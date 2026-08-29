@@ -7,11 +7,12 @@ arvore validada ou levanta. Ver docs/ARCHITECTURE.md.
 from __future__ import annotations
 
 from maskgw.sql.parser import parse_single_statement, parse_statements
-from maskgw.sql.policy import DEFAULT_SQL_POLICY, SqlPolicy
+from maskgw.sql.policy import DEFAULT_SQL_POLICY, DENIED_RELATIONS, SqlPolicy
 from maskgw.sql.validator import validate_select
 
 __all__ = [
     "DEFAULT_SQL_POLICY",
+    "DENIED_RELATIONS",
     "SqlPolicy",
     "parse_single_statement",
     "parse_statements",

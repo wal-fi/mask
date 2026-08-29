@@ -36,6 +36,28 @@ from collections.abc import Iterable
 from dataclasses import dataclass, field
 from typing import Final
 
+#: Relacoes do catalogo que carregam AMOSTRAS DOS DADOS, nao metadata.
+#:
+#: `pg_statistic` guarda valores reais das colunas em `stavaluesN`, e a view
+#: `pg_stats` os expoe em `most_common_vals` e `histogram_bounds`. Uma unica
+#: consulta devolve CPFs verdadeiros em claro: os nomes de coluna sao
+#: `most_common_vals` e `histogram_bounds`, que nao casam regra nenhuma, e nao
+#: ha coluna de origem a resolver. Medido na Fase 6. Ver D-039.
+#:
+#: Isto NAO e um bloqueio de `pg_catalog`: o resto do catalogo continua
+#: acessivel, e a resolucao de proveniencia usa a conexao do Gateway, nao a SQL
+#: do cliente, entao nada nela e afetado.
+DENIED_RELATIONS: Final[frozenset[str]] = frozenset(
+    {
+        "pg_statistic",
+        "pg_stats",
+        "pg_stats_ext",
+        "pg_stats_ext_exprs",
+        "pg_statistic_ext",
+        "pg_statistic_ext_data",
+    }
+)
+
 #: Prefixo cujo namespace inteiro e negado por default.
 PG_PREFIX: Final = "pg_"
 
@@ -88,6 +110,7 @@ class SqlPolicy:
     allowed_pg_functions: frozenset[str] = field(default=DEFAULT_ALLOWED_PG_FUNCTIONS)
     denied_functions: frozenset[str] = field(default=DEFAULT_DENIED_FUNCTIONS)
     denied_prefixes: tuple[str, ...] = field(default=DEFAULT_DENIED_PREFIXES)
+    denied_relations: frozenset[str] = field(default=DENIED_RELATIONS)
 
     @classmethod
     def build(
@@ -122,6 +145,14 @@ class SqlPolicy:
         if name.startswith(PG_PREFIX):
             return name in self.allowed_pg_functions
         return True
+
+    def allows_relation(self, relation_name: str) -> bool:
+        """Decide sobre o nome da relacao, sem o schema.
+
+        Como nas funcoes, o schema nao muda a decisao: `pg_catalog.pg_stats` e
+        `pg_stats` sao a mesma relacao.
+        """
+        return relation_name.casefold() not in self.denied_relations
 
 
 #: Politica usada quando nada e configurado.

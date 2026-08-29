@@ -105,11 +105,39 @@ passa.
 
 ### Catálogo do PostgreSQL
 `pg_stats` expõe amostras reais de valores em `most_common_vals` e
-`histogram_bounds`. Mitigação no MVP: a role read-only não deve ter acesso a
-estatísticas de tabelas sensíveis.
+`histogram_bounds`.
+
+**Corrigido na Fase 6 (D-039):** o validator recusa `pg_statistic`, `pg_stats`
+e as demais relações de estatística. A mitigação por privilégio de role
+continua valendo como segunda camada, mas deixou de ser a única.
+
+O resto do catálogo permanece legível, e isso é reconhecimento de schema
+aceito — ver F-06 em `docs/SECURITY-REVIEW.md`.
 
 ## Resultado esperado
 
 Nenhum cenário da seção "cobertos" deve permitir acesso não mascarado.
 Os riscos aceitos devem ter teste que documenta o comportamento atual, para
 que uma mudança futura seja percebida.
+
+---
+
+## Resultado medido (Fase 6)
+
+`docs/SECURITY-REVIEW.md` substitui a expectativa deste documento pelo que foi
+efetivamente medido. Resumo do que **não** se confirmou como coberto:
+
+| cenário deste documento | resultado real |
+|---|---|
+| Alias | coberto (Fase 3) |
+| SELECT *, JOIN, subquery, CTE, view que preserva nome | cobertos |
+| Alias combinado com subquery | **coberto** — a origem sobrevive |
+| UNION | coberto por nome; **com alias, vaza** (F-02) |
+| Expressões e funções SQL | **vaza** — F-01, mais amplo do que se supunha |
+| Erros | coberto |
+| Logs, metadata | cobertos |
+| Alteração de regras pelo cliente | coberto |
+| — | **novo:** `pg_stats` vazava valores reais (F-05, corrigido) |
+| — | **novo:** exception alcançável por alias (F-08) |
+| — | **novo:** função de usuário devolve coluna sensível (F-04) |
+| — | **novo:** perda de catálogo em runtime vazava (F-09, corrigido) |

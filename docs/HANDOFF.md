@@ -1,6 +1,6 @@
 # Handoff
 
-Estado do projeto ao final da sessao que implementou a **Fase 5**.
+Estado do projeto ao final da sessao que implementou a **Fase 6**.
 Documento de entrada para a proxima sessao.
 
 Leitura obrigatoria antes de continuar: `CLAUDE.md`, `docs/ARCHITECTURE.md`,
@@ -15,18 +15,18 @@ Leitura obrigatoria antes de continuar: `CLAUDE.md`, `docs/ARCHITECTURE.md`,
 **FASE 2 — PostgreSQL Adapter + ResultSet Masking.** Concluida.
 **FASE 3 — Column provenance / lineage.** Concluida.
 **FASE 4 — SQL validation + execution safety.** Concluida.
-**FASE 5 — Gateway + MCP Server.** Concluida e verificada contra PostgreSQL
-real, pelo protocolo MCP.
+**FASE 5 — Gateway + MCP Server.** Concluida.
+**FASE 6 — Security red team + hardening.** Concluida.
 
-A Fase 6 **nao foi iniciada**.
+**Todas as seis fases do roadmap estao concluidas.**
 
-Entregue na Fase 5:
+Entregue na Fase 6:
 
-- `gateway/`: fachada publica, modelo de resultado seguro, factory de bootstrap
-- `mcp/`: servidor MCP com uma tool, `query_database`, em **stdio apenas**
-- `audit/`: log estruturado somente de metadata; primeiro `logging` do projeto
-- proveniencia NAO e exposta ao cliente
-- 163 testes novos (1038 no total)
+- `tests/security/`: 170 testes adversariais por classe de ataque
+- `docs/SECURITY-REVIEW.md`: 11 findings com reproducao, impacto e status
+- dois hardenings: relacoes de estatistica bloqueadas; falha de resolucao de
+  proveniencia passa a rejeitar a consulta
+- 170 testes novos (1208 no total)
 
 ## 2. Stack e dependencias
 
@@ -170,6 +170,13 @@ tests/
                                  test_mcp_server.py            54
                                  test_mcp_integration.py       43
                                  test_audit.py                 19
+
+  security/                      <- Fase 6, 170 testes adversariais
+    test_attack_expressions.py        31
+    test_attack_union_views.py        19
+    test_attack_functions_catalog.py  29
+    test_attack_oracle_errors.py      23
+    test_attack_protocol.py           68
 ```
 
 Os testes de protocolo MCP usam o cliente in-memory do SDK
@@ -217,20 +224,24 @@ D-001 a D-014 na Fase 1; D-015 a D-019 na Fase 2. Detalhamento em
 | D-036 | Somente stdio; nenhuma porta de rede |
 | D-037 | Argumentos extras sao IGNORADOS pelo SDK, nao recusados |
 | D-038 | Erro do MCP: categoria fixa, mensagem curta, sem encadeamento |
+| D-039 | Relacoes de estatistica (`pg_stats`) bloqueadas no validator |
+| D-040 | Falha de resolucao rejeita a consulta; `DERIVED` nao. Emenda D-025 |
+| D-041 | Bypass conhecido vira teste que o AFIRMA, nunca `skip` |
 
 ## 6. Resultado das verificacoes
 
 Com `MASKGW_TEST_DSN` apontando para PostgreSQL 16 em Docker:
 
 ```text
-pytest   1038 passed
-pytest    198 passed  (-m integration)
+pytest   1208 passed
+pytest    368 passed  (-m integration)
+pytest    170 passed  (tests/security)
 ruff     All checks passed
-ruff     66 files already formatted
-mypy     Success: no issues found in 66 source files  (strict)
+ruff     73 files already formatted
+mypy     Success: no issues found in 73 source files  (strict)
 ```
 
-Sem `MASKGW_TEST_DSN`: `841 passed, 197 skipped`.
+Sem `MASKGW_TEST_DSN`: `843 passed, 365 skipped`.
 
 ## 7. Protecao contra alias: o que a Fase 3 fechou
 
@@ -326,35 +337,53 @@ Transporte: **stdio**. Nenhuma porta e aberta. Falha em qualquer passo do
 startup termina o processo com codigo 1, e o servidor nunca fica disponivel
 parcialmente funcional.
 
-## 10. Fase 6 — objetivo e criterios
+## 9c. Postura de seguranca (leia antes de expor)
 
-**FASE 6 — Adversarial / security testing.**
+`docs/SECURITY-REVIEW.md` traz os 11 findings. O essencial:
 
-Escopo (`docs/ROADMAP.md`): executar `PROMPT-03-SECURITY-AUDIT.txt` contra o
-codigo pronto; suite adversarial derivada de `docs/THREAT-MODEL.md`; varredura
-automatizada garantindo que nenhum valor original aparece em resposta, log ou
-excecao; teste de regressao para cada achado; confirmacao de que cada risco
-aceito esta documentado e coberto por teste.
+**Tres bypasses de UMA LINHA de SQL permanecem abertos.** Cada um devolve o
+valor sensivel em claro:
 
-Boa parte ja existe, espalhada: `test_sql_validator` (149), `test_db_leakage`,
-`test_execution_safety`, `TestTheFundamentalSecurityTest`. A Fase 6 deve
-consolidar, procurar o que ninguem procurou ainda, e fechar o inventario de
-riscos aceitos.
+```sql
+SELECT substr(cpf, 1, 11) AS documento FROM cliente;      -- F-01 expressao
+SELECT cpf AS documento FROM cliente UNION ALL SELECT 'x'; -- F-02 union
+SELECT cpf AS tipo_cpf FROM cliente;                       -- F-08 exception
+```
 
-Pontos de partida sugeridos, todos ja medidos e documentados:
+**Obrigatorio antes de expor:** revogar `EXECUTE` das funcoes de usuario para a
+role do Gateway. `EXECUTE` e concedido a `PUBLIC` por padrao, e uma funcao
+pre-existente que leia coluna sensivel devolve o valor sob o nome dela (F-04).
 
-- os tres bypasses residuais: expressao sobre coluna sensivel, UNION com alias,
-  view que renomeia coluna
-- D-037: argumentos extras ignorados pelo SDK
-- oraculo por WHERE / ORDER BY, fora do escopo do MVP mas nao testado
-- a politica de funcoes nao cobre funcao de usuario com efeito colateral
+```sql
+REVOKE EXECUTE ON ALL FUNCTIONS IN SCHEMA public FROM PUBLIC;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC;
+```
 
-## 11. O que NAO foi implementado
+**Oraculo por predicado reconstroi um CPF em 11 consultas** (F-07), e esta
+fora do escopo do MVP.
 
-- testes adversariais consolidados (Fase 6)
-- Streamable HTTP, SSE, autenticacao, OAuth (fase de deployment)
-- `resources` e `prompts` MCP; schema discovery
-- pool de conexoes, multi-database, MySQL, RBAC, multi-tenant
+Conclusao: o Gateway eleva o custo do vazamento acidental. Nao resiste a um
+cliente adversarial. **Uso interno com cliente semi-confiavel.**
+
+## 10. Depois da Fase 6
+
+O roadmap acabou. As proximas decisoes sao do responsavel pelo projeto, e
+nenhuma foi iniciada.
+
+**Propostas de hardening em aberto.** Desenhadas e medidas na Fase 6, com
+impacto e custo em `docs/FUTURE-HARDENING.md` e `docs/SECURITY-REVIEW.md`.
+Fechar F-01, F-02 e F-08 e o que separa "cliente semi-confiavel" de "cliente
+nao confiavel". Cada uma altera semantica documentada do produto, por isso
+nenhuma foi aplicada.
+
+**Deployment.** Streamable HTTP, autenticacao, OAuth. Hoje so ha stdio, e a
+ausencia de porta de rede e uma decisao de seguranca (D-036), nao uma lacuna.
+Trocar o transporte exige um modelo de sessao e de autenticacao — nao e trocar
+um parametro.
+
+**Fora do escopo do MVP, inalterado:** pool de conexoes, multi-database, MySQL,
+RBAC, multi-tenant, `resources`/`prompts` MCP, schema discovery, JSONB deep
+inspection, lineage completo, controle de inferencia e default deny.
 
 Fora do escopo do MVP, em `docs/FUTURE-HARDENING.md`: bloqueio de WHERE /
 ORDER BY / GROUP BY sobre dados sensiveis, supressao de agregacoes, controle de

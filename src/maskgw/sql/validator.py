@@ -20,7 +20,9 @@ Quatro regras, nesta ordem:
    `LockingClause` (`FOR UPDATE`/`FOR SHARE`) sao recusadas em qualquer ponto
    da arvore.
 
-Depois disso, a politica de funcoes (`policy.py`) e aplicada a cada `FuncCall`.
+Depois disso, a politica de `policy.py` e aplicada a cada `FuncCall` e a cada
+`RangeVar` — a segunda para barrar as relacoes de estatistica do catalogo, que
+guardam amostras reais dos dados e nao metadata (D-039).
 
 Nenhuma mensagem de erro contem a consulta, nomes vindos dela ou valores. O
 motivo vem de um conjunto fixo de constantes.
@@ -43,6 +45,7 @@ NESTED_STATEMENT: Final = "statement que modifica dados dentro da consulta"
 WRITES_A_RELATION: Final = "SELECT que grava em relacao (INTO)"
 LOCKS_ROWS: Final = "SELECT que trava linhas (FOR UPDATE/SHARE)"
 FORBIDDEN_FUNCTION: Final = "funcao nao permitida"
+FORBIDDEN_RELATION: Final = "relacao nao permitida"
 
 #: Unicos nos de statement aceitos em qualquer ponto da arvore.
 _ALLOWED_STATEMENTS: Final[tuple[type, ...]] = (ast.RawStmt, ast.SelectStmt)
@@ -78,10 +81,16 @@ class _Inspector(Visitor):
             self.reason = LOCKS_ROWS
         elif isinstance(node, ast.FuncCall) and not self._allows(node):
             self.reason = FORBIDDEN_FUNCTION
+        elif isinstance(node, ast.RangeVar) and not self._allows_relation(node):
+            self.reason = FORBIDDEN_RELATION
 
     def _allows(self, node: ast.FuncCall) -> bool:
         name = _function_name(node)
         return name is None or self._policy.allows(name)
+
+    def _allows_relation(self, node: ast.RangeVar) -> bool:
+        name = node.relname
+        return not isinstance(name, str) or self._policy.allows_relation(name)
 
 
 def _function_name(node: ast.FuncCall) -> str | None:

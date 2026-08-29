@@ -193,6 +193,24 @@ Ver `docs/FUTURE-HARDENING.md`.
 
 EXCEPTION > MASKING > ORIGINAL
 
+## Resultado do red team (Fase 6)
+
+`docs/SECURITY-REVIEW.md` traz o relatório completo: 11 findings, dois
+corrigidos, nove aceitos com teste que fixa o comportamento.
+
+**Antes de expor este Gateway, entenda que:**
+
+- expressão sobre coluna sensível (`substr(cpf,1,11) AS x`), UNION com alias e
+  alias para o nome de uma exception devolvem o valor **em claro**. São três
+  bypasses de uma linha de SQL cada.
+- a role do Gateway **precisa ter `EXECUTE` revogado** nas funções de usuário —
+  `EXECUTE` é concedido a `PUBLIC` por padrão, e uma função pré-existente que
+  leia coluna sensível devolve o valor sob o nome dela.
+- o oráculo por predicado reconstrói um CPF em 11 consultas.
+
+O Gateway eleva o custo do vazamento acidental. Não resiste a um cliente
+adversarial. Uso interno com cliente semi-confiável.
+
 ## Fora do escopo do MVP
 
 Os itens abaixo são riscos conhecidos e **aceitos** nesta versão. Estão

@@ -144,6 +144,18 @@ medição impôs ao escopo:
 - confirmação de que cada risco aceito está documentado e coberto por teste
   de comportamento
 
+**Concluída.** Relatório em `docs/SECURITY-REVIEW.md`: 11 findings, dois
+corrigidos (`pg_stats` expondo valores reais; perda de catálogo em runtime
+vazando em claro), nove aceitos com teste que fixa o comportamento.
+
+Suíte `tests/security/`, 170 testes, classificados como BLOCKED, MASKED ou
+KNOWN LIMITATION. Bypass conhecido é teste que **afirma** o bypass, nunca
+`skip` (D-041).
+
+Três bypasses de uma linha de SQL permanecem abertos — expressão, UNION com
+alias e alias para o nome de uma exception. As propostas de correção estão no
+relatório; nenhuma foi implementada, por alterarem a filosofia do produto.
+
 ---
 
 ## Critérios de aceite da FASE 1

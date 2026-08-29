@@ -74,6 +74,9 @@ select = [
 "tests/test_mcp_server.py" = ["S608"]
 "tests/test_audit.py" = ["S608"]
 "tests/test_gateway.py" = ["S608"]
+# A suite adversarial PRECISA montar SQL de ataque: e o objeto do teste.
+# Os homoglifos Unicode (RUF001) sao exatamente o que se testa.
+"tests/security/*" = ["S608", "RUF001"]
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "parents"

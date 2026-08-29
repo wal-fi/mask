@@ -50,6 +50,7 @@ def check_provenance_capability(connection: psycopg.Connection[Any]) -> None:
 
     # Passa pelo resolver REAL, e nao por uma consulta paralela: o que se quer
     # provar e que o caminho usado em producao funciona nesta instalacao.
+    # `resolve` ja levanta `CapabilityError` quando o catalogo falha (D-040).
     origin = ProvenanceResolver(connection).resolve([key])[0]
 
     if origin.kind is ProvenanceKind.UNKNOWN or origin.name is None:

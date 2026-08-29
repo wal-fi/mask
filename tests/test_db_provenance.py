@@ -19,7 +19,7 @@ import pytest
 
 from maskgw.db.columns import DERIVED_ORIGIN, UNKNOWN_ORIGIN, ColumnOrigin, describe_columns
 from maskgw.db.provenance import ProvenanceResolver, provenance_keys
-from maskgw.errors import DatabaseError
+from maskgw.errors import CapabilityError, DatabaseError
 from maskgw.masking.descriptor import ProvenanceKind
 from tests.conftest import FakeColumn, FakePgResult
 
@@ -200,20 +200,23 @@ class TestCache:
 
 
 class TestCatalogFailure:
-    """Falha ao resolver e absorvida: nunca fatal, nunca vazando."""
+    """Falha de catalogo e ERRO OPERACIONAL, nao ausencia de origem (D-040).
 
-    def test_failure_yields_unknown(self):
+    Ate a Fase 5 a falha virava `UNKNOWN`, e a coluna caia no default ALLOW —
+    o que devolvia em claro uma coluna que deveria estar mascarada. Medido na
+    Fase 6 e corrigido: a consulta falha.
+    """
+
+    def test_failure_rejects_the_query(self):
         resolver, _ = build(error=psycopg.errors.InsufficientPrivilege("sem permissao"))
-        assert resolver.resolve([(CLIENTE, 2)]) == (UNKNOWN_ORIGIN,)
-
-    def test_failure_does_not_raise(self):
-        resolver, _ = build(error=psycopg.OperationalError("conexao morta"))
-        resolver.resolve([(CLIENTE, 2), (0, 0)])
+        with pytest.raises(CapabilityError):
+            resolver.resolve([(CLIENTE, 2)])
 
     def test_failure_is_not_cached_so_it_can_recover(self):
         """Erro transitorio nao pode desligar a proveniencia para sempre."""
         resolver, connection = build(error=psycopg.OperationalError("falha"))
-        assert resolver.resolve([(CLIENTE, 2)]) == (UNKNOWN_ORIGIN,)
+        with pytest.raises(CapabilityError):
+            resolver.resolve([(CLIENTE, 2)])
         assert resolver.cache_size == 0
 
         connection.error = None
@@ -222,12 +225,21 @@ class TestCatalogFailure:
 
     def test_failure_message_never_escapes(self):
         resolver, _ = build(error=psycopg.errors.InsufficientPrivilege("permission denied"))
-        origins = resolver.resolve([(CLIENTE, 2)])
-        assert "permission denied" not in repr(origins)
+        with pytest.raises(CapabilityError) as info:
+            resolver.resolve([(CLIENTE, 2)])
+        assert "permission denied" not in str(info.value)
+        assert info.value.__cause__ is None
+        assert info.value.__context__ is None
 
-    def test_derived_columns_still_resolve_when_the_catalog_fails(self):
+    def test_derived_columns_never_touch_the_catalog(self):
+        """`ftable = 0` nao consulta nada, entao nao pode falhar."""
         resolver, _ = build(error=psycopg.OperationalError("falha"))
         assert resolver.resolve([(0, 0)]) == (DERIVED_ORIGIN,)
+
+    def test_absent_catalog_row_is_still_unknown(self):
+        """Catalogo respondeu, mas nao ha linha: isso NAO e falha operacional."""
+        resolver, _ = build([])
+        assert resolver.resolve([(CLIENTE, 2)]) == (UNKNOWN_ORIGIN,)
 
 
 class TestDescribeColumnsWithOrigins:

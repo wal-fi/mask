@@ -230,10 +230,12 @@ configuração legítima.
 ## Acesso ao catálogo do PostgreSQL
 
 `pg_stats` expõe amostras reais de valores em `most_common_vals` e
-`histogram_bounds`. Mitigação atual: privilégios da role read-only.
+`histogram_bounds`.
 
-Evolução possível: denylist explícita de `pg_catalog`, `information_schema` e
-`pg_stats` no Query Validator.
+**Resolvido na Fase 6 (D-039):** o validator recusa `pg_statistic`, `pg_stats`
+e as demais relações de estatística. O resto do catálogo permanece legível —
+bloquear `pg_catalog` inteiro impediria uso legítimo sem fechar os bypasses que
+realmente importam. Ver F-05 e F-06 em `docs/SECURITY-REVIEW.md`.
 
 ## Funções definidas pelo usuário com efeito colateral
 
@@ -253,3 +255,20 @@ A Fase 4 protege a **execução**, não a inferência. `SELECT id FROM clientes
 WHERE cpf LIKE '123%'` continua permitido, e o `statement_timeout` e o
 `max_rows` não impedem extração incremental por consultas sucessivas. Ver as
 seções acima sobre WHERE/ORDER BY e cardinalidade.
+
+---
+
+## Propostas abertas do red team
+
+Medidas e desenhadas na Fase 6, **não implementadas**, por alterarem a
+filosofia do produto ou exigirem lineage. Detalhes, impacto e reprodução em
+`docs/SECURITY-REVIEW.md`.
+
+| finding | proposta | por que não foi feita |
+|---|---|---|
+| F-01 expressão | rejeitar consulta cujo `ColumnRef` dentro de expressão nomeie coluna que casa regra | recusa SQL legítima (`SELECT length(cpf)`); acopla validator à política de masking; falso-negativo dentro de subquery |
+| F-02 UNION | propagar `origin_name` quando todos os ramos têm o mesmo `ColumnRef` simples | `SELECT *` em qualquer ramo destrói o mapeamento posicional |
+| F-03 view | resolver via `pg_get_viewdef` até a tabela base | exige reparsear a definição e mapear posições: lineage engine |
+| F-08 exception por alias | avaliar exceptions contra `origin_name`, caindo para `output_name` só sem origem | altera a regra documentada `EXCEPTION > MASKING` |
+| F-11 default de exception | `mode` default `exact` para exceptions | quebra configurações existentes; precisa de migração com `mode` obrigatório por uma versão |
+| F-04 funções | resolver `FuncCall` em `pg_proc` e avaliar `provolatile`/`prosecdef` | gestão de funções do PostgreSQL inteira; mitigação é operacional |

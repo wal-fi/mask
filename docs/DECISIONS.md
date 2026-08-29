@@ -641,3 +641,84 @@ Duas travas:
 
 `QueryTimeout` e checado antes de `DatabaseError`, de que e subclasse.
 
+---
+
+# Fase 6 — Security red team + hardening
+
+## D-039 — Relacoes de estatistica sao bloqueadas no validator
+
+`pg_statistic` guarda AMOSTRAS DOS VALORES REAIS das colunas em `stavaluesN`, e
+a view `pg_stats` as expoe em `most_common_vals` e `histogram_bounds`. Medido
+na Fase 6: uma consulta devolvia CPFs verdadeiros em claro.
+
+Todas as camadas passavam batido, e por bons motivos:
+
+- os nomes de saida (`most_common_vals`, `histogram_bounds`) nao casam regra;
+- nao ha coluna de origem a resolver — e um array agregado;
+- nao ha erro, nao ha escrita, nao ha funcao proibida.
+
+Decisao: o validator recusa `pg_statistic`, `pg_stats`, `pg_stats_ext`,
+`pg_stats_ext_exprs`, `pg_statistic_ext` e `pg_statistic_ext_data`, por no
+`RangeVar`, em qualquer ponto da arvore — CTE, subquery ou ramo de UNION
+inclusive. A decisao e pelo nome da relacao, sem o schema, como nas funcoes:
+`pg_catalog.pg_stats`, `PG_STATS` e `"pg_stats"` caem juntos.
+
+**Nao e um bloqueio de `pg_catalog`.** O resto do catalogo continua legivel, e
+a resolucao de proveniencia usa a conexao do Gateway, nao a SQL do cliente:
+nada nela foi afetado. A distincao aplicada e entre metadata (permitida) e
+amostras de dado (recusadas).
+
+Isto e uma denylist, e o projeto prefere allowlist. A diferenca importa: a
+allowlist de tipos de no da AST (D-031) continua sendo a barreira estrutural;
+esta lista cobre um punhado de relacoes que sao dado disfarcado de catalogo, e
+e enumeravel porque o PostgreSQL tem exatamente essas.
+
+## D-040 — Falha de resolucao rejeita a consulta; DERIVED nao
+
+Ate a Fase 5, qualquer problema de proveniencia virava `UNKNOWN`, e `UNKNOWN`
+caia no default ALLOW. Medido na Fase 6: um Gateway que perde `SELECT` em
+`pg_attribute` DEPOIS do startup passava a devolver `SELECT cpf AS documento`
+em claro, em silencio. O capability check (D-026) so roda no `connect()`.
+
+Decisao: separar duas situacoes que eram uma so.
+
+| situacao | quem afirma | comportamento |
+|---|---|---|
+| `ftable = 0` | o PostgreSQL: nao ha coluna de origem unica | `DERIVED`, default ALLOW, inalterado |
+| consulta ao catalogo falha | erro operacional nosso | `CapabilityError`, consulta rejeitada |
+| catalogo responde sem a linha | coluna nao esta no catalogo | `UNKNOWN`, default ALLOW |
+
+A terceira linha permanece tolerante de proposito: uma coluna ausente do
+catalogo nao e falha de infraestrutura, e nao e alcancavel pelo atacante.
+
+Isto **emenda D-025**, que estabelecia que falha de proveniencia nunca muda a
+politica. O raciocinio mudou porque a medicao mostrou que a tolerancia nao
+custava disponibilidade — custava confidencialidade, que e a garantia central
+do produto. Uma instalacao com catalogo inacessivel deixa de responder em vez
+de responder errado.
+
+Detalhes que importam:
+
+- a falha **nao** entra no cache, entao um erro transitorio nao desliga a
+  proveniencia pelo resto da vida da conexao;
+- o erro do PostgreSQL nao sai: nem mensagem, nem `__cause__`, nem
+  `__context__` — o mesmo cuidado de D-017, e o teste pegou a primeira versao
+  que errava nisso;
+- na fronteira MCP vira `CONFIGURATION_ERROR`.
+
+## D-041 — Bypasses conhecidos viram teste, nunca `skip`
+
+`tests/security/` classifica cada ataque como **BLOCKED**, **MASKED** ou
+**KNOWN LIMITATION**, e um KNOWN LIMITATION e um teste que **afirma que o
+ataque funciona**.
+
+Parece estranho ter uma suite que garante a existencia de um bypass. E
+deliberado, por duas razoes:
+
+1. um `skip` some do relatorio; uma asercao positiva nao. O inventario de
+   riscos aceitos fica executavel, e nao apenas escrito;
+2. quando um hardening futuro fechar o bypass, o teste QUEBRA — e a correcao
+   e notada, documentada e datada, em vez de acontecer sem ninguem perceber.
+
+Cada teste desse tipo carrega a mensagem `fechou? atualizar SECURITY-REVIEW`.
+

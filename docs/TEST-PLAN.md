@@ -197,15 +197,27 @@ Verificar que a chave HMAC não aparece em log, erro ou resposta.
 ## Riscos aceitos (Fase 6)
 
 Testes que **documentam o comportamento atual**, para que uma mudança futura
-seja percebida:
+seja percebida. Implementados em `tests/security/`, 170 testes organizados por
+classe de ataque:
 
-- `SELECT substr(cpf,1,3) AS x` passa em claro
-- coluna sensível com nome fora do padrão passa em claro
-- `WHERE cpf LIKE '...'` é permitido
-- `ORDER BY cpf` é permitido
-- JSONB não é inspecionado internamente
+```text
+tests/security/
+  conftest.py                        schema, dados fictícios, política
+  test_attack_expressions.py         expressões sobre coluna sensível
+  test_attack_union_views.py         UNION e views
+  test_attack_functions_catalog.py   funções de usuário e catálogo
+  test_attack_oracle_errors.py       inferência por predicado e erro
+  test_attack_protocol.py            nomes hostis, exceptions, serialização,
+                                     segredos, MCP, concorrência, row limit,
+                                     perda de capability
+```
 
-Cada um referencia o item correspondente em `docs/FUTURE-HARDENING.md`.
+Cada teste declara o veredito: **BLOCKED**, **MASKED** ou **KNOWN LIMITATION**.
+Um KNOWN LIMITATION **afirma que o ataque funciona** — nunca vira `skip`, para
+que o inventário de riscos fique executável e para que uma correção futura
+quebre o teste e seja notada (D-041).
+
+Findings e severidades em `docs/SECURITY-REVIEW.md`.
 
 ## MCP e Gateway (Fase 5)
 
