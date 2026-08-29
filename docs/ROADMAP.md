@@ -124,6 +124,14 @@ Aceite:
   do Masking Engine
 - tentativa do cliente de alterar configuração é rejeitada
 
+**Concluída.** SDK oficial `mcp` 2.1.1, transporte stdio apenas. Ajustes que a
+medição impôs ao escopo:
+
+- **Argumentos extras são ignorados pelo SDK, não recusados** (D-037). Nada foi
+  remendado; o que se testa é que nenhum extra altera o resultado.
+- Auditoria sem digest da SQL: seria um oráculo sobre predicados (D-035).
+- Provenance não é exposta ao cliente (D-033).
+
 ---
 
 ## FASE 6 — Adversarial/security testing

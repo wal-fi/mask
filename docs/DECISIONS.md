@@ -527,3 +527,117 @@ raiz o aceitaria. `SELECT ... FOR UPDATE` tem o mesmo formato e trava linhas.
 A garantia de D-017 vale para todos: nem `__cause__` nem `__context__` apontam
 para a excecao original. Fixado por teste que renderiza o traceback completo.
 
+---
+
+# Fase 5 — Gateway + MCP Server
+
+## D-033 — A proveniencia nao sai para o cliente MCP
+
+`ColumnDescriptor` carrega `origin_name`, `origin_schema`, `origin_table` e
+`provenance_kind`. Nada disso entra no `QueryResult`.
+
+O cliente recebe, por coluna, apenas `name` e `masked`. `masked` e util: diz ao
+modelo que aquele valor foi transformado, o que evita conclusoes erradas sobre
+o dado. `origin_table` nao teria uso legitimo — diria a uma IA nao confiavel
+qual tabela sustenta cada coluna de cada consulta, o que e reconhecimento de
+schema de graca.
+
+Regra geral aplicada: o cliente precisa do dado ja seguro, nao do mapa de como
+ele foi protegido. Tambem ficam de fora `table_oid`, `attnum`, indices de
+regra, nomes de transformer, o DSN e qualquer objeto psycopg.
+
+## D-034 — Lifecycle da conexao: uma so, aberta no startup
+
+Sem pool nesta fase. O comportamento, para constar:
+
+| momento | comportamento |
+|---|---|
+| **abertura** | em `build_application`, antes de o MCP existir |
+| **por consulta** | `connect()` e chamado sempre; e no-op quando ja aberta |
+| **queda da conexao** | a proxima consulta reconecta, com verificacao completa de sessao e capability |
+| **erro de consulta** | a conexao sobrevive (autocommit, D-016); a sessao volta a IDLE |
+| **PostgreSQL fora no startup** | `build_application` levanta e o processo **nao sobe** |
+| **encerramento do MCP** | `Application.close()` no `finally` do bootstrap |
+
+Duas consequencias explicitas:
+
+- **Nao ha estado parcialmente funcional.** Se `build_application` levanta,
+  nao existe Gateway, e sem Gateway nao ha servidor MCP. O processo termina com
+  codigo 1 em vez de aceitar consultas que falhariam todas.
+- **Consultas sao serializadas.** O SDK MCP executa tools sincronas numa thread
+  pool, e uma conexao psycopg nao suporta consultas concorrentes intercaladas.
+  `Gateway.query` usa um `threading.Lock`. Para um servidor stdio com um
+  cliente, o custo e nulo; se um dia houver transporte HTTP concorrente, e aqui
+  que um pool entra.
+
+## D-035 — Auditoria: `request_id`, nunca digest da SQL
+
+`audit/` e o unico modulo autorizado a importar `logging`, e o teste global
+mudou de "ninguem loga" para "so `audit/log.py` loga". `masking/` continua
+proibido, verificado tambem por `test_purity`.
+
+Os campos auditados sao fechados **por construcao**: `QueryAudit` e uma
+dataclass com exatamente `request_id`, `outcome`, `duration_ms`, `row_count`,
+`truncated` e `error_category`. Nao existe parametro para SQL, valores, linhas
+ou segredos — passar um levanta `TypeError`, e isso esta fixado em teste.
+
+O escopo da fase permitia hash ou HMAC da SQL para correlacao. **Descartado.**
+Um digest estavel permite confirmar, por comparacao, que uma consulta
+especifica rodou; com predicados como `WHERE cpf = '...'`, quem tiver acesso
+aos logs testa hipoteses e confirma valores. E o mesmo oraculo de WHERE que
+`docs/FUTURE-HARDENING.md` ja registra, so que gravado em disco.
+
+Correlacao usa `request_id` — um UUID por consulta, sem relacao com o conteudo.
+
+## D-036 — Somente stdio; nenhuma porta de rede
+
+O SDK v2 oferece `stdio`, `sse` e `streamable-http`. Apenas `stdio` e usado, e
+`run(transport="stdio")` e a unica chamada de transporte no projeto.
+
+Reducao deliberada de superficie: sem socket, sem autenticacao a implementar,
+sem CORS, sem DNS rebinding, sem sessao HTTP para sequestrar. O processo fala
+com um cliente pelo proprio stdin/stdout.
+
+Streamable HTTP fica para uma fase de deployment, onde tera de vir acompanhado
+de autenticacao e de um modelo de sessao — nao como um parametro trocado.
+
+## D-037 — Argumentos extras sao IGNORADOS pelo SDK, nao recusados
+
+Medido no SDK v2.1.1, e diferente do que o escopo da fase supunha.
+
+O `input_schema` publicado nao traz `additionalProperties: false`, e o modelo
+de argumentos que o SDK gera usa o default do Pydantic (`extra="ignore"`).
+Uma chamada com `{"sql": "...", "disable_masking": true}` retorna
+`is_error: false` e executa normalmente, com o argumento extra descartado antes
+de chegar ao handler.
+
+Nao ha ponto de extensao publico para tornar isso estrito. Conforme a instrucao
+de nao improvisar compatibilidade, **nada foi remendado**: nem monkey patch no
+SDK, nem `additionalProperties: false` declarado no schema — anunciar uma
+restricao que o servidor nao aplica seria pior que a ausencia dela.
+
+A garantia de seguranca que vale, e que esta fixada em teste, e mais forte que
+a recusa: **o argumento extra nao pode mudar nada.** Para cada um dos oito
+nomes perigosos (`disable_masking`, `raw`, `unmasked`, `masking`,
+`transformer`, `max_rows`, `timeout`, `dsn`), o resultado com o extra e
+identico ao sem ele, o Gateway recebe a mesma chamada, e a coluna continua
+mascarada. O cliente controla apenas a SQL porque nao existe outro parametro —
+nao porque outro seja recusado.
+
+## D-038 — Erro do MCP: categoria fixa, mensagem curta
+
+`Gateway.query` levanta apenas `GatewayError`, com uma de cinco categorias
+(`INVALID_QUERY`, `QUERY_REJECTED`, `QUERY_TIMEOUT`, `DATABASE_ERROR`,
+`CONFIGURATION_ERROR`) e a mensagem fixa correspondente. O handler MCP traduz
+para `ToolError`.
+
+Duas travas:
+
+- **Toda excecao e capturada**, inclusive `RuntimeError` inesperado. Sem isso,
+  o SDK registraria o traceback completo via `logging` antes de redigir a
+  resposta — o que colocaria a excecao original nos logs do operador.
+- `GatewayError` e levantado FORA do handler (D-017): nem `__cause__` nem
+  `__context__` apontam para o erro interno.
+
+`QueryTimeout` e checado antes de `DatabaseError`, de que e subclasse.
+

@@ -17,6 +17,18 @@ mascarada. A proteção depende da qualidade do `masking.yaml`.
 Mitigação operacional: revisar o schema e cadastrar as regras antes de expor
 o Gateway. Default deny está documentado como hardening futuro.
 
+## Superfície exposta ao cliente MCP
+
+Uma tool, `query_database(sql: str)`, sobre stdio. Nenhuma porta de rede.
+
+O cliente controla apenas a SQL — não porque outros parâmetros sejam recusados,
+mas porque não existem no schema. Medido no SDK v2.1.1: argumentos extras são
+**ignorados**, não rejeitados (D-037); a garantia testada é que nenhum extra
+altera o resultado.
+
+Não há `resources` nem `prompts`: nada de `masking://config`,
+`database://schema` ou `security://rules`.
+
 ## Cliente
 
 A IA é um cliente não confiável. Nunca aceitar do cliente:
@@ -42,8 +54,18 @@ A IA é um cliente não confiável. Nunca aceitar do cliente:
 Nunca registrar valores originais de CPF, CNPJ, e-mail, telefone, senha,
 tokens ou outros dados sensíveis.
 
-Logs devem conter somente metadata: identificador da consulta, nomes de
-coluna, regra aplicada, contagem de linhas, duração.
+Desde a Fase 5 existe log, e só em `audit/` — o único módulo do projeto
+autorizado a importar `logging`, verificado por teste global. `masking/`
+continua proibido.
+
+Os campos auditados são fechados por construção (`QueryAudit`): `request_id`,
+`outcome`, `duration_ms`, `row_count`, `truncated`, `error_category`. Não
+existe parâmetro para SQL, valores ou segredos.
+
+**Nomes de coluna não são registrados**, ao contrário do que esta seção previa:
+uma coluna pode ter nome revelador, e o benefício não compensa. Correlação usa
+`request_id`; digest da SQL foi descartado por ser um oráculo sobre predicados
+(D-035).
 
 Nunca registrar a chave HMAC.
 
@@ -58,6 +80,12 @@ Erros externos vêm de um conjunto fixo e nunca citam a consulta:
 | `QueryTimeout` | SQLSTATE 57014, do `statement_timeout` |
 | `DatabaseError` | demais erros do PostgreSQL, por classe de SQLSTATE |
 | `CapabilityError` | instalação sem uma capacidade essencial; fatal no startup |
+
+Na fronteira MCP tudo isso vira uma de cinco categorias — `INVALID_QUERY`,
+`QUERY_REJECTED`, `QUERY_TIMEOUT`, `DATABASE_ERROR`, `CONFIGURATION_ERROR` —
+com mensagem curta e fixa. Toda exceção é capturada no Gateway, inclusive as
+inesperadas: sem isso o SDK registraria o traceback original nos logs antes de
+redigir a resposta (D-038).
 
 Nenhum deles encadeia a exceção original: `__cause__` e `__context__` ficam
 nulos (D-017). Nem o nome da função proibida entra na mensagem.

@@ -54,6 +54,26 @@ AI Client
 Interface para Claude, ChatGPT, Cursor e outros clientes MCP.
 Apenas entrada/saída. Nenhuma regra de masking nos handlers.
 
+SDK oficial `mcp` v2 (`from mcp.server import MCPServer`). Transporte **stdio
+apenas** — nenhuma porta de rede é aberta (D-036).
+
+Uma única tool, `query_database(sql: str)`, com structured output tipado. Sem
+`resources`, sem `prompts`. O cliente controla exclusivamente a SQL: não existe
+parâmetro para desabilitar masking, escolher transformer, alterar limites ou
+informar credenciais.
+
+### Gateway
+Fachada pública. Orquestra validação, execução, provenance, masking e limites,
+e traduz o resultado interno para o modelo seguro. É a única camada que a
+interface MCP conhece — handlers nunca falam com `PostgresAdapter`.
+
+Levanta apenas `GatewayError`, com uma de cinco categorias externas.
+
+### Audit
+Log estruturado, somente metadata: `request_id`, desfecho, duração, contagem de
+linhas, `truncated` e categoria de erro. Único módulo do projeto autorizado a
+importar `logging`. Nunca a SQL, nunca valores (D-035).
+
 ### Query Validator
 Parsing com pglast (`sql/`). Allowlist de nós, nunca blocklist de texto.
 
@@ -207,17 +227,22 @@ passa normalmente. Não há default deny neste MVP.
 ## Módulos
 
 ```text
-mcp/       adapter de I/O, sem logica de seguranca
-gateway/   orquestrador; unica camada que toca valor original
+mcp/       adapter de I/O, sem logica de seguranca; stdio apenas
+gateway/   orquestrador e fachada publica; unica camada que toca valor original
 sql/       parser, validator e politica de funcoes (allowlist de nos)
 db/        adapter PostgreSQL: execucao, proveniencia, sanitizacao de erro
 masking/   matcher, exceptions, registry, engine  <- nucleo PURO, sem I/O
 config/    loader validado, imutavel, carregado uma vez no boot
-audit/     log estruturado, somente metadata
+audit/     log estruturado, somente metadata; unico modulo que loga
 ```
 
 `masking/` não depende de rede, banco ou MCP e deve ser testável isoladamente.
 `gateway/` é a única fronteira onde o valor original existe.
+
+O que **nunca** atravessa a fronteira para o cliente MCP: psycopg, cursor, DSN,
+`MaskingEngine`, regras, segredos, validator interno, conexão PostgreSQL,
+provenance (`origin_*`, `table_oid`, `attnum`), nomes de transformer,
+tracebacks e mensagens do PostgreSQL.
 
 ## Princípios
 

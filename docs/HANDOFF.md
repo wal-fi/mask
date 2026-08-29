@@ -1,6 +1,6 @@
 # Handoff
 
-Estado do projeto ao final da sessao que implementou a **Fase 4**.
+Estado do projeto ao final da sessao que implementou a **Fase 5**.
 Documento de entrada para a proxima sessao.
 
 Leitura obrigatoria antes de continuar: `CLAUDE.md`, `docs/ARCHITECTURE.md`,
@@ -14,22 +14,19 @@ Leitura obrigatoria antes de continuar: `CLAUDE.md`, `docs/ARCHITECTURE.md`,
 **FASE 1 — Config Loader + Masking Engine puro.** Concluida.
 **FASE 2 — PostgreSQL Adapter + ResultSet Masking.** Concluida.
 **FASE 3 — Column provenance / lineage.** Concluida.
-**FASE 4 — SQL validation + execution safety.** Concluida e verificada contra
-PostgreSQL real.
+**FASE 4 — SQL validation + execution safety.** Concluida.
+**FASE 5 — Gateway + MCP Server.** Concluida e verificada contra PostgreSQL
+real, pelo protocolo MCP.
 
-As Fases 5 e 6 **nao foram iniciadas**. Nao existe uma linha de MCP.
+A Fase 6 **nao foi iniciada**.
 
-Entregue na Fase 4:
+Entregue na Fase 5:
 
-- pacote `sql/`: parser, validator e politica de funcoes, com pglast
-- um statement executavel, raiz `SelectStmt`, nenhum `*Stmt` aninhado,
-  `IntoClause`/`LockingClause` recusadas
-- politica de funcoes: namespace `pg_` deny-by-default
-- sessao read-only e `statement_timeout` aplicados pelo PostgreSQL e
-  conferidos apos a conexao
-- `max_rows` com `truncated`; a linha N+1 nunca e mascarada nem devolvida
-- capability check de proveniencia, fatal no startup
-- 267 testes novos (875 no total)
+- `gateway/`: fachada publica, modelo de resultado seguro, factory de bootstrap
+- `mcp/`: servidor MCP com uma tool, `query_database`, em **stdio apenas**
+- `audit/`: log estruturado somente de metadata; primeiro `logging` do projeto
+- proveniencia NAO e exposta ao cliente
+- 163 testes novos (1038 no total)
 
 ## 2. Stack e dependencias
 
@@ -45,6 +42,7 @@ Python >= 3.11.
 | mypy | type-check strict | Fase 1 |
 
 | pglast | parser oficial do PostgreSQL | Fase 4 |
+| mcp | SDK MCP oficial, linha v2 (testado em 2.1.1) | Fase 5 |
 
 Configuracao em `pyproject.toml`. Nao ha instalacao editavel: o pytest resolve
 o pacote via `pythonpath = ["src"]`.
@@ -97,7 +95,7 @@ deliberadamente **nao** adotado.
 
 ```text
 AI Client -> MCP Server -> Gateway -> Query Validator -> DB Adapter -> PostgreSQL
-   (Fase 5)                (Fase 5)     (Fase 4)          (Fase 2)
+   (stdio)                                (Fase 4)          (Fase 2)
                                                               |
                                               Result Set + Column Metadata
                                                               |
@@ -145,6 +143,15 @@ src/maskgw/
     parser.py            pglast; um statement executavel
     validator.py         allowlist de nos da AST
     policy.py            politica de funcoes, extensivel
+  gateway/               <- Fase 5
+    models.py            QueryResult, QueryColumn, ErrorCategory, GatewayError
+    service.py           Gateway.query: a fachada publica
+    factory.py           build_application: os 8 passos do startup
+  mcp/                   <- Fase 5
+    server.py            build_mcp_server; a tool query_database
+    __main__.py          bootstrap: python -m maskgw.mcp
+  audit/                 <- Fase 5
+    log.py               QueryAudit, AuditLog; UNICO modulo que importa logging
 
 tests/
   conftest.py                    fixtures, DSN e dublês de conexao/cursor
@@ -159,7 +166,14 @@ tests/
                                  test_sql_parser.py            36
                                  test_sql_validator.py        149
                                  test_execution_safety.py      48
+                                 test_gateway.py               46
+                                 test_mcp_server.py            54
+                                 test_mcp_integration.py       43
+                                 test_audit.py                 19
 ```
+
+Os testes de protocolo MCP usam o cliente in-memory do SDK
+(`mcp.Client(server)`), nunca a funcao Python decorada.
 
 `tests/test_pgresult_metadata.py` nao testa codigo do Gateway: mede o que o
 PostgreSQL e o psycopg devolvem. Se uma versao futura mudar esse contrato, ele
@@ -197,20 +211,26 @@ D-001 a D-014 na Fase 1; D-015 a D-019 na Fase 2. Detalhamento em
 | D-030 | Row limit devolve ate `max_rows` e marca `truncated`; N+1 descartada |
 | D-031 | Validacao por tipo de no da AST, incluindo `*Stmt` aninhados |
 | D-032 | Erros de parser e validator nao citam a consulta |
+| D-033 | Proveniencia nao sai para o cliente MCP |
+| D-034 | Uma conexao, aberta no startup; sem pool; consultas serializadas |
+| D-035 | Auditoria por `request_id`; digest da SQL descartado (oraculo) |
+| D-036 | Somente stdio; nenhuma porta de rede |
+| D-037 | Argumentos extras sao IGNORADOS pelo SDK, nao recusados |
+| D-038 | Erro do MCP: categoria fixa, mensagem curta, sem encadeamento |
 
 ## 6. Resultado das verificacoes
 
 Com `MASKGW_TEST_DSN` apontando para PostgreSQL 16 em Docker:
 
 ```text
-pytest   875 passed
-pytest   155 passed  (-m integration)
+pytest   1038 passed
+pytest    198 passed  (-m integration)
 ruff     All checks passed
-ruff     53 files already formatted
-mypy     Success: no issues found in 53 source files  (strict)
+ruff     66 files already formatted
+mypy     Success: no issues found in 66 source files  (strict)
 ```
 
-Sem `MASKGW_TEST_DSN`: `720 passed, 155 skipped`.
+Sem `MASKGW_TEST_DSN`: `841 passed, 197 skipped`.
 
 ## 7. Protecao contra alias: o que a Fase 3 fechou
 
@@ -292,38 +312,49 @@ com o cursor client-side do psycopg3, que ja materializou o resultado. Se o row
 limit da Fase 4 introduzir cursor server-side, essa ordem precisa ser
 reavaliada.
 
-## 10. Fase 5 — objetivo e criterios
+## 9b. Como subir o servidor MCP
 
-**FASE 5 — MCP Server.**
+```bash
+export MASKGW_HMAC_KEY="<chave com ao menos 32 caracteres>"
+export MASKGW_DATABASE_DSN="host=... dbname=... user=... password=..."
+python -m maskgw.mcp
+```
 
-Escopo (`docs/ROADMAP.md`): servidor MCP expondo a capacidade de consulta;
-handlers finos, sem nenhuma regra de masking; nenhuma superficie que permita ao
-cliente ler, alterar ou desabilitar regras; logging estruturado com metadata.
+`MASKGW_CONFIG` aponta outro `masking.yaml` (default: `config/masking.yaml`).
 
-Criterios de aceite:
+Transporte: **stdio**. Nenhuma porta e aberta. Falha em qualquer passo do
+startup termina o processo com codigo 1, e o servidor nunca fica disponivel
+parcialmente funcional.
 
-1. Fluxo end-to-end com cliente MCP real.
-2. Inspecao do codigo confirma que nenhum caminho devolve valor original antes
-   do Masking Engine.
-3. Tentativa do cliente de alterar configuracao e rejeitada.
+## 10. Fase 6 — objetivo e criterios
 
-O ponto de entrada ja existe e esta pronto: `PostgresAdapter.execute_validated`.
-Os handlers MCP devem chamar exclusivamente essa porta — nunca `execute`.
+**FASE 6 — Adversarial / security testing.**
 
-Dois cuidados herdados:
+Escopo (`docs/ROADMAP.md`): executar `PROMPT-03-SECURITY-AUDIT.txt` contra o
+codigo pronto; suite adversarial derivada de `docs/THREAT-MODEL.md`; varredura
+automatizada garantindo que nenhum valor original aparece em resposta, log ou
+excecao; teste de regressao para cada achado; confirmacao de que cada risco
+aceito esta documentado e coberto por teste.
 
-- **`audit/` estreia aqui, e com ele o primeiro `logging` do projeto.** Ate
-  hoje nenhum modulo importa `logging`, e `tests/test_leakage.py` varre `src/`
-  inteiro para garantir isso (D-012). Esse teste precisara ser reescrito para
-  permitir log APENAS de metadata, sem afrouxar a garantia.
-- `MaskedResult.truncated` precisa chegar ao cliente MCP: uma IA que nao saiba
-  que o resultado foi cortado tirara conclusoes erradas.
+Boa parte ja existe, espalhada: `test_sql_validator` (149), `test_db_leakage`,
+`test_execution_safety`, `TestTheFundamentalSecurityTest`. A Fase 6 deve
+consolidar, procurar o que ninguem procurou ainda, e fechar o inventario de
+riscos aceitos.
+
+Pontos de partida sugeridos, todos ja medidos e documentados:
+
+- os tres bypasses residuais: expressao sobre coluna sensivel, UNION com alias,
+  view que renomeia coluna
+- D-037: argumentos extras ignorados pelo SDK
+- oraculo por WHERE / ORDER BY, fora do escopo do MVP mas nao testado
+- a politica de funcoes nao cobre funcao de usuario com efeito colateral
 
 ## 11. O que NAO foi implementado
 
-- MCP Server (Fase 5) — nao existe `maskgw/mcp/`
-- `gateway/` e `audit/` (Fase 5); nenhum modulo importa `logging`
-- testes adversariais end-to-end (Fase 6)
+- testes adversariais consolidados (Fase 6)
+- Streamable HTTP, SSE, autenticacao, OAuth (fase de deployment)
+- `resources` e `prompts` MCP; schema discovery
+- pool de conexoes, multi-database, MySQL, RBAC, multi-tenant
 
 Fora do escopo do MVP, em `docs/FUTURE-HARDENING.md`: bloqueio de WHERE /
 ORDER BY / GROUP BY sobre dados sensiveis, supressao de agregacoes, controle de

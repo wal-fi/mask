@@ -63,11 +63,25 @@ class TestNoLogging:
             load_config_text(CONFIG, secrets=secrets)
         assert caplog.records == []
 
-    def test_core_does_not_import_logging(self):
-        """A Fase 1 nao registra nada: audit/ so entra na Fase 5."""
-        for path in SRC_DIR.rglob("*.py"):
-            source = path.read_text(encoding="utf-8")
-            assert "import logging" not in source, f"{path.name} usa logging"
+    def test_logging_lives_only_in_approved_modules(self):
+        """Ate a Fase 4 nada logava (D-012). A Fase 5 abre a excecao, estreita.
+
+        `audit/` e o unico modulo autorizado a importar `logging`. Qualquer
+        outro que passe a logar quebra este teste, e a decisao tem de ser
+        consciente — nao um `logger.debug(row)` que escapou numa depuracao.
+        """
+        offenders = [
+            path.relative_to(SRC_DIR).as_posix()
+            for path in SRC_DIR.rglob("*.py")
+            if "import logging" in path.read_text(encoding="utf-8")
+        ]
+        assert offenders == ["audit/log.py"], offenders
+
+    def test_masking_core_still_cannot_log(self):
+        """`masking/` continua proibido, sem excecao. Ver test_purity."""
+        masking = SRC_DIR / "masking"
+        for path in masking.rglob("*.py"):
+            assert "import logging" not in path.read_text(encoding="utf-8"), path.name
 
 
 class TestNoValueInRepr:

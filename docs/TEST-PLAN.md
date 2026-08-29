@@ -206,3 +206,36 @@ seja percebida:
 - JSONB não é inspecionado internamente
 
 Cada um referencia o item correspondente em `docs/FUTURE-HARDENING.md`.
+
+## MCP e Gateway (Fase 5)
+
+Todos os testes de protocolo passam pelo cliente in-memory do SDK
+(`mcp.Client(server)`), nunca chamando a função Python decorada diretamente.
+
+- `tools/list` encontra `query_database` e nada mais
+- o `input_schema` tem exatamente `sql`, e nenhum dos doze nomes de controle
+- o `output_schema` não menciona provenance
+- consulta simples, com CPF, com alias, `SELECT *`, JOIN, nomes duplicados,
+  NULL, Unicode, resultado truncado, resultado vazio
+- SQL inválida, INSERT, `SELECT INTO`, multi-statement, CTE modificadora,
+  função proibida, `SET`, erro do PostgreSQL, timeout
+- argumento extra não muda o resultado, e não chega ao Gateway
+
+### O teste fundamental
+
+`TestTheFundamentalSecurityTest`, contra PostgreSQL real, com
+`nome = "Joao"`, `cpf = "11122233344"`, `email = "joao@example.com"`:
+
+- `nome` passa original
+- `cpf` sai transformado por `hmac_sha256`
+- `email` segue o transformer `regex` configurado
+- o CPF original não aparece no structured output, no conteúdo textual, no
+  `model_dump()`, no `repr`, nos logs, na exceção nem no traceback — inclusive
+  quando a consulta **falha** com o CPF no predicado
+
+### Auditoria
+
+- `QueryAudit` não tem parâmetro para SQL, valores, DSN ou segredo: passar um
+  levanta `TypeError`
+- nenhum registro contém o CPF, o nome ou a palavra `SELECT`
+- `audit/log.py` é o único arquivo de `src/` que importa `logging`
