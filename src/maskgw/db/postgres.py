@@ -9,6 +9,8 @@ Invariantes:
 
 - Valor original nunca sai. `execute` devolve `MaskedResult`; o fetch cru vive
   num gerador privado, consumido inteiramente dentro de `execute`.
+- A proveniencia de cada coluna vem da metadata do PostgreSQL, resolvida ANTES
+  de qualquer linha ser lida. Nunca dos valores das linhas.
 - Leitura em LOTES via `fetchmany`, para que o adapter nao dependa de carregar
   o result set inteiro em memoria. Isso e estrategia de consumo, nao row
   limiting: nenhuma linha e descartada.
@@ -29,6 +31,7 @@ import psycopg
 from psycopg.rows import tuple_row
 
 from maskgw.db.columns import describe_columns
+from maskgw.db.provenance import ProvenanceResolver, provenance_keys
 from maskgw.db.result import MaskedResult
 from maskgw.db.sanitize import sanitize_error
 from maskgw.errors import DatabaseError
@@ -60,6 +63,7 @@ class PostgresAdapter:
         self._engine = engine
         self._batch_size = batch_size
         self._connection: _Connection | None = None
+        self._provenance: ProvenanceResolver | None = None
 
     @property
     def closed(self) -> bool:
@@ -79,8 +83,11 @@ class PostgresAdapter:
                 autocommit=True,
                 row_factory=tuple_row,
             )
+            # Cache de proveniencia vive junto com a conexao (D-021).
+            self._provenance = ProvenanceResolver(self._connection)
         except psycopg.Error as exc:
             self._connection = None
+            self._provenance = None
             failure = sanitize_error(exc)
         else:
             return
@@ -89,6 +96,7 @@ class PostgresAdapter:
     def close(self) -> None:
         """Fecha a conexao. Idempotente."""
         connection, self._connection = self._connection, None
+        self._provenance = None
         if connection is not None and not connection.closed:
             with contextlib.suppress(psycopg.Error):
                 connection.close()
@@ -100,7 +108,7 @@ class PostgresAdapter:
         try:
             with connection.cursor() as cursor:
                 cursor.execute(query, params)
-                columns = describe_columns(cursor.description)
+                columns = self._describe(cursor)
                 decisions = tuple(self._engine.decide(column) for column in columns)
                 rows = tuple(self._masked_batches(cursor, columns))
         except psycopg.Error as exc:
@@ -114,6 +122,17 @@ class PostgresAdapter:
             _raise_sanitized(failure)
 
         return MaskedResult(columns=columns, decisions=decisions, rows=rows)
+
+    def _describe(self, cursor: _Cursor) -> tuple[ColumnDescriptor, ...]:
+        """Monta os descritores, resolvendo a proveniencia antes do fetch.
+
+        A ordem importa: `cursor.pgresult` e lido enquanto o resultado ainda
+        esta intacto, e so depois as linhas sao buscadas.
+        """
+        keys = provenance_keys(cursor.pgresult, cursor.description)
+        resolver = self._provenance
+        origins = None if keys is None or resolver is None else resolver.resolve(keys)
+        return describe_columns(cursor.description, origins)
 
     def _require_connection(self) -> _Connection:
         connection = self._connection

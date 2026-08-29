@@ -14,12 +14,15 @@ import logging
 from pathlib import Path
 from typing import Any, cast
 
+import psycopg
 import pytest
 
 import maskgw.db
 from maskgw.config import load_config_text
 from maskgw.db.postgres import PostgresAdapter
+from maskgw.db.provenance import ProvenanceResolver
 from maskgw.db.result import MaskedResult
+from maskgw.masking.descriptor import ProvenanceKind
 from maskgw.masking.engine import MaskingEngine
 from tests.conftest import TEST_HMAC_KEY, FakeColumn, FakeConnection, FakeCursor
 
@@ -170,3 +173,54 @@ class TestMaskedOutputHasNoOriginal:
         with pytest.raises(ValueError) as info:
             MaskedResult(columns=(), decisions=(), rows=((CPF,),))
         assert CPF not in str(info.value)
+
+
+class TestProvenanceLeakage:
+    """A proveniencia adiciona metadata ao descritor — e so metadata.
+
+    `origin_schema` e `origin_table` sao nomes de objeto do banco, nunca
+    valores de linha. E o resolver toca no catalogo, nao nos dados.
+    """
+
+    def test_descriptor_repr_has_no_values(self, adapter):
+        columns = adapter.execute("SELECT ...").columns
+        assert CPF not in repr(columns)
+        assert EMAIL not in repr(columns)
+
+    def test_resolver_does_not_expose_the_connection(self):
+        resolver = ProvenanceResolver(cast("Any", object()))
+        assert all(name.startswith("_") for name in vars(resolver))
+        assert not hasattr(resolver, "connection")
+
+    def test_resolver_public_api_is_narrow(self):
+        resolver = ProvenanceResolver(cast("Any", object()))
+        assert public_names(resolver) == {"resolve", "cache_size"}
+
+    def test_catalog_failure_is_absorbed_without_a_trace(self, caplog):
+        """Falha ao resolver nao levanta, nao loga e nao cita o motivo.
+
+        O erro do PostgreSQL aqui poderia citar objetos do catalogo e o
+        privilegio faltando. Ele nao sai por caminho nenhum: a coluna apenas
+        volta a UNKNOWN, e o matching segue pelo `output_name`.
+        """
+
+        class Exploding:
+            def cursor(self) -> Any:
+                raise psycopg.errors.InsufficientPrivilege("permission denied for pg_attribute")
+
+        resolver = ProvenanceResolver(cast("Any", Exploding()))
+        with caplog.at_level(logging.DEBUG):
+            origins = resolver.resolve([(1, 1)])
+
+        assert caplog.records == []
+        assert origins[0].kind is ProvenanceKind.UNKNOWN
+        assert origins[0].name is None
+        assert "permission denied" not in repr(origins)
+
+    def test_origin_fields_come_from_the_catalog_not_from_rows(self, adapter):
+        """Nenhum valor de linha pode aparecer como origem."""
+        result = adapter.execute("SELECT ...")
+        for column in result.columns:
+            assert column.origin_name != CPF
+            assert column.origin_table != CPF
+            assert column.origin_schema != CPF

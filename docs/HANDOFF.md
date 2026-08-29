@@ -1,6 +1,6 @@
 # Handoff
 
-Estado do projeto ao final da sessao que implementou a **Fase 2**.
+Estado do projeto ao final da sessao que implementou a **Fase 3**.
 Documento de entrada para a proxima sessao.
 
 Leitura obrigatoria antes de continuar: `CLAUDE.md`, `docs/ARCHITECTURE.md`,
@@ -12,19 +12,22 @@ Leitura obrigatoria antes de continuar: `CLAUDE.md`, `docs/ARCHITECTURE.md`,
 ## 1. Fases concluidas
 
 **FASE 1 — Config Loader + Masking Engine puro.** Concluida.
-**FASE 2 — PostgreSQL Adapter + ResultSet Masking.** Concluida e verificada
-contra PostgreSQL real.
+**FASE 2 — PostgreSQL Adapter + ResultSet Masking.** Concluida.
+**FASE 3 — Column provenance / lineage.** Concluida e verificada contra
+PostgreSQL real.
 
-As Fases 3 a 6 **nao foram iniciadas**.
+As Fases 4 a 6 **nao foram iniciadas**.
 
-Entregue na Fase 2:
+Entregue na Fase 3:
 
-- `PostgresAdapter`: conexao psycopg3, execucao de consulta, leitura em lotes
-- extracao de `output_name` a partir de `cursor.description`
-- aplicacao do Masking Engine sobre o result set
-- sanitizacao de erros do PostgreSQL
-- canonicalizacao deterministica de valores por tipo, com falha fechada
-- 241 testes novos (497 no total)
+- medicao empirica de `ftable`/`ftablecol` por cenario, escrita ANTES da
+  implementacao
+- `ProvenanceResolver`: `(oid, attnum)` -> schema, relacao, coluna, via
+  catalogo, com cache por conexao
+- `ColumnDescriptor` com `origin_schema`, `origin_table` e `provenance_kind`
+- bypass por alias fechado: `SELECT cpf AS documento` retorna mascarado
+- testes da lacuna da Fase 2 invertidos
+- 111 testes novos (608 no total)
 
 ## 2. Stack e dependencias
 
@@ -109,8 +112,9 @@ MASKING MATCH   -> TRANSFORMER
 NO MATCH        -> ORIGINAL
 ```
 
-**Na Fase 2 `origin_name` e sempre `None`**: o matching usa somente
-`output_name`. Lineage e a Fase 3.
+Desde a Fase 3 o matching avalia `output_name` OR `origin_name`, com
+`origin_name` resolvido a partir da metadata do PostgreSQL. O default ALLOW e a
+prioridade absoluta das exceptions nao mudaram.
 
 ## 4. Estrutura dos modulos
 
@@ -128,22 +132,28 @@ src/maskgw/
     matcher.py           RuleMatcher, ExceptionMatcher
     engine.py            Action, Decision, MaskingEngine
     transformers/        base, params, registry, hashes, regex, randomize, simple
-  db/                    <- Fase 2
-    columns.py           describe_columns: cursor.description -> ColumnDescriptor
+  db/                    <- Fases 2 e 3
+    columns.py           ColumnOrigin, describe_columns
+    provenance.py        ftable/ftablecol -> catalogo -> origem  (Fase 3)
     result.py            MaskedResult
     sanitize.py          psycopg.Error -> DatabaseError generico
     postgres.py          PostgresAdapter
 
 tests/
-  conftest.py              fixtures, DSN e dublês de conexao/cursor
-  test_config_loader.py     35     test_canonical.py         52
-  test_matching.py          38     test_db_columns.py        13
-  test_transformers.py      94     test_db_masking.py        47
-  test_engine.py            36     test_db_errors.py         37
-  test_purity.py            32     test_db_leakage.py        41
-  test_leakage.py           13     test_db_integration.py    51
-  test_config_hazards.py     8
+  conftest.py                    fixtures, DSN e dublês de conexao/cursor
+  test_config_loader.py     35   test_canonical.py             52
+  test_matching.py          44   test_db_columns.py            13
+  test_transformers.py      94   test_db_masking.py            55
+  test_engine.py            36   test_db_errors.py             37
+  test_purity.py            32   test_db_leakage.py            46
+  test_leakage.py           13   test_db_integration.py        80
+  test_config_hazards.py     8   test_db_provenance.py         36
+                                 test_pgresult_metadata.py     27
 ```
+
+`tests/test_pgresult_metadata.py` nao testa codigo do Gateway: mede o que o
+PostgreSQL e o psycopg devolvem. Se uma versao futura mudar esse contrato, ele
+quebra antes do resto.
 
 `masking/` continua puro: `test_purity.py` verifica por AST e em subprocesso
 que importar `maskgw.masking` nao carrega `maskgw.db` nem psycopg, e a
@@ -164,66 +174,67 @@ D-001 a D-014 na Fase 1; D-015 a D-019 na Fase 2. Detalhamento em
 | D-017 | Erro sanitizado levantado FORA do `except`, para zerar tambem `__context__` |
 | D-018 | Leitura em lotes com `fetchmany`; nao e row limiting |
 | D-019 | SQLSTATE classifica internamente, mas nao entra na mensagem |
+| D-020 | `DERIVED` (o PostgreSQL afirma) e `UNKNOWN` (nos admitimos) sao distintos |
+| D-021 | Cache `(oid, attnum)` por conexao; falha NAO e cacheada |
+| D-022 | View resolve para a coluna da view; sem lineage recursivo |
+| D-023 | Proveniencia resolvida antes de qualquer linha ser lida |
+| D-024 | `origin_schema`/`origin_table` sao auditoria, nao criterio de matching |
+| D-025 | Falha de proveniencia nao muda a politica; nao ha nova regra fail-closed |
 
 ## 6. Resultado das verificacoes
 
 Com `MASKGW_TEST_DSN` apontando para PostgreSQL 16 em Docker:
 
 ```text
-pytest   497 passed
+pytest   608 passed
 ruff     All checks passed
-ruff     40 files already formatted
-mypy     Success: no issues found in 40 source files  (strict)
+ruff     43 files already formatted
+mypy     Success: no issues found in 43 source files  (strict)
 ```
 
-Sem `MASKGW_TEST_DSN`: `447 passed, 50 skipped`.
+Sem `MASKGW_TEST_DSN`: `501 passed, 107 skipped`.
 
-## 7. Lacuna da Fase 2, deliberada
+## 7. Protecao contra alias: o que a Fase 3 fechou
 
-`SELECT cpf AS documento` passa **em claro**. Sem lineage o adapter so conhece
-o alias, e `documento` nao casa nenhuma regra.
+`SELECT cpf AS documento` agora retorna **mascarado**. Cobertos e verificados
+contra banco real:
 
-Fixado por `TestPhaseTwoAliasGap`, em `tests/test_db_masking.py` e em
-`tests/test_db_integration.py`. **Esses testes devem ser invertidos na Fase 3.**
+| cenario | resultado |
+|---|---|
+| `SELECT cpf AS documento` | mascarado |
+| alias dentro de subquery | mascarado |
+| alias dentro de CTE | mascarado |
+| alias sobre JOIN | mascarado |
+| alias sobre cast (`cpf::text AS documento`) | mascarado |
+| alias sobre view | mascarado (`provenance_kind = VIEW`) |
+| `SELECT *`, nomes duplicados | cada posicao com origem propria |
+| identificador entre aspas / maiusculas | mascarado |
 
-## 8. Sondagem para a Fase 3 (medida, nao suposta)
+## 8. Limitacoes de proveniencia que permanecem
 
-`docs/ARCHITECTURE.md` afirmava que `table_oid` e `table_column` sao expostos
-por psycopg3 em `cursor.description`. **Nao sao** (psycopg 3.3.4): o `Column`
-oferece apenas `name`, `type_code`, `display_size`, `internal_size`,
-`precision`, `scale` e `null_ok`. Os campos existem em
-`cursor.pgresult.ftable(i)` e `cursor.pgresult.ftablecol(i)`. O documento ja
-foi corrigido.
+Medidas, nao supostas (`tests/test_pgresult_metadata.py`).
 
-Medicao por cenario, contra PostgreSQL 16:
-
-| cenario | `ftable` | origem resolvivel? |
+| cenario | `ftable` | efeito |
 |---|---|---|
-| `SELECT cpf` | oid da tabela | sim |
-| `SELECT cpf AS documento` | oid da tabela | **sim** |
-| `SELECT *` | oid da tabela, por coluna | sim |
-| JOIN | oid da tabela de cada coluna | sim |
-| subquery | oid da tabela | sim |
-| `SELECT d FROM (SELECT cpf AS d ...)` | oid da tabela | **sim** |
-| CTE | oid da tabela | sim |
-| view | **oid da VIEW**, nao da tabela base | parcial — ver abaixo |
-| `cpf::text` | oid da tabela | sim |
-| **UNION ALL** | **0** | **nao** |
-| `md5(cpf)` | 0 | nao (esperado) |
-| `substr(cpf,1,3) AS x` | 0 | nao (esperado) |
-| literal | 0 | nao (esperado) |
+| coluna direta, alias, `SELECT *`, JOIN | oid da relacao | origem resolvida |
+| subquery, alias em subquery, CTE, cast | oid da relacao | origem resolvida |
+| view | **oid da VIEW** | origem e a coluna DA VIEW |
+| **UNION** | **0** | sem origem |
+| expressao, literal, agregado | 0 | sem origem (esperado) |
 
-Dois achados que o design da Fase 3 precisa tratar:
+Tres limitacoes conhecidas, todas em `docs/FUTURE-HARDENING.md`:
 
-- **UNION perde a proveniencia.** `SELECT cpf FROM a UNION ALL SELECT cpf FROM b`
-  devolve `ftable = 0`. Hoje o `output_name` ainda salva o caso, mas
-  `SELECT cpf AS documento FROM a UNION ALL ...` nao teria nem nome nem origem.
-- **View resolve para a coluna da view, nao da tabela base.** Uma view
-  `SELECT cpf AS documento FROM cliente` daria `origin_name = "documento"`.
-  Resolver ate a tabela base exigiria percorrer `pg_rewrite`.
+- **UNION nao preserva proveniencia.** Com o nome preservado o `output_name`
+  ainda mascara, mas `SELECT cpf AS documento FROM a UNION ALL SELECT cpf FROM b`
+  passa em claro. E o bypass mais barato que sobrou.
+- **View que renomeia apaga o nome original.** `CREATE VIEW v AS SELECT cpf AS
+  documento FROM cliente` da `origin_name = "documento"`. Sem lineage recursivo
+  por `pg_rewrite` nesta fase (D-022).
+- **Role sem leitura em `pg_catalog` reabre o bypass, em silencio.** A falha de
+  resolucao e deliberadamente nao fatal (D-025), e nao ha logging ate a Fase 5.
 
-A cobertura por alias e melhor do que `docs/THREAT-MODEL.md` supunha: alias em
-subquery preserva a origem.
+Expressoes continuam sendo o bypass residual principal do MVP:
+`SELECT substr(cpf,1,3) AS x` passa em claro.
 
 ## 9. Sondagem para a Fase 4
 
@@ -237,32 +248,36 @@ Ou seja: **o bloqueio de multiplos statements da Fase 4 e obrigatorio** e nao
 pode depender do driver. Ate la o adapter e componente interno, sem superficie
 MCP.
 
-## 10. Fase 3 — objetivo e criterios
+Ponto de atencao herdado da Fase 3 (D-023): a proveniencia e resolvida com um
+cursor proprio na mesma conexao, antes do primeiro `fetchmany`. Isso e seguro
+com o cursor client-side do psycopg3, que ja materializou o resultado. Se o row
+limit da Fase 4 introduzir cursor server-side, essa ordem precisa ser
+reavaliada.
 
-**FASE 3 — Column provenance/lineage e protecao contra alias.**
+## 10. Fase 4 — objetivo e criterios
 
-Escopo (`docs/ROADMAP.md`): resolucao de `origin_name` via `table_oid` +
-`table_column` cruzados com `pg_attribute`; `ColumnDescriptor` completo;
-matching por `output_name` OR `origin_name`; exceptions avaliadas contra os
-dois nomes.
+**FASE 4 — SQL validation + read-only + timeout + row limit.**
 
-O ponto de extensao ja existe: `maskgw/db/columns.py::describe_columns`. Hoje
-ele devolve `origin_name=None` para toda coluna.
+Escopo (`docs/ROADMAP.md`): parsing com pglast e allowlist de `SelectStmt` na
+raiz; inspecao recursiva de CTEs; bloqueio de multiplos statements; role
+read-only documentada e verificada; `statement_timeout`; limite maximo de
+linhas por resposta.
 
 Criterios de aceite:
 
-1. `SELECT cpf AS documento` retorna mascarado.
-2. Alias em JOIN, subquery, CTE, UNION e view retornam mascarados.
-3. Expressao (`table_oid = 0`) nao quebra o pipeline: `origin_name` e `None` e
-   o matching recai sobre `output_name`.
-4. Os testes de lacuna da Fase 2 sao invertidos.
+1. INSERT, UPDATE, DELETE, DROP, ALTER, TRUNCATE, CREATE, GRANT e REVOKE
+   rejeitados.
+2. `WITH x AS (DELETE ... RETURNING *) SELECT * FROM x` rejeitado.
+3. `SELECT 1; DROP TABLE t` rejeitado — obrigatorio, ver secao 9.
+4. Consulta longa interrompida pelo timeout.
+5. Resposta truncada no limite de linhas, com indicacao de truncamento.
+6. Escrita que passe pelo validator ainda falha pelo privilegio da role.
 
-Cuidados ja identificados: o custo de consultar `pg_attribute` por consulta
-(cache por `(oid, attnum)`), e os dois achados da secao 8.
+`pglast` ainda nao esta instalado. O adapter ja le em lotes (D-018), entao o
+row limit entra sem reescrita.
 
 ## 11. O que NAO foi implementado
 
-- resolucao de proveniencia / lineage de coluna (Fase 3)
 - SQL parser e query validator com pglast (Fase 4)
 - conexao read-only, `statement_timeout`, limite de linhas (Fase 4)
 - bloqueio de multiplos statements (Fase 4)

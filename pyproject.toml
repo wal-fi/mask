@@ -58,9 +58,11 @@ select = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["S101", "PLR2004", "ANN"]
-# O arquivo de integracao monta SQL a partir de constantes do proprio modulo,
-# nunca de entrada externa. A validacao de SQL do Gateway e da Fase 4.
+# Os arquivos de integracao e de sondagem montam SQL a partir de constantes do
+# proprio modulo, nunca de entrada externa. A validacao de SQL do Gateway e da
+# Fase 4.
 "tests/test_db_integration.py" = ["S608"]
+"tests/test_pgresult_metadata.py" = ["S608"]
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "parents"

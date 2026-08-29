@@ -76,13 +76,74 @@ como default para compatibilidade.
 ## Expressões e funções SQL
 
 `SELECT substr(cpf,1,3) AS x` não casa nenhuma regra e passa em claro. Para
-expressões o PostgreSQL não informa origem, então não há lineage a resolver.
+expressões o PostgreSQL não informa origem (`ftable = 0`), então não há lineage
+a resolver.
 
 Evolução possível: analisar a árvore da expressão com pglast e propagar a
 sensibilidade das colunas referenciadas para a coluna de saída — ou
 simplesmente rejeitar expressões que toquem colunas sensíveis.
 
 Este é o bypass residual mais relevante do MVP.
+
+## UNION apaga a proveniência
+
+Medido na Fase 3 (`tests/test_pgresult_metadata.py`):
+
+```sql
+SELECT cpf FROM a UNION ALL SELECT cpf FROM b       -- ftable = 0
+```
+
+O PostgreSQL não atribui origem única à coluna de saída de um UNION. Com o
+nome preservado o `output_name` ainda casa a regra, mas basta um alias:
+
+```sql
+SELECT cpf AS documento FROM a UNION ALL SELECT cpf FROM b   -- passa em claro
+```
+
+Nem nome nem origem casam. É o bypass mais barato que sobrou depois da Fase 3.
+
+Evolução possível: resolver a proveniência de cada ramo do UNION por AST
+(pglast) e unir a sensibilidade — se qualquer ramo for sensível, a coluna de
+saída é sensível. Depende do parser da Fase 4.
+
+## View que renomeia a coluna
+
+A proveniência de uma view aponta para a coluna **da view**, não da tabela
+base (D-022). Uma view que renomeia apaga o nome original:
+
+```sql
+CREATE VIEW v AS SELECT cpf AS documento FROM cliente;
+SELECT documento FROM v;    -- origin_name = "documento"
+```
+
+Evolução possível: percorrer `pg_rewrite` para resolver a coluna da view até a
+tabela base. Não implementado no MVP: exige interpretar a árvore de reescrita
+da view, e uma view pode combinar colunas de várias tabelas.
+
+Mitigação operacional atual: cadastrar também os nomes usados pelas views no
+`masking.yaml`, ou evitar views que renomeiem colunas sensíveis.
+
+## Cache de proveniência obsoleto após DDL
+
+O cache `(oid, attnum) -> origem` vive enquanto a conexão existir (D-021). Um
+`ALTER TABLE ... RENAME COLUMN` durante esse período deixa a entrada obsoleta,
+e o matching passa a usar o nome antigo.
+
+O Gateway é read-only sobre schema estável, então não há invalidação. Evolução
+possível: TTL curto, ou invalidação por `pg_notify` em eventos de DDL.
+
+## Role sem acesso a `pg_catalog` desliga a proteção contra alias
+
+A resolução de proveniência consulta `pg_attribute`, `pg_class` e
+`pg_namespace`. Sem esse acesso toda coluna cai em `UNKNOWN`, o matching volta
+a depender só do `output_name`, e `SELECT cpf AS documento` passa em claro.
+
+A falha é deliberadamente não fatal (D-025): a alternativa seria derrubar toda
+consulta por um problema de catálogo. Mas ela é **silenciosa**, porque não há
+logging até a Fase 5.
+
+Evolução possível: verificar o acesso ao catálogo no boot e recusar subir, ou
+emitir métrica de proporção de colunas `UNKNOWN` quando o `audit/` existir.
 
 ## Validação semântica do masking.yaml no boot
 

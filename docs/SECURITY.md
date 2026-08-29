@@ -65,6 +65,13 @@ apenas no lado servidor, com redação.
 
 Usar conexão read-only, com role dedicada sem permissão de escrita.
 
+**A role precisa manter leitura em `pg_catalog`.** A proteção contra bypass por
+alias depende de resolver `(oid, attnum)` em `pg_attribute`, `pg_class` e
+`pg_namespace`. Uma role sem esse acesso faz toda coluna cair em `UNKNOWN`, e
+`SELECT cpf AS documento` volta a passar em claro — **em silêncio**, porque a
+falha de resolução é deliberadamente não fatal (D-025). O acesso é concedido a
+`PUBLIC` por padrão; um hardening que o remova precisa saber disso.
+
 Bloquear:
 INSERT, UPDATE, DELETE, DROP, ALTER, TRUNCATE, CREATE, GRANT, REVOKE.
 
@@ -76,6 +83,20 @@ pode falhar, o privilégio do banco não.
 
 A chave do `hmac_sha256` vem de secret/variável de ambiente, separada do
 `masking.yaml`. Ausência da chave com regra que a exige impede o boot.
+
+## Proteção contra alias
+
+Desde a Fase 3 o `origin_name` é resolvido a partir da metadata do próprio
+PostgreSQL — `ftable`/`ftablecol` do result set, cruzados com o catálogo.
+Nunca a partir dos valores das linhas, e nunca por parsing textual da SQL.
+
+Cobertos: alias, alias em subquery, alias em CTE, alias sobre JOIN, alias sobre
+cast, alias sobre view, `SELECT *` e nomes duplicados.
+
+**Não** cobertos, por o PostgreSQL não informar origem: UNION, expressões,
+literais e agregados. Nesses casos resta o `output_name`, e
+`SELECT cpf AS documento FROM a UNION ALL SELECT cpf FROM b` passa em claro.
+Ver `docs/FUTURE-HARDENING.md`.
 
 ## Bypass a testar
 

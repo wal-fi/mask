@@ -109,7 +109,13 @@ class TestAliasProtection:
         assert engine.mask_value(column("documento", "cpf"), CPF) == CPF_MD5
 
     def test_alias_without_origin_passes(self, engine):
-        """Limite conhecido da Fase 2: sem lineage, o alias escapa."""
+        """Sem origem determinavel, resta o `output_name`.
+
+        Na Fase 2 este era o caso de TODA consulta com alias. Desde a Fase 3 a
+        proveniencia cobre alias, subquery, CTE, JOIN, cast e view; sobram as
+        colunas que o proprio PostgreSQL declara sem origem — expressoes,
+        literais, agregados e UNION.
+        """
         assert engine.mask_value(column("documento"), CPF) == CPF
 
     def test_output_name_alone_is_enough(self, engine):

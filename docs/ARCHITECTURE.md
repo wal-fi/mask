@@ -67,6 +67,15 @@ sanitização de erros e extração de metadados de coluna.
 Constrói, para cada coluna do result set, um descritor com os dois nomes
 usados no matching.
 
+Implementado em `db/provenance.py` (Fase 3). Lê `ftable`/`ftablecol` do
+resultado de baixo nível, traduz `(oid, attnum)` via `pg_attribute`,
+`pg_class` e `pg_namespace`, e mantém um cache `(oid, attnum)` por conexão.
+Resolve uma vez por **coluna**, nunca por linha ou célula.
+
+A resolução acontece **antes** de qualquer linha ser lida, e falha de forma
+segura: sem catálogo, a coluna fica `UNKNOWN` e o matching recai sobre
+`output_name`. Ver D-021, D-023 e D-025.
+
 ### Masking Engine
 Núcleo puro. Sem I/O, sem dependência de MCP ou de banco.
 Recebe descritores de coluna e valores; devolve valores transformados.
@@ -84,10 +93,26 @@ recebe um descritor:
 
 ```text
 ColumnDescriptor
-  output_name    nome da coluna como retornada ao cliente (alias, se houver)
-  origin_name    nome real da coluna de origem, quando determinável
-  type_oid       tipo da coluna
+  output_name       nome da coluna como retornada ao cliente (alias, se houver)
+  origin_name       nome real da coluna de origem, quando determinável
+  origin_schema     schema da relação de origem
+  origin_table      relação de origem (tabela ou view)
+  provenance_kind   DIRECT | VIEW | DERIVED | UNKNOWN
 ```
+
+`origin_schema` e `origin_table` são **metadata de auditoria**: o matching não
+os usa. As regras continuam globais por nome de coluna. Ver D-024.
+
+`provenance_kind` distingue a afirmação do PostgreSQL da nossa ignorância:
+
+| valor | significado |
+|---|---|
+| `DIRECT` | coluna de tabela; origem resolvida |
+| `VIEW` | coluna de view ou materialized view; a origem é a coluna **da view** |
+| `DERIVED` | o PostgreSQL informa `ftable = 0`: não há coluna de origem única |
+| `UNKNOWN` | há origem, mas não foi possível traduzi-la |
+
+Ver D-020.
 
 `origin_name` é resolvido a partir dos metadados que o próprio PostgreSQL
 devolve em `RowDescription` (`table_oid` + `table_column`), cruzados com
@@ -100,9 +125,23 @@ disponíveis são `name`, `type_code`, `display_size`, `internal_size`,
 de baixo nível: `cursor.pgresult.ftable(i)` e `cursor.pgresult.ftablecol(i)`.
 O resolver da Fase 3 deve ler de lá.
 
-Para expressões (`md5(cpf)`, `cpf::text`, `substr(cpf,1,3)`) o PostgreSQL
-devolve `table_oid = 0`: não há origem determinável e `origin_name` fica
-`None`. Nesse caso o matching usa apenas `output_name`.
+Para expressões (`md5(cpf)`, `substr(cpf,1,3)`) e literais o PostgreSQL
+devolve `ftable = 0`: não há origem determinável e `origin_name` fica `None`.
+Nesse caso o matching usa apenas `output_name`.
+
+Medido na Fase 3, contra PostgreSQL 16 (`tests/test_pgresult_metadata.py`):
+
+| cenário | origem resolvida? |
+|---|---|
+| coluna direta, alias, `SELECT *`, JOIN | sim |
+| subquery, alias dentro de subquery, CTE | sim |
+| cast (`cpf::text`) | sim |
+| view | sim, mas aponta para a coluna **da view** |
+| UNION | **não** (`ftable = 0`) |
+| expressão, literal, agregado | não (`ftable = 0`) |
+
+Note que `cpf::text` **preserva** a origem — um cast para o mesmo tipo não cria
+expressão. O contrário do que `docs/THREAT-MODEL.md` supunha.
 
 ## Matching por dois nomes
 
@@ -151,7 +190,7 @@ passa normalmente. Não há default deny neste MVP.
 mcp/       adapter de I/O, sem logica de seguranca
 gateway/   orquestrador; unica camada que toca valor original
 sql/       parser e validator (allowlist de SELECT)
-db/        adapter PostgreSQL: execucao, metadados, sanitizacao de erro
+db/        adapter PostgreSQL: execucao, proveniencia, sanitizacao de erro
 masking/   matcher, exceptions, registry, engine  <- nucleo PURO, sem I/O
 config/    loader validado, imutavel, carregado uma vez no boot
 audit/     log estruturado, somente metadata

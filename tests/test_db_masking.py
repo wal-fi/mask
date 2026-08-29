@@ -21,11 +21,21 @@ import psycopg
 import pytest
 
 from maskgw.config import load_config_text
+from maskgw.db.columns import ColumnOrigin
 from maskgw.db.postgres import DEFAULT_BATCH_SIZE, PostgresAdapter
 from maskgw.db.result import MaskedResult
 from maskgw.errors import DatabaseError, TransformerError
+from maskgw.masking.descriptor import ProvenanceKind
 from maskgw.masking.engine import Action, MaskingEngine
-from tests.conftest import TEST_HMAC_KEY, FakeColumn, FakeConnection, FakeCursor
+from tests.conftest import (
+    NO_ORIGIN,
+    TEST_HMAC_KEY,
+    FakeColumn,
+    FakeConnection,
+    FakeCursor,
+    FakeResolver,
+    origin_key,
+)
 
 CPF = "11122233344"
 EMAIL = "joao.silva@empresa.com.br"
@@ -62,19 +72,35 @@ def engine(secrets):
 
 @pytest.fixture
 def adapter_factory(engine):
-    """Monta um adapter ja ligado a uma conexao falsa."""
+    """Monta um adapter ja ligado a uma conexao falsa.
 
-    def _build(names, rows=(), *, error=None, batch_size=DEFAULT_BATCH_SIZE, status=None):
-        cursor = FakeCursor([FakeColumn(name) for name in names], rows, error=error)
-        connection = FakeConnection(
-            cursor,
-            **({} if status is None else {"transaction_status": status}),
-        )
+    `origins` e posicional e alinhado a `names`: `None` numa posicao significa
+    que o PostgreSQL nao informou origem (`ftable = 0`), e uma `ColumnOrigin`
+    significa proveniencia resolvida.
+    """
+
+    def _build(names, rows=(), *, origins=None, error=None, batch_size=DEFAULT_BATCH_SIZE):
+        origins = list(origins) if origins is not None else [None] * len(names)
+        keys = [
+            NO_ORIGIN if origin is None else origin_key(index)
+            for index, origin in enumerate(origins)
+        ]
+        resolved = {
+            origin_key(index): origin for index, origin in enumerate(origins) if origin is not None
+        }
+        cursor = FakeCursor([FakeColumn(name) for name in names], rows, error=error, keys=keys)
+        connection = FakeConnection(cursor)
         adapter = PostgresAdapter("", engine, batch_size=batch_size)
         adapter._connection = cast("Any", connection)
+        adapter._provenance = cast("Any", FakeResolver(resolved))
         return adapter, connection, cursor
 
     return _build
+
+
+def direct(name: str, table: str = "cliente", schema: str = "public") -> ColumnOrigin:
+    """Origem resolvida numa tabela."""
+    return ColumnOrigin(kind=ProvenanceKind.DIRECT, name=name, schema=schema, table=table)
 
 
 class TestAcceptanceCriteria:
@@ -123,22 +149,75 @@ class TestExceptionPriority:
         assert result.rows == ((hmac_of(CPF), hmac_of(CPF)),)
 
 
-class TestPhaseTwoAliasGap:
-    """Lacuna conhecida e ACEITA da Fase 2, fixada em teste.
+class TestAliasProtection:
+    """Fase 3: a proveniencia fecha o bypass por alias.
 
-    Sem lineage, `SELECT cpf AS documento` passa em claro: o adapter so conhece
-    o alias. Este teste sera INVERTIDO na Fase 3, quando `origin_name` for
-    resolvido via `table_oid` + `pg_attribute`.
-
-    Ver docs/ROADMAP.md (Fase 2 e Fase 3) e docs/THREAT-MODEL.md.
+    Estes testes INVERTEM `TestPhaseTwoAliasGap`, que na Fase 2 fixava
+    `SELECT cpf AS documento` passando em claro.
     """
 
-    def test_alias_currently_passes_in_clear(self, adapter_factory):
-        adapter, _, _ = adapter_factory(["documento"], [(CPF,)])
+    def test_alias_is_masked_by_origin(self, adapter_factory):
+        adapter, _, _ = adapter_factory(["documento"], [(CPF,)], origins=[direct("cpf")])
         result = adapter.execute("SELECT cpf AS documento FROM cliente")
-        assert result.rows == ((CPF,),), "Fase 3 deve inverter esta asercao"
+        assert result.rows == ((hmac_of(CPF),),)
+        assert result.rows[0][0] != CPF
+        assert result.decisions[0].action is Action.MASK
+
+    def test_descriptor_carries_the_full_origin(self, adapter_factory):
+        adapter, _, _ = adapter_factory(["documento"], [(CPF,)], origins=[direct("cpf")])
+        column = adapter.execute("SELECT cpf AS documento FROM cliente").columns[0]
+        assert column.output_name == "documento"
+        assert column.origin_name == "cpf"
+        assert column.origin_schema == "public"
+        assert column.origin_table == "cliente"
+        assert column.provenance_kind is ProvenanceKind.DIRECT
+        assert column.qualified_origin == "public.cliente.cpf"
+
+    def test_exception_still_wins_over_the_origin(self, adapter_factory):
+        """Prioridade absoluta da exception vale para os dois nomes."""
+        adapter, _, _ = adapter_factory(["tipo_cpf"], [("fisica",)], origins=[direct("cpf")])
+        result = adapter.execute("SELECT cpf AS tipo_cpf FROM cliente")
+        assert result.rows == (("fisica",),)
+        assert result.decisions[0].action is Action.EXCEPTION
+
+    def test_exception_matching_by_origin_wins(self, adapter_factory):
+        adapter, _, _ = adapter_factory(["qualquer"], [("fisica",)], origins=[direct("tipo_cpf")])
+        assert adapter.execute("SELECT tipo_cpf AS qualquer FROM cliente").rows == (("fisica",),)
+
+    def test_output_name_alone_is_still_enough(self, adapter_factory):
+        """Origem que nao casa nao anula um `output_name` que casa."""
+        adapter, _, _ = adapter_factory(["cpf_cliente"], [(CPF,)], origins=[direct("documento")])
+        assert adapter.execute("SELECT documento AS cpf_cliente FROM cliente").rows == (
+            (hmac_of(CPF),),
+        )
+
+    def test_default_allow_is_unchanged(self, adapter_factory):
+        """Nem nome nem origem casam: o valor continua passando."""
+        adapter, _, _ = adapter_factory(["nome"], [("Maria",)], origins=[direct("nome")])
+        result = adapter.execute("SELECT nome FROM cliente")
+        assert result.rows == (("Maria",),)
         assert result.decisions[0].action is Action.ALLOW
-        assert result.columns[0].origin_name is None
+
+
+class TestDerivedColumnsFallBackToOutputName:
+    """`ftable = 0`: nao ha origem, e o matching recai sobre o nome de saida."""
+
+    def test_derived_column_has_no_origin(self, adapter_factory):
+        adapter, _, _ = adapter_factory(["md5"], [("abc",)])
+        column = adapter.execute("SELECT md5(cpf) FROM cliente").columns[0]
+        assert column.origin_name is None
+        assert column.provenance_kind is ProvenanceKind.DERIVED
+
+    def test_derived_column_still_matches_by_output_name(self, adapter_factory):
+        adapter, _, _ = adapter_factory(["cpf"], [(CPF,)])
+        assert adapter.execute("SELECT ... AS cpf").rows == ((hmac_of(CPF),),)
+
+    def test_derived_column_without_a_matching_name_passes(self, adapter_factory):
+        """Bypass residual do MVP, documentado em FUTURE-HARDENING."""
+        adapter, _, _ = adapter_factory(["x"], [(CPF,)])
+        result = adapter.execute("SELECT substr(cpf,1,3) AS x FROM cliente")
+        assert result.rows == ((CPF,),)
+        assert result.decisions[0].action is Action.ALLOW
 
 
 class TestTypePreservation:

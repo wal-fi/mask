@@ -7,15 +7,19 @@ crua ou iterador de valores originais. O unico resultado que sai e
 
 from __future__ import annotations
 
-from maskgw.db.columns import describe_columns
+from maskgw.db.columns import ColumnOrigin, describe_columns
 from maskgw.db.postgres import DEFAULT_BATCH_SIZE, PostgresAdapter
+from maskgw.db.provenance import ProvenanceResolver, provenance_keys
 from maskgw.db.result import MaskedResult
 from maskgw.db.sanitize import sanitize_error
 
 __all__ = [
     "DEFAULT_BATCH_SIZE",
+    "ColumnOrigin",
     "MaskedResult",
     "PostgresAdapter",
+    "ProvenanceResolver",
     "describe_columns",
+    "provenance_keys",
     "sanitize_error",
 ]

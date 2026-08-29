@@ -28,6 +28,7 @@ from psycopg.types.json import Jsonb
 from maskgw.config import load_config_text
 from maskgw.db.postgres import PostgresAdapter
 from maskgw.errors import DatabaseError, TransformerError
+from maskgw.masking.descriptor import ProvenanceKind
 from maskgw.masking.engine import Action, MaskingEngine
 from tests.conftest import TEST_HMAC_KEY
 
@@ -87,7 +88,11 @@ CREATE TABLE {TABLE} (
     anexo       bytea
 );
 CREATE VIEW {SCHEMA}.cliente_vw AS SELECT id, cpf, email FROM {TABLE};
+CREATE VIEW {SCHEMA}.cliente_alias_vw AS SELECT id, cpf AS documento FROM {TABLE};
+CREATE TABLE {SCHEMA}."Cliente Maiusculo" (id integer, "CPF" text);
 """
+
+INSERT_MAIUSCULO = f'INSERT INTO {SCHEMA}."Cliente Maiusculo" VALUES (1, %s)'
 
 INSERT = f"""
 INSERT INTO {TABLE} VALUES
@@ -121,6 +126,7 @@ def database(dsn: str) -> Iterator[str]:
     with psycopg.connect(dsn, autocommit=True) as setup:
         setup.execute(DDL)
         setup.execute(INSERT, values)
+        setup.execute(INSERT_MAIUSCULO, [CPF])
     yield dsn
     with psycopg.connect(dsn, autocommit=True) as teardown:
         teardown.execute(f"DROP SCHEMA IF EXISTS {SCHEMA} CASCADE")
@@ -199,18 +205,223 @@ class TestAcceptanceCriteria:
         assert caplog.records == []
 
 
-class TestPhaseTwoAliasGap:
-    """Lacuna conhecida e ACEITA da Fase 2. Sera invertida na Fase 3."""
+class TestAliasProtection:
+    """Criterio central da Fase 3, contra banco real.
 
-    def test_alias_currently_passes_in_clear(self, adapter):
+    INVERTE `TestPhaseTwoAliasGap`, que na Fase 2 fixava este mesmo cenario
+    passando em claro.
+    """
+
+    def test_alias_is_masked(self, adapter):
         result = adapter.execute(f"SELECT cpf AS documento FROM {TABLE} WHERE id = 1")
-        assert result.rows == ((CPF,),), "Fase 3 deve inverter esta asercao"
-        assert result.columns[0].origin_name is None
-        assert result.decisions[0].action is Action.ALLOW
+        assert result.rows == ((hmac_of(CPF),),)
+        assert CPF not in str(result.rows)
+        assert result.decisions[0].action is Action.MASK
 
-    def test_alias_that_still_matches_by_name_is_masked(self, adapter):
+    def test_alias_descriptor_carries_the_origin(self, adapter):
+        column = adapter.execute(f"SELECT cpf AS documento FROM {TABLE} WHERE id = 1").columns[0]
+        assert column.output_name == "documento"
+        assert column.origin_name == "cpf"
+        assert column.origin_schema == SCHEMA
+        assert column.origin_table == "cliente"
+        assert column.provenance_kind is ProvenanceKind.DIRECT
+        assert column.qualified_origin == f"{SCHEMA}.cliente.cpf"
+
+    def test_alias_that_also_matches_by_name_is_masked(self, adapter):
         result = adapter.execute(f"SELECT cpf AS cpf_do_cliente FROM {TABLE} WHERE id = 1")
         assert result.rows == ((hmac_of(CPF),),)
+
+    def test_alias_chosen_to_look_harmless(self, adapter):
+        for alias in ("doc", "ni", "campo1", "x"):
+            result = adapter.execute(f"SELECT cpf AS {alias} FROM {TABLE} WHERE id = 1")
+            assert result.rows == ((hmac_of(CPF),),), alias
+
+    def test_alias_inside_subquery_is_masked(self, adapter):
+        query = f"SELECT d FROM (SELECT cpf AS d FROM {TABLE} WHERE id = 1) x"
+        result = adapter.execute(query)
+        assert result.rows == ((hmac_of(CPF),),)
+        assert result.columns[0].origin_name == "cpf"
+
+    def test_alias_inside_cte_is_masked(self, adapter):
+        query = f"WITH x AS (SELECT cpf AS d FROM {TABLE} WHERE id = 1) SELECT d FROM x"
+        assert adapter.execute(query).rows == ((hmac_of(CPF),),)
+
+    def test_alias_over_join_is_masked(self, adapter):
+        query = (
+            f"SELECT a.cpf AS documento FROM {TABLE} a JOIN {TABLE} b ON a.id = b.id WHERE a.id = 1"
+        )
+        assert adapter.execute(query).rows == ((hmac_of(CPF),),)
+
+    def test_alias_over_cast_is_masked(self, adapter):
+        query = f"SELECT cpf::text AS documento FROM {TABLE} WHERE id = 1"
+        assert adapter.execute(query).rows == ((hmac_of(CPF),),)
+
+    def test_alias_over_view_is_masked(self, adapter):
+        query = f"SELECT cpf AS documento FROM {SCHEMA}.cliente_vw WHERE id = 1"
+        result = adapter.execute(query)
+        assert result.rows == ((hmac_of(CPF),),)
+        assert result.columns[0].provenance_kind is ProvenanceKind.VIEW
+
+    def test_exception_still_has_absolute_priority(self, adapter):
+        """A proveniencia nao pode passar por cima de uma exception."""
+        query = f"SELECT cpf AS tipo_cpf FROM {TABLE} WHERE id = 1"
+        result = adapter.execute(query)
+        assert result.rows == ((CPF,),)
+        assert result.decisions[0].action is Action.EXCEPTION
+
+
+class TestProvenanceByScenario:
+    """Cada cenario medido em test_pgresult_metadata, agora ponta a ponta."""
+
+    def test_direct_column(self, adapter):
+        column = adapter.execute(f"SELECT cpf FROM {TABLE}").columns[0]
+        assert (column.origin_name, column.provenance_kind) == ("cpf", ProvenanceKind.DIRECT)
+
+    def test_select_star_resolves_each_column(self, adapter):
+        result = adapter.execute(f"SELECT * FROM {TABLE} WHERE id = 1")
+        origins = dict(zip(result.column_names, result.columns, strict=True))
+        assert origins["cpf"].origin_name == "cpf"
+        assert origins["nome"].origin_name == "nome"
+        assert all(column.origin_table == "cliente" for column in result.columns)
+        assert all(column.provenance_kind is ProvenanceKind.DIRECT for column in result.columns)
+
+    def test_join_keeps_one_origin_per_position(self, adapter):
+        query = (
+            f"SELECT c.cpf, c.nome FROM {TABLE} c "
+            f"JOIN {SCHEMA}.cliente_vw v ON v.id = c.id WHERE c.id = 1"
+        )
+        result = adapter.execute(query)
+        assert [column.origin_name for column in result.columns] == ["cpf", "nome"]
+
+    def test_duplicate_names_keep_distinct_origins(self, adapter):
+        query = (
+            f"SELECT c.id, v.id FROM {TABLE} c "
+            f"JOIN {SCHEMA}.cliente_vw v ON v.id = c.id WHERE c.id = 1"
+        )
+        result = adapter.execute(query)
+        assert result.column_names == ("id", "id")
+        assert [column.origin_table for column in result.columns] == ["cliente", "cliente_vw"]
+        assert [column.provenance_kind for column in result.columns] == [
+            ProvenanceKind.DIRECT,
+            ProvenanceKind.VIEW,
+        ]
+
+    def test_subquery(self, adapter):
+        query = f"SELECT cpf FROM (SELECT cpf FROM {TABLE}) x"
+        assert adapter.execute(query).columns[0].origin_name == "cpf"
+
+    def test_cte(self, adapter):
+        query = f"WITH x AS (SELECT cpf FROM {TABLE}) SELECT cpf FROM x"
+        assert adapter.execute(query).columns[0].origin_name == "cpf"
+
+    def test_cast(self, adapter):
+        column = adapter.execute(f"SELECT cpf::text FROM {TABLE}").columns[0]
+        assert column.origin_name == "cpf"
+        assert column.provenance_kind is ProvenanceKind.DIRECT
+
+    def test_view_points_to_the_view_not_the_base_table(self, adapter):
+        """Decisao da fase: sem lineage recursivo. Ver D-022."""
+        column = adapter.execute(f"SELECT cpf FROM {SCHEMA}.cliente_vw").columns[0]
+        assert column.origin_name == "cpf"
+        assert column.origin_table == "cliente_vw"
+        assert column.origin_schema == SCHEMA
+        assert column.provenance_kind is ProvenanceKind.VIEW
+
+    def test_view_that_renames_reports_the_view_column(self, adapter):
+        """Limitacao conhecida: a view apaga o nome original nesta camada."""
+        query = f"SELECT documento FROM {SCHEMA}.cliente_alias_vw WHERE id = 1"
+        result = adapter.execute(query)
+        assert result.columns[0].origin_name == "documento"
+        assert result.columns[0].provenance_kind is ProvenanceKind.VIEW
+        assert result.rows == ((CPF,),), "limitacao documentada em FUTURE-HARDENING"
+
+    def test_union_has_no_provenance(self, adapter):
+        query = (
+            f"SELECT cpf FROM {TABLE} WHERE id = 1 UNION ALL SELECT cpf FROM {TABLE} WHERE id = 2"
+        )
+        result = adapter.execute(query)
+        assert result.columns[0].origin_name is None
+        assert result.columns[0].provenance_kind is ProvenanceKind.DERIVED
+        # `output_name` ainda casa a regra: o valor continua mascarado.
+        assert set(result.rows) == {(hmac_of(CPF),), (hmac_of(OTHER_CPF),)}
+
+    def test_union_with_alias_is_the_residual_bypass(self, adapter):
+        """Sem nome e sem origem, o default ALLOW deixa passar. Documentado."""
+        query = (
+            f"SELECT cpf AS documento FROM {TABLE} WHERE id = 1 "
+            f"UNION ALL SELECT cpf FROM {TABLE} WHERE id = 2"
+        )
+        result = adapter.execute(query)
+        assert result.columns[0].provenance_kind is ProvenanceKind.DERIVED
+        assert (CPF,) in result.rows
+
+    def test_expression_has_no_provenance(self, adapter):
+        query = f"SELECT substr(cpf, 1, 3) AS x FROM {TABLE} WHERE id = 1"
+        result = adapter.execute(query)
+        assert result.columns[0].origin_name is None
+        assert result.columns[0].provenance_kind is ProvenanceKind.DERIVED
+        assert result.decisions[0].action is Action.ALLOW
+
+    def test_literal_has_no_provenance(self, adapter):
+        column = adapter.execute("SELECT 'x' AS documento").columns[0]
+        assert column.origin_name is None
+        assert column.provenance_kind is ProvenanceKind.DERIVED
+
+    def test_null_does_not_affect_provenance(self, adapter):
+        """Proveniencia vem da metadata, nunca do conteudo das linhas."""
+        result = adapter.execute(f"SELECT email AS x FROM {TABLE} WHERE id = 2")
+        assert result.rows == ((None,),)
+        assert result.columns[0].origin_name == "email"
+
+    def test_provenance_is_the_same_with_zero_rows(self, adapter):
+        result = adapter.execute(f"SELECT cpf AS documento FROM {TABLE} WHERE false")
+        assert result.rows == ()
+        assert result.columns[0].origin_name == "cpf"
+
+    def test_quoted_uppercase_identifiers(self, adapter):
+        query = f'SELECT "CPF" AS "Documento" FROM {SCHEMA}."Cliente Maiusculo"'
+        result = adapter.execute(query)
+        assert result.columns[0].output_name == "Documento"
+        assert result.columns[0].origin_name == "CPF"
+        assert result.columns[0].origin_table == "Cliente Maiusculo"
+        # Matching e case-insensitive: `CPF` casa a regra `cpf`.
+        assert result.rows == ((hmac_of(CPF),),)
+
+    def test_system_column_resolves(self, adapter):
+        column = adapter.execute(f"SELECT ctid FROM {TABLE}").columns[0]
+        assert column.origin_name == "ctid"
+        assert column.provenance_kind is ProvenanceKind.DIRECT
+
+
+class TestProvenanceCache:
+    """Resolver uma vez por coluna, nunca por linha (D-021)."""
+
+    def test_many_rows_do_not_multiply_the_lookups(self, app_dsn, engine):
+        with PostgresAdapter(app_dsn, engine) as adapter:
+            adapter.execute(
+                f"SELECT cpf AS documento FROM {TABLE} CROSS JOIN generate_series(1, 200) AS s"
+            )
+            assert adapter._provenance is not None
+            assert adapter._provenance.cache_size == 1
+
+    def test_repeated_queries_reuse_the_cache(self, app_dsn, engine):
+        with PostgresAdapter(app_dsn, engine) as adapter:
+            for _ in range(5):
+                adapter.execute(f"SELECT cpf AS documento FROM {TABLE}")
+            assert adapter._provenance is not None
+            assert adapter._provenance.cache_size == 1
+
+    def test_select_star_caches_one_entry_per_column(self, app_dsn, engine):
+        with PostgresAdapter(app_dsn, engine) as adapter:
+            result = adapter.execute(f"SELECT * FROM {TABLE}")
+            assert adapter._provenance is not None
+            assert adapter._provenance.cache_size == len(result.columns)
+
+    def test_derived_columns_do_not_enter_the_cache(self, app_dsn, engine):
+        with PostgresAdapter(app_dsn, engine) as adapter:
+            adapter.execute("SELECT 1 AS um, 'x' AS dois")
+            assert adapter._provenance is not None
+            assert adapter._provenance.cache_size == 0
 
 
 class TestBypassAttempts:

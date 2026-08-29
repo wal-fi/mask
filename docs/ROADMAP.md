@@ -56,14 +56,27 @@ em claro**, e isso deve estar coberto por um teste que documenta a lacuna.
 
 Aceite:
 - `SELECT cpf AS documento` retorna mascarado
-- alias em JOIN, subquery, CTE, UNION e view retornam mascarados
-- expressão (`table_oid = 0`) não quebra o pipeline: `origin_name` é `None` e
+- alias em JOIN, subquery, CTE e view retornam mascarados
+- expressão (`ftable = 0`) não quebra o pipeline: `origin_name` é `None` e
   o matching recai sobre `output_name`
 - o teste da lacuna da Fase 2 é invertido para o comportamento correto
 
 Primeira tarefa da fase: mapear empiricamente o que o PostgreSQL devolve em
-`table_oid` para alias, `SELECT *`, JOIN, subquery, CTE, UNION e view. O
+`ftable` para alias, `SELECT *`, JOIN, subquery, CTE, UNION e view. O
 design do resolver segue o resultado medido, não a suposição.
+
+**Concluída.** Correções que a medição impôs ao plano original:
+
+- `table_oid`/`table_column` **não** estão em `cursor.description`. Estão em
+  `cursor.pgresult.ftable(i)` / `ftablecol(i)`.
+- **UNION não preserva proveniência** (`ftable = 0`). O critério "alias em
+  UNION → masked" não é alcançável por metadata e foi removido do aceite;
+  o comportamento real está fixado em teste e registrado em
+  `docs/FUTURE-HARDENING.md`.
+- View aponta para a coluna **da view**, não da tabela base. Lineage recursivo
+  ficou fora de escopo (D-022).
+- `cpf::text` **preserva** a proveniência: cast para o mesmo tipo não cria
+  expressão.
 
 ---
 

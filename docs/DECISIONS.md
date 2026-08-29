@@ -250,3 +250,124 @@ mensagem: `42P01` viraria um oraculo barato de existencia de tabela e coluna.
 Nada mais da excecao original sai: nem `str(exc)`, nem `repr(exc)`, nem `diag`,
 nem query, nem parametros. O `DatabaseError` resultante tambem nao carrega
 atributo algum do erro de origem.
+
+---
+
+# Fase 3 — Column provenance / lineage
+
+## D-020 — `DERIVED` e `UNKNOWN` sao coisas diferentes
+
+`docs/ROADMAP.md` sugeria um enum com `DIRECT`, `VIEW`, `DERIVED` e `UNKNOWN`,
+deixando em aberto qual usar quando `ftable = 0`. A medicao empirica
+(`tests/test_pgresult_metadata.py`) mostrou que os dois casos tem naturezas
+opostas e nao devem colapsar:
+
+| | quem afirma | significado |
+|---|---|---|
+| `DERIVED` | **o PostgreSQL** | `ftable = 0`: a coluna nao vem de uma unica coluna de tabela. Expressao, literal, agregado, UNION |
+| `UNKNOWN` | **nos** | O PostgreSQL indicou uma origem, mas nao conseguimos traduzi-la: catalogo inacessivel, ou linha de `pg_attribute` ausente |
+
+Decisao: `ftable = 0` (ou `ftablecol = 0`) e `DERIVED`. Falha de resolucao e
+`UNKNOWN`. `UNKNOWN` tambem e o default de um `ColumnDescriptor` construido a
+mao, sem proveniencia.
+
+Nos dois casos o efeito no matching e identico — `origin_name = None`, recai
+sobre `output_name` — e o default ALLOW nao muda. A distincao existe para
+auditoria e para o hardening futuro: `UNKNOWN` frequente e sintoma de
+privilegio faltando no catalogo, e nao de consulta legitimamente sem origem.
+Um alerta sobre isso ficaria mudo se os dois casos fossem o mesmo valor.
+
+## D-021 — Cache de proveniencia por conexao, com chave `(oid, attnum)`
+
+A resolucao consulta `pg_attribute`, `pg_class` e `pg_namespace`. Sem cache
+seriam N consultas por result set.
+
+Decisao: dicionario simples `(oid, attnum) -> ColumnOrigin`, no
+`ProvenanceResolver`, com tempo de vida igual ao da conexao. Resolve-se uma vez
+por COLUNA, nunca por linha ou celula — verificado por teste que le 200 linhas
+e confirma `cache_size == 1`.
+
+Detalhes que valem registro:
+
+- **Uma consulta por result set, no maximo.** As chaves ainda desconhecidas vao
+  juntas, via `unnest(%s::oid[], %s::int2[])` com JOIN em `pg_attribute`. Um
+  `SELECT *` de 14 colunas custa uma consulta ao catalogo, nao 14.
+- **Ausencia tambem e cacheada.** Chave consultada e nao devolvida pelo
+  catalogo vira `UNKNOWN` no cache, para nao repetir a consulta a cada
+  result set.
+- **Falha NAO e cacheada.** Se a consulta ao catalogo levantar, as colunas
+  ficam `UNKNOWN` apenas naquela consulta e nada entra no cache. Cachear o erro
+  desligaria a proveniencia — e portanto a protecao contra alias — pelo resto
+  da vida da conexao, a partir de uma falha transitoria. Fixado em teste.
+- **Colunas `DERIVED` nunca entram no cache**: nao ha o que consultar.
+
+Risco aceito: um `ALTER TABLE ... RENAME COLUMN` durante a vida da conexao
+deixa a entrada obsoleta. O Gateway e read-only sobre schema estavel, entao o
+custo de invalidacao nao se justifica no MVP. Registrado em
+`docs/FUTURE-HARDENING.md`.
+
+## D-022 — View resolve para a coluna da view, sem lineage recursivo
+
+Medido: para `SELECT cpf FROM cliente_vw`, o PostgreSQL devolve o oid **da
+view**, nao o da tabela base. `relkind` distingue (`v` para view, `m` para
+materialized view).
+
+Decisao, conforme o escopo da fase: `origin_name` e `origin_table` recebem a
+coluna e o nome DA VIEW, com `provenance_kind = VIEW`. Nao se percorre
+`pg_rewrite` para chegar a tabela base.
+
+Consequencia, coberta por teste: uma view que RENOMEIA a coluna apaga o nome
+original nesta camada.
+
+```sql
+CREATE VIEW v AS SELECT cpf AS documento FROM cliente;
+SELECT documento FROM v;   -- origin_name = "documento", nao "cpf"
+```
+
+Isso passa em claro. E a mesma classe de risco do default ALLOW: quem define a
+view define o que o Gateway enxerga. Registrado em
+`docs/FUTURE-HARDENING.md`, nao corrigido nesta fase.
+
+Na pratica a maioria das views preserva o nome da coluna, e nesse caso o
+matching funciona normalmente.
+
+## D-023 — Proveniencia e resolvida ANTES de qualquer linha ser lida
+
+`cursor.pgresult` e lido logo apos o `execute`, e a resolucao acontece antes do
+primeiro `fetchmany`. Duas razoes:
+
+1. A metadata de baixo nivel e lida enquanto o resultado esta intacto.
+2. Deixa explicito no codigo que a proveniencia vem da metadata do PostgreSQL,
+   nunca dos valores das linhas.
+
+A consulta ao catalogo usa um cursor proprio, na mesma conexao. Isso e seguro
+com o cursor client-side do psycopg3, que ja materializou o resultado. Se a
+Fase 4 introduzir cursor server-side para o row limit, esta ordem precisa ser
+reavaliada.
+
+## D-024 — `origin_schema` e `origin_table` sao auditoria, nao criterio
+
+O descritor passou a carregar schema e tabela de origem, mas o matching
+continua avaliando apenas `output_name` e `origin_name`.
+
+As regras do `masking.yaml` sao globais por nome de coluna
+(`docs/MASKING-SPEC.md`). Se schema ou tabela influenciassem o matching, a
+mesma configuracao produziria resultados diferentes conforme a consulta, sem
+nada no arquivo de regras dizer isso. Regra por tabela e RBAC — fora do MVP.
+
+Fixado por teste: descritores identicos exceto por schema, tabela e
+`provenance_kind` produzem o mesmo resultado.
+
+## D-025 — Falha de proveniencia nao muda a politica
+
+Se o catalogo nao responder, a coluna fica `UNKNOWN` e o matching recai sobre
+`output_name`, exatamente como na Fase 2. Nao ha nova politica fail-closed.
+
+O erro do PostgreSQL e absorvido no resolver: nao levanta, nao e logado e nao
+aparece em `repr`. Ele poderia citar objetos do catalogo e o privilegio
+faltando.
+
+Efeito colateral operacional que precisa estar visivel: **uma role sem leitura
+em `pg_catalog` reabre o bypass por alias**, silenciosamente. Registrado em
+`docs/SECURITY.md` e em `docs/FUTURE-HARDENING.md`.
+

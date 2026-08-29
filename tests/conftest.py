@@ -11,13 +11,14 @@ exclusivamente da variavel de ambiente `MASKGW_TEST_DSN`, e os testes marcados
 from __future__ import annotations
 
 import os
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
 import psycopg
 import pytest
 
+from maskgw.db.columns import DERIVED_ORIGIN, UNKNOWN_ORIGIN, ColumnOrigin
 from maskgw.masking.transformers.hashes import HMAC_KEY_ENV
 from maskgw.secretsource import MappingSecretProvider, SecretProvider
 
@@ -34,6 +35,17 @@ REPO_CONFIG = REPO_ROOT / "config" / "masking.yaml"
 TransactionStatus = psycopg.pq.TransactionStatus
 IDLE = TransactionStatus.IDLE
 INTRANS = TransactionStatus.INTRANS
+
+#: `(ftable, ftablecol)` de uma coluna. Ver maskgw.db.provenance.
+ProvenanceKey = tuple[int, int]
+
+#: O que o PostgreSQL devolve quando nao ha coluna de origem unica.
+NO_ORIGIN: ProvenanceKey = (0, 0)
+
+
+def origin_key(index: int) -> ProvenanceKey:
+    """Chave sintetica e estavel para a coluna `index` dos dublês."""
+    return (1000 + index, 1)
 
 
 @pytest.fixture
@@ -70,6 +82,34 @@ class FakeColumn:
         self.name = name
 
 
+class FakePgResult:
+    """Imita `psycopg.pq.PGresult` nos dois metodos de proveniencia."""
+
+    def __init__(self, keys: Sequence[ProvenanceKey]) -> None:
+        self._keys = list(keys)
+
+    def ftable(self, column_number: int) -> int:
+        return self._keys[column_number][0]
+
+    def ftablecol(self, column_number: int) -> int:
+        return self._keys[column_number][1]
+
+
+class FakeResolver:
+    """Resolver de proveniencia sem catalogo, para os testes sem banco."""
+
+    def __init__(self, origins: Mapping[ProvenanceKey, ColumnOrigin] | None = None) -> None:
+        self._origins = dict(origins or {})
+        self.calls: list[tuple[ProvenanceKey, ...]] = []
+
+    def resolve(self, keys: Sequence[ProvenanceKey]) -> tuple[ColumnOrigin, ...]:
+        self.calls.append(tuple(keys))
+        return tuple(
+            DERIVED_ORIGIN if key == NO_ORIGIN else self._origins.get(key, UNKNOWN_ORIGIN)
+            for key in keys
+        )
+
+
 class FakeCursor:
     def __init__(
         self,
@@ -77,8 +117,11 @@ class FakeCursor:
         rows: Sequence[Sequence[Any]] = (),
         *,
         error: BaseException | None = None,
+        keys: Sequence[ProvenanceKey] | None = None,
     ) -> None:
         self.description = description
+        width = 0 if description is None else len(description)
+        self.pgresult = FakePgResult(list(keys) if keys is not None else [NO_ORIGIN] * width)
         self._pending = [tuple(row) for row in rows]
         self._error = error
         self.executed: list[tuple[str, Any]] = []
@@ -99,6 +142,10 @@ class FakeCursor:
     def fetchmany(self, size: int) -> list[tuple[Any, ...]]:
         self.batch_sizes.append(size)
         batch, self._pending = self._pending[:size], self._pending[size:]
+        return batch
+
+    def fetchall(self) -> list[tuple[Any, ...]]:
+        batch, self._pending = self._pending, []
         return batch
 
 

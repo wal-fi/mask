@@ -108,9 +108,33 @@ na Fase 3.
 ## Provenance / alias (Fase 3)
 
 - `SELECT cpf AS documento` → masked
-- alias em JOIN, subquery, CTE, UNION e view → masked
+- alias em JOIN, subquery, CTE e view → masked
 - `SELECT md5(cpf)` → `origin_name is None`, sem erro no pipeline
-- teste que mede o que o PostgreSQL devolve em `table_oid` por cenário
+- teste que mede o que o PostgreSQL devolve em `ftable` por cenário
+
+Implementado em três camadas:
+
+- **medição** (`test_pgresult_metadata`) — não testa código do Gateway. Mede o
+  que o PostgreSQL e o psycopg devolvem em `cursor.pgresult.ftable(i)` e
+  `ftablecol(i)`, cenário a cenário, e fixa o resultado. Foi escrito **antes**
+  da implementação: o resolver segue o que foi medido, não a documentação
+  anterior — que estava errada sobre onde esses campos vivem.
+- **sem banco** (`test_db_provenance`) — classificação, cache, alinhamento
+  posicional e comportamento quando o catálogo falha.
+- **com PostgreSQL real** (`test_db_integration`) — os quinze cenários
+  obrigatórios ponta a ponta, com a política aplicada.
+
+Ressalva sobre UNION: o PostgreSQL **não** preserva proveniência em UNION
+(`ftable = 0`). O critério original do roadmap ("alias em UNION → masked") não
+é alcançável por metadata. O teste registra o comportamento real: com o nome
+preservado o `output_name` ainda mascara; com alias, passa em claro. Ver
+`docs/FUTURE-HARDENING.md`.
+
+### Testes invertidos
+
+`TestPhaseTwoAliasGap`, que na Fase 2 fixava `SELECT cpf AS documento` passando
+em claro, virou `TestAliasProtection` nas duas camadas. O valor agora sai
+transformado pela regra `cpf`.
 
 ## Security (Fase 4)
 

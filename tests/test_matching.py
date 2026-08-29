@@ -7,13 +7,17 @@ from __future__ import annotations
 
 import pytest
 
-from maskgw.masking.descriptor import ColumnDescriptor
+from maskgw.config import load_config_text
+from maskgw.masking.descriptor import ColumnDescriptor, ProvenanceKind
+from maskgw.masking.engine import MaskingEngine
 from maskgw.masking.matcher import ExceptionMatcher, RuleMatcher, spec_matches_column
 from maskgw.masking.rules import MaskingException, MaskingRule, MatchMode, MatchSpec
 from maskgw.masking.transformers.simple import FixedTransformer
 
 CONTAINS_CPF = MatchSpec(pattern="cpf")
 EXACT_CPF = MatchSpec(pattern="cpf", mode=MatchMode.EXACT)
+
+RULE_CPF_MD5 = "masking:\n  - match: cpf\n    transformer: md5\n"
 
 
 def column(output_name: str, origin_name: str | None = None) -> ColumnDescriptor:
@@ -140,3 +144,43 @@ class TestExceptionMatcher:
 
     def test_empty_exceptions(self):
         assert ExceptionMatcher([]).find(column("cpf")) is None
+
+
+class TestProvenanceMetadataDoesNotAffectMatching:
+    """Fase 3: `origin_schema` e `origin_table` sao auditoria, nao criterio.
+
+    As regras continuam globais por nome de coluna. Se schema ou tabela
+    passassem a influenciar o matching, a mesma configuracao produziria
+    resultados diferentes por consulta, sem nada no `masking.yaml` dizer isso.
+    """
+
+    def test_schema_and_table_are_ignored(self, secrets):
+        engine = MaskingEngine(load_config_text(RULE_CPF_MD5, secrets=secrets))
+        sem_qualificacao = ColumnDescriptor(output_name="documento", origin_name="cpf")
+        com_qualificacao = ColumnDescriptor(
+            output_name="documento",
+            origin_name="cpf",
+            origin_schema="outro_schema",
+            origin_table="outra_tabela",
+            provenance_kind=ProvenanceKind.VIEW,
+        )
+        valor = "11122233344"
+        assert engine.mask_value(sem_qualificacao, valor) == engine.mask_value(
+            com_qualificacao, valor
+        )
+
+    @pytest.mark.parametrize("kind", list(ProvenanceKind))
+    def test_every_provenance_kind_matches_the_same_way(self, secrets, kind):
+        engine = MaskingEngine(load_config_text(RULE_CPF_MD5, secrets=secrets))
+        column = ColumnDescriptor(output_name="documento", origin_name="cpf", provenance_kind=kind)
+        assert engine.mask_value(column, "11122233344") != "11122233344"
+
+    def test_qualified_origin_is_metadata_only(self):
+        column = ColumnDescriptor(
+            output_name="documento",
+            origin_name="cpf",
+            origin_schema="public",
+            origin_table="cliente",
+        )
+        assert column.qualified_origin == "public.cliente.cpf"
+        assert column.names == ("documento", "cpf")
