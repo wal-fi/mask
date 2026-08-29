@@ -21,3 +21,13 @@ class ConfigError(MaskGatewayError):
 
 class TransformerError(MaskGatewayError):
     """Falha na construcao ou execucao de um transformer."""
+
+
+class DatabaseError(MaskGatewayError):
+    """Falha ao falar com o banco de dados, ja sanitizada.
+
+    E o unico erro de banco que sai do adapter. A excecao original do psycopg
+    nunca e encadeada nem repassada: a mensagem do PostgreSQL pode embutir
+    valores (`invalid input syntax for type integer: "..."`). Ver
+    `maskgw.db.sanitize` e docs/SECURITY.md.
+    """

@@ -8,12 +8,16 @@ Regras invariantes:
 - NULL permanece NULL: `apply(None)` devolve None sem chamar o transformer.
 - A saida e sempre `str` (ou None). Nao ha transformacao dependente de tipo.
 - Nenhum transformer registra o valor recebido em log ou mensagem de erro.
+- Valor nao-string e convertido por `canonicalize`, nunca por `str()`: tipo
+  fora da tabela falha fechada. Ver `maskgw.masking.canonical` e D-015.
 """
 
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from typing import ClassVar
+
+from maskgw.masking.canonical import canonicalize
 
 #: Marcador usado quando um transformer nao consegue produzir uma saida valida.
 #: Nunca devolver o valor original nesse caso (fail-closed).
@@ -27,11 +31,14 @@ class Transformer(ABC):
     deterministic: ClassVar[bool] = True
 
     def apply(self, value: object) -> str | None:
-        """Ponto de entrada do engine. Trata NULL e normaliza para texto."""
+        """Ponto de entrada do engine. Trata NULL e normaliza para texto.
+
+        Levanta `TransformerError` para tipo sem forma canonica definida:
+        falhar a consulta e preferivel a produzir uma saida nao deterministica.
+        """
         if value is None:
             return None
-        text = value if isinstance(value, str) else str(value)
-        return self.transform(text)
+        return self.transform(canonicalize(value))
 
     @abstractmethod
     def transform(self, value: str) -> str:

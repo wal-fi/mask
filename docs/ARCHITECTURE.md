@@ -90,8 +90,15 @@ ColumnDescriptor
 ```
 
 `origin_name` é resolvido a partir dos metadados que o próprio PostgreSQL
-devolve em `RowDescription` (`table_oid` + `table_column`, expostos por
-psycopg3 em `cursor.description`), cruzados com `pg_attribute`.
+devolve em `RowDescription` (`table_oid` + `table_column`), cruzados com
+`pg_attribute`.
+
+**Correção medida na Fase 2:** o `Column` de `cursor.description` **não** expõe
+`table_oid` nem `table_column` (verificado em psycopg 3.3.4 — os atributos
+disponíveis são `name`, `type_code`, `display_size`, `internal_size`,
+`precision`, `scale` e `null_ok`). Os dois campos existem, porém no resultado
+de baixo nível: `cursor.pgresult.ftable(i)` e `cursor.pgresult.ftablecol(i)`.
+O resolver da Fase 3 deve ler de lá.
 
 Para expressões (`md5(cpf)`, `cpf::text`, `substr(cpf,1,3)`) o PostgreSQL
 devolve `table_oid = 0`: não há origem determinável e `origin_name` fica

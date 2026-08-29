@@ -102,3 +102,33 @@ def test_importing_masking_does_not_load_forbidden_modules():
     loaded = set(result.stdout.strip().split(","))
     assert not loaded & {"psycopg", "psycopg2", "asyncpg", "pglast", "mcp", "requests", "httpx"}
     assert not loaded & {"yaml", "pydantic"}
+
+
+def loaded_modules(statement: str) -> set[str]:
+    """Modulos carregados por um import, medidos em subprocesso limpo."""
+    src_dir = MASKING_DIR.parents[1]
+    code = (
+        "import sys;"
+        f"sys.path.insert(0, {str(src_dir)!r});"
+        f"{statement};"
+        "print(','.join(sorted(sys.modules)))"
+    )
+    result = subprocess.run(  # noqa: S603
+        [sys.executable, "-c", code],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return set(result.stdout.strip().split(","))
+
+
+def test_importing_masking_does_not_load_the_db_adapter():
+    """A Fase 2 adicionou `maskgw.db`. A dependencia continua num sentido so."""
+    assert "maskgw.db" not in loaded_modules("import maskgw.masking")
+
+
+def test_the_db_adapter_really_does_depend_on_psycopg():
+    """Contraprova: sem isto, os testes de pureza passariam por vacuidade."""
+    loaded = loaded_modules("import maskgw.db")
+    assert "psycopg" in loaded
+    assert "maskgw.masking" in loaded

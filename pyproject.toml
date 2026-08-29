@@ -1,9 +1,14 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "maskgw"
 version = "0.1.0"
 description = "AI Data Masking Gateway"
 requires-python = ">=3.11"
 dependencies = [
+    "psycopg[binary]>=3.1",
     "pydantic>=2.6",
     "PyYAML>=6",
 ]
@@ -20,6 +25,12 @@ dev = [
 pythonpath = ["src"]
 testpaths = ["tests"]
 addopts = "-q --strict-markers"
+markers = [
+    "integration: exige um PostgreSQL real via MASKGW_TEST_DSN; skip sem ela",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.ruff]
 line-length = 100
@@ -47,6 +58,9 @@ select = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["S101", "PLR2004", "ANN"]
+# O arquivo de integracao monta SQL a partir de constantes do proprio modulo,
+# nunca de entrada externa. A validacao de SQL do Gateway e da Fase 4.
+"tests/test_db_integration.py" = ["S608"]
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "parents"

@@ -77,6 +77,34 @@ Testar:
 - view
 - NULL vindo do banco
 
+Implementado em duas camadas:
+
+- **sem banco** (`test_db_columns`, `test_db_masking`, `test_db_errors`,
+  `test_db_leakage`), com dublês de conexao e cursor — roda em qualquer
+  maquina e mantem a suite verde sem PostgreSQL;
+- **com PostgreSQL real** (`test_db_integration`), marcado `integration` e
+  pulado com SKIP limpo quando `MASKGW_TEST_DSN` nao esta definida.
+
+O DSN vem exclusivamente do ambiente. Nenhum usuario, senha ou host aparece no
+codigo ou nos testes.
+
+Alem dos itens acima, a Fase 2 cobre:
+
+- canonicalizacao deterministica por tipo e falha fechada em tipo nao
+  suportado (`test_canonical`, D-015)
+- preservacao do objeto Python nas colunas sem transformacao
+- nomes de coluna duplicados, que nao podem ser colapsados
+- leitura em lotes: o resultado nao muda com o tamanho do lote
+- estado transacional observado de fora, por `pg_stat_activity` (D-016)
+- ausencia de `__cause__` e `__context__` no erro sanitizado (D-017)
+- superficie publica de `db/` sem cursor, fetch cru ou acessor de original
+
+### Lacuna da Fase 2, fixada em teste
+
+`SELECT cpf AS documento` passa **em claro**, porque nao ha lineage. Coberto
+por `TestPhaseTwoAliasGap`, nas duas camadas. Esses testes serao **invertidos**
+na Fase 3.
+
 ## Provenance / alias (Fase 3)
 
 - `SELECT cpf AS documento` → masked
