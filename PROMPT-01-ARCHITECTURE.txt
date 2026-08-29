@@ -1,0 +1,22 @@
+Leia todo o contexto do projeto antes de escrever código.
+
+Leia obrigatoriamente:
+CLAUDE.md
+docs/ARCHITECTURE.md
+docs/SECURITY.md
+docs/MASKING-SPEC.md
+docs/THREAT-MODEL.md
+docs/TEST-PLAN.md
+
+Não implemente nada ainda.
+
+Analise o projeto como um engenheiro sênior de backend, segurança, bancos de dados e MCP.
+
+1. Valide a arquitetura.
+2. Identifique riscos.
+3. Identifique possíveis bypasses do masking.
+4. Identifique decisões arquiteturais pendentes.
+5. Proponha melhorias.
+6. Apresente o plano de implementação em fases.
+
+Não escreva código nesta etapa.

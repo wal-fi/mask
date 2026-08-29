@@ -1,0 +1,17 @@
+Implemente a Fase definida no plano aprovado.
+
+Siga rigorosamente CLAUDE.md e docs/SECURITY.md.
+
+Não avance para outras fases.
+
+Implemente testes junto com o código.
+
+Ao terminar:
+1. execute todos os testes;
+2. faça revisão de segurança;
+3. procure vazamentos;
+4. procure bypasses;
+5. informe arquivos criados/alterados;
+6. informe testes executados e resultados.
+
+Não considere a tarefa concluída se algum teste falhar.

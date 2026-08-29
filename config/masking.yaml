@@ -1,0 +1,57 @@
+# Regras globais de masking.
+#
+# Pipeline:
+#   EXCEPTION MATCH -> ORIGINAL
+#   MASKING MATCH   -> TRANSFORMER
+#   NO MATCH        -> ORIGINAL   (default ALLOW)
+#
+# O matching e avaliado contra output_name e origin_name da coluna.
+# A regra e aplicada se qualquer um dos dois corresponder.
+#
+# md5/sha256/sha512 nao sao recomendados para pseudonimizacao de dominios
+# pequenos como CPF, CNPJ, telefone ou CEP: o espaco de valores e pequeno o
+# bastante para permitir reversao por forca bruta. Use hmac_sha256.
+#
+# A chave do hmac_sha256 vem de secret/variavel de ambiente e NUNCA deste
+# arquivo. Declarar a chave aqui faz o carregamento falhar.
+
+masking:
+
+  - match: cpf
+    mode: contains
+    case_sensitive: false
+    transformer: hmac_sha256
+
+  - match: cnpj
+    mode: contains
+    case_sensitive: false
+    transformer: hmac_sha256
+
+  - match: email
+    mode: contains
+    case_sensitive: false
+    transformer: regex
+    config:
+      pattern: "^(.{2}).*(@.*)$"
+      replacement: "\\1***\\2"
+
+  - match: telefone
+    mode: contains
+    case_sensitive: false
+    transformer: random
+    config:
+      strategy: digits
+      preserve_length: true
+
+  - match: senha
+    mode: contains
+    case_sensitive: false
+    transformer: fixed
+    config:
+      value: "[REDACTED]"
+
+exceptions:
+
+  - match: tipo_cpf
+    mode: exact
+    case_sensitive: false

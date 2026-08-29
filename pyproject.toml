@@ -1,0 +1,63 @@
+[project]
+name = "maskgw"
+version = "0.1.0"
+description = "AI Data Masking Gateway"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.6",
+    "PyYAML>=6",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "ruff>=0.6",
+    "mypy>=1.11",
+    "types-PyYAML",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W",   # pycodestyle
+    "F",        # pyflakes
+    "I",        # isort
+    "N",        # pep8-naming
+    "UP",       # pyupgrade
+    "B",        # bugbear
+    "S",        # bandit
+    "C4",       # comprehensions
+    "SIM",      # simplify
+    "RET",      # return
+    "ARG",      # unused arguments
+    "ANN",      # annotations
+    "TID",      # tidy imports
+    "PL",       # pylint
+    "RUF",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101", "PLR2004", "ANN"]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "parents"
+
+[tool.mypy]
+python_version = "3.11"
+mypy_path = "src"
+strict = true
+warn_unreachable = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
