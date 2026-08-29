@@ -49,6 +49,19 @@ Nunca registrar a chave HMAC.
 
 ## Errors
 
+Erros externos vêm de um conjunto fixo e nunca citam a consulta:
+
+| erro | quando |
+|---|---|
+| `InvalidQuery` | SQL malformada; mensagem fixa, sem o texto do parser |
+| `QueryRejected` | SQL válida recusada pela política; `reason` de um conjunto fixo de sete constantes |
+| `QueryTimeout` | SQLSTATE 57014, do `statement_timeout` |
+| `DatabaseError` | demais erros do PostgreSQL, por classe de SQLSTATE |
+| `CapabilityError` | instalação sem uma capacidade essencial; fatal no startup |
+
+Nenhum deles encadeia a exceção original: `__cause__` e `__context__` ficam
+nulos (D-017). Nem o nome da função proibida entra na mensagem.
+
 Não retornar ao cliente:
 - result sets
 - valores sensíveis
@@ -65,6 +78,26 @@ apenas no lado servidor, com redação.
 
 Usar conexão read-only, com role dedicada sem permissão de escrita.
 
+Desde a Fase 4 o Gateway aplica, além disso, na própria sessão:
+
+```text
+-c default_transaction_read_only=on
+-c statement_timeout=<database.statement_timeout_ms>
+```
+
+Ambos vão em `options` do DSN, aplicados pelo backend na inicialização — não há
+janela entre conectar e proteger — e são **conferidos** em `pg_settings` logo
+após a conexão. Se não pegaram, o Gateway não opera (`CapabilityError`).
+
+Isso não substitui a role sem privilégio de escrita. São camadas distintas, e a
+suíte prova a de baixo chamando o adapter sem passar pelo validator.
+
+**A role precisa manter EXECUTE apenas no que for necessário.** A política de
+funções (D-027) nega o namespace `pg_` por default, mas uma função definida
+pelo usuário com efeito colateral e nome comum passa pelo validator. A barreira
+real ali é o privilégio: a role não deve ter `EXECUTE` em funções perigosas nem
+pertencer a `pg_read_server_files` ou `pg_execute_server_program`.
+
 **A role precisa manter leitura em `pg_catalog`.** A proteção contra bypass por
 alias depende de resolver `(oid, attnum)` em `pg_attribute`, `pg_class` e
 `pg_namespace`. Uma role sem esse acesso faz toda coluna cair em `UNKNOWN`, e
@@ -78,6 +111,18 @@ INSERT, UPDATE, DELETE, DROP, ALTER, TRUNCATE, CREATE, GRANT, REVOKE.
 A validação de SQL é feita por parsing (pglast) com allowlist, nunca por
 blocklist de palavras-chave. A role read-only é a segunda camada: a validação
 pode falhar, o privilégio do banco não.
+
+Quatro regras, todas por tipo de nó da AST (D-031):
+
+1. exatamente um statement **executável** — o parser descarta os vazios, então
+   o critério é a contagem de statements reconhecidos, não a de `;`
+2. raiz `SelectStmt`
+3. nenhum outro nó `*Stmt` em ponto algum da árvore — cobre CTE modificadora,
+   CTE aninhada e CTE dentro de subquery
+4. `IntoClause` e `LockingClause` recusadas em qualquer ponto
+
+A regra 4 existe porque **`SELECT 1 INTO nova` parseia como `SelectStmt` e cria
+uma tabela**, e `SELECT ... FOR UPDATE` trava linhas. Raiz SELECT não basta.
 
 ## Chaves
 

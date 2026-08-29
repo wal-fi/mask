@@ -8,6 +8,7 @@ version = "0.1.0"
 description = "AI Data Masking Gateway"
 requires-python = ">=3.11"
 dependencies = [
+    "pglast>=6",
     "psycopg[binary]>=3.1",
     "pydantic>=2.6",
     "PyYAML>=6",
@@ -63,6 +64,10 @@ select = [
 # Fase 4.
 "tests/test_db_integration.py" = ["S608"]
 "tests/test_pgresult_metadata.py" = ["S608"]
+"tests/test_execution_safety.py" = ["S608"]
+# Os testes adversariais do validator PRECISAM montar SQL maliciosa: e o que
+# esta sendo testado. Nenhuma delas chega a um banco.
+"tests/test_sql_validator.py" = ["S608"]
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "parents"

@@ -132,6 +132,69 @@ e o matching passa a usar o nome antigo.
 O Gateway é read-only sobre schema estável, então não há invalidação. Evolução
 possível: TTL curto, ou invalidação por `pg_notify` em eventos de DDL.
 
+## Provenance por AST: o que a Fase 4 mediu
+
+A Fase 4 investigou, por experimento, se a AST do pglast permite **provar** a
+origem nos três bypasses conhecidos. Regra aplicada: provenance provada pode
+enriquecer `origin_name`; provenance incerta permanece `DERIVED`/`UNKNOWN`.
+Origem não se inventa.
+
+### UNION + alias — provável em parte, não implementado
+
+A AST expõe, por ramo do UNION, a lista de alvos:
+
+```text
+SELECT cpf AS documento FROM a UNION ALL SELECT cpf FROM b
+  larg = [ColumnRef ('cpf',) AS 'documento']
+  rarg = [ColumnRef ('cpf',)]
+```
+
+Quando o N-ésimo alvo de **todos** os ramos é um `ColumnRef` simples, o nome de
+origem é um fato sintático — e como o matching do Gateway é por nome, propagá-lo
+seria sound.
+
+Não implementado nesta fase, por três obstáculos concretos:
+
+- **`SELECT *` em qualquer ramo destrói o mapeamento posicional** entre alvos da
+  AST e colunas do result set. Sem expandir `*` contra o catálogo, não há como
+  saber qual alvo corresponde a qual coluna.
+- Ramos com expressão (`SELECT lower(y)`) ou nomes divergentes entre ramos não
+  produzem uma origem única.
+- Exigiria acoplar `sql/` a `db/`, hoje independentes, para levar a árvore até a
+  montagem dos descritores.
+
+Extensão proposta, pequena e delimitada: quando nenhum ramo usa `*`, e o
+N-ésimo alvo de todos os ramos é um `ColumnRef` cujo último identificador é o
+mesmo, propagar esse nome como `origin_name` com um `provenance_kind` próprio.
+Em qualquer outra forma, manter `DERIVED`.
+
+### VIEW que renomeia — não provável pela AST
+
+A definição da view **não aparece** na árvore da consulta: `SELECT documento
+FROM cliente_alias_vw` produz apenas um `ColumnRef` e um `RangeVar`. Resolver
+exigiria `pg_rewrite` / `pg_get_viewdef` e reparsing da view — um lineage
+engine. Permanece adiado, como em D-022.
+
+### Expressões sobre coluna sensível — provável só com resolução de nomes
+
+A AST mostra o `ColumnRef` dentro da expressão:
+
+```text
+SELECT substr(cpf,1,3) AS x FROM cliente        refs = [('cpf',)]
+SELECT substr(c.cpf,1,3) AS x FROM cliente c    refs = [('c','cpf')]
+SELECT substr(x,1,3) AS y FROM (SELECT cpf AS x FROM cliente) t   refs = [('x',)]
+```
+
+O terceiro caso mostra o limite: dentro de uma subquery o nome visível é o
+alias, e recuperar `cpf` exige resolver escopos — ou seja, o lineage engine.
+
+**Alternativa mais promissora, e mais barata: rejeitar em vez de enriquecer.**
+Recusar a consulta quando qualquer `ColumnRef` dentro de uma expressão nomeia
+uma coluna que casa uma regra de masking. Isso não precisa de mapeamento
+posicional nem de resolução de escopo — é fail-closed e sound na direção
+segura. Custo: acoplar o validator à política de masking, e recusar consultas
+legítimas como `SELECT length(cpf)`. Fica como o próximo passo de maior valor.
+
 ## Role sem acesso a `pg_catalog` desliga a proteção contra alias
 
 A resolução de proveniência consulta `pg_attribute`, `pg_class` e
@@ -142,8 +205,12 @@ A falha é deliberadamente não fatal (D-025): a alternativa seria derrubar toda
 consulta por um problema de catálogo. Mas ela é **silenciosa**, porque não há
 logging até a Fase 5.
 
-Evolução possível: verificar o acesso ao catálogo no boot e recusar subir, ou
-emitir métrica de proporção de colunas `UNKNOWN` quando o `audit/` existir.
+**Resolvido na Fase 4 (D-026):** `check_provenance_capability` roda no
+`connect()` e levanta `CapabilityError` quando a role não consegue resolver uma
+coluna. O processo não sobe com a proteção desligada.
+
+Permanece futuro: métrica da proporção de colunas `UNKNOWN` em runtime, quando
+o `audit/` existir.
 
 ## Validação semântica do masking.yaml no boot
 
@@ -167,3 +234,22 @@ configuração legítima.
 
 Evolução possível: denylist explícita de `pg_catalog`, `information_schema` e
 `pg_stats` no Query Validator.
+
+## Funções definidas pelo usuário com efeito colateral
+
+A política da Fase 4 (D-027) nega o namespace `pg_` por default e mantém uma
+denylist para as famílias perigosas fora dele. Uma função criada pelo usuário,
+com nome comum e efeito colateral — `atualiza_saldo()`, `registra_acesso()` —
+**passa**.
+
+Fechar isso exigiria resolver cada `FuncCall` contra `pg_proc` e verificar
+`provolatile`/`prosecdef`, ou uma allowlist completa por OID. Mitigação atual e
+suficiente para o MVP: a role read-only não deve ter `EXECUTE` nessas funções,
+e uma função que escreva falha de qualquer forma na transação read-only.
+
+## Inferência por WHERE, ORDER BY e agregação continua aberta
+
+A Fase 4 protege a **execução**, não a inferência. `SELECT id FROM clientes
+WHERE cpf LIKE '123%'` continua permitido, e o `statement_timeout` e o
+`max_rows` não impedem extração incremental por consultas sucessivas. Ver as
+seções acima sobre WHERE/ORDER BY e cardinalidade.

@@ -14,6 +14,9 @@ Tipos, conforme a decisao da Fase 2:
   JSONB continua `dict`, `bytes` continuam `bytes`);
 - coluna COM transformacao carrega a saida do transformer, que e `str`;
 - NULL permanece NULL nos dois casos.
+
+`truncated` indica que o result set do banco tinha mais linhas que `max_rows`.
+As linhas excedentes nao sao mascaradas nem devolvidas. Ver D-030.
 """
 
 from __future__ import annotations
@@ -33,6 +36,8 @@ class MaskedResult:
     columns: tuple[ColumnDescriptor, ...]
     decisions: tuple[Decision, ...]
     rows: tuple[tuple[Any, ...], ...]
+    #: Havia mais linhas do que `max_rows`. As excedentes nunca sao devolvidas.
+    truncated: bool = False
 
     def __post_init__(self) -> None:
         # Desalinhamento aqui seria falha de seguranca, nao de ergonomia:
@@ -64,4 +69,7 @@ class MaskedResult:
 
     def __repr__(self) -> str:
         # Somente contagens: um repr com linhas vazaria dado em traceback e log.
-        return f"MaskedResult(columns={len(self.columns)}, rows={len(self.rows)})"
+        return (
+            f"MaskedResult(columns={len(self.columns)}, "
+            f"rows={len(self.rows)}, truncated={self.truncated})"
+        )

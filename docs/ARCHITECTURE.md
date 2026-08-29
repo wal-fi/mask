@@ -55,13 +55,33 @@ Interface para Claude, ChatGPT, Cursor e outros clientes MCP.
 Apenas entrada/saída. Nenhuma regra de masking nos handlers.
 
 ### Query Validator
-Parsing com pglast. Allowlist de nós: somente `SelectStmt` na raiz.
-Bloqueia escrita, DDL e múltiplos statements.
+Parsing com pglast (`sql/`). Allowlist de nós, nunca blocklist de texto.
+
+Quatro regras: um statement executável; raiz `SelectStmt`; nenhum outro nó
+`*Stmt` em ponto algum da árvore (cobre CTE modificadora, aninhada ou dentro de
+subquery); e `IntoClause`/`LockingClause` recusadas — porque `SELECT 1 INTO t`
+parseia como `SelectStmt` e **cria uma tabela**.
+
+Política de funções separada (`sql/policy.py`): namespace `pg_` negado por
+default com allowlist curta, demais funções permitidas com denylist de famílias
+perigosas. Extensível por configuração. Ver D-027 e o limite declarado em
+`docs/SECURITY.md`.
+
+Independente de MCP, de banco e do Masking Engine: recebe texto, devolve árvore
+validada ou levanta.
 
 ### Database Adapter
 Abstração de conexão. PostgreSQL é o primeiro e único adapter do MVP.
 Responsável por: conexão read-only, `statement_timeout`, limite de linhas,
 sanitização de erros e extração de metadados de coluna.
+
+Duas portas, deliberadamente distintas (D-029):
+
+- `execute_validated(sql)` — valida e só então executa. É o que um Gateway ou
+  servidor MCP deve chamar.
+- `execute(sql, params)` — **não** valida. Porta interna, mantida para que os
+  testes possam contornar o validator e provar que o PostgreSQL barra a escrita
+  sozinho.
 
 ### Column Descriptor Resolver
 Constrói, para cada coluna do result set, um descritor com os dois nomes
@@ -189,7 +209,7 @@ passa normalmente. Não há default deny neste MVP.
 ```text
 mcp/       adapter de I/O, sem logica de seguranca
 gateway/   orquestrador; unica camada que toca valor original
-sql/       parser e validator (allowlist de SELECT)
+sql/       parser, validator e politica de funcoes (allowlist de nos)
 db/        adapter PostgreSQL: execucao, proveniencia, sanitizacao de erro
 masking/   matcher, exceptions, registry, engine  <- nucleo PURO, sem I/O
 config/    loader validado, imutavel, carregado uma vez no boot
@@ -206,3 +226,6 @@ audit/     log estruturado, somente metadata
 - Manter o Masking Engine independente do MCP e do database adapter.
 - Evitar acoplamento entre regras, matching e transformers.
 - Configuração inválida impede a inicialização do processo (fail-closed).
+- Uma capacidade essencial ausente também impede a inicialização: sem
+  resolução de proveniência, a proteção contra alias estaria desligada em
+  silêncio (D-026).

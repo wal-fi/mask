@@ -1,6 +1,6 @@
 # Handoff
 
-Estado do projeto ao final da sessao que implementou a **Fase 3**.
+Estado do projeto ao final da sessao que implementou a **Fase 4**.
 Documento de entrada para a proxima sessao.
 
 Leitura obrigatoria antes de continuar: `CLAUDE.md`, `docs/ARCHITECTURE.md`,
@@ -13,21 +13,23 @@ Leitura obrigatoria antes de continuar: `CLAUDE.md`, `docs/ARCHITECTURE.md`,
 
 **FASE 1 — Config Loader + Masking Engine puro.** Concluida.
 **FASE 2 — PostgreSQL Adapter + ResultSet Masking.** Concluida.
-**FASE 3 — Column provenance / lineage.** Concluida e verificada contra
+**FASE 3 — Column provenance / lineage.** Concluida.
+**FASE 4 — SQL validation + execution safety.** Concluida e verificada contra
 PostgreSQL real.
 
-As Fases 4 a 6 **nao foram iniciadas**.
+As Fases 5 e 6 **nao foram iniciadas**. Nao existe uma linha de MCP.
 
-Entregue na Fase 3:
+Entregue na Fase 4:
 
-- medicao empirica de `ftable`/`ftablecol` por cenario, escrita ANTES da
-  implementacao
-- `ProvenanceResolver`: `(oid, attnum)` -> schema, relacao, coluna, via
-  catalogo, com cache por conexao
-- `ColumnDescriptor` com `origin_schema`, `origin_table` e `provenance_kind`
-- bypass por alias fechado: `SELECT cpf AS documento` retorna mascarado
-- testes da lacuna da Fase 2 invertidos
-- 111 testes novos (608 no total)
+- pacote `sql/`: parser, validator e politica de funcoes, com pglast
+- um statement executavel, raiz `SelectStmt`, nenhum `*Stmt` aninhado,
+  `IntoClause`/`LockingClause` recusadas
+- politica de funcoes: namespace `pg_` deny-by-default
+- sessao read-only e `statement_timeout` aplicados pelo PostgreSQL e
+  conferidos apos a conexao
+- `max_rows` com `truncated`; a linha N+1 nunca e mascarada nem devolvida
+- capability check de proveniencia, fatal no startup
+- 267 testes novos (875 no total)
 
 ## 2. Stack e dependencias
 
@@ -42,7 +44,7 @@ Python >= 3.11.
 | ruff | lint + format | Fase 1 |
 | mypy | type-check strict | Fase 1 |
 
-`pglast` continua **nao** instalado: pertence a Fase 4.
+| pglast | parser oficial do PostgreSQL | Fase 4 |
 
 Configuracao em `pyproject.toml`. Nao ha instalacao editavel: o pytest resolve
 o pacote via `pythonpath = ["src"]`.
@@ -95,7 +97,7 @@ deliberadamente **nao** adotado.
 
 ```text
 AI Client -> MCP Server -> Gateway -> Query Validator -> DB Adapter -> PostgreSQL
-   (Fase 5)                (Fase 4)     (Fase 4)          (Fase 2)
+   (Fase 5)                (Fase 5)     (Fase 4)          (Fase 2)
                                                               |
                                               Result Set + Column Metadata
                                                               |
@@ -132,23 +134,31 @@ src/maskgw/
     matcher.py           RuleMatcher, ExceptionMatcher
     engine.py            Action, Decision, MaskingEngine
     transformers/        base, params, registry, hashes, regex, randomize, simple
-  db/                    <- Fases 2 e 3
+  db/                    <- Fases 2, 3 e 4
     columns.py           ColumnOrigin, describe_columns
     provenance.py        ftable/ftablecol -> catalogo -> origem  (Fase 3)
-    result.py            MaskedResult
-    sanitize.py          psycopg.Error -> DatabaseError generico
-    postgres.py          PostgresAdapter
+    capabilities.py      check_provenance_capability             (Fase 4)
+    result.py            MaskedResult (+ truncated)
+    sanitize.py          psycopg.Error -> DatabaseError / QueryTimeout
+    postgres.py          PostgresAdapter: read-only, timeout, row limit
+  sql/                   <- Fase 4
+    parser.py            pglast; um statement executavel
+    validator.py         allowlist de nos da AST
+    policy.py            politica de funcoes, extensivel
 
 tests/
   conftest.py                    fixtures, DSN e dublês de conexao/cursor
   test_config_loader.py     35   test_canonical.py             52
   test_matching.py          44   test_db_columns.py            13
   test_transformers.py      94   test_db_masking.py            55
-  test_engine.py            36   test_db_errors.py             37
+  test_engine.py            36   test_db_errors.py             38
   test_purity.py            32   test_db_leakage.py            46
   test_leakage.py           13   test_db_integration.py        80
   test_config_hazards.py     8   test_db_provenance.py         36
-                                 test_pgresult_metadata.py     27
+  test_config_gateway.py    33   test_pgresult_metadata.py     27
+                                 test_sql_parser.py            36
+                                 test_sql_validator.py        149
+                                 test_execution_safety.py      48
 ```
 
 `tests/test_pgresult_metadata.py` nao testa codigo do Gateway: mede o que o
@@ -180,19 +190,27 @@ D-001 a D-014 na Fase 1; D-015 a D-019 na Fase 2. Detalhamento em
 | D-023 | Proveniencia resolvida antes de qualquer linha ser lida |
 | D-024 | `origin_schema`/`origin_table` sao auditoria, nao criterio de matching |
 | D-025 | Falha de proveniencia nao muda a politica; nao ha nova regra fail-closed |
+| D-026 | Capability check de proveniencia, fatal no startup |
+| D-027 | Funcoes: namespace `pg_` deny-by-default; resto allow com denylist |
+| D-028 | Read-only e timeout por `options` do DSN, conferidos apos conectar |
+| D-029 | Duas portas no adapter: `execute_validated` e `execute` sem validacao |
+| D-030 | Row limit devolve ate `max_rows` e marca `truncated`; N+1 descartada |
+| D-031 | Validacao por tipo de no da AST, incluindo `*Stmt` aninhados |
+| D-032 | Erros de parser e validator nao citam a consulta |
 
 ## 6. Resultado das verificacoes
 
 Com `MASKGW_TEST_DSN` apontando para PostgreSQL 16 em Docker:
 
 ```text
-pytest   608 passed
+pytest   875 passed
+pytest   155 passed  (-m integration)
 ruff     All checks passed
-ruff     43 files already formatted
-mypy     Success: no issues found in 43 source files  (strict)
+ruff     53 files already formatted
+mypy     Success: no issues found in 53 source files  (strict)
 ```
 
-Sem `MASKGW_TEST_DSN`: `501 passed, 107 skipped`.
+Sem `MASKGW_TEST_DSN`: `720 passed, 155 skipped`.
 
 ## 7. Protecao contra alias: o que a Fase 3 fechou
 
@@ -230,11 +248,31 @@ Tres limitacoes conhecidas, todas em `docs/FUTURE-HARDENING.md`:
 - **View que renomeia apaga o nome original.** `CREATE VIEW v AS SELECT cpf AS
   documento FROM cliente` da `origin_name = "documento"`. Sem lineage recursivo
   por `pg_rewrite` nesta fase (D-022).
-- **Role sem leitura em `pg_catalog` reabre o bypass, em silencio.** A falha de
-  resolucao e deliberadamente nao fatal (D-025), e nao ha logging ate a Fase 5.
+- **Role sem leitura em `pg_catalog` reabria o bypass em silencio.** Fechado na
+  Fase 4: `check_provenance_capability` roda no `connect()` e o processo nao
+  sobe sem a capacidade (D-026). A resolucao em runtime segue tolerante a falha
+  (D-025), mas a instalacao deixou de poder estar errada sem ninguem saber.
 
 Expressoes continuam sendo o bypass residual principal do MVP:
 `SELECT substr(cpf,1,3) AS x` passa em claro.
+
+## 8b. Configuracao nova da Fase 4
+
+```yaml
+database:
+  statement_timeout_ms: 30000   # 100 .. 600000
+  max_rows: 1000                # 1 .. 1000000
+sql:
+  allowed_pg_functions: []      # acrescenta a allowlist do namespace pg_
+  denied_functions: []          # acrescenta a denylist; a negacao vence
+```
+
+Ambas as secoes sao opcionais e validadas fail-closed. DSN e credenciais
+continuam fora do `masking.yaml`: declarar `password`, `dsn` ou `host` ali e
+erro fatal, nao campo ignorado.
+
+`load_config` continua devolvendo so a `MaskingPolicy`; `load_gateway_config`
+devolve tambem `database` e `sql`.
 
 ## 9. Sondagem para a Fase 4
 
@@ -254,35 +292,37 @@ com o cursor client-side do psycopg3, que ja materializou o resultado. Se o row
 limit da Fase 4 introduzir cursor server-side, essa ordem precisa ser
 reavaliada.
 
-## 10. Fase 4 — objetivo e criterios
+## 10. Fase 5 — objetivo e criterios
 
-**FASE 4 — SQL validation + read-only + timeout + row limit.**
+**FASE 5 — MCP Server.**
 
-Escopo (`docs/ROADMAP.md`): parsing com pglast e allowlist de `SelectStmt` na
-raiz; inspecao recursiva de CTEs; bloqueio de multiplos statements; role
-read-only documentada e verificada; `statement_timeout`; limite maximo de
-linhas por resposta.
+Escopo (`docs/ROADMAP.md`): servidor MCP expondo a capacidade de consulta;
+handlers finos, sem nenhuma regra de masking; nenhuma superficie que permita ao
+cliente ler, alterar ou desabilitar regras; logging estruturado com metadata.
 
 Criterios de aceite:
 
-1. INSERT, UPDATE, DELETE, DROP, ALTER, TRUNCATE, CREATE, GRANT e REVOKE
-   rejeitados.
-2. `WITH x AS (DELETE ... RETURNING *) SELECT * FROM x` rejeitado.
-3. `SELECT 1; DROP TABLE t` rejeitado — obrigatorio, ver secao 9.
-4. Consulta longa interrompida pelo timeout.
-5. Resposta truncada no limite de linhas, com indicacao de truncamento.
-6. Escrita que passe pelo validator ainda falha pelo privilegio da role.
+1. Fluxo end-to-end com cliente MCP real.
+2. Inspecao do codigo confirma que nenhum caminho devolve valor original antes
+   do Masking Engine.
+3. Tentativa do cliente de alterar configuracao e rejeitada.
 
-`pglast` ainda nao esta instalado. O adapter ja le em lotes (D-018), entao o
-row limit entra sem reescrita.
+O ponto de entrada ja existe e esta pronto: `PostgresAdapter.execute_validated`.
+Os handlers MCP devem chamar exclusivamente essa porta — nunca `execute`.
+
+Dois cuidados herdados:
+
+- **`audit/` estreia aqui, e com ele o primeiro `logging` do projeto.** Ate
+  hoje nenhum modulo importa `logging`, e `tests/test_leakage.py` varre `src/`
+  inteiro para garantir isso (D-012). Esse teste precisara ser reescrito para
+  permitir log APENAS de metadata, sem afrouxar a garantia.
+- `MaskedResult.truncated` precisa chegar ao cliente MCP: uma IA que nao saiba
+  que o resultado foi cortado tirara conclusoes erradas.
 
 ## 11. O que NAO foi implementado
 
-- SQL parser e query validator com pglast (Fase 4)
-- conexao read-only, `statement_timeout`, limite de linhas (Fase 4)
-- bloqueio de multiplos statements (Fase 4)
-- MCP Server (Fase 5)
-- `gateway/` e `audit/` (Fases 4 e 5); nenhum modulo importa `logging`
+- MCP Server (Fase 5) — nao existe `maskgw/mcp/`
+- `gateway/` e `audit/` (Fase 5); nenhum modulo importa `logging`
 - testes adversariais end-to-end (Fase 6)
 
 Fora do escopo do MVP, em `docs/FUTURE-HARDENING.md`: bloqueio de WHERE /

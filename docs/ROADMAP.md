@@ -98,6 +98,17 @@ Aceite:
 - resposta truncada no limite de linhas, com indicação de truncamento
 - tentativa de escrita que passe pelo validator ainda falha pelo privilégio
 
+**Concluída.** Acrescentado ao escopo original, a partir de medição:
+
+- **`SELECT 1 INTO nova` parseia como `SelectStmt` e cria uma tabela.** Raiz
+  SELECT não basta: `IntoClause` e `LockingClause` são recusadas em qualquer
+  ponto da árvore (D-031).
+- Contagem de statements pelo que o parser reconhece como executável, não por
+  `;`: `SELECT 1;;` é um statement, `;` é nenhum.
+- Política de funções `pg_`-deny-by-default (D-027), com o limite de segurança
+  declarado.
+- Capability check de proveniência, fatal no startup (D-026).
+
 ---
 
 ## FASE 5 — MCP Server

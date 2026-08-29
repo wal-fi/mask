@@ -17,8 +17,13 @@ import pytest
 
 from maskgw.config import load_config_text
 from maskgw.db.postgres import PostgresAdapter
-from maskgw.db.sanitize import GENERIC_MESSAGE, classify, sanitize_error
-from maskgw.errors import DatabaseError, MaskGatewayError
+from maskgw.db.sanitize import (
+    GENERIC_MESSAGE,
+    TIMEOUT_MESSAGE,
+    classify,
+    sanitize_error,
+)
+from maskgw.errors import DatabaseError, MaskGatewayError, QueryTimeout
 from maskgw.masking.engine import MaskingEngine
 from tests.conftest import INTRANS, FakeColumn, FakeConnection, FakeCursor
 
@@ -70,7 +75,6 @@ class TestClassification:
             ("42P01", "invalida"),
             ("53200", "recursos"),
             ("54000", "limite"),
-            ("57014", "interrompida"),
         ],
     )
     def test_class_selects_a_generic_message(self, sqlstate, fragment):
@@ -79,6 +83,18 @@ class TestClassification:
     @pytest.mark.parametrize("sqlstate", ["XX000", "P0001", "", "9"])
     def test_unknown_class_falls_back_to_generic(self, sqlstate):
         assert str(sanitize_error(pg_error(sqlstate))) == GENERIC_MESSAGE
+
+    def test_query_canceled_becomes_a_timeout(self):
+        """`statement_timeout` produz 57014: o chamador distingue o caso."""
+        error = sanitize_error(pg_error("57014", "canceling statement due to statement timeout"))
+        assert isinstance(error, QueryTimeout)
+        assert isinstance(error, DatabaseError)
+        assert str(error) == TIMEOUT_MESSAGE
+        assert "canceling statement" not in str(error)
+        assert CPF not in str(error)
+
+    def test_other_57_codes_are_not_timeouts(self):
+        assert not isinstance(sanitize_error(pg_error("57P01")), QueryTimeout)
 
     def test_missing_sqlstate_falls_back_to_generic(self):
         assert str(sanitize_error(psycopg.Error(LEAKY_MESSAGE))) == GENERIC_MESSAGE

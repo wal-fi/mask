@@ -47,8 +47,12 @@ masking:
 
 #: Unico conjunto de nomes publicos que cada tipo pode expor. Ampliar esta
 #: lista tem de ser uma decisao consciente, nao um acidente.
-ADAPTER_PUBLIC_API = frozenset({"connect", "close", "execute", "closed"})
-RESULT_PUBLIC_API = frozenset({"columns", "decisions", "rows", "column_names", "row_count"})
+ADAPTER_PUBLIC_API = frozenset(
+    {"connect", "close", "execute", "execute_validated", "closed", "settings"}
+)
+RESULT_PUBLIC_API = frozenset(
+    {"columns", "decisions", "rows", "column_names", "row_count", "truncated"}
+)
 
 #: Nomes que jamais podem existir na API publica de db/.
 FORBIDDEN_API = frozenset(
@@ -141,7 +145,7 @@ class TestNoValueInRepr:
         assert CPF not in rendered
         assert EMAIL not in rendered
         assert "Maria" not in rendered
-        assert rendered == "MaskedResult(columns=3, rows=2)"
+        assert rendered == "MaskedResult(columns=3, rows=2, truncated=False)"
 
     def test_result_repr_survives_a_wide_result(self, adapter):
         assert len(repr(adapter.execute("SELECT ..."))) < 80

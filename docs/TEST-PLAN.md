@@ -142,19 +142,46 @@ Verificar bloqueio de:
 - INSERT
 - UPDATE
 - DELETE
+- MERGE
 - DROP
 - ALTER
 - TRUNCATE
 - CREATE
 - GRANT
 - REVOKE
-- CTE modificadora de dados
+- COPY, CALL, DO, VACUUM, ANALYZE, REFRESH, SET, RESET
+- CTE modificadora de dados, inclusive aninhada e dentro de subquery
 - múltiplos statements
+- `SELECT ... INTO` e `SELECT ... FOR UPDATE`
+- funções perigosas, com schema explícito e com variação de caixa
 
 Verificar:
 - `statement_timeout` interrompe consulta longa
 - limite de linhas trunca a resposta e sinaliza truncamento
 - escrita que passe pelo validator ainda falha pelo privilégio da role
+
+Implementado em três camadas:
+
+- **medição** (`test_sql_parser`) — o que o pglast considera um statement
+  executável. `SELECT 1;;` é um; `;` é nenhum. O critério do validator segue o
+  que foi medido, nunca a contagem de `;`.
+- **adversarial sem banco** (`test_sql_validator`) — todos os cenários acima,
+  mais as garantias de que nenhuma mensagem cita a consulta.
+- **com PostgreSQL real** (`test_execution_safety`) — read-only, timeout, row
+  limit e capability check.
+
+### Defesa em profundidade
+
+`TestReadOnlyIsEnforcedByPostgres` chama `execute`, a porta **sem validação**,
+de propósito. Se o PostgreSQL não barrasse, as escritas aconteceriam e a suíte
+acusaria. Um teste de controle confere, por uma segunda conexão, que a tabela
+continua com as 50 linhas depois de todas as tentativas.
+
+### Capability check de proveniência
+
+Testado com uma role real sem `SELECT` em `pg_attribute`: `check_provenance_
+capability` levanta `CapabilityError`, e um teste seguinte confirma que o acesso
+ao catálogo foi restaurado.
 
 ## Leakage (todas as fases)
 

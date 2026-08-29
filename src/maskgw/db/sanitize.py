@@ -22,10 +22,16 @@ from typing import Final
 
 import psycopg
 
-from maskgw.errors import DatabaseError
+from maskgw.errors import DatabaseError, QueryTimeout
 
 #: Um SQLSTATE tem 5 caracteres; os dois primeiros identificam a classe.
 _SQLSTATE_CLASS_LENGTH: Final = 2
+
+#: `query_canceled`: e o que o `statement_timeout` produz.
+QUERY_CANCELED_SQLSTATE: Final = "57014"
+
+#: Mensagem do timeout. Nao cita a consulta nem a duracao real.
+TIMEOUT_MESSAGE: Final = "a consulta excedeu o tempo maximo de execucao"
 
 #: Mensagem usada quando a classe do SQLSTATE e desconhecida ou ausente.
 GENERIC_MESSAGE: Final = "erro ao consultar o banco de dados"
@@ -59,5 +65,11 @@ def classify(exc: psycopg.Error) -> str:
 
 
 def sanitize_error(exc: psycopg.Error) -> DatabaseError:
-    """Traduz um erro do psycopg em `DatabaseError` sem nenhum dado original."""
+    """Traduz um erro do psycopg em `DatabaseError` sem nenhum dado original.
+
+    O cancelamento por `statement_timeout` vira `QueryTimeout`, que e um
+    `DatabaseError` — o chamador distingue o caso sem receber nada do servidor.
+    """
+    if exc.sqlstate == QUERY_CANCELED_SQLSTATE:
+        return QueryTimeout(TIMEOUT_MESSAGE)
     return DatabaseError(_MESSAGE_BY_CLASS.get(classify(exc), GENERIC_MESSAGE))

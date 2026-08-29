@@ -371,3 +371,159 @@ Efeito colateral operacional que precisa estar visivel: **uma role sem leitura
 em `pg_catalog` reabre o bypass por alias**, silenciosamente. Registrado em
 `docs/SECURITY.md` e em `docs/FUTURE-HARDENING.md`.
 
+---
+
+# Fase 4 — SQL validation + execution safety
+
+## D-026 — Capability check de proveniencia: falha alta no startup
+
+A resolucao de proveniencia em runtime e tolerante a falha por desenho
+(D-025): derrubar uma consulta inteira por um problema de catalogo seria pior
+que o problema. O preco e que uma role sem `SELECT` em `pg_attribute` degrada a
+protecao contra alias **em silencio**, e nao ha logging ate a Fase 5.
+
+Decisao: `maskgw.db.capabilities.check_provenance_capability` faz uma
+verificacao EXPLICITA, para o startup, e levanta `CapabilityError` quando a
+capacidade nao existe. O adapter a executa em `connect()`.
+
+Detalhes que importam:
+
+- A sonda e `pg_catalog.pg_class.relname`, um catalogo do sistema — a
+  verificacao nao depende do schema da aplicacao.
+- Ela passa pelo **resolver real**, nao por uma consulta paralela. O que se
+  quer provar e que o caminho usado em producao funciona nesta instalacao.
+- A mensagem nomeia as tabelas de catalogo necessarias, e nada mais: nem o
+  erro do PostgreSQL, nem o DSN, nem a role.
+
+Isto **nao** e politica de masking. Colunas `DERIVED` e `UNKNOWN` continuam
+seguindo o default ALLOW; o que muda e que o processo nao sobe com a protecao
+desligada. Validacao de instalacao, nao de dados.
+
+Testado com uma role real sem `SELECT` em `pg_attribute`.
+
+## D-027 — Politica de funcoes: `pg_` deny-by-default, resto allow-by-default
+
+Uma allowlist COMPLETA de funcoes seguras tornaria o Gateway inutilizavel:
+`lower`, `substr`, `count`, `coalesce`, `date_trunc`, todos os agregados e
+janelas teriam de ser enumerados, e cada omissao quebraria uma consulta
+legitima. O escopo da fase previa apresentar essa decisao antes de expandir.
+
+Decisao: inverter o default onde o risco se concentra.
+
+| namespace | default | mecanismo |
+|---|---|---|
+| `pg_*` | **negar** | allowlist curta e explicita (`pg_typeof`, `pg_size_pretty`, `pg_column_size`) |
+| demais | permitir | denylist de familias perigosas (`dblink*`, `lo_*`, `query_to_xml*`, `set_config`, `setseed`) |
+
+Praticamente toda funcao perigosa do PostgreSQL vive no namespace `pg_`:
+`pg_read_file`, `pg_ls_dir`, `pg_stat_file`, `pg_terminate_backend`,
+`pg_sleep`, `pg_reload_conf`. Negar o namespace inteiro cobre inclusive
+funcoes que ainda nao existem — testado com `pg_funcao_inventada_no_futuro()`.
+
+A decisao e sobre o nome FINAL da funcao, sem o schema:
+`pg_catalog.pg_read_file`, `pg_read_file` e `PG_READ_FILE` sao a mesma coisa, e
+o parser do PostgreSQL ja normaliza caixa e aspas.
+
+**O limite de seguranca, declarado sem eufemismo:** uma funcao definida pelo
+usuario, com efeito colateral e nome comum, PASSA. Esta politica e a primeira
+camada, nao a unica. A barreira real e o privilegio: role read-only, sem
+EXECUTE em funcoes perigosas, e sem pertencer a `pg_read_server_files` nem a
+`pg_execute_server_program`. Registrado em `docs/SECURITY.md`.
+
+A politica e extensivel por configuracao (`sql.allowed_pg_functions` e
+`sql.denied_functions`), sem alterar codigo. Em conflito, a negacao vence.
+
+## D-028 — Read-only e timeout por `options` do DSN, conferidos depois
+
+Os dois limites vao ao backend em `options` do conninfo:
+
+```text
+-c default_transaction_read_only=on -c statement_timeout=<ms>
+```
+
+Escolha sobre as alternativas:
+
+- **`options` em vez de `SET` apos conectar:** o `options` e aplicado pelo
+  backend na inicializacao, antes de qualquer statement. Nao existe janela
+  entre conectar e proteger.
+- **Compativel com `autocommit=True`** (D-016): `default_transaction_read_only`
+  vale para as transacoes implicitas.
+- **Os `-c` do Gateway vao por ultimo.** Se o DSN ja trouxer `options`
+  conflitante, prevalece o do Gateway. Fixado em teste com um DSN hostil
+  (`-c default_transaction_read_only=off -c statement_timeout=0`).
+
+E, porque configuracao pode ser silenciosamente neutralizada — por um pooler,
+por `ALTER ROLE ... SET`, por um DSN inesperado — `connect()` **confere** os
+dois valores em `pg_settings` e levanta `CapabilityError` se nao bateram. O
+Gateway nao opera sem eles.
+
+Nada disso substitui a exigencia operacional de uma role sem privilegio de
+escrita. Sao camadas distintas, e o teste de defesa em profundidade contorna o
+validator de proposito para provar que a de baixo funciona.
+
+## D-029 — Duas portas no adapter, deliberadamente
+
+- `execute_validated(sql)` — valida e so entao executa. E o que um Gateway ou
+  servidor MCP deve chamar.
+- `execute(sql, params)` — **nao** valida. Porta interna.
+
+Manter a porta sem validacao e intencional: os testes de defesa em profundidade
+precisam contornar o validator para provar que o PostgreSQL barra a escrita
+sozinho. Se `execute` validasse, esse teste nao existiria — e a suite passaria
+a medir o parser duas vezes em vez de medir o privilegio uma.
+
+## D-030 — Row limit: devolver ate `max_rows` e sinalizar `truncated`
+
+Alternativa descartada: rejeitar o resultado inteiro quando passa do limite.
+Para uso por IA isso e pior — uma consulta exploratoria comum falharia sem
+entregar nada, e o cliente tenderia a repetir com filtros ate acertar.
+
+Decisao: devolver ate `max_rows` linhas e marcar `MaskedResult.truncated`.
+
+O ponto delicado e como saber que havia mais. O adapter busca deliberadamente
+UMA linha alem do limite; ao detectar o excesso, **descarta essa linha antes do
+masking**. Ela nunca e transformada e nunca chega ao chamador. A linha N+1
+existe apenas como um booleano.
+
+O enforcement e no consumo do result set, nao reescrevendo a SQL com `LIMIT`:
+reescrever mudaria a semantica de consultas com `ORDER BY`, `OFFSET` ou
+agregacao, e exigiria um SQL rewriter — fora do escopo.
+
+A leitura em lotes (D-018) permanece: o tamanho do lote nao altera nem o
+resultado nem o `truncated`, fixado em teste para lotes de 1, 3, 7 e 500.
+
+## D-031 — Validacao por tipo de no da AST, incluindo os `*Stmt` aninhados
+
+Quatro regras, todas sobre a arvore que o proprio PostgreSQL produz:
+
+1. Exatamente um statement **executavel**. O parser descarta statements
+   vazios: `SELECT 1;;` e um, `;` e nenhum. O criterio e a contagem de
+   statements reconhecidos, nunca a de ponto e virgula. Medido em
+   `tests/test_sql_parser.py`.
+2. Raiz `SelectStmt`. Isso cobre INSERT, UPDATE, DELETE, MERGE, CREATE, ALTER,
+   DROP, TRUNCATE, GRANT, REVOKE, COPY, CALL, DO, VACUUM, ANALYZE, REFRESH,
+   SET e RESET sem que nenhum precise ser nomeado.
+3. Nenhum outro no de statement em lugar nenhum da arvore. A raiz ser
+   `SelectStmt` **nao basta**: `WITH x AS (DELETE ... RETURNING *)` tem raiz
+   `SelectStmt`. O criterio para "no de statement" e estrutural — toda classe
+   de statement da gramatica termina em `Stmt`, e sao 117 delas —, nao uma
+   lista de palavras-chave mantida a mao.
+4. `IntoClause` e `LockingClause` recusadas em qualquer ponto.
+
+A regra 4 nasceu de uma medicao, nao do plano: **`SELECT 1 INTO nova` parseia
+como `SelectStmt` e CRIA UMA TABELA.** Um validator que so olhasse o tipo do no
+raiz o aceitaria. `SELECT ... FOR UPDATE` tem o mesmo formato e trava linhas.
+
+## D-032 — Erros de parser e validator nao citam a consulta
+
+- `InvalidQuery` para SQL malformada: mensagem fixa `"sintaxe SQL invalida"`. A
+  do pglast cita trechos da consulta (`syntax error at or near "SELEC"`).
+- `QueryRejected` para SQL valida que a politica recusa. O motivo vem de um
+  conjunto FIXO de sete constantes. Nem a consulta, nem nomes vindos dela —
+  nem o nome da funcao proibida — entram na mensagem.
+- `QueryTimeout` para SQLSTATE 57014, com texto proprio. E subclasse de
+  `DatabaseError`: o chamador distingue o caso sem receber nada do servidor.
+
+A garantia de D-017 vale para todos: nem `__cause__` nem `__context__` apontam
+para a excecao original. Fixado por teste que renderiza o traceback completo.
+

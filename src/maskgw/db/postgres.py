@@ -1,22 +1,29 @@
 """Adapter PostgreSQL.
 
-Componente INTERNO da Fase 2. Nao ha superficie MCP nem cliente externo
-ligado a ele: a validacao de SQL (allowlist de SELECT, bloqueio de multiplos
-statements), o enforcement read-only, o `statement_timeout` e o limite de
-linhas sao da Fase 4 e NAO estao implementados aqui.
+Componente INTERNO: nao ha superficie MCP ligada a ele (Fase 5).
+
+Duas portas de entrada, deliberadamente distintas:
+
+- `execute_validated(sql)` — passa pelo validator antes de tocar o banco. E o
+  que um Gateway ou servidor MCP deve chamar.
+- `execute(sql, params)` — NAO valida. Existe porque a seguranca nao pode
+  depender so do parser: os testes chamam esta porta para provar que o
+  PostgreSQL rejeita escrita mesmo com o validator deliberadamente contornado.
 
 Invariantes:
 
-- Valor original nunca sai. `execute` devolve `MaskedResult`; o fetch cru vive
-  num gerador privado, consumido inteiramente dentro de `execute`.
+- Valor original nunca sai. As duas portas devolvem `MaskedResult`; o fetch
+  cru vive num gerador privado, consumido inteiramente dentro de `execute`.
 - A proveniencia de cada coluna vem da metadata do PostgreSQL, resolvida ANTES
   de qualquer linha ser lida. Nunca dos valores das linhas.
-- Leitura em LOTES via `fetchmany`, para que o adapter nao dependa de carregar
-  o result set inteiro em memoria. Isso e estrategia de consumo, nao row
-  limiting: nenhuma linha e descartada.
+- A sessao e read-only e tem `statement_timeout`, ambos aplicados pelo
+  PostgreSQL e conferidos apos a conexao. Ver D-028.
+- No maximo `max_rows` linhas saem. A linha N+1 e lida para detectar excesso,
+  mas descartada ANTES do masking e nunca devolvida. Ver D-030.
+- Leitura em LOTES via `fetchmany`: o adapter nao carrega o result set inteiro.
 - Erros do PostgreSQL saem sanitizados e SEM referencia a excecao original,
   nem por `__cause__` nem por `__context__`. Ver `_raise_sanitized`.
-- A sessao nunca fica `idle in transaction`. Ver docs/DECISIONS.md (D-016).
+- A sessao nunca fica `idle in transaction`. Ver D-016.
 - `conninfo` pode conter senha: nao aparece em `repr`, log ou erro.
 """
 
@@ -28,18 +35,31 @@ from types import TracebackType
 from typing import Any, Final, NoReturn
 
 import psycopg
+from psycopg.conninfo import conninfo_to_dict, make_conninfo
 from psycopg.rows import tuple_row
 
+from maskgw.config.gateway import DatabaseSettings
+from maskgw.db.capabilities import check_provenance_capability
 from maskgw.db.columns import describe_columns
 from maskgw.db.provenance import ProvenanceResolver, provenance_keys
 from maskgw.db.result import MaskedResult
 from maskgw.db.sanitize import sanitize_error
-from maskgw.errors import DatabaseError
+from maskgw.errors import CapabilityError, DatabaseError
 from maskgw.masking.descriptor import ColumnDescriptor
 from maskgw.masking.engine import MaskingEngine
+from maskgw.sql.policy import DEFAULT_SQL_POLICY, SqlPolicy
+from maskgw.sql.validator import validate_select
 
-#: Linhas buscadas por `fetchmany`. Nao e limite de resposta (Fase 4).
+#: Linhas buscadas por `fetchmany`. Nao e o limite de resposta: e `max_rows`.
 DEFAULT_BATCH_SIZE: Final = 500
+
+#: Limites default, quando nenhuma configuracao e passada.
+DEFAULT_SETTINGS: Final = DatabaseSettings(statement_timeout_ms=30_000, max_rows=1_000)
+
+_SESSION_QUERY: Final = """
+SELECT name, setting FROM pg_settings
+WHERE name IN ('default_transaction_read_only', 'statement_timeout')
+"""
 
 _Connection = psycopg.Connection[tuple[Any, ...]]
 _Cursor = psycopg.Cursor[tuple[Any, ...]]
@@ -48,12 +68,15 @@ _Cursor = psycopg.Cursor[tuple[Any, ...]]
 class PostgresAdapter:
     """Executa consultas e devolve apenas result sets ja mascarados."""
 
-    def __init__(
+    def __init__(  # noqa: PLR0913 - limites e politicas, todos keyword-only
         self,
         conninfo: str,
         engine: MaskingEngine,
         *,
+        settings: DatabaseSettings = DEFAULT_SETTINGS,
+        sql_policy: SqlPolicy = DEFAULT_SQL_POLICY,
         batch_size: int = DEFAULT_BATCH_SIZE,
+        verify_capabilities: bool = True,
     ) -> None:
         if batch_size < 1:
             msg = "batch_size deve ser >= 1"
@@ -61,7 +84,10 @@ class PostgresAdapter:
         # Guardado apenas para conectar; nunca exposto.
         self._conninfo = conninfo
         self._engine = engine
+        self._settings = settings
+        self._sql_policy = sql_policy
         self._batch_size = batch_size
+        self._verify_capabilities = verify_capabilities
         self._connection: _Connection | None = None
         self._provenance: ProvenanceResolver | None = None
 
@@ -70,16 +96,22 @@ class PostgresAdapter:
         connection = self._connection
         return connection is None or connection.closed
 
+    @property
+    def settings(self) -> DatabaseSettings:
+        return self._settings
+
     def connect(self) -> None:
-        """Abre a conexao, se ainda nao estiver aberta."""
+        """Abre a conexao, aplica os limites e confere que eles pegaram."""
         if not self.closed:
             return
+        failure: DatabaseError | None = None
         try:
             # autocommit: cada statement roda na propria transacao implicita e
             # a sessao volta a IDLE sozinha. Sem COMMIT explicito de operacao
-            # arbitraria e compativel com o read-only da Fase 4.
+            # arbitraria. `options` chega ao backend na inicializacao, antes de
+            # qualquer statement.
             self._connection = psycopg.connect(
-                self._conninfo,
+                self._session_conninfo(),
                 autocommit=True,
                 row_factory=tuple_row,
             )
@@ -89,9 +121,16 @@ class PostgresAdapter:
             self._connection = None
             self._provenance = None
             failure = sanitize_error(exc)
-        else:
-            return
-        _raise_sanitized(failure)
+        if failure is not None:
+            _raise_sanitized(failure)
+
+        try:
+            self._verify_session()
+            if self._verify_capabilities:
+                check_provenance_capability(self._require_connection())
+        except CapabilityError:
+            self.close()
+            raise
 
     def close(self) -> None:
         """Fecha a conexao. Idempotente."""
@@ -101,8 +140,22 @@ class PostgresAdapter:
             with contextlib.suppress(psycopg.Error):
                 connection.close()
 
+    def execute_validated(self, sql: str) -> MaskedResult:
+        """Valida a consulta e so entao a executa.
+
+        Porta de entrada de qualquer chamador nao confiavel. `InvalidQuery` e
+        `QueryRejected` sao levantadas antes de o banco ver a consulta.
+        """
+        validate_select(sql, policy=self._sql_policy)
+        return self.execute(sql)
+
     def execute(self, query: str, params: Sequence[Any] | None = None) -> MaskedResult:
-        """Executa uma consulta e devolve o result set ja mascarado."""
+        """Executa SEM validar e devolve o result set ja mascarado.
+
+        Porta interna. A protecao contra escrita aqui e o privilegio do
+        PostgreSQL, nao o validator — e disso que dependem os testes de defesa
+        em profundidade.
+        """
         connection = self._require_connection()
         failure: DatabaseError | None = None
         try:
@@ -110,7 +163,7 @@ class PostgresAdapter:
                 cursor.execute(query, params)
                 columns = self._describe(cursor)
                 decisions = tuple(self._engine.decide(column) for column in columns)
-                rows = tuple(self._masked_batches(cursor, columns))
+                rows, truncated = self._read_masked(cursor, columns)
         except psycopg.Error as exc:
             # Guardado, nao levantado aqui: ver `_raise_sanitized`.
             failure = sanitize_error(exc)
@@ -121,7 +174,53 @@ class PostgresAdapter:
         if failure is not None:
             _raise_sanitized(failure)
 
-        return MaskedResult(columns=columns, decisions=decisions, rows=rows)
+        return MaskedResult(
+            columns=columns,
+            decisions=decisions,
+            rows=rows,
+            truncated=truncated,
+        )
+
+    def _session_conninfo(self) -> str:
+        """DSN com os limites de execucao anexados em `options`.
+
+        Os `-c` do Gateway vao por ultimo: em caso de conflito com o que ja
+        estava no DSN, prevalece o ultimo.
+        """
+        existing = conninfo_to_dict(self._conninfo).get("options")
+        ours = (
+            "-c default_transaction_read_only=on "
+            f"-c statement_timeout={self._settings.statement_timeout_ms}"
+        )
+        options = f"{existing} {ours}" if isinstance(existing, str) and existing else ours
+        return make_conninfo(self._conninfo, options=options)
+
+    def _verify_session(self) -> None:
+        """Confere que read-only e timeout realmente valem nesta sessao.
+
+        Um DSN com `options` conflitante, um pooler que reescreve parametros ou
+        um `ALTER ROLE ... SET` poderiam neutralizar os limites em silencio.
+        """
+        connection = self._require_connection()
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute(_SESSION_QUERY)
+                settings: dict[str, str] = dict(cursor.fetchall())
+        except psycopg.Error:
+            settings = {}
+
+        expected = {
+            "default_transaction_read_only": "on",
+            "statement_timeout": str(self._settings.statement_timeout_ms),
+        }
+        for name, wanted in expected.items():
+            if settings.get(name) != wanted:
+                # Nomes de parametro do PostgreSQL: constantes, nunca dado.
+                msg = (
+                    f"a sessao nao aplicou o limite de execucao {name!r}; "
+                    "o Gateway nao opera sem read-only e statement_timeout"
+                )
+                raise CapabilityError(msg)
 
     def _describe(self, cursor: _Cursor) -> tuple[ColumnDescriptor, ...]:
         """Monta os descritores, resolvendo a proveniencia antes do fetch.
@@ -141,18 +240,41 @@ class PostgresAdapter:
             raise DatabaseError(msg)
         return connection
 
-    def _masked_batches(
+    def _read_masked(
         self,
         cursor: _Cursor,
         columns: tuple[ColumnDescriptor, ...],
-    ) -> Iterator[tuple[Any, ...]]:
-        """Le em lotes e mascara cada lote. Privado: linha crua nao escapa."""
+    ) -> tuple[tuple[tuple[Any, ...], ...], bool]:
+        """Le em lotes, mascara e corta em `max_rows`.
+
+        Busca deliberadamente UMA linha alem do limite, para saber se havia
+        mais. Essa linha e descartada antes do masking: ela nunca e
+        transformada e nunca chega ao chamador.
+        """
+        limit = self._settings.max_rows
+        masked: list[tuple[Any, ...]] = []
+        truncated = False
+
         while True:
-            batch = cursor.fetchmany(self._batch_size)
+            wanted = min(self._batch_size, limit - len(masked) + 1)
+            batch = cursor.fetchmany(wanted)
             if not batch:
-                return
-            for row in self._engine.mask_rows(columns, batch):
-                yield tuple(row)
+                break
+            if len(masked) + len(batch) > limit:
+                batch = batch[: limit - len(masked)]
+                truncated = True
+                masked.extend(self._mask(columns, batch))
+                break
+            masked.extend(self._mask(columns, batch))
+
+        return tuple(masked), truncated
+
+    def _mask(
+        self,
+        columns: tuple[ColumnDescriptor, ...],
+        batch: Sequence[Sequence[Any]],
+    ) -> Iterator[tuple[Any, ...]]:
+        return (tuple(row) for row in self._engine.mask_rows(columns, batch))
 
     def _settle(self) -> None:
         """Garante que a sessao nao fique `idle in transaction`.

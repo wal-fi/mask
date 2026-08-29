@@ -55,16 +55,8 @@ def _format_validation_error(exc: ValidationError) -> str:
     return "; ".join(parts)
 
 
-def parse_config(
-    raw: object,
-    *,
-    secrets: SecretProvider | None = None,
-    registry: TransformerRegistry | None = None,
-) -> MaskingPolicy:
-    """Valida uma estrutura ja desserializada e compila a politica."""
-    secrets = secrets if secrets is not None else EnvSecretProvider()
-    registry = registry if registry is not None else build_default_registry()
-
+def validate_file_config(raw: object) -> MaskingFileConfig:
+    """Valida a estrutura do arquivo. Nao constroi transformers."""
     if raw is None:
         raw = {}
     if not isinstance(raw, dict):
@@ -72,10 +64,21 @@ def parse_config(
         raise ConfigError(msg)
 
     try:
-        parsed = MaskingFileConfig.model_validate(raw)
+        return MaskingFileConfig.model_validate(raw)
     except ValidationError as exc:
         msg = f"configuracao invalida: {_format_validation_error(exc)}"
         raise ConfigError(msg) from exc
+
+
+def compile_policy(
+    parsed: MaskingFileConfig,
+    *,
+    secrets: SecretProvider | None = None,
+    registry: TransformerRegistry | None = None,
+) -> MaskingPolicy:
+    """Constroi os transformers e compila a politica imutavel."""
+    secrets = secrets if secrets is not None else EnvSecretProvider()
+    registry = registry if registry is not None else build_default_registry()
 
     exceptions = tuple(
         MaskingException(spec=_spec(item), index=index)
@@ -102,13 +105,19 @@ def parse_config(
     return MaskingPolicy(exceptions=exceptions, rules=tuple(rules))
 
 
-def load_config_text(
-    text: str,
+def parse_config(
+    raw: object,
     *,
     secrets: SecretProvider | None = None,
     registry: TransformerRegistry | None = None,
 ) -> MaskingPolicy:
-    """Carrega a politica a partir de texto YAML."""
+    """Valida uma estrutura ja desserializada e compila a politica."""
+    parsed = validate_file_config(raw)
+    return compile_policy(parsed, secrets=secrets, registry=registry)
+
+
+def deserialize(text: str) -> object:
+    """YAML -> estrutura Python. Nunca propaga o texto do arquivo."""
     try:
         raw: Any = yaml.safe_load(text)
     except yaml.YAMLError as exc:
@@ -119,8 +128,27 @@ def load_config_text(
         where = f" (linha {mark.line + 1}, coluna {mark.column + 1})" if mark else ""
         msg = f"masking.yaml malformado: {detail}{where}"
         raise ConfigError(msg) from exc
+    return raw
 
-    return parse_config(raw, secrets=secrets, registry=registry)
+
+def read_config_text(path: str | Path) -> str:
+    """Le o arquivo de configuracao."""
+    config_path = Path(path)
+    try:
+        return config_path.read_text(encoding="utf-8")
+    except OSError as exc:
+        msg = f"nao foi possivel ler a configuracao em {config_path}: {exc.strerror}"
+        raise ConfigError(msg) from exc
+
+
+def load_config_text(
+    text: str,
+    *,
+    secrets: SecretProvider | None = None,
+    registry: TransformerRegistry | None = None,
+) -> MaskingPolicy:
+    """Carrega a politica a partir de texto YAML."""
+    return parse_config(deserialize(text), secrets=secrets, registry=registry)
 
 
 def load_config(
@@ -130,11 +158,4 @@ def load_config(
     registry: TransformerRegistry | None = None,
 ) -> MaskingPolicy:
     """Carrega a politica a partir de um arquivo."""
-    config_path = Path(path)
-    try:
-        text = config_path.read_text(encoding="utf-8")
-    except OSError as exc:
-        msg = f"nao foi possivel ler a configuracao em {config_path}: {exc.strerror}"
-        raise ConfigError(msg) from exc
-
-    return load_config_text(text, secrets=secrets, registry=registry)
+    return load_config_text(read_config_text(path), secrets=secrets, registry=registry)
