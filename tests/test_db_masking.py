@@ -173,12 +173,12 @@ class TestAliasProtection:
         assert column.provenance_kind is ProvenanceKind.DIRECT
         assert column.qualified_origin == "public.cliente.cpf"
 
-    def test_exception_still_wins_over_the_origin(self, adapter_factory):
-        """Prioridade absoluta da exception vale para os dois nomes."""
-        adapter, _, _ = adapter_factory(["tipo_cpf"], [("fisica",)], origins=[direct("cpf")])
+    def test_alias_cannot_create_an_exception(self, adapter_factory):
+        """Fase 6.1 (D-042): a origem responde pela exception, nao o alias."""
+        adapter, _, _ = adapter_factory(["tipo_cpf"], [(CPF,)], origins=[direct("cpf")])
         result = adapter.execute("SELECT cpf AS tipo_cpf FROM cliente")
-        assert result.rows == (("fisica",),)
-        assert result.decisions[0].action is Action.EXCEPTION
+        assert result.rows == ((hmac_of(CPF),),)
+        assert result.decisions[0].action is Action.MASK
 
     def test_exception_matching_by_origin_wins(self, adapter_factory):
         adapter, _, _ = adapter_factory(["qualquer"], [("fisica",)], origins=[direct("tipo_cpf")])

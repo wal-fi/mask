@@ -87,8 +87,17 @@ default com allowlist curta, demais funções permitidas com denylist de famíli
 perigosas. Extensível por configuração. Ver D-027 e o limite declarado em
 `docs/SECURITY.md`.
 
-Independente de MCP, de banco e do Masking Engine: recebe texto, devolve árvore
-validada ou levanta.
+Independente de MCP e de banco: recebe texto, devolve árvore validada ou
+levanta.
+
+### Sensitivity Analyzer
+`sql/sensitivity.py` (Fase 6.1). Determina, por posição do result set, qual
+regra de masking cobre as colunas de que a expressão depende — o que a
+proveniência do PostgreSQL não alcança para expressões, agregados e UNION.
+
+Complementa a proveniência, nunca a enfraquece: só acrescenta sensibilidade, e
+só é aplicada quando as posições batem com o result set. Roda uma vez por
+consulta, jamais por linha. Ver D-043.
 
 ### Database Adapter
 Abstração de conexão. PostgreSQL é o primeiro e único adapter do MVP.
@@ -133,15 +142,20 @@ recebe um descritor:
 
 ```text
 ColumnDescriptor
-  output_name       nome da coluna como retornada ao cliente (alias, se houver)
-  origin_name       nome real da coluna de origem, quando determinável
-  origin_schema     schema da relação de origem
-  origin_table      relação de origem (tabela ou view)
-  provenance_kind   DIRECT | VIEW | DERIVED | UNKNOWN
+  output_name         nome da coluna como retornada ao cliente (alias, se houver)
+  origin_name         nome real da coluna de origem, quando determinável
+  origin_schema       schema da relação de origem
+  origin_table        relação de origem (tabela ou view)
+  provenance_kind     DIRECT | VIEW | DERIVED | UNKNOWN
+  derived_rule_index  regra provada pela análise de AST, quando houver
 ```
 
 `origin_schema` e `origin_table` são **metadata de auditoria**: o matching não
 os usa. As regras continuam globais por nome de coluna. Ver D-024.
+
+`derived_rule_index` carrega a regra que a análise de AST provou cobrir a
+posição, quando a proveniência não alcança. É metadata **interna**: nunca sai
+para o cliente MCP.
 
 `provenance_kind` distingue a afirmação do PostgreSQL da nossa ignorância:
 
@@ -229,7 +243,7 @@ passa normalmente. Não há default deny neste MVP.
 ```text
 mcp/       adapter de I/O, sem logica de seguranca; stdio apenas
 gateway/   orquestrador e fachada publica; unica camada que toca valor original
-sql/       parser, validator e politica de funcoes (allowlist de nos)
+sql/       parser, validator, politica de funcoes e analise de sensitividade
 db/        adapter PostgreSQL: execucao, proveniencia, sanitizacao de erro
 masking/   matcher, exceptions, registry, engine  <- nucleo PURO, sem I/O
 config/    loader validado, imutavel, carregado uma vez no boot

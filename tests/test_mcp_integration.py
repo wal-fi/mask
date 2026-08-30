@@ -192,13 +192,13 @@ class TestTheFundamentalSecurityTest:
         assert masked["email"] is True
         assert masked["nome"] is False
 
-    def test_expression_over_the_cpf_is_the_documented_residual_bypass(self, ask):
-        """Limite conhecido do MVP, fixado aqui para nao passar despercebido."""
+    def test_expression_over_the_cpf_is_masked(self, ask):
+        """Fase 6.1 (D-043): a analise de AST cobre o que a proveniencia nao."""
         result = ask(f"SELECT substr(cpf, 1, 3) AS x FROM {TABLE} WHERE id = 1")
         content = result.structured_content
         assert content is not None
-        assert content["rows"][0][0] == CPF[:3]
-        assert content["columns"][0]["masked"] is False
+        assert content["rows"][0][0] != CPF[:3]
+        assert content["columns"][0]["masked"] is True
 
 
 class TestQueryShapes:

@@ -26,23 +26,35 @@ def engine_factory(secrets):
 
 
 class TestBroadExceptionDisablesRule:
-    """H-1: exception larga desliga a regra inteira, em silencio.
+    """H-1, corrigido na Fase 6.1 (D-045).
 
-    `mode` das exceptions tem default `contains`, igual ao das regras. Uma
-    exception `cpf` cobre tudo que a regra `cpf` cobriria.
+    O `mode` default das exceptions passou de `contains` para `exact`. Uma
+    exception declarada sem `mode` deixou de cobrir tudo o que a regra cobria.
+    Uma exception larga ainda e possivel — mas agora e preciso escrever
+    `mode: contains`, e a escolha fica visivel no arquivo.
     """
 
-    def test_exception_with_same_pattern_disables_masking(self, engine_factory):
+    def test_exception_without_mode_no_longer_disables_the_rule(self, engine_factory):
         engine = engine_factory(
             "masking:\n  - match: cpf\n    transformer: md5\nexceptions:\n  - match: cpf\n"
         )
-        assert engine.mask_value(ColumnDescriptor("cliente_cpf"), CPF) == CPF
+        assert engine.mask_value(ColumnDescriptor("cliente_cpf"), CPF) != CPF
+        # A coluna com o nome exato da exception continua liberada.
+        assert engine.mask_value(ColumnDescriptor("cpf"), CPF) == CPF
 
-    def test_single_letter_exception_disables_masking(self, engine_factory):
+    def test_single_letter_exception_no_longer_disables_the_rule(self, engine_factory):
         engine = engine_factory(
             "masking:\n  - match: cpf\n    transformer: md5\nexceptions:\n  - match: c\n"
         )
-        assert engine.mask_value(ColumnDescriptor("num_cpf"), CPF) == CPF
+        assert engine.mask_value(ColumnDescriptor("num_cpf"), CPF) != CPF
+
+    def test_explicit_contains_still_widens_the_exception(self, engine_factory):
+        """O risco nao sumiu: ficou explicito. Escolher `contains` e visivel."""
+        engine = engine_factory(
+            "masking:\n  - match: cpf\n    transformer: md5\n"
+            "exceptions:\n  - match: cpf\n    mode: contains\n"
+        )
+        assert engine.mask_value(ColumnDescriptor("cliente_cpf"), CPF) == CPF
 
     def test_exact_mode_keeps_the_rule_effective(self, engine_factory):
         """Com `mode: exact` a exception fica restrita, como no doc."""

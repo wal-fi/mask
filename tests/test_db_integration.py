@@ -262,11 +262,17 @@ class TestAliasProtection:
         assert result.rows == ((hmac_of(CPF),),)
         assert result.columns[0].provenance_kind is ProvenanceKind.VIEW
 
-    def test_exception_still_has_absolute_priority(self, adapter):
-        """A proveniencia nao pode passar por cima de uma exception."""
+    def test_alias_cannot_create_an_exception(self, adapter):
+        """Fase 6.1 (D-042): o alias nao converte coluna sensivel em excecao."""
         query = f"SELECT cpf AS tipo_cpf FROM {TABLE} WHERE id = 1"
         result = adapter.execute(query)
-        assert result.rows == ((CPF,),)
+        assert result.rows == ((hmac_of(CPF),),)
+        assert result.decisions[0].action is Action.MASK
+
+    def test_exception_still_applies_to_its_own_column(self, adapter):
+        query = f"SELECT tipo_cpf FROM {TABLE} WHERE id = 1"
+        result = adapter.execute(query)
+        assert result.rows == (("fisica",),)
         assert result.decisions[0].action is Action.EXCEPTION
 
 

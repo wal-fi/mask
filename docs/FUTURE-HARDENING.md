@@ -264,11 +264,20 @@ Medidas e desenhadas na Fase 6, **não implementadas**, por alterarem a
 filosofia do produto ou exigirem lineage. Detalhes, impacto e reprodução em
 `docs/SECURITY-REVIEW.md`.
 
-| finding | proposta | por que não foi feita |
+| finding | proposta | status |
 |---|---|---|
-| F-01 expressão | rejeitar consulta cujo `ColumnRef` dentro de expressão nomeie coluna que casa regra | recusa SQL legítima (`SELECT length(cpf)`); acopla validator à política de masking; falso-negativo dentro de subquery |
-| F-02 UNION | propagar `origin_name` quando todos os ramos têm o mesmo `ColumnRef` simples | `SELECT *` em qualquer ramo destrói o mapeamento posicional |
-| F-03 view | resolver via `pg_get_viewdef` até a tabela base | exige reparsear a definição e mapear posições: lineage engine |
-| F-08 exception por alias | avaliar exceptions contra `origin_name`, caindo para `output_name` só sem origem | altera a regra documentada `EXCEPTION > MASKING` |
-| F-11 default de exception | `mode` default `exact` para exceptions | quebra configurações existentes; precisa de migração com `mode` obrigatório por uma versão |
-| F-04 funções | resolver `FuncCall` em `pg_proc` e avaliar `provolatile`/`prosecdef` | gestão de funções do PostgreSQL inteira; mitigação é operacional |
+| F-01 expressão | mascarar o resultado da expressão com a regra da coluna referenciada | **implementado na Fase 6.1** (D-043) — a solução foi mascarar, não rejeitar: recusar `SELECT length(cpf)` seria caro demais |
+| F-02 UNION | tratar a posição como sensível quando qualquer ramo tem dependência provada | **implementado na Fase 6.1** (D-043) |
+| F-08 exception por alias | avaliar exceptions contra o nome autoritativo | **implementado na Fase 6.1** (D-042) |
+| F-11 default de exception | `mode` default `exact` para exceptions | **implementado na Fase 6.1** (D-045) |
+| F-03 view | resolver via `pg_get_viewdef` até a tabela base | **em aberto** — exige reparsear a definição e mapear posições: lineage engine |
+| F-04 funções | resolver `FuncCall` em `pg_proc` e avaliar `provolatile`/`prosecdef` | **em aberto** — gestão de funções do PostgreSQL inteira; mitigação é operacional |
+| F-07 inferência | controle de cardinalidade e supressão de agregados | **em aberto** — outro produto |
+
+O que ficou de fora deliberadamente na Fase 6.1:
+
+- **resolução de escopo.** A análise casa por nome, inclusive no mapa de nomes
+  exportados por CTE e subquery. Um nome exportado afeta a consulta inteira —
+  mascara demais em casos raros, nunca de menos.
+- **profundidade além de 16 níveis.** A análise desiste e a proveniência segue
+  sozinha. Desistir é diferente de afirmar que é seguro.

@@ -10,6 +10,7 @@ import contextlib
 import json
 import logging
 import threading
+import time
 from typing import Any
 
 import anyio
@@ -18,6 +19,7 @@ import pytest
 from mcp import Client
 from mcp.types import CallToolResult, TextContent
 
+import maskgw.db.postgres as postgres_module
 from maskgw.db.columns import DERIVED_ORIGIN
 from maskgw.errors import CapabilityError
 from maskgw.gateway.models import ErrorCategory, GatewayError
@@ -79,11 +81,11 @@ class TestHostileColumnNames:
 
 
 class TestExceptionAbuse:
-    """KNOWN LIMITATION — o nome da exception e alcancavel por alias.
+    """MASKED desde a Fase 6.1 — F-08 fechado (D-042).
 
-    A exception `tipo_cpf` existe para uma coluna legitima. Como ela e avaliada
-    tambem contra o `output_name`, que o atacante escolhe, ela vira uma
-    primitiva de desmascaramento. Ver F-08.
+    A exception passou a ser avaliada contra o nome AUTORITATIVO da coluna:
+    `origin_name` quando existe, `output_name` so quando nao ha origem. Um
+    alias deixou de poder converter coluna sensivel em excecao.
     """
 
     def test_exception_applies_to_the_legitimate_column(self, gateway):
@@ -91,18 +93,30 @@ class TestExceptionAbuse:
         assert result.rows[0][0] == "fisica"
         assert result.columns[0].masked is False
 
-    def test_known_limitation_alias_to_the_exception_name_unmasks(self, gateway):
-        result = gateway.query(f"SELECT cpf AS tipo_cpf FROM {TABLE} WHERE id = 1")
-        assert leaks(result), "fechou? atualizar SECURITY-REVIEW (F-08)"
+    def test_exception_applies_through_an_alias_of_its_own_column(self, gateway):
+        """`SELECT tipo_cpf AS x`: a ORIGEM e a excecao, entao segue original."""
+        result = gateway.query(f"SELECT tipo_cpf AS documento FROM {TABLE} WHERE id = 1")
+        assert result.rows[0][0] == "fisica"
         assert result.columns[0].masked is False
 
-    @pytest.mark.parametrize("alias", ["tipo_cpf", "TIPO_CPF", "Tipo_Cpf"])
-    def test_case_variations_of_the_exception_also_unmask(self, gateway, alias):
-        assert leaks(gateway.query(f'SELECT cpf AS "{alias}" FROM {TABLE} WHERE id = 1'))
+    @pytest.mark.parametrize("alias", ["tipo_cpf", "TIPO_CPF", "Tipo_Cpf", "tipo_CPF"])
+    def test_alias_to_the_exception_name_no_longer_unmasks(self, gateway, alias):
+        result = gateway.query(f'SELECT cpf AS "{alias}" FROM {TABLE} WHERE id = 1')
+        assert not leaks(result), f"{alias}: reabriu o bypass"
+        assert result.columns[0].masked is True
+
+    def test_a_sensitive_sibling_aliased_to_the_exception(self, gateway):
+        result = gateway.query(f"SELECT cpf AS tipo_cpf FROM {TABLE} WHERE id = 1")
+        assert not leaks(result)
+
+    def test_expression_aliased_to_the_exception_name(self, gateway):
+        """F-01 + F-08 combinados: a analise de AST vem antes da exception."""
+        result = gateway.query(f"SELECT substr(cpf, 1, 11) AS tipo_cpf FROM {TABLE} WHERE id = 1")
+        assert not leaks(result)
+        assert result.columns[0].masked is True
 
     @pytest.mark.parametrize("alias", ["meu_tipo_cpf", "tipo_cpf_extra", " tipo_cpf "])
     def test_exact_mode_keeps_the_exception_narrow(self, gateway, alias):
-        """MASKED — `mode: exact` impede que a exception se alargue."""
         assert not leaks(gateway.query(f'SELECT cpf AS "{alias}" FROM {TABLE} WHERE id = 1'))
 
 
@@ -404,3 +418,45 @@ class TestNothingSensitiveInAnySurface:
         )
         for secret in (CPF, EMAIL, SENHA):
             assert secret not in rendered
+
+
+class TestSensitivityAnalysisCostIsPerQuery:
+    """A analise de AST roda UMA VEZ por consulta, nunca por linha (§20)."""
+
+    def test_ten_thousand_rows_do_not_multiply_the_cost(self, gateway, database):
+        with psycopg.connect(database, autocommit=True) as setup:
+            setup.execute(f"CREATE TABLE {SCHEMA}.grande (cpf text)")
+            setup.execute(
+                f"INSERT INTO {SCHEMA}.grande "
+                "SELECT lpad(i::text, 11, '0') FROM generate_series(1, 10000) AS i"
+            )
+
+        query = f"SELECT substr(cpf, 1, 11) AS d FROM {SCHEMA}.grande"
+
+        started = time.perf_counter()
+        uma_linha = gateway.query(f"{query} LIMIT 1")
+        custo_uma = time.perf_counter() - started
+
+        started = time.perf_counter()
+        muitas = gateway.query(query)
+        custo_muitas = time.perf_counter() - started
+
+        assert uma_linha.columns[0].masked is True
+        assert muitas.truncated is True
+        # O custo cresce com o masking das linhas devolvidas (limitado a
+        # max_rows), nao com a analise. Uma ordem de grandeza de folga.
+        assert custo_muitas < custo_uma * 10 + 1.0
+
+    def test_the_analysis_is_not_repeated_per_row(self, gateway, monkeypatch):
+        """Marcador de regressao: contar chamadas ao analisador."""
+        calls = 0
+        original = postgres_module.analyze_sensitivity
+
+        def counting(*args: Any, **kwargs: Any) -> Any:
+            nonlocal calls
+            calls += 1
+            return original(*args, **kwargs)
+
+        monkeypatch.setattr(postgres_module, "analyze_sensitivity", counting)
+        gateway.query(f"SELECT substr(cpf, 1, 11) AS d FROM {TABLE}")
+        assert calls == 1

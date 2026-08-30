@@ -1,6 +1,6 @@
 # Handoff
 
-Estado do projeto ao final da sessao que implementou a **Fase 6**.
+Estado do projeto ao final da sessao que implementou a **Fase 6.1**.
 Documento de entrada para a proxima sessao.
 
 Leitura obrigatoria antes de continuar: `CLAUDE.md`, `docs/ARCHITECTURE.md`,
@@ -17,16 +17,16 @@ Leitura obrigatoria antes de continuar: `CLAUDE.md`, `docs/ARCHITECTURE.md`,
 **FASE 4 — SQL validation + execution safety.** Concluida.
 **FASE 5 — Gateway + MCP Server.** Concluida.
 **FASE 6 — Security red team + hardening.** Concluida.
+**FASE 6.1 — Fechamento dos bypasses criticos.** Concluida.
 
-**Todas as seis fases do roadmap estao concluidas.**
+**Todas as fases do roadmap estao concluidas.**
 
-Entregue na Fase 6:
+Entregue na Fase 6.1:
 
-- `tests/security/`: 170 testes adversariais por classe de ataque
-- `docs/SECURITY-REVIEW.md`: 11 findings com reproducao, impacto e status
-- dois hardenings: relacoes de estatistica bloqueadas; falha de resolucao de
-  proveniencia passa a rejeitar a consulta
-- 170 testes novos (1208 no total)
+- `sql/sensitivity.py`: analise de sensitividade por AST, uma vez por consulta
+- F-01 (expressoes), F-02 (UNION + alias) e F-08 (exception via alias) FECHADOS
+- H-1 corrigido: `mode` default das exceptions passou a `exact`
+- 96 testes novos (1304 no total)
 
 ## 2. Stack e dependencias
 
@@ -139,10 +139,11 @@ src/maskgw/
     result.py            MaskedResult (+ truncated)
     sanitize.py          psycopg.Error -> DatabaseError / QueryTimeout
     postgres.py          PostgresAdapter: read-only, timeout, row limit
-  sql/                   <- Fase 4
+  sql/                   <- Fases 4 e 6.1
     parser.py            pglast; um statement executavel
     validator.py         allowlist de nos da AST
-    policy.py            politica de funcoes, extensivel
+    policy.py            politica de funcoes e de relacoes
+    sensitivity.py       dependencia sensivel por posicao  (Fase 6.1)
   gateway/               <- Fase 5
     models.py            QueryResult, QueryColumn, ErrorCategory, GatewayError
     service.py           Gateway.query: a fachada publica
@@ -227,21 +228,24 @@ D-001 a D-014 na Fase 1; D-015 a D-019 na Fase 2. Detalhamento em
 | D-039 | Relacoes de estatistica (`pg_stats`) bloqueadas no validator |
 | D-040 | Falha de resolucao rejeita a consulta; `DERIVED` nao. Emenda D-025 |
 | D-041 | Bypass conhecido vira teste que o AFIRMA, nunca `skip` |
+| D-042 | Exception responde pelo nome AUTORITATIVO; alias nao cria excecao |
+| D-043 | Sensitividade por AST aplicada ao resultado da expressao; ambiguidade recusa |
+| D-044 | Serializacao de linha inteira (`row_to_json`) e recusada |
+| D-045 | `mode` default das exceptions passa a `exact`. Corrige H-1 |
+| D-046 | Um passo entre niveis: nomes exportados por CTE e subquery |
 
 ## 6. Resultado das verificacoes
 
 Com `MASKGW_TEST_DSN` apontando para PostgreSQL 16 em Docker:
 
 ```text
-pytest   1208 passed
-pytest    368 passed  (-m integration)
-pytest    170 passed  (tests/security)
+pytest   1304 passed
+pytest    408 passed  (-m integration)
+pytest    209 passed  (tests/security)
 ruff     All checks passed
-ruff     73 files already formatted
-mypy     Success: no issues found in 73 source files  (strict)
+ruff     75 files already formatted
+mypy     Success: no issues found in 75 source files  (strict)
 ```
-
-Sem `MASKGW_TEST_DSN`: `843 passed, 365 skipped`.
 
 ## 7. Protecao contra alias: o que a Fase 3 fechou
 
@@ -339,16 +343,8 @@ parcialmente funcional.
 
 ## 9c. Postura de seguranca (leia antes de expor)
 
-`docs/SECURITY-REVIEW.md` traz os 11 findings. O essencial:
-
-**Tres bypasses de UMA LINHA de SQL permanecem abertos.** Cada um devolve o
-valor sensivel em claro:
-
-```sql
-SELECT substr(cpf, 1, 11) AS documento FROM cliente;      -- F-01 expressao
-SELECT cpf AS documento FROM cliente UNION ALL SELECT 'x'; -- F-02 union
-SELECT cpf AS tipo_cpf FROM cliente;                       -- F-08 exception
-```
+`docs/SECURITY-REVIEW.md` traz os 11 findings: **seis corrigidos**, cinco
+aceitos. Os tres bypasses de uma linha de SQL foram fechados na Fase 6.1.
 
 **Obrigatorio antes de expor:** revogar `EXECUTE` das funcoes de usuario para a
 role do Gateway. `EXECUTE` e concedido a `PUBLIC` por padrao, e uma funcao
@@ -359,22 +355,40 @@ REVOKE EXECUTE ON ALL FUNCTIONS IN SCHEMA public FROM PUBLIC;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC;
 ```
 
-**Oraculo por predicado reconstroi um CPF em 11 consultas** (F-07), e esta
-fora do escopo do MVP.
+**Permanece aceito e nao fechado:**
 
-Conclusao: o Gateway eleva o custo do vazamento acidental. Nao resiste a um
-cliente adversarial. **Uso interno com cliente semi-confiavel.**
+- oraculo por predicado reconstroi um CPF em 11 consultas (F-07), fora do
+  escopo do MVP
+- view que renomeia coluna sensivel expoe o valor (F-03)
+- default ALLOW: coluna sensivel com nome fora do padrao passa em claro
+
+Conclusao: com o `EXECUTE` revogado e o oraculo aceito, **uso interno com
+cliente semi-confiavel**. Nao adequado a exposicao externa — nao ha
+autenticacao e o transporte e stdio.
+
+## 9d. Mudancas de comportamento da Fase 6.1
+
+Tres, todas documentadas e cobertas por teste:
+
+1. **Exception nao e mais alcancavel por alias** (D-042). `SELECT cpf AS
+   tipo_cpf` passou de original para mascarado. `SELECT tipo_cpf` nao mudou.
+2. **Expressoes sobre coluna sensivel sao mascaradas ou recusadas** (D-043).
+   `concat(cpf, email)` e `row_to_json(c)` passaram a ser recusadas.
+3. **`mode` default das exceptions e `exact`** (D-045). Configuracao que
+   dependa de exception por substring precisa declarar `mode: contains`.
 
 ## 10. Depois da Fase 6
 
 O roadmap acabou. As proximas decisoes sao do responsavel pelo projeto, e
 nenhuma foi iniciada.
 
-**Propostas de hardening em aberto.** Desenhadas e medidas na Fase 6, com
-impacto e custo em `docs/FUTURE-HARDENING.md` e `docs/SECURITY-REVIEW.md`.
-Fechar F-01, F-02 e F-08 e o que separa "cliente semi-confiavel" de "cliente
-nao confiavel". Cada uma altera semantica documentada do produto, por isso
-nenhuma foi aplicada.
+**Propostas de hardening em aberto.** F-01, F-02, F-08 e H-1 foram fechados na
+Fase 6.1. Restam, com impacto e custo em `docs/FUTURE-HARDENING.md`:
+
+- **F-03**, lineage recursivo de view por `pg_get_viewdef`
+- **F-04**, resolver `FuncCall` em `pg_proc` e avaliar `provolatile`/`prosecdef`
+- **F-07**, controle de inferencia — outro produto
+- **default deny** (`unmatched_policy`), a evolucao natural do modelo
 
 **Deployment.** Streamable HTTP, autenticacao, OAuth. Hoje so ha stdio, e a
 ausencia de porta de rede e uma decisao de seguranca (D-036), nao uma lacuna.

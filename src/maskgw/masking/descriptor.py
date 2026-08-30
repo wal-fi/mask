@@ -15,8 +15,12 @@ bypass por alias:
         resultado: mascarado
 
 `origin_schema` e `origin_table` acompanham a origem como metadata de
-auditoria; o matching da Fase 3 NAO os usa — as regras continuam globais por
-nome de coluna, como manda `docs/MASKING-SPEC.md`.
+auditoria; o matching NAO os usa — as regras continuam globais por nome de
+coluna, como manda `docs/MASKING-SPEC.md`.
+
+Desde a Fase 6.1, o alias sozinho NAO decide exception: quando a origem e
+conhecida, e ela que responde por exception. Um alias nao pode converter uma
+coluna sensivel em excecao. Ver D-042.
 
 A proveniencia e preenchida pelo adapter a partir da metadata do proprio
 PostgreSQL. Nunca a partir dos valores das linhas.
@@ -65,6 +69,10 @@ class ColumnDescriptor:
     origin_schema: str | None = None
     origin_table: str | None = None
     provenance_kind: ProvenanceKind = ProvenanceKind.UNKNOWN
+    #: Regra que a analise de AST provou cobrir esta posicao, quando a
+    #: proveniencia do PostgreSQL nao alcanca — expressoes e UNION. Metadata
+    #: INTERNA: nunca sai para o cliente MCP. Ver `maskgw.sql.sensitivity`.
+    derived_rule_index: int | None = None
 
     @property
     def names(self) -> tuple[str, ...]:

@@ -8,12 +8,15 @@ from __future__ import annotations
 
 from maskgw.sql.parser import parse_single_statement, parse_statements
 from maskgw.sql.policy import DEFAULT_SQL_POLICY, DENIED_RELATIONS, SqlPolicy
+from maskgw.sql.sensitivity import Sensitivity, analyze_sensitivity
 from maskgw.sql.validator import validate_select
 
 __all__ = [
     "DEFAULT_SQL_POLICY",
     "DENIED_RELATIONS",
+    "Sensitivity",
     "SqlPolicy",
+    "analyze_sensitivity",
     "parse_single_statement",
     "parse_statements",
     "validate_select",

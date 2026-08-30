@@ -16,6 +16,8 @@ Invariantes:
   cru vive num gerador privado, consumido inteiramente dentro de `execute`.
 - A proveniencia de cada coluna vem da metadata do PostgreSQL, resolvida ANTES
   de qualquer linha ser lida. Nunca dos valores das linhas.
+- A analise de sensitividade por AST complementa a proveniencia onde ela nao
+  alcanca (expressoes, UNION). Roda uma vez por consulta. Ver D-043.
 - A sessao e read-only e tem `statement_timeout`, ambos aplicados pelo
   PostgreSQL e conferidos apos a conexao. Ver D-028.
 - No maximo `max_rows` linhas saem. A linha N+1 e lida para detectar excesso,
@@ -48,6 +50,7 @@ from maskgw.errors import CapabilityError, DatabaseError
 from maskgw.masking.descriptor import ColumnDescriptor
 from maskgw.masking.engine import MaskingEngine
 from maskgw.sql.policy import DEFAULT_SQL_POLICY, SqlPolicy
+from maskgw.sql.sensitivity import Sensitivity, analyze_sensitivity
 from maskgw.sql.validator import validate_select
 
 #: Linhas buscadas por `fetchmany`. Nao e o limite de resposta: e `max_rows`.
@@ -60,6 +63,10 @@ _SESSION_QUERY: Final = """
 SELECT name, setting FROM pg_settings
 WHERE name IN ('default_transaction_read_only', 'statement_timeout')
 """
+
+#: Reexportado de proposito: a suite de seguranca instrumenta este simbolo
+#: para provar que a analise roda uma vez por consulta, nunca por linha.
+__all__ = ["DEFAULT_BATCH_SIZE", "DEFAULT_SETTINGS", "PostgresAdapter", "analyze_sensitivity"]
 
 _Connection = psycopg.Connection[tuple[Any, ...]]
 _Cursor = psycopg.Cursor[tuple[Any, ...]]
@@ -141,15 +148,26 @@ class PostgresAdapter:
                 connection.close()
 
     def execute_validated(self, sql: str) -> MaskedResult:
-        """Valida a consulta e so entao a executa.
+        """Valida, analisa a sensitividade e so entao executa.
 
         Porta de entrada de qualquer chamador nao confiavel. `InvalidQuery` e
         `QueryRejected` sao levantadas antes de o banco ver a consulta.
-        """
-        validate_select(sql, policy=self._sql_policy)
-        return self.execute(sql)
 
-    def execute(self, query: str, params: Sequence[Any] | None = None) -> MaskedResult:
+        A analise de AST roda UMA VEZ por consulta, nunca por linha: o
+        resultado e um indice de regra por posicao, que os descritores
+        carregam. Ver D-043.
+        """
+        statement = validate_select(sql, policy=self._sql_policy)
+        sensitivity = analyze_sensitivity(statement, self._engine.policy)
+        return self.execute(sql, sensitivity=sensitivity)
+
+    def execute(
+        self,
+        query: str,
+        params: Sequence[Any] | None = None,
+        *,
+        sensitivity: Sensitivity | None = None,
+    ) -> MaskedResult:
         """Executa SEM validar e devolve o result set ja mascarado.
 
         Porta interna. A protecao contra escrita aqui e o privilegio do
@@ -161,7 +179,7 @@ class PostgresAdapter:
         try:
             with connection.cursor() as cursor:
                 cursor.execute(query, params)
-                columns = self._describe(cursor)
+                columns = self._describe(cursor, sensitivity)
                 decisions = tuple(self._engine.decide(column) for column in columns)
                 rows, truncated = self._read_masked(cursor, columns)
         except psycopg.Error as exc:
@@ -222,7 +240,9 @@ class PostgresAdapter:
                 )
                 raise CapabilityError(msg)
 
-    def _describe(self, cursor: _Cursor) -> tuple[ColumnDescriptor, ...]:
+    def _describe(
+        self, cursor: _Cursor, sensitivity: Sensitivity | None = None
+    ) -> tuple[ColumnDescriptor, ...]:
         """Monta os descritores, resolvendo a proveniencia antes do fetch.
 
         A ordem importa: `cursor.pgresult` e lido enquanto o resultado ainda
@@ -231,7 +251,7 @@ class PostgresAdapter:
         keys = provenance_keys(cursor.pgresult, cursor.description)
         resolver = self._provenance
         origins = None if keys is None or resolver is None else resolver.resolve(keys)
-        return describe_columns(cursor.description, origins)
+        return describe_columns(cursor.description, origins, sensitivity)
 
     def _require_connection(self) -> _Connection:
         connection = self._connection

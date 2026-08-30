@@ -56,6 +56,7 @@ UNKNOWN_ORIGIN: Final = ColumnOrigin(kind=ProvenanceKind.UNKNOWN)
 def describe_columns(
     description: Sequence[ColumnSource] | None,
     origins: Sequence[ColumnOrigin] | None = None,
+    sensitivity: Sequence[int | None] | None = None,
 ) -> tuple[ColumnDescriptor, ...]:
     """Converte `cursor.description` em descritores, preservando a ordem.
 
@@ -68,6 +69,13 @@ def describe_columns(
     if description is None:
         msg = "a consulta nao produziu result set"
         raise DatabaseError(msg)
+
+    # A analise de AST so e aplicada quando as posicoes batem de verdade. Um
+    # `SELECT *` produz um alvo na arvore e N colunas no result set: ali as
+    # contagens divergem e a proveniencia segue sozinha. Ver D-043.
+    derived: list[int | None] = [None] * len(description)
+    if sensitivity is not None and len(sensitivity) == len(description):
+        derived = list(sensitivity)
 
     resolved = [UNKNOWN_ORIGIN] * len(description) if origins is None else list(origins)
     if len(resolved) != len(description):
@@ -82,6 +90,7 @@ def describe_columns(
             origin_schema=origin.schema,
             origin_table=origin.table,
             provenance_kind=origin.kind,
+            derived_rule_index=rule,
         )
-        for column, origin in zip(description, resolved, strict=True)
+        for column, origin, rule in zip(description, resolved, derived, strict=True)
     )

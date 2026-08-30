@@ -1,13 +1,16 @@
-# Security Review — Fase 6
+# Security Review — Fases 6 e 6.1
 
-Red team contra o Gateway completo (Fases 1–5), com PostgreSQL real e cliente
-MCP real. Medido, não suposto: cada finding tem reprodução e teste.
+Red team contra o Gateway completo, com PostgreSQL real e cliente MCP real.
+Medido, não suposto: cada finding tem reprodução e teste.
+
+**Atualizado após a Fase 6.1**, que fechou F-01, F-02 e F-08.
 
 Nenhum valor ou credencial real aparece neste documento. O CPF usado nos testes
 é fictício.
 
-Suíte: `tests/security/`, 170 testes. Vereditos: **BLOCKED**, **MASKED**,
-**KNOWN LIMITATION**. Nenhum bypass conhecido virou `skip`.
+Suíte: `tests/security/`, 207 testes. Vereditos: **BLOCKED**, **MASKED**,
+**KNOWN LIMITATION**. Nenhum bypass conhecido virou `skip` — e quando a Fase
+6.1 os fechou, foram exatamente esses testes que quebraram primeiro (D-041).
 
 ---
 
@@ -15,24 +18,31 @@ Suíte: `tests/security/`, 170 testes. Vereditos: **BLOCKED**, **MASKED**,
 
 | # | Finding | Severidade | Status |
 |---|---|---|---|
-| F-01 | Expressão sobre coluna sensível devolve o valor em claro | **HIGH** | ACCEPTED RISK — proposta em aberto |
-| F-02 | UNION com alias apaga nome e origem | **HIGH** | ACCEPTED RISK — proposta em aberto |
-| F-03 | View que renomeia coluna apaga o nome original | **MEDIUM** | ACCEPTED RISK — proposta em aberto |
+| F-01 | Expressão sobre coluna sensível devolve o valor em claro | **HIGH** | **RESOLVED** (6.1, D-043) |
+| F-02 | UNION com alias apaga nome e origem | **HIGH** | **RESOLVED** (6.1, D-043) |
+| F-08 | Alias para o nome de uma exception desmascara | **HIGH** | **RESOLVED** (6.1, D-042) |
+| F-05 | `pg_stats` / `pg_statistic` expõem valores reais | **CRITICAL** | **RESOLVED** (6, D-039) |
+| F-09 | Perda de acesso ao catálogo após o startup vazava em claro | **HIGH** | **RESOLVED** (6, D-040) |
+| F-11 | Exception com `mode` default desliga a regra (H-1) | **MEDIUM** | **RESOLVED** (6.1, D-045) |
 | F-04 | Função de usuário devolve coluna sensível sob nome inócuo | **HIGH** | ACCEPTED RISK — mitigação por privilégio |
-| F-05 | `pg_stats` / `pg_statistic` expõem valores reais | **CRITICAL** | **CORRIGIDO** (D-039) |
-| F-06 | Catálogo permite reconhecimento de schema | **LOW** | ACCEPTED RISK |
 | F-07 | Oráculo por predicado reconstrói o valor | **HIGH** | ACCEPTED RISK — fora do escopo do MVP |
-| F-08 | Alias para o nome de uma exception desmascara | **HIGH** | ACCEPTED RISK — proposta em aberto |
-| F-09 | Perda de acesso ao catálogo após o startup vazava em claro | **HIGH** | **CORRIGIDO** (D-040) |
+| F-03 | View que renomeia coluna apaga o nome original | **MEDIUM** | ACCEPTED RISK — proposta em aberto |
+| F-06 | Catálogo permite reconhecimento de schema | **LOW** | ACCEPTED RISK |
 | F-10 | Argumentos extras do MCP são ignorados, não recusados | **LOW** | ACCEPTED RISK (D-037) |
-| F-11 | Exception com `mode` default desliga a regra (H-1) | **MEDIUM** | ACCEPTED RISK — proposta em aberto |
+
+**Seis findings corrigidos** (um CRITICAL, quatro HIGH, um MEDIUM); cinco
+aceitos, todos com teste que fixa o comportamento.
+
+Nenhum finding HIGH ou CRITICAL exigindo mudança de código permanece aberto.
+Os dois HIGH restantes têm mitigação operacional (F-04) ou estão fora do
+escopo declarado do MVP (F-07).
 
 Dois findings corrigidos nesta fase; nove aceitos, todos com teste que fixa o
 comportamento.
 
 ---
 
-## F-05 — `pg_stats` expõe valores reais das colunas · CRITICAL · CORRIGIDO
+## F-05 — `pg_stats` expõe valores reais das colunas · CRITICAL · **RESOLVED**
 
 **Ataque**
 
@@ -71,7 +81,7 @@ nas estatísticas.
 
 ---
 
-## F-09 — Perda de catálogo após o startup · HIGH · CORRIGIDO
+## F-09 — Perda de catálogo após o startup · HIGH · **RESOLVED**
 
 **Ataque** Não é um ataque via SQL: é uma falha operacional explorável.
 
@@ -108,7 +118,7 @@ correção: voltar `_load` a absorver o erro.
 
 ---
 
-## F-01 — Expressão sobre coluna sensível · HIGH · ACCEPTED RISK
+## F-01 — Expressão sobre coluna sensível · HIGH · **RESOLVED**
 
 **Ataque** Qualquer expressão que faça o PostgreSQL reportar `ftable = 0`:
 
@@ -116,43 +126,45 @@ correção: voltar `_load` a absorver o erro.
 SELECT substr(cpf, 1, 11) AS documento FROM cliente;
 SELECT cpf || ''          AS documento FROM cliente;
 SELECT upper(cpf)         AS documento FROM cliente;
-SELECT coalesce(cpf, '')  AS documento FROM cliente;
 SELECT cpf::varchar       AS documento FROM cliente;
-SELECT row_to_json(t)     AS d         FROM cliente t;   -- a linha inteira
+SELECT min(cpf)           AS documento FROM cliente;
+SELECT reverse(cpf)       AS documento FROM cliente;   -- reversível
+SELECT encode(convert_to(cpf,'UTF8'),'base64') AS d FROM cliente;
 ```
 
-**Pré-condição** Conhecer o nome da coluna. `SELECT *` ou o catálogo entregam.
+**Impacto (antes)** O valor original chegava ao cliente, verbatim ou em forma
+trivialmente reversível.
 
-**Impacto** O valor original chega ao cliente, verbatim. `row_to_json` é o
-pior caso: devolve a linha inteira, com todas as colunas sensíveis.
+**Correção (Fase 6.1, D-043)** `maskgw.sql.sensitivity` analisa a AST da
+consulta já validada e determina, por posição do result set, qual regra de
+masking cobre as colunas referenciadas. O transformer dessa regra é aplicado ao
+**resultado da expressão**.
 
-Variantes que devolvem forma **reversível**, não o literal —
-igualmente exposição: `reverse(cpf)`, `encode(convert_to(cpf,'UTF8'),'base64')`,
-`encode(...,'hex')`. Transformado por SQL não é sinônimo de seguro.
+Funciona porque as regras são globais por nome de coluna: basta o nome, que
+está na própria árvore. Não há lineage engine.
 
-**Assimetria medida** `cpf::text` **preserva** a origem e sai mascarado;
-`cpf::varchar` não. Um cast para o mesmo tipo é no-op e o PostgreSQL mantém a
-proveniência; qualquer outro vira expressão.
+**Verificado MASKED:** `substr`, `concat`, `||`, `upper`, `lower`, `lpad`,
+`trim`, `coalesce`, `CASE`, `min`, `max`, `ARRAY[]`, `array_agg`, `json_agg`,
+`string_agg`, `to_json`, `::varchar`, `::char`, `::jsonb`, `format`, subquery
+escalar, referência qualificada (`c.cpf`), expressão aninhada, `reverse`,
+base64, hex — mais os nomes escondidos por alias de CTE e de subquery (D-046).
 
-**Proteção existente** Nenhuma para este caso. A proveniência da Fase 3 cobre
-alias, subquery, CTE, JOIN, cast-no-op e view — não expressões.
+**Verificado REJECTED:** `row_to_json(c)` e `to_json(c)` (linha inteira, D-044);
+`concat(cpf, email)` e equivalentes (duas regras diferentes, D-043).
 
-**Recomendação (proposta, não implementada)** Rejeitar a consulta quando
-qualquer `ColumnRef` dentro de uma expressão nomeie uma coluna que case uma
-regra de masking. Não precisa de mapeamento posicional nem de resolução de
-escopo, e é fail-closed.
+**Verificado sem over-masking:** `substr(tipo_cpf,1,3)` segue original — a
+análise respeita a exception sobre o nome referenciado; `upper(nome)` e
+`count(*)` seguem originais.
 
-Custo: acopla o validator à política de masking, e recusa consultas legítimas
-como `SELECT length(cpf)` ou `SELECT count(cpf)`. Falso-negativo conhecido:
-dentro de subquery o nome visível é o alias
-(`SELECT substr(x,1,3) FROM (SELECT cpf AS x FROM cliente) t` referencia `x`).
-Fechar isso de verdade exige lineage completo.
+**Reprodução** `tests/security/test_attack_expressions.py`,
+`tests/test_sensitivity.py`.
 
-**Reprodução** `tests/security/test_attack_expressions.py`.
+**Limitação residual** A análise casa por nome, sem resolver escopo. Um nome
+exportado por uma subquery afeta a consulta inteira — o que mascara demais em
+casos raros, nunca de menos. Além de 16 níveis de aninhamento a análise desiste
+e a proveniência segue sozinha.
 
----
-
-## F-02 — UNION com alias · HIGH · ACCEPTED RISK
+## F-02 — UNION com alias · HIGH · **RESOLVED**
 
 **Ataque**
 
@@ -160,28 +172,32 @@ Fechar isso de verdade exige lineage completo.
 SELECT cpf AS documento FROM cliente UNION ALL SELECT 'x';
 ```
 
-**Pré-condição** Nenhuma. Uma cláusula a mais em qualquer consulta.
+**Impacto (antes)** O PostgreSQL devolve `ftable = 0` para a coluna de saída de
+um UNION. Com alias não sobrava nem nome nem origem, e o valor saía em claro.
+Era o bypass mais barato que existia.
 
-**Impacto** O PostgreSQL devolve `ftable = 0` para a coluna de saída de um
-UNION. Com o nome preservado o `output_name` ainda salva; com alias não sobra
-nada, e o valor sai em claro. É o bypass mais barato que resta: transforma uma
-coluna protegida em coluna aberta com uma linha de SQL.
+**Correção (Fase 6.1, D-043)** A análise achata os ramos do set operation —
+`UNION`, `UNION ALL`, `INTERSECT`, `EXCEPT`, aninhados — e olha o alvo
+correspondente em **todos** eles. Basta um ramo ter dependência sensível
+comprovada para a posição inteira ser tratada como sensível: um UNION mistura
+as linhas dos ramos numa coluna só.
 
-**Proteção existente** Só o `output_name`, quando o alias não é usado.
+**Verificado MASKED:** alias no primeiro ramo, alias com ramo inocente, alias
+com literal, sensível apenas no segundo ramo, UNION aninhada, UNION dentro de
+CTE, UNION dentro de subquery, `UNION` sem `ALL`, `INTERSECT`, `EXCEPT`.
+Posições não sensíveis na mesma consulta seguem intactas.
 
-**Recomendação (proposta, não implementada)** Quando **nenhum** ramo usa `*`,
-e o N-ésimo alvo de **todos** os ramos é um `ColumnRef` simples cujo último
-identificador é o mesmo, propagar esse nome como `origin_name`. Em qualquer
-outra forma, manter `DERIVED`.
+**Verificado REJECTED:** duas classes sensíveis com transformers diferentes na
+mesma posição (`SELECT cpf FROM a UNION ALL SELECT email FROM b`).
 
-Obstáculo principal: `SELECT *` em qualquer ramo destrói o mapeamento
-posicional entre alvos da AST e colunas do result set.
+**Verificado preservado:** `SELECT * FROM a UNION ALL SELECT * FROM b` continua
+protegido por nome — as contagens de posição divergem e a proveniência segue
+sozinha, sem heurística frágil.
 
-**Reprodução** `tests/security/test_attack_union_views.py::TestUnionBypass`.
+**Reprodução** `tests/security/test_attack_union_views.py::TestUnionIsNowMasked`
+e `::TestUnionWithConflictingRules`.
 
----
-
-## F-08 — Alias para o nome de uma exception · HIGH · ACCEPTED RISK
+## F-08 — Alias para o nome de uma exception · HIGH · **RESOLVED**
 
 **Ataque**
 
@@ -189,39 +205,37 @@ posicional entre alvos da AST e colunas do result set.
 SELECT cpf AS tipo_cpf FROM cliente;
 ```
 
-**Pré-condição** Existir qualquer exception no `masking.yaml`, e o atacante
-descobrir o nome — o que o catálogo entrega, já que exceptions costumam
-nomear colunas reais.
+**Impacto (antes)** Exceptions eram avaliadas contra `output_name` **e**
+`origin_name`, com prioridade absoluta. Como o `output_name` é escolhido pelo
+atacante, **toda exception configurada era uma primitiva de desmascaramento**
+para qualquer coluna sensível.
 
-**Impacto** Exceptions são avaliadas contra `output_name` **e** `origin_name`,
-e têm prioridade absoluta. Como o `output_name` é escolhido pelo atacante,
-**toda exception configurada vira uma primitiva de desmascaramento** para
-qualquer coluna sensível. Variações de caixa funcionam igualmente
-(`TIPO_CPF`, `Tipo_Cpf`).
+**Correção (Fase 6.1, D-042)** A exception passou a ser avaliada contra o nome
+**autoritativo** da coluna: `origin_name` quando existe, `output_name` só
+quando não há origem resolvível. O masking continua avaliando os dois nomes —
+a assimetria é o ponto: o alias pode adicionar proteção, nunca removê-la.
 
-O `mode: exact` continua fazendo o seu trabalho: `meu_tipo_cpf`,
-`tipo_cpf_extra` e `" tipo_cpf "` seguem mascarados. O problema não é a
-largura da exception — é ela ser alcançável pelo nome de saída.
-
-**Proteção existente** Nenhuma. Este comportamento está documentado como
-"prioridade absoluta" desde a Fase 1, e foi fixado em teste na Fase 3.
-
-**Recomendação (proposta, não implementada)** Avaliar exceptions contra
-`origin_name` quando ele existir, caindo para `output_name` só quando não há
-origem resolvível. Mudança de uma linha no matcher.
-
-| consulta | hoje | com a proposta |
+| consulta | antes | agora |
 |---|---|---|
-| `SELECT tipo_cpf FROM cliente` | original | original (inalterado) |
-| `SELECT tipo_cpf AS x FROM cliente` | original | original (inalterado) |
-| `SELECT cpf AS tipo_cpf FROM cliente` | **em claro** | mascarado |
+| `SELECT tipo_cpf FROM cliente` | original | original |
+| `SELECT tipo_cpf AS documento` | original | original |
+| `SELECT cpf AS tipo_cpf` | **em claro** | mascarado |
+| `SELECT cliente_cpf AS tipo_cpf` | **em claro** | mascarado |
+| `SELECT substr(cpf,1,11) AS tipo_cpf` | **em claro** | mascarado |
 
-Altera uma regra documentada do produto (`EXCEPTION > MASKING`), por isso é
-proposta e não correção direta.
+A última linha combina F-01 e F-08: a análise de AST vem antes da exception no
+pipeline, justamente para que um alias não libere uma expressão provada
+sensível.
 
-**Reprodução** `tests/security/test_attack_protocol.py::TestExceptionAbuse`.
+Variações de caixa (`TIPO_CPF`, `Tipo_Cpf`) e `mode: exact` continuam se
+comportando como documentado.
 
----
+**Reprodução** `tests/security/test_attack_protocol.py::TestExceptionAbuse`,
+`tests/test_engine.py::TestExceptionPriority`.
+
+**Mudança de semântica** A regra `EXCEPTION > MASKING` continua valendo, mas
+sobre o nome autoritativo, e não sobre qualquer nome. Documentado em
+`docs/MASKING-SPEC.md` e `docs/DECISIONS.md` (D-042).
 
 ## F-04 — Função de usuário com nome inócuo · HIGH · ACCEPTED RISK
 
@@ -331,33 +345,31 @@ nomes usados pelas views, ou evitar views que renomeiem colunas sensíveis.
 
 ---
 
-## F-11 — Exception com `mode` default (H-1) · MEDIUM · ACCEPTED RISK
+## F-11 — Exception com `mode` default (H-1) · MEDIUM · **RESOLVED**
 
-**Ataque** Não é ataque via SQL: é uma configuração que desliga a proteção.
+**Configuração vulnerável**
 
 ```yaml
 exceptions:
-  - match: cpf        # mode default é `contains`
+  - match: cpf        # mode default era `contains`
 ```
 
-**Impacto** Desliga a regra `cpf` inteira, em silêncio. Registrado desde a
-Fase 1 (D-014, H-1) e fixado em `tests/test_config_hazards.py`.
+**Impacto (antes)** Desligava a regra `cpf` inteira, em silêncio. Aberto desde
+a Fase 1 (D-014).
 
-**Recomendação (proposta, não implementada)** Trocar o default de `mode` para
-exceptions de `contains` para `exact`, mantendo `contains` como default das
-regras de masking. A assimetria é justificada: regra larga protege demais,
-exception larga protege de menos.
+**Correção (Fase 6.1, D-045)** O default de `mode` passou a ser `exact` para
+exceptions, mantendo `contains` para regras de masking. A assimetria é
+justificada: uma regra larga protege demais, uma exception larga protege de
+menos.
 
-Compatibilidade: quebra silenciosamente configurações existentes que dependem
-de exception por substring — uma exception `tipo_cpf` continuaria funcionando,
-mas uma exception `tipo` que hoje cobre `tipo_cpf` deixaria de cobrir. Migração
-sugerida: exigir `mode` explícito nas exceptions por uma versão, recusando o
-carregamento quando ausente, e só então mudar o default.
+Uma exception larga continua possível — mas agora exige `mode: contains`
+escrito no arquivo, e a escolha fica visível.
 
-Combina com F-08: a proposta daquele finding reduz o alcance desta, mas não a
-elimina.
+**Compatibilidade** Configuração existente que dependa de exception por
+substring muda de comportamento. `config/masking.yaml` do repositório já
+declarava `mode: exact` e não mudou.
 
----
+**Reprodução** `tests/test_config_hazards.py::TestBroadExceptionDisablesRule`.
 
 ## F-06 — Reconhecimento de schema pelo catálogo · LOW · ACCEPTED RISK
 
@@ -411,18 +423,42 @@ continua mascarada.
 
 ## O que falta antes de considerar o MVP seguro para uso interno
 
-Quatro condições, em ordem de importância:
+Atualizado após a Fase 6.1. Duas condições permanecem, e uma delas é
+operacional:
 
-1. **Assumir que o cliente MCP pode ler qualquer valor sensível** cujas colunas
-   ele conheça, via F-01, F-02 ou F-08 — três bypasses reproduzíveis com uma
-   linha de SQL cada. O Gateway hoje eleva o custo do vazamento acidental; não
-   resiste a um cliente adversarial.
-2. **Revogar `EXECUTE` de funções** da role do Gateway (F-04). É a única
-   mitigação disponível e não é default do PostgreSQL.
-3. **Aceitar formalmente o oráculo por predicado** (F-07) ou restringir o uso a
-   contextos onde reconstrução por consultas sucessivas seja tolerável.
-4. **Auditar o `masking.yaml`** contra H-1 (F-11) e contra colunas sensíveis
-   com nome fora do padrão — consequência direta do default ALLOW.
+1. **Revogar `EXECUTE` de funções** para a role do Gateway (F-04). É a única
+   mitigação disponível e **não é o default do PostgreSQL** — `EXECUTE` é
+   concedido a `PUBLIC`. Uma função pré-existente que leia coluna sensível
+   devolve o valor sob o nome dela, e uma com SQL dinâmica é bypass de leitura
+   completo.
 
-Com isso entendido e aceito, o Gateway é adequado a **uso interno com cliente
-semi-confiável**. Não é adequado a cliente hostil nem a exposição externa.
+   ```sql
+   REVOKE EXECUTE ON ALL FUNCTIONS IN SCHEMA public FROM PUBLIC;
+   ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC;
+   ```
+
+2. **Aceitar formalmente o oráculo por predicado** (F-07) ou restringir o uso a
+   contextos onde reconstrução por consultas sucessivas seja tolerável. Está
+   fora do escopo do MVP desde a Fase 1, e fechá-lo é outro produto.
+
+Duas recomendações que deixaram de ser bloqueantes, mas continuam valendo:
+
+3. **Evitar views que renomeiem colunas sensíveis** (F-03), ou cadastrar
+   também os nomes usados pelas views no `masking.yaml`.
+4. **Auditar o `masking.yaml`** contra colunas sensíveis com nome fora do
+   padrão — consequência direta do default ALLOW, que não mudou.
+
+### Postura resultante
+
+Os três bypasses de uma linha de SQL — expressão, UNION com alias, alias para
+exception — estão fechados, junto com o dump de `pg_stats` e a perda silenciosa
+de catálogo. Um cliente que conheça os nomes das colunas não consegue mais
+extrair valores protegidos por consulta direta.
+
+O que resta exige uma pré-condição fora do controle do cliente (uma função
+pré-existente, uma view que renomeia) ou muitas consultas (o oráculo).
+
+Com as duas condições acima atendidas, o Gateway é adequado a **uso interno com
+cliente semi-confiável**, e a margem para cliente pouco confiável melhorou
+substancialmente. Continua **não** adequado a exposição externa: não há
+autenticação, o transporte é stdio, e o oráculo por predicado permanece aberto.

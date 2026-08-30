@@ -53,7 +53,11 @@ class TestMaskingMatch:
 
 
 class TestExceptionPriority:
-    """Criterios 4 e 5: exception vence a regra em qualquer conflito."""
+    """Criterios 4 e 5: exception vence a regra, pelo nome autoritativo.
+
+    Desde a Fase 6.1 a exception e avaliada contra `origin_name` quando ele
+    existe, e contra `output_name` so quando nao ha origem. Ver D-042.
+    """
 
     def test_exception_returns_original(self, engine):
         assert engine.mask_value(column("tipo_cpf"), "fisica") == "fisica"
@@ -71,8 +75,18 @@ class TestExceptionPriority:
         """SELECT tipo_cpf AS cpf_x -> exception vence pelo origin_name."""
         assert engine.mask_value(column("cpf_x", "tipo_cpf"), "fisica") == "fisica"
 
-    def test_exception_matched_by_output_name(self, engine):
-        assert engine.mask_value(column("tipo_cpf", "cpf"), "fisica") == "fisica"
+    def test_alias_cannot_create_an_exception(self, engine):
+        """Fase 6.1 (D-042): `SELECT cpf AS tipo_cpf` deixa de sair em claro.
+
+        Antes a exception casava tambem o `output_name`, que o cliente escolhe
+        — o que fazia de toda exception uma primitiva de desmascaramento.
+        """
+        assert engine.mask_value(column("tipo_cpf", "cpf"), CPF) == CPF_MD5
+        assert engine.decide(column("tipo_cpf", "cpf")).action is Action.MASK
+
+    def test_exception_applies_by_output_name_when_there_is_no_origin(self, engine):
+        """Sem origem, o nome de saida e o unico nome autoritativo."""
+        assert engine.mask_value(column("tipo_cpf"), "fisica") == "fisica"
 
     def test_exception_declared_after_rule_still_wins(self, secrets):
         """A ordem no arquivo nao afeta a precedencia das exceptions."""

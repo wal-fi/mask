@@ -4,9 +4,21 @@ Nucleo puro: sem I/O, sem banco, sem MCP, sem rede.
 
 Pipeline, por coluna:
 
-    EXCEPTION MATCH   -> ORIGINAL
-    MASKING MATCH     -> TRANSFORMER
-    NO MATCH          -> ORIGINAL      (default ALLOW do MVP)
+    DERIVED (AST provou dependencia sensivel) -> TRANSFORMER
+    EXCEPTION MATCH (pelo nome autoritativo)  -> ORIGINAL
+    MASKING MATCH                             -> TRANSFORMER
+    NO MATCH                                  -> ORIGINAL   (default ALLOW)
+
+Duas mudancas da Fase 6.1, ambas para fechar bypass medido:
+
+- o primeiro ramo e novo. Quando `maskgw.sql.sensitivity` prova que a posicao
+  depende de uma coluna sensivel — `substr(cpf, 1, 11)`, `min(cpf)`, um ramo
+  de UNION —, a regra daquela coluna se aplica ao resultado da expressao.
+- a exception passou a ser avaliada pelo nome AUTORITATIVO: `origin_name`
+  quando existe, `output_name` quando nao ha origem. Antes ela casava os dois,
+  e `SELECT cpf AS tipo_cpf` saia em claro.
+
+Ver D-042 e D-043.
 
 NULL permanece NULL em qualquer ramo.
 """
@@ -20,7 +32,7 @@ from typing import Any
 
 from maskgw.masking.descriptor import ColumnDescriptor
 from maskgw.masking.matcher import ExceptionMatcher, RuleMatcher
-from maskgw.masking.rules import MaskingPolicy
+from maskgw.masking.rules import MaskingPolicy, MaskingRule
 from maskgw.masking.transformers.base import Transformer
 
 
@@ -60,7 +72,26 @@ class MaskingEngine:
 
     def _resolve(self, column: ColumnDescriptor) -> tuple[Decision, Transformer | None]:
         """Decide o desfecho da coluna e devolve o transformer, se houver."""
-        exception = self._exceptions.find(column)
+        derived = self._derived_rule(column)
+        if derived is not None:
+            # A analise de AST provou que esta posicao depende de uma coluna
+            # sensivel. Vem antes de tudo: o `output_name` e do cliente, e uma
+            # exception por alias nao pode liberar uma expressao provada
+            # sensivel. Ver D-042 e D-043.
+            decision = Decision(
+                action=Action.MASK,
+                output_name=column.output_name,
+                origin_name=column.origin_name,
+                rule_index=derived.index,
+                transformer_name=derived.transformer_name,
+            )
+            return decision, derived.transformer
+
+        # A exception responde pelo nome AUTORITATIVO da coluna: a origem
+        # quando ela existe, o nome de saida quando nao ha origem. Um alias
+        # nao converte coluna sensivel em excecao (D-042).
+        authoritative = column.origin_name or column.output_name
+        exception = self._exceptions.find_by_name(authoritative)
         if exception is not None:
             # Prioridade absoluta: nenhuma regra de masking e avaliada.
             decision = Decision(
@@ -88,6 +119,13 @@ class MaskingEngine:
             origin_name=column.origin_name,
         )
         return decision, None
+
+    def _derived_rule(self, column: ColumnDescriptor) -> MaskingRule | None:
+        """Regra provada por AST para esta posicao, se houver."""
+        index = column.derived_rule_index
+        if index is None or not 0 <= index < len(self._policy.rules):
+            return None
+        return self._policy.rules[index]
 
     def decide(self, column: ColumnDescriptor) -> Decision:
         """Decisao de matching para uma coluna, sem tocar em valores."""

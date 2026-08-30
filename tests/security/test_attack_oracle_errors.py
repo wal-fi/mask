@@ -96,15 +96,15 @@ class TestErrorOracleIsBlocked:
         assert info.value.__cause__ is None
         assert info.value.__context__ is None
 
-    def test_casts_that_do_not_fail_are_expression_leaks_not_error_leaks(self, gateway):
-        """KNOWN LIMITATION — nem todo cast falha; os que passam caem no F-01.
+    def test_casts_that_do_not_fail_are_masked_as_expressions(self, gateway):
+        """Nem todo cast falha; os que passam sao cobertos pela analise de AST.
 
-        Um CPF so de digitos e JSON valido, entao `cpf::jsonb` NAO levanta:
-        vira uma expressao comum, perde a origem e sai em claro.
+        Um CPF so de digitos e JSON valido, entao `cpf::jsonb` NAO levanta.
+        Ate a Fase 6 isso virava expressao comum e saia em claro.
         """
         result = gateway.query(f"SELECT cpf::jsonb AS d FROM {TABLE} WHERE id = 1")
-        assert CPF in dump(result)
-        assert result.columns[0].masked is False
+        assert CPF not in dump(result)
+        assert result.columns[0].masked is True
 
     def test_out_of_range_subscript_returns_null_not_an_error(self, gateway):
         result = gateway.query(f"SELECT (ARRAY[cpf])[999999999] AS d FROM {TABLE} LIMIT 1")
@@ -156,7 +156,8 @@ class TestOtherColumnsAreProtected:
         assert SENHA not in dump(result)
         assert result.rows[0] == ["jo***@example.com", "[REDACTED]"]
 
-    def test_password_via_expression_leaks_too(self, gateway):
-        """KNOWN LIMITATION — mesma classe do F-01, para qualquer regra."""
+    def test_password_via_expression_is_masked_too(self, gateway):
+        """A correcao vale para qualquer regra, nao so para `cpf`."""
         result = gateway.query(f"SELECT senha || '' AS s FROM {TABLE} WHERE id = 1")
-        assert SENHA in dump(result)
+        assert SENHA not in dump(result)
+        assert result.rows[0][0] == "[REDACTED]"

@@ -722,3 +722,125 @@ deliberado, por duas razoes:
 
 Cada teste desse tipo carrega a mensagem `fechou? atualizar SECURITY-REVIEW`.
 
+---
+
+# Fase 6.1 — Fechamento dos bypasses criticos
+
+## D-042 — A exception responde pelo nome AUTORITATIVO, nao pelo alias
+
+**F-08.** Exceptions eram avaliadas contra `output_name` E `origin_name`. Como
+o `output_name` e escolhido pelo cliente, toda exception configurada virava uma
+primitiva de desmascaramento: `SELECT cpf AS tipo_cpf` saia em claro.
+
+Decisao: a exception e avaliada contra UM nome, o autoritativo —
+`origin_name` quando existe, `output_name` quando nao ha origem resolvivel.
+
+| consulta | antes | agora |
+|---|---|---|
+| `SELECT tipo_cpf FROM cliente` | original | original |
+| `SELECT tipo_cpf AS documento` | original | original |
+| `SELECT cpf AS tipo_cpf` | **em claro** | mascarado |
+| `SELECT cliente_cpf AS tipo_cpf` | **em claro** | mascarado |
+| `SELECT 'x' AS tipo_cpf` | original | original |
+
+O masking segue avaliando os DOIS nomes: um `output_name` que casa regra ainda
+mascara mesmo com origem inocente. A assimetria e o ponto — o alias pode
+adicionar protecao, nunca remove-la.
+
+Isto muda a regra documentada `EXCEPTION > MASKING`: ela continua valendo, mas
+sobre o nome autoritativo, e nao sobre qualquer nome. `docs/MASKING-SPEC.md` e
+`docs/SECURITY.md` foram corrigidos.
+
+## D-043 — Sensitividade por AST, aplicada ao resultado da expressao
+
+**F-01 e F-02.** A proveniencia do PostgreSQL cobre alias, subquery, CTE, JOIN,
+cast no-op e view. Ela nao cobre o que o proprio PostgreSQL declara sem origem:
+expressoes, agregados e UNION. Ali o valor saia em claro.
+
+O que torna a correcao pequena: **as regras de masking sao globais por nome de
+coluna**. Para saber se `substr(c.cpf, 1, 11)` e sensivel nao e preciso saber
+de qual tabela `cpf` vem — basta o nome, e ele esta na arvore. Se a consulta e
+valida, o nome referenciado e um nome de coluna real. Nao ha lineage engine.
+
+`maskgw.sql.sensitivity` produz, por POSICAO do result set, o indice da regra
+que a cobre. Para UNION, olha o alvo correspondente em TODOS os ramos: basta um
+ramo ter dependencia sensivel para a posicao inteira ser sensivel — um UNION
+mistura as linhas dos ramos numa coluna so.
+
+O engine aplica o transformer dessa regra ao RESULTADO da expressao. Nao se
+tenta reconstruir a origem: `substr(cpf, 1, 11)` sai como o HMAC do prefixo,
+nao o HMAC do CPF. O que importa e que o valor exposto deixa de ser derivavel.
+
+Isso fecha tambem as formas reversiveis, que nunca foram protecao:
+`reverse(cpf)`, base64 e hex.
+
+**Ambiguidade recusa, nao escolhe.** Se uma posicao depende de duas regras
+DIFERENTES — `concat(cpf, email)`, ou `SELECT cpf FROM a UNION ALL SELECT email
+FROM b` — nao ha transformer unico comprovavel, e a consulta e rejeitada. Duas
+referencias a MESMA regra (`concat(cpf, nr_cpf)`) nao sao ambiguas.
+
+**A analise complementa, nunca enfraquece.** Ela so acrescenta sensibilidade;
+nao ha caminho pelo qual ela libere uma coluna que a proveniencia protegeria. E
+so e aplicada quando as posicoes batem com o result set: um `SELECT *` produz
+um alvo na arvore e N colunas no resultado, e ali as contagens divergem e a
+proveniencia segue sozinha.
+
+Custo: uma passada de AST por CONSULTA, nunca por linha. Fixado por teste com
+10.000 linhas e por um contador de chamadas ao analisador.
+
+## D-044 — Serializacao de linha inteira e recusada
+
+`row_to_json(c)` e `to_json(c)` devolvem a linha toda, com todas as colunas
+sensiveis, e a arvore nao tem um `ColumnRef` por campo para provar coisa
+alguma. Um `ColumnRef` de campo unico que casa o nome ou o alias de uma relacao
+do FROM nao e uma coluna: e a linha.
+
+Decisao: recusar. Sem `REJECT`, a alternativa seria mascarar o documento
+inteiro por uma regra escolhida arbitrariamente, ou deixar passar.
+
+Falso positivo possivel: uma coluna com o mesmo nome de uma tabela ou alias do
+FROM. Recusar e o lado seguro, e `SELECT c.cpf` (qualificado) nao e afetado.
+
+## D-045 — `mode` default das exceptions passa a ser `exact`
+
+**Hazard H-1**, aberto desde a Fase 1 (D-014). Uma exception escrita sem `mode`
+herdava `contains` e desligava a regra inteira em silencio.
+
+Decisao: `mode` default `contains` para regras de masking, `exact` para
+exceptions. A assimetria e justificada: uma regra larga protege demais, uma
+exception larga protege de menos.
+
+**Compatibilidade.** Configuracao existente que dependa de exception por
+substring muda de comportamento — uma exception `tipo` que hoje cobre
+`tipo_cpf` deixa de cobrir. A correcao e explicitar `mode: contains`, e a
+escolha fica visivel no arquivo. `config/masking.yaml` do repositorio ja
+declarava `mode: exact` e nao mudou.
+
+Combinada com D-042, o risco de H-1 cai bastante: mesmo uma exception larga
+deixou de ser alcancavel por alias.
+
+## D-046 — Um passo entre niveis: os nomes exportados por CTE e subquery
+
+Sem ele, `WITH x AS (SELECT cpf AS d FROM cliente) SELECT upper(d) FROM x`
+esconderia `cpf` atras do alias `d`, e o UNION dentro de CTE — exigido no
+escopo da fase — continuaria aberto.
+
+Decisao: construir um mapa `nome exportado -> regra` aplicando a MESMA analise
+a cada select de CTE e de subquery do FROM, e consultar esse mapa quando o nome
+referenciado nao casa regra diretamente.
+
+Limites deliberados:
+
+- **nao resolve escopo.** O mapa e por nome, como toda a politica. Um nome
+  exportado por uma subquery afeta a consulta inteira. Isso mascara demais em
+  casos raros, nunca de menos.
+- **um nivel por vez, com recursao.** O coletor para no primeiro select interno
+  (`Skip`) e a recursao trata o resto. Descer a arvore inteira em cada nivel
+  tornava a analise quadratica: uma consulta com 200 subqueries aninhadas
+  travava o processo — medido, e por isso o `Skip` existe.
+- **profundidade maxima de 16.** Alem dela a analise devolve `None` e a
+  proveniencia segue sozinha. Desistir e diferente de afirmar que e seguro.
+
+Isto e menos que um lineage engine: nao ha resolucao de escopo, nao ha
+propagacao de tipos, nao ha reescrita. E um mapa de nomes.
+

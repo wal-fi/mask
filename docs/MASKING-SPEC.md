@@ -14,9 +14,10 @@ E retorna o valor transformado.
 ## Pipeline
 
 ```text
-EXCEPTION MATCH   -> ORIGINAL
-MASKING MATCH     -> TRANSFORMER
-NO MATCH          -> ORIGINAL
+DERIVED (a AST provou dependência sensível)  -> TRANSFORMER
+EXCEPTION MATCH (pelo nome autoritativo)     -> ORIGINAL
+MASKING MATCH (output_name OU origin_name)   -> TRANSFORMER
+NO MATCH                                     -> ORIGINAL
 ```
 
 Default do MVP: **ALLOW**. Coluna sem correspondência passa normalmente.
@@ -58,14 +59,31 @@ SELECT cpf AS documento FROM cliente
 
 Resultado: mascarado.
 
-Quando `origin_name` não é determinável (expressões, funções, casts), o
-matching usa apenas `output_name`.
+Quando `origin_name` não é determinável (expressões, funções, casts, UNION), o
+matching usa `output_name` — e, desde a Fase 6.1, a **análise de sensitividade
+por AST**, que identifica as colunas de que a expressão depende e aplica a
+regra delas ao resultado. Ver `docs/DECISIONS.md` (D-043).
 
 ## Exceptions
 
-Exceptions possuem prioridade absoluta e são avaliadas contra os mesmos dois
-nomes. Se `output_name` ou `origin_name` casar uma exception, o valor passa
-original — mesmo que a regra de masking também casasse.
+Exceptions possuem prioridade absoluta sobre as regras de masking, mas são
+avaliadas contra **um** nome: o **autoritativo** da coluna — `origin_name`
+quando ele existe, `output_name` apenas quando não há origem determinável.
+
+Isso é assimétrico em relação ao masking de propósito. O `output_name` é
+escolhido pelo cliente: se a exception casasse por ele, toda exception
+configurada seria uma forma de desmascarar qualquer coluna sensível
+(`SELECT cpf AS tipo_cpf`). O alias pode **adicionar** proteção, nunca removê-la.
+
+```sql
+SELECT tipo_cpf FROM cliente             -- origem tipo_cpf  -> ORIGINAL
+SELECT tipo_cpf AS documento FROM ...    -- origem tipo_cpf  -> ORIGINAL
+SELECT cpf AS tipo_cpf FROM cliente      -- origem cpf       -> MASCARADO
+```
+
+O `mode` default de uma exception é `exact` — e não `contains`, como nas regras.
+Uma exception larga continua possível, com `mode: contains` explícito no
+arquivo. Ver D-042 e D-045.
 
 Exemplo:
 
@@ -154,3 +172,27 @@ Erro de schema, transformer inexistente, regex inválida ou parâmetro ausente
 impedem a inicialização.
 
 O cliente MCP não pode ler, alterar ou desabilitar regras.
+
+## Expressões derivadas
+
+Uma expressão sobre coluna sensível não tem origem no protocolo do PostgreSQL.
+A análise da AST resolve o caso: para cada posição do result set, ela reúne as
+colunas referenciadas e determina a regra que as cobre.
+
+```sql
+SELECT substr(cpf, 1, 11) AS documento FROM cliente
+-- depende de `cpf` -> o resultado da expressão recebe o transformer de `cpf`
+```
+
+Regras:
+
+- o transformer é aplicado ao **resultado da expressão**, não à coluna de
+  origem. Não se tenta reconstruir o valor original.
+- em um UNION, basta um ramo ter dependência sensível para a posição inteira
+  ser sensível.
+- duas regras **diferentes** na mesma posição (`concat(cpf, email)`) fazem a
+  consulta ser **rejeitada**: não há transformer único comprovável.
+- serialização de linha inteira (`row_to_json(c)`) é **rejeitada**: não há
+  referência por campo para provar nada.
+- a análise respeita exceptions sobre o nome referenciado:
+  `substr(tipo_cpf, 1, 3)` continua original.

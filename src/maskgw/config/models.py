@@ -26,11 +26,18 @@ class MatchConfig(BaseModel):
 
 
 class ExceptionConfig(MatchConfig):
-    """Exception: tem prioridade absoluta e nao possui transformer."""
+    """Exception: tem prioridade absoluta e nao possui transformer.
+
+    O default de `mode` e `exact`, e nao `contains` como nas regras. A
+    assimetria e deliberada: uma regra larga protege demais, uma exception
+    larga protege de menos. Ver docs/DECISIONS.md (D-045) e o hazard H-1.
+    """
+
+    mode: MatchMode = MatchMode.EXACT
 
 
 class RuleConfig(MatchConfig):
-    """Regra de masking."""
+    """Regra de masking. `mode` default `contains`, herdado de MatchConfig."""
 
     transformer: str = Field(min_length=1)
     config: dict[str, Any] = Field(default_factory=dict)

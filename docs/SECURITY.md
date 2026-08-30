@@ -191,25 +191,42 @@ Ver `docs/FUTURE-HARDENING.md`.
 
 ## Regra de prioridade
 
-EXCEPTION > MASKING > ORIGINAL
+```text
+DERIVED (a AST provou dependência sensível)  -> TRANSFORMER
+EXCEPTION (pelo nome AUTORITATIVO)           -> ORIGINAL
+MASKING (por output_name OU origin_name)     -> TRANSFORMER
+NO MATCH                                     -> ORIGINAL
+```
 
-## Resultado do red team (Fase 6)
+Duas precisões da Fase 6.1:
 
-`docs/SECURITY-REVIEW.md` traz o relatório completo: 11 findings, dois
-corrigidos, nove aceitos com teste que fixa o comportamento.
+- **O nome autoritativo** de uma exception é `origin_name` quando ele existe, e
+  `output_name` só quando não há origem. Um alias não converte coluna sensível
+  em exceção (D-042).
+- **A análise de AST vem antes de tudo.** Quando ela prova que a posição
+  depende de coluna sensível — expressão, agregado, ramo de UNION — a regra
+  dessa coluna se aplica ao resultado (D-043).
+
+## Resultado do red team (Fases 6 e 6.1)
+
+`docs/SECURITY-REVIEW.md` traz o relatório completo: 11 findings, **seis
+corrigidos**, cinco aceitos com teste que fixa o comportamento.
+
+Fechados na Fase 6.1: expressão sobre coluna sensível, UNION com alias, alias
+para o nome de uma exception, e o hazard H-1.
 
 **Antes de expor este Gateway, entenda que:**
 
-- expressão sobre coluna sensível (`substr(cpf,1,11) AS x`), UNION com alias e
-  alias para o nome de uma exception devolvem o valor **em claro**. São três
-  bypasses de uma linha de SQL cada.
 - a role do Gateway **precisa ter `EXECUTE` revogado** nas funções de usuário —
   `EXECUTE` é concedido a `PUBLIC` por padrão, e uma função pré-existente que
   leia coluna sensível devolve o valor sob o nome dela.
-- o oráculo por predicado reconstrói um CPF em 11 consultas.
+- o oráculo por predicado reconstrói um CPF em 11 consultas, e está fora do
+  escopo do MVP.
+- uma view que renomeia coluna sensível continua expondo o valor.
 
-O Gateway eleva o custo do vazamento acidental. Não resiste a um cliente
-adversarial. Uso interno com cliente semi-confiável.
+Com o `EXECUTE` revogado e o oráculo aceito: uso interno com cliente
+semi-confiável. Não adequado a exposição externa — não há autenticação e o
+transporte é stdio.
 
 ## Fora do escopo do MVP
 
