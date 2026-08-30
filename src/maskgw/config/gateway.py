@@ -61,6 +61,57 @@ def build_gateway_config(
     )
 
 
+@dataclass(frozen=True, slots=True)
+class LoadedConfig:
+    """O arquivo validado E os objetos runtime compilados, juntos.
+
+    D-047: a fonte administrativa e o arquivo validado, nao o compilado. A
+    compilacao descarta e transforma informacao — um `RegexTransformer` carrega
+    o padrao ja compilado, nao o texto do YAML; um `MaskingRule` carrega uma
+    instancia de `Transformer`, nao os parametros que a originaram.
+    Reconstruir o arquivo a partir dos objetos runtime devolveria algo que
+    PARECE a configuracao original sem ser ela.
+
+    Por isso os dois viajam juntos: o caminho e sempre
+    `arquivo -> modelo validado -> objetos runtime`, nunca o inverso.
+    """
+
+    file_config: MaskingFileConfig
+    gateway: GatewayConfig
+
+
+def parse_config_bundle(
+    raw: object,
+    *,
+    secrets: SecretProvider | None = None,
+    registry: TransformerRegistry | None = None,
+) -> LoadedConfig:
+    """Valida e compila, preservando o modelo do arquivo."""
+    parsed = validate_file_config(raw)
+    policy = compile_policy(parsed, secrets=secrets, registry=registry)
+    return LoadedConfig(file_config=parsed, gateway=build_gateway_config(parsed, policy))
+
+
+def load_config_bundle_text(
+    text: str,
+    *,
+    secrets: SecretProvider | None = None,
+    registry: TransformerRegistry | None = None,
+) -> LoadedConfig:
+    """Carrega arquivo validado + compilado a partir de texto YAML."""
+    return parse_config_bundle(deserialize(text), secrets=secrets, registry=registry)
+
+
+def load_config_bundle(
+    path: str | Path,
+    *,
+    secrets: SecretProvider | None = None,
+    registry: TransformerRegistry | None = None,
+) -> LoadedConfig:
+    """Carrega arquivo validado + compilado a partir de um arquivo."""
+    return load_config_bundle_text(read_config_text(path), secrets=secrets, registry=registry)
+
+
 def parse_gateway_config(
     raw: object,
     *,

@@ -10,18 +10,28 @@ proveniencia da Fase 3, os limites da Fase 4. O Gateway compoe e traduz.
 Fronteira de erro: `Gateway.query` levanta APENAS `GatewayError`, com uma
 categoria e uma mensagem fixa. A excecao interna nao e encadeada — nem por
 `__cause__`, nem por `__context__` (D-017).
+
+Desde a Fase 7 o Gateway nao guarda um adapter: ele ADQUIRE um runtime por
+query no `RuntimeRegistry` e o libera no fim (D-054). A query usa ESSA
+referencia do inicio ao fim, sem releitura no meio — e o que garante "o
+runtime antigo inteiro ou o novo inteiro", nunca uma mistura.
+
+A referencia e liberada assim que a execucao sincrona termina e o
+`QueryResult` ja protegido esta montado. NAO se prolonga a referencia porque o
+cliente MCP demorou a consumir a saida: o resultado ja e imutavel e ja passou
+pelo Masking Engine, entao nada nele depende mais do runtime. Prolongar
+seguraria uma conexao PostgreSQL pelo tempo do cliente, e um cliente que
+parasse de consumir bloquearia todo reload por RELOAD_BUSY.
 """
 
 from __future__ import annotations
 
-import threading
 import time
 import uuid
 from types import TracebackType
 from typing import NoReturn
 
 from maskgw.audit import FAILURE, SUCCESS, AuditLog, QueryAudit
-from maskgw.db.postgres import PostgresAdapter
 from maskgw.gateway.models import (
     ErrorCategory,
     GatewayError,
@@ -31,18 +41,20 @@ from maskgw.gateway.models import (
     jsonable,
 )
 from maskgw.masking.engine import Action
+from maskgw.runtime import RuntimeRegistry
 
 
 class Gateway:
     """Orquestrador. A unica camada que toca o valor original."""
 
-    def __init__(self, adapter: PostgresAdapter, audit: AuditLog) -> None:
-        self._adapter = adapter
+    def __init__(self, registry: RuntimeRegistry, audit: AuditLog) -> None:
+        self._registry = registry
         self._audit = audit
-        # O SDK MCP executa tools sincronas numa thread pool. Uma conexao
-        # psycopg nao suporta consultas concorrentes intercaladas, e nao ha
-        # pool nesta fase (D-034): as consultas sao serializadas aqui.
-        self._lock = threading.Lock()
+
+    @property
+    def revision(self) -> int:
+        """Revision do runtime publicado. Metadata, para o plano admin."""
+        return self._registry.current.revision
 
     def query(self, sql: str) -> QueryResult:
         """Executa uma consulta e devolve o resultado ja seguro."""
@@ -52,12 +64,21 @@ class Gateway:
         result: QueryResult | None = None
 
         try:
-            with self._lock:
-                # Idempotente quando ja aberta; reconecta com verificacao
-                # completa se a conexao caiu. Ver D-034.
-                self._adapter.connect()
-                masked = self._adapter.execute_validated(sql)
-            result = _to_query_result(masked)
+            # Uma unica aquisicao, usada ate o fim. O `finally` do `borrow`
+            # garante o release inclusive quando a query levanta.
+            with self._registry.borrow() as runtime:
+                # O lock de conexao e POR RUNTIME: cada runtime tem seu
+                # proprio adapter, e uma conexao psycopg nao suporta consultas
+                # concorrentes intercaladas (D-034). Ele nao serializa o
+                # Gateway inteiro, so aquele adapter.
+                with runtime.connection_lock:
+                    # Idempotente quando ja aberta; reconecta com verificacao
+                    # completa se a conexao caiu.
+                    runtime.adapter.connect()
+                    masked = runtime.adapter.execute_validated(sql)
+                # Montado ainda dentro da referencia: depois daqui o resultado
+                # e imutavel e nao depende mais do runtime.
+                result = _to_query_result(masked)
         except BaseException as exc:
             category = categorize(exc)
 
@@ -87,9 +108,8 @@ class Gateway:
         return result
 
     def close(self) -> None:
-        """Fecha a conexao. Idempotente."""
-        with self._lock:
-            self._adapter.close()
+        """Fecha o runtime publicado e os aposentados. Idempotente."""
+        self._registry.close_all()
 
     def __enter__(self) -> Gateway:
         return self

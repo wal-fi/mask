@@ -11,7 +11,6 @@ import datetime as dt
 import logging
 import traceback
 from decimal import Decimal
-from typing import Any, cast
 from uuid import UUID
 
 import psycopg
@@ -32,6 +31,7 @@ from maskgw.gateway.models import ErrorCategory, GatewayError, categorize, jsona
 from maskgw.gateway.service import Gateway
 from maskgw.masking.descriptor import ColumnDescriptor, ProvenanceKind
 from maskgw.masking.engine import Action, Decision
+from tests.conftest import make_test_registry
 
 CPF = "11122233344"
 MASKED = "9f2c1e0d"
@@ -88,7 +88,9 @@ class FakeAdapter:
 
 
 def build(adapter: object, audit: AuditLog | None = None) -> Gateway:
-    return Gateway(cast("Any", adapter), audit if audit is not None else AuditLog())
+    # Desde a Fase 7 o Gateway recebe um RuntimeRegistry, nao um adapter: ele
+    # adquire e libera um runtime por query (D-054).
+    return Gateway(make_test_registry(adapter), audit if audit is not None else AuditLog())
 
 
 class TestTranslation:

@@ -13,14 +13,21 @@ from __future__ import annotations
 import os
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import psycopg
 import pytest
 
+from maskgw.config.gateway import DatabaseSettings, GatewayConfig
+from maskgw.config.models import MaskingFileConfig
 from maskgw.db.columns import DERIVED_ORIGIN, UNKNOWN_ORIGIN, ColumnOrigin
+from maskgw.db.postgres import PostgresAdapter
+from maskgw.masking.engine import MaskingEngine
+from maskgw.masking.rules import MaskingPolicy
 from maskgw.masking.transformers.hashes import HMAC_KEY_ENV
+from maskgw.runtime import Runtime, RuntimeRegistry
 from maskgw.secretsource import MappingSecretProvider, SecretProvider
+from maskgw.sql.policy import DEFAULT_SQL_POLICY
 
 #: Chave de teste. Nao e segredo real; existe apenas para exercitar o HMAC.
 TEST_HMAC_KEY = "chave-de-teste-para-hmac-com-tamanho-suficiente"
@@ -183,3 +190,33 @@ class FakeConnection:
 
     def close(self) -> None:
         self.closed = True
+
+
+# --------------------------------------------------------------------------
+# Fase 7: montar um Runtime/Registry em volta de um adapter duble.
+#
+# O Gateway passou a adquirir e liberar um runtime por query (D-054), entao um
+# teste que antes passava um adapter agora precisa do agregado. Nada aqui e
+# especifico de um teste: e a mesma montagem minima em todos.
+# --------------------------------------------------------------------------
+
+
+def make_test_runtime(adapter: object, *, revision: int = 1) -> Runtime:
+    """Runtime minimo em volta de um adapter duble."""
+    policy = MaskingPolicy(exceptions=(), rules=())
+    return Runtime(
+        revision=revision,
+        file_config=MaskingFileConfig(),
+        config=GatewayConfig(
+            masking=policy,
+            database=DatabaseSettings(statement_timeout_ms=30_000, max_rows=1_000),
+            sql=DEFAULT_SQL_POLICY,
+        ),
+        engine=MaskingEngine(policy),
+        adapter=cast(PostgresAdapter, adapter),
+    )
+
+
+def make_test_registry(adapter: object) -> RuntimeRegistry:
+    """Registry de um runtime so, para testes que nao exercitam reload."""
+    return RuntimeRegistry(make_test_runtime(adapter))

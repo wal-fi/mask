@@ -170,7 +170,7 @@ class TestViewBypass:
 
     def test_provenance_reports_view_kind(self, application):
         """O descritor interno SABE que e view; falta seguir ate a base."""
-        masked = application.gateway._adapter.execute_validated(
+        masked = application.registry.current.adapter.execute_validated(
             f"SELECT documento FROM {SCHEMA}.v2 WHERE id = 1"
         )
         assert masked.columns[0].provenance_kind is ProvenanceKind.VIEW

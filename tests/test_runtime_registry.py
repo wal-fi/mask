@@ -278,31 +278,38 @@ class TestRetiredLimit:
     def test_connection_count_never_exceeds_two(self) -> None:
         """A garantia da secao 8.5: o total de conexoes nao cresce.
 
-        Conta o que de fato existe aberto no processo: o runtime publicado,
-        os aposentados ainda nao fechados, e o candidato enquanto ele estiver
-        conectado mas ainda nao publicado. E o candidato que torna o passo 4
-        da secao 7.4 necessario — checar o limite ANTES de conectar. Sem essa
-        ordem, um aposentado em uso mais um candidato ja conectado dariam 3.
+        A amostra e a verdade de campo — quantos adapters existem sem `close` —
+        e nao uma leitura combinada de duas fontes. Cada adapter entra na lista
+        no instante em que e criado, inclusive o candidato, e sai so quando e
+        fechado. Isso conta o candidato durante a janela em que ele ja esta
+        conectado e ainda nao foi publicado, que e exatamente a janela que
+        torna o passo 4 da secao 7.4 necessario: checar o limite ANTES de
+        conectar. Sem essa ordem, um aposentado em uso mais um candidato ja
+        conectado dariam 3.
         """
+        state_lock = threading.Lock()
         adapters: list[CountingAdapter] = []
+
+        def track(adapter: CountingAdapter) -> CountingAdapter:
+            with state_lock:
+                adapters.append(adapter)
+            return adapter
+
+        def open_adapters() -> int:
+            with state_lock:
+                return sum(1 for a in adapters if a.close_calls == 0)
+
         first, first_adapter = make_runtime(1)
-        adapters.append(first_adapter)
+        track(first_adapter)
         registry = RuntimeRegistry(first)
 
-        state_lock = threading.Lock()
-        candidate_open = 0
         stop = threading.Event()
         samples: list[int] = []
-
-        def sample() -> int:
-            with state_lock:
-                pending = candidate_open
-            return 1 + registry.retired_in_use() + pending
 
         def worker() -> None:
             while not stop.is_set():
                 with registry.borrow():
-                    samples.append(sample())
+                    samples.append(open_adapters())
 
         threads = [threading.Thread(target=worker) for _ in range(4)]
         for thread in threads:
@@ -320,17 +327,13 @@ class TestRetiredLimit:
                 continue
 
             candidate, candidate_adapter = make_runtime(swaps + 2)
-            with state_lock:
-                candidate_open += 1
+            track(candidate_adapter)
             try:
                 registry.swap_and_close(candidate)
             except RetiredRuntimeInUseError:
+                # Candidato abandonado: fecha, como faz o fluxo real.
                 candidate_adapter.close()
                 continue
-            finally:
-                with state_lock:
-                    candidate_open -= 1
-            adapters.append(candidate_adapter)
             swaps += 1
 
         stop.set()

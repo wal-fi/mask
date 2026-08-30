@@ -35,11 +35,12 @@ from pathlib import Path
 from typing import Final
 
 from maskgw.audit import AuditLog
-from maskgw.config import GatewayConfig, load_gateway_config
+from maskgw.config import GatewayConfig, load_config_bundle
 from maskgw.db.postgres import PostgresAdapter
 from maskgw.errors import ConfigError
 from maskgw.gateway.service import Gateway
 from maskgw.masking.engine import MaskingEngine
+from maskgw.runtime import Runtime, RuntimeRegistry
 from maskgw.secretsource import EnvSecretProvider, SecretProvider
 
 #: Variavel de ambiente com o DSN do PostgreSQL. Nunca no `masking.yaml`.
@@ -55,6 +56,7 @@ class Application:
 
     gateway: Gateway
     config: GatewayConfig
+    registry: RuntimeRegistry
 
     def close(self) -> None:
         self.gateway.close()
@@ -81,8 +83,11 @@ def build_application(
     audit: AuditLog | None = None,
 ) -> Application:
     """Constroi a aplicacao inteira, ou levanta sem deixar nada de pe."""
-    # 1 e 2: configuracao e segredos.
-    config = load_gateway_config(config_path, secrets=secrets)
+    # 1 e 2: configuracao e segredos. O modelo do arquivo viaja junto com o
+    # compilado: e ele a fonte administrativa (D-047).
+    bundle = load_config_bundle(config_path, secrets=secrets)
+    file_config = bundle.file_config
+    config = bundle.gateway
 
     # 3: Masking Engine.
     engine = MaskingEngine(config.masking)
@@ -102,9 +107,20 @@ def build_application(
         adapter.close()
         raise
 
-    # 7: a fachada.
-    gateway = Gateway(adapter, audit if audit is not None else AuditLog())
-    return Application(gateway=gateway, config=config)
+    # 7: o runtime inicial e o registry que coordena o ciclo de vida.
+    registry = RuntimeRegistry(
+        Runtime(
+            revision=file_config.revision,
+            file_config=file_config,
+            config=config,
+            engine=engine,
+            adapter=adapter,
+        )
+    )
+
+    # 8: a fachada.
+    gateway = Gateway(registry, audit if audit is not None else AuditLog())
+    return Application(gateway=gateway, config=config, registry=registry)
 
 
 def dsn_from_environment() -> str:

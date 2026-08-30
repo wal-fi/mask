@@ -190,7 +190,7 @@ class TestSecretsNeverEscape:
         assert TEST_HMAC_KEY not in str(info.value)
 
     def test_the_dsn_is_absent_from_the_adapter_repr(self, application):
-        assert repr(application.gateway._adapter) == "PostgresAdapter(closed=False)"
+        assert repr(application.registry.current.adapter) == "PostgresAdapter(closed=False)"
 
     def test_sql_cannot_read_the_key_from_the_session(self, gateway):
         result = gateway.query("SELECT current_setting('maskgw.key', true) AS k")
@@ -364,9 +364,9 @@ class TestCapabilityLossAfterStartup:
             admin.execute(f"GRANT SELECT ON ALL TABLES IN SCHEMA {SCHEMA} TO {role}")
             try:
                 admin.execute("REVOKE SELECT ON pg_attribute FROM PUBLIC")
-                connection = gateway._adapter._connection
+                connection = application.registry.current.adapter._connection
                 connection.execute(f"SET ROLE {role}")
-                gateway._adapter._provenance._cache.clear()
+                application.registry.current.adapter._provenance._cache.clear()
 
                 with pytest.raises(GatewayError) as info:
                     gateway.query(f"SELECT cpf AS documento FROM {TABLE} WHERE id = 1")
