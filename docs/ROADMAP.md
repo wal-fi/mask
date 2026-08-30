@@ -232,10 +232,19 @@ nem teste.
 Objetivo: criar uma superfície administrativa separada do MCP para
 gerenciamento seguro de configuração, policies, status e auditoria.
 
-Decisões arquiteturais já aprovadas: **D-047 a D-053**. As principais —
+Decisões arquiteturais já aprovadas: **D-047 a D-054**. As principais —
 Admin API não executa SQL, a fonte administrativa é o arquivo validado e não o
-runtime compilado, reload reconstrói o runtime inteiro com troca atômica,
-proteções estruturais não são editáveis.
+runtime compilado, reload reconstrói o runtime inteiro, proteções estruturais
+não são editáveis, operações administrativas de escrita são serializadas com
+`expected_revision` verificado dentro da seção crítica (D-052), e o ciclo de
+vida do runtime é coordenado por refcount + `retired` (D-054).
+
+Uma precisão registrada em D-048: **não há atomicidade conjunta entre
+filesystem e memória**. A persistência é atômica e a troca de referência é
+atômica, cada uma por si. Depois do `rename` o arquivo já é o novo e não há
+rollback de arquivo; existe uma janela de crash entre persistir e trocar, e a
+recuperação é o próximo start ler o arquivo — que já passou por validação,
+compilação, conexão e capability check antes de ser escrito.
 
 **A especificação final será aprovada antes do início.**
 

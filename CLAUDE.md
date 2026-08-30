@@ -27,7 +27,7 @@ Nesta ordem:
 2. `docs/ARCHITECTURE.md` — módulos e responsabilidades
 3. `docs/SECURITY.md` — invariantes de segurança
 4. `docs/SECURITY-REVIEW.md` — o que foi atacado, o que resistiu, o que não
-5. `docs/DECISIONS.md` — 53 decisões (D-001 a D-053) e o porquê de cada uma
+5. `docs/DECISIONS.md` — 54 decisões (D-001 a D-054) e o porquê de cada uma
 6. `docs/MASKING-SPEC.md` — semântica exata do pipeline de masking
 7. `docs/TEST-PLAN.md`, `docs/THREAT-MODEL.md`, `docs/FUTURE-HARDENING.md`
 
@@ -115,10 +115,13 @@ riscos aceitos em `docs/SECURITY-REVIEW.md`.
 ## Próxima evolução — Admin API
 
 A próxima fase planejada é a **Fase 7 — Admin API**. Ela ainda **NÃO foi
-iniciada**: não há módulo `admin/`, dependência FastAPI nem teste. A
-especificação final será aprovada antes da implementação.
+iniciada**: não há módulo `admin/`, dependência FastAPI nem teste.
 
-Invariantes já decididos (D-047 a D-053) — não os reabra:
+A especificação está escrita em `docs/PHASE-7-SPEC.md` e está **em revisão, não
+aprovada**. Ela não autoriza implementação: quatro questões abertas (§14.2)
+precisam de decisão antes de qualquer código.
+
+Invariantes já decididos (D-047 a D-054) — não os reabra:
 
 - **MCP nunca altera configuração.**
 - **Admin API nunca executa SQL.** Não haverá `/query`, `/sql` ou `/execute`;
@@ -132,6 +135,18 @@ Invariantes já decididos (D-047 a D-053) — não os reabra:
   parcialmente. A query vê o antigo inteiro ou o novo inteiro.
 - **Proteções estruturais de segurança não podem ser desligadas pela Admin
   API** — `denied_relations` com `pg_stats` é o caso concreto.
+- **Não há atomicidade conjunta entre filesystem e memória** (D-048). Depois do
+  `rename` o arquivo já é o novo, e não há rollback de arquivo. Existe uma
+  janela de crash entre persistir e trocar; a recuperação é o próximo start
+  ler o arquivo novo, que já foi validado e comprovado conectável.
+- **Operações administrativas de escrita/reload são serializadas** (D-052):
+  `expected_revision`, nova revision, persistência e swap na mesma seção
+  crítica. Duas requisições com o mesmo `expected_revision` não vencem ambas.
+- **O DSN nunca é campo administrativo** — credenciais, host e banco continuam
+  vindo só de secret/env.
+- **Ciclo de vida do runtime por refcount + `retired`** (D-054): o reload não
+  espera queries antigas, o último release fecha o runtime aposentado
+  exatamente uma vez, e nenhuma query adquire um runtime já aposentado.
 
 FastAPI **não** entra na stack enquanto a implementação não começar.
 

@@ -911,24 +911,76 @@ A ordem nao e arbitraria. Cada passo existe porque o inverso quebra algo:
 O passo de **conectar e verificar** e o que diferencia esta decisao de um
 reload ingenuo. As tres verificacoes ja existem no `PostgresAdapter.connect()`
 — sessao read-only, `statement_timeout` conferido em `pg_settings` (D-028) e
-`check_provenance_capability` (D-026). Uma configuracao com
-`statement_timeout_ms` que o servidor recuse, ou uma troca de DSN para uma role
-sem catalogo, precisa falhar **aqui**, com o runtime antigo intacto — e nao no
-proximo restart, quando ninguem estiver olhando.
+`check_provenance_capability` (D-026).
 
-### Falha antes do swap
+O que torna a reconexao necessaria e que `database.statement_timeout_ms` viaja
+em `options` do DSN (D-028) e so vale a partir de uma sessao nova. Um
+`statement_timeout_ms` que o servidor recuse, ou uma role que tenha perdido o
+acesso ao catalogo desde o startup, precisa falhar **aqui**, com o runtime
+antigo intacto — e nao no proximo restart, quando ninguem estiver olhando.
 
-Qualquer falha antes da troca **fecha o candidato** — inclusive a conexao que
-ele ja tenha aberto — e preserva arquivo e runtime atuais. O Gateway continua
-respondendo com a configuracao anterior, e o erro volta ao administrador como
-`CONFIG_WRITE_ERROR` ou `CONFIG_RELOAD_ERROR` sanitizado.
+**O DSN nao e campo administrativo.** Credenciais, host e banco continuam vindo
+exclusivamente de secret/variavel de ambiente e nao sao editaveis pela Admin
+API — nem para leitura. A reconexao usa o mesmo DSN de sempre; o que muda sao
+os parametros de sessao derivados da configuracao.
 
-Nao ha estado intermediario observavel: ou a operacao inteira aconteceu, ou
-nada aconteceu.
+### Semantica de falha, por ponto
 
-Falha inesperada NO swap e erro critico: arquivo novo, runtime indefinido. A
-implementacao deve tornar o swap uma unica operacao atomica justamente para que
-esse caso nao exista — ver D-054.
+Nao existe atomicidade conjunta entre filesystem e memoria. Sao dois meios
+distintos, e nenhuma primitiva os cobre junto. O que existe e uma sequencia
+cujo unico ponto de nao-retorno e conhecido e documentado.
+
+| falha em | arquivo | runtime | candidato | resposta ao admin |
+|---|---|---|---|---|
+| validacao | anterior | anterior | nunca existiu | `CONFIG_INVALID` |
+| compilacao / construcao | anterior | anterior | fechado | `CONFIG_RELOAD_ERROR` |
+| conexao ou capability check | anterior | anterior | fechado, com a conexao | `CONFIG_RELOAD_ERROR` |
+| persistencia atomica | **anterior** | anterior | fechado | `CONFIG_WRITE_ERROR` |
+| **crash entre persistencia e swap** | **novo** | anterior, e o processo morreu | perdido com o processo | nenhuma — ver abaixo |
+| swap | nao ocorre (ver abaixo) | — | — | — |
+
+**Falha da persistencia preserva o arquivo anterior.** A escrita e
+`arquivo temporario no mesmo diretorio -> fsync -> rename`. O `rename` dentro
+do mesmo filesystem e atomico: ou o arquivo novo passou a existir inteiro, ou o
+anterior permaneceu intacto. Nao ha meio-arquivo. Se qualquer passo falhar
+antes do `rename`, o temporario e removido e nada mudou.
+
+**Depois que a persistencia termina, o arquivo ja e o novo.** Nao ha rollback
+do arquivo. Nao se afirma, em ponto algum, que "qualquer falha antes do swap
+preserva o arquivo": isso e falso a partir do `rename`. Um rollback de arquivo
+so poderia ser afirmado se existisse, com teste que o exercite; nao existe, e
+por isso nao e afirmado.
+
+### A janela de crash entre persistir e trocar
+
+Entre o `rename` concluido e a reatribuicao da referencia de runtime existe uma
+janela real. Se o processo morrer nela, o estado e:
+
+- **em disco:** a configuracao nova, ja validada e ja comprovada conectavel;
+- **em memoria:** nada — o processo nao existe mais.
+
+**Recuperacao:** o proximo start le o arquivo, que e o novo. O Gateway sobe com
+a configuracao nova. Nao ha reconciliacao a fazer, nao ha arquivo a reverter e
+nao ha estado corrompido: o arquivo persistido e exatamente aquele que passou
+por validacao, compilacao, conexao e capability check antes de ser escrito.
+Essa e a razao de a verificacao vir **antes** da persistencia — e nao uma
+otimizacao.
+
+**Consequencia que o administrador precisa conhecer:** uma operacao que nao
+retornou sucesso pode, ainda assim, ter tomado efeito no proximo start. E o
+preco de nao haver atomicidade entre disco e memoria, e a direcao do risco e a
+segura — a configuracao que vigora e uma que ja foi validada, nunca uma
+mistura nem um arquivo pela metade. Apos qualquer queda durante uma operacao
+administrativa, o administrador deve **ler a configuracao vigente** antes de
+repetir a operacao.
+
+### O swap
+
+O swap e a reatribuicao de **uma** referencia, sob a mesma secao critica
+administrativa que fez a verificacao de `expected_revision` e a persistencia
+(D-052). Nao ha passo intermediario dentro dele e nao ha caminho de falha
+parcial: ou a referencia nova esta publicada, ou a antiga continua. O ciclo de
+vida do runtime aposentado e problema separado, e esta em D-054.
 
 ## D-049 — A Admin API nao executa SQL
 
@@ -966,7 +1018,7 @@ A ORDEM das masking rules continua semanticamente relevante — "first match
 wins" (D-004) — entao ID estavel nao substitui ordenacao: sao coisas distintas,
 e a reordenacao precisa de operacao propria.
 
-## D-052 — Controle otimista por revision
+## D-052 — Controle otimista por revision, dentro de uma secao critica
 
 A configuracao administrativa tera uma `revision` inteira crescente. Operacoes
 de escrita informam `expected_revision`; se ela diferir da atual, a operacao e
@@ -974,6 +1026,37 @@ recusada por conflito e nada e sobrescrito.
 
 E o minimo para dois administradores nao se sobrescreverem em silencio. Nao e
 sistema distribuido: um inteiro no arquivo e uma comparacao.
+
+### Toda operacao administrativa de escrita ou reload e serializada
+
+Comparar `expected_revision` fora de uma secao critica nao controla nada: duas
+requisicoes leem a mesma revision atual, ambas aprovam a comparacao, e a
+segunda sobrescreve a primeira — que ja respondeu sucesso ao seu administrador.
+O controle otimista viraria decoracao.
+
+Portanto: **a verificacao de `expected_revision`, a criacao da nova `revision`,
+a persistencia e o swap pertencem a uma unica secao critica administrativa.**
+Um lock de escrita administrativo, um por processo, adquirido no inicio da
+operacao e liberado no fim.
+
+Consequencias:
+
+- **Duas requisicoes com o mesmo `expected_revision` nao podem ambas vencer.**
+  A primeira a entrar na secao critica vence e publica `revision + 1`; a
+  segunda encontra a revision ja incrementada e recebe conflito (HTTP 409).
+  Nao ha ordem de chegada garantida entre as duas — a garantia e que exatamente
+  uma vence.
+- As operacoes administrativas de escrita sao **serializadas entre si**. Sao
+  raras e humanas; serializar nao custa nada.
+- Esse lock **nao** toca o caminho de query. Ele cobre a operacao
+  administrativa inteira; a query so interage com o runtime pelo mecanismo de
+  aquisicao de D-054, cuja secao critica e curta e separada.
+- Leitura administrativa (`GET`) nao entra nessa secao critica: le a referencia
+  publicada e responde.
+
+A `revision` e persistida **dentro** do proprio arquivo de configuracao. Se
+ficasse fora, arquivo e revision poderiam divergir na janela de crash de D-048,
+e o controle otimista passaria a mentir depois de um restart.
 
 ## D-053 — `enabled` fica fora da primeira versao administrativa
 
@@ -998,27 +1081,68 @@ garantias: ou uma query e interrompida no meio, ou o adapter antigo vaza.
 Fechar a conexao psycopg sob uma query em execucao aborta a consulta e produz
 um erro que o cliente nao causou.
 
-Mecanismo adotado: **referencia imutavel + contagem de uso (refcount)**.
+Mecanismo adotado: **referencia imutavel + contagem de uso (refcount) + marca
+de aposentadoria (retired)**.
 
 - O runtime e um objeto **imutavel** que agrega config, engine, `SqlPolicy`,
   settings e adapter. Trocar de runtime e reatribuir uma unica referencia.
 - Toda query **adquire** a referencia atual uma vez, no inicio, e usa **essa**
   referencia ate o fim. Nao ha releitura no meio: e isso que garante "o antigo
   inteiro ou o novo inteiro".
-- A aquisicao incrementa um contador no runtime; o fim da query decrementa,
-  em `finally`.
-- O reload troca a referencia e entao aguarda o contador do runtime antigo
-  chegar a zero para fecha-lo. Queries novas ja pegam o runtime novo.
+- A aquisicao incrementa o contador do runtime; o fim da query o decrementa,
+  sempre em `finally`.
+- O swap publica o runtime novo e **aposenta** o antigo. O antigo e fechado
+  quando seu ultimo usuario o libera — nao pelo reload.
+
+### Regras que a implementacao precisa cumprir
+
+1. **O reload nao bloqueia esperando queries antigas.** Ele publica o runtime
+   novo, marca o antigo como `retired`, decide se pode fecha-lo ja, e retorna.
+   Uma query de 30 s nao segura a resposta da operacao administrativa.
+
+2. **O runtime antigo e marcado como `retired` no swap**, dentro da mesma
+   secao critica que publica o novo. `retired` e um estado do proprio objeto
+   runtime, nao uma variavel do reload: quem decide fechar precisa ler
+   `retired` e o contador **juntos**.
+
+3. **Aquisicao, swap, alteracao do refcount e decisao de fechamento usam a
+   mesma sincronizacao.** Todas essas operacoes leem ou escrevem o par
+   `(retired, refcount)`, e uma decisao de fechamento tomada sobre uma leitura
+   parcial fecha um runtime em uso ou vaza um aposentado. Um unico lock curto
+   cobre as quatro; ele **nao** cobre a execucao da query, so a transicao de
+   estado.
+
+4. **O ultimo release fecha o runtime aposentado exatamente uma vez.** O
+   fechamento pertence a transicao que leva o contador a zero **com `retired`
+   verdadeiro**, e essa transicao acontece uma so vez. Nao ha "verificar e
+   depois fechar" fora do lock, nem fechamento idempotente por tentativa e
+   erro: a condicao e decidida sob o lock, e o `close` do adapter ocorre depois
+   de solta-lo — fora da secao critica, porque fechar uma conexao psycopg pode
+   demorar.
+
+5. **Se o runtime antigo ja estiver sem usuarios no momento do swap, ele e
+   fechado imediatamente.** Esse e o caso comum: um Gateway ocioso recebe um
+   reload e nao ha nada a esperar. A condicao e a mesma da regra 4 —
+   `retired` verdadeiro e contador zero — avaliada uma vez no proprio swap.
+   Sem isso, um runtime sem nenhuma query em andamento nunca seria fechado,
+   porque nao havera release algum para dispara-lo.
+
+6. **Nenhuma query adquire um runtime depois que ele foi aposentado.** A
+   aquisicao le a referencia publicada e incrementa sob o mesmo lock; um
+   runtime aposentado ja nao e a referencia publicada. Se, por qualquer
+   caminho, uma tentativa de aquisicao encontrar um runtime com `retired`
+   verdadeiro, ela **nao** o adquire — nao o incrementa e nao o usa.
+
+O `statement_timeout` (D-028) limita por quanto tempo um runtime aposentado
+pode sobreviver: e o teto natural do periodo em que dois adapters coexistem.
 
 Consequencias que a implementacao precisa respeitar:
 
-- **A troca da referencia e a aquisicao precisam ser mutuamente atomicas.** Um
-  lock curto em volta de "ler a referencia e incrementar" basta; ele nao cobre
-  a execucao da query, so a aquisicao. Sem isso existe a janela: ler a
-  referencia, o reload trocar e fechar, e so entao incrementar.
-- **O fechamento e assincrono em relacao ao reload.** O reload nao bloqueia
-  esperando queries longas; o `statement_timeout` (D-028) ja limita quanto
-  tempo o runtime antigo pode sobreviver.
+- **A troca da referencia e a aquisicao precisam ser mutuamente atomicas.** Sem
+  isso existe a janela: ler a referencia, o reload trocar e fechar, e so entao
+  incrementar — uma query executando sobre uma conexao ja fechada.
+- **O fechamento e assincrono em relacao ao reload.** O reload nao espera; quem
+  fecha e o ultimo release, ou o proprio swap quando ja nao ha usuarios.
 - **O lock nao cobre a execucao da query.** Serializar queries no reload
   transformaria uma operacao administrativa num stall de todo o Gateway.
 
@@ -1027,6 +1151,14 @@ segurando o lock de leitura durante toda a execucao. E mais simples de
 escrever, mas um reload passa a esperar a query mais longa segurando o lock de
 escrita, e queries novas ficam bloqueadas atras dele. Um `statement_timeout` de
 30 s vira 30 s de indisponibilidade administrativa e de fila.
+
+Sao tres locks distintos, e confundi-los quebra alguma das garantias:
+
+| lock | cobre | duracao |
+|---|---|---|
+| administrativo (D-052) | `expected_revision`, nova revision, persistencia, swap | a operacao administrativa inteira |
+| de ciclo de vida (esta decisao) | aquisicao, swap, refcount, decisao de fechamento | transicao de estado, nunca a query |
+| de conexao (D-034) | acesso a conexao psycopg de **um** runtime | a execucao da query |
 
 Isto substitui, para o reload, o `threading.Lock` que hoje serializa as
 consultas em `Gateway.query` (D-034). Aquele lock existe porque ha **uma**

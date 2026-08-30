@@ -335,5 +335,18 @@ Invariantes dos dois planos:
 - **Mudança de configuração reconstrói o runtime inteiro** e troca a referência
   de forma atômica. Uma query enxerga o runtime antigo inteiro ou o novo
   inteiro, nunca uma mistura (D-048).
+- **Persistência e troca são atômicas separadamente, não em conjunto** (D-048).
+  Não há atomicidade entre filesystem e memória: depois do `rename` o arquivo
+  já é o novo, e a recuperação de um crash na janela entre persistir e trocar é
+  o próximo start ler esse arquivo — que já foi validado, compilado, conectado
+  e verificado antes de ser escrito.
+- **Operações administrativas de escrita são serializadas** (D-052):
+  `expected_revision`, nova revision, persistência e swap na mesma seção
+  crítica administrativa.
+- **O ciclo de vida dos runtimes é coordenado por refcount + `retired`**
+  (D-054). O reload não bloqueia esperando queries antigas; nenhuma query
+  adquire um runtime aposentado; o último release o fecha exatamente uma vez.
+- **O DSN não é campo administrativo.** Credenciais, host e banco continuam
+  vindo exclusivamente de secret/env.
 - **Proteções estruturais de segurança não são editáveis** pela Admin API —
   `denied_relations` com `pg_stats`/`pg_statistic` é o exemplo (D-050).

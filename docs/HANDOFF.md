@@ -19,7 +19,7 @@ Ordem de leitura sugerida:
 | `docs/ARCHITECTURE.md` | modulos e responsabilidades |
 | `docs/SECURITY.md` | invariantes de seguranca e o que exigir antes de expor |
 | `docs/SECURITY-REVIEW.md` | 11 findings do red team, seis fechados |
-| `docs/DECISIONS.md` | D-001 a D-053, com o motivo de cada uma |
+| `docs/DECISIONS.md` | D-001 a D-054, com o motivo de cada uma |
 | `docs/MASKING-SPEC.md` | semantica exata do pipeline |
 | `docs/TEST-PLAN.md` | o que cada camada de teste cobre |
 | `docs/THREAT-MODEL.md` | cenarios de ataque e o resultado medido |
@@ -257,6 +257,20 @@ D-001 a D-014 na Fase 1; D-015 a D-019 na Fase 2. Detalhamento em
 | D-045 | `mode` default das exceptions passa a `exact`. Corrige H-1 |
 | D-046 | Um passo entre niveis: nomes exportados por CTE e subquery |
 
+D-047 a D-054 sao da Fase 7 e foram aprovadas **antes** de qualquer codigo.
+Nenhuma delas esta implementada:
+
+| # | Decisao (Fase 7, nao implementada) |
+|---|---|
+| D-047 | A fonte administrativa e o arquivo validado, nao o runtime compilado |
+| D-048 | Reload reconstroi o runtime inteiro; sem atomicidade entre disco e memoria |
+| D-049 | A Admin API nao executa SQL |
+| D-050 | Protecoes estruturais nao sao editaveis pela Admin API |
+| D-051 | IDs administrativos estaveis; ordem continua semantica |
+| D-052 | Revision otimista, verificada dentro de uma secao critica serializada |
+| D-053 | `enabled` fica fora da primeira versao |
+| D-054 | Ciclo de vida do runtime: refcount + `retired`; o ultimo release fecha |
+
 ## 6. Resultado das verificacoes
 
 Com `MASKGW_TEST_DSN` apontando para PostgreSQL 16 em Docker:
@@ -440,15 +454,23 @@ Status:
 NAO INICIADA
 ```
 
-Nao ha modulo `admin/`, nao ha FastAPI no `pyproject.toml`, nao ha teste. A
-especificacao inicial foi revista apos inspecao do codigo real, e a
-**especificacao final sera aprovada separadamente antes da implementacao**.
+Nao ha modulo `admin/`, nao ha FastAPI no `pyproject.toml`, nao ha teste.
+
+A especificacao esta em `docs/PHASE-7-SPEC.md`, **em revisao e nao aprovada**.
+Ela cobre endpoints, autenticacao, bind e CORS, schemas, IDs e migracao,
+revision e 409, persistencia atomica, lifecycle dos runtimes, sanitizacao de
+erro, secrets, protecoes read-only, testes exigidos e escopo de auditoria.
+
+Quatro questoes abertas na secao 14.2 precisam de decisao antes de qualquer
+codigo: o conjunto nunca-liberavel de `allowed_pg_functions` no loader, o teto
+de runtimes aposentados, a porta default, e a perda dos comentarios do
+`masking.yaml` na adocao.
 
 Objetivo: superficie administrativa separada do MCP para gerenciar
 configuracao, policies, status e auditoria sem editar arquivo a mao.
 
 **Principios ja aprovados** — decididos antes de qualquer codigo, registrados
-em D-047 a D-053 com o motivo de cada um:
+em D-047 a D-054 com o motivo de cada um:
 
 - Admin API **completamente separada** do MCP: planos distintos, sem handler e
   sem schema compartilhado
@@ -463,9 +485,26 @@ em D-047 a D-053 com o motivo de cada um:
 - **Runtime nunca e alterado parcialmente**: a query ve o antigo inteiro ou o
   novo inteiro
 - **Persistencia atomica** e **troca de runtime atomica**, nesta ordem:
-  validar → construir runtime → persistir → trocar (D-048)
-- **`revision` + `expected_revision`** para controle otimista de concorrencia
-  (D-052)
+  validar → construir runtime → conectar e verificar → persistir → trocar
+  (D-048). As duas sao atomicas **separadamente**: nao ha atomicidade conjunta
+  entre filesystem e memoria
+- **Depois do `rename` o arquivo ja e o novo**, e nao ha rollback de arquivo.
+  Falha da persistencia preserva o arquivo anterior; falha antes dela preserva
+  arquivo e runtime (D-048)
+- **Janela de crash entre persistir e trocar**: se o processo morrer nela, o
+  disco tem a configuracao nova — ja validada e ja comprovada conectavel — e o
+  proximo start sobe com ela. Uma operacao que nao retornou sucesso pode ter
+  tomado efeito no restart (D-048)
+- **O DSN nao e campo administrativo**: credenciais, host e banco continuam
+  vindo so de secret/env. A reconexao do candidato existe porque
+  `statement_timeout_ms` viaja em `options` do DSN (D-028, D-048)
+- **Ciclo de vida do runtime por refcount + `retired`** (D-054): o reload nao
+  bloqueia esperando queries antigas; o runtime antigo e aposentado no swap; o
+  ultimo release o fecha exatamente uma vez; se ja nao houver usuarios no
+  swap, e fechado ali mesmo; e nenhuma query adquire um runtime aposentado
+- **`revision` + `expected_revision`** para controle otimista de concorrencia,
+  verificados **dentro de uma secao critica administrativa serializada**: duas
+  requisicoes com o mesmo `expected_revision` nao vencem ambas (D-052)
 - **Protecoes estruturais nao sao editaveis** — `denied_relations` com
   `pg_stats` e o caso concreto (D-050)
 - IDs administrativos estaveis para rules e exceptions; a ordem continua
