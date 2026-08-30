@@ -1,5 +1,11 @@
 # Implementation Roadmap
 
+> **Documento histórico.** As seis fases estão concluídas, mais a Fase 6.1 de
+> hardening. Para o estado atual e os próximos passos, leia `docs/HANDOFF.md`.
+>
+> Cada seção abaixo registra o escopo original **e** o que a medição obrigou a
+> corrigir no plano — é aí que está o valor de reler isto.
+
 Seis fases. Cada fase termina com testes verdes, revisão de segurança e busca
 ativa de bypass. Não avançar de fase com teste falhando.
 
@@ -53,6 +59,8 @@ em claro**, e isso deve estar coberto por um teste que documenta a lacuna.
 - `ColumnDescriptor` completo entregue ao Masking Engine
 - matching por `output_name` OR `origin_name`
 - exceptions avaliadas contra os dois nomes
+  (revisto na Fase 6.1: passaram a ser avaliadas contra o nome **autoritativo**,
+  porque casar pelo `output_name` era um bypass — D-042)
 
 Aceite:
 - `SELECT cpf AS documento` retorna mascarado
@@ -148,7 +156,7 @@ medição impôs ao escopo:
 corrigidos (`pg_stats` expondo valores reais; perda de catálogo em runtime
 vazando em claro), nove aceitos com teste que fixa o comportamento.
 
-Suíte `tests/security/`, 170 testes, classificados como BLOCKED, MASKED ou
+Suíte `tests/security/`, 209 testes, classificados como BLOCKED, MASKED ou
 KNOWN LIMITATION. Bypass conhecido é teste que **afirma** o bypass, nunca
 `skip` (D-041).
 
@@ -191,3 +199,28 @@ Não funcionais:
 15. `masking/` não importa nada de banco, rede ou MCP.
 16. Nenhum teste imprime valor original em log ou saída.
 17. Todos os testes passam.
+
+---
+
+## FASE 6.1 — Fechamento dos bypasses críticos
+
+Não estava no roadmap original. Nasceu do resultado da Fase 6: três bypasses
+de uma linha de SQL impediam considerar o MVP seguro para uso interno.
+
+- exceptions passam a ser avaliadas pelo nome autoritativo (F-08, D-042)
+- análise de sensitividade por AST para expressões e UNION (F-01 e F-02, D-043)
+- serialização de linha inteira e ambiguidade entre regras: rejeitar (D-044)
+- `mode` default das exceptions passa a `exact`, fechando H-1 (D-045)
+- resolução dos nomes exportados por CTE e subquery (D-046)
+
+**Concluída.** Seis dos onze findings do red team ficaram RESOLVED. Nenhum HIGH
+ou CRITICAL exigindo mudança de código permanece aberto.
+
+---
+
+## Depois do roadmap
+
+Nenhuma fase nova foi iniciada. Uma **Fase 7 — Admin API** chegou a ser
+especificada e foi descartada antes de qualquer implementação; não há código,
+dependência nem teste dela. As opções em aberto, com esforço e impacto, estão
+em `docs/HANDOFF.md`, seção 10.

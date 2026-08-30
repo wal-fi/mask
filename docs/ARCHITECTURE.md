@@ -215,8 +215,14 @@ SELECT cpf AS documento FROM cliente
 - `origin_name` = `cpf` → casa
 - resultado: **mascarado**
 
-Exceptions são avaliadas contra os mesmos dois nomes e mantêm prioridade
-absoluta: basta um deles casar uma exception para o valor passar original.
+Exceptions **não** seguem a mesma regra. Elas são avaliadas contra um só nome,
+o **autoritativo** — `origin_name` quando existe, `output_name` apenas quando
+não há origem determinável.
+
+A assimetria é uma correção de segurança (D-042): o `output_name` é escolhido
+pelo cliente, e deixar a exception casar por ele fazia de toda exception
+configurada uma forma de desmascarar qualquer coluna (`SELECT cpf AS tipo_cpf`).
+O alias pode adicionar proteção, nunca removê-la.
 
 ## Pipeline do Masking Engine
 

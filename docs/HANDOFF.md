@@ -1,11 +1,26 @@
 # Handoff
 
-Estado do projeto ao final da sessao que implementou a **Fase 6.1**.
-Documento de entrada para a proxima sessao.
+**Documento de entrada. Comece por aqui.**
 
-Leitura obrigatoria antes de continuar: `CLAUDE.md`, `docs/ARCHITECTURE.md`,
-`docs/SECURITY.md`, `docs/MASKING-SPEC.md`, `docs/ROADMAP.md`,
-`docs/DECISIONS.md`.
+Estado do projeto ao final da sessao que implementou a Fase 6.1. O MVP esta
+completo e nao ha trabalho em andamento: a arvore esta limpa, a suite verde, e
+a proxima decisao e de escopo, nao de implementacao (secao 10).
+
+Ordem de leitura sugerida:
+
+| documento | para que |
+|---|---|
+| `CLAUDE.md` | invariantes e pipeline; carregado em toda sessao |
+| **este arquivo** | estado, como rodar, o que fazer a seguir |
+| `docs/ARCHITECTURE.md` | modulos e responsabilidades |
+| `docs/SECURITY.md` | invariantes de seguranca e o que exigir antes de expor |
+| `docs/SECURITY-REVIEW.md` | 11 findings do red team, seis fechados |
+| `docs/DECISIONS.md` | D-001 a D-046, com o motivo de cada uma |
+| `docs/MASKING-SPEC.md` | semantica exata do pipeline |
+| `docs/TEST-PLAN.md` | o que cada camada de teste cobre |
+| `docs/THREAT-MODEL.md` | cenarios de ataque e o resultado medido |
+| `docs/FUTURE-HARDENING.md` | propostas avaliadas, com custo e impacto |
+| `docs/ROADMAP.md` | historico das seis fases |
 
 ---
 
@@ -172,12 +187,14 @@ tests/
                                  test_mcp_integration.py       43
                                  test_audit.py                 19
 
-  security/                      <- Fase 6, 170 testes adversariais
-    test_attack_expressions.py        31
-    test_attack_union_views.py        19
+  test_sensitivity.py       54   <- Fase 6.1
+
+  security/                      <- Fases 6 e 6.1, 209 testes adversariais
+    test_attack_expressions.py        55
+    test_attack_union_views.py        29
     test_attack_functions_catalog.py  29
     test_attack_oracle_errors.py      23
-    test_attack_protocol.py           68
+    test_attack_protocol.py           73
 ```
 
 Os testes de protocolo MCP usam o cliente in-memory do SDK
@@ -377,31 +394,101 @@ Tres, todas documentadas e cobertas por teste:
 3. **`mode` default das exceptions e `exact`** (D-045). Configuracao que
    dependa de exception por substring precisa declarar `mode: contains`.
 
-## 10. Depois da Fase 6
+## 10. Como continuar
 
-O roadmap acabou. As proximas decisoes sao do responsavel pelo projeto, e
-nenhuma foi iniciada.
+O roadmap acabou e **nenhuma nova fase foi iniciada**. As opcoes abaixo estao
+em ordem de valor, na avaliacao de quem fechou a Fase 6.1. Todas exigem
+aprovacao antes de comecar — a regra de nao avancar de fase sem aprovacao
+continua valendo.
 
-**Propostas de hardening em aberto.** F-01, F-02, F-08 e H-1 foram fechados na
-Fase 6.1. Restam, com impacto e custo em `docs/FUTURE-HARDENING.md`:
+### A. Endurecer o que resta (menor esforco, maior retorno)
 
-- **F-03**, lineage recursivo de view por `pg_get_viewdef`
-- **F-04**, resolver `FuncCall` em `pg_proc` e avaliar `provolatile`/`prosecdef`
-- **F-07**, controle de inferencia — outro produto
-- **default deny** (`unmatched_policy`), a evolucao natural do modelo
+Os dois findings HIGH abertos nao precisam de codigo:
 
-**Deployment.** Streamable HTTP, autenticacao, OAuth. Hoje so ha stdio, e a
-ausencia de porta de rede e uma decisao de seguranca (D-036), nao uma lacuna.
-Trocar o transporte exige um modelo de sessao e de autenticacao — nao e trocar
-um parametro.
+- **F-04** — revogar `EXECUTE` das funcoes de usuario para a role do Gateway.
+  E operacional, e esta na secao 9c. Deveria ser feito antes de qualquer uso
+  real, e nao depende de mais nenhuma fase.
+- **F-07** — decidir formalmente se o oraculo por predicado e aceitavel para o
+  contexto de uso, ou restringir o uso.
 
-**Fora do escopo do MVP, inalterado:** pool de conexoes, multi-database, MySQL,
-RBAC, multi-tenant, `resources`/`prompts` MCP, schema discovery, JSONB deep
-inspection, lineage completo, controle de inferencia e default deny.
+Os que precisam de codigo, com custo em `docs/FUTURE-HARDENING.md`:
 
-Fora do escopo do MVP, em `docs/FUTURE-HARDENING.md`: bloqueio de WHERE /
-ORDER BY / GROUP BY sobre dados sensiveis, supressao de agregacoes, controle de
-cardinalidade, RBAC, column-level GRANT automatico, JSONB deep inspection,
-transformers Python customizados, multi-tenant e default deny.
+| item | esforco | observacao |
+|---|---|---|
+| F-03 lineage de view por `pg_get_viewdef` | medio | exige reparsear a definicao e mapear posicoes |
+| F-04 resolver `FuncCall` em `pg_proc` | medio | gestao de funcoes do PostgreSQL |
+| `unmatched_policy: allow \| mask \| deny` | pequeno | evolucao natural do default ALLOW; muda a filosofia, precisa de aprovacao |
+| F-07 controle de inferencia | grande | e outro produto |
+
+### B. Admin API (especificada e adiada)
+
+Uma **Fase 7 — Admin API** chegou a ser especificada em detalhe nesta sessao —
+FastAPI, CRUD de regras e exceptions, policy tester, persistencia atomica com
+revision/conflict, audit em memoria, token administrativo por env — e foi
+**descartada antes de qualquer implementacao**. Nao ha codigo, dependencia nem
+teste dela no repositorio.
+
+Se for retomada, os pontos que valem carregar da especificacao:
+
+- Admin API separada do caminho MCP: sem handler compartilhado, sem schema
+  compartilhado, e **sem endpoint de execucao de SQL** — o MCP continua sendo o
+  unico caminho de query
+- segredos nunca retornados, nem parcialmente mascarados
+- escrita de config atomica: validar, construir runtime novo, persistir, so
+  entao trocar a referencia; falha antes da troca mantem tudo como estava
+- `revision` crescente com `expected_revision` para evitar sobrescrita entre
+  administradores
+- bind default em `127.0.0.1`, sem CORS
+
+### C. Deployment (Fase futura, nao iniciada)
+
+Streamable HTTP, autenticacao, OAuth. Hoje so ha stdio, e a ausencia de porta
+de rede e uma **decisao de seguranca** (D-036), nao uma lacuna. Trocar o
+transporte exige um modelo de sessao e de autenticacao; nao e trocar um
+parametro.
+
+### Fora do escopo, inalterado
+
+Front-end, RBAC, multi-tenant, multi-database, MySQL, pool de conexoes,
+`resources`/`prompts` MCP, schema discovery, JSONB deep inspection, lineage
+completo, transformers Python customizados, column-level GRANT automatico.
+
+## 11. Riscos conhecidos que atravessam qualquer fase seguinte
+
+1. **Default ALLOW.** Coluna sensivel com nome fora do padrao passa em claro.
+   E consequencia direta do modelo, nao um defeito, e a protecao depende da
+   qualidade do `masking.yaml`.
+2. **Funcao de usuario pre-existente** que leia coluna sensivel devolve o valor
+   sob o nome dela (F-04). Mitigacao e privilegio, nao codigo.
+3. **View que renomeia coluna sensivel** expoe o valor (F-03).
+4. **Oraculo por predicado** reconstroi um CPF em 11 consultas (F-07).
+5. **Cache de proveniencia por conexao** fica obsoleto apos `RENAME COLUMN`
+   (D-021). O Gateway e read-only sobre schema estavel; nao ha invalidacao.
+6. **Argumentos extras do MCP sao ignorados, nao recusados** pelo SDK 2.1.1
+   (D-037). Nao alteram nada; a expectativa de recusa e que nao se cumpre.
+7. **`audit/` e in-memory-free**: escreve via `logging`, sem storage proprio.
+   Nao ha historico consultavel — qualquer feature que precise disso comeca do
+   zero.
+
+## 12. Armadilhas ja pisadas (nao repita)
+
+Registradas porque custaram tempo e foram descobertas por teste, nao por
+revisao:
+
+- **`raise ... from None` nao basta.** Zera `__cause__`, mas o interpretador
+  ainda pendura a excecao original em `__context__` quando o `raise` ocorre
+  dentro de um handler ativo. Levante FORA do handler. Aconteceu duas vezes
+  (D-017 na Fase 2, e de novo na Fase 6 em `provenance.py`).
+- **`SELECT 1 INTO nova` parseia como `SelectStmt` e cria uma tabela.** Raiz
+  SELECT nao basta (D-031).
+- **`str()` sobre `memoryview` embute o endereco do objeto** e quebra o
+  determinismo do HMAC em silencio (D-015).
+- **Multiplos comandos com parametros** sao recusados pelo protocolo estendido
+  do psycopg. Separe o DDL do INSERT parametrizado nas fixtures.
+- **Descer a arvore inteira em cada nivel** tornou a analise de AST quadratica
+  e travou o processo com 200 subqueries aninhadas (D-046). Use `Skip`.
+- **`bool` e subclasse de `int`; `datetime` e subclasse de `date`.** A ordem
+  dos `isinstance` na canonicalizacao importa (D-015).
+- **Nomes de coluna duplicados sao validos.** Nunca indexar linhas por nome.
 
 Regra do projeto: nao avancar de fase sem aprovacao, nem com teste falhando.

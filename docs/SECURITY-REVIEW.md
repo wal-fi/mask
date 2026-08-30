@@ -8,7 +8,7 @@ Medido, não suposto: cada finding tem reprodução e teste.
 Nenhum valor ou credencial real aparece neste documento. O CPF usado nos testes
 é fictício.
 
-Suíte: `tests/security/`, 207 testes. Vereditos: **BLOCKED**, **MASKED**,
+Suíte: `tests/security/`, 209 testes. Vereditos: **BLOCKED**, **MASKED**,
 **KNOWN LIMITATION**. Nenhum bypass conhecido virou `skip` — e quando a Fase
 6.1 os fechou, foram exatamente esses testes que quebraram primeiro (D-041).
 

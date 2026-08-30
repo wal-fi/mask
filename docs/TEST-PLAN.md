@@ -197,7 +197,7 @@ Verificar que a chave HMAC não aparece em log, erro ou resposta.
 ## Riscos aceitos (Fase 6)
 
 Testes que **documentam o comportamento atual**, para que uma mudança futura
-seja percebida. Implementados em `tests/security/`, 170 testes organizados por
+seja percebida. Implementados em `tests/security/`, 209 testes organizados por
 classe de ataque:
 
 ```text
@@ -251,3 +251,25 @@ Todos os testes de protocolo passam pelo cliente in-memory do SDK
   levanta `TypeError`
 - nenhum registro contém o CPF, o nome ou a palavra `SELECT`
 - `audit/log.py` é o único arquivo de `src/` que importa `logging`
+
+## Sensitividade por AST (Fase 6.1)
+
+`tests/test_sensitivity.py`, 54 testes sem banco, sobre `sql/sensitivity.py`:
+
+- dependência direta encontrada em expressão, agregado, cast, subquery escalar
+  e referência qualificada
+- **sem falso positivo**: `upper(nome)`, `count(*)`, literais e
+  `substr(tipo_cpf, 1, 3)` continuam sem regra
+- UNION: qualquer ramo sensível torna a posição sensível; posições
+  independentes entre si
+- ambiguidade entre duas regras → `QueryRejected`, e o motivo não cita coluna
+- `row_to_json(c)` → `QueryRejected`; `c.cpf` qualificado não é confundido
+- nomes exportados por CTE e subquery resolvidos, sem over-masking do inocente
+- limites: `SELECT *` não mapeia posição; 200 níveis aninhados em menos de 2 s;
+  além de 16 níveis a análise desiste em vez de adivinhar
+
+### Custo
+
+Dois testes garantem que a análise é **por consulta, nunca por linha**: um com
+10.000 linhas comparando o custo contra uma única linha, e um contador de
+chamadas ao analisador que exige exatamente 1 por query.
