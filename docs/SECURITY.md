@@ -128,10 +128,19 @@ pertencer a `pg_read_server_files` ou `pg_execute_server_program`.
 
 **A role precisa manter leitura em `pg_catalog`.** A proteção contra bypass por
 alias depende de resolver `(oid, attnum)` em `pg_attribute`, `pg_class` e
-`pg_namespace`. Uma role sem esse acesso faz toda coluna cair em `UNKNOWN`, e
-`SELECT cpf AS documento` volta a passar em claro — **em silêncio**, porque a
-falha de resolução é deliberadamente não fatal (D-025). O acesso é concedido a
-`PUBLIC` por padrão; um hardening que o remova precisa saber disso.
+`pg_namespace`. O acesso é concedido a `PUBLIC` por padrão; um hardening que o
+remova precisa saber disso.
+
+Sem esse acesso o Gateway **não responde**, em vez de responder errado:
+
+- no **startup**, `check_provenance_capability` falha e o processo não sobe
+  (D-026);
+- em **runtime**, a falha de consulta ao catálogo **rejeita a consulta** com
+  `CONFIGURATION_ERROR` sanitizado (D-040, que emendou D-025).
+
+A distinção que importa: `DERIVED` — o PostgreSQL afirmando que a coluna não
+tem origem única — continua sendo estado legítimo e segue o fluxo normal.
+Falha *operacional* de resolução é outra coisa, e derruba a consulta.
 
 Bloquear:
 INSERT, UPDATE, DELETE, DROP, ALTER, TRUNCATE, CREATE, GRANT, REVOKE.
@@ -163,13 +172,24 @@ Desde a Fase 3 o `origin_name` é resolvido a partir da metadata do próprio
 PostgreSQL — `ftable`/`ftablecol` do result set, cruzados com o catálogo.
 Nunca a partir dos valores das linhas, e nunca por parsing textual da SQL.
 
-Cobertos: alias, alias em subquery, alias em CTE, alias sobre JOIN, alias sobre
-cast, alias sobre view, `SELECT *` e nomes duplicados.
+Cobertos pela proveniência: alias, alias em subquery, alias em CTE, alias sobre
+JOIN, alias sobre cast, alias sobre view, `SELECT *` e nomes duplicados.
 
-**Não** cobertos, por o PostgreSQL não informar origem: UNION, expressões,
-literais e agregados. Nesses casos resta o `output_name`, e
-`SELECT cpf AS documento FROM a UNION ALL SELECT cpf FROM b` passa em claro.
-Ver `docs/FUTURE-HARDENING.md`.
+Onde o PostgreSQL **não** informa origem — expressões, agregados, literais e
+UNION — entra a **análise de sensitividade por AST** (D-043), que identifica de
+quais colunas a expressão depende e aplica a regra delas ao resultado:
+
+- expressão que depende de uma regra sensível → **mascarada**, inclusive as
+  formas reversíveis (`reverse`, base64, hex)
+- UNION: um ramo sensível torna a posição inteira sensível → **mascarada**
+- duas regras diferentes na mesma posição → **consulta rejeitada**
+- serialização de linha inteira (`row_to_json`) → **consulta rejeitada** (D-044)
+
+Além disso, um **alias não pode criar exception** (D-042): exceptions respondem
+pelo nome autoritativo — `origin_name` quando existe.
+
+Permanece descoberto: view que renomeia coluna sensível (F-03), porque a
+definição da view não está na árvore da consulta. Ver `docs/SECURITY-REVIEW.md`.
 
 ## Bypass a testar
 

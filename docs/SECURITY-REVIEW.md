@@ -37,9 +37,6 @@ Nenhum finding HIGH ou CRITICAL exigindo mudança de código permanece aberto.
 Os dois HIGH restantes têm mitigação operacional (F-04) ou estão fora do
 escopo declarado do MVP (F-07).
 
-Dois findings corrigidos nesta fase; nove aceitos, todos com teste que fixa o
-comportamento.
-
 ---
 
 ## F-05 — `pg_stats` expõe valores reais das colunas · CRITICAL · **RESOLVED**

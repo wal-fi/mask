@@ -121,9 +121,26 @@ resultado de baixo nível, traduz `(oid, attnum)` via `pg_attribute`,
 `pg_class` e `pg_namespace`, e mantém um cache `(oid, attnum)` por conexão.
 Resolve uma vez por **coluna**, nunca por linha ou célula.
 
-A resolução acontece **antes** de qualquer linha ser lida, e falha de forma
-segura: sem catálogo, a coluna fica `UNKNOWN` e o matching recai sobre
-`output_name`. Ver D-021, D-023 e D-025.
+A resolução acontece **antes** de qualquer linha ser lida.
+
+**Falha de resolução não cai em default ALLOW.** Desde D-040, dois casos que
+antes eram um só:
+
+| situação | quem afirma | comportamento |
+|---|---|---|
+| `ftable = 0` (`DERIVED`) | o PostgreSQL: não há coluna de origem única | estado legítimo; matching recai sobre `output_name` e sobre a análise de AST |
+| catálogo responde sem a linha (`UNKNOWN`) | a coluna não está no catálogo | matching recai sobre `output_name` |
+| **consulta ao catálogo falha** | erro operacional nosso | **consulta REJEITADA** |
+
+O terceiro caso é o que mudou. Havia proveniência que deveria ser resolvível, e
+devolver o resultado assim entregaria em claro uma coluna que deveria estar
+mascarada. O resolver levanta `CapabilityError`, que a fronteira MCP traduz em
+`CONFIGURATION_ERROR` — sanitizado, sem nada da mensagem do PostgreSQL.
+
+A falha **não** entra no cache: um erro transitório não desliga a proveniência
+pelo resto da vida da conexão.
+
+Ver D-021, D-023, D-025 (emendada) e D-040.
 
 ### Masking Engine
 Núcleo puro. Sem I/O, sem dependência de MCP ou de banco.
@@ -164,9 +181,10 @@ para o cliente MCP.
 | `DIRECT` | coluna de tabela; origem resolvida |
 | `VIEW` | coluna de view ou materialized view; a origem é a coluna **da view** |
 | `DERIVED` | o PostgreSQL informa `ftable = 0`: não há coluna de origem única |
-| `UNKNOWN` | há origem, mas não foi possível traduzi-la |
+| `UNKNOWN` | o catálogo respondeu, mas não há linha para essa coluna |
 
-Ver D-020.
+`UNKNOWN` **não** cobre falha operacional de catálogo: essa rejeita a consulta
+(D-040). Ver D-020.
 
 `origin_name` é resolvido a partir dos metadados que o próprio PostgreSQL
 devolve em `RowDescription` (`table_oid` + `table_column`), cruzados com
@@ -274,3 +292,48 @@ tracebacks e mensagens do PostgreSQL.
 - Uma capacidade essencial ausente também impede a inicialização: sem
   resolução de proveniência, a proteção contra alias estaria desligada em
   silêncio (D-026).
+
+---
+
+## Separação de planos (futura Fase 7)
+
+A Fase 7 — Admin API está **planejada e não iniciada**. A separação abaixo é
+uma decisão arquitetural já aprovada, registrada aqui para que nenhuma
+implementação futura a atravesse por conveniência.
+
+```text
+Data plane:
+
+AI Client
+→ MCP
+→ Gateway
+→ PostgreSQL
+
+Admin plane:
+
+Administrator
+→ Admin API
+→ Administrative Configuration
+→ Runtime Rebuild / Atomic Swap
+```
+
+Invariantes dos dois planos:
+
+- **A Admin API não é caminho de execução SQL.** Não existirão endpoints como
+  `/query`, `/sql` ou `/execute`. O Gateway/MCP continua sendo o único caminho
+  de query (D-049).
+- **O MCP não tem acesso administrativo.** Não há, e não haverá, superfície MCP
+  para ler, alterar ou desabilitar configuração.
+- **Os dois planos não compartilham handlers**, nem schemas de request/response.
+  A Admin API é mais privilegiada; reaproveitar schema do MCP arrastaria o
+  modelo de confiança errado.
+- **Secrets nunca são expostos pela Admin API** — nem o valor, nem uma
+  representação parcial, nem tamanho ou prefixo. Só estado (`configured` /
+  `missing`).
+- **A fonte administrativa persistida é o arquivo de configuração validado**,
+  não os objetos runtime compilados (D-047).
+- **Mudança de configuração reconstrói o runtime inteiro** e troca a referência
+  de forma atômica. Uma query enxerga o runtime antigo inteiro ou o novo
+  inteiro, nunca uma mistura (D-048).
+- **Proteções estruturais de segurança não são editáveis** pela Admin API —
+  `denied_relations` com `pg_stats`/`pg_statistic` é o exemplo (D-050).

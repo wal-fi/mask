@@ -3,8 +3,12 @@
 **Documento de entrada. Comece por aqui.**
 
 Estado do projeto ao final da sessao que implementou a Fase 6.1. O MVP esta
-completo e nao ha trabalho em andamento: a arvore esta limpa, a suite verde, e
-a proxima decisao e de escopo, nao de implementacao (secao 10).
+completo e nao ha trabalho de implementacao em andamento: a suite esta verde e
+a proxima decisao e de escopo, nao de codigo (secao 10).
+
+Antes de comecar qualquer fase, confira `git status --short`: a arvore precisa
+estar limpa. **Confira, nao presuma** — este documento nao pode afirmar o
+estado do working tree no momento em que voce o le.
 
 Ordem de leitura sugerida:
 
@@ -15,7 +19,7 @@ Ordem de leitura sugerida:
 | `docs/ARCHITECTURE.md` | modulos e responsabilidades |
 | `docs/SECURITY.md` | invariantes de seguranca e o que exigir antes de expor |
 | `docs/SECURITY-REVIEW.md` | 11 findings do red team, seis fechados |
-| `docs/DECISIONS.md` | D-001 a D-046, com o motivo de cada uma |
+| `docs/DECISIONS.md` | D-001 a D-053, com o motivo de cada uma |
 | `docs/MASKING-SPEC.md` | semantica exata do pipeline |
 | `docs/TEST-PLAN.md` | o que cada camada de teste cobre |
 | `docs/THREAT-MODEL.md` | cenarios de ataque e o resultado medido |
@@ -208,8 +212,10 @@ quebra antes do resto.
 que importar `maskgw.masking` nao carrega `maskgw.db` nem psycopg, e a
 contraprova confirma que `maskgw.db` de fato depende de psycopg.
 
-Modulos ainda inexistentes: `maskgw/sql/`, `maskgw/gateway/`, `maskgw/mcp/`,
-`maskgw/audit/`.
+Todos os modulos previstos por `docs/ARCHITECTURE.md` existem: `masking/`,
+`config/`, `db/`, `sql/`, `gateway/`, `mcp/` e `audit/`.
+
+Nao existe `maskgw/admin/` — a Fase 7 nao foi iniciada.
 
 ## 5. Decisoes
 
@@ -280,7 +286,7 @@ contra banco real:
 | `SELECT *`, nomes duplicados | cada posicao com origem propria |
 | identificador entre aspas / maiusculas | mascarado |
 
-## 8. Limitacoes de proveniencia que permanecem
+## 8. Proveniencia: o que o PostgreSQL informa, e o que resta aberto
 
 Medidas, nao supostas (`tests/test_pgresult_metadata.py`).
 
@@ -292,21 +298,25 @@ Medidas, nao supostas (`tests/test_pgresult_metadata.py`).
 | **UNION** | **0** | sem origem |
 | expressao, literal, agregado | 0 | sem origem (esperado) |
 
-Tres limitacoes conhecidas, todas em `docs/FUTURE-HARDENING.md`:
+A tabela acima descreve o que o PostgreSQL informa, e continua valendo. O que
+mudou e o que o Gateway FAZ quando ele nao informa nada:
 
-- **UNION nao preserva proveniencia.** Com o nome preservado o `output_name`
-  ainda mascara, mas `SELECT cpf AS documento FROM a UNION ALL SELECT cpf FROM b`
-  passa em claro. E o bypass mais barato que sobrou.
-- **View que renomeia apaga o nome original.** `CREATE VIEW v AS SELECT cpf AS
-  documento FROM cliente` da `origin_name = "documento"`. Sem lineage recursivo
-  por `pg_rewrite` nesta fase (D-022).
-- **Role sem leitura em `pg_catalog` reabria o bypass em silencio.** Fechado na
-  Fase 4: `check_provenance_capability` roda no `connect()` e o processo nao
-  sobe sem a capacidade (D-026). A resolucao em runtime segue tolerante a falha
-  (D-025), mas a instalacao deixou de poder estar errada sem ninguem saber.
-
-Expressoes continuam sendo o bypass residual principal do MVP:
-`SELECT substr(cpf,1,3) AS x` passa em claro.
+- **UNION e expressoes deixaram de vazar.** A analise de AST da Fase 6.1
+  (`sql/sensitivity.py`) cobre os dois casos: `SELECT substr(cpf,1,3) AS x` e
+  `SELECT cpf AS documento FROM a UNION ALL SELECT 'x'` saem mascarados
+  (D-043). Ambiguidade entre regras e serializacao de linha inteira sao
+  rejeitadas.
+- **View que renomeia continua aberta.** `CREATE VIEW v AS SELECT cpf AS
+  documento FROM cliente` da `origin_name = "documento"`, e a definicao da view
+  nao esta na arvore da consulta. Nem a AST nem a proveniencia enxergam `cpf`.
+  Sem lineage recursivo por `pg_get_viewdef` (D-022, F-03).
+- **Falha de catalogo em runtime REJEITA a consulta.** Nao e mais tolerante:
+  D-040 emendou D-025. Havia proveniencia que deveria ser resolvivel, e
+  devolver o resultado assim entregaria em claro uma coluna que deveria estar
+  mascarada. `DERIVED` (`ftable = 0`) continua sendo estado legitimo e segue o
+  fluxo normal; falha operacional levanta `CapabilityError`, que chega ao
+  cliente como `CONFIGURATION_ERROR` sanitizado. O check de startup (D-026)
+  cobre a instalacao; este cobre o runtime.
 
 ## 8b. Configuracao nova da Fase 4
 
@@ -420,27 +430,55 @@ Os que precisam de codigo, com custo em `docs/FUTURE-HARDENING.md`:
 | `unmatched_policy: allow \| mask \| deny` | pequeno | evolucao natural do default ALLOW; muda a filosofia, precisa de aprovacao |
 | F-07 controle de inferencia | grande | e outro produto |
 
-### B. Admin API (especificada e adiada)
+### B. Fase 7 — Admin API
 
-Uma **Fase 7 — Admin API** chegou a ser especificada em detalhe nesta sessao —
-FastAPI, CRUD de regras e exceptions, policy tester, persistencia atomica com
-revision/conflict, audit em memoria, token administrativo por env — e foi
-**descartada antes de qualquer implementacao**. Nao ha codigo, dependencia nem
-teste dela no repositorio.
+```text
+Proxima fase planejada:
+Fase 7 — Admin API
 
-Se for retomada, os pontos que valem carregar da especificacao:
+Status:
+NAO INICIADA
+```
 
-- Admin API separada do caminho MCP: sem handler compartilhado, sem schema
-  compartilhado, e **sem endpoint de execucao de SQL** — o MCP continua sendo o
-  unico caminho de query
-- segredos nunca retornados, nem parcialmente mascarados
-- escrita de config atomica: validar, construir runtime novo, persistir, so
-  entao trocar a referencia; falha antes da troca mantem tudo como estava
-- `revision` crescente com `expected_revision` para evitar sobrescrita entre
-  administradores
-- bind default em `127.0.0.1`, sem CORS
+Nao ha modulo `admin/`, nao ha FastAPI no `pyproject.toml`, nao ha teste. A
+especificacao inicial foi revista apos inspecao do codigo real, e a
+**especificacao final sera aprovada separadamente antes da implementacao**.
 
-### C. Deployment (Fase futura, nao iniciada)
+Objetivo: superficie administrativa separada do MCP para gerenciar
+configuracao, policies, status e auditoria sem editar arquivo a mao.
+
+**Principios ja aprovados** — decididos antes de qualquer codigo, registrados
+em D-047 a D-053 com o motivo de cada um:
+
+- Admin API **completamente separada** do MCP: planos distintos, sem handler e
+  sem schema compartilhado
+- Admin API **nao executa SQL**. Nao havera `/query`, `/sql` nem `/execute`
+  (D-049)
+- **MCP continua sendo o unico caminho de query**, e nunca altera configuracao
+- **Secrets nunca retornados**, nem parcialmente mascarados: so `configured` /
+  `missing`
+- **A fonte administrativa persistida e o arquivo de configuracao validado**,
+  nao os objetos runtime compilados (D-047)
+- **Mudanca constroi runtime novo por inteiro** (D-048)
+- **Runtime nunca e alterado parcialmente**: a query ve o antigo inteiro ou o
+  novo inteiro
+- **Persistencia atomica** e **troca de runtime atomica**, nesta ordem:
+  validar → construir runtime → persistir → trocar (D-048)
+- **`revision` + `expected_revision`** para controle otimista de concorrencia
+  (D-052)
+- **Protecoes estruturais nao sao editaveis** — `denied_relations` com
+  `pg_stats` e o caso concreto (D-050)
+- IDs administrativos estaveis para rules e exceptions; a ordem continua
+  semanticamente relevante (D-051)
+- `enabled` fica fora da primeira versao (D-053)
+- bind HTTP futuro em **`127.0.0.1`** por default, **sem CORS wildcard**
+- **sem front-end** nesta fase
+
+### C. Fase 8 — Front-end · NAO INICIADA
+
+Depende da Fase 7. Sem Admin API nao ha o que consumir.
+
+### D. Fase 9 — Deployment · NAO INICIADA
 
 Streamable HTTP, autenticacao, OAuth. Hoje so ha stdio, e a ausencia de porta
 de rede e uma **decisao de seguranca** (D-036), nao uma lacuna. Trocar o
@@ -449,9 +487,18 @@ parametro.
 
 ### Fora do escopo, inalterado
 
-Front-end, RBAC, multi-tenant, multi-database, MySQL, pool de conexoes,
-`resources`/`prompts` MCP, schema discovery, JSONB deep inspection, lineage
-completo, transformers Python customizados, column-level GRANT automatico.
+RBAC, OAuth/OIDC, LDAP/SSO, multi-tenant, multi-database, MySQL, pool de
+conexoes, `resources`/`prompts` MCP, schema discovery, JSONB deep inspection,
+lineage completo, transformers Python customizados, column-level GRANT
+automatico, banco de configuracao, Redis, background workers.
+
+### Antes de iniciar a proxima fase
+
+- `git status --short` vazio: a arvore precisa estar limpa
+- suite verde: **1304 passed**, `ruff check`, `ruff format --check` e
+  `mypy --strict` sem erros
+- PostgreSQL real disponivel via `MASKGW_TEST_DSN` para os 408 testes de
+  integracao
 
 ## 11. Riscos conhecidos que atravessam qualquer fase seguinte
 

@@ -75,7 +75,9 @@ como default para compatibilidade.
 
 ## Expressões e funções SQL
 
-`SELECT substr(cpf,1,3) AS x` não casa nenhuma regra e passa em claro. Para
+> **Histórico (pré-Fase 6.1).**
+
+`SELECT substr(cpf,1,3) AS x` não casava nenhuma regra e passava em claro. Para
 expressões o PostgreSQL não informa origem (`ftable = 0`), então não há lineage
 a resolver.
 
@@ -83,9 +85,19 @@ Evolução possível: analisar a árvore da expressão com pglast e propagar a
 sensibilidade das colunas referenciadas para a coluna de saída — ou
 simplesmente rejeitar expressões que toquem colunas sensíveis.
 
-Este é o bypass residual mais relevante do MVP.
+**RESOLVIDO na Fase 6.1 (D-043).** A análise de AST identifica de quais colunas
+a expressão depende e aplica a regra delas ao resultado. A opção de *rejeitar*
+foi descartada em favor de *mascarar*: recusar `SELECT length(cpf)` seria caro
+demais para o uso legítimo.
+
+Permanece aberto o caso em que a expressão referencia um nome que a análise não
+consegue associar a regra alguma — ver a limitação de escopo no fim deste
+documento.
 
 ## UNION apaga a proveniência
+
+> **Histórico (pré-Fase 6.1).** O diagnóstico abaixo continua correto sobre o
+> que o PostgreSQL informa; o efeito no Gateway foi corrigido.
 
 Medido na Fase 3 (`tests/test_pgresult_metadata.py`):
 
@@ -97,14 +109,15 @@ O PostgreSQL não atribui origem única à coluna de saída de um UNION. Com o
 nome preservado o `output_name` ainda casa a regra, mas basta um alias:
 
 ```sql
-SELECT cpf AS documento FROM a UNION ALL SELECT cpf FROM b   -- passa em claro
+SELECT cpf AS documento FROM a UNION ALL SELECT cpf FROM b   -- passava em claro
 ```
 
-Nem nome nem origem casam. É o bypass mais barato que sobrou depois da Fase 3.
+Era o bypass mais barato que existia depois da Fase 3.
 
-Evolução possível: resolver a proveniência de cada ramo do UNION por AST
-(pglast) e unir a sensibilidade — se qualquer ramo for sensível, a coluna de
-saída é sensível. Depende do parser da Fase 4.
+**RESOLVIDO na Fase 6.1 (D-043)**, exatamente pela evolução que esta seção
+previa: a análise achata os ramos do set operation e avalia cada posição em
+todos eles; um ramo sensível torna a posição sensível. Classes sensíveis
+conflitantes na mesma posição são rejeitadas.
 
 ## View que renomeia a coluna
 
@@ -193,24 +206,45 @@ Recusar a consulta quando qualquer `ColumnRef` dentro de uma expressão nomeia
 uma coluna que casa uma regra de masking. Isso não precisa de mapeamento
 posicional nem de resolução de escopo — é fail-closed e sound na direção
 segura. Custo: acoplar o validator à política de masking, e recusar consultas
-legítimas como `SELECT length(cpf)`. Fica como o próximo passo de maior valor.
+legítimas como `SELECT length(cpf)`.
+
+**Resolvido na Fase 6.1 (D-043), mas por outro caminho.** A opção de *recusar*
+foi trocada por *mascarar*: a regra da coluna referenciada é aplicada ao
+resultado da expressão. Recusar `SELECT length(cpf)` seria caro demais para o
+uso legítimo, e mascarar fecha o vazamento igualmente. A recusa ficou reservada
+aos casos em que não há transformer único comprovável — ambiguidade entre duas
+regras e serialização de linha inteira.
 
 ## Role sem acesso a `pg_catalog` desliga a proteção contra alias
 
+> **Histórico (pré-Fase 6).** O diagnóstico continua correto; o comportamento
+> descrito abaixo mudou duas vezes desde então.
+
 A resolução de proveniência consulta `pg_attribute`, `pg_class` e
-`pg_namespace`. Sem esse acesso toda coluna cai em `UNKNOWN`, o matching volta
-a depender só do `output_name`, e `SELECT cpf AS documento` passa em claro.
+`pg_namespace`. Sem esse acesso toda coluna caía em `UNKNOWN`, o matching
+voltava a depender só do `output_name`, e `SELECT cpf AS documento` passava em
+claro.
 
-A falha é deliberadamente não fatal (D-025): a alternativa seria derrubar toda
-consulta por um problema de catálogo. Mas ela é **silenciosa**, porque não há
-logging até a Fase 5.
+A falha era deliberadamente não fatal (D-025): a alternativa seria derrubar
+toda consulta por um problema de catálogo. Mas era **silenciosa**, porque não
+havia logging até a Fase 5.
 
-**Resolvido na Fase 4 (D-026):** `check_provenance_capability` roda no
-`connect()` e levanta `CapabilityError` quando a role não consegue resolver uma
-coluna. O processo não sobe com a proteção desligada.
+**Resolvido em duas etapas.**
 
-Permanece futuro: métrica da proporção de colunas `UNKNOWN` em runtime, quando
-o `audit/` existir.
+1. **Fase 4 (D-026)** — `check_provenance_capability` roda no `connect()` e
+   levanta `CapabilityError` quando a role não consegue resolver uma coluna. O
+   processo não sobe com a proteção desligada. Isso cobre a *instalação*.
+2. **Fase 6 (D-040)** — a falha de catálogo **em runtime** passou a rejeitar a
+   consulta, em vez de cair em `UNKNOWN` e default ALLOW. Medido: um Gateway
+   que perdia o acesso *depois* do startup voltava a devolver
+   `SELECT cpf AS documento` em claro, em silêncio.
+
+`DERIVED` (`ftable = 0`) continua sendo estado legítimo e segue o fluxo normal
+— a distinção entre "o PostgreSQL afirma que não há origem" e "não conseguimos
+resolver" é o que torna as duas correções compatíveis.
+
+Permanece futuro: métrica da proporção de colunas `UNKNOWN` em runtime, agora
+que o `audit/` existe.
 
 ## Validação semântica do masking.yaml no boot
 

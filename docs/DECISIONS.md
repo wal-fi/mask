@@ -377,10 +377,15 @@ em `pg_catalog` reabre o bypass por alias**, silenciosamente. Registrado em
 
 ## D-026 — Capability check de proveniencia: falha alta no startup
 
-A resolucao de proveniencia em runtime e tolerante a falha por desenho
-(D-025): derrubar uma consulta inteira por um problema de catalogo seria pior
-que o problema. O preco e que uma role sem `SELECT` em `pg_attribute` degrada a
-protecao contra alias **em silencio**, e nao ha logging ate a Fase 5.
+> **A premissa deste paragrafo caiu na Fase 6.** D-040 emendou D-025: falha
+> operacional de catalogo passou a REJEITAR a consulta. A decisao de checar no
+> startup continua valida — e complementar, nao substituta.
+
+*Premissa em 2026-08 (Fase 4):* a resolucao de proveniencia em runtime e
+tolerante a falha por desenho (D-025): derrubar uma consulta inteira por um
+problema de catalogo seria pior que o problema. O preco e que uma role sem
+`SELECT` em `pg_attribute` degrada a protecao contra alias **em silencio**, e
+nao ha logging ate a Fase 5.
 
 Decisao: `maskgw.db.capabilities.check_provenance_capability` faz uma
 verificacao EXPLICITA, para o startup, e levanta `CapabilityError` quando a
@@ -844,3 +849,188 @@ Limites deliberados:
 Isto e menos que um lineage engine: nao ha resolucao de escopo, nao ha
 propagacao de tipos, nao ha reescrita. E um mapa de nomes.
 
+---
+
+# Fase 7 — Admin API (decisoes aprovadas, implementacao NAO iniciada)
+
+As decisoes abaixo foram aprovadas antes de qualquer codigo. Nao ha modulo
+`admin/`, nao ha FastAPI no `pyproject.toml`, nao ha teste. Elas existem para
+que a especificacao final — que sera aprovada separadamente — nao reabra
+questoes ja resolvidas.
+
+## D-047 — A fonte administrativa e o arquivo validado, nao o runtime compilado
+
+A Admin API NAO deve reconstruir configuracao a partir de `GatewayConfig`,
+`MaskingPolicy`, `MaskingEngine` ou `SqlPolicy`. Esses sao objetos runtime.
+
+A fonte administrativa persistida e o modelo validado correspondente ao
+arquivo — hoje, `MaskingFileConfig`.
+
+Motivo: a compilacao descarta e transforma informacao. Um `MaskingRule` carrega
+uma instancia de `Transformer` ja construida, e nao os parametros que a
+originaram; um `RegexTransformer` tem o padrao compilado, nao o texto do YAML.
+Reconstruir o arquivo a partir dai devolveria algo que **parece** a
+configuracao original sem ser ela — e a diferenca so apareceria depois, num
+reload.
+
+Consequencia pratica: o caminho e sempre
+`arquivo -> modelo validado -> objetos runtime`, nunca o inverso.
+
+## D-048 — Reload reconstroi o runtime inteiro
+
+Mudanca administrativa nao altera componentes individuais em-place.
+
+Constroi-se um conjunto NOVO e consistente: config compilada, `MaskingEngine`,
+`SqlPolicy`, `DatabaseSettings` e `PostgresAdapter`. Uma query enxerga o
+runtime antigo inteiro ou o novo inteiro. Nunca uma mistura: um
+`MaskingEngine` novo com um `SqlPolicy` antigo produziria decisoes que nenhuma
+configuracao jamais descreveu.
+
+### Fluxo obrigatorio
+
+```text
+validar a configuracao candidata
+  -> compilar e construir o runtime candidato
+  -> conectar o novo PostgresAdapter
+  -> verificar read-only, statement_timeout e capability de provenance
+  -> persistir atomicamente
+  -> trocar o runtime atomicamente
+  -> fechar o runtime antigo somente quando nenhuma query ainda estiver usando-o
+```
+
+A ordem nao e arbitraria. Cada passo existe porque o inverso quebra algo:
+
+| passo | o que garante | se inverter |
+|---|---|---|
+| validar antes de tudo | config invalida nao toca em nada | arquivo corrompido por config que nao carrega |
+| construir antes de persistir | falha de compilacao nao deixa rastro | arquivo novo com runtime velho |
+| **conectar e verificar antes de persistir** | o candidato e comprovadamente utilizavel | config salva que derruba o Gateway no proximo restart |
+| persistir antes do swap | arquivo e runtime concordam | runtime novo com arquivo velho: o restart regride em silencio |
+| swap por ultimo | a troca e o unico ponto observavel | janela em que a query ve estado parcial |
+
+O passo de **conectar e verificar** e o que diferencia esta decisao de um
+reload ingenuo. As tres verificacoes ja existem no `PostgresAdapter.connect()`
+— sessao read-only, `statement_timeout` conferido em `pg_settings` (D-028) e
+`check_provenance_capability` (D-026). Uma configuracao com
+`statement_timeout_ms` que o servidor recuse, ou uma troca de DSN para uma role
+sem catalogo, precisa falhar **aqui**, com o runtime antigo intacto — e nao no
+proximo restart, quando ninguem estiver olhando.
+
+### Falha antes do swap
+
+Qualquer falha antes da troca **fecha o candidato** — inclusive a conexao que
+ele ja tenha aberto — e preserva arquivo e runtime atuais. O Gateway continua
+respondendo com a configuracao anterior, e o erro volta ao administrador como
+`CONFIG_WRITE_ERROR` ou `CONFIG_RELOAD_ERROR` sanitizado.
+
+Nao ha estado intermediario observavel: ou a operacao inteira aconteceu, ou
+nada aconteceu.
+
+Falha inesperada NO swap e erro critico: arquivo novo, runtime indefinido. A
+implementacao deve tornar o swap uma unica operacao atomica justamente para que
+esse caso nao exista — ver D-054.
+
+## D-049 — A Admin API nao executa SQL
+
+Nao existirao `/query`, `/sql`, `/execute` nem equivalente.
+
+A execucao de SQL continua exclusivamente pelo caminho Gateway/MCP, que e onde
+vivem o validator, a proveniencia, o masking e os limites. Um segundo caminho
+de query seria um segundo lugar para errar, com privilegio administrativo — ou
+seja, o pior dos dois mundos.
+
+A Admin API administra politicas. Nao e um cliente de banco.
+
+## D-050 — Protecoes estruturais nao sao editaveis pela Admin API
+
+Item criado para fechar vulnerabilidade nao pode ser desligado por
+configuracao administrativa. O caso concreto e `denied_relations` com
+`pg_statistic` e `pg_stats` (D-039): torna-lo editavel reabriria um finding
+CRITICAL por uma chamada de API.
+
+Vale igualmente para qualquer controle que enfraqueca invariante critico. NAO
+existirao campos como `read_only: false`, `allow_multiple_statements: true` ou
+`disable_sql_validation: true` — nem recusados, mas inexistentes.
+
+Essas protecoes podem ser EXIBIDAS como read-only num front futuro. Ver, sim;
+alterar, nao.
+
+## D-051 — Rules e exceptions terao IDs administrativos estaveis
+
+CRUD por indice de lista e fragil: remover a regra 2 renumera a 3, e duas telas
+abertas ao mesmo tempo editam coisas diferentes achando que editam a mesma.
+
+O schema evoluira para incluir um ID estavel por regra e por exception.
+
+A ORDEM das masking rules continua semanticamente relevante — "first match
+wins" (D-004) — entao ID estavel nao substitui ordenacao: sao coisas distintas,
+e a reordenacao precisa de operacao propria.
+
+## D-052 — Controle otimista por revision
+
+A configuracao administrativa tera uma `revision` inteira crescente. Operacoes
+de escrita informam `expected_revision`; se ela diferir da atual, a operacao e
+recusada por conflito e nada e sobrescrito.
+
+E o minimo para dois administradores nao se sobrescreverem em silencio. Nao e
+sistema distribuido: um inteiro no arquivo e uma comparacao.
+
+## D-053 — `enabled` fica fora da primeira versao administrativa
+
+A primeira versao tera criar, editar, remover e reordenar. NAO tera um campo
+`enabled` por regra.
+
+Motivo: uma regra desabilitada precisaria ocupar posicao na lista sem
+participar do matching, o que interage com a ordem ("first match wins"), com os
+indices de regra que o `derived_rule_index` carrega (D-043) e com a compilacao
+da policy. Remover a regra tem o mesmo efeito pratico e nenhuma dessas
+consequencias.
+
+Registrado como evolucao futura possivel, nao como omissao.
+
+## D-054 — Coordenacao entre queries em andamento e reload
+
+O passo "fechar o runtime antigo somente quando nenhuma query ainda estiver
+usando-o" precisa de um mecanismo, e a escolha errada quebra uma das duas
+garantias: ou uma query e interrompida no meio, ou o adapter antigo vaza.
+
+**O fechamento do adapter antigo nao pode interromper uma query em andamento.**
+Fechar a conexao psycopg sob uma query em execucao aborta a consulta e produz
+um erro que o cliente nao causou.
+
+Mecanismo adotado: **referencia imutavel + contagem de uso (refcount)**.
+
+- O runtime e um objeto **imutavel** que agrega config, engine, `SqlPolicy`,
+  settings e adapter. Trocar de runtime e reatribuir uma unica referencia.
+- Toda query **adquire** a referencia atual uma vez, no inicio, e usa **essa**
+  referencia ate o fim. Nao ha releitura no meio: e isso que garante "o antigo
+  inteiro ou o novo inteiro".
+- A aquisicao incrementa um contador no runtime; o fim da query decrementa,
+  em `finally`.
+- O reload troca a referencia e entao aguarda o contador do runtime antigo
+  chegar a zero para fecha-lo. Queries novas ja pegam o runtime novo.
+
+Consequencias que a implementacao precisa respeitar:
+
+- **A troca da referencia e a aquisicao precisam ser mutuamente atomicas.** Um
+  lock curto em volta de "ler a referencia e incrementar" basta; ele nao cobre
+  a execucao da query, so a aquisicao. Sem isso existe a janela: ler a
+  referencia, o reload trocar e fechar, e so entao incrementar.
+- **O fechamento e assincrono em relacao ao reload.** O reload nao bloqueia
+  esperando queries longas; o `statement_timeout` (D-028) ja limita quanto
+  tempo o runtime antigo pode sobreviver.
+- **O lock nao cobre a execucao da query.** Serializar queries no reload
+  transformaria uma operacao administrativa num stall de todo o Gateway.
+
+Alternativa descartada: lock compartilhado de leitura/escrita, com a query
+segurando o lock de leitura durante toda a execucao. E mais simples de
+escrever, mas um reload passa a esperar a query mais longa segurando o lock de
+escrita, e queries novas ficam bloqueadas atras dele. Um `statement_timeout` de
+30 s vira 30 s de indisponibilidade administrativa e de fila.
+
+Isto substitui, para o reload, o `threading.Lock` que hoje serializa as
+consultas em `Gateway.query` (D-034). Aquele lock existe porque ha **uma**
+conexao psycopg e o SDK MCP executa tools numa thread pool — e continua
+necessario **por runtime**, ja que cada runtime tem seu proprio adapter. O
+refcount e ortogonal: um coordena o acesso a conexao, o outro coordena o ciclo
+de vida do runtime.

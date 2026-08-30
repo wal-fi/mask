@@ -125,10 +125,15 @@ Implementado em três camadas:
   obrigatórios ponta a ponta, com a política aplicada.
 
 Ressalva sobre UNION: o PostgreSQL **não** preserva proveniência em UNION
-(`ftable = 0`). O critério original do roadmap ("alias em UNION → masked") não
-é alcançável por metadata. O teste registra o comportamento real: com o nome
-preservado o `output_name` ainda mascara; com alias, passa em claro. Ver
-`docs/FUTURE-HARDENING.md`.
+(`ftable = 0`), então o critério original do roadmap ("alias em UNION → masked")
+não é alcançável **por metadata**.
+
+Isso foi resolvido na Fase 6.1 por outro caminho: a análise de AST (D-043)
+avalia cada posição em todos os ramos, e um ramo sensível torna a posição
+inteira sensível. `SELECT cpf AS documento FROM a UNION ALL SELECT 'x'` sai
+mascarado; classes sensíveis conflitantes na mesma posição são rejeitadas.
+Coberto por `tests/security/test_attack_union_views.py` e
+`tests/test_sensitivity.py`.
 
 ### Testes invertidos
 

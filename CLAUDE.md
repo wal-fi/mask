@@ -27,7 +27,7 @@ Nesta ordem:
 2. `docs/ARCHITECTURE.md` — módulos e responsabilidades
 3. `docs/SECURITY.md` — invariantes de segurança
 4. `docs/SECURITY-REVIEW.md` — o que foi atacado, o que resistiu, o que não
-5. `docs/DECISIONS.md` — 46 decisões (D-001 a D-046) e o porquê de cada uma
+5. `docs/DECISIONS.md` — 53 decisões (D-001 a D-053) e o porquê de cada uma
 6. `docs/MASKING-SPEC.md` — semântica exata do pipeline de masking
 7. `docs/TEST-PLAN.md`, `docs/THREAT-MODEL.md`, `docs/FUTURE-HARDENING.md`
 
@@ -112,12 +112,37 @@ consulta em vez de escolher (D-043, D-044).
 default do PostgreSQL e é a única mitigação do finding F-04. Detalhes e demais
 riscos aceitos em `docs/SECURITY-REVIEW.md`.
 
+## Próxima evolução — Admin API
+
+A próxima fase planejada é a **Fase 7 — Admin API**. Ela ainda **NÃO foi
+iniciada**: não há módulo `admin/`, dependência FastAPI nem teste. A
+especificação final será aprovada antes da implementação.
+
+Invariantes já decididos (D-047 a D-053) — não os reabra:
+
+- **MCP nunca altera configuração.**
+- **Admin API nunca executa SQL.** Não haverá `/query`, `/sql` ou `/execute`;
+  o Gateway/MCP continua sendo o único caminho de query.
+- **Admin API e MCP são planos separados**: sem handler e sem schema
+  compartilhado.
+- **Secrets nunca são retornados**, nem parcialmente mascarados.
+- **A configuração administrativa persistida é o arquivo validado**, distinta
+  dos objetos runtime compilados — a compilação descarta informação.
+- **Mudanças constroem runtime novo por inteiro**; runtime nunca é alterado
+  parcialmente. A query vê o antigo inteiro ou o novo inteiro.
+- **Proteções estruturais de segurança não podem ser desligadas pela Admin
+  API** — `denied_relations` com `pg_stats` é o caso concreto.
+
+FastAPI **não** entra na stack enquanto a implementação não começar.
+
 ## Fora do escopo
 
-Front-end, Admin API, OAuth/RBAC, multi-tenant, deployment, HTTP MCP, pool de
-conexões, MySQL, migrations, schema browser, JSONB deep inspection, lineage
-completo de view, controle de inferência (WHERE/ORDER BY/GROUP BY), supressão
-de agregações, transformers Python customizados, default deny.
+Front-end, OAuth/RBAC, multi-tenant, deployment, HTTP MCP, pool de conexões,
+MySQL, migrations, schema browser, JSONB deep inspection, lineage completo de
+view, controle de inferência (WHERE/ORDER BY/GROUP BY), supressão de
+agregações, transformers Python customizados, default deny.
+
+A Admin API está planejada (seção acima), não em escopo de implementação.
 
 Propostas avaliadas e adiadas estão em `docs/FUTURE-HARDENING.md` com custo e
 impacto — consulte antes de propor de novo.

@@ -160,9 +160,12 @@ Suíte `tests/security/`, 209 testes, classificados como BLOCKED, MASKED ou
 KNOWN LIMITATION. Bypass conhecido é teste que **afirma** o bypass, nunca
 `skip` (D-041).
 
-Três bypasses de uma linha de SQL permanecem abertos — expressão, UNION com
-alias e alias para o nome de uma exception. As propostas de correção estão no
-relatório; nenhuma foi implementada, por alterarem a filosofia do produto.
+Ao final da Fase 6, três bypasses de uma linha de SQL permaneciam abertos —
+expressão, UNION com alias e alias para o nome de uma exception. As propostas
+de correção ficaram no relatório, não implementadas nesta fase por alterarem
+semântica documentada do produto.
+
+**Os três foram fechados na Fase 6.1** (D-042 e D-043), na seção seguinte.
 
 ---
 
@@ -218,9 +221,41 @@ ou CRITICAL exigindo mudança de código permanece aberto.
 
 ---
 
-## Depois do roadmap
+## FASE 7 — Admin API
 
-Nenhuma fase nova foi iniciada. Uma **Fase 7 — Admin API** chegou a ser
-especificada e foi descartada antes de qualquer implementação; não há código,
-dependência nem teste dela. As opções em aberto, com esforço e impacto, estão
-em `docs/HANDOFF.md`, seção 10.
+**STATUS: PLANEJADA / NÃO INICIADA.**
+
+A especificação inicial foi revista após inspeção do código real. A
+implementação ainda não começou: não há módulo `admin/`, dependência FastAPI
+nem teste.
+
+Objetivo: criar uma superfície administrativa separada do MCP para
+gerenciamento seguro de configuração, policies, status e auditoria.
+
+Decisões arquiteturais já aprovadas: **D-047 a D-053**. As principais —
+Admin API não executa SQL, a fonte administrativa é o arquivo validado e não o
+runtime compilado, reload reconstrói o runtime inteiro com troca atômica,
+proteções estruturais não são editáveis.
+
+**A especificação final será aprovada antes do início.**
+
+---
+
+## FASE 8 — Front-end
+
+**STATUS: NÃO INICIADA.** Depende da Fase 7 — sem Admin API não há o que
+consumir.
+
+---
+
+## FASE 9 — Deployment
+
+**STATUS: NÃO INICIADA.** Streamable HTTP, autenticação, OAuth. A ausência de
+porta de rede hoje é uma decisão de segurança (D-036), não uma lacuna.
+
+---
+
+## Estado atual
+
+Fases 1 a 6.1 concluídas. Nenhuma fase nova iniciada. Opções em aberto, com
+esforço e impacto, em `docs/HANDOFF.md`, seção 10.
