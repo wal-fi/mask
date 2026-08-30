@@ -8,8 +8,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from maskgw.config.ids import EXCEPTION_ID_PATTERN, RULE_ID_PATTERN
 from maskgw.masking.rules import MatchMode
 
 _STRICT = ConfigDict(extra="forbid", frozen=True, str_strip_whitespace=False)
@@ -35,12 +36,20 @@ class ExceptionConfig(MatchConfig):
 
     mode: MatchMode = MatchMode.EXACT
 
+    #: ID administrativo estavel (D-051). Ausente num arquivo ainda nao
+    #: adotado; obrigatorio depois da adocao. Nao participa do matching.
+    id: str | None = Field(default=None, pattern=EXCEPTION_ID_PATTERN)
+
 
 class RuleConfig(MatchConfig):
     """Regra de masking. `mode` default `contains`, herdado de MatchConfig."""
 
     transformer: str = Field(min_length=1)
     config: dict[str, Any] = Field(default_factory=dict)
+
+    #: ID administrativo estavel (D-051). Ausente num arquivo ainda nao
+    #: adotado; obrigatorio depois da adocao. Nao participa do matching.
+    id: str | None = Field(default=None, pattern=RULE_ID_PATTERN)
 
 
 #: Limites do `statement_timeout`. Abaixo do minimo qualquer consulta real
@@ -88,12 +97,64 @@ class SqlConfig(BaseModel):
     denied_functions: list[str] = Field(default_factory=list)
 
 
+#: `revision` 0 significa "configuracao ainda nao adotada pela Admin API".
+#: Um `masking.yaml` escrito a mao nao tem o campo e cai aqui — e continua
+#: carregando normalmente, sem Admin API e sem adocao. Ver a spec da Fase 7,
+#: secao 5.2, e docs/DECISIONS.md (D-052).
+UNADOPTED_REVISION = 0
+
+
 class MaskingFileConfig(BaseModel):
-    """Conteudo completo do `masking.yaml`."""
+    """Conteudo completo do `masking.yaml`.
+
+    `revision` e os `id` das regras e exceptions sao metadata ADMINISTRATIVA:
+    nao participam do matching e nao alteram nenhuma decisao de masking. Um
+    arquivo sem eles carrega normalmente — e o requisito de compatibilidade da
+    Fase 7.
+    """
 
     model_config = _STRICT
+
+    #: Contador otimista de concorrencia administrativa (D-052). Monotonico,
+    #: nunca reutilizado, escolhido pelo servidor e nunca pelo cliente.
+    #: Persistido DENTRO do arquivo: fora dele, arquivo e revision poderiam
+    #: divergir na janela de crash entre persistir e trocar (D-048).
+    revision: int = Field(default=UNADOPTED_REVISION, ge=0)
 
     masking: list[RuleConfig] = Field(default_factory=list)
     exceptions: list[ExceptionConfig] = Field(default_factory=list)
     database: DatabaseConfig = Field(default_factory=DatabaseConfig)
     sql: SqlConfig = Field(default_factory=SqlConfig)
+
+    @model_validator(mode="after")
+    def _adopted_requires_ids(self) -> MaskingFileConfig:
+        """Uma configuracao adotada tem ID em TODO item.
+
+        Sem esta regra existe um estado do qual nao se sai: `revision >= 1`
+        com um item sem ID faria toda escrita ser recusada por
+        `CONFIG_NOT_ADOPTED`, enquanto `config:adopt` — que exige
+        `expected_revision = 0` — seria recusada por `REVISION_CONFLICT`. A
+        Admin API ficaria travada, sem operacao possivel.
+
+        Acontece na pratica: edicao manual de um arquivo ja adotado para
+        acrescentar uma regra, que e o caminho suportado para edicao externa.
+        Falhar no carregamento, com uma mensagem que diz o que fazer, e melhor
+        que subir e travar a administracao depois.
+        """
+        if self.revision == UNADOPTED_REVISION:
+            return self
+
+        missing = [
+            f"masking[{index}]" for index, item in enumerate(self.masking) if item.id is None
+        ] + [
+            f"exceptions[{index}]" for index, item in enumerate(self.exceptions) if item.id is None
+        ]
+        if missing:
+            locations = ", ".join(missing)
+            msg = (
+                f"configuracao adotada (revision={self.revision}) exige `id` em todo item; "
+                f"faltam em: {locations}. Acrescente um `id` unico a cada um, ou remova "
+                f"`revision` para voltar ao estado nao adotado."
+            )
+            raise ValueError(msg)
+        return self

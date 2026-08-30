@@ -1,9 +1,11 @@
 # Fase 7 — Admin API · ESPECIFICAÇÃO FINAL
 
-> **STATUS: EM REVISÃO — NÃO APROVADA PARA IMPLEMENTAÇÃO.**
+> **STATUS: APROVADA PARA IMPLEMENTAÇÃO.**
 >
-> Nenhuma linha de código foi escrita. Não existe `src/maskgw/admin/`, não há
-> FastAPI no `pyproject.toml`, não há teste.
+> Aprovada sobre o commit `923b3b291dc2fcdb97fe31984b5d57fa00a7c041`. A
+> implementação segue **estritamente** este documento; qualquer incompatibilidade
+> real entre ele e a arquitetura existente interrompe a implementação e volta
+> para decisão, em vez de ser resolvida reduzindo garantia (§15).
 >
 > Decisões que este documento implementa, sem reabrir: **D-047 a D-054**.
 >
