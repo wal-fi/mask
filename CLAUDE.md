@@ -118,8 +118,16 @@ A próxima fase planejada é a **Fase 7 — Admin API**. Ela ainda **NÃO foi
 iniciada**: não há módulo `admin/`, dependência FastAPI nem teste.
 
 A especificação está escrita em `docs/PHASE-7-SPEC.md` e está **em revisão, não
-aprovada**. Ela não autoriza implementação: quatro questões abertas (§14.2)
-precisam de decisão antes de qualquer código.
+aprovada**. As quatro questões que estavam abertas foram decididas (§14.1); a
+especificação ainda **não autoriza implementação** — falta a aprovação final.
+
+Dois pontos dela que valem como invariante desde já:
+
+- **`allowed_pg_functions` é somente leitura na Admin API.** O campo pode
+  liberar `pg_read_file`, e administrá-lo por HTTP reabriria leitura de
+  arquivos do servidor (D-050). O loader **não muda** nesta fase.
+- **Bind administrativo só em loopback.** Sem TLS, interface externa põe o
+  bearer token em HTTP claro. Bind externo é Fase 9.
 
 Invariantes já decididos (D-047 a D-054) — não os reabra:
 

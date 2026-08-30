@@ -1133,8 +1133,13 @@ de aposentadoria (retired)**.
    caminho, uma tentativa de aquisicao encontrar um runtime com `retired`
    verdadeiro, ela **nao** o adquire — nao o incrementa e nao o usa.
 
-O `statement_timeout` (D-028) limita por quanto tempo um runtime aposentado
-pode sobreviver: e o teto natural do periodo em que dois adapters coexistem.
+**Um runtime aposentado vive ate a query liberar a referencia — nao existe
+teto de tempo, e o `statement_timeout` NAO e um.** Ele limita a execucao do
+statement dentro do PostgreSQL; nao limita bloqueio de rede, o `fetchmany` em
+lotes (D-018), a canonicalizacao (D-015), o masking por celula, a serializacao
+da resposta, nem um cliente que pare de consumir.
+
+O que se limita e o NUMERO de aposentados abertos, nao a duracao de cada um.
 
 Consequencias que a implementacao precisa respeitar:
 

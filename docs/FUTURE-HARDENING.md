@@ -271,6 +271,31 @@ e as demais relações de estatística. O resto do catálogo permanece legível 
 bloquear `pg_catalog` inteiro impediria uso legítimo sem fechar os bypasses que
 realmente importam. Ver F-05 e F-06 em `docs/SECURITY-REVIEW.md`.
 
+## Endurecer `allowed_pg_functions` no carregamento do arquivo
+
+Levantado ao especificar a Fase 7, e **deliberadamente deixado fora dela**.
+
+`SqlPolicy.allows` avalia, nesta ordem: `denied_functions` →
+`denied_prefixes` → allowlist do namespace `pg_`. Como `pg_read_file` **não**
+está em `DEFAULT_DENIED_FUNCTIONS` nem casa um prefixo negado, uma
+configuração com `sql.allowed_pg_functions: ["pg_read_file"]` **o libera** —
+e com ele a leitura de arquivos do servidor pela role do Gateway.
+
+Hoje isso exige acesso de escrita ao `masking.yaml`, ou seja, alguém que já é
+dono da máquina. Não é escalação de privilégio; é uma configuração válida que
+desliga uma proteção sem qualquer aviso, na mesma família dos quatro hazards
+de D-014.
+
+**A Fase 7 fecha o caminho por HTTP** tornando o campo somente leitura na
+Admin API (D-050), e **não toca no loader** — endurecê-lo mudaria o
+comportamento de um produto já entregue, e isso precisa de decisão própria.
+
+Evolução possível: um conjunto de funções nunca-liberáveis — acesso a arquivo,
+execução de programa, controle de backend, replicação, leitura de configuração
+— que `allowed_pg_functions` não consiga alcançar, com o carregamento falhando
+fechado quando tentar. Custo: pequeno. Impacto: recusa configuração hoje
+aceita, então é mudança incompatível.
+
 ## Funções definidas pelo usuário com efeito colateral
 
 A política da Fase 4 (D-027) nega o namespace `pg_` por default e mantém uma

@@ -461,10 +461,23 @@ Ela cobre endpoints, autenticacao, bind e CORS, schemas, IDs e migracao,
 revision e 409, persistencia atomica, lifecycle dos runtimes, sanitizacao de
 erro, secrets, protecoes read-only, testes exigidos e escopo de auditoria.
 
-Quatro questoes abertas na secao 14.2 precisam de decisao antes de qualquer
-codigo: o conjunto nunca-liberavel de `allowed_pg_functions` no loader, o teto
-de runtimes aposentados, a porta default, e a perda dos comentarios do
-`masking.yaml` na adocao.
+As quatro questoes que estavam abertas foram decididas (secao 14.1 da spec):
+
+| questao | decisao |
+|---|---|
+| `allowed_pg_functions` | somente leitura na Admin API; loader nao muda nesta fase |
+| runtimes aposentados | limite 1; `409 RELOAD_BUSY` antes de construir o candidato |
+| porta default | 8765 |
+| comentarios do YAML | perda aceita, com backup dos bytes originais |
+
+Dez bloqueios da revisao tambem foram corrigidos, entre eles: `config:reload`
+removido da primeira versao, `409 CONFIG_OUT_OF_SYNC` antes de toda escrita,
+`CONFIG_DURABILITY_ERROR` com `applied: true` para falha de `fsync` depois do
+`replace`, lock exclusivo de arquivo contra um segundo processo, bind so em
+loopback, e uma composition root em `bootstrap/` que e o unico modulo a
+conhecer os dois planos.
+
+A especificacao continua **nao aprovada para implementacao**.
 
 Objetivo: superficie administrativa separada do MCP para gerenciar
 configuracao, policies, status e auditoria sem editar arquivo a mao.
