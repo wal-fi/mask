@@ -9,15 +9,16 @@ IA → MCP → Gateway → SQL Validator → PostgreSQL → provenance
    → Masking Engine → row limit → resposta segura → MCP → IA
 ```
 
-## Estado: MVP completo
+## Estado: MVP completo + Fase 7 em andamento
 
 **As seis fases do roadmap estão concluídas**, mais a Fase 6.1 de hardening.
 O produto executa fim a fim: um cliente MCP real consulta um PostgreSQL real e
 recebe dados mascarados.
 
-Não há trabalho em andamento. Antes de iniciar qualquer coisa, leia
-`docs/HANDOFF.md` — é o documento de entrada e diz exatamente onde o projeto
-parou e quais são as opções seguintes.
+A Fase 7 foi iniciada de forma incremental. As **Etapas 1–4 estão concluídas**;
+a próxima tarefa é exclusivamente a Etapa 5, ainda não iniciada. Antes de
+alterar qualquer coisa, leia `docs/HANDOFF.md` — é o documento de entrada e diz
+exatamente onde o projeto parou.
 
 ## Leitura obrigatória antes de alterar código
 
@@ -31,7 +32,8 @@ Nesta ordem:
 6. `docs/MASKING-SPEC.md` — semântica exata do pipeline de masking
 7. `docs/TEST-PLAN.md`, `docs/THREAT-MODEL.md`, `docs/FUTURE-HARDENING.md`
 
-`docs/ROADMAP.md` é histórico: as seis fases estão fechadas.
+`docs/ROADMAP.md` preserva o histórico das seis fases fechadas e registra o
+andamento atual da Fase 7.
 
 ## Objetivo
 
@@ -112,14 +114,29 @@ consulta em vez de escolher (D-043, D-044).
 default do PostgreSQL e é a única mitigação do finding F-04. Detalhes e demais
 riscos aceitos em `docs/SECURITY-REVIEW.md`.
 
-## Próxima evolução — Admin API
+## Evolução em andamento — Fase 7 / Admin API
 
-A próxima fase planejada é a **Fase 7 — Admin API**. Ela ainda **NÃO foi
-iniciada**: não há módulo `admin/`, dependência FastAPI nem teste.
+A **Fase 7 — Admin API** está em implementação incremental conforme
+`docs/PHASE-7-SPEC.md`. As Etapas 1–4 estão concluídas:
 
-A especificação está escrita em `docs/PHASE-7-SPEC.md` e está **em revisão, não
-aprovada**. As quatro questões que estavam abertas foram decididas (§14.1); a
-especificação ainda **não autoriza implementação** — falta a aprovação final.
+- Etapa 1 — IDs e revision no modelo do arquivo: `053cf66`;
+- Etapa 2 — `RuntimeRegistry`: `3114c14`;
+- Etapa 3 — aquisição/liberação de runtime por query: `3c8de4c`;
+- Etapa 4 — composition root e lifecycle: `HEAD` (este commit local).
+
+O `origin/master` está em `3c8de4c`; portanto o `HEAD` contém a Etapa 4 como o
+único commit local à frente. A Etapa 4 criou `maskgw/bootstrap/` como
+composition root, removeu `gateway/factory.py` e centralizou startup/shutdown.
+Os entrypoints `python -m maskgw` e `python -m maskgw.mcp` delegam ao bootstrap
+e preservam o transporte MCP stdio.
+
+A próxima tarefa é a **Etapa 5**, ainda não iniciada: filesystem seguro, com
+verificações, lock exclusivo, escrita atômica, digest e limpeza de temporários.
+A Etapa 6 implementará a seção crítica administrativa e o fluxo completo de
+escrita/reload. A aplicação HTTP/FastAPI, autenticação, bind, anti-CSRF,
+headers, limites, handlers e rotas de leitura pertencem à **Etapa 7**. No estado
+atual ainda não existem `maskgw/admin/`, FastAPI, bind nem porta HTTP. Não
+antecipe as Etapas 5–11.
 
 Dois pontos dela que valem como invariante desde já:
 
@@ -156,7 +173,7 @@ Invariantes já decididos (D-047 a D-054) — não os reabra:
   espera queries antigas, o último release fecha o runtime aposentado
   exatamente uma vez, e nenhuma query adquire um runtime já aposentado.
 
-FastAPI **não** entra na stack enquanto a implementação não começar.
+FastAPI **ainda não** faz parte da stack; sua introdução pertence à Etapa 7.
 
 ## Fora do escopo
 
@@ -165,7 +182,7 @@ MySQL, migrations, schema browser, JSONB deep inspection, lineage completo de
 view, controle de inferência (WHERE/ORDER BY/GROUP BY), supressão de
 agregações, transformers Python customizados, default deny.
 
-A Admin API está planejada (seção acima), não em escopo de implementação.
+As Etapas 5–11 da Admin API não fazem parte do fechamento atual.
 
 Propostas avaliadas e adiadas estão em `docs/FUTURE-HARDENING.md` com custo e
 impacto — consulte antes de propor de novo.

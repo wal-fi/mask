@@ -1,7 +1,8 @@
 # Implementation Roadmap
 
-> **Documento histórico.** As seis fases estão concluídas, mais a Fase 6.1 de
-> hardening. Para o estado atual e os próximos passos, leia `docs/HANDOFF.md`.
+> **Documento histórico e registro de andamento.** As seis fases estão
+> concluídas, mais a Fase 6.1 de hardening. A Fase 7 está em andamento, com as
+> Etapas 1–4 concluídas. Para o estado atual, leia `docs/HANDOFF.md`.
 >
 > Cada seção abaixo registra o escopo original **e** o que a medição obrigou a
 > corrigir no plano — é aí que está o valor de reler isto.
@@ -223,11 +224,29 @@ ou CRITICAL exigindo mudança de código permanece aberto.
 
 ## FASE 7 — Admin API
 
-**STATUS: PLANEJADA / NÃO INICIADA.**
+**STATUS: EM ANDAMENTO — ETAPAS 1–4 CONCLUÍDAS.**
 
-A especificação inicial foi revista após inspeção do código real. A
-implementação ainda não começou: não há módulo `admin/`, dependência FastAPI
-nem teste.
+A implementação segue `docs/PHASE-7-SPEC.md` de forma incremental:
+
+| etapa | estado | commit |
+|---|---|---|
+| 1 — IDs e revision no modelo do arquivo | concluída | `053cf66` |
+| 2 — `RuntimeRegistry` | concluída | `3114c14` |
+| 3 — aquisição/liberação de runtime por query | concluída | `3c8de4c` |
+| 4 — composition root e lifecycle | concluída | `HEAD` (este commit local) |
+| 5 — filesystem seguro: verificações, lock exclusivo, escrita atômica, digest e limpeza de temporários | próxima; não iniciada | — |
+| 6 — seção crítica administrativa e fluxo completo de escrita/reload | não iniciada | — |
+| 7 — aplicação HTTP/FastAPI e sua segurança e rotas de leitura | não iniciada | — |
+
+O `origin/master` está em `3c8de4c`; a Etapa 4 é o único commit local à
+frente. Ela criou `bootstrap/` como composition root, removeu
+`gateway/factory.py` e fez os entrypoints `python -m maskgw` e
+`python -m maskgw.mcp` delegarem ao bootstrap, preservando MCP stdio.
+
+A Etapa 5 trata somente do filesystem seguro.
+
+Não há módulo `admin/`, FastAPI, rota, bind ou porta HTTP administrativa; a
+aplicação HTTP/FastAPI pertence à Etapa 7 e não foi antecipada.
 
 Objetivo: criar uma superfície administrativa separada do MCP para
 gerenciamento seguro de configuração, policies, status e auditoria.
@@ -246,7 +265,7 @@ rollback de arquivo; existe uma janela de crash entre persistir e trocar, e a
 recuperação é o próximo start ler o arquivo — que já passou por validação,
 compilação, conexão e capability check antes de ser escrito.
 
-**A especificação final será aprovada antes do início.**
+**Próximo passo: Etapa 5, somente após autorização.**
 
 ---
 
@@ -266,5 +285,7 @@ porta de rede hoje é uma decisão de segurança (D-036), não uma lacuna.
 
 ## Estado atual
 
-Fases 1 a 6.1 concluídas. Nenhuma fase nova iniciada. Opções em aberto, com
-esforço e impacto, em `docs/HANDOFF.md`, seção 10.
+Fases 1 a 6.1 concluídas. Fase 7 em andamento, Etapas 1–4 concluídas; Etapa 5
+não iniciada. Estado validado: 1394 testes completos; `-m integration` com 408
+testes aprovados (405 dependentes de DSN), sem skip por falta de DSN. Detalhes
+em `docs/HANDOFF.md`, seção 10.

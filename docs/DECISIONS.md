@@ -851,12 +851,12 @@ propagacao de tipos, nao ha reescrita. E um mapa de nomes.
 
 ---
 
-# Fase 7 — Admin API (decisoes aprovadas, implementacao NAO iniciada)
+# Fase 7 — Admin API (decisoes aprovadas, implementacao em andamento)
 
-As decisoes abaixo foram aprovadas antes de qualquer codigo. Nao ha modulo
-`admin/`, nao ha FastAPI no `pyproject.toml`, nao ha teste. Elas existem para
-que a especificacao final — que sera aprovada separadamente — nao reabra
-questoes ja resolvidas.
+As decisoes abaixo foram aprovadas antes de qualquer codigo. A implementacao
+esta nas etapas ordenadas da especificacao final; nesta etapa ainda nao ha
+modulo `admin/` nem FastAPI no `pyproject.toml`. Elas existem para que cada
+etapa nao reabra questoes ja resolvidas.
 
 ## D-047 — A fonte administrativa e o arquivo validado, nao o runtime compilado
 
@@ -1013,6 +1013,13 @@ CRUD por indice de lista e fragil: remover a regra 2 renumera a 3, e duas telas
 abertas ao mesmo tempo editam coisas diferentes achando que editam a mesma.
 
 O schema evoluira para incluir um ID estavel por regra e por exception.
+
+Esclarecimento do estado adotado na Etapa 1: em conjunto com a `revision` de
+D-052, `revision >= 1` exige `id` em toda regra e exception. Um arquivo adotado
+com qualquer item sem `id` e inconsistente e falha no carregamento. Isso nao
+cria uma decisao arquitetural nova nem muda a adocao aprovada; apenas impede o
+estado sem saida em que as escritas exigiriam configuracao adotada, enquanto
+`config:adopt` ja nao poderia partir de `expected_revision = 0`.
 
 A ORDEM das masking rules continua semanticamente relevante — "first match
 wins" (D-004) — entao ID estavel nao substitui ordenacao: sao coisas distintas,

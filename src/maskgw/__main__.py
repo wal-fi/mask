@@ -1,4 +1,4 @@
-"""Entrypoint compativel: `python -m maskgw.mcp` delega ao bootstrap."""
+"""Entrypoint principal: `python -m maskgw`."""
 
 from __future__ import annotations
 

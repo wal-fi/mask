@@ -3,6 +3,11 @@
 Toda funcionalidade nova deve possuir testes. Nenhuma fase é concluída com
 teste falhando. Critérios de aceite por fase estão em `docs/ROADMAP.md`.
 
+Estado medido ao final da Etapa 4 da Fase 7: **1394 passed** na suíte completa;
+**408 passed, 986 deselected** com `-m integration`. Dos 408 marcados como
+integração, 405 dependem de `MASKGW_TEST_DSN`; todos executaram e nenhum teste
+foi pulado por ausência de DSN.
+
 ## Config Loader (Fase 1)
 
 Deve **impedir a inicialização**:
@@ -278,3 +283,58 @@ Todos os testes de protocolo passam pelo cliente in-memory do SDK
 Dois testes garantem que a análise é **por consulta, nunca por linha**: um com
 10.000 linhas comparando o custo contra uma única linha, e um contador de
 chamadas ao analisador que exige exatamente 1 por query.
+
+## Fase 7 — Etapas 1–4 concluídas
+
+Commits de referência:
+
+- Etapa 1: `053cf66` — IDs e revision no modelo do arquivo;
+- Etapa 2: `3114c14` — `RuntimeRegistry`;
+- Etapa 3: `3c8de4c` — aquisição/liberação de runtime por query;
+- Etapa 4: `HEAD` — composition root e lifecycle (este commit local).
+
+`origin/master` está em `3c8de4c`; a Etapa 4 é o único commit local à frente.
+
+### Etapa 1 — IDs e revision
+
+`tests/test_config_ids.py` cobre geração/migração de IDs, estabilidade, ordem e
+validação. Configuração com `revision >= 1` e qualquer rule ou exception sem
+`id` falha no carregamento. `LoadedConfig` preserva juntos o modelo validado do
+arquivo e os objetos runtime compilados.
+
+### Etapa 2 — RuntimeRegistry
+
+`tests/test_runtime_registry.py` cobre acquire/release, aposentadoria, limite de
+runtimes aposentados, concorrência, shutdown idempotente e fechamento único do
+último runtime.
+
+### Etapa 3 — Gateway por runtime
+
+`tests/test_gateway_runtime.py` comprova que cada query adquire e libera um
+runtime, inclusive em erro, e que o comportamento de query, masking e auditoria
+permanece inalterado.
+
+### Etapa 4 — Composition root e lifecycle
+
+`tests/test_bootstrap.py` e `tests/test_plan_separation.py` cobrem:
+
+- `bootstrap/` como único composition root autorizado a conhecer MCP e o futuro
+  plano administrativo;
+- ausência atual de `admin/` e FastAPI;
+- remoção de `gateway/factory.py`;
+- compatibilidade de `python -m maskgw` e `python -m maskgw.mcp`, ambos
+  delegando ao bootstrap com transporte MCP stdio;
+- startup e shutdown ordenados, shutdown idempotente e runtimes fechados uma
+  única vez;
+- falha parcial de startup fechando todos os recursos já construídos;
+- nenhum byte não protocolar em `stdout`;
+- ausência de DSN, secret, SQL, valor ou traceback nos erros e logs da
+  aplicação;
+- nenhuma thread daemon ou recurso abandonado.
+
+A Etapa 5 é a próxima tarefa e não foi iniciada: filesystem seguro, com
+verificações, lock exclusivo, escrita atômica, digest e limpeza de temporários.
+A Etapa 6 cobre a seção crítica administrativa e o fluxo completo de
+escrita/reload. HTTP/FastAPI, autenticação, bind, anti-CSRF, headers, limites,
+handlers e rotas de leitura pertencem à Etapa 7. Não há pacote administrativo,
+FastAPI, bind ou porta HTTP no estado coberto por este plano.

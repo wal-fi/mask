@@ -316,6 +316,14 @@ Um arquivo sem nenhum dos dois continua carregando e o MCP continua subindo,
 sem Admin API e sem adoção. **É o requisito de compatibilidade, e é teste**
 (§12.9).
 
+**Esclarecimento do estado adotado na Etapa 1:** quando `revision >= 1`, toda
+regra e toda exception precisa ter `id`. Se qualquer item estiver sem `id`, a
+configuração é inconsistente e **falha no carregamento**. Isso explicita a
+coerência entre os dois metadados já aprovados: não cria um novo estado nem
+altera a semântica de adoção; impede que o processo suba num estado em que as
+escritas exigiriam adoção, mas `config:adopt` já não poderia partir de
+`expected_revision: 0`.
+
 Formato: `rul_<32 hex>` e `exc_<32 hex>`, aleatório na criação, opaco, imutável
 pela vida do item. Editar preserva o ID; remover e recriar gera outro. Não há
 renomeação.

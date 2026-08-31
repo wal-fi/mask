@@ -267,6 +267,8 @@ passa normalmente. Não há default deny neste MVP.
 ```text
 mcp/       adapter de I/O, sem logica de seguranca; stdio apenas
 gateway/   orquestrador e fachada publica; unica camada que toca valor original
+bootstrap/ composition root; constroi os planos e conduz startup/shutdown
+runtime/   runtime imutavel, refcount, aposentadoria e fechamento unico
 sql/       parser, validator, politica de funcoes e analise de sensitividade
 db/        adapter PostgreSQL: execucao, proveniencia, sanitizacao de erro
 masking/   matcher, exceptions, registry, engine  <- nucleo PURO, sem I/O
@@ -295,11 +297,12 @@ tracebacks e mensagens do PostgreSQL.
 
 ---
 
-## Separação de planos (futura Fase 7)
+## Separação de planos (Fase 7 em implementação)
 
-A Fase 7 — Admin API está **planejada e não iniciada**. A separação abaixo é
-uma decisão arquitetural já aprovada, registrada aqui para que nenhuma
-implementação futura a atravesse por conveniência.
+A composition root em `bootstrap/` já centraliza a construção e o lifecycle do
+data plane MCP. O admin plane ainda não existe nesta etapa; quando for criado,
+somente `bootstrap/` poderá conhecer os dois ao mesmo tempo. A separação abaixo
+é uma decisão arquitetural aprovada e não pode ser atravessada por conveniência.
 
 ```text
 Data plane:

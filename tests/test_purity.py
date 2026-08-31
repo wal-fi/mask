@@ -124,7 +124,10 @@ def loaded_modules(statement: str) -> set[str]:
 
 def test_importing_masking_does_not_load_the_db_adapter():
     """A Fase 2 adicionou `maskgw.db`. A dependencia continua num sentido so."""
-    assert "maskgw.db" not in loaded_modules("import maskgw.masking")
+    loaded = loaded_modules("import maskgw.masking")
+    assert "maskgw.db" not in loaded
+    assert "maskgw.admin" not in loaded
+    assert "fastapi" not in loaded
 
 
 def test_the_db_adapter_really_does_depend_on_psycopg():

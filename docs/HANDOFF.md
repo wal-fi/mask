@@ -2,9 +2,9 @@
 
 **Documento de entrada. Comece por aqui.**
 
-Estado do projeto ao final da sessao que implementou a Fase 6.1. O MVP esta
-completo e nao ha trabalho de implementacao em andamento: a suite esta verde e
-a proxima decisao e de escopo, nao de codigo (secao 10).
+Estado do projeto ao final da Etapa 4 da Fase 7. O MVP esta completo, as Etapas
+1–4 da Fase 7 estao concluidas e a suite esta verde. A proxima tarefa e a Etapa
+5, ainda nao iniciada (secao 10).
 
 Antes de comecar qualquer fase, confira `git status --short`: a arvore precisa
 estar limpa. **Confira, nao presuma** — este documento nao pode afirmar o
@@ -38,7 +38,7 @@ Ordem de leitura sugerida:
 **FASE 6 — Security red team + hardening.** Concluida.
 **FASE 6.1 — Fechamento dos bypasses criticos.** Concluida.
 
-**Todas as fases do roadmap estao concluidas.**
+**As fases historicas 1–6.1 estao concluidas.**
 
 Entregue na Fase 6.1:
 
@@ -46,6 +46,20 @@ Entregue na Fase 6.1:
 - F-01 (expressoes), F-02 (UNION + alias) e F-08 (exception via alias) FECHADOS
 - H-1 corrigido: `mode` default das exceptions passou a `exact`
 - 96 testes novos (1304 no total)
+
+Andamento da Fase 7:
+
+| etapa | estado | commit |
+|---|---|---|
+| 1 — IDs e revision no modelo do arquivo | concluida | `053cf66` |
+| 2 — `RuntimeRegistry` | concluida | `3114c14` |
+| 3 — runtime adquirido/liberado por query | concluida | `3c8de4c` |
+| 4 — composition root e lifecycle | concluida | `HEAD` (este commit local) |
+| 5 — filesystem seguro: verificações, lock exclusivo, escrita atômica, digest e limpeza de temporários | proxima, nao iniciada | — |
+
+`origin/master` e o commit `3c8de4c`; `HEAD` acrescenta somente a Etapa 4. O
+hash exato da Etapa 4 e o proprio hash do commit que contem este documento e
+deve ser conferido com `git rev-parse HEAD`.
 
 ## 2. Stack e dependencias
 
@@ -166,10 +180,15 @@ src/maskgw/
   gateway/               <- Fase 5
     models.py            QueryResult, QueryColumn, ErrorCategory, GatewayError
     service.py           Gateway.query: a fachada publica
-    factory.py           build_application: os 8 passos do startup
+  runtime/               <- Fase 7, Etapas 2 e 3
+    registry.py          RuntimeRegistry: acquire/release, retired, close unico
+  bootstrap/             <- Fase 7, Etapa 4; composition root
+    application.py       construcao e lifecycle ordenado da aplicacao
+    main.py              entrypoint compartilhado, stderr sanitizado
+  __main__.py            python -m maskgw -> bootstrap
   mcp/                   <- Fase 5
     server.py            build_mcp_server; a tool query_database
-    __main__.py          bootstrap: python -m maskgw.mcp
+    __main__.py          python -m maskgw.mcp -> bootstrap
   audit/                 <- Fase 5
     log.py               QueryAudit, AuditLog; UNICO modulo que importa logging
 
@@ -193,6 +212,12 @@ tests/
 
   test_sensitivity.py       54   <- Fase 6.1
 
+  test_config_ids.py             <- Fase 7, Etapa 1
+  test_runtime_registry.py       <- Fase 7, Etapa 2
+  test_gateway_runtime.py        <- Fase 7, Etapa 3
+  test_bootstrap.py              <- Fase 7, Etapa 4
+  test_plan_separation.py        <- Fase 7, Etapa 4
+
   security/                      <- Fases 6 e 6.1, 209 testes adversariais
     test_attack_expressions.py        55
     test_attack_union_views.py        29
@@ -212,10 +237,13 @@ quebra antes do resto.
 que importar `maskgw.masking` nao carrega `maskgw.db` nem psycopg, e a
 contraprova confirma que `maskgw.db` de fato depende de psycopg.
 
-Todos os modulos previstos por `docs/ARCHITECTURE.md` existem: `masking/`,
-`config/`, `db/`, `sql/`, `gateway/`, `mcp/` e `audit/`.
+Todos os modulos previstos ate a Etapa 4 existem: `masking/`, `config/`, `db/`,
+`sql/`, `gateway/`, `runtime/`, `bootstrap/`, `mcp/` e `audit/`.
 
-Nao existe `maskgw/admin/` — a Fase 7 nao foi iniciada.
+`gateway/factory.py` foi removido: construcao e lifecycle pertencem somente ao
+composition root `bootstrap/`. A Etapa 5, ainda nao iniciada, trata somente do
+filesystem seguro. Nao existe `maskgw/admin/`, e FastAPI nao e dependencia; a
+aplicacao HTTP/FastAPI pertence a Etapa 7.
 
 ## 5. Decisoes
 
@@ -257,31 +285,34 @@ D-001 a D-014 na Fase 1; D-015 a D-019 na Fase 2. Detalhamento em
 | D-045 | `mode` default das exceptions passa a `exact`. Corrige H-1 |
 | D-046 | Um passo entre niveis: nomes exportados por CTE e subquery |
 
-D-047 a D-054 sao da Fase 7 e foram aprovadas **antes** de qualquer codigo.
-Nenhuma delas esta implementada:
+D-047 a D-054 foram aprovadas antes da Fase 7. As Etapas 1–4 implementam apenas
+as fundacoes que lhes correspondem; comportamento administrativo das Etapas
+5–11 continua ausente:
 
-| # | Decisao (Fase 7, nao implementada) |
+| # | Estado ao final da Etapa 4 |
 |---|---|
-| D-047 | A fonte administrativa e o arquivo validado, nao o runtime compilado |
-| D-048 | Reload reconstroi o runtime inteiro; sem atomicidade entre disco e memoria |
-| D-049 | A Admin API nao executa SQL |
-| D-050 | Protecoes estruturais nao sao editaveis pela Admin API |
-| D-051 | IDs administrativos estaveis; ordem continua semantica |
-| D-052 | Revision otimista, verificada dentro de uma secao critica serializada |
-| D-053 | `enabled` fica fora da primeira versao |
-| D-054 | Ciclo de vida do runtime: refcount + `retired`; o ultimo release fecha |
+| D-047 | `LoadedConfig` preserva juntos o modelo validado do arquivo e os objetos runtime compilados |
+| D-048 | Construcao integral de runtime preparada; persistencia e swap administrativos ainda nao existem |
+| D-049 | Separacao de planos imposta; ainda nao existe Admin API |
+| D-050 | Protecoes estruturais preservadas; ainda nao ha superficie administrativa |
+| D-051 | IDs estaveis implementados; com `revision >= 1`, ID ausente falha no carregamento |
+| D-052 | `revision` modelada; secao critica administrativa pertence a etapa futura |
+| D-053 | `enabled` continua ausente |
+| D-054 | `RuntimeRegistry` implementa refcount, `retired` e fechamento unico |
 
 ## 6. Resultado das verificacoes
 
-Com `MASKGW_TEST_DSN` apontando para PostgreSQL 16 em Docker:
+Com `MASKGW_TEST_DSN` apontando para PostgreSQL 16.15 descartavel:
 
 ```text
-pytest   1304 passed
-pytest    408 passed  (-m integration)
+pytest   1394 passed
+pytest    408 passed, 986 deselected  (-m integration)
+          405 testes dependentes de DSN executados; nenhum skip por falta de DSN
 pytest    209 passed  (tests/security)
 ruff     All checks passed
-ruff     75 files already formatted
-mypy     Success: no issues found in 75 source files  (strict)
+ruff     86 files already formatted
+mypy     Success: no issues found in 86 source files  (strict)
+git      diff --check sem erros
 ```
 
 ## 7. Protecao contra alias: o que a Fase 3 fechou
@@ -420,12 +451,11 @@ Tres, todas documentadas e cobertas por teste:
 
 ## 10. Como continuar
 
-O roadmap acabou e **nenhuma nova fase foi iniciada**. As opcoes abaixo estao
-em ordem de valor, na avaliacao de quem fechou a Fase 6.1. Todas exigem
-aprovacao antes de comecar — a regra de nao avancar de fase sem aprovacao
-continua valendo.
+A Fase 7 esta em andamento, com as Etapas 1–4 concluidas. A proxima tarefa e
+**exclusivamente a Etapa 5**, ainda nao iniciada. A regra de nao avancar de
+etapa sem aprovacao continua valendo.
 
-### A. Endurecer o que resta (menor esforco, maior retorno)
+### A. Endurecer o que resta (inventario preservado; nao e a proxima etapa)
 
 Os dois findings HIGH abertos nao precisam de codigo:
 
@@ -447,16 +477,19 @@ Os que precisam de codigo, com custo em `docs/FUTURE-HARDENING.md`:
 ### B. Fase 7 — Admin API
 
 ```text
-Proxima fase planejada:
-Fase 7 — Admin API
+Fase em andamento:
+Fase 7 — Admin API, Etapas 1–4 concluidas
 
-Status:
-NAO INICIADA
+Proxima tarefa:
+Etapa 5 — filesystem seguro — NAO INICIADA
 ```
 
-Nao ha modulo `admin/`, nao ha FastAPI no `pyproject.toml`, nao ha teste.
+A Etapa 5 trata exclusivamente do filesystem seguro. Ainda nao ha modulo
+`admin/`, FastAPI no `pyproject.toml`, rota, bind ou porta HTTP administrativa;
+a aplicacao HTTP pertence a Etapa 7. Os testes existentes da Fase 7 cobrem
+somente as Etapas 1–4.
 
-A especificacao esta em `docs/PHASE-7-SPEC.md`, **em revisao e nao aprovada**.
+A especificacao aprovada esta em `docs/PHASE-7-SPEC.md`.
 Ela cobre endpoints, autenticacao, bind e CORS, schemas, IDs e migracao,
 revision e 409, persistencia atomica, lifecycle dos runtimes, sanitizacao de
 erro, secrets, protecoes read-only, testes exigidos e escopo de auditoria.
@@ -470,14 +503,15 @@ As quatro questoes que estavam abertas foram decididas (secao 14.1 da spec):
 | porta default | 8765 |
 | comentarios do YAML | perda aceita, com backup dos bytes originais |
 
-Dez bloqueios da revisao tambem foram corrigidos, entre eles: `config:reload`
+Dez bloqueios da revisao tambem foram corrigidos na especificacao, entre eles: `config:reload`
 removido da primeira versao, `409 CONFIG_OUT_OF_SYNC` antes de toda escrita,
 `CONFIG_DURABILITY_ERROR` com `applied: true` para falha de `fsync` depois do
 `replace`, lock exclusivo de arquivo contra um segundo processo, bind so em
-loopback, e uma composition root em `bootstrap/` que e o unico modulo a
-conhecer os dois planos.
+loopback, e uma composition root em `bootstrap/` que e o unico modulo autorizado
+a conhecer os dois planos. A composition root foi implementada na Etapa 4; os
+demais itens administrativos continuam fora do codigo.
 
-A especificacao continua **nao aprovada para implementacao**.
+As Etapas 5–11 ainda nao foram iniciadas.
 
 Objetivo: superficie administrativa separada do MCP para gerenciar
 configuracao, policies, status e auditoria sem editar arquivo a mao.
@@ -544,13 +578,13 @@ conexoes, `resources`/`prompts` MCP, schema discovery, JSONB deep inspection,
 lineage completo, transformers Python customizados, column-level GRANT
 automatico, banco de configuracao, Redis, background workers.
 
-### Antes de iniciar a proxima fase
+### Antes de iniciar a proxima etapa
 
 - `git status --short` vazio: a arvore precisa estar limpa
-- suite verde: **1304 passed**, `ruff check`, `ruff format --check` e
+- suite verde: **1394 passed**, `ruff check`, `ruff format --check` e
   `mypy --strict` sem erros
-- PostgreSQL real disponivel via `MASKGW_TEST_DSN` para os 408 testes de
-  integracao
+- PostgreSQL real disponivel via `MASKGW_TEST_DSN`: 408 testes marcados como
+  integracao, dos quais 405 dependem do DSN, sem skip por ausencia dele
 
 ## 11. Riscos conhecidos que atravessam qualquer fase seguinte
 
@@ -590,4 +624,5 @@ revisao:
   dos `isinstance` na canonicalizacao importa (D-015).
 - **Nomes de coluna duplicados sao validos.** Nunca indexar linhas por nome.
 
-Regra do projeto: nao avancar de fase sem aprovacao, nem com teste falhando.
+Regra do projeto: nao avancar de fase ou etapa sem aprovacao, nem com teste
+falhando.

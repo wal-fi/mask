@@ -23,8 +23,8 @@ import pytest
 from mcp import Client
 from mcp.types import CallToolResult, TextContent
 
+from maskgw.bootstrap import build_application
 from maskgw.errors import ConfigError, DatabaseError
-from maskgw.gateway.factory import build_application
 from maskgw.masking.transformers.hashes import HMAC_KEY_ENV
 from maskgw.mcp.server import build_mcp_server
 from maskgw.secretsource import MappingSecretProvider

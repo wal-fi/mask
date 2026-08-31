@@ -19,7 +19,7 @@ from typing import Any
 import psycopg
 import pytest
 
-from maskgw.gateway.factory import build_application
+from maskgw.bootstrap import build_application
 from maskgw.gateway.models import QueryResult
 from maskgw.masking.transformers.hashes import HMAC_KEY_ENV
 from maskgw.secretsource import MappingSecretProvider
