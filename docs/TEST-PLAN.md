@@ -293,9 +293,10 @@ Commits de referência:
 - Etapa 2: `3114c14` — `RuntimeRegistry`;
 - Etapa 3: `3c8de4c` — aquisição/liberação de runtime por query;
 - Etapa 4: `7c06132` — composition root e lifecycle;
-- Etapa 5: `HEAD` — filesystem seguro (este commit local).
+- Etapa 5: `d651fe0` — filesystem seguro.
 
-`origin/master` está em `7c06132`; a Etapa 5 é o único commit local à frente.
+A Etapa 5 foi publicada em `origin/master` no commit `d651fe0`; a sincronização
+atual deve ser conferida pelo Git, não inferida deste documento.
 
 ### Etapa 1 — IDs e revision
 

@@ -234,14 +234,15 @@ A implementação segue `docs/PHASE-7-SPEC.md` de forma incremental:
 | 2 — `RuntimeRegistry` | concluída | `3114c14` |
 | 3 — aquisição/liberação de runtime por query | concluída | `3c8de4c` |
 | 4 — composition root e lifecycle | concluída | `7c06132` |
-| 5 — filesystem seguro: verificações, lock exclusivo, escrita atômica, digest e limpeza de temporários | concluída | `HEAD` (este commit local) |
+| 5 — filesystem seguro: verificações, lock exclusivo, escrita atômica, digest e limpeza de temporários | concluída | `d651fe0` |
 | 6 — seção crítica administrativa e fluxo completo de escrita/reload | próxima; não iniciada | — |
 | 7 — aplicação HTTP/FastAPI e sua segurança e rotas de leitura | não iniciada | — |
 
-O `origin/master` está em `7c06132`; a Etapa 5 é o único commit local à
-frente. A Etapa 4 criou `bootstrap/` como composition root, removeu
-`gateway/factory.py` e fez os entrypoints `python -m maskgw` e
-`python -m maskgw.mcp` delegarem ao bootstrap, preservando MCP stdio.
+A Etapa 5 foi publicada em `origin/master` no commit `d651fe0`; a sincronização
+atual deve ser conferida pelo Git, não inferida deste documento. A Etapa 4 criou
+`bootstrap/` como composition root, removeu `gateway/factory.py` e fez os
+entrypoints `python -m maskgw` e `python -m maskgw.mcp` delegarem ao bootstrap,
+preservando MCP stdio.
 
 A Etapa 5 adicionou `config/filesystem.py`: verificações fail-closed, sidecar
 lock mantido aberto, digest dos bytes exatos, escrita atômica e limpeza

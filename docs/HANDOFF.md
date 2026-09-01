@@ -55,12 +55,13 @@ Andamento da Fase 7:
 | 2 — `RuntimeRegistry` | concluida | `3114c14` |
 | 3 — runtime adquirido/liberado por query | concluida | `3c8de4c` |
 | 4 — composition root e lifecycle | concluida | `7c06132` |
-| 5 — filesystem seguro: verificações, lock exclusivo, escrita atômica, digest e limpeza de temporários | concluida | `HEAD` (este commit local) |
+| 5 — filesystem seguro: verificações, lock exclusivo, escrita atômica, digest e limpeza de temporários | concluida | `d651fe0` |
 | 6 — secao critica administrativa e fluxo completo de escrita/reload | proxima, nao iniciada | — |
 
-`origin/master` e o commit `7c06132`; `HEAD` acrescenta somente a Etapa 5. O
-hash exato da Etapa 5 e o proprio hash do commit que contem este documento e
-deve ser conferido com `git rev-parse HEAD`.
+A Etapa 5 foi publicada em `origin/master` no commit `d651fe0`. O estado atual
+deve ser conferido com `git status --short --branch` e
+`git rev-list --left-right --count origin/master...HEAD` antes de continuar;
+nao o presuma a partir deste documento versionado.
 
 ## 2. Stack e dependencias
 
@@ -133,7 +134,7 @@ AI Client -> MCP Server -> Gateway -> Query Validator -> DB Adapter -> PostgreSQ
                                                               |
                                               Result Set + Column Metadata
                                                               |
-                                MaskingEngine (Exception -> Masking -> Original)
+                       MaskingEngine (Derived -> Exception -> Masking -> Original)
                                                               |
                                                         MaskedResult
 ```
@@ -141,14 +142,16 @@ AI Client -> MCP Server -> Gateway -> Query Validator -> DB Adapter -> PostgreSQ
 Pipeline por coluna, default **ALLOW**:
 
 ```text
-EXCEPTION MATCH -> ORIGINAL
-MASKING MATCH   -> TRANSFORMER
-NO MATCH        -> ORIGINAL
+DERIVED (a AST provou dependencia sensivel) -> TRANSFORMER
+EXCEPTION (pelo nome autoritativo)           -> ORIGINAL
+MASKING (por output_name ou origin_name)     -> TRANSFORMER
+NO MATCH                                     -> ORIGINAL
 ```
 
 Desde a Fase 3 o matching avalia `output_name` OR `origin_name`, com
-`origin_name` resolvido a partir da metadata do PostgreSQL. O default ALLOW e a
-prioridade absoluta das exceptions nao mudaram.
+`origin_name` resolvido a partir da metadata do PostgreSQL. Desde a Fase 6.1,
+uma dependencia sensivel provada pela AST vem antes das exceptions; fora desse
+ramo, o default ALLOW e a prioridade das exceptions sobre masking permanecem.
 
 ## 4. Estrutura dos modulos
 

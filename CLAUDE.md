@@ -123,13 +123,13 @@ A **Fase 7 — Admin API** está em implementação incremental conforme
 - Etapa 2 — `RuntimeRegistry`: `3114c14`;
 - Etapa 3 — aquisição/liberação de runtime por query: `3c8de4c`;
 - Etapa 4 — composition root e lifecycle: `7c06132`;
-- Etapa 5 — filesystem seguro: `HEAD` (este commit local).
+- Etapa 5 — filesystem seguro: `d651fe0`.
 
-O `origin/master` está em `7c06132`; portanto o `HEAD` contém a Etapa 5 como o
-único commit local à frente. A Etapa 4 criou `maskgw/bootstrap/` como
-composition root, removeu `gateway/factory.py` e centralizou startup/shutdown.
-Os entrypoints `python -m maskgw` e `python -m maskgw.mcp` delegam ao bootstrap
-e preservam o transporte MCP stdio.
+A Etapa 5 foi publicada em `origin/master` no commit `d651fe0`. Confira a
+sincronização atual pelo Git em vez de inferi-la deste documento. A Etapa 4
+criou `maskgw/bootstrap/` como composition root, removeu `gateway/factory.py` e
+centralizou startup/shutdown. Os entrypoints `python -m maskgw` e
+`python -m maskgw.mcp` delegam ao bootstrap e preservam o transporte MCP stdio.
 
 A Etapa 5 criou `maskgw/config/filesystem.py`, independente de HTTP: valida
 arquivo/diretório/lock, mantém o sidecar `masking.yaml.lock`, calcula digest
