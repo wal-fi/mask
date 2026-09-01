@@ -1,4 +1,8 @@
-"""Fase 7, etapa 4: separacao estrutural entre data e admin planes (§12.8)."""
+"""Fase 7, etapas 4 e 6: separacao estrutural entre data e admin planes (§12.8).
+
+Ate a Etapa 5 estes testes valiam por vacuidade: o pacote `admin/` nao existia.
+Desde a Etapa 6 ele existe, e a separacao passa a ser verificada de fato.
+"""
 
 from __future__ import annotations
 
@@ -36,19 +40,60 @@ def test_mcp_never_imports_the_admin_plane() -> None:
         assert not imports_prefix(path, "maskgw.admin"), path
 
 
+def test_the_admin_package_exists_since_stage_six() -> None:
+    """Sem isto, os testes de separacao passariam por vacuidade."""
+    assert python_files(ADMIN_DIR), "o pacote admin/ deveria existir desde a Etapa 6"
+
+
 def test_admin_never_imports_the_mcp_plane() -> None:
-    """Vacuamente verdadeiro ate o pacote admin nascer numa etapa futura."""
     for path in python_files(ADMIN_DIR):
         assert not imports_prefix(path, "maskgw.mcp"), path
 
 
+def test_admin_never_imports_the_gateway() -> None:
+    """O admin troca o runtime; quem o consome e o data plane, e sao planos distintos."""
+    for path in python_files(ADMIN_DIR):
+        assert not imports_prefix(path, "maskgw.gateway"), path
+
+
+def test_admin_has_no_http_surface_in_stage_six() -> None:
+    """A Etapa 6 e a secao critica; HTTP e a Etapa 7.
+
+    Este teste MUDA quando a Etapa 7 introduzir a aplicacao HTTP, e e por isso
+    que ele existe: antecipar FastAPI, bind ou porta aqui quebra a suite em vez
+    de passar despercebido.
+    """
+    forbidden = {"fastapi", "starlette", "uvicorn", "http", "http.server", "socket", "ssl"}
+    for path in python_files(ADMIN_DIR):
+        offending = sorted(name for name in imports_of(path) if name.split(".")[0] in forbidden)
+        assert offending == [], f"{path.name} importa {offending}"
+
+
+def test_bootstrap_really_composes_the_admin_plane() -> None:
+    importers = [
+        path.relative_to(SRC_ROOT).as_posix()
+        for path in python_files(BOOTSTRAP_DIR)
+        if imports_prefix(path, "maskgw.admin")
+    ]
+    assert importers == ["bootstrap/application.py"]
+
+
 def test_only_bootstrap_may_import_a_plane_from_outside_that_plane() -> None:
+    """Cada plano so e importado de dentro dele mesmo, ou do bootstrap.
+
+    Ate a Etapa 5 os dois planos podiam ser varridos juntos, porque `admin/`
+    estava vazio e nenhum modulo importava `maskgw.admin`. Com o pacote
+    existindo, os planos precisam ser avaliados um a um: um modulo de `admin/`
+    que importa `maskgw.admin.errors` esta DENTRO do proprio plano, e isso
+    sempre foi permitido.
+    """
     offenders: list[str] = []
-    for path in python_files(SRC_ROOT):
-        if MCP_DIR in path.parents or BOOTSTRAP_DIR in path.parents:
-            continue
-        if imports_prefix(path, "maskgw.mcp") or imports_prefix(path, "maskgw.admin"):
-            offenders.append(path.relative_to(SRC_ROOT).as_posix())
+    for plane_dir, prefix in ((MCP_DIR, "maskgw.mcp"), (ADMIN_DIR, "maskgw.admin")):
+        for path in python_files(SRC_ROOT):
+            if plane_dir in path.parents or BOOTSTRAP_DIR in path.parents:
+                continue
+            if imports_prefix(path, prefix):
+                offenders.append(f"{path.relative_to(SRC_ROOT).as_posix()} -> {prefix}")
     assert offenders == []
 
 

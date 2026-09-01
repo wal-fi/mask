@@ -853,10 +853,14 @@ propagacao de tipos, nao ha reescrita. E um mapa de nomes.
 
 # Fase 7 — Admin API (decisoes aprovadas, implementacao em andamento)
 
-As decisoes abaixo foram aprovadas antes de qualquer codigo. A implementacao
-esta nas etapas ordenadas da especificacao final; nesta etapa ainda nao ha
-modulo `admin/` nem FastAPI no `pyproject.toml`. Elas existem para que cada
-etapa nao reabra questoes ja resolvidas.
+As decisoes D-047 a D-054 foram aprovadas antes de qualquer codigo. A
+implementacao esta nas etapas ordenadas da especificacao final; ate a Etapa 6
+existe o pacote `admin/` com a secao critica, e ainda NAO ha FastAPI no
+`pyproject.toml`. Elas existem para que cada etapa nao reabra questoes ja
+resolvidas.
+
+D-055 e posterior: registra escolhas de implementacao da Etapa 6 que nao
+estavam na especificacao e nao alteram nenhuma decisao aprovada.
 
 ## D-047 — A fonte administrativa e o arquivo validado, nao o runtime compilado
 
@@ -1185,3 +1189,89 @@ conexao psycopg e o SDK MCP executa tools numa thread pool — e continua
 necessario **por runtime**, ja que cada runtime tem seu proprio adapter. O
 refcount e ortogonal: um coordena o acesso a conexao, o outro coordena o ciclo
 de vida do runtime.
+
+## D-055 — Escolhas de implementacao da secao critica administrativa (Etapa 6)
+
+Tres pontos que a especificacao nao fixava e que a implementacao precisou
+decidir. Nenhum deles altera D-047 a D-054.
+
+### O runtime candidato e construido a partir dos BYTES que serao persistidos
+
+A secao 7.4 pede validar (5), compilar e construir (6) e persistir (8), mas nao
+diz de onde saem os bytes. Se o documento fosse serializado no passo 8, a
+partir do modelo, e o runtime construido no passo 6 a partir de outro caminho,
+o digest de referencia poderia descrever um arquivo que nao originou o runtime
+publicado — e nada notaria.
+
+Decisao: no passo 5 o documento validado e serializado UMA vez e o resultado e
+reparseado; a igualdade entre o reparseado e o documento validado e verificada,
+e uma divergencia falha com `CONFIG_INVALID` antes de qualquer escrita. Sao
+esses bytes que vao para o passo 8, e e o documento **reparseado deles** que
+origina o candidato do passo 6.
+
+A distincao entre "equivalente" e "originado" e a que importa aqui, e foi
+corrigida depois de uma revisao: construir o candidato a partir do modelo
+anterior a serializacao daria equivalencia semantica verificada, mas nao
+tornaria verdadeira a frase "o runtime publicado e o que o arquivo descreve".
+Uma unica fonte — os bytes — elimina a duvida e, de quebra, isola o documento
+publicado de qualquer objeto que o chamador ainda segure.
+
+O mesmo vale no startup: com admin habilitado, o runtime inicial e construido
+do snapshot lido sob o lock, e nao de uma segunda leitura do arquivo.
+
+### O callback nunca recebe o documento do runtime publicado
+
+`frozen=True` do Pydantic e superficial: impede REATRIBUIR um campo, e nao
+congela as listas e dicionarios de dentro. `masking`, `exceptions`,
+`sql.allowed_pg_functions` e o `config` de cada regra continuam mutaveis.
+
+Entregar `runtime.file_config` diretamente a mutacao criava um caminho que
+derrota o rollback pre-commit: uma mutacao que fizesse `masking.clear()` e em
+seguida falhasse produzia o desfecho aparentemente correto — erro devolvido,
+arquivo e engine antigos — e ainda assim deixava o documento do runtime
+publicado sem regras. A escrita seguinte, valida e sem relacao com a primeira,
+partiria desse documento, persistiria zero regras e publicaria um engine SEM
+MASKING. Reproduzido em teste antes da correcao.
+
+Decisao: a mutacao recebe `model_copy(deep=True)`, e `AdminConfigService.document`
+tambem devolve copia profunda. O rollback pre-commit passa a valer para a
+identidade do runtime **e** para o conteudo dele, e nenhuma leitura
+administrativa entrega referencia mutavel do runtime.
+
+A regra geral que fica: um objeto que pertence ao runtime publicado so
+atravessa a fronteira administrativa como copia ou como valor imutavel.
+`GatewayConfig`, `MaskingPolicy` e `SqlPolicy` ja satisfazem isso por
+construcao — dataclasses congeladas sobre tuplas e frozensets. `MaskingFileConfig`
+nao satisfazia, e por isso e copiado.
+
+### O plano administrativo tem vocabulario proprio de erro
+
+`config/` e `runtime/` levantam excecoes que descrevem o mecanismo
+(`ConfigOutOfSyncError`, `RetiredRuntimeInUseError`). A fronteira
+administrativa responde por CATEGORIA (secao 10.2).
+
+Decisao: `admin/errors.py` define `AdminError` com o conjunto fechado, e o
+servico traduz TODA falha — inclusive a inesperada, que vira `INTERNAL_ERROR`.
+Reexportar as excecoes internas faria uma excecao nova aparecer na resposta sem
+ninguem decidir por isso. O erro devolvido e sempre uma instancia NOVA,
+levantada fora de qualquer handler: `__cause__` e `__context__` ficam nulos
+mesmo quando o passo que falhou levantou de dentro de um `except` (D-017).
+
+Mapeamento que a secao 7.4 implica e que fica registrado: falha de schema ou de
+documento e `CONFIG_INVALID` (passo 5); falha de compilacao de transformer,
+de construcao ou de conexao e `CONFIG_RELOAD_ERROR` (passos 6 e 7); arquivo
+ilegivel no passo 3 e `CONFIG_WRITE_ERROR`, porque nada foi escrito e o
+anterior permanece — que e exatamente o que essa categoria promete.
+
+### Na Etapa 6, o admin e habilitado por parametro de composicao
+
+`MASKGW_ADMIN_ENABLED`, `MASKGW_ADMIN_TOKEN`, `MASKGW_ADMIN_BIND` e
+`MASKGW_ADMIN_PORT` pertencem a aplicacao HTTP (secao 9.2, passo 1), que e a
+Etapa 7. Ler variaveis de ambiente agora fixaria metade de um contrato de
+startup cuja outra metade — token, bind, confirmacao de escuta — ainda nao
+existe.
+
+Decisao: `build_application(admin_enabled=...)`, default `False`. Sem ele o
+processo e exatamente o de hoje: nenhum lock de arquivo, nenhuma secao critica
+e nenhum caminho de escrita. A Etapa 7 passa a derivar esse parametro do
+ambiente, sem mudar a composicao.

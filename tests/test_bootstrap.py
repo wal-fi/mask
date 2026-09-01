@@ -1,9 +1,14 @@
-"""Fase 7, etapa 4: composition root, startup e shutdown.
+"""Fase 7, etapas 4 e 6: composition root, startup e shutdown.
 
-Sem admin HTTP nesta etapa. Os testes cobrem somente o lifecycle aplicavel:
-MCP stdio construido por ultimo, falha parcial fechando o runtime, data plane
-parado antes dos runtimes, shutdown idempotente e fronteira de processo sem
-vazamento nem byte nao protocolar em stdout.
+Sem admin HTTP: nao ha thread HTTP, bind nem porta, e isso e a Etapa 7. O que a
+Etapa 6 acrescentou aqui e a composicao do plano administrativo em processo —
+lock de arquivo adquirido no startup, secao critica construida sobre os bytes
+exatos que originaram o runtime, e lock liberado por ultimo no shutdown.
+
+Os demais testes cobrem o lifecycle ja existente: MCP stdio construido por
+ultimo, falha parcial fechando o que ja subiu, data plane parado antes dos
+runtimes, shutdown idempotente e fronteira de processo sem vazamento nem byte
+nao protocolar em stdout.
 """
 
 from __future__ import annotations
@@ -22,6 +27,7 @@ from mcp.server import MCPServer
 import maskgw.bootstrap.application as application_module
 import maskgw.bootstrap.main as main_module
 from maskgw.bootstrap import Application
+from maskgw.config import ConfigFileStore, ConfigLockUnavailableError, digest_bytes
 
 SENSITIVE_DSN = "postgresql://user:super-secret@database.example.invalid/private"
 SENSITIVE_SQL = "SELECT cpf FROM cliente WHERE cpf = '11122233344'"
@@ -273,6 +279,172 @@ class TestLifecycle:
         app, _server, _adapter = compose(monkeypatch, config_file)
         app.run()
         assert {(thread.ident, thread.name) for thread in threading.enumerate()} == before
+
+
+class ObservableStore(ConfigFileStore):
+    """Registra o fechamento do lock na mesma linha do tempo dos runtimes."""
+
+    def close(self) -> None:
+        already = self.closed
+        super().close()
+        if not already:
+            FakeAdapter.events.append("lock:released")
+
+
+class TestAdminComposition:
+    """Etapa 6: o admin plane composto em processo, sem HTTP."""
+
+    def test_admin_disabled_is_the_process_of_today(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        config_file: Path,
+    ) -> None:
+        app, _server, _adapter = compose(monkeypatch, config_file)
+
+        assert app.admin is None
+        assert app.config_store is None
+        # Sem admin nao ha escrita, entao nao ha lock a adquirir.
+        assert not (config_file.parent / "masking.yaml.lock").exists()
+        app.close()
+
+    def test_admin_enabled_holds_the_lock_and_exposes_the_critical_section(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        config_file: Path,
+    ) -> None:
+        monkeypatch.setattr(application_module, "PostgresAdapter", FakeAdapter)
+        monkeypatch.setattr(
+            application_module,
+            "build_mcp_server",
+            lambda _gateway: cast(MCPServer, FakeMcpServer()),
+        )
+        app = application_module.build_application(
+            config_path=config_file,
+            conninfo=SENSITIVE_DSN,
+            admin_enabled=True,
+        )
+        try:
+            admin = app.admin
+            assert admin is not None
+            assert app.config_store is not None
+            assert admin.revision == 0
+            assert not admin.adopted
+            # O digest de referencia sao os BYTES que originaram o runtime.
+            assert admin.reference_digest == digest_bytes(config_file.read_bytes())
+            # Um segundo processo administrativo sobre o mesmo arquivo nao
+            # entra: o lock exclusivo esta preso a este.
+            with pytest.raises(ConfigLockUnavailableError):
+                ConfigFileStore.open(config_file)
+        finally:
+            app.close()
+
+        # Liberado no shutdown, e so entao outro pode abrir.
+        with ConfigFileStore.open(config_file) as store:
+            assert not store.closed
+
+    def test_shutdown_releases_the_lock_after_the_runtimes(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        config_file: Path,
+    ) -> None:
+        monkeypatch.setattr(application_module, "PostgresAdapter", FakeAdapter)
+        monkeypatch.setattr(application_module, "ConfigFileStore", ObservableStore)
+        monkeypatch.setattr(
+            application_module,
+            "build_mcp_server",
+            lambda _gateway: cast(MCPServer, FakeMcpServer()),
+        )
+        app = application_module.build_application(
+            config_path=config_file,
+            conninfo=SENSITIVE_DSN,
+            admin_enabled=True,
+        )
+        app.run()
+        app.close()
+
+        admin = app.admin
+        assert admin is not None
+        assert admin.closed
+        assert FakeAdapter.events == [
+            "runtime:connected",
+            "mcp:started",
+            "mcp:stopped",
+            "runtime:closed",
+            "lock:released",
+        ]
+        assert FakeAdapter.instances[0].close_calls == 1
+
+    def test_partial_startup_with_admin_releases_the_lock(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        config_file: Path,
+    ) -> None:
+        monkeypatch.setattr(application_module, "PostgresAdapter", FakeAdapter)
+
+        def fail_after_runtime(_gateway: object) -> MCPServer:
+            raise RuntimeError(f"{SENSITIVE_DSN} {SENSITIVE_SQL}")
+
+        monkeypatch.setattr(application_module, "build_mcp_server", fail_after_runtime)
+
+        with pytest.raises(RuntimeError):
+            application_module.build_application(
+                config_path=config_file,
+                conninfo=SENSITIVE_DSN,
+                admin_enabled=True,
+            )
+
+        assert FakeAdapter.instances[0].close_calls == 1
+        # Nem lock nem conexao ficaram de pe.
+        with ConfigFileStore.open(config_file) as store:
+            assert not store.closed
+
+    def test_admin_composition_creates_no_thread(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        config_file: Path,
+    ) -> None:
+        """A Etapa 6 nao abre porta e nao cria thread: isso e a Etapa 7."""
+        before = {(thread.ident, thread.name) for thread in threading.enumerate()}
+        monkeypatch.setattr(application_module, "PostgresAdapter", FakeAdapter)
+        monkeypatch.setattr(
+            application_module,
+            "build_mcp_server",
+            lambda _gateway: cast(MCPServer, FakeMcpServer()),
+        )
+        app = application_module.build_application(
+            config_path=config_file,
+            conninfo=SENSITIVE_DSN,
+            admin_enabled=True,
+        )
+        try:
+            assert {(thread.ident, thread.name) for thread in threading.enumerate()} == before
+        finally:
+            app.close()
+        assert {(thread.ident, thread.name) for thread in threading.enumerate()} == before
+
+    def test_repr_reports_admin_without_leaking(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        config_file: Path,
+    ) -> None:
+        monkeypatch.setattr(application_module, "PostgresAdapter", FakeAdapter)
+        monkeypatch.setattr(
+            application_module,
+            "build_mcp_server",
+            lambda _gateway: cast(MCPServer, FakeMcpServer()),
+        )
+        app = application_module.build_application(
+            config_path=config_file,
+            conninfo=SENSITIVE_DSN,
+            admin_enabled=True,
+        )
+        try:
+            rendered = repr(app)
+            assert "admin=True" in rendered
+            assert SENSITIVE_DSN not in rendered
+            assert str(config_file) not in rendered
+        finally:
+            app.close()
 
 
 class StubApplication:

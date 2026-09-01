@@ -1,8 +1,8 @@
 """Composition root e lifecycle do processo MaskGW.
 
 Somente este pacote monta os planos da aplicacao. O data plane MCP continua
-fino e nao conhece o futuro plano administrativo; quando `admin/` existir,
-tambem sera composto aqui, sem criar dependencia entre os dois.
+fino e nao conhece o plano administrativo, e o admin plane nao conhece o MCP:
+o unico modulo autorizado a importar os dois e este, e isso e teste de AST.
 """
 
 from __future__ import annotations
@@ -13,6 +13,7 @@ from maskgw.bootstrap.application import (
     DSN_ENV,
     Application,
     build_application,
+    make_adapter_factory,
     resolve_dsn,
 )
 
@@ -22,5 +23,6 @@ __all__ = [
     "DSN_ENV",
     "Application",
     "build_application",
+    "make_adapter_factory",
     "resolve_dsn",
 ]

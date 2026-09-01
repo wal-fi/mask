@@ -411,11 +411,30 @@ continua mascarada.
 | Nomes de coluna hostis | **MASKED** — caixa, espaços, `\n`, zero-width, sinal de Kelvin, İ turco, fullwidth e homoglifo cirílico: todos protegidos, os últimos pela origem |
 | Serialização | **OK** — bytea não-UTF8 vira base64; JSONB profundo, arrays aninhados, numeric extremo, NaN e Infinity atravessam o MCP; tipos sem forma canônica falham fechado, nunca em `repr()` |
 | Segredos | **OK** — a chave HMAC não aparece em `repr` de aplicação, config, política ou gateway, nem em erro, nem na resposta MCP; o DSN não aparece no `repr` do adapter |
-| Protocolo MCP | **BLOCKED** — tool desconhecida, `sql` ausente/null/lista/objeto/inteiro/booleano recusados pelo schema; payload grande e consulta aninhada em 200 níveis não derrubam o processo |
+| Protocolo MCP | **BLOCKED, com uma ressalva** — tool desconhecida, `sql` ausente/null/lista/objeto/inteiro/booleano recusados pelo schema; consulta aninhada em 200 níveis não derruba o processo. Payload grande: ver a limitação abaixo |
 | Concorrência | **OK** — 30 chamadas paralelas: nenhum erro, mascaramento consistente, nenhuma resposta trocada, 20 `request_id` distintos |
 | Row limit | **OK** — valor sensível colocado exclusivamente na linha N+1 não aparece no resultado, no log nem em exceção |
 | Escrita | **BLOCKED** — a transação read-only barra INSERT/UPDATE/DELETE/DDL inclusive via função de usuário; tabela verificada intacta por conexão de controle |
 | Filesystem administrativo (Etapa 5) | **PREPARADO, NÃO EXPOSTO** — lock entre processos, symlink/tipo/modo inseguros, colisão `O_EXCL`, órfãos, corridas de digest e falhas antes/depois do `replace` têm testes; HTTP/admin ainda não existe |
+
+### Limitação: payload grande depende do tamanho da pilha, e não há proteção
+
+A linha do protocolo MCP **não** afirma que qualquer payload é seguro. Uma
+consulta com 100.000 termos somados faz o walk recursivo da AST estourar a
+pilha da thread e **derruba o interpretador** com `Windows fatal exception:
+stack overflow`, antes de qualquer limite do produto.
+
+O que decide o desfecho é o tamanho de pilha disponível na thread que atende a
+chamada, não uma verificação do Gateway. Com a pilha default deste host Windows
+o processo cai; com `threading.stack_size(64 MiB)` no processo de teste, o
+mesmo teste passa. **Não existe controle no produto que limite o tamanho da
+consulta ou a profundidade da expressão**, e esta seção não finge que exista.
+
+Medido no commit `d276c22`, anterior à Fase 7, e reproduzido depois: não é
+regressão de nenhuma etapa da Admin API. Uma correção real — limitar o tamanho
+da consulta na fronteira, ou tornar o walk iterativo — muda comportamento já
+entregue e precisa de aprovação própria. Registrada como risco aberto em
+`docs/HANDOFF.md`, seção 11, e **não** como finding corrigido.
 
 A revisão da Etapa 5 também confirmou que erros e `repr` não carregam caminho
 sensível, bytes da configuração, DSN, SQL, valor ou traceback. A validação de

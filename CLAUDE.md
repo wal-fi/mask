@@ -15,8 +15,8 @@ IA → MCP → Gateway → SQL Validator → PostgreSQL → provenance
 O produto executa fim a fim: um cliente MCP real consulta um PostgreSQL real e
 recebe dados mascarados.
 
-A Fase 7 foi iniciada de forma incremental. As **Etapas 1–5 estão concluídas**;
-a próxima tarefa é exclusivamente a Etapa 6, ainda não iniciada. Antes de
+A Fase 7 foi iniciada de forma incremental. As **Etapas 1–6 estão concluídas**;
+a próxima tarefa é exclusivamente a Etapa 7, ainda não iniciada. Antes de
 alterar qualquer coisa, leia `docs/HANDOFF.md` — é o documento de entrada e diz
 exatamente onde o projeto parou.
 
@@ -28,7 +28,7 @@ Nesta ordem:
 2. `docs/ARCHITECTURE.md` — módulos e responsabilidades
 3. `docs/SECURITY.md` — invariantes de segurança
 4. `docs/SECURITY-REVIEW.md` — o que foi atacado, o que resistiu, o que não
-5. `docs/DECISIONS.md` — 54 decisões (D-001 a D-054) e o porquê de cada uma
+5. `docs/DECISIONS.md` — 55 decisões (D-001 a D-055) e o porquê de cada uma
 6. `docs/MASKING-SPEC.md` — semântica exata do pipeline de masking
 7. `docs/TEST-PLAN.md`, `docs/THREAT-MODEL.md`, `docs/FUTURE-HARDENING.md`
 
@@ -117,19 +117,20 @@ riscos aceitos em `docs/SECURITY-REVIEW.md`.
 ## Evolução em andamento — Fase 7 / Admin API
 
 A **Fase 7 — Admin API** está em implementação incremental conforme
-`docs/PHASE-7-SPEC.md`. As Etapas 1–5 estão concluídas:
+`docs/PHASE-7-SPEC.md`. As Etapas 1–6 estão concluídas:
 
 - Etapa 1 — IDs e revision no modelo do arquivo: `053cf66`;
 - Etapa 2 — `RuntimeRegistry`: `3114c14`;
 - Etapa 3 — aquisição/liberação de runtime por query: `3c8de4c`;
 - Etapa 4 — composition root e lifecycle: `7c06132`;
-- Etapa 5 — filesystem seguro: `d651fe0`.
+- Etapa 5 — filesystem seguro: `d651fe0`;
+- Etapa 6 — seção crítica administrativa e escrita/reload.
 
-A Etapa 5 foi publicada em `origin/master` no commit `d651fe0`. Confira a
-sincronização atual pelo Git em vez de inferi-la deste documento. A Etapa 4
-criou `maskgw/bootstrap/` como composition root, removeu `gateway/factory.py` e
-centralizou startup/shutdown. Os entrypoints `python -m maskgw` e
-`python -m maskgw.mcp` delegam ao bootstrap e preservam o transporte MCP stdio.
+Confira a sincronização com `origin/master` pelo Git em vez de inferi-la deste
+documento. A Etapa 4 criou `maskgw/bootstrap/` como composition root, removeu
+`gateway/factory.py` e centralizou startup/shutdown. Os entrypoints
+`python -m maskgw` e `python -m maskgw.mcp` delegam ao bootstrap e preservam o
+transporte MCP stdio.
 
 A Etapa 5 criou `maskgw/config/filesystem.py`, independente de HTTP: valida
 arquivo/diretório/lock, mantém o sidecar `masking.yaml.lock`, calcula digest
@@ -137,14 +138,20 @@ dos bytes exatos, limpa somente temporários de nome estrito e escreve por
 temporário + `fsync` + `os.replace`. Falhas antes do replace preservam o arquivo
 anterior; falha de `fsync` do diretório depois dele informa `applied=True`.
 
-A próxima tarefa é a **Etapa 6**, ainda não iniciada: seção crítica
-administrativa e fluxo completo de escrita/reload. Ela deverá compor os
-primitivos da Etapa 5 com validação, runtime candidato e swap; a Etapa 5 não
-faz isso sozinha e o bootstrap ainda não adquire lock, pois o admin não existe.
-A aplicação HTTP/FastAPI, autenticação, bind, anti-CSRF, headers, limites,
-handlers e rotas de leitura pertencem à **Etapa 7**. No estado atual ainda não
-existem `maskgw/admin/`, FastAPI, bind nem porta HTTP. Não antecipe as Etapas
-6–11.
+A Etapa 6 criou `maskgw/admin/` — `errors.py`, `document.py` e `service.py` —
+também sem HTTP. `AdminConfigService.apply` executa os onze passos da §7.4 sob
+**um** lock por processo: adoção, `expected_revision`, digest, limite de
+aposentados, validação, compilação, conexão com os capability checks,
+persistência atômica, swap, digest novo e fechamento do aposentado. Os quatro
+primeiros passos precedem construir ou conectar qualquer candidato. O admin é
+habilitado por `build_application(admin_enabled=True)`; **não há variável de
+ambiente administrativa** ainda (D-055).
+
+A próxima tarefa é a **Etapa 7**, ainda não iniciada: aplicação HTTP/FastAPI,
+autenticação, bind, anti-CSRF, headers, limites, handlers e rotas de leitura.
+No estado atual não existem FastAPI, rota, bind nem porta HTTP. `config:validate`
+é a Etapa 8; as rotas de escrita e a adoção completa com backup são a Etapa 9;
+`AdminAudit` é a Etapa 10. Não antecipe as Etapas 7–11.
 
 Dois pontos dela que valem como invariante desde já:
 
@@ -183,6 +190,16 @@ Invariantes já decididos (D-047 a D-054) — não os reabra:
 
 FastAPI **ainda não** faz parte da stack; sua introdução pertence à Etapa 7.
 
+D-055 registra o que a Etapa 6 decidiu e a especificação não fixava: o runtime
+candidato é construído a partir do documento **reparseado dos bytes que serão
+persistidos**, de modo que o digest de referência corresponda ao runtime
+publicado por construção; o callback de mutação e a leitura administrativa
+recebem **cópia profunda**, nunca o documento do runtime publicado, porque
+`frozen=True` do Pydantic não congela as listas e dicionários de dentro; o plano
+administrativo traduz toda falha para o **seu** conjunto fechado de categorias,
+sem reexportar exceção interna; e `admin_enabled` é parâmetro de composição
+enquanto não existe a aplicação HTTP.
+
 ## Fora do escopo
 
 Front-end, OAuth/RBAC, multi-tenant, deployment, HTTP MCP, pool de conexões,
@@ -190,7 +207,7 @@ MySQL, migrations, schema browser, JSONB deep inspection, lineage completo de
 view, controle de inferência (WHERE/ORDER BY/GROUP BY), supressão de
 agregações, transformers Python customizados, default deny.
 
-As Etapas 6–11 da Admin API não fazem parte do fechamento atual.
+As Etapas 7–11 da Admin API não fazem parte do fechamento atual.
 
 Propostas avaliadas e adiadas estão em `docs/FUTURE-HARDENING.md` com custo e
 impacto — consulte antes de propor de novo.

@@ -9,10 +9,12 @@
 >
 > Decisões que este documento implementa, sem reabrir: **D-047 a D-054**.
 >
-> **Estado da implementação.** Etapas 1–5 concluídas. A Etapa 5 implementa os
-> primitivos de §7.1–§7.3 e §7.5 em `maskgw/config/filesystem.py`, sem compor a
-> seção crítica, runtime candidato ou HTTP. A Etapa 6 é a próxima e não foi
-> iniciada.
+> **Estado da implementação.** Etapas 1–6 concluídas. A Etapa 5 implementa os
+> primitivos de §7.1–§7.3 e §7.5 em `maskgw/config/filesystem.py`. A Etapa 6
+> implementa §6, §7.4, §7.6, §12.1 e §12.4 em `maskgw/admin/`, sem HTTP: seção
+> crítica, runtime candidato, persistência, swap e digest de referência,
+> validados contra PostgreSQL 16 real. A Etapa 7 é a próxima e não foi
+> iniciada — não há FastAPI, rota, bind nem porta.
 >
 > **Histórico.** Primeira versão em `dcf497f`, com quatro questões abertas.
 > Esta revisão registra as quatro decisões (§14) e corrige dez bloqueios

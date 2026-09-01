@@ -188,9 +188,50 @@ best-effort e `fsync` de diretório é omitido. Filesystem remoto (NFS, SMB/CIFS
 continua não suportado e não há detecção automática. Resta também a janela
 portável, documentada, entre a segunda verificação de digest e o `replace`.
 
-Esses primitivos ainda não são uma superfície administrativa: a serialização
-in-process, o fluxo de runtime candidato/swap e a integração ao lifecycle
-pertencem às Etapas 6–7.
+## Seção crítica administrativa
+
+A Etapa 6 acrescentou o fluxo de escrita/reload em `admin/`. Ele **não** é uma
+superfície de rede: não há HTTP, porta, bind, autenticação nem thread nova, e
+isso pertence à Etapa 7. Os invariantes que já valem:
+
+- **toda escrita administrativa é serializada** por um único lock in-process,
+  e é dentro dele que o estado de adoção, o `expected_revision`, o digest do
+  arquivo e o limite de aposentados são verificados. Duas operações com o mesmo
+  `expected_revision` não vencem ambas (D-052);
+- **nada é criado para uma operação condenada**: os quatro primeiros passos
+  precedem compilar, construir e conectar qualquer candidato;
+- **o candidato é comprovado antes de ser persistido** — compilado, conectado e
+  submetido aos três capability checks (read-only, `statement_timeout`,
+  proveniência). Uma configuração que derrubaria o Gateway falha aqui, com o
+  runtime antigo intacto (D-048);
+- **falha antes do `os.replace`** preserva o arquivo byte a byte, mantém o
+  mesmo objeto runtime publicado — em identidade **e em conteúdo** —, mantém o
+  digest e fecha o candidato exatamente uma vez;
+- **nenhum objeto mutável do runtime publicado atravessa a fronteira
+  administrativa.** A mutação recebe uma cópia profunda do documento, e a
+  leitura administrativa também devolve cópia. O `frozen=True` do Pydantic é
+  superficial: ele impede reatribuir um campo, mas `masking`, `exceptions`,
+  `sql.allowed_pg_functions` e o `config` de cada regra continuam sendo lista e
+  dicionário comuns. Sem a cópia, uma mutação que falhasse ainda esvaziaria as
+  regras do runtime publicado, e a escrita seguinte — válida e sem relação com
+  ela — persistiria zero regras e publicaria um engine **sem masking** (D-055);
+- **falha de durabilidade depois do `replace`** não afirma rollback: o runtime
+  novo é publicado e a resposta é `CONFIG_DURABILITY_ERROR` com `applied=true`;
+- **nenhum adapter é fechado com query em andamento**, e o aposentado é fechado
+  exatamente uma vez (D-054);
+- **o DSN não chega ao plano administrativo**: ele fica capturado numa fábrica
+  de adapters construída pelo composition root. A chave HMAC continua vindo do
+  `SecretProvider`, nunca do arquivo;
+- **erros administrativos são de um conjunto fechado**, com texto fixo por
+  categoria, sem `str(exc)`, sem traceback e com `__cause__` e `__context__`
+  nulos. Um erro do PostgreSQL na verificação do candidato vira
+  `CONFIG_RELOAD_ERROR`, como no plano MCP;
+- **`admin/` não importa `logging`** e não escreve em `stdout`, que continua
+  sendo exclusivamente o canal do protocolo MCP.
+
+O que ainda não existe, e não deve ser presumido: autenticação, bind em
+loopback, anti-CSRF, limites de corpo, rotas, `config:validate`, adoção com
+backup e `AdminAudit`.
 
 ## Proteção contra alias
 

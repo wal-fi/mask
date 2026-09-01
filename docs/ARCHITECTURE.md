@@ -267,12 +267,13 @@ passa normalmente. Não há default deny neste MVP.
 ```text
 mcp/       adapter de I/O, sem logica de seguranca; stdio apenas
 gateway/   orquestrador e fachada publica; unica camada que toca valor original
+admin/     secao critica administrativa e fluxo de escrita/reload; sem HTTP
 bootstrap/ composition root; constroi os planos e conduz startup/shutdown
 runtime/   runtime imutavel, refcount, aposentadoria e fechamento unico
 sql/       parser, validator, politica de funcoes e analise de sensitividade
 db/        adapter PostgreSQL: execucao, proveniencia, sanitizacao de erro
 masking/   matcher, exceptions, registry, engine  <- nucleo PURO, sem I/O
-config/    loader validado, imutavel, carregado uma vez no boot
+config/    loader validado, imutavel; filesystem seguro da configuracao
 audit/     log estruturado, somente metadata; unico modulo que loga
 ```
 
@@ -299,10 +300,12 @@ tracebacks e mensagens do PostgreSQL.
 
 ## Separação de planos (Fase 7 em implementação)
 
-A composition root em `bootstrap/` já centraliza a construção e o lifecycle do
-data plane MCP. O admin plane ainda não existe nesta etapa; quando for criado,
-somente `bootstrap/` poderá conhecer os dois ao mesmo tempo. A separação abaixo
-é uma decisão arquitetural aprovada e não pode ser atravessada por conveniência.
+A composition root em `bootstrap/` centraliza a construção e o lifecycle dos
+dois planos. Desde a Etapa 6 o admin plane existe como **seção crítica**, sem
+HTTP: ele conhece o `RuntimeRegistry` e o `ConfigFileStore`, e não conhece
+`gateway/` nem `mcp/`. Somente `bootstrap/` conhece os dois ao mesmo tempo — e
+isso é teste de AST. A separação abaixo é uma decisão arquitetural aprovada e
+não pode ser atravessada por conveniência.
 
 ```text
 Data plane:
@@ -354,7 +357,7 @@ Invariantes dos dois planos:
 - **Proteções estruturais de segurança não são editáveis** pela Admin API —
   `denied_relations` com `pg_stats`/`pg_statistic` é o exemplo (D-050).
 
-### Filesystem seguro preparado na Etapa 5
+### Filesystem seguro da Etapa 5
 
 `config/filesystem.py` é independente dos dois planos. `ConfigFileStore`
 valida `masking.yaml`, diretório pai e sidecar antes de operar, mantém o lock
@@ -370,7 +373,52 @@ O componente separa explicitamente três resultados:
 - digest divergente em qualquer uma das duas verificações informa
   `CONFIG_OUT_OF_SYNC` e não sobrescreve a edição externa.
 
-A seção crítica administrativa, a construção/swap de runtime e a atualização
-da referência de digest pertencem à Etapa 6. Quando o admin for habilitado,
-`bootstrap/` deverá adquirir um `ConfigFileStore` e mantê-lo até o shutdown;
-isso não ocorre hoje porque não existe admin plane.
+### Seção crítica administrativa (Etapa 6)
+
+`admin/` compõe esses primitivos com o `RuntimeRegistry` e o carregador
+validado. Três módulos, nenhum deles HTTP:
+
+```text
+admin/errors.py    AdminError e o conjunto FECHADO de categorias (§10.2)
+admin/document.py  MaskingFileConfig <-> bytes YAML, com round-trip conferido
+admin/service.py   AdminConfigService: o fluxo de onze passos da §7.4
+```
+
+`AdminConfigService.apply` executa, sob **um** lock por processo: verificação
+do estado de adoção, de `expected_revision`, do digest em disco e do limite de
+aposentados; aplicação da mudança e validação; compilação e construção do
+runtime candidato; conexão com os três capability checks; persistência
+atômica; swap; atualização do digest; e fechamento do aposentado. Os quatro
+primeiros passos são **anteriores** a construir e conectar — nenhuma conexão é
+aberta para uma operação já condenada.
+
+O único ponto de extensão é uma **mutação** que recebe o documento persistido e
+devolve o candidato. As operações granulares da Etapa 9 são açúcar sobre ela:
+não existe caminho que altere o arquivo parcialmente. A `revision` é sempre
+escolhida pelo servidor.
+
+A mutação recebe uma **cópia profunda**, nunca o documento do runtime
+publicado, e a leitura administrativa também devolve cópia. `frozen=True` do
+Pydantic impede reatribuir um campo, mas não congela as listas e dicionários de
+dentro; sem a cópia, uma mutação que falhasse deixaria o runtime publicado sem
+regras e a escrita seguinte persistiria essa corrupção (D-055).
+
+O documento candidato é o **reparseado dos bytes que serão persistidos**, e não
+o modelo anterior à serialização: o runtime publicado é, literalmente, o que o
+arquivo descreve.
+
+O ponto de não-retorno é o `os.replace`. Antes dele, qualquer falha preserva o
+arquivo byte a byte, mantém o mesmo objeto runtime publicado, mantém o digest
+e fecha o candidato exatamente uma vez. Depois dele, uma falha de `fsync` do
+diretório **não** afirma rollback: o candidato é publicado, o digest e a
+revision são atualizados e a resposta é `CONFIG_DURABILITY_ERROR` com
+`applied=True`.
+
+Com o admin habilitado, `bootstrap/` adquire o `ConfigFileStore` antes de tudo
+e o libera por último no shutdown, depois de fechar os runtimes. O runtime
+inicial é construído dos **bytes do snapshot** lido sob o lock, para que o
+digest de referência corresponda exatamente ao runtime publicado (D-055).
+
+A aplicação HTTP — FastAPI, autenticação, bind, anti-CSRF, headers, limites,
+handlers e rotas — pertence à Etapa 7 e não existe. `admin/` também não importa
+`logging`: `AdminAudit` é a Etapa 10, e o registro será feito por `audit/`.

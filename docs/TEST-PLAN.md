@@ -3,11 +3,33 @@
 Toda funcionalidade nova deve possuir testes. Nenhuma fase é concluída com
 teste falhando. Critérios de aceite por fase estão em `docs/ROADMAP.md`.
 
-Estado medido ao final da Etapa 5 da Fase 7: **1418 passed, 8 skips condicionais
-de plataforma** entre 1426 coletados; **408 passed, 1018 deselected** com
-`-m integration`. Dos 408 marcados como integração, 405 dependem de
-`MASKGW_TEST_DSN`; todos executaram e nenhum teste foi pulado por ausência de
-DSN.
+Estado medido ao final da Etapa 5 da Fase 7, com PostgreSQL real: **1418
+passed, 8 skips condicionais de plataforma** entre 1426 coletados; **408
+passed, 1018 deselected** com `-m integration`. Dos 408 marcados como
+integração, 405 dependiam de `MASKGW_TEST_DSN`; todos executaram e nenhum teste
+foi pulado por ausência de DSN.
+
+Estado medido ao final da Etapa 6, com PostgreSQL 16.15 real: **1494
+coletados, 1485 passed e 9 skips condicionais de plataforma** — a suíte
+inteira, sem nenhum deselect e sem skip por ausência de `MASKGW_TEST_DSN`. Com
+`-m integration`, **410 passed e 0 skipped**. A Etapa 6 acrescentou 68 testes,
+dois deles marcados `integration` — o reload contra banco real —, e os dois
+executam.
+
+**Como rodar neste host Windows.** `test_large_query_payload_does_not_crash`,
+da Fase 6, monta uma consulta com 100.000 termos e estoura a pilha da thread na
+análise recursiva da AST, derrubando o interpretador. Rode o pytest com a pilha
+de thread ampliada — 64 MiB bastou:
+
+```bash
+.venv/Scripts/python.exe -c "import threading, pytest; threading.stack_size(64 * 1024 * 1024); raise SystemExit(pytest.main(['-q']))"
+```
+
+Isso é ajuste do **ambiente de teste**, não do produto: nenhuma correção foi
+feita e o Gateway continua sem limite de tamanho de consulta. A limitação está
+em `docs/HANDOFF.md` seção 11 e em `docs/SECURITY-REVIEW.md`. O teste não foi
+transformado em `skip` nem alterado, porque um limite conhecido vira teste que
+o afirma (D-041).
 
 ## Config Loader (Fase 1)
 
@@ -285,7 +307,7 @@ Dois testes garantem que a análise é **por consulta, nunca por linha**: um com
 10.000 linhas comparando o custo contra uma única linha, e um contador de
 chamadas ao analisador que exige exatamente 1 por query.
 
-## Fase 7 — Etapas 1–5 concluídas
+## Fase 7 — Etapas 1–6 concluídas
 
 Commits de referência:
 
@@ -293,10 +315,12 @@ Commits de referência:
 - Etapa 2: `3114c14` — `RuntimeRegistry`;
 - Etapa 3: `3c8de4c` — aquisição/liberação de runtime por query;
 - Etapa 4: `7c06132` — composition root e lifecycle;
-- Etapa 5: `d651fe0` — filesystem seguro.
+- Etapa 5: `d651fe0` — filesystem seguro;
+- Etapa 6: seção crítica administrativa e fluxo de escrita/reload — o commit
+  que introduziu `src/maskgw/admin/`.
 
-A Etapa 5 foi publicada em `origin/master` no commit `d651fe0`; a sincronização
-atual deve ser conferida pelo Git, não inferida deste documento.
+A sincronização com `origin/master` deve ser conferida pelo Git, não inferida
+deste documento.
 
 ### Etapa 1 — IDs e revision
 
@@ -352,9 +376,77 @@ permanece inalterado.
 - `repr` e erros sem caminho sensível, configuração, DSN, SQL, valor ou
   traceback.
 
-A Etapa 6 é a próxima tarefa e não foi iniciada: seção crítica administrativa
-e fluxo completo de escrita/reload, incluindo construção/swap de runtime e a
-integração dos primitivos acima ao lifecycle. HTTP/FastAPI, autenticação, bind,
-anti-CSRF, headers, limites, handlers e rotas de leitura pertencem à Etapa 7.
-Não há pacote administrativo, FastAPI, bind ou porta HTTP no estado coberto por
-este plano.
+### Etapa 6 — Seção crítica administrativa e escrita/reload
+
+`tests/test_admin_service.py` acrescenta 58 testes e cobre:
+
+- **§12.1, concorrência.** N escritas paralelas com o mesmo
+  `expected_revision`: exatamente uma vence, as demais recebem
+  `REVISION_CONFLICT` com `current_revision` correto, a revision final é
+  inicial + 1, o arquivo contém só a mudança vencedora e **nenhum perdedor
+  construiu candidato**. Escritas concorrentes diferentes, com um leitor
+  paralelo: todo documento lido é válido e vem de uma única operação. Escrita
+  concorrente com queries em voo: nenhuma query falha e nenhum adapter é
+  fechado enquanto a referência está adquirida.
+- **§7.4, passos 1 a 4.** Conflito de revision, escrita antes da adoção, adoção
+  sobre configuração já adotada, adoção a partir de `expected_revision != 0`,
+  edição externa antes da operação e `RELOAD_BUSY` — este último **provado por
+  contador**: nenhum candidato construído e nenhuma conexão aberta. A ordem
+  entre os passos é observável: a revision é conferida antes do limite de
+  aposentados.
+- **§12.4, falhas antes do `os.replace`.** Mutação que levanta, documento
+  inválido, transformer inexistente, `regex` de padrão inválido, construção do
+  adapter, conexão, colisão de `O_EXCL` do temporário, `fsync` do temporário,
+  `replace`, arquivo ilegível e a corrida real de digest entre a primeira
+  verificação e o `replace`. Para cada uma: bytes do arquivo idênticos, runtime
+  publicado é o **mesmo objeto**, digest de referência inalterado, candidato
+  fechado **exatamente uma vez**, categoria correta, sem `applied`, `__cause__`
+  e `__context__` nulos.
+- **§7.6, depois do `replace`.** O runtime novo é publicado, o digest e a
+  revision são atualizados, a resposta é `CONFIG_DURABILITY_ERROR` com
+  `applied=true` e `current_revision` nova, e uma retentativa cega recebe
+  `409 REVISION_CONFLICT` sem sobrescrever nada. A falha real de `fsync` de
+  diretório é exercitada no POSIX; no Windows a **omissão é afirmada**, nunca
+  simulada como sucesso; e um duble de store cobre a semântica de
+  depois-do-`replace` nas duas plataformas.
+- **Swap e ciclo de vida.** Runtime novo por inteiro, o antigo inalterado,
+  query em voo terminando com o antigo, query nova já com o novo, aposentado
+  fechado uma única vez, 15 reloads sem vazar adapter, e o digest de referência
+  igual ao SHA-256 dos bytes em disco — que reproduzem exatamente o documento
+  publicado.
+- **Vazamento.** Texto e `repr` fixos por categoria para todas as categorias;
+  falha cujo erro interno carrega DSN, SQL e valor não os propaga; `repr` do
+  serviço sem caminho, digest ou colaborador; `stdout`, `stderr` e `logging`
+  vazios em sucesso e em falha.
+- **Isolamento do runtime publicado contra a mutação** (11 testes,
+  regressão de um finding P1). Uma mutação hostil esvazia `masking`,
+  `exceptions` ou `sql.allowed_pg_functions`, ou reescreve o `config` aninhado
+  de uma regra, e então falha — em dois pontos distintos do fluxo: antes de
+  qualquer candidato existir, e com o candidato já construído. Em ambos: bytes
+  do arquivo idênticos, `registry.current` é o **mesmo objeto**, o documento e
+  os objetos compilados do runtime continuam campo a campo intactos, revisão e
+  digest inalterados, e o candidato ou não é criado ou é fechado exatamente uma
+  vez. Uma escrita válida e sem relação, executada depois da falha, não
+  persiste resíduo algum e não desliga o masking. Mutar o objeto devolvido por
+  `service.document` também não alcança o runtime. Os onze testes **falhavam**
+  contra o código anterior à correção.
+- **Contra PostgreSQL real** (`integration`, 2 testes): reload publicando a
+  política nova sem restart, com o arquivo, o runtime e o digest concordando, e
+  o número de sessões do banco não crescendo; e um candidato inválido deixando
+  o runtime publicado servindo queries.
+
+`tests/test_bootstrap.py` acrescenta a composição do admin plane: admin
+desabilitado é o processo de hoje e não cria sequer o arquivo de lock; admin
+habilitado prende o lock exclusivo contra um segundo `ConfigFileStore` e expõe
+o digest dos bytes que originaram o runtime; o shutdown libera o lock **depois**
+de fechar os runtimes, uma única vez; falha parcial de startup libera lock e
+conexão; e nenhuma thread é criada, porque a Etapa 6 não abre porta.
+
+`tests/test_plan_separation.py` deixa de valer por vacuidade: o pacote `admin/`
+existe, não importa `maskgw.mcp` nem `maskgw.gateway`, não importa `logging`,
+não tem superfície HTTP nesta etapa, e só `bootstrap/application.py` importa os
+dois planos.
+
+A Etapa 7 é a próxima e não foi iniciada: HTTP/FastAPI, autenticação, bind,
+anti-CSRF, headers, limites, handlers de erro e rotas de leitura. Não há
+FastAPI, bind ou porta HTTP no estado coberto por este plano.

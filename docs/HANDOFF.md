@@ -2,9 +2,9 @@
 
 **Documento de entrada. Comece por aqui.**
 
-Estado do projeto ao final da Etapa 5 da Fase 7. O MVP esta completo, as Etapas
-1–5 da Fase 7 estao concluidas e a suite esta verde. A proxima tarefa e a Etapa
-6, ainda nao iniciada (secao 10).
+Estado do projeto ao final da Etapa 6 da Fase 7. O MVP esta completo, as
+Etapas 1–6 da Fase 7 estao concluidas e a suite esta verde contra PostgreSQL 16
+real. A proxima tarefa e a Etapa 7, ainda nao iniciada (secao 10).
 
 Antes de comecar qualquer fase, confira `git status --short`: a arvore precisa
 estar limpa. **Confira, nao presuma** — este documento nao pode afirmar o
@@ -19,7 +19,7 @@ Ordem de leitura sugerida:
 | `docs/ARCHITECTURE.md` | modulos e responsabilidades |
 | `docs/SECURITY.md` | invariantes de seguranca e o que exigir antes de expor |
 | `docs/SECURITY-REVIEW.md` | 11 findings do red team, seis fechados |
-| `docs/DECISIONS.md` | D-001 a D-054, com o motivo de cada uma |
+| `docs/DECISIONS.md` | D-001 a D-055, com o motivo de cada uma |
 | `docs/MASKING-SPEC.md` | semantica exata do pipeline |
 | `docs/TEST-PLAN.md` | o que cada camada de teste cobre |
 | `docs/THREAT-MODEL.md` | cenarios de ataque e o resultado medido |
@@ -56,7 +56,8 @@ Andamento da Fase 7:
 | 3 — runtime adquirido/liberado por query | concluida | `3c8de4c` |
 | 4 — composition root e lifecycle | concluida | `7c06132` |
 | 5 — filesystem seguro: verificações, lock exclusivo, escrita atômica, digest e limpeza de temporários | concluida | `d651fe0` |
-| 6 — secao critica administrativa e fluxo completo de escrita/reload | proxima, nao iniciada | — |
+| 6 — secao critica administrativa e fluxo completo de escrita/reload | concluida | `git log -- src/maskgw/admin` |
+| 7 — aplicacao HTTP: auth, bind, anti-CSRF, headers, limites, handlers, rotas de leitura | proxima, nao iniciada | — |
 
 A Etapa 5 foi publicada em `origin/master` no commit `d651fe0`. O estado atual
 deve ser conferido com `git status --short --branch` e
@@ -186,8 +187,12 @@ src/maskgw/
     service.py           Gateway.query: a fachada publica
   runtime/               <- Fase 7, Etapas 2 e 3
     registry.py          RuntimeRegistry: acquire/release, retired, close unico
-  bootstrap/             <- Fase 7, Etapa 4; composition root
-    application.py       construcao e lifecycle ordenado da aplicacao
+  admin/                 <- Fase 7, Etapa 6; SEM HTTP
+    errors.py            AdminError e as categorias fechadas da secao 10.2
+    document.py          MaskingFileConfig <-> bytes YAML, round-trip conferido
+    service.py           AdminConfigService: a secao critica e a secao 7.4
+  bootstrap/             <- Fase 7, Etapas 4 e 6; composition root
+    application.py       construcao e lifecycle ordenado dos dois planos
     main.py              entrypoint compartilhado, stderr sanitizado
   __main__.py            python -m maskgw -> bootstrap
   mcp/                   <- Fase 5
@@ -219,8 +224,10 @@ tests/
   test_config_ids.py             <- Fase 7, Etapa 1
   test_runtime_registry.py       <- Fase 7, Etapa 2
   test_gateway_runtime.py        <- Fase 7, Etapa 3
-  test_bootstrap.py              <- Fase 7, Etapa 4
-  test_plan_separation.py        <- Fase 7, Etapa 4
+  test_bootstrap.py              <- Fase 7, Etapas 4 e 6
+  test_plan_separation.py        <- Fase 7, Etapas 4 e 6
+  test_config_filesystem.py      <- Fase 7, Etapa 5
+  test_admin_service.py     47   <- Fase 7, Etapa 6
 
   security/                      <- Fases 6 e 6.1, 209 testes adversariais
     test_attack_expressions.py        55
@@ -241,14 +248,16 @@ quebra antes do resto.
 que importar `maskgw.masking` nao carrega `maskgw.db` nem psycopg, e a
 contraprova confirma que `maskgw.db` de fato depende de psycopg.
 
-Todos os modulos previstos ate a Etapa 5 existem: `masking/`, `config/`, `db/`,
-`sql/`, `gateway/`, `runtime/`, `bootstrap/`, `mcp/` e `audit/`.
+Todos os modulos previstos ate a Etapa 6 existem: `masking/`, `config/`, `db/`,
+`sql/`, `gateway/`, `runtime/`, `admin/`, `bootstrap/`, `mcp/` e `audit/`.
 
 `gateway/factory.py` foi removido: construcao e lifecycle pertencem somente ao
 composition root `bootstrap/`. A Etapa 5 adicionou `config/filesystem.py`, sem
 HTTP: validacao fail-closed, lock sidecar pelo lifecycle, digest exato, escrita
-atomica e limpeza seletiva de temporarios. Nao existe `maskgw/admin/`, e FastAPI
-nao e dependencia; a aplicacao HTTP/FastAPI pertence a Etapa 7.
+atomica e limpeza seletiva de temporarios. A Etapa 6 adicionou `maskgw/admin/`,
+tambem sem HTTP: a secao critica administrativa e o fluxo de escrita/reload.
+**FastAPI continua fora do `pyproject.toml`**, e nao ha rota, bind nem porta; a
+aplicacao HTTP pertence a Etapa 7.
 
 ## 5. Decisoes
 
@@ -290,42 +299,76 @@ D-001 a D-014 na Fase 1; D-015 a D-019 na Fase 2. Detalhamento em
 | D-045 | `mode` default das exceptions passa a `exact`. Corrige H-1 |
 | D-046 | Um passo entre niveis: nomes exportados por CTE e subquery |
 
-D-047 a D-054 foram aprovadas antes da Fase 7. As Etapas 1–5 implementam apenas
-as fundacoes que lhes correspondem; comportamento administrativo das Etapas
-6–11 continua ausente:
+D-047 a D-054 foram aprovadas antes da Fase 7. As Etapas 1–6 implementam apenas
+as fundacoes que lhes correspondem; comportamento HTTP das Etapas 7–11 continua
+ausente. D-055 registra escolhas de implementacao da Etapa 6:
 
-| # | Estado ao final da Etapa 5 |
+| # | Estado na Etapa 6 |
 |---|---|
-| D-047 | `LoadedConfig` preserva juntos o modelo validado do arquivo e os objetos runtime compilados |
-| D-048 | Construcao integral de runtime e persistencia atomica preparadas; orquestracao e swap administrativos ainda nao existem |
-| D-049 | Separacao de planos imposta; ainda nao existe Admin API |
-| D-050 | Protecoes estruturais preservadas; ainda nao ha superficie administrativa |
+| D-047 | `LoadedConfig` preserva juntos o modelo validado do arquivo e os objetos runtime compilados; o admin so escreve a partir do modelo validado |
+| D-048 | Fluxo completo implementado: validar, construir, conectar, persistir, trocar — com as semanticas dos dois lados do `os.replace` |
+| D-049 | Separacao de planos imposta e verificada por AST; `admin/` nao executa SQL e nao conhece `gateway/` nem `mcp/` |
+| D-050 | Protecoes estruturais preservadas; nao ha superficie que as edite |
 | D-051 | IDs estaveis implementados; com `revision >= 1`, ID ausente falha no carregamento |
-| D-052 | `revision` modelada; secao critica administrativa pertence a Etapa 6 |
+| D-052 | Secao critica administrativa implementada: adocao, `expected_revision`, digest, limite de aposentados, persistencia e swap sob um lock |
 | D-053 | `enabled` continua ausente |
-| D-054 | `RuntimeRegistry` implementa refcount, `retired` e fechamento unico |
+| D-054 | `RuntimeRegistry` implementa refcount, `retired` e fechamento unico; o fluxo administrativo respeita os tres |
+| D-055 | Runtime candidato construido do documento reparseado dos bytes que serao persistidos; callback e leitura administrativa recebem copia profunda, nunca o documento do runtime publicado; vocabulario de erro proprio do admin; `admin_enabled` como parametro de composicao |
 
 ## 6. Resultado das verificacoes
 
-Com `MASKGW_TEST_DSN` apontando para PostgreSQL 16.15 descartavel:
+Medido ao final da Etapa 5, com `MASKGW_TEST_DSN` apontando para PostgreSQL
+16.15 descartavel:
 
 ```text
 pytest   1418 passed, 8 skipped condicionais de plataforma (1426 coletados)
 pytest    408 passed, 1018 deselected  (-m integration)
           405 testes dependentes de DSN executados; nenhum skip por falta de DSN
-pytest     24 passed, 8 skipped condicionais  (test_config_filesystem.py)
-           repetido 5 vezes sem intermitencia
 pytest    209 passed  (tests/security)
+```
+
+Medido ao final da Etapa 6, com `MASKGW_TEST_DSN` apontando para um
+PostgreSQL 16.15 descartavel em Docker:
+
+```text
+pytest   1485 passed, 9 skipped  (1494 coletados)
+         suite INTEIRA: nenhum deselect, nenhum skip por ausencia de DSN
+           9 skips condicionais de plataforma
+pytest    410 passed, 0 skipped  (-m integration)
+pytest      2 passed  (TestRealReload, o reload contra banco real)
+pytest     93 passed, 1 skipped  (admin + bootstrap + plan separation)
+           repetido 10 vezes sem intermitencia
+pytest     16 testes de concorrencia, isolamento e reload real repetidos 15
+           vezes, sem intermitencia
 ruff     All checks passed
-ruff     106 files already formatted
-mypy     Success: no issues found in 88 source files  (strict)
+ruff     93 files already formatted  (src + tests)
+mypy     Success: no issues found in 93 source files  (strict, mypy 2.3.1)
 git      diff --check sem erros
 ```
 
-Os oito skips do host Windows sao quatro criacoes de symlink sem privilegio,
-tres verificacoes de bits POSIX e o `fsync` de diretorio POSIX. Os testes
-Windows reais, inclusive `msvcrt` entre processos e omissao de `fsync` de
-diretorio, passaram. Nao ha WSL neste host; os ramos POSIX permanecem na suite
+**A suite integral exigiu pilha ampliada neste host.** Com a pilha default do
+Windows, `test_large_query_payload_does_not_crash` — a consulta com 100.000
+termos somados — estoura a pilha da thread no walk recursivo da AST e derruba o
+interpretador com `Windows fatal exception: stack overflow`. Nao e regressao:
+reproduz identicamente no commit `d276c22`, anterior a Etapa 6. Nunca havia
+aparecido aqui porque, sem DSN, esse teste dava SKIP.
+
+O gate foi fechado rodando o processo de teste com pilha de thread de
+**64 MiB**, valor que bastou. Nada foi deselecionado, pulado ou alterado no
+teste, e **nenhuma correcao de producao foi feita**: a limitacao continua
+aberta, na secao 11 e em `docs/SECURITY-REVIEW.md`.
+
+```bash
+.venv/Scripts/python.exe -c "import threading, pytest; threading.stack_size(64 * 1024 * 1024); raise SystemExit(pytest.main(['-q']))"
+```
+
+Os nove skips condicionais do host Windows sao quatro criacoes de symlink sem
+privilegio, tres verificacoes de bits POSIX e dois `fsync` de diretorio POSIX
+(um do filesystem, um do fluxo administrativo). Os testes Windows reais,
+inclusive `msvcrt` entre processos e a omissao de `fsync` de diretorio,
+passaram.
+
+Nao ha distribuicao WSL neste host; os ramos POSIX permanecem na suite
 condicional para execucao nativa em POSIX.
 
 ## 7. Protecao contra alias: o que a Fase 3 fechou
@@ -464,8 +507,8 @@ Tres, todas documentadas e cobertas por teste:
 
 ## 10. Como continuar
 
-A Fase 7 esta em andamento, com as Etapas 1–5 concluidas. A proxima tarefa e
-**exclusivamente a Etapa 6**, ainda nao iniciada. A regra de nao avancar de
+A Fase 7 esta em andamento, com as Etapas 1–6 concluidas. A proxima tarefa e
+**exclusivamente a Etapa 7**, ainda nao iniciada. A regra de nao avancar de
 etapa sem aprovacao continua valendo.
 
 ### A. Endurecer o que resta (inventario preservado; nao e a proxima etapa)
@@ -491,25 +534,42 @@ Os que precisam de codigo, com custo em `docs/FUTURE-HARDENING.md`:
 
 ```text
 Fase em andamento:
-Fase 7 — Admin API, Etapas 1–5 concluidas
+Fase 7 — Admin API, Etapas 1–6 concluidas
 
 Proxima tarefa:
-Etapa 6 — secao critica administrativa e escrita/reload — NAO INICIADA
+Etapa 7 — aplicacao HTTP, auth, bind, headers e rotas de leitura — NAO INICIADA
 ```
 
-A Etapa 5 concluiu exclusivamente os primitivos de filesystem seguro em
+A Etapa 5 concluiu os primitivos de filesystem seguro em
 `config/filesystem.py`: arquivo/diretorio/lock verificados, lock exclusivo
 mantido aberto, SHA-256 dos bytes exatos, duas verificacoes de digest, escrita
-atomica e limpeza estrita de orfaos. Ainda nao ha modulo `admin/`, FastAPI no
-`pyproject.toml`, rota, bind ou porta HTTP administrativa; a aplicacao HTTP
-pertence a Etapa 7.
+atomica e limpeza estrita de orfaos.
 
-A Etapa 6 devera criar a secao critica administrativa e orquestrar, fim a fim,
-validacao, runtime candidato, persistencia, swap e atualizacao do digest. Ate
-la, o bootstrap nao adquire o `ConfigFileStore`: nao existe admin habilitado
-cujo lifecycle exija o lock. Chamadas concorrentes ao primitivo dentro do mesmo
-processo tambem dependem da serializacao da Etapa 6; o lock da Etapa 5 protege
-contra outro processo.
+A Etapa 6 criou `maskgw/admin/` — `errors.py`, `document.py` e `service.py` — e
+com ele a secao critica administrativa. `AdminConfigService.apply` executa os
+onze passos da secao 7.4 sob **um** lock por processo, e o composition root
+passa a adquirir o `ConfigFileStore` quando o admin esta habilitado, mantendo-o
+ate o shutdown. O runtime inicial e construido dos bytes do snapshot lido sob o
+lock, para que o digest de referencia corresponda ao runtime publicado.
+
+Como o admin e habilitado hoje: `build_application(admin_enabled=True)`. **Nao
+ha variavel de ambiente ainda** — `MASKGW_ADMIN_ENABLED`, `MASKGW_ADMIN_TOKEN`,
+`MASKGW_ADMIN_BIND` e `MASKGW_ADMIN_PORT` pertencem a Etapa 7 (D-055). Com o
+default `False`, o processo e exatamente o de antes: nenhum lock, nenhuma secao
+critica, nenhum caminho de escrita.
+
+O que a Etapa 6 deliberadamente **nao** fez, e nao deve ser presumido pronto:
+
+- FastAPI, rota, bind, porta, autenticacao, anti-CSRF, headers e limites de
+  corpo — Etapa 7;
+- `config:validate` — Etapa 8;
+- as rotas de escrita, a operacao `config:adopt` completa (IDs aleatorios,
+  `confirm_comment_loss` e backup dos bytes originais) e o backup — Etapa 9.
+  O que existe e a **pre-condicao assimetrica** do passo 1, que e parte da
+  secao critica: `AdminOperation.ADOPT` exige estado nao adotado e
+  `expected_revision: 0`; as demais escritas exigem estado adotado;
+- `AdminAudit` — Etapa 10. `admin/` nao importa `logging`, e isso e teste;
+- a suite adversarial HTTP — Etapa 11.
 
 A especificacao aprovada esta em `docs/PHASE-7-SPEC.md`.
 Ela cobre endpoints, autenticacao, bind e CORS, schemas, IDs e migracao,
@@ -530,11 +590,12 @@ removido da primeira versao, `409 CONFIG_OUT_OF_SYNC` antes de toda escrita,
 `CONFIG_DURABILITY_ERROR` com `applied: true` para falha de `fsync` depois do
 `replace`, lock exclusivo de arquivo contra um segundo processo, bind so em
 loopback, e uma composition root em `bootstrap/` que e o unico modulo autorizado
-a conhecer os dois planos. A composition root foi implementada na Etapa 4 e o
-filesystem na Etapa 5; os demais itens administrativos continuam fora do
-codigo.
+a conhecer os dois planos. A composition root foi implementada na Etapa 4, o
+filesystem na Etapa 5 e a serializacao com as duas verificacoes de digest e a
+semantica de durabilidade na Etapa 6; os itens de HTTP — bind, porta e
+autenticacao — continuam fora do codigo.
 
-As Etapas 6–11 ainda nao foram iniciadas.
+As Etapas 7–11 ainda nao foram iniciadas.
 
 Objetivo: superficie administrativa separada do MCP para gerenciar
 configuracao, policies, status e auditoria sem editar arquivo a mao.
@@ -604,10 +665,13 @@ automatico, banco de configuracao, Redis, background workers.
 ### Antes de iniciar a proxima etapa
 
 - `git status --short` vazio: a arvore precisa estar limpa
-- suite verde: **1426 testes coletados**, `ruff check`, `ruff format --check` e
-  `mypy --strict` sem erros
-- PostgreSQL real disponivel via `MASKGW_TEST_DSN`: 408 testes marcados como
-  integracao, dos quais 405 dependem do DSN, sem skip por ausencia dele
+- suite verde: **1494 testes coletados**, 1485 passed e 9 skips condicionais
+  de plataforma; `ruff check`, `ruff format --check` e `mypy --strict` sem erros
+- PostgreSQL real disponivel via `MASKGW_TEST_DSN`: 410 testes marcados como
+  integracao, todos executando, sem skip por ausencia dele
+- neste host Windows, rode o pytest com pilha de thread ampliada (64 MiB), ou o
+  teste de payload gigante derruba o processo. Nunca o transforme em `skip`
+  (D-041); a limitacao esta na secao 11
 
 ## 11. Riscos conhecidos que atravessam qualquer fase seguinte
 
@@ -625,6 +689,18 @@ automatico, banco de configuracao, Redis, background workers.
 7. **`audit/` e in-memory-free**: escreve via `logging`, sem storage proprio.
    Nao ha historico consultavel — qualquer feature que precise disso comeca do
    zero.
+8. **Consulta com dezenas de milhares de termos pode derrubar o processo.** A
+   analise da AST e recursiva, e uma expressao com 100.000 somas estoura a
+   pilha da thread antes de qualquer limite do produto. **Nao existe controle
+   no Gateway** que limite o tamanho da consulta ou a profundidade da
+   expressao: quem decide o desfecho e o tamanho de pilha disponivel. Com a
+   pilha default deste host Windows o processo cai; com 64 MiB por thread o
+   mesmo caso passa — foi assim que a suite integral fechou, e isso e
+   propriedade do AMBIENTE DE TESTE, nunca uma protecao do produto.
+   Nao e regressao da Fase 7 — reproduzido em `d276c22` — e **continua sem
+   correcao**. Uma correcao real seria limitar o tamanho da consulta na
+   fronteira, ou tornar o walk iterativo; as duas mudam comportamento ja
+   entregue e precisam de aprovacao propria.
 
 ## 12. Armadilhas ja pisadas (nao repita)
 
