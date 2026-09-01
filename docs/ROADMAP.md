@@ -2,7 +2,7 @@
 
 > **Documento histórico e registro de andamento.** As seis fases estão
 > concluídas, mais a Fase 6.1 de hardening. A Fase 7 está em andamento, com as
-> Etapas 1–4 concluídas. Para o estado atual, leia `docs/HANDOFF.md`.
+> Etapas 1–5 concluídas. Para o estado atual, leia `docs/HANDOFF.md`.
 >
 > Cada seção abaixo registra o escopo original **e** o que a medição obrigou a
 > corrigir no plano — é aí que está o valor de reler isto.
@@ -224,7 +224,7 @@ ou CRITICAL exigindo mudança de código permanece aberto.
 
 ## FASE 7 — Admin API
 
-**STATUS: EM ANDAMENTO — ETAPAS 1–4 CONCLUÍDAS.**
+**STATUS: EM ANDAMENTO — ETAPAS 1–5 CONCLUÍDAS.**
 
 A implementação segue `docs/PHASE-7-SPEC.md` de forma incremental:
 
@@ -233,17 +233,20 @@ A implementação segue `docs/PHASE-7-SPEC.md` de forma incremental:
 | 1 — IDs e revision no modelo do arquivo | concluída | `053cf66` |
 | 2 — `RuntimeRegistry` | concluída | `3114c14` |
 | 3 — aquisição/liberação de runtime por query | concluída | `3c8de4c` |
-| 4 — composition root e lifecycle | concluída | `HEAD` (este commit local) |
-| 5 — filesystem seguro: verificações, lock exclusivo, escrita atômica, digest e limpeza de temporários | próxima; não iniciada | — |
-| 6 — seção crítica administrativa e fluxo completo de escrita/reload | não iniciada | — |
+| 4 — composition root e lifecycle | concluída | `7c06132` |
+| 5 — filesystem seguro: verificações, lock exclusivo, escrita atômica, digest e limpeza de temporários | concluída | `HEAD` (este commit local) |
+| 6 — seção crítica administrativa e fluxo completo de escrita/reload | próxima; não iniciada | — |
 | 7 — aplicação HTTP/FastAPI e sua segurança e rotas de leitura | não iniciada | — |
 
-O `origin/master` está em `3c8de4c`; a Etapa 4 é o único commit local à
-frente. Ela criou `bootstrap/` como composition root, removeu
+O `origin/master` está em `7c06132`; a Etapa 5 é o único commit local à
+frente. A Etapa 4 criou `bootstrap/` como composition root, removeu
 `gateway/factory.py` e fez os entrypoints `python -m maskgw` e
 `python -m maskgw.mcp` delegarem ao bootstrap, preservando MCP stdio.
 
-A Etapa 5 trata somente do filesystem seguro.
+A Etapa 5 adicionou `config/filesystem.py`: verificações fail-closed, sidecar
+lock mantido aberto, digest dos bytes exatos, escrita atômica e limpeza
+seletiva de temporários. Esses primitivos são independentes de HTTP e ainda
+não são adquiridos pelo bootstrap, porque não há admin habilitado.
 
 Não há módulo `admin/`, FastAPI, rota, bind ou porta HTTP administrativa; a
 aplicação HTTP/FastAPI pertence à Etapa 7 e não foi antecipada.
@@ -265,7 +268,8 @@ rollback de arquivo; existe uma janela de crash entre persistir e trocar, e a
 recuperação é o próximo start ler o arquivo — que já passou por validação,
 compilação, conexão e capability check antes de ser escrito.
 
-**Próximo passo: Etapa 5, somente após autorização.**
+**Próximo passo: Etapa 6, somente após autorização.** Ela fará a seção crítica
+administrativa e o fluxo completo de escrita/reload; não foi antecipada.
 
 ---
 
@@ -285,7 +289,7 @@ porta de rede hoje é uma decisão de segurança (D-036), não uma lacuna.
 
 ## Estado atual
 
-Fases 1 a 6.1 concluídas. Fase 7 em andamento, Etapas 1–4 concluídas; Etapa 5
-não iniciada. Estado validado: 1394 testes completos; `-m integration` com 408
+Fases 1 a 6.1 concluídas. Fase 7 em andamento, Etapas 1–5 concluídas; Etapa 6
+não iniciada. Estado validado: 1426 testes coletados; `-m integration` com 408
 testes aprovados (405 dependentes de DSN), sem skip por falta de DSN. Detalhes
 em `docs/HANDOFF.md`, seção 10.

@@ -951,6 +951,13 @@ preserva o arquivo": isso e falso a partir do `rename`. Um rollback de arquivo
 so poderia ser afirmado se existisse, com teste que o exercite; nao existe, e
 por isso nao e afirmado.
 
+**Estado implementado na Etapa 5:** `ConfigFileStore` fornece os primitivos
+acima e distingue `ConfigWriteError(applied=False)` de
+`ConfigDurabilityError(applied=True)`. Ele nao publica runtime nem atualiza a
+referencia de digest; essas duas acoes, sob a secao critica administrativa,
+continuam pertencendo a Etapa 6. Isso esclarece a divisao de etapas sem alterar
+a decisao.
+
 ### A janela de crash entre persistir e trocar
 
 Entre o `rename` concluido e a reatribuicao da referencia de runtime existe uma

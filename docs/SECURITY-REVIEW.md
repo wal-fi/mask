@@ -415,6 +415,14 @@ continua mascarada.
 | Concorrência | **OK** — 30 chamadas paralelas: nenhum erro, mascaramento consistente, nenhuma resposta trocada, 20 `request_id` distintos |
 | Row limit | **OK** — valor sensível colocado exclusivamente na linha N+1 não aparece no resultado, no log nem em exceção |
 | Escrita | **BLOCKED** — a transação read-only barra INSERT/UPDATE/DELETE/DDL inclusive via função de usuário; tabela verificada intacta por conexão de controle |
+| Filesystem administrativo (Etapa 5) | **PREPARADO, NÃO EXPOSTO** — lock entre processos, symlink/tipo/modo inseguros, colisão `O_EXCL`, órfãos, corridas de digest e falhas antes/depois do `replace` têm testes; HTTP/admin ainda não existe |
+
+A revisão da Etapa 5 também confirmou que erros e `repr` não carregam caminho
+sensível, bytes da configuração, DSN, SQL, valor ou traceback. A validação de
+ACL do Windows não é prometida, filesystem remoto não é suportado e a janela
+entre a segunda conferência de digest e `os.replace` permanece uma limitação
+portável declarada, não um controle omitido. A suíte adversarial da superfície
+HTTP continua reservada à Etapa 11.
 
 ---
 

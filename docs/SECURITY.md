@@ -166,6 +166,32 @@ uma tabela**, e `SELECT ... FOR UPDATE` trava linhas. Raiz SELECT não basta.
 A chave do `hmac_sha256` vem de secret/variável de ambiente, separada do
 `masking.yaml`. Ausência da chave com regra que a exige impede o boot.
 
+## Filesystem da configuração administrativa
+
+Os primitivos da Etapa 5 falham fechado antes de administrar o arquivo:
+
+- `masking.yaml`, seu diretório pai e `masking.yaml.lock` são inspecionados sem
+  seguir symlink; arquivo/lock precisam ser regulares e o pai, diretório real;
+- no POSIX, arquivo e pai não podem ser graváveis por group/other, e lock e
+  temporários usam modo `0600`;
+- o sidecar é criado com `O_CREAT | O_EXCL`, nunca truncado, e fica aberto com
+  lock exclusivo não bloqueante até `ConfigFileStore.close()`;
+- a escrita usa temporário de nome estrito no mesmo diretório, `O_EXCL`, flush,
+  `fsync` e `os.replace`; somente depois sincroniza o diretório no POSIX;
+- limpeza remove apenas regular não-symlink que case exatamente
+  `.masking.yaml.tmp.<pid>.<16 hex>`;
+- SHA-256 é calculado sobre bytes exatos, com verificações no início e
+  imediatamente antes do `replace`; divergência nunca sobrescreve o editor.
+
+No Windows, os bits de `mode` são sintéticos e não validam ACLs; `0600` é
+best-effort e `fsync` de diretório é omitido. Filesystem remoto (NFS, SMB/CIFS)
+continua não suportado e não há detecção automática. Resta também a janela
+portável, documentada, entre a segunda verificação de digest e o `replace`.
+
+Esses primitivos ainda não são uma superfície administrativa: a serialização
+in-process, o fluxo de runtime candidato/swap e a integração ao lifecycle
+pertencem às Etapas 6–7.
+
 ## Proteção contra alias
 
 Desde a Fase 3 o `origin_name` é resolvido a partir da metadata do próprio

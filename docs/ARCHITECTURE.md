@@ -353,3 +353,24 @@ Invariantes dos dois planos:
   vindo exclusivamente de secret/env.
 - **Proteções estruturais de segurança não são editáveis** pela Admin API —
   `denied_relations` com `pg_stats`/`pg_statistic` é o exemplo (D-050).
+
+### Filesystem seguro preparado na Etapa 5
+
+`config/filesystem.py` é independente dos dois planos. `ConfigFileStore`
+valida `masking.yaml`, diretório pai e sidecar antes de operar, mantém o lock
+exclusivo aberto pelo próprio lifecycle, lê snapshots dos bytes exatos e
+realiza a troca atômica no mesmo diretório. Ele não conhece HTTP, modelos de
+request, `RuntimeRegistry` nem runtime candidato.
+
+O componente separa explicitamente três resultados:
+
+- antes de `os.replace`, a falha preserva o arquivo anterior;
+- depois de `os.replace`, falha de `fsync` do diretório informa
+  `ConfigDurabilityError(applied=True)` e o arquivo novo permanece;
+- digest divergente em qualquer uma das duas verificações informa
+  `CONFIG_OUT_OF_SYNC` e não sobrescreve a edição externa.
+
+A seção crítica administrativa, a construção/swap de runtime e a atualização
+da referência de digest pertencem à Etapa 6. Quando o admin for habilitado,
+`bootstrap/` deverá adquirir um `ConfigFileStore` e mantê-lo até o shutdown;
+isso não ocorre hoje porque não existe admin plane.

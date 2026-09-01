@@ -2,6 +2,19 @@
 
 from __future__ import annotations
 
+from maskgw.config.filesystem import (
+    AtomicWriteResult,
+    ConfigDurabilityError,
+    ConfigFileStore,
+    ConfigLockUnavailableError,
+    ConfigOutOfSyncError,
+    ConfigSnapshot,
+    ConfigWriteError,
+    DigestCheckPoint,
+    FilesystemHooks,
+    UnsafeConfigFilesystemError,
+    digest_bytes,
+)
 from maskgw.config.gateway import (
     DatabaseSettings,
     GatewayConfig,
@@ -23,15 +36,26 @@ from maskgw.config.models import (
 )
 
 __all__ = [
+    "AtomicWriteResult",
+    "ConfigDurabilityError",
+    "ConfigFileStore",
+    "ConfigLockUnavailableError",
+    "ConfigOutOfSyncError",
+    "ConfigSnapshot",
+    "ConfigWriteError",
     "DatabaseConfig",
     "DatabaseSettings",
+    "DigestCheckPoint",
     "ExceptionConfig",
+    "FilesystemHooks",
     "GatewayConfig",
     "LoadedConfig",
     "MaskingFileConfig",
     "MatchConfig",
     "RuleConfig",
     "SqlConfig",
+    "UnsafeConfigFilesystemError",
+    "digest_bytes",
     "load_config",
     "load_config_bundle",
     "load_config_bundle_text",

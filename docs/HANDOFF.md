@@ -2,9 +2,9 @@
 
 **Documento de entrada. Comece por aqui.**
 
-Estado do projeto ao final da Etapa 4 da Fase 7. O MVP esta completo, as Etapas
-1–4 da Fase 7 estao concluidas e a suite esta verde. A proxima tarefa e a Etapa
-5, ainda nao iniciada (secao 10).
+Estado do projeto ao final da Etapa 5 da Fase 7. O MVP esta completo, as Etapas
+1–5 da Fase 7 estao concluidas e a suite esta verde. A proxima tarefa e a Etapa
+6, ainda nao iniciada (secao 10).
 
 Antes de comecar qualquer fase, confira `git status --short`: a arvore precisa
 estar limpa. **Confira, nao presuma** — este documento nao pode afirmar o
@@ -54,11 +54,12 @@ Andamento da Fase 7:
 | 1 — IDs e revision no modelo do arquivo | concluida | `053cf66` |
 | 2 — `RuntimeRegistry` | concluida | `3114c14` |
 | 3 — runtime adquirido/liberado por query | concluida | `3c8de4c` |
-| 4 — composition root e lifecycle | concluida | `HEAD` (este commit local) |
-| 5 — filesystem seguro: verificações, lock exclusivo, escrita atômica, digest e limpeza de temporários | proxima, nao iniciada | — |
+| 4 — composition root e lifecycle | concluida | `7c06132` |
+| 5 — filesystem seguro: verificações, lock exclusivo, escrita atômica, digest e limpeza de temporários | concluida | `HEAD` (este commit local) |
+| 6 — secao critica administrativa e fluxo completo de escrita/reload | proxima, nao iniciada | — |
 
-`origin/master` e o commit `3c8de4c`; `HEAD` acrescenta somente a Etapa 4. O
-hash exato da Etapa 4 e o proprio hash do commit que contem este documento e
+`origin/master` e o commit `7c06132`; `HEAD` acrescenta somente a Etapa 5. O
+hash exato da Etapa 5 e o proprio hash do commit que contem este documento e
 deve ser conferido com `git rev-parse HEAD`.
 
 ## 2. Stack e dependencias
@@ -237,13 +238,14 @@ quebra antes do resto.
 que importar `maskgw.masking` nao carrega `maskgw.db` nem psycopg, e a
 contraprova confirma que `maskgw.db` de fato depende de psycopg.
 
-Todos os modulos previstos ate a Etapa 4 existem: `masking/`, `config/`, `db/`,
+Todos os modulos previstos ate a Etapa 5 existem: `masking/`, `config/`, `db/`,
 `sql/`, `gateway/`, `runtime/`, `bootstrap/`, `mcp/` e `audit/`.
 
 `gateway/factory.py` foi removido: construcao e lifecycle pertencem somente ao
-composition root `bootstrap/`. A Etapa 5, ainda nao iniciada, trata somente do
-filesystem seguro. Nao existe `maskgw/admin/`, e FastAPI nao e dependencia; a
-aplicacao HTTP/FastAPI pertence a Etapa 7.
+composition root `bootstrap/`. A Etapa 5 adicionou `config/filesystem.py`, sem
+HTTP: validacao fail-closed, lock sidecar pelo lifecycle, digest exato, escrita
+atomica e limpeza seletiva de temporarios. Nao existe `maskgw/admin/`, e FastAPI
+nao e dependencia; a aplicacao HTTP/FastAPI pertence a Etapa 7.
 
 ## 5. Decisoes
 
@@ -285,18 +287,18 @@ D-001 a D-014 na Fase 1; D-015 a D-019 na Fase 2. Detalhamento em
 | D-045 | `mode` default das exceptions passa a `exact`. Corrige H-1 |
 | D-046 | Um passo entre niveis: nomes exportados por CTE e subquery |
 
-D-047 a D-054 foram aprovadas antes da Fase 7. As Etapas 1–4 implementam apenas
+D-047 a D-054 foram aprovadas antes da Fase 7. As Etapas 1–5 implementam apenas
 as fundacoes que lhes correspondem; comportamento administrativo das Etapas
-5–11 continua ausente:
+6–11 continua ausente:
 
-| # | Estado ao final da Etapa 4 |
+| # | Estado ao final da Etapa 5 |
 |---|---|
 | D-047 | `LoadedConfig` preserva juntos o modelo validado do arquivo e os objetos runtime compilados |
-| D-048 | Construcao integral de runtime preparada; persistencia e swap administrativos ainda nao existem |
+| D-048 | Construcao integral de runtime e persistencia atomica preparadas; orquestracao e swap administrativos ainda nao existem |
 | D-049 | Separacao de planos imposta; ainda nao existe Admin API |
 | D-050 | Protecoes estruturais preservadas; ainda nao ha superficie administrativa |
 | D-051 | IDs estaveis implementados; com `revision >= 1`, ID ausente falha no carregamento |
-| D-052 | `revision` modelada; secao critica administrativa pertence a etapa futura |
+| D-052 | `revision` modelada; secao critica administrativa pertence a Etapa 6 |
 | D-053 | `enabled` continua ausente |
 | D-054 | `RuntimeRegistry` implementa refcount, `retired` e fechamento unico |
 
@@ -305,15 +307,23 @@ as fundacoes que lhes correspondem; comportamento administrativo das Etapas
 Com `MASKGW_TEST_DSN` apontando para PostgreSQL 16.15 descartavel:
 
 ```text
-pytest   1394 passed
-pytest    408 passed, 986 deselected  (-m integration)
+pytest   1418 passed, 8 skipped condicionais de plataforma (1426 coletados)
+pytest    408 passed, 1018 deselected  (-m integration)
           405 testes dependentes de DSN executados; nenhum skip por falta de DSN
+pytest     24 passed, 8 skipped condicionais  (test_config_filesystem.py)
+           repetido 5 vezes sem intermitencia
 pytest    209 passed  (tests/security)
 ruff     All checks passed
-ruff     86 files already formatted
-mypy     Success: no issues found in 86 source files  (strict)
+ruff     106 files already formatted
+mypy     Success: no issues found in 88 source files  (strict)
 git      diff --check sem erros
 ```
+
+Os oito skips do host Windows sao quatro criacoes de symlink sem privilegio,
+tres verificacoes de bits POSIX e o `fsync` de diretorio POSIX. Os testes
+Windows reais, inclusive `msvcrt` entre processos e omissao de `fsync` de
+diretorio, passaram. Nao ha WSL neste host; os ramos POSIX permanecem na suite
+condicional para execucao nativa em POSIX.
 
 ## 7. Protecao contra alias: o que a Fase 3 fechou
 
@@ -451,8 +461,8 @@ Tres, todas documentadas e cobertas por teste:
 
 ## 10. Como continuar
 
-A Fase 7 esta em andamento, com as Etapas 1–4 concluidas. A proxima tarefa e
-**exclusivamente a Etapa 5**, ainda nao iniciada. A regra de nao avancar de
+A Fase 7 esta em andamento, com as Etapas 1–5 concluidas. A proxima tarefa e
+**exclusivamente a Etapa 6**, ainda nao iniciada. A regra de nao avancar de
 etapa sem aprovacao continua valendo.
 
 ### A. Endurecer o que resta (inventario preservado; nao e a proxima etapa)
@@ -478,16 +488,25 @@ Os que precisam de codigo, com custo em `docs/FUTURE-HARDENING.md`:
 
 ```text
 Fase em andamento:
-Fase 7 — Admin API, Etapas 1–4 concluidas
+Fase 7 — Admin API, Etapas 1–5 concluidas
 
 Proxima tarefa:
-Etapa 5 — filesystem seguro — NAO INICIADA
+Etapa 6 — secao critica administrativa e escrita/reload — NAO INICIADA
 ```
 
-A Etapa 5 trata exclusivamente do filesystem seguro. Ainda nao ha modulo
-`admin/`, FastAPI no `pyproject.toml`, rota, bind ou porta HTTP administrativa;
-a aplicacao HTTP pertence a Etapa 7. Os testes existentes da Fase 7 cobrem
-somente as Etapas 1–4.
+A Etapa 5 concluiu exclusivamente os primitivos de filesystem seguro em
+`config/filesystem.py`: arquivo/diretorio/lock verificados, lock exclusivo
+mantido aberto, SHA-256 dos bytes exatos, duas verificacoes de digest, escrita
+atomica e limpeza estrita de orfaos. Ainda nao ha modulo `admin/`, FastAPI no
+`pyproject.toml`, rota, bind ou porta HTTP administrativa; a aplicacao HTTP
+pertence a Etapa 7.
+
+A Etapa 6 devera criar a secao critica administrativa e orquestrar, fim a fim,
+validacao, runtime candidato, persistencia, swap e atualizacao do digest. Ate
+la, o bootstrap nao adquire o `ConfigFileStore`: nao existe admin habilitado
+cujo lifecycle exija o lock. Chamadas concorrentes ao primitivo dentro do mesmo
+processo tambem dependem da serializacao da Etapa 6; o lock da Etapa 5 protege
+contra outro processo.
 
 A especificacao aprovada esta em `docs/PHASE-7-SPEC.md`.
 Ela cobre endpoints, autenticacao, bind e CORS, schemas, IDs e migracao,
@@ -508,10 +527,11 @@ removido da primeira versao, `409 CONFIG_OUT_OF_SYNC` antes de toda escrita,
 `CONFIG_DURABILITY_ERROR` com `applied: true` para falha de `fsync` depois do
 `replace`, lock exclusivo de arquivo contra um segundo processo, bind so em
 loopback, e uma composition root em `bootstrap/` que e o unico modulo autorizado
-a conhecer os dois planos. A composition root foi implementada na Etapa 4; os
-demais itens administrativos continuam fora do codigo.
+a conhecer os dois planos. A composition root foi implementada na Etapa 4 e o
+filesystem na Etapa 5; os demais itens administrativos continuam fora do
+codigo.
 
-As Etapas 5–11 ainda nao foram iniciadas.
+As Etapas 6–11 ainda nao foram iniciadas.
 
 Objetivo: superficie administrativa separada do MCP para gerenciar
 configuracao, policies, status e auditoria sem editar arquivo a mao.
@@ -581,7 +601,7 @@ automatico, banco de configuracao, Redis, background workers.
 ### Antes de iniciar a proxima etapa
 
 - `git status --short` vazio: a arvore precisa estar limpa
-- suite verde: **1394 passed**, `ruff check`, `ruff format --check` e
+- suite verde: **1426 testes coletados**, `ruff check`, `ruff format --check` e
   `mypy --strict` sem erros
 - PostgreSQL real disponivel via `MASKGW_TEST_DSN`: 408 testes marcados como
   integracao, dos quais 405 dependem do DSN, sem skip por ausencia dele

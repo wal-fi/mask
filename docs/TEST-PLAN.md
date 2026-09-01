@@ -3,10 +3,11 @@
 Toda funcionalidade nova deve possuir testes. Nenhuma fase é concluída com
 teste falhando. Critérios de aceite por fase estão em `docs/ROADMAP.md`.
 
-Estado medido ao final da Etapa 4 da Fase 7: **1394 passed** na suíte completa;
-**408 passed, 986 deselected** com `-m integration`. Dos 408 marcados como
-integração, 405 dependem de `MASKGW_TEST_DSN`; todos executaram e nenhum teste
-foi pulado por ausência de DSN.
+Estado medido ao final da Etapa 5 da Fase 7: **1418 passed, 8 skips condicionais
+de plataforma** entre 1426 coletados; **408 passed, 1018 deselected** com
+`-m integration`. Dos 408 marcados como integração, 405 dependem de
+`MASKGW_TEST_DSN`; todos executaram e nenhum teste foi pulado por ausência de
+DSN.
 
 ## Config Loader (Fase 1)
 
@@ -284,16 +285,17 @@ Dois testes garantem que a análise é **por consulta, nunca por linha**: um com
 10.000 linhas comparando o custo contra uma única linha, e um contador de
 chamadas ao analisador que exige exatamente 1 por query.
 
-## Fase 7 — Etapas 1–4 concluídas
+## Fase 7 — Etapas 1–5 concluídas
 
 Commits de referência:
 
 - Etapa 1: `053cf66` — IDs e revision no modelo do arquivo;
 - Etapa 2: `3114c14` — `RuntimeRegistry`;
 - Etapa 3: `3c8de4c` — aquisição/liberação de runtime por query;
-- Etapa 4: `HEAD` — composition root e lifecycle (este commit local).
+- Etapa 4: `7c06132` — composition root e lifecycle;
+- Etapa 5: `HEAD` — filesystem seguro (este commit local).
 
-`origin/master` está em `3c8de4c`; a Etapa 4 é o único commit local à frente.
+`origin/master` está em `7c06132`; a Etapa 5 é o único commit local à frente.
 
 ### Etapa 1 — IDs e revision
 
@@ -332,9 +334,26 @@ permanece inalterado.
   aplicação;
 - nenhuma thread daemon ou recurso abandonado.
 
-A Etapa 5 é a próxima tarefa e não foi iniciada: filesystem seguro, com
-verificações, lock exclusivo, escrita atômica, digest e limpeza de temporários.
-A Etapa 6 cobre a seção crítica administrativa e o fluxo completo de
-escrita/reload. HTTP/FastAPI, autenticação, bind, anti-CSRF, headers, limites,
-handlers e rotas de leitura pertencem à Etapa 7. Não há pacote administrativo,
-FastAPI, bind ou porta HTTP no estado coberto por este plano.
+### Etapa 5 — Filesystem seguro
+
+`tests/test_config_filesystem.py` acrescenta 32 verificações e cobre:
+
+- arquivo, diretório pai e sidecar sem symlink ou tipo inseguro;
+- permissões POSIX, criação privada e limitação explícita de ACL/modo no
+  Windows;
+- lock não bloqueante entre dois processos reais e liberação em falha parcial;
+- digest SHA-256 dos bytes exatos e `CONFIG_OUT_OF_SYNC` nas duas verificações;
+- temporário no mesmo diretório, `O_EXCL`, modo `0600`, flush e `fsync`;
+- visibilidade concorrente apenas do arquivo antigo ou novo, nunca parcial;
+- falhas distintas antes do `replace` e no `fsync` posterior do diretório;
+- omissão explícita do `fsync` de diretório no Windows;
+- limpeza estrita de órfãos, sem seguir ou remover symlink/tipo alheio;
+- `repr` e erros sem caminho sensível, configuração, DSN, SQL, valor ou
+  traceback.
+
+A Etapa 6 é a próxima tarefa e não foi iniciada: seção crítica administrativa
+e fluxo completo de escrita/reload, incluindo construção/swap de runtime e a
+integração dos primitivos acima ao lifecycle. HTTP/FastAPI, autenticação, bind,
+anti-CSRF, headers, limites, handlers e rotas de leitura pertencem à Etapa 7.
+Não há pacote administrativo, FastAPI, bind ou porta HTTP no estado coberto por
+este plano.

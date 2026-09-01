@@ -4,8 +4,10 @@ Este e o unico lugar que conhece a montagem do data plane MCP e, no futuro,
 do admin plane. Os planos nao se importam entre si: `mcp/` conhece somente o
 Gateway, e o futuro `admin/` conhecera o RuntimeRegistry.
 
-Etapa 4 da Fase 7: ainda nao existe admin HTTP, thread HTTP, bind, lock de
-arquivo nem persistencia administrativa. A ordem aplicavel hoje e:
+Etapas 4-5 da Fase 7: ainda nao existe admin HTTP, thread HTTP ou bind. Os
+primitivos de filesystem seguro existem em `config/filesystem.py`, mas ainda
+nao sao compostos aqui: sem admin habilitado, esta aplicacao nao deve adquirir
+lock nem persistir configuracao. A ordem aplicavel hoje e:
 
 1. carregar e compilar a configuracao;
 2. construir e conectar o runtime inicial, com todos os capability checks;
