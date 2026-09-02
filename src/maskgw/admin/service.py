@@ -83,6 +83,7 @@ from maskgw.db.postgres import PostgresAdapter
 from maskgw.masking.engine import MaskingEngine
 from maskgw.runtime import RetiredRuntimeInUseError, Runtime, RuntimeRegistry
 from maskgw.secretsource import EnvSecretProvider, SecretProvider
+from maskgw.sql.policy import SqlPolicy
 
 #: Recebe o documento persistido e devolve o documento candidato, ainda cru.
 #:
@@ -126,6 +127,38 @@ class AdminOperation(StrEnum):
 
 
 @dataclass(frozen=True, slots=True)
+class AdminSnapshot:
+    """Uma leitura COERENTE do runtime publicado: identidade e conteudo juntos.
+
+    Existe porque ler `revision` e depois ler `document` sao duas leituras da
+    referencia publicada, e um swap cabe entre elas. O resultado seria uma
+    resposta com o conteudo do runtime antigo rotulada com a revision nova — e
+    o dano nao para na leitura: na Etapa 9 um administrador editaria esse
+    conteudo antigo usando a `expected_revision` nova, que o passo 2 da secao
+    7.4 aprovaria, e sobrescreveria em silencio uma mudanca que ele nunca viu.
+    `expected_revision` so protege se a revision que o cliente leu descrever o
+    conteudo que ele leu.
+
+    Um snapshot resolve isso por construcao: a referencia publicada e lida UMA
+    vez, e revision, documento e politica saem todos dela. Um swap logo depois
+    e irrelevante — a resposta descreve, inteira, o runtime que existia no
+    instante da leitura.
+
+    O documento e copia profunda (D-055); `SqlPolicy` e congelada sobre
+    `frozenset` e `tuple`, e vai por referencia.
+    """
+
+    revision: int
+    document: MaskingFileConfig
+    sql_policy: SqlPolicy
+
+    @property
+    def adopted(self) -> bool:
+        """Derivado da revision DESTE snapshot, nunca de uma segunda leitura."""
+        return self.revision != UNADOPTED_REVISION
+
+
+@dataclass(frozen=True, slots=True)
 class AdminWriteResult:
     """Sucesso de escrita: a revision nova e a confirmacao de que foi aplicada."""
 
@@ -163,6 +196,7 @@ class AdminConfigService:
         "_closed",
         "_critical_section",
         "_lifecycle_lock",
+        "_operations_total",
         "_reference_digest",
         "_registry",
         "_secrets",
@@ -192,20 +226,59 @@ class AdminConfigService:
         # mecanismo de aquisicao de D-054, cuja secao critica e outra e curta.
         self._critical_section = threading.Lock()
 
+        # Operacoes de escrita/reload TENTADAS desde o start, contadas sob a
+        # propria secao critica. Conta tentativas, e nao sucessos, porque e
+        # isso que `GET /admin/v1/status` pede (secao 13.4): um contador de
+        # atividade administrativa. Nao e historico e nao substitui
+        # `AdminAudit`, que e a Etapa 10 — nao ha aqui operacao, alvo, desfecho
+        # nem instante, so um inteiro.
+        self._operations_total = 0
+
         self._lifecycle_lock = threading.Lock()
         self._closed = False
 
     # -- leitura, sem entrar na secao critica ----------------------------
 
+    def snapshot(self) -> AdminSnapshot:
+        """UMA leitura do runtime publicado, com identidade e conteudo juntos.
+
+        E a unica leitura que uma resposta administrativa pode usar. As
+        propriedades abaixo continuam existindo, mas cada uma le a referencia
+        publicada por conta propria: combinar duas delas reintroduz exatamente
+        a incoerencia que este metodo elimina (D-057).
+
+        O lock do registry NAO e segurado durante a copia profunda. `current`
+        entra e sai da secao critica dele so para devolver a referencia; a
+        copia acontece depois, sobre um agregado cujo conteudo e imutavel. Um
+        swap concorrente troca a referencia PUBLICADA, e nao o objeto ja lido —
+        e o runtime aposentado so e fechado quando ninguem mais o usa (D-054),
+        o que nao afeta a leitura de `file_config`, que e memoria pura.
+        """
+        published = self._registry.current
+        return AdminSnapshot(
+            revision=published.revision,
+            document=published.file_config.model_copy(deep=True),
+            sql_policy=published.config.sql,
+        )
+
     @property
     def revision(self) -> int:
-        """Revision publicada. Leitura administrativa nao serializa (D-052)."""
+        """Revision publicada. Leitura administrativa nao serializa (D-052).
+
+        Sozinha, para metadata. Uma resposta que precise de revision E conteudo
+        usa `snapshot()`.
+        """
         return self._registry.current.revision
 
     @property
     def adopted(self) -> bool:
-        """Se a configuracao ja passou pela adocao."""
-        return self.revision != UNADOPTED_REVISION
+        """Se a configuracao ja passou pela adocao.
+
+        Uma unica leitura da referencia publicada, e nao `self.revision` outra
+        vez: duas leituras aqui teriam a mesma janela de swap que `snapshot()`
+        existe para fechar.
+        """
+        return self._registry.current.revision != UNADOPTED_REVISION
 
     @property
     def document(self) -> MaskingFileConfig:
@@ -215,8 +288,43 @@ class AdminConfigService:
         reatribuir um campo, mas nao congela as listas e dicionarios de dentro:
         `document.masking.clear()` funcionaria sobre o objeto do runtime
         publicado. Quem le nao pode ter esse poder.
+
+        Nao rotule este documento com uma revision lida a parte: use
+        `snapshot()`.
         """
         return self._registry.current.file_config.model_copy(deep=True)
+
+    @property
+    def sql_policy(self) -> SqlPolicy:
+        """Politica de funcoes/relacoes efetiva do runtime publicado.
+
+        Devolvida por referencia, e nao por copia, porque `SqlPolicy` e uma
+        dataclass congelada sobre `frozenset` e `tuple`: nao ha o que mutar. E
+        a excecao explicita a regra de copia de D-055, que existe para
+        `MaskingFileConfig` — cujas listas e dicionarios internos `frozen=True`
+        nao congela.
+
+        Serve a `GET /admin/v1/protected`, que EXIBE as protecoes estruturais.
+        Nao existe caminho que as altere (D-050). Tambem aqui, a revision que
+        acompanha a politica numa resposta vem de `snapshot()`.
+        """
+        return self._registry.current.config.sql
+
+    @property
+    def retired_runtimes_open(self) -> int:
+        """Aposentados ainda abertos. No maximo um, por MAX_RETIRED_RUNTIMES."""
+        return self._registry.retired_in_use()
+
+    @property
+    def queries_total(self) -> int:
+        """Aquisicoes de runtime desde o start — uma por query (D-054)."""
+        return self._registry.acquired_total()
+
+    @property
+    def operations_total(self) -> int:
+        """Operacoes administrativas de escrita/reload tentadas desde o start."""
+        with self._critical_section:
+            return self._operations_total
 
     @property
     def reference_digest(self) -> str:
@@ -250,6 +358,7 @@ class AdminConfigService:
         result: AdminWriteResult | None = None
 
         with self._critical_section:
+            self._operations_total += 1
             try:
                 result = self._execute(mutation, expected_revision, operation)
             except AdminError as exc:

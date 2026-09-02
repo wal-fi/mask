@@ -1275,3 +1275,224 @@ Decisao: `build_application(admin_enabled=...)`, default `False`. Sem ele o
 processo e exatamente o de hoje: nenhum lock de arquivo, nenhuma secao critica
 e nenhum caminho de escrita. A Etapa 7 passa a derivar esse parametro do
 ambiente, sem mudar a composicao.
+
+## D-056 — Escolhas de implementacao da fronteira HTTP (Etapa 7)
+
+Cinco pontos que a especificacao nao fixava e que a implementacao precisou
+decidir. Nenhum deles altera D-047 a D-055.
+
+### Quatro categorias de erro novas, porque a secao 10.2 nao as tinha
+
+A especificacao fixa os STATUS de quatro recusas de fronteira — `Host` alheio
+`400`, `Origin`/`Referer` presentes `403`, `Content-Type` errado `415` (secao
+3.3) e corpo acima de 1 MiB `413` (secao 12.7) — e fixa, na secao 4.4, que toda
+resposta de erro tem a MESMA forma, com um campo `error` de conjunto fechado. O
+conjunto da secao 10.2 nao contem nome para nenhuma das quatro.
+
+As duas saidas possiveis eram ruins: reaproveitar uma categoria existente
+mentiria sobre o motivo — um `403` respondendo `UNAUTHORIZED` seria
+indistinguivel do `401`, contra o proprio texto da secao 3.3 —, e omitir o
+campo quebraria a forma unica.
+
+Decisao: o conjunto fechado ganha `HOST_NOT_ALLOWED`, `CROSS_ORIGIN_REJECTED`,
+`UNSUPPORTED_MEDIA_TYPE` e `PAYLOAD_TOO_LARGE`, mais `METHOD_NOT_ALLOWED` para
+o `405` que o roteador produz sozinho num metodo nao registrado. Continuam
+valendo as regras do conjunto: texto FIXO por categoria, nenhum eco da entrada,
+nenhuma cadeia de excecao.
+
+`IMMUTABLE_FIELD`, que a secao 10.2 lista, **nao** foi declarada. Ela so e
+alcancavel por uma rota de escrita com corpo, e a Etapa 7 nao registra nenhuma;
+declara-la agora fixaria, sem necessidade, o status HTTP de uma operacao da
+Etapa 9.
+
+### A ordem entre as camadas de fronteira
+
+A especificacao exige que a autenticacao preceda o parsing do corpo — "sem
+credencial valida nunca ocorre um `422`" — e nao ordena as demais camadas.
+
+Decisao, de fora para dentro: `Host` (400), `Origin`/`Referer` (403),
+`Content-Length` acima do limite (413), autenticacao (401), `Content-Type`
+(415), leitura contada do corpo (413), roteador.
+
+`Host` e `Origin` vem antes da autenticacao porque nao dependem do token e nao
+revelam nada sobre ele: sao propriedades da requisicao, nao da credencial, e
+cortar na borda externa e a defesa contra DNS rebinding e contra a pagina que o
+administrador abriu no navegador. O `Content-Length` vem antes por outro motivo
+— um corpo declarado gigante nao deve custar trabalho nenhum. A autenticacao
+vem antes do `Content-Type` e do roteador, que e o que cumpre a exigencia da
+secao 2.
+
+Consequencia declarada: um `POST` com `Content-Type: text/plain` numa rota que
+so aceita `GET` responde `415`, e nao `405`. A recusa acontece na fronteira,
+antes de o caminho importar — que e o desfecho mais seguro, e e teste.
+
+### A excecao e contida FORA do Starlette, e nao so tratada
+
+Registrar um handler para `Exception` nao basta. O `ServerErrorMiddleware` do
+Starlette responde e em seguida **relevanta** a excecao, para que o servidor a
+registre — e o uvicorn a registra com `exc_info`, ou seja, o traceback inteiro,
+com o que quer que a excecao carregue. E o mesmo trap de D-038 no plano MCP,
+num lugar novo.
+
+Decisao: a camada mais externa e um middleware ASGI proprio, por fora do
+Starlette, que captura `Exception`, responde `INTERNAL_ERROR` quando a resposta
+ainda nao comecou, e **nao relevanta**. `asyncio.CancelledError` e demais
+`BaseException` continuam subindo: engolir um cancelamento quebraria o
+desligamento do proprio servidor.
+
+O mesmo middleware poe `Cache-Control: no-store` e apaga qualquer header CORS
+em TODA resposta — inclusive as que nenhum handler nosso produz, como o `404`
+do roteador e o `405` do Starlette. Fazer isso nos handlers deixaria justamente
+essas de fora.
+
+### O bind acontece na thread chamadora
+
+A secao 9.2 exige aguardar "a confirmacao de que o socket esta efetivamente
+escutando", com timeout. Esperar um flag do uvicorn cobre o startup do loop,
+mas deixa "porta ocupada" como uma corrida.
+
+Decisao: o socket e criado, vinculado e posto em `listen` **na thread que chama
+`start()`**, antes de qualquer thread existir; o uvicorn recebe o socket pronto.
+Porta ocupada levanta sincronamente, dentro do mesmo `build_application` que
+constroi tudo o mais. O flag `started` continua sendo esperado, com timeout,
+para cobrir o resto.
+
+`SO_REUSEADDR` **nao** e usado. No Windows ele permite que dois processos se
+liguem a mesma porta, e o segundo sequestraria em silencio a superficie
+administrativa do primeiro.
+
+### O catalogo de transformers declara seus parametros no registry
+
+`GET /admin/v1/transformers` publica "nome e parametros aceitos" (secao 1.1). A
+unica fonte disso eram as chamadas a `require_params` dentro de cada builder —
+informacao real, mas nao alcancavel de fora.
+
+Decisao: `TransformerRegistry.register` passa a receber os nomes dos parametros
+obrigatorios e opcionais, e `build_default_registry` os declara junto de cada
+transformer. O catalogo administrativo le essa declaracao, e um teste a
+confronta com o comportamento efetivo dos builders — omitir um obrigatorio
+falha, um parametro fora do declarado e recusado. Sem esse confronto, a
+declaracao viraria documentacao que envelhece em silencio.
+
+Publica-se apenas NOMES: nenhum default, nenhum exemplo, nenhum valor.
+`hmac_sha256` aparece sem parametro algum, porque a chave vem do ambiente e
+declarar `key` ali sugeriria que ela poderia morar no arquivo (D-006).
+
+### Os contadores de `/status` saem de metadata que ja existia
+
+A secao 13.4 pede "contagem de queries e de operacoes administrativas", e nenhum
+contador existia.
+
+Decisao: `queries_total` e o numero de aquisicoes de runtime desde o start,
+contado no `RuntimeRegistry` sob o mesmo lock que incrementa o refcount — uma
+query adquire exatamente uma vez (D-054), entao os dois numeros coincidem por
+construcao. O contador vive em `runtime/`, abaixo dos dois planos, para que o
+admin possa le-lo sem conhecer `gateway/`. `admin_operations_total` conta as
+entradas na secao critica administrativa.
+
+Sao contadores, nao historico: nao ha operacao, alvo, desfecho nem instante, e
+se perdem no restart. Isso **nao** antecipa `AdminAudit` (Etapa 10), que e um
+schema fechado de eventos, e a propria secao 13.4 distingue os dois.
+
+## D-057 — Snapshot administrativo coerente e shutdown que nao abandona thread
+
+Duas correcoes exigidas na revisao da Etapa 7, antes da aprovacao para push.
+Nenhuma delas reabre D-047 a D-056; a D-056 continua valendo como decisao de
+contrato, incluindo as cinco categorias de erro novas e a ordem dos
+middlewares, e **recebeu aprovacao posterior a revisao**.
+
+### Uma resposta administrativa nasce de UMA leitura do runtime publicado
+
+As views liam `service.document` — ou `service.sql_policy` — e, em seguida,
+`service.revision` e `service.adopted`. Sao leituras separadas da referencia
+publicada, e o swap de um reload cabe entre elas: a resposta podia sair com o
+conteudo do runtime ANTIGO carimbado com a revision NOVA.
+
+Uma leitura incoerente ja seria ruim, mas o dano real e na Etapa 9. O passo 2
+da secao 7.4 promete, via `expected_revision`, que ninguem sobrescreve uma
+mudanca que nao viu — e essa promessa depende inteiramente de a revision lida
+descrever o conteudo lido. Com o par misturado, o administrador editaria o
+documento antigo enviando a revision nova, o passo 2 aprovaria, e a mudanca de
+outra pessoa desapareceria sem conflito algum. O controle de concorrencia
+falharia em silencio exatamente no caso para o qual existe.
+
+Decisao: `AdminConfigService.snapshot()` le a referencia publicada **uma vez** e
+devolve `AdminSnapshot`, com `revision`, documento e `SqlPolicy` do mesmo
+runtime; `adopted` e derivado da revision capturada. Cada handler chama
+`snapshot()` uma vez, e as funcoes de `views.py` passam a receber
+`AdminSnapshot` em vez do servico — assim elas nao MISTURAM porque nao tem como
+fazer a segunda leitura. `build_status` e a unica que tambem recebe o servico, e
+so para os contadores: eles descrevem atividade do processo, nao uma
+configuracao, e um swap entre a captura e a contagem nao produz afirmacao falsa.
+
+O lock do registry **nao** e segurado durante a copia profunda nem durante a
+serializacao: `current` entra e sai da secao critica dele so para devolver a
+referencia, e o `Runtime` e um agregado de conteudo imutavel. Segurar o lock ali
+bloquearia a aquisicao de toda query nova pelo tempo de uma serializacao, contra
+o proprio motivo de D-054.
+
+Busca por ID herda a propriedade sem regra nova: uma regra removida ou alterada
+por um reload concorrente aparece inteira sob a revision antiga, ou nao aparece —
+nunca a regra antiga sob a revision nova.
+
+### O shutdown nao tem timeout: `stop()` espera a thread ate o fim
+
+`AdminHttpServer._tear_down` fazia `thread.join(timeout=...)` sem conferir
+`is_alive()` depois. `Thread.join` devolve `None` nos dois casos, entao um
+`join` expirado era indistinguivel de um bem-sucedido: as referencias eram
+apagadas, `running` passava a falso e o `Application.close()` seguia para
+`registry.close_all()` e para a liberacao do lock — com uma requisicao
+administrativa possivelmente ainda em execucao sobre esse mesmo registry. O
+`join` da secao 9.2 virava decorativo justamente no unico caso em que importa.
+
+Conferir `is_alive()` e levantar corrige a confusao, mas cria um problema
+proprio: o **retorno parcial**. O shutdown teria comecado e nao terminado, e
+cada chamador precisaria saber o que fazer com esse meio-estado — nao fechar
+runtime, nao soltar o lock, voltar depois. Estado a mais em todo mundo, para um
+caso em que so existe uma resposta certa.
+
+Decisao: **nao ha timeout de shutdown**. `stop()` sinaliza `should_exit` e faz
+`join()` integral; quando retorna, a thread acabou, e so entao `_thread`,
+`_server` e `_socket` sao soltos e o socket e fechado — fecha-lo antes, sob um
+loop ainda ativo, produziria erro numa requisicao que o cliente nao causou. O
+unico timeout do modulo continua sendo o da confirmacao de escuta no startup,
+onde desistir e seguro porque nada foi disponibilizado ainda.
+
+O que se limita e o TRABALHO, nao a espera: o uvicorn recebe
+`timeout_graceful_shutdown`, cancela sozinho requisicoes que se arrastem, e a
+thread sempre chega ao fim. Um cliente em loopback que pare de consumir a
+resposta nao prende o processo — e nada e abandonado para consegui-lo. E o que
+motiva o piso `uvicorn>=0.29`.
+
+`AdminHttpShutdownTimeoutError` deixou de existir junto com o timeout.
+
+### A referencia do servidor e adotada ANTES de `start()`
+
+`http_server = _start_admin_http(...)` so atribuia se `start()` retornasse. Um
+`start()` que criasse a thread e falhasse depois — o timeout de confirmacao e o
+caso obvio — deixava `http_server is None`, e o `except` de `build_application`
+pulava o `stop()` e ia direto fechar registry e store, com a thread viva.
+
+Decisao: `_build_admin_http` **constroi sem iniciar**, o composition root adota
+a referencia e so entao chama `start()`. A propriedade de um recurso nao pode
+depender de a construcao dele ter dado certo. Com o `join` integral, o `stop()`
+do `except` tambem garante que nenhum runtime feche com a thread de pe.
+
+### `_closing` e permanente, e `run()` o respeita
+
+Depois de um `close()` interrompido, `_closing` voltava a falso e `_closed`
+continuava falso: `repr()` dizia `ready` e `run()` aceitava a aplicacao. Um
+chamador podia reabrir o MCP sobre uma aplicacao parcialmente encerrada, com o
+`AdminConfigService` ja fechado e o HTTP parando.
+
+Decisao: `_closing` marca que a sequencia COMECOU e nunca volta atras. `run()`
+recusa com `_closed or _closing`; `repr()` reporta `closing` entre o inicio e o
+fim, e nunca `ready`. Um `_close_lock` proprio serializa chamadas concorrentes
+sem impedir repeticao — quem espera nele encontra `_closed` e sai —, e ele e
+distinto do `_lifecycle_lock`, que so cobre transicoes de estado e nunca e
+segurado durante o `join` nem durante o fechamento de conexoes.
+
+Com o `join` integral, a fronteira de processo nao precisa de laco de retomada:
+`main()` chama `close()`, que bloqueia ate a thread morrer e so entao fecha
+runtimes e solta o lock. Nao existe caminho em que o processo termine com
+cleanup pendente.

@@ -14,6 +14,7 @@ from maskgw.bootstrap.application import (
     Application,
     build_application,
     make_adapter_factory,
+    resolve_admin_settings,
     resolve_dsn,
 )
 
@@ -24,5 +25,6 @@ __all__ = [
     "Application",
     "build_application",
     "make_adapter_factory",
+    "resolve_admin_settings",
     "resolve_dsn",
 ]

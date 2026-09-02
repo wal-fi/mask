@@ -15,10 +15,10 @@ IA → MCP → Gateway → SQL Validator → PostgreSQL → provenance
 O produto executa fim a fim: um cliente MCP real consulta um PostgreSQL real e
 recebe dados mascarados.
 
-A Fase 7 foi iniciada de forma incremental. As **Etapas 1–6 estão concluídas**;
-a próxima tarefa é exclusivamente a Etapa 7, ainda não iniciada. Antes de
-alterar qualquer coisa, leia `docs/HANDOFF.md` — é o documento de entrada e diz
-exatamente onde o projeto parou.
+A Fase 7 foi iniciada de forma incremental. As **Etapas 1–7 estão concluídas**;
+a próxima tarefa é exclusivamente a Etapa 8 — `POST /admin/v1/config:validate` —,
+ainda não iniciada. Antes de alterar qualquer coisa, leia `docs/HANDOFF.md` — é
+o documento de entrada e diz exatamente onde o projeto parou.
 
 ## Leitura obrigatória antes de alterar código
 
@@ -28,7 +28,7 @@ Nesta ordem:
 2. `docs/ARCHITECTURE.md` — módulos e responsabilidades
 3. `docs/SECURITY.md` — invariantes de segurança
 4. `docs/SECURITY-REVIEW.md` — o que foi atacado, o que resistiu, o que não
-5. `docs/DECISIONS.md` — 55 decisões (D-001 a D-055) e o porquê de cada uma
+5. `docs/DECISIONS.md` — 57 decisões (D-001 a D-057) e o porquê de cada uma
 6. `docs/MASKING-SPEC.md` — semântica exata do pipeline de masking
 7. `docs/TEST-PLAN.md`, `docs/THREAT-MODEL.md`, `docs/FUTURE-HARDENING.md`
 
@@ -45,6 +45,8 @@ access governance. Essa distinção já rejeitou várias propostas; mantenha-a.
 ## Stack
 
 Python ≥ 3.11 · psycopg3 · pglast · MCP SDK v2 · Pydantic · PyYAML · pytest.
+FastAPI + uvicorn desde a Fase 7 / Etapa 7, **só** na fronteira HTTP
+administrativa: o MCP continua stdio only (D-036).
 Versões testadas em `docs/HANDOFF.md`.
 
 ## Pipeline de masking
@@ -117,14 +119,15 @@ riscos aceitos em `docs/SECURITY-REVIEW.md`.
 ## Evolução em andamento — Fase 7 / Admin API
 
 A **Fase 7 — Admin API** está em implementação incremental conforme
-`docs/PHASE-7-SPEC.md`. As Etapas 1–6 estão concluídas:
+`docs/PHASE-7-SPEC.md`. As Etapas 1–7 estão concluídas:
 
 - Etapa 1 — IDs e revision no modelo do arquivo: `053cf66`;
 - Etapa 2 — `RuntimeRegistry`: `3114c14`;
 - Etapa 3 — aquisição/liberação de runtime por query: `3c8de4c`;
 - Etapa 4 — composition root e lifecycle: `7c06132`;
 - Etapa 5 — filesystem seguro: `d651fe0`;
-- Etapa 6 — seção crítica administrativa e escrita/reload.
+- Etapa 6 — seção crítica administrativa e escrita/reload;
+- Etapa 7 — fronteira HTTP e rotas de leitura.
 
 Confira a sincronização com `origin/master` pelo Git em vez de inferi-la deste
 documento. A Etapa 4 criou `maskgw/bootstrap/` como composition root, removeu
@@ -143,23 +146,61 @@ também sem HTTP. `AdminConfigService.apply` executa os onze passos da §7.4 sob
 **um** lock por processo: adoção, `expected_revision`, digest, limite de
 aposentados, validação, compilação, conexão com os capability checks,
 persistência atômica, swap, digest novo e fechamento do aposentado. Os quatro
-primeiros passos precedem construir ou conectar qualquer candidato. O admin é
-habilitado por `build_application(admin_enabled=True)`; **não há variável de
-ambiente administrativa** ainda (D-055).
+primeiros passos precedem construir ou conectar qualquer candidato.
 
-A próxima tarefa é a **Etapa 7**, ainda não iniciada: aplicação HTTP/FastAPI,
-autenticação, bind, anti-CSRF, headers, limites, handlers e rotas de leitura.
-No estado atual não existem FastAPI, rota, bind nem porta HTTP. `config:validate`
-é a Etapa 8; as rotas de escrita e a adoção completa com backup são a Etapa 9;
-`AdminAudit` é a Etapa 10. Não antecipe as Etapas 7–11.
+A Etapa 7 criou `maskgw/admin/http/` — a **primeira porta de rede do projeto**,
+opcional e desligada por default. Oito rotas `GET`/`HEAD` sob `/admin/v1`:
+`status`, `config`, `rules`, `rules/{id}`, `exceptions`, `exceptions/{id}`,
+`transformers` e `protected`. **Nenhuma escrita.** FastAPI e uvicorn entraram na
+stack, e são usados só ali: `maskgw.admin` continua importável sem carregar
+FastAPI, e isso é teste com contraprova.
 
-Dois pontos dela que valem como invariante desde já:
+O admin passa a ser habilitado por `MASKGW_ADMIN_ENABLED=1` (qualquer outro
+valor **não** habilita), com `MASKGW_ADMIN_TOKEN` (≥ 32 caracteres),
+`MASKGW_ADMIN_BIND` (só `127.0.0.1`, `::1`, `localhost`) e `MASKGW_ADMIN_PORT`
+(default `8765`). `build_application` tem dois parâmetros distintos:
+`admin_enabled` compõe a seção crítica, `admin_http` acrescenta a fronteira
+HTTP — e o segundo implica o primeiro, nunca o contrário.
+
+Invariantes da fronteira, todos com teste:
+
+- **token só em `Authorization: Bearer`**, comparado com `hmac.compare_digest`;
+  query string e cookie nunca são aceitos; ausente, malformado e errado dão o
+  mesmo `401`; **sem credencial válida nunca ocorre um `422`**;
+- **`Origin`/`Referer` presentes → `403`** (pela presença, não pelo valor);
+  **`Host` fora da allowlist → `400`**; **`Content-Type` ≠ JSON em método com
+  corpo → `415`**; **corpo > 1 MiB → `413`**, cortando streaming sem bufferizar;
+- **`Cache-Control: no-store` em toda resposta** e **nenhum header CORS**;
+  `OPTIONS` não registrado, `redirect_slashes` desligado, `/docs`, `/redoc` e
+  `/openapi.json` desligados;
+- **erro sempre da mesma forma**, categoria fechada e texto fixo, sem
+  `str(exc)`, traceback, `input` rejeitado ou cadeia de exceção;
+- **`stdout` continua exclusivo do MCP**: uvicorn sem handlers e sem access log,
+  `admin/` sem `logging` e sem `print`;
+- **startup confirma o bind antes de liberar o MCP**; shutdown faz `join` da
+  thread HTTP **antes** de fechar runtimes, e libera o lock por último. Esse
+  `join` **não tem timeout** — `stop()` só retorna com a thread terminada —, e o
+  que se limita é o trabalho, via `timeout_graceful_shutdown` do uvicorn. A
+  referência do servidor é adotada **antes** de `start()`, e `_closing` é
+  permanente: `run()` recusa e `repr()` nunca diz `ready` depois do início do
+  shutdown (D-057);
+- **uma resposta administrativa nasce de UMA leitura do runtime publicado**
+  (D-057): `snapshot()` devolve revision, documento e política juntos, e as
+  funções de `views.py` recebem esse snapshot em vez do serviço — não misturam
+  porque não têm como fazer a segunda leitura.
+
+A próxima tarefa é a **Etapa 8**, ainda não iniciada: `config:validate`. As
+rotas de escrita e a adoção completa com backup são a Etapa 9; `AdminAudit` é a
+Etapa 10; a suíte adversarial HTTP é a Etapa 11. Não antecipe as Etapas 8–11.
+
+Dois pontos que valem como invariante:
 
 - **`allowed_pg_functions` é somente leitura na Admin API.** O campo pode
   liberar `pg_read_file`, e administrá-lo por HTTP reabriria leitura de
   arquivos do servidor (D-050). O loader **não muda** nesta fase.
 - **Bind administrativo só em loopback.** Sem TLS, interface externa põe o
-  bearer token em HTTP claro. Bind externo é Fase 9.
+  bearer token em HTTP claro. Não há variável de escape, e bind externo faz o
+  processo recusar o startup. Bind externo é Fase 9.
 
 Invariantes já decididos (D-047 a D-054) — não os reabra:
 
@@ -188,17 +229,35 @@ Invariantes já decididos (D-047 a D-054) — não os reabra:
   espera queries antigas, o último release fecha o runtime aposentado
   exatamente uma vez, e nenhuma query adquire um runtime já aposentado.
 
-FastAPI **ainda não** faz parte da stack; sua introdução pertence à Etapa 7.
-
 D-055 registra o que a Etapa 6 decidiu e a especificação não fixava: o runtime
 candidato é construído a partir do documento **reparseado dos bytes que serão
 persistidos**, de modo que o digest de referência corresponda ao runtime
 publicado por construção; o callback de mutação e a leitura administrativa
 recebem **cópia profunda**, nunca o documento do runtime publicado, porque
-`frozen=True` do Pydantic não congela as listas e dicionários de dentro; o plano
-administrativo traduz toda falha para o **seu** conjunto fechado de categorias,
-sem reexportar exceção interna; e `admin_enabled` é parâmetro de composição
-enquanto não existe a aplicação HTTP.
+`frozen=True` do Pydantic não congela as listas e dicionários de dentro; e o
+plano administrativo traduz toda falha para o **seu** conjunto fechado de
+categorias, sem reexportar exceção interna.
+
+D-056 registra o que a Etapa 7 decidiu e a especificação não fixava: quatro
+categorias de erro novas para as recusas de fronteira, cujos status a §3.3 fixa
+mas cujos nomes a §10.2 não fornecia; a ordem entre as camadas de middleware; a
+contenção da exceção **por fora** do Starlette, porque o `ServerErrorMiddleware`
+responde e **relevanta**, e o uvicorn registraria o traceback; o `bind` na
+thread chamadora, para que porta ocupada falhe sincronamente; a declaração dos
+parâmetros de transformer no registry, confrontada com os builders por teste; e
+os contadores de `/status` derivados de metadata já existente. A revisão da
+Etapa 7 aprovou D-056 como decisão de contrato, incluindo as cinco categorias
+novas e a ordem dos middlewares.
+
+D-057 registra as duas correções exigidas nessa mesma revisão: o **snapshot
+administrativo coerente**, porque revision e conteúdo lidos separadamente
+permitiam devolver o runtime antigo rotulado com a revision nova — e, na Etapa
+9, uma escrita com essa `expected_revision` sobrescreveria em silêncio uma
+mudança que ninguém viu; e o **shutdown sem timeout**, porque
+`Thread.join(timeout=...)` não distingue sucesso de expiração: a thread HTTP era
+abandonada enquanto o processo seguia fechando runtimes e soltando o lock, e
+conferir `is_alive()` apenas trocaria o abandono por um retorno parcial que todo
+chamador teria de saber interpretar.
 
 ## Fora do escopo
 
@@ -207,7 +266,7 @@ MySQL, migrations, schema browser, JSONB deep inspection, lineage completo de
 view, controle de inferência (WHERE/ORDER BY/GROUP BY), supressão de
 agregações, transformers Python customizados, default deny.
 
-As Etapas 7–11 da Admin API não fazem parte do fechamento atual.
+As Etapas 8–11 da Admin API não fazem parte do fechamento atual.
 
 Propostas avaliadas e adiadas estão em `docs/FUTURE-HARDENING.md` com custo e
 impacto — consulte antes de propor de novo.

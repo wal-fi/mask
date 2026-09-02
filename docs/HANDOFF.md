@@ -2,9 +2,10 @@
 
 **Documento de entrada. Comece por aqui.**
 
-Estado do projeto ao final da Etapa 6 da Fase 7. O MVP esta completo, as
-Etapas 1–6 da Fase 7 estao concluidas e a suite esta verde contra PostgreSQL 16
-real. A proxima tarefa e a Etapa 7, ainda nao iniciada (secao 10).
+Estado do projeto ao final da Etapa 7 da Fase 7. O MVP esta completo, as
+Etapas 1–7 da Fase 7 estao concluidas e a suite esta verde contra PostgreSQL 16
+real. A proxima tarefa e a Etapa 8 — `POST /admin/v1/config:validate` —, ainda
+nao iniciada (secao 10).
 
 Antes de comecar qualquer fase, confira `git status --short`: a arvore precisa
 estar limpa. **Confira, nao presuma** — este documento nao pode afirmar o
@@ -19,7 +20,7 @@ Ordem de leitura sugerida:
 | `docs/ARCHITECTURE.md` | modulos e responsabilidades |
 | `docs/SECURITY.md` | invariantes de seguranca e o que exigir antes de expor |
 | `docs/SECURITY-REVIEW.md` | 11 findings do red team, seis fechados |
-| `docs/DECISIONS.md` | D-001 a D-055, com o motivo de cada uma |
+| `docs/DECISIONS.md` | D-001 a D-057, com o motivo de cada uma |
 | `docs/MASKING-SPEC.md` | semantica exata do pipeline |
 | `docs/TEST-PLAN.md` | o que cada camada de teste cobre |
 | `docs/THREAT-MODEL.md` | cenarios de ataque e o resultado medido |
@@ -57,10 +58,10 @@ Andamento da Fase 7:
 | 4 — composition root e lifecycle | concluida | `7c06132` |
 | 5 — filesystem seguro: verificações, lock exclusivo, escrita atômica, digest e limpeza de temporários | concluida | `d651fe0` |
 | 6 — secao critica administrativa e fluxo completo de escrita/reload | concluida | `git log -- src/maskgw/admin` |
-| 7 — aplicacao HTTP: auth, bind, anti-CSRF, headers, limites, handlers, rotas de leitura | proxima, nao iniciada | — |
+| 7 — aplicacao HTTP: auth, bind, anti-CSRF, headers, limites, handlers, rotas de leitura | concluida | `git log -- src/maskgw/admin/http` |
+| 8 — `POST /admin/v1/config:validate` | proxima, nao iniciada | — |
 
-A Etapa 5 foi publicada em `origin/master` no commit `d651fe0`. O estado atual
-deve ser conferido com `git status --short --branch` e
+O estado atual deve ser conferido com `git status --short --branch` e
 `git rev-list --left-right --count origin/master...HEAD` antes de continuar;
 nao o presuma a partir deste documento versionado.
 
@@ -79,6 +80,12 @@ Python >= 3.11.
 
 | pglast | parser oficial do PostgreSQL | Fase 4 |
 | mcp | SDK MCP oficial, linha v2 (testado em 2.1.1) | Fase 5 |
+| fastapi | fronteira HTTP administrativa (testado em 0.141.1) | Fase 7, Etapa 7 |
+| uvicorn | servidor ASGI da Admin API (testado em 0.52.4) | Fase 7, Etapa 7 |
+
+FastAPI e uvicorn sao usados **exclusivamente** pelo plano administrativo. O
+MCP continua stdio only (D-036), e nenhuma porta e aberta sem
+`MASKGW_ADMIN_ENABLED=1`.
 
 Configuracao em `pyproject.toml`. Nao ha instalacao editavel: o pytest resolve
 o pacote via `pythonpath = ["src"]`.
@@ -114,7 +121,13 @@ Comandos (ajuste `.venv/bin` para `.venv/Scripts` no Windows):
 | Variavel | Uso | Obrigatoria? |
 |---|---|---|
 | `MASKGW_HMAC_KEY` | chave do `hmac_sha256`, minimo 32 caracteres | sim, se alguma regra usar `hmac_sha256` |
+| `MASKGW_DATABASE_DSN` | DSN do PostgreSQL do Gateway | sim |
+| `MASKGW_CONFIG` | outro `masking.yaml` (default: `config/masking.yaml`) | nao |
 | `MASKGW_TEST_DSN` | DSN do PostgreSQL dos testes de integracao | nao; sem ela os testes `integration` dao SKIP |
+| `MASKGW_ADMIN_ENABLED` | `1` habilita a Admin API; **qualquer outro valor nao habilita** | nao; default desligado |
+| `MASKGW_ADMIN_TOKEN` | token administrativo, minimo 32 caracteres | sim, se a Admin API estiver habilitada |
+| `MASKGW_ADMIN_BIND` | `127.0.0.1` (default), `::1` ou `localhost` — **so loopback** | nao |
+| `MASKGW_ADMIN_PORT` | porta da Admin API, 1..65535 (default `8765`) | nao |
 
 Nenhum usuario, senha, host ou DSN esta escrito no codigo ou nos testes.
 
@@ -187,11 +200,19 @@ src/maskgw/
     service.py           Gateway.query: a fachada publica
   runtime/               <- Fase 7, Etapas 2 e 3
     registry.py          RuntimeRegistry: acquire/release, retired, close unico
-  admin/                 <- Fase 7, Etapa 6; SEM HTTP
-    errors.py            AdminError e as categorias fechadas da secao 10.2
+  admin/                 <- Fase 7, Etapa 6; a secao critica, SEM HTTP
+    errors.py            AdminError e as categorias fechadas (10.2 + D-056)
     document.py          MaskingFileConfig <-> bytes YAML, round-trip conferido
     service.py           AdminConfigService: a secao critica e a secao 7.4
-  bootstrap/             <- Fase 7, Etapas 4 e 6; composition root
+    http/                <- Fase 7, Etapa 7; SOMENTE LEITURA
+      settings.py        enable, token, bind e porta: o passo 1 do startup
+      middleware.py      Host, Origin, limite de corpo, auth, Content-Type
+      responses.py       forma unica de erro; categoria -> status HTTP
+      schemas.py         modelos de resposta, extra="forbid" e frozen=True
+      views.py           respostas a partir de UM snapshot (D-057)
+      app.py             as oito rotas de leitura e os tres handlers
+      server.py          uvicorn em thread nao-daemon, com bind confirmado
+  bootstrap/             <- Fase 7, Etapas 4, 6 e 7; composition root
     application.py       construcao e lifecycle ordenado dos dois planos
     main.py              entrypoint compartilhado, stderr sanitizado
   __main__.py            python -m maskgw -> bootstrap
@@ -229,6 +250,15 @@ tests/
   test_config_filesystem.py      <- Fase 7, Etapa 5
   test_admin_service.py     47   <- Fase 7, Etapa 6
 
+  admin_http_support.py          <- Fase 7, Etapa 7 (apoio, nao e teste)
+  test_admin_http_settings.py    51
+  test_admin_http_boundary.py    88
+  test_admin_http_surface.py    108
+  test_admin_http_reads.py       64
+  test_admin_http_lifecycle.py   35
+  test_admin_http_leakage.py     20
+  test_admin_http_mcp_coexistence.py  5  (integration)
+
   security/                      <- Fases 6 e 6.1, 209 testes adversariais
     test_attack_expressions.py        55
     test_attack_union_views.py        29
@@ -256,8 +286,15 @@ composition root `bootstrap/`. A Etapa 5 adicionou `config/filesystem.py`, sem
 HTTP: validacao fail-closed, lock sidecar pelo lifecycle, digest exato, escrita
 atomica e limpeza seletiva de temporarios. A Etapa 6 adicionou `maskgw/admin/`,
 tambem sem HTTP: a secao critica administrativa e o fluxo de escrita/reload.
-**FastAPI continua fora do `pyproject.toml`**, e nao ha rota, bind nem porta; a
-aplicacao HTTP pertence a Etapa 7.
+
+A Etapa 7 adicionou `maskgw/admin/http/`, **somente leitura**: as oito rotas
+`GET`/`HEAD` sob `/admin/v1`, autenticacao por bearer token, bind so em
+loopback, anti-CSRF, limite de corpo, headers e os tres handlers de erro.
+FastAPI e uvicorn entraram no `pyproject.toml` **agora**, e sao usados so ali.
+
+O confinamento e estrutural e e teste com contraprova: importar `maskgw.admin`
+**nao** carrega FastAPI, e importar `maskgw.admin.http` carrega. A secao critica
+continua utilizavel — e testavel — sem servidor.
 
 ## 5. Decisoes
 
@@ -299,11 +336,11 @@ D-001 a D-014 na Fase 1; D-015 a D-019 na Fase 2. Detalhamento em
 | D-045 | `mode` default das exceptions passa a `exact`. Corrige H-1 |
 | D-046 | Um passo entre niveis: nomes exportados por CTE e subquery |
 
-D-047 a D-054 foram aprovadas antes da Fase 7. As Etapas 1–6 implementam apenas
-as fundacoes que lhes correspondem; comportamento HTTP das Etapas 7–11 continua
-ausente. D-055 registra escolhas de implementacao da Etapa 6:
+D-047 a D-054 foram aprovadas antes da Fase 7; comportamento das Etapas 8–11
+continua ausente. D-055 registra escolhas de implementacao da Etapa 6, D-056 as
+da Etapa 7, e D-057 as duas correcoes exigidas na revisao da Etapa 7:
 
-| # | Estado na Etapa 6 |
+| # | Estado na Etapa 7 |
 |---|---|
 | D-047 | `LoadedConfig` preserva juntos o modelo validado do arquivo e os objetos runtime compilados; o admin so escreve a partir do modelo validado |
 | D-048 | Fluxo completo implementado: validar, construir, conectar, persistir, trocar — com as semanticas dos dois lados do `os.replace` |
@@ -314,6 +351,8 @@ ausente. D-055 registra escolhas de implementacao da Etapa 6:
 | D-053 | `enabled` continua ausente |
 | D-054 | `RuntimeRegistry` implementa refcount, `retired` e fechamento unico; o fluxo administrativo respeita os tres |
 | D-055 | Runtime candidato construido do documento reparseado dos bytes que serao persistidos; callback e leitura administrativa recebem copia profunda, nunca o documento do runtime publicado; vocabulario de erro proprio do admin; `admin_enabled` como parametro de composicao |
+| D-056 | Escolhas da fronteira HTTP: cinco categorias de erro novas, ordem dos middlewares, contencao da excecao por fora do Starlette, bind na thread chamadora, parametros de transformer no registry e contadores de `/status`. Aprovada como decisao de contrato na revisao da Etapa 7 |
+| D-057 | Snapshot administrativo coerente (`AdminSnapshot`, uma leitura por resposta); shutdown SEM timeout, com `join` integral da thread HTTP; referencia do servidor adotada antes de `start()`; `_closing` permanente, que impede `run()` e nunca se apresenta como `ready` |
 
 ## 6. Resultado das verificacoes
 
@@ -343,6 +382,22 @@ pytest     16 testes de concorrencia, isolamento e reload real repetidos 15
 ruff     All checks passed
 ruff     93 files already formatted  (src + tests)
 mypy     Success: no issues found in 93 source files  (strict, mypy 2.3.1)
+git      diff --check sem erros
+```
+
+Medido ao final da Etapa 7, com `MASKGW_TEST_DSN` apontando para um
+PostgreSQL 16.15 descartavel em Docker:
+
+```text
+pytest   1871 passed, 9 skipped  (1880 coletados)
+         suite INTEIRA: nenhum deselect, nenhum skip por ausencia de DSN
+           os MESMOS 9 skips condicionais de plataforma do baseline
+pytest    415 passed, 0 skipped  (-m integration)
+pytest    371 testes novos da Etapa 7
+           os arquivos HTTP repetidos 9+ vezes sem intermitencia
+ruff     All checks passed
+ruff     109 files already formatted  (src + tests)
+mypy     Success: no issues found in 109 source files  (strict, mypy 2.3.1)
 git      diff --check sem erros
 ```
 
@@ -465,9 +520,40 @@ python -m maskgw.mcp
 
 `MASKGW_CONFIG` aponta outro `masking.yaml` (default: `config/masking.yaml`).
 
-Transporte: **stdio**. Nenhuma porta e aberta. Falha em qualquer passo do
-startup termina o processo com codigo 1, e o servidor nunca fica disponivel
-parcialmente funcional.
+Transporte de dados: **stdio**. Falha em qualquer passo do startup termina o
+processo com codigo 1, e o servidor nunca fica disponivel parcialmente
+funcional.
+
+**Sem `MASKGW_ADMIN_ENABLED=1`, nenhuma porta e aberta** — o processo e
+exatamente o de antes da Etapa 7: nenhuma thread nova, nenhum lock de arquivo e
+nenhum caminho de escrita.
+
+### 9b.1 Como subir tambem a Admin API (opcional, Etapa 7)
+
+```bash
+export MASKGW_ADMIN_ENABLED=1
+export MASKGW_ADMIN_TOKEN="<token com ao menos 32 caracteres>"
+python -m maskgw.mcp
+```
+
+`MASKGW_ADMIN_BIND` (default `127.0.0.1`) aceita **so** `127.0.0.1`, `::1` e
+`localhost`; `MASKGW_ADMIN_PORT` default `8765`. Bind fora de loopback, token
+ausente ou curto, porta invalida e porta ocupada **impedem o startup** — e o
+MCP nunca fica disponivel.
+
+Leitura, com o token no header e so nele:
+
+```bash
+curl -H "Authorization: Bearer $MASKGW_ADMIN_TOKEN" http://127.0.0.1:8765/admin/v1/status
+```
+
+As oito rotas sao `GET`/`HEAD`: `status`, `config`, `rules`, `rules/{id}`,
+`exceptions`, `exceptions/{id}`, `transformers` e `protected`. **Nao ha escrita
+nesta etapa**, nao ha `/docs` e nao ha CORS. Token em query string ou cookie
+nunca e aceito, e `Origin`/`Referer` presentes recusam a requisicao com `403`.
+
+O startup anuncia host e porta em `stderr`; `stdout` continua exclusivamente
+com o protocolo MCP.
 
 ## 9c. Postura de seguranca (leia antes de expor)
 
@@ -491,8 +577,19 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE EXECUTE ON FUNCTIONS FROM PUBLI
 - default ALLOW: coluna sensivel com nome fora do padrao passa em claro
 
 Conclusao: com o `EXECUTE` revogado e o oraculo aceito, **uso interno com
-cliente semi-confiavel**. Nao adequado a exposicao externa — nao ha
-autenticacao e o transporte e stdio.
+cliente semi-confiavel**. Nao adequado a exposicao externa — o transporte de
+dados e stdio e nao ha autenticacao nele.
+
+**A Admin API da Etapa 7 nao muda essa conclusao.** Ela e loopback-only, sem
+TLS, com um token estatico e um unico papel; autentica o plano administrativo,
+e nao o plano de dados. Antes de habilita-la:
+
+- o token e um segredo de verdade: 32+ caracteres, de `MASKGW_ADMIN_TOKEN`, e
+  nunca em linha de comando, onde apareceria em `ps`;
+- quem alcanca `127.0.0.1` alcanca a porta. Numa maquina multiusuario, isso
+  inclui outros usuarios locais;
+- rotacao e trocar a variavel e reiniciar. Nao ha endpoint que rotacione
+  secret, e nao havera.
 
 ## 9d. Mudancas de comportamento da Fase 6.1
 
@@ -505,11 +602,45 @@ Tres, todas documentadas e cobertas por teste:
 3. **`mode` default das exceptions e `exact`** (D-045). Configuracao que
    dependa de exception por substring precisa declarar `mode: contains`.
 
+## 9e. Mudancas de comportamento da Etapa 7
+
+Uma so, e ela e opcional:
+
+1. **Existe uma porta de rede, quando pedida.** Com `MASKGW_ADMIN_ENABLED=1` o
+   processo passa a abrir um socket em loopback e a manter uma thread HTTP
+   nao-daemon. **Sem a variavel, nada muda** — nenhuma porta, nenhuma thread,
+   nenhum lock de arquivo —, e isso e teste, inclusive num processo real.
+
+Mudancas internas que nao alteram comportamento observavel do MCP:
+
+- `TransformerRegistry.register` aceita os nomes dos parametros de cada
+  transformer, para que `GET /admin/v1/transformers` os publique a partir de uma
+  fonte unica (D-056). Chamadas existentes continuam validas;
+- `RuntimeRegistry` conta aquisicoes, e `AdminConfigService` conta operacoes
+  administrativas, para os contadores de `/status`. Sao inteiros em memoria, nao
+  historico, e **nao** antecipam `AdminAudit`;
+- `AdminConfigService.snapshot()` devolve `AdminSnapshot` — `revision`,
+  documento e `SqlPolicy` de UMA leitura do runtime publicado — e as funcoes de
+  `views.py` passam a receber esse snapshot em vez do servico (D-057). As
+  propriedades `revision`, `adopted`, `document` e `sql_policy` continuam
+  existindo para leitura avulsa; o que nao se pode e combinar duas delas na
+  mesma resposta;
+- `AdminHttpServer.stop()` **bloqueia ate a thread HTTP terminar**: nao ha mais
+  `shutdown_timeout`, e o limite passou para o `timeout_graceful_shutdown` do
+  uvicorn, que encerra requisicoes arrastadas para que a thread sempre chegue ao
+  fim (D-057). No caminho normal nada muda;
+- o composition root adota a referencia do servidor ANTES de `start()`
+  (`_build_admin_http` constroi sem iniciar), e `Application` ganhou `_closing`
+  permanente: `run()` recusa uma aplicacao em desmontagem e `repr()` reporta
+  `closing` em vez de `ready` (D-057);
+- piso do uvicorn subiu para `>=0.29`, versao em que
+  `timeout_graceful_shutdown` existe.
+
 ## 10. Como continuar
 
-A Fase 7 esta em andamento, com as Etapas 1–6 concluidas. A proxima tarefa e
-**exclusivamente a Etapa 7**, ainda nao iniciada. A regra de nao avancar de
-etapa sem aprovacao continua valendo.
+A Fase 7 esta em andamento, com as Etapas 1–7 concluidas. A proxima tarefa e
+**exclusivamente a Etapa 8** — `POST /admin/v1/config:validate` —, ainda nao
+iniciada. A regra de nao avancar de etapa sem aprovacao continua valendo.
 
 ### A. Endurecer o que resta (inventario preservado; nao e a proxima etapa)
 
@@ -534,10 +665,10 @@ Os que precisam de codigo, com custo em `docs/FUTURE-HARDENING.md`:
 
 ```text
 Fase em andamento:
-Fase 7 — Admin API, Etapas 1–6 concluidas
+Fase 7 — Admin API, Etapas 1–7 concluidas
 
 Proxima tarefa:
-Etapa 7 — aplicacao HTTP, auth, bind, headers e rotas de leitura — NAO INICIADA
+Etapa 8 — POST /admin/v1/config:validate — NAO INICIADA
 ```
 
 A Etapa 5 concluiu os primitivos de filesystem seguro em
@@ -552,24 +683,35 @@ passa a adquirir o `ConfigFileStore` quando o admin esta habilitado, mantendo-o
 ate o shutdown. O runtime inicial e construido dos bytes do snapshot lido sob o
 lock, para que o digest de referencia corresponda ao runtime publicado.
 
-Como o admin e habilitado hoje: `build_application(admin_enabled=True)`. **Nao
-ha variavel de ambiente ainda** — `MASKGW_ADMIN_ENABLED`, `MASKGW_ADMIN_TOKEN`,
-`MASKGW_ADMIN_BIND` e `MASKGW_ADMIN_PORT` pertencem a Etapa 7 (D-055). Com o
-default `False`, o processo e exatamente o de antes: nenhum lock, nenhuma secao
-critica, nenhum caminho de escrita.
+A Etapa 7 criou `maskgw/admin/http/` e a fronteira de rede: as oito rotas de
+leitura, autenticacao por bearer token em header, bind so em loopback, as
+quatro camadas anti-CSRF, o limite de 1 MiB que corta streaming, os headers
+obrigatorios e os tres handlers de erro. O admin passa a ser habilitado por
+`MASKGW_ADMIN_ENABLED=1`, e nao mais so por parametro de composicao.
 
-O que a Etapa 6 deliberadamente **nao** fez, e nao deve ser presumido pronto:
+`build_application` tem agora **dois** parametros administrativos, e a
+distincao importa: `admin_enabled` compoe a secao critica — lock e caminho de
+escrita —, e `admin_http` acrescenta a fronteira HTTP — thread, socket e rotas.
+O segundo implica o primeiro, nunca o contrario. `resolve_admin_settings()` le
+o ambiente e e o passo 1 do startup, antes de qualquer arquivo ser aberto.
 
-- FastAPI, rota, bind, porta, autenticacao, anti-CSRF, headers e limites de
-  corpo — Etapa 7;
-- `config:validate` — Etapa 8;
+O que a Etapa 7 deliberadamente **nao** fez, e nao deve ser presumido pronto:
+
+- `POST /admin/v1/config:validate` — Etapa 8. Nao ha rota com corpo, e por isso
+  o `RequestValidationError` handler existe mas nao e alcancavel pelas rotas
+  registradas;
 - as rotas de escrita, a operacao `config:adopt` completa (IDs aleatorios,
   `confirm_comment_loss` e backup dos bytes originais) e o backup — Etapa 9.
   O que existe e a **pre-condicao assimetrica** do passo 1, que e parte da
   secao critica: `AdminOperation.ADOPT` exige estado nao adotado e
   `expected_revision: 0`; as demais escritas exigem estado adotado;
-- `AdminAudit` — Etapa 10. `admin/` nao importa `logging`, e isso e teste;
+- `AdminAudit` — Etapa 10. `admin/` nao importa `logging`, e isso e teste. Os
+  contadores de `/status` sao inteiros em memoria, nao historico;
 - a suite adversarial HTTP — Etapa 11.
+
+**`IMMUTABLE_FIELD` nao foi declarada** (D-056): ela so e alcancavel por rota de
+escrita com corpo, e declara-la agora fixaria o status HTTP de uma operacao da
+Etapa 9. A Etapa 9 a acrescenta.
 
 A especificacao aprovada esta em `docs/PHASE-7-SPEC.md`.
 Ela cobre endpoints, autenticacao, bind e CORS, schemas, IDs e migracao,
@@ -591,11 +733,11 @@ removido da primeira versao, `409 CONFIG_OUT_OF_SYNC` antes de toda escrita,
 `replace`, lock exclusivo de arquivo contra um segundo processo, bind so em
 loopback, e uma composition root em `bootstrap/` que e o unico modulo autorizado
 a conhecer os dois planos. A composition root foi implementada na Etapa 4, o
-filesystem na Etapa 5 e a serializacao com as duas verificacoes de digest e a
-semantica de durabilidade na Etapa 6; os itens de HTTP — bind, porta e
-autenticacao — continuam fora do codigo.
+filesystem na Etapa 5, a serializacao com as duas verificacoes de digest e a
+semantica de durabilidade na Etapa 6, e os itens de HTTP — bind so em loopback,
+porta e autenticacao — na Etapa 7.
 
-As Etapas 7–11 ainda nao foram iniciadas.
+As Etapas 8–11 ainda nao foram iniciadas.
 
 Objetivo: superficie administrativa separada do MCP para gerenciar
 configuracao, policies, status e auditoria sem editar arquivo a mao.
@@ -665,9 +807,9 @@ automatico, banco de configuracao, Redis, background workers.
 ### Antes de iniciar a proxima etapa
 
 - `git status --short` vazio: a arvore precisa estar limpa
-- suite verde: **1494 testes coletados**, 1485 passed e 9 skips condicionais
+- suite verde: **1880 testes coletados**, 1871 passed e 9 skips condicionais
   de plataforma; `ruff check`, `ruff format --check` e `mypy --strict` sem erros
-- PostgreSQL real disponivel via `MASKGW_TEST_DSN`: 410 testes marcados como
+- PostgreSQL real disponivel via `MASKGW_TEST_DSN`: 415 testes marcados como
   integracao, todos executando, sem skip por ausencia dele
 - neste host Windows, rode o pytest com pilha de thread ampliada (64 MiB), ou o
   teste de payload gigante derruba o processo. Nunca o transforme em `skip`

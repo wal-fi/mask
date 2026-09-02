@@ -2,7 +2,7 @@
 
 > **Documento histórico e registro de andamento.** As seis fases estão
 > concluídas, mais a Fase 6.1 de hardening. A Fase 7 está em andamento, com as
-> Etapas 1–6 concluídas. Para o estado atual, leia `docs/HANDOFF.md`.
+> Etapas 1–7 concluídas. Para o estado atual, leia `docs/HANDOFF.md`.
 >
 > Cada seção abaixo registra o escopo original **e** o que a medição obrigou a
 > corrigir no plano — é aí que está o valor de reler isto.
@@ -236,7 +236,8 @@ A implementação segue `docs/PHASE-7-SPEC.md` de forma incremental:
 | 4 — composition root e lifecycle | concluída | `7c06132` |
 | 5 — filesystem seguro: verificações, lock exclusivo, escrita atômica, digest e limpeza de temporários | concluída | `d651fe0` |
 | 6 — seção crítica administrativa e fluxo completo de escrita/reload | concluída | `git log -- src/maskgw/admin` |
-| 7 — aplicação HTTP/FastAPI e sua segurança e rotas de leitura | próxima; não iniciada | — |
+| 7 — aplicação HTTP/FastAPI e sua segurança e rotas de leitura | concluída | `git log -- src/maskgw/admin/http` |
+| 8 — `POST /admin/v1/config:validate` | próxima; não iniciada | — |
 
 A sincronização com `origin/master` deve ser conferida pelo Git, não inferida
 deste documento. A Etapa 4 criou `bootstrap/` como composition root, removeu
@@ -255,9 +256,21 @@ swap, atualização do digest e fechamento do aposentado. O composition root pas
 a adquirir o `ConfigFileStore` quando o admin está habilitado por
 `build_application(admin_enabled=True)`, e a liberá-lo por último no shutdown.
 
-Continua **não havendo** FastAPI, rota, bind, porta, autenticação ou variável de
-ambiente administrativa; a aplicação HTTP pertence à Etapa 7 e não foi
-antecipada.
+A Etapa 7 adicionou `maskgw/admin/http/` — a primeira porta de rede do projeto,
+opcional e desligada por default. Oito rotas `GET`/`HEAD` sob `/admin/v1`,
+autenticação por bearer token só em header, bind exclusivamente em loopback,
+as quatro camadas anti-CSRF da §3.3, limite de corpo de 1 MiB que corta
+streaming sem bufferizar, `Cache-Control: no-store` em toda resposta, nenhum
+header CORS, e os três handlers de erro da §10.3. FastAPI e uvicorn entraram na
+stack e são usados só ali — importar `maskgw.admin` continua não os carregando.
+
+O admin passa a ser habilitado por `MASKGW_ADMIN_ENABLED=1`; `build_application`
+ganha `admin_http` ao lado de `admin_enabled`, e o segundo implica o primeiro.
+O startup confirma o bind antes de liberar o MCP, e o shutdown faz `join` da
+thread HTTP antes de fechar os runtimes.
+
+Continua **não havendo** rota de escrita, `config:validate`, adoção com backup
+ou `AdminAudit`: são as Etapas 8, 9 e 10, e não foram antecipadas.
 
 Objetivo: criar uma superfície administrativa separada do MCP para
 gerenciamento seguro de configuração, policies, status e auditoria.
@@ -279,13 +292,25 @@ compilação, conexão e capability check antes de ser escrito.
 D-055 registra as escolhas de implementação da Etapa 6 que a especificação não
 fixava: o runtime candidato é construído do documento reparseado dos bytes que
 serão persistidos; o callback de mutação e a leitura administrativa recebem
-cópia profunda, nunca o documento do runtime publicado; o plano administrativo
-tem vocabulário próprio de erro; e o admin é habilitado por parâmetro de
-composição enquanto não existe a aplicação HTTP.
+cópia profunda, nunca o documento do runtime publicado; e o plano administrativo
+tem vocabulário próprio de erro.
 
-**Próximo passo: Etapa 7, somente após autorização.** Ela fará a aplicação
-HTTP — autenticação, bind em loopback, anti-CSRF, headers, limites, handlers de
-erro e rotas de leitura; não foi antecipada.
+D-056 registra as escolhas de implementação da Etapa 7: quatro categorias de
+erro novas para as recusas de fronteira, cujos status a §3.3 fixa mas cujos
+nomes a §10.2 não fornecia; a ordem entre as camadas de middleware; a contenção
+da exceção por fora do Starlette; o `bind` na thread chamadora; a declaração dos
+parâmetros de transformer no registry; e os contadores de `/status`. A revisão
+da Etapa 7 aprovou D-056 como decisão de contrato.
+
+D-057 registra as duas correções exigidas nessa revisão: o **snapshot
+administrativo coerente** — revision, documento e política de uma única leitura
+do runtime publicado, porque o par misturado quebraria o `expected_revision` da
+Etapa 9 — e o **shutdown sem timeout**, em que `stop()` espera a thread HTTP até o
+fim, a referência do servidor é adotada antes de `start()` e `_closing` impede
+que uma aplicação em desmontagem volte a ser usada.
+
+**Próximo passo: Etapa 8, somente após autorização.** Ela fará
+`POST /admin/v1/config:validate`; não foi antecipada.
 
 ---
 
@@ -305,10 +330,10 @@ porta de rede hoje é uma decisão de segurança (D-036), não uma lacuna.
 
 ## Estado atual
 
-Fases 1 a 6.1 concluídas. Fase 7 em andamento, Etapas 1–6 concluídas; Etapa 7
+Fases 1 a 6.1 concluídas. Fase 7 em andamento, Etapas 1–7 concluídas; Etapa 8
 não iniciada. Estado validado contra PostgreSQL 16.15 real, com a suíte
-inteira: 1494 testes coletados, 1485 aprovados e 9 pulados por condição de
-plataforma, sem nenhum deselect. Com `-m integration`, 410 aprovados e nenhum
+inteira: 1915 testes coletados, 1906 aprovados e 9 pulados por condição de
+plataforma, sem nenhum deselect. Com `-m integration`, 415 aprovados e nenhum
 skip por falta de DSN. Neste host Windows o pytest precisa de pilha de thread
 ampliada (64 MiB) por causa de um teste adversarial da Fase 6; é ajuste de
 ambiente, não correção de produto. Detalhes em `docs/HANDOFF.md`, seções 6

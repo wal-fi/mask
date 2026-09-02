@@ -14,6 +14,16 @@ dependencies = [
     "psycopg[binary]>=3.1",
     "pydantic>=2.6",
     "PyYAML>=6",
+    # Fase 7, Etapa 7: a fronteira HTTP administrativa. Entram juntas e so
+    # agora, porque a especificacao condicionava a adocao do FastAPI a
+    # aprovacao da Fase 7 (secao 14.2). Sao usadas EXCLUSIVAMENTE pelo plano
+    # administrativo: o MCP continua stdio only (D-036), e nenhuma porta e
+    # aberta sem MASKGW_ADMIN_ENABLED=1.
+    "fastapi>=0.110",
+    # >= 0.29 por causa de `timeout_graceful_shutdown`: e ele que limita a
+    # espera do SERVIDOR por requisicoes em voo, para que o `join` do shutdown
+    # possa ser integral sem risco de prender o processo (D-057).
+    "uvicorn>=0.29",
 ]
 
 [project.optional-dependencies]
@@ -78,6 +88,39 @@ select = [
 # Os homoglifos Unicode (RUF001) sao exatamente o que se testa.
 "tests/security/*" = ["S608", "RUF001"]
 "tests/test_sensitivity.py" = ["S608"]
+# Fase 7, Etapa 7 — a suite da fronteira HTTP administrativa.
+#
+# Os codigos abaixo sao propriedades do que esta sendo testado, e nao descuido:
+#
+# ARG001/ARG002  uma app ASGI precisa aceitar `(scope, receive, send)` mesmo
+#                quando nao usa os tres; a assinatura e o protocolo.
+# N802           varios testes gritam a parte que importa no nome —
+#                `..._vem_ANTES_do_415`, `..._e_NOT_FOUND` — porque e a ordem
+#                entre camadas que o teste existe para fixar.
+# PLC0415        imports locais, para nao carregar em modulo o que so um teste
+#                usa (`hashlib`, `json`, `Runtime`).
+# S104/S105/S106 `0.0.0.0` e o bind que o startup TEM de recusar, e os tokens
+#                sao marcadores de teste que os testes de vazamento procuram.
+#                Nenhum e credencial real.
+# S310           `urlopen` contra `127.0.0.1`, com esquema fixo no proprio
+#                teste; e o cliente HTTP do teste de coexistencia com o MCP.
+# S324           `md5` usado para PROVAR que o hash de um segredo nao aparece
+#                na resposta — o oposto de usar md5 para proteger algo.
+# S608           SQL montada a partir de constantes do proprio modulo, como nos
+#                demais arquivos de integracao.
+# PLR0913        o cliente HTTP cru: cada header controlavel e um parametro.
+# RUF012         tabela de dados de teste declarada como atributo de classe.
+"tests/admin_http_support.py" = ["ARG001", "PLC0415", "PLR0913", "S105"]
+"tests/test_admin_http_boundary.py" = ["ARG001", "ARG002", "N802", "PLC0415"]
+"tests/test_admin_http_leakage.py" = ["ARG002", "N802", "S106", "S324"]
+"tests/test_admin_http_lifecycle.py" = ["ARG001", "N802", "PLC0415", "S104", "S106"]
+"tests/test_admin_http_mcp_coexistence.py" = ["S106", "S310", "S608"]
+"tests/test_admin_http_reads.py" = ["N802", "PLC0415", "RUF012", "S105"]
+"tests/test_admin_http_settings.py" = ["S104", "S105"]
+"tests/test_admin_http_surface.py" = ["N802", "PLC0415", "S106"]
+# O subprocesso mede o que `maskgw.admin` carrega; interpretador e programa sao
+# constantes do proprio teste, como em `test_purity.py`.
+"tests/test_plan_separation.py" = ["S603"]
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "parents"

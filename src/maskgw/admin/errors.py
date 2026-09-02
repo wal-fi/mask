@@ -30,14 +30,27 @@ from maskgw.errors import MaskGatewayError
 
 
 class AdminErrorCategory(StrEnum):
-    """As categorias da secao 10.2 alcancaveis pelo fluxo de escrita/reload.
+    """As categorias da secao 10.2, mais as da fronteira HTTP da Etapa 7.
 
-    O conjunto e fechado. As categorias exclusivas da fronteira HTTP —
-    `UNAUTHORIZED`, `NOT_FOUND`, `SCHEMA_INVALID`, `IMMUTABLE_FIELD` — nascem
-    com a aplicacao HTTP da Etapa 7 e nao pertencem a este modulo, porque
-    nenhum caminho desta etapa pode produzi-las.
+    O conjunto e fechado. A primeira metade e alcancavel pelo fluxo de
+    escrita/reload da Etapa 6; a segunda nasceu com a aplicacao HTTP, e nenhum
+    caminho da secao critica pode produzi-la.
+
+    `IMMUTABLE_FIELD`, tambem prevista na secao 10.2, NAO esta aqui: ela so e
+    alcancavel por uma rota de escrita com corpo, e a Etapa 7 nao registra
+    nenhuma. Declara-la agora fixaria, sem necessidade, o status HTTP de uma
+    operacao da Etapa 9.
+
+    Quatro categorias — `HOST_NOT_ALLOWED`, `CROSS_ORIGIN_REJECTED`,
+    `UNSUPPORTED_MEDIA_TYPE` e `PAYLOAD_TOO_LARGE` — nao constam da secao 10.2.
+    A especificacao fixa os STATUS dessas recusas (secao 3.3: 400, 403, 415, e
+    o limite de 1 MiB de 12.7) e fixa que toda resposta de erro tem a MESMA
+    forma, com `error` de conjunto fechado (secao 4.4) — e nao fornece o nome
+    para elas. Reaproveitar uma categoria existente mentiria sobre o motivo;
+    omitir o campo quebraria a forma unica. Ver docs/DECISIONS.md (D-056).
     """
 
+    # -- secao 10.2, alcancaveis pela secao critica administrativa --------
     CONFIG_INVALID = "CONFIG_INVALID"
     CONFIG_RELOAD_ERROR = "CONFIG_RELOAD_ERROR"
     CONFIG_WRITE_ERROR = "CONFIG_WRITE_ERROR"
@@ -48,6 +61,16 @@ class AdminErrorCategory(StrEnum):
     REVISION_CONFLICT = "REVISION_CONFLICT"
     RELOAD_BUSY = "RELOAD_BUSY"
     INTERNAL_ERROR = "INTERNAL_ERROR"
+
+    # -- fronteira HTTP (Etapa 7) -----------------------------------------
+    UNAUTHORIZED = "UNAUTHORIZED"
+    NOT_FOUND = "NOT_FOUND"
+    SCHEMA_INVALID = "SCHEMA_INVALID"
+    METHOD_NOT_ALLOWED = "METHOD_NOT_ALLOWED"
+    HOST_NOT_ALLOWED = "HOST_NOT_ALLOWED"
+    CROSS_ORIGIN_REJECTED = "CROSS_ORIGIN_REJECTED"
+    UNSUPPORTED_MEDIA_TYPE = "UNSUPPORTED_MEDIA_TYPE"
+    PAYLOAD_TOO_LARGE = "PAYLOAD_TOO_LARGE"
 
 
 #: Texto fixo por categoria. Nenhum deles cita arquivo, campo, valor ou causa.
@@ -74,6 +97,18 @@ CATEGORY_DETAILS: Final[dict[AdminErrorCategory, str]] = {
     ),
     AdminErrorCategory.RELOAD_BUSY: "A retired runtime is still in use; retry later.",
     AdminErrorCategory.INTERNAL_ERROR: "The administrative operation could not be completed.",
+    # Fronteira HTTP. Nenhum destes cita header recebido, caminho, metodo,
+    # tamanho medido ou qualquer coisa que o chamador tenha enviado: um texto
+    # que ecoasse a entrada seria o mesmo vazamento que o handler default do
+    # FastAPI produz com `input` (secao 4.5).
+    AdminErrorCategory.UNAUTHORIZED: "Authentication is required.",
+    AdminErrorCategory.NOT_FOUND: "The requested resource does not exist.",
+    AdminErrorCategory.SCHEMA_INVALID: "The request does not match the expected schema.",
+    AdminErrorCategory.METHOD_NOT_ALLOWED: "The method is not allowed for this resource.",
+    AdminErrorCategory.HOST_NOT_ALLOWED: "The Host header is not accepted.",
+    AdminErrorCategory.CROSS_ORIGIN_REJECTED: "Browser-originated requests are not accepted.",
+    AdminErrorCategory.UNSUPPORTED_MEDIA_TYPE: "The request body must be application/json.",
+    AdminErrorCategory.PAYLOAD_TOO_LARGE: "The request body is too large.",
 }
 
 #: A unica categoria que afirma que a mudanca tomou efeito (secao 7.6). Depois

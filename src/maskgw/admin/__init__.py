@@ -32,6 +32,7 @@ from maskgw.admin.service import (
     AdapterFactory,
     AdminConfigService,
     AdminOperation,
+    AdminSnapshot,
     AdminWriteResult,
     ConfigMutation,
 )
@@ -44,6 +45,7 @@ __all__ = [
     "AdminError",
     "AdminErrorCategory",
     "AdminOperation",
+    "AdminSnapshot",
     "AdminWriteResult",
     "ConfigMutation",
     "RenderedDocument",

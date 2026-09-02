@@ -160,7 +160,7 @@ class RuntimeRegistry:
     bloquearia a aquisicao de toda query nova.
     """
 
-    __slots__ = ("_current", "_lock", "_max_retired", "_retired")
+    __slots__ = ("_acquired_total", "_current", "_lock", "_max_retired", "_retired")
 
     def __init__(self, initial: Runtime, *, max_retired: int = MAX_RETIRED_RUNTIMES) -> None:
         self._lock = threading.Lock()
@@ -168,6 +168,13 @@ class RuntimeRegistry:
         # Aposentados ainda nao fechados, na ordem em que foram aposentados.
         self._retired: list[Runtime] = []
         self._max_retired = max_retired
+        # Aquisicoes desde o start. Uma query adquire exatamente uma vez
+        # (D-054), entao este contador E a contagem de queries que a secao
+        # 13.4 pede em `GET /admin/v1/status`. Vive aqui, e nao no Gateway,
+        # porque `runtime/` fica abaixo dos dois planos: o admin plane pode
+        # le-lo sem conhecer `gateway/`. E contador, nunca historico — se
+        # perde no restart, e o schema do status diz isso.
+        self._acquired_total = 0
 
     # -- leitura ---------------------------------------------------------
 
@@ -185,6 +192,11 @@ class RuntimeRegistry:
         """Quantos aposentados ainda estao abertos."""
         with self._lock:
             return len(self._retired)
+
+    def acquired_total(self) -> int:
+        """Aquisicoes bem-sucedidas desde o start. Metadata, nunca historico."""
+        with self._lock:
+            return self._acquired_total
 
     def check_can_swap(self) -> None:
         """Regra do limite, avaliada ANTES de construir o candidato.
@@ -222,6 +234,10 @@ class RuntimeRegistry:
                 msg = "runtime publicado esta aposentado ou fechado"
                 raise RuntimeError(msg)
             runtime._refcount += 1
+            # Contado somente na aquisicao BEM-SUCEDIDA, sob o mesmo lock que
+            # incrementa o refcount: um contador atualizado fora dele contaria
+            # aquisicoes que nunca aconteceram.
+            self._acquired_total += 1
             return runtime
 
     def release(self, runtime: Runtime) -> None:

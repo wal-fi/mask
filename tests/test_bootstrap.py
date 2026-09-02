@@ -1,9 +1,13 @@
 """Fase 7, etapas 4 e 6: composition root, startup e shutdown.
 
-Sem admin HTTP: nao ha thread HTTP, bind nem porta, e isso e a Etapa 7. O que a
-Etapa 6 acrescentou aqui e a composicao do plano administrativo em processo —
-lock de arquivo adquirido no startup, secao critica construida sobre os bytes
-exatos que originaram o runtime, e lock liberado por ultimo no shutdown.
+**Sem a fronteira HTTP.** Estes testes cobrem a composicao com `admin_enabled`
+sozinho — lock de arquivo adquirido no startup, secao critica construida sobre
+os bytes exatos que originaram o runtime, e lock liberado por ultimo no
+shutdown —, e continuam afirmando que isso NAO abre porta nem cria thread.
+
+A fronteira HTTP da Etapa 7 e um parametro separado (`admin_http`) e tem
+arquivo proprio: `test_admin_http_lifecycle.py`. A separacao entre os dois
+parametros e o que permite este arquivo continuar valendo sem afrouxar nada.
 
 Os demais testes cobrem o lifecycle ja existente: MCP stdio construido por
 ultimo, falha parcial fechando o que ja subiu, data plane parado antes dos
@@ -403,7 +407,13 @@ class TestAdminComposition:
         monkeypatch: pytest.MonkeyPatch,
         config_file: Path,
     ) -> None:
-        """A Etapa 6 nao abre porta e nao cria thread: isso e a Etapa 7."""
+        """A secao critica sozinha nao abre porta nem cria thread.
+
+        Continua valendo na Etapa 7, e por isso `admin_enabled` e `admin_http`
+        sao parametros distintos: compor a secao critica administrativa nao
+        implica expor uma fronteira HTTP. A fronteira, quando pedida, e coberta
+        em `test_admin_http_lifecycle.py`.
+        """
         before = {(thread.ident, thread.name) for thread in threading.enumerate()}
         monkeypatch.setattr(application_module, "PostgresAdapter", FakeAdapter)
         monkeypatch.setattr(
@@ -453,6 +463,10 @@ class StubApplication:
         self.revision = 7
         self.run_calls = 0
         self.close_calls = 0
+        # Etapa 7: a fronteira de processo consulta a fronteira HTTP para
+        # anunciar host e porta em stderr. `None` e o caso sem Admin API, que e
+        # o que estes testes exercitam.
+        self.admin_http: object | None = None
 
     def run(self) -> None:
         self.run_calls += 1

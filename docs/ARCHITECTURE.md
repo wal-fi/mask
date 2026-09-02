@@ -15,6 +15,9 @@ data access governance. Ver `docs/FUTURE-HARDENING.md` para o que ficou fora.
 - Pydantic (validação de configuração)
 - YAML (formato de configuração)
 - pytest (testes)
+- FastAPI + uvicorn (Fase 7, Etapa 7) — **exclusivamente** na fronteira HTTP
+  administrativa. O MCP continua stdio only (D-036), e nenhuma porta é aberta
+  sem `MASKGW_ADMIN_ENABLED=1`.
 
 ## Fluxo
 
@@ -267,7 +270,8 @@ passa normalmente. Não há default deny neste MVP.
 ```text
 mcp/       adapter de I/O, sem logica de seguranca; stdio apenas
 gateway/   orquestrador e fachada publica; unica camada que toca valor original
-admin/     secao critica administrativa e fluxo de escrita/reload; sem HTTP
+admin/     secao critica administrativa e fluxo de escrita/reload
+admin/http/ fronteira HTTP administrativa, somente leitura; unico lugar com rede
 bootstrap/ composition root; constroi os planos e conduz startup/shutdown
 runtime/   runtime imutavel, refcount, aposentadoria e fechamento unico
 sql/       parser, validator, politica de funcoes e analise de sensitividade
@@ -419,6 +423,87 @@ e o libera por último no shutdown, depois de fechar os runtimes. O runtime
 inicial é construído dos **bytes do snapshot** lido sob o lock, para que o
 digest de referência corresponda exatamente ao runtime publicado (D-055).
 
-A aplicação HTTP — FastAPI, autenticação, bind, anti-CSRF, headers, limites,
-handlers e rotas — pertence à Etapa 7 e não existe. `admin/` também não importa
-`logging`: `AdminAudit` é a Etapa 10, e o registro será feito por `audit/`.
+### Fronteira HTTP administrativa (Etapa 7)
+
+`admin/http/` é a superfície HTTP, e é **somente leitura** nesta etapa. Ela vive
+num subpacote separado de propósito: importar `maskgw.admin` continua **não**
+carregando FastAPI, uvicorn nem starlette, e isso é teste com contraprova. A
+seção crítica da Etapa 6 permanece utilizável — e testável — sem servidor.
+
+```text
+admin/http/settings.py    enable, token, bind e porta; o passo 1 do startup
+admin/http/middleware.py  as camadas de fronteira, ASGI puro
+admin/http/responses.py   forma única de erro e categoria -> status HTTP
+admin/http/schemas.py     modelos de resposta, extra="forbid" e frozen=True
+admin/http/views.py       respostas derivadas do modelo validado do arquivo
+admin/http/app.py         as oito rotas de leitura e os três handlers
+admin/http/server.py      uvicorn numa thread não-daemon, com bind confirmado
+```
+
+As oito rotas são `GET`/`HEAD` sob `/admin/v1`: `status`, `config`, `rules`,
+`rules/{id}`, `exceptions`, `exceptions/{id}`, `transformers` e `protected`. O
+conjunto é comparado com a lista literal da especificação por teste — rota nova
+quebra a suíte. `/docs`, `/redoc` e `/openapi.json` são desligados na
+construção; `redirect_slashes` é desligado, então `/rules/` é `404` e nunca um
+`307`; `OPTIONS` não é registrado e não há header CORS em resposta alguma.
+
+**A ordem das camadas de fronteira** (D-056), de fora para dentro: `Host` fora
+da allowlist `400`; `Origin`/`Referer` presentes `403`; `Content-Length` acima
+de 1 MiB `413`; `Authorization: Bearer` ausente/errado `401`; `Content-Type`
+diferente de `application/json` em método com corpo `415`; leitura contada do
+corpo `413`; roteador. `Host` e `Origin` precedem a autenticação porque não
+dependem do token; a autenticação precede o `Content-Type` e o roteador, que é
+o que garante que **sem credencial válida nunca ocorre um `422`**.
+
+O limite de corpo conta os bytes no `receive` cru, sem bufferizar: um envio
+chunked de vários MiB é cortado em 1 MiB, e o chunk que estoura o limite não é
+repassado adiante.
+
+A camada mais externa é um middleware próprio, **por fora do Starlette**. Ela
+põe `Cache-Control: no-store` e apaga qualquer header CORS em toda resposta —
+inclusive o `404` do roteador e o `405` do Starlette —, e contém qualquer
+exceção: sem isso, o `ServerErrorMiddleware` responde e **relevanta**, e o
+uvicorn registraria o traceback com `exc_info` (D-056, mesmo trap de D-038).
+
+`admin/` continua **não importando `logging`**: `AdminAudit` é a Etapa 10, e o
+registro será feito por `audit/`. O uvicorn sobe com `log_config=None` e
+`access_log=False`, então nenhum byte vai para `stdout` — que continua sendo
+exclusivamente o canal do protocolo MCP.
+
+**Cada resposta nasce de UMA leitura do runtime publicado** (D-057).
+`AdminConfigService.snapshot()` devolve `revision`, documento e `SqlPolicy` do
+mesmo runtime, e `adopted` sai da revision capturada; as funções de `views.py`
+recebem esse `AdminSnapshot`, e não o serviço, de modo que não têm como fazer a
+segunda leitura. Sem isso, um reload entre duas leituras devolveria o conteúdo
+antigo carimbado com a revision nova — e, na Etapa 9, uma escrita baseada nesse
+par passaria pelo `expected_revision` e sobrescreveria uma mudança que ninguém
+viu. A cópia profunda acontece **fora** do lock do registry.
+
+**O startup confirma o bind antes de o MCP existir.** O socket é criado e
+vinculado na thread chamadora, e só então entregue ao uvicorn: porta ocupada
+levanta sincronamente, e o processo não sobe. No shutdown, a thread HTTP recebe
+`join` **antes** de os runtimes fecharem, e o lock de arquivo sai por último.
+
+**E o `join` não tem timeout** (D-057). `Thread.join(timeout=...)` não
+distingue sucesso de expiração, e expirado só há duas saídas, ambas ruins:
+abandonar a thread ou devolver o controle com o shutdown pela metade, obrigando
+cada chamador a lidar com esse meio-estado. `stop()` espera até a thread
+terminar; quando retorna, ela acabou, e só então `_thread`, `_server` e
+`_socket` são soltos. O que se limita é o trabalho, não a espera: o uvicorn
+recebe `timeout_graceful_shutdown` e cancela sozinho requisições que se
+arrastem, então a thread sempre chega ao fim.
+
+A referência do servidor é **adotada antes de `start()`**: `_build_admin_http`
+constrói sem iniciar. Assim, um `start()` que crie a thread e falhe depois
+continua tendo dono, e o `except` de `build_application` chama `stop()` em vez
+de fechar registry e lock com a thread viva.
+
+`_closing` marca que o shutdown começou e nunca volta atrás: `run()` recusa a
+aplicação a partir daí e `repr()` reporta `closing`, nunca `ready`.
+
+`admin_enabled` e `admin_http` são parâmetros distintos do composition root: o
+primeiro compõe a seção crítica, o segundo acrescenta a fronteira HTTP. O
+segundo implica o primeiro, nunca o contrário.
+
+`POST /admin/v1/config:validate` é a Etapa 8; as rotas de escrita e a adoção com
+backup são a Etapa 9; `AdminAudit` é a Etapa 10.

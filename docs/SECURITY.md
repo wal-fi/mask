@@ -229,9 +229,90 @@ isso pertence à Etapa 7. Os invariantes que já valem:
 - **`admin/` não importa `logging`** e não escreve em `stdout`, que continua
   sendo exclusivamente o canal do protocolo MCP.
 
-O que ainda não existe, e não deve ser presumido: autenticação, bind em
-loopback, anti-CSRF, limites de corpo, rotas, `config:validate`, adoção com
-backup e `AdminAudit`.
+## Fronteira HTTP administrativa (Etapa 7)
+
+A Etapa 7 abriu a **primeira porta de rede do projeto**. Ela é opcional,
+desligada por default, e cercada. O que vale:
+
+- **desligada por default.** Sem `MASKGW_ADMIN_ENABLED=1` o processo é
+  exatamente o de antes: nenhuma porta, nenhuma thread, nenhum lock de arquivo
+  e nenhum caminho de escrita. Qualquer outro valor da variável — `0`, `true`,
+  `yes` — **não** habilita, e isso é literal e é teste;
+- **somente loopback.** `MASKGW_ADMIN_BIND` aceita `127.0.0.1`, `::1` e
+  `localhost`, e nada mais. Bind externo **impede o startup**, e não existe
+  variável de escape: sem TLS, uma interface externa poria o bearer token em
+  HTTP claro, em todo request. Bind externo é Fase 9;
+- **um token estático, só por header.** `MASKGW_ADMIN_TOKEN`, mínimo de 32
+  caracteres como a chave HMAC (D-006), nunca no `masking.yaml` e nunca em
+  argumento de linha de comando. Aceito exclusivamente em
+  `Authorization: Bearer`; **nunca** por query string nem por cookie — a
+  primeira vaza em log de proxy, em histórico e em `Referer`, e a segunda é o
+  que torna CSRF possível. Comparação por `hmac.compare_digest`, em tempo
+  constante. Token ausente, malformado e errado produzem o **mesmo** `401`,
+  com o mesmo corpo;
+- **anti-CSRF em quatro camadas** (§3.3): token em header customizado;
+  `Origin` ou `Referer` presentes → `403`, recusado pela **presença** e não pelo
+  valor; `Content-Type` diferente de `application/json` em método com corpo →
+  `415`; `Host` fora de `127.0.0.1:<porta>`, `localhost:<porta>` e
+  `[::1]:<porta>` → `400`, que fecha DNS rebinding;
+- **autenticação antes do schema.** Sem credencial válida nunca ocorre um
+  `422`: um `422` que chegasse antes do `401` transformaria o schema num
+  oráculo para quem não tem token;
+- **corpo limitado a 1 MiB**, com ou sem `Content-Length`. Um envio chunked de
+  vários MiB é cortado contando os bytes no `receive` cru, sem bufferizar, e o
+  chunk que estoura o limite não é repassado adiante;
+- **nenhum header CORS, em nenhuma resposta.** Não há middleware de CORS,
+  `OPTIONS` não é registrado, e a camada externa **apaga** qualquer header CORS
+  que escape. Um `Access-Control-Allow-Origin` num plano administrativo
+  deixaria qualquer página aberta no navegador do administrador ler a
+  configuração;
+- **`Cache-Control: no-store` em toda resposta**, inclusive `401`, `403`,
+  `404`, `405`, `413`, `415`, `422` e `500`;
+- **nenhuma rota implícita.** O conjunto de rotas é comparado por teste com a
+  lista literal da especificação. `/docs`, `/redoc` e `/openapi.json` são
+  desligados na construção — entregariam a superfície inteira a um chamador não
+  autenticado. `redirect_slashes` é desligado: `/rules/` é `404`, nunca `307`;
+- **a Admin API não executa SQL** (D-049), e nesta etapa **não escreve nada**:
+  as oito rotas são `GET`/`HEAD`;
+- **secrets só como `configured`/`missing`.** Nunca o valor, e nunca um
+  derivado — tamanho, prefixo, sufixo, hash ou data. O tipo do campo não admite
+  um terceiro valor;
+- **erro sempre da mesma forma**, com categoria de conjunto fechado e texto
+  fixo. Nunca `str(exc)`, traceback, `repr` arbitrário, o `input` rejeitado ou
+  cadeia de exceção. O `422` lista **caminhos de campo** e reason codes
+  fechados, jamais valores — o handler default do FastAPI inclui o `input` que
+  falhou, e por isso é substituído;
+- **nenhuma exceção chega ao servidor.** A camada mais externa contém tudo:
+  sem ela o `ServerErrorMiddleware` do Starlette responde e **relevanta**, e o
+  uvicorn registraria o traceback com `exc_info` (D-056);
+- **`stdout` permanece do MCP.** uvicorn sobe sem handlers default e sem access
+  log; `admin/` não importa `logging` e não referencia `sys.stdout`. Uma sessão
+  MCP real, com a Admin API sob carga, não vê byte estranho — verificado em
+  subprocesso, contra PostgreSQL real;
+- **o startup confirma o bind antes de o MCP existir**, e o shutdown faz `join`
+  da thread HTTP **antes** de fechar os runtimes, liberando o lock por último.
+  O `join` **não tem timeout**: `stop()` espera até a thread terminar, e só
+  então os runtimes fecham e o lock sai. Com a thread viva, uma requisição
+  administrativa pode estar tocando o registry, e nem abandoná-la nem devolver
+  o controle com o shutdown pela metade seriam aceitáveis. O uvicorn recebe
+  `timeout_graceful_shutdown`, então o que é limitado é o trabalho, não a
+  espera. A referência do servidor é adotada antes de `start()`, e `_closing`
+  impede `run()` sobre uma aplicação em desmontagem (D-057);
+- **cada resposta administrativa nasce de UMA leitura do runtime publicado**
+  (D-057): revision, documento e política vêm do mesmo snapshot, e `adopted` sai
+  da revision capturada. Não é só higiene de leitura — a Etapa 9 vai aceitar
+  `expected_revision`, e essa proteção só vale se a revision que o administrador
+  leu descrever o conteúdo que ele leu. Com o par misturado, uma escrita passaria
+  pelo controle de concorrência e sobrescreveria em silêncio a mudança de outra
+  pessoa.
+
+O que ainda não existe, e não deve ser presumido: `config:validate`, qualquer
+rota de escrita, a adoção com backup e `AdminAudit`.
+
+**Isto não muda a conclusão de exposição.** A Admin API é loopback, sem TLS, com
+um token estático e um único papel. Ela não torna o Gateway adequado a
+exposição externa; o transporte de dados continua stdio, e o `EXECUTE` revogado
+(F-04) continua sendo pré-requisito.
 
 ## Proteção contra alias
 

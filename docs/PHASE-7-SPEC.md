@@ -9,12 +9,26 @@
 >
 > Decisões que este documento implementa, sem reabrir: **D-047 a D-054**.
 >
-> **Estado da implementação.** Etapas 1–6 concluídas. A Etapa 5 implementa os
+> **Estado da implementação.** Etapas 1–7 concluídas. A Etapa 5 implementa os
 > primitivos de §7.1–§7.3 e §7.5 em `maskgw/config/filesystem.py`. A Etapa 6
 > implementa §6, §7.4, §7.6, §12.1 e §12.4 em `maskgw/admin/`, sem HTTP: seção
 > crítica, runtime candidato, persistência, swap e digest de referência,
-> validados contra PostgreSQL 16 real. A Etapa 7 é a próxima e não foi
-> iniciada — não há FastAPI, rota, bind nem porta.
+> validados contra PostgreSQL 16 real. A Etapa 7 implementa §1.1, §2, §3, §4,
+> §9, §10, §11.1–§11.2, §12.6–§12.8 e §12.10 em `maskgw/admin/http/`: as oito
+> rotas de leitura, autenticação, bind loopback, anti-CSRF, headers, limite de
+> corpo, handlers de erro e o lifecycle com bind confirmado. FastAPI e uvicorn
+> entraram na stack (§14.2).
+>
+> **A Etapa 8 é a próxima e não foi iniciada:** não existe
+> `POST /admin/v1/config:validate`, nenhuma rota de escrita (Etapa 9) e nenhum
+> `AdminAudit` (Etapa 10).
+>
+> **Um ponto que esta especificação não fixava**, decidido na implementação e
+> registrado em D-056: as recusas de fronteira de §3.3 e do limite de §12.7 têm
+> status definidos aqui, mas nenhum nome no conjunto fechado de §10.2. O
+> conjunto ganhou `HOST_NOT_ALLOWED`, `CROSS_ORIGIN_REJECTED`,
+> `UNSUPPORTED_MEDIA_TYPE`, `PAYLOAD_TOO_LARGE` e `METHOD_NOT_ALLOWED`.
+> `IMMUTABLE_FIELD` continua sem ser declarada, porque só a Etapa 9 a alcança.
 >
 > **Histórico.** Primeira versão em `dcf497f`, com quatro questões abertas.
 > Esta revisão registra as quatro decisões (§14) e corrige dez bloqueios

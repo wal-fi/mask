@@ -16,6 +16,13 @@ inteira, sem nenhum deselect e sem skip por ausência de `MASKGW_TEST_DSN`. Com
 dois deles marcados `integration` — o reload contra banco real —, e os dois
 executam.
 
+Estado medido ao final da Etapa 7, já com as duas correções de D-057, contra
+PostgreSQL 16.15 real: **1915 coletados, 1906 passed e os mesmos 9 skips
+condicionais de plataforma** — sem nenhum deselect e sem skip por ausência de
+DSN. Com `-m integration`, **415 passed e 0 skipped**. A Etapa 7 acrescentou
+406 testes, cinco deles marcados `integration` — a coexistência dos dois planos
+num processo real.
+
 **Como rodar neste host Windows.** `test_large_query_payload_does_not_crash`,
 da Fase 6, monta uma consulta com 100.000 termos e estoura a pilha da thread na
 análise recursiva da AST, derrubando o interpretador. Rode o pytest com a pilha
@@ -447,6 +454,144 @@ existe, não importa `maskgw.mcp` nem `maskgw.gateway`, não importa `logging`,
 não tem superfície HTTP nesta etapa, e só `bootstrap/application.py` importa os
 dois planos.
 
-A Etapa 7 é a próxima e não foi iniciada: HTTP/FastAPI, autenticação, bind,
-anti-CSRF, headers, limites, handlers de erro e rotas de leitura. Não há
-FastAPI, bind ou porta HTTP no estado coberto por este plano.
+### Etapa 7 — Fronteira HTTP e rotas de leitura
+
+Oito arquivos novos, **406 testes**, e a suíte passa de 1494 para 1915
+coletados.
+
+```text
+tests/admin_http_support.py            apoio: cliente HTTP cru + serviço real
+tests/test_admin_http_settings.py   51 enable, token, bind e porta
+tests/test_admin_http_boundary.py   88 as camadas, sobre uma app ASGI interna
+tests/test_admin_http_surface.py   108 conjunto literal de rotas e métodos
+tests/test_admin_http_reads.py      64 o conteúdo das oito rotas
+tests/test_admin_http_lifecycle.py  44 bind real, porta ocupada, shutdown
+tests/test_admin_http_snapshot.py   26 coerência do snapshot sob reload (D-057)
+tests/test_admin_http_leakage.py    20 vazamento em sucesso e em erro
+tests/test_admin_http_mcp_coexistence.py 5 os dois planos, em processo real
+```
+
+**Por que um cliente por socket, e não um TestClient.** Metade do que a etapa
+precisa provar não passa por um cliente educado: um `Host` alheio, um corpo
+`chunked` de vários MiB **sem** `Content-Length`, um `HEAD` cujo corpo precisa
+vir literalmente vazio no fio, e um token em query string que precisa ser
+ignorado. `http.client` com `skip_host=True` deixa cada header sob controle.
+
+**Por que uma app ASGI interna.** Nenhuma rota desta etapa tem corpo, então o
+limite de 1 MiB e a exigência de `Content-Type` **não são alcançáveis por
+endpoint de produção**. Registrar um só para provocá-los criaria superfície que
+a especificação não pede — e o teste de conjunto literal passaria a proteger uma
+rota inventada pelo próprio teste. Os middlewares são exercitados sobre uma app
+que existe só dentro do arquivo de teste.
+
+O que os 371 cobrem:
+
+- **§12.7, superfície.** O conjunto de rotas registradas é comparado com a
+  lista literal da §1.1 — oito caminhos, `{GET, HEAD}` cada um. `/query`,
+  `/sql`, `/execute`, `/config:reload`, `/docs`, `/openapi.json`, `/redoc` e as
+  rotas das Etapas 8–10 são `404`. `OPTIONS` responde `405` sem header CORS.
+  `HEAD` exige autenticação, devolve o mesmo status e corpo vazio. `/rules/`
+  é `404`, nunca `307`, e nenhuma resposta carrega `Location`.
+- **§2, autenticação.** Ausente, malformado e errado dão o **mesmo** `401`, com
+  o mesmo corpo. Token em query string (quatro formas) e em cookie (três
+  formas) é recusado. O `401` chega **antes** de qualquer `422`. Um teste lê o
+  fonte e afirma o uso de `hmac.compare_digest`.
+- **§3.3, anti-CSRF.** `Origin` e `Referer` recusados pela **presença**,
+  inclusive quando o valor aponta para o próprio servidor. Sete formas de
+  `Host` alheio, incluindo `127.0.0.1.evil.example` e `127.0.0.1:<outra porta>`.
+  `Content-Type` exigido só em método com corpo.
+- **Limite de corpo.** `Content-Length` acima do limite falha **antes de ler**,
+  provado por contador na app de baixo. Chunked de 8 MiB é cortado com `413`, e
+  o que chegou embaixo é `<= 1 MiB` — que é a propriedade de memória, medida
+  também com `tracemalloc`. E o servidor continua atendendo depois do corte.
+- **Ordem entre camadas.** `Host` e `Origin` vencem a ausência de token; o
+  `401` vence o `415`; o `413` por `Content-Length` vence o `401`.
+- **Headers.** `Cache-Control: no-store` numa amostra que cobre 200, 400, 401,
+  403, 404, 405, 413 e 415 — e o teste **afirma que a amostra cobre esses oito
+  status**, para não passar por vacuidade. Nenhum header CORS, nem `Server`.
+- **§12.6, vazamento.** Token, chave HMAC, DSN e suas partes, valor de dado, SQL
+  e caminho do arquivo não aparecem em corpo, header ou `repr` — em sucesso
+  **e** em todos os caminhos de erro. Nem prefixo, nem sufixo, nem MD5/SHA-1/
+  SHA-256 do segredo. Uma app que levanta com DSN, SQL e valor na mensagem vira
+  `INTERNAL_ERROR` sem nada da original, sem traceback e sem derrubar a thread.
+- **§10.3, handlers.** `RequestValidationError` é exercitado sobre uma app de
+  teste — nenhuma rota desta etapa o alcança —, e o valor rejeitado **nunca**
+  aparece no corpo. Todo reason code pertence ao conjunto fechado.
+- **§1.1, conteúdo.** Os oito payloads, com `adopted: false` e IDs nulos numa
+  configuração não adotada, sem inventar IDs. Contadores acompanhando
+  aquisições e aposentados. O catálogo de transformers é **confrontado com o
+  comportamento real dos builders** — omitir um obrigatório falha, um parâmetro
+  fora do declarado é recusado —, para que a declaração não vire documentação
+  falsa. `/protected` mostra `denied_relations`, as quatro regras do validator,
+  o deny-by-default de `pg_`, `allowed_pg_functions` como leitura, e afirma
+  `editable: false`.
+- **Cópia defensiva.** Esvaziar `masking`, `exceptions` e
+  `sql.allowed_pg_functions` do documento devolvido **não** alcança o runtime, e
+  a resposta HTTP seguinte continua completa (D-055).
+- **Coerência do snapshot** (D-057, 26 testes). Um `RuntimeRegistry` de teste
+  troca o runtime publicado **a cada leitura** de `current`, o que torna o swap
+  determinístico em vez de uma corrida. O arquivo abre com a **contraprova**: o
+  padrão antigo — `service.document` e depois `service.revision` — devolve, ali,
+  o documento da revision 3 rotulado como 4, e `adopted` verdadeiro sobre uma
+  revision 0. Sem essa contraprova os demais testes poderiam passar por não
+  provocarem nada. Sobre esse cenário, cada view e cada rota são verificadas:
+  nunca `revision != config.revision`, nunca conteúdo ou política de uma
+  revision sob outra, e uma regra removida no reload ou aparece inteira sob a
+  revision antiga ou responde `NOT_FOUND`. Há ainda um teste de que o lock do
+  registry **não** fica preso durante a cópia profunda, e um de reload contínuo
+  numa thread separada, contra leituras HTTP reais.
+- **§12.10, lifecycle.** Bind real e porta exposta; porta ocupada falhando
+  **sem deixar thread**, com o erro sem host, porta, `errno`, `__cause__` nem
+  `__context__`; timeout de confirmação; falha da fábrica de app liberando o
+  socket; `stop` idempotente; thread não-daemon; `threading.enumerate` idêntico
+  antes e depois. No composition root: a ordem
+  `runtime:connected → http:listening → mcp:started → mcp:stopped → http:joined
+  → runtime:closed → lock:released` é comparada **elemento a elemento**.
+- **Shutdown que não abandona a thread** (D-057). Uma aplicação ASGI segura uma
+  requisição até um `Event` ser liberado. `stop()` roda numa **thread
+  auxiliar** — chamá-lo direto travaria o teste em vez de reprová-lo — e o que
+  se afirma é a sequência: ele **não** retorna enquanto a requisição está presa,
+  a thread `maskgw-admin-http` continua viva, e depois da liberação ele conclui
+  **sozinho**, sem nova chamada. As referências internas só são soltas nesse
+  ponto. Um terceiro caso nunca libera a requisição e prova que o shutdown
+  termina mesmo assim, pelo `timeout_graceful_shutdown` do uvicorn: o limite
+  está no trabalho, não na espera.
+- **Ownership na falha parcial de startup** (D-057). Um duble sobe a thread e só
+  então falha, como um timeout de confirmação faria. O composition root precisa
+  ter ficado com a referência: o teste afirma `stop_calls == 1` e a ordem
+  `runtime:connected → http:stopped → runtime:closed → lock:released`, mais
+  `threading.enumerate` idêntico ao inicial e o lock de arquivo liberado. Com a
+  atribuição antiga — só após `start()` retornar — `stop_calls` é `0`.
+- **Estado durante a desmontagem** (D-057). Um duble inspeciona a aplicação de
+  **dentro** do `stop()`, a única janela em que o shutdown começou e não
+  terminou: `repr()` reporta `closing`, nunca `ready`, e `run()` é recusado ali
+  — sondado de outra thread, para que um `run()` indevidamente aceito reprove em
+  vez de travar. Um quarto teste prende uma requisição por mais de 25 s — acima
+  dos dois timeouts de 10 s que existiam — e verifica que nada fecha enquanto
+  isso, que a liberação conclui tudo na ordem `HTTP → runtime → lock`, e que
+  nenhuma thread `maskgw-admin-http` sobra.
+- **§12.8, separação.** HTTP confinado a `admin/http/`; `mcp/`, `gateway/` e
+  `runtime/` sem dependência de rede; importar `maskgw.admin` **não** carrega
+  FastAPI — com contraprova de que importar `maskgw.admin.http` carrega.
+  Nenhum `print` em `admin/`, e nenhuma referência a `sys.stdout` em `admin/`
+  ou `bootstrap/`.
+- **Coexistência, contra PostgreSQL real** (`integration`, 5 testes). Um
+  processo de verdade — `python -m maskgw.mcp` com a Admin API habilitada por
+  ambiente —, uma sessão MCP real por stdio e, **enquanto ela está aberta**, 75
+  requisições administrativas. O enquadramento JSON-RPC é o próprio detector:
+  um byte estranho em `stdout` quebraria o parsing. O CPF sai mascarado, o
+  `stderr` carrega só as duas linhas fixas de startup — sem access log, sem
+  traceback, sem segredo —, o token é exigido também ali, e a porta é liberada
+  no encerramento. Com a variável ausente, nenhuma porta é aberta e o arquivo
+  de lock não chega a existir.
+
+**Uma armadilha de instrumentação, registrada.** Sob pytest, o access log do
+uvicorn **volta a existir**: o `LogCaptureHandler` é anexado deliberadamente a
+todo logger com `propagate=False` — inclusive `uvicorn.access` —, e o uvicorn
+decide emitir por `hasHandlers()`, avaliado por conexão. Contar registros
+capturados provaria o contrário do que se quer. O teste afirma a **configuração**
+— sem handler próprio e sem propagação — e a ausência real é verificada onde a
+instrumentação não alcança: no subprocesso do teste de coexistência.
+
+`config:validate` é a Etapa 8; as rotas de escrita e a adoção com backup são a
+Etapa 9; `AdminAudit` é a Etapa 10; a suíte adversarial HTTP é a Etapa 11.
