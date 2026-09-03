@@ -26,15 +26,22 @@
 > de compilação estão registrados em D-058, junto da correção do
 > `BodyLimitMiddleware` que a primeira rota com corpo exigiu.
 >
-> **A Etapa 9 é a próxima e não foi iniciada:** nenhuma rota de escrita e nenhum
-> `AdminAudit` (Etapa 10).
+> A Etapa 9 implementa §1.3, §5.3–§5.5, §6, §7.4–§7.6, §11.3 e §12.1–§12.5/§12.9
+> em `maskgw/admin/http/mutations.py` e `app.py`: as **onze rotas de escrita** e
+> a adoção com backup. Cada rota é uma tradução para `AdminConfigService.apply()`
+> — a mutação roda dentro da seção crítica sobre a cópia profunda do documento
+> corrente, sem janela TOCTOU. `IMMUTABLE_FIELD` entrou no conjunto fechado. O
+> contrato de escrita, a identidade de IDs e o backup transacional estão em D-059.
+>
+> **A Etapa 10 (`AdminAudit`) é a próxima e não foi iniciada;** a Etapa 11 (suíte
+> adversarial geral) também não.
 >
 > **Um ponto que esta especificação não fixava**, decidido na implementação e
 > registrado em D-056: as recusas de fronteira de §3.3 e do limite de §12.7 têm
 > status definidos aqui, mas nenhum nome no conjunto fechado de §10.2. O
 > conjunto ganhou `HOST_NOT_ALLOWED`, `CROSS_ORIGIN_REJECTED`,
 > `UNSUPPORTED_MEDIA_TYPE`, `PAYLOAD_TOO_LARGE` e `METHOD_NOT_ALLOWED`.
-> `IMMUTABLE_FIELD` continua sem ser declarada, porque só a Etapa 9 a alcança.
+> `IMMUTABLE_FIELD` foi declarada na Etapa 9 (§10.2), status `422`.
 >
 > **Histórico.** Primeira versão em `dcf497f`, com quatro questões abertas.
 > Esta revisão registra as quatro decisões (§14) e corrige dez bloqueios

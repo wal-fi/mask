@@ -63,6 +63,7 @@ otimizacao, e o que torna a janela recuperavel.
 from __future__ import annotations
 
 import threading
+import time
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from enum import StrEnum
@@ -75,6 +76,7 @@ from maskgw.config.filesystem import (
     ConfigDurabilityError,
     ConfigFileStore,
     ConfigOutOfSyncError,
+    ConfigSnapshot,
 )
 from maskgw.config.gateway import GatewayConfig, build_gateway_config
 from maskgw.config.loader import compile_policy, validate_file_config
@@ -84,6 +86,12 @@ from maskgw.masking.engine import MaskingEngine
 from maskgw.runtime import RetiredRuntimeInUseError, Runtime, RuntimeRegistry
 from maskgw.secretsource import EnvSecretProvider, SecretProvider
 from maskgw.sql.policy import SqlPolicy
+
+
+def _default_epoch() -> int:
+    """Epoch em segundos, para o nome do backup da adocao. Injetavel em teste."""
+    return int(time.time())
+
 
 #: Recebe o documento persistido e devolve o documento candidato, ainda cru.
 #:
@@ -193,6 +201,7 @@ class AdminConfigService:
 
     __slots__ = (
         "_adapter_factory",
+        "_clock",
         "_closed",
         "_critical_section",
         "_lifecycle_lock",
@@ -203,7 +212,7 @@ class AdminConfigService:
         "_store",
     )
 
-    def __init__(
+    def __init__(  # noqa: PLR0913 - parametros de composicao, todos keyword-only
         self,
         *,
         store: ConfigFileStore,
@@ -211,11 +220,18 @@ class AdminConfigService:
         adapter_factory: AdapterFactory,
         reference_digest: str,
         secrets: SecretProvider | None = None,
+        clock: Callable[[], int] = _default_epoch,
     ) -> None:
         self._store = store
         self._registry = registry
         self._adapter_factory = adapter_factory
         self._secrets = secrets if secrets is not None else EnvSecretProvider()
+
+        # Relogio injetavel para o nome do backup da adocao (`.bak.<epoch>`).
+        # Injetavel para que o teste force um nome deterministico — inclusive uma
+        # colisao — sem depender do relogio real (secao 5.4). Usado somente na
+        # adocao, sob a secao critica.
+        self._clock = clock
 
         # Digest dos bytes EXATOS a partir dos quais o runtime publicado foi
         # construido. Lido e escrito somente sob `_critical_section`.
@@ -402,7 +418,7 @@ class AdminConfigService:
 
         self._check_adoption(current_revision, operation)
         self._check_revision(current_revision, expected_revision)
-        self._check_disk_matches_reference()
+        disk = self._check_disk_matches_reference()
         self._check_reload_capacity()
 
         revision = current_revision + 1
@@ -414,6 +430,13 @@ class AdminConfigService:
 
         try:
             self._connect_candidate(candidate)
+            # Backup byte a byte ANTES de persistir, so na adocao (secao 5.4). Os
+            # bytes sao os do passo 3, ja comprovados iguais ao runtime publicado
+            # — os originais, com comentarios. Colisao de nome -> CONFIG_WRITE_ERROR,
+            # e o candidato e fechado pelo `except` abaixo; o arquivo principal
+            # nao foi tocado, porque `_persist` ainda nao rodou.
+            if operation is AdminOperation.ADOPT:
+                self._write_adoption_backup(disk.data)
             persisted = self._persist(rendered.data)
         except BaseException:
             # Passo 6 ou 7 concluido e passo 8 falhado: o candidato existe e
@@ -470,27 +493,33 @@ class AdminConfigService:
                 current_revision=current_revision,
             )
 
-    def _check_disk_matches_reference(self) -> None:
+    def _check_disk_matches_reference(self) -> ConfigSnapshot:
         """Passo 3. O arquivo pode ter sido editado por fora (secao 7.5).
 
         Digest de conteudo, e nao `mtime` ou tamanho: `mtime` tem granularidade
         grosseira e e falsificavel por `touch`, e uma edicao pode preservar o
         tamanho. Divergiu, nada e sobrescrito — a recuperacao e do
         administrador, que decide se a edicao externa vale.
-        """
-        digest: str | None = None
-        try:
-            digest = self._store.read_snapshot().digest
-        except BaseException:
-            digest = None
 
-        if digest is None:
+        Devolve o snapshot lido: os mesmos bytes que a adocao usa para o backup
+        byte a byte (secao 5.4), ja comprovados iguais ao runtime publicado.
+        Assim o backup nao re-le o arquivo, e nao ha janela entre a verificacao
+        e a copia.
+        """
+        snapshot: ConfigSnapshot | None = None
+        try:
+            snapshot = self._store.read_snapshot()
+        except BaseException:
+            snapshot = None
+
+        if snapshot is None:
             # O arquivo ficou ilegivel ou deixou de satisfazer as verificacoes
             # de seguranca. Nada foi escrito e o anterior permanece: e
             # exatamente o que `CONFIG_WRITE_ERROR` promete (secao 7.6).
             raise AdminError(AdminErrorCategory.CONFIG_WRITE_ERROR)
-        if digest != self._reference_digest:
+        if snapshot.digest != self._reference_digest:
             raise AdminError(AdminErrorCategory.CONFIG_OUT_OF_SYNC)
+        return snapshot
 
     def _check_reload_capacity(self) -> None:
         """Passo 4. Recusar ANTES de compilar, construir e conectar (secao 8.5)."""
@@ -524,6 +553,16 @@ class AdminConfigService:
         O rollback pre-commit vale para a identidade do runtime e para o
         conteudo dele. A copia e o que torna isso verdade.
         """
+        # A mutacao roda sob a MESMA secao critica e sobre a copia profunda do
+        # documento corrente — nunca uma leitura anterior (sem janela TOCTOU). Os
+        # erros ESPECIFICOS da mutacao — alvo inexistente, campo imutavel — sao
+        # `AdminError` de categoria fechada, e devem sair com a categoria que a
+        # mutacao escolheu (NOT_FOUND, IMMUTABLE_FIELD), nao viram `CONFIG_INVALID`.
+        # Ja uma posicao invalida dependente do estado, ou a validacao do
+        # documento inteiro, sao `CONFIG_INVALID`. Distinguimos pela categoria: a
+        # mutacao levanta `AdminError`; a validacao levanta `ConfigError` (ou
+        # outra coisa). Tudo capturado, nada reencadeado (D-017).
+        mutation_error: AdminError | None = None
         document: MaskingFileConfig | None = None
         try:
             proposed = dict(mutation(current.model_copy(deep=True)))
@@ -531,8 +570,16 @@ class AdminConfigService:
             # valor vindo da mutacao e sobrescrito, sem discussao.
             proposed["revision"] = revision
             document = validate_file_config(proposed)
+        except AdminError as exc:
+            # Categoria preservada; instancia nova, sem cadeia. `_execute` roda
+            # dentro do `try` de `apply`, que ja reconstroi qualquer `AdminError`,
+            # entao propagar aqui e suficiente — mas reconstruimos por simetria e
+            # para nao depender desse detalhe.
+            mutation_error = AdminError(exc.category, current_revision=exc.current_revision)
         except BaseException:
             document = None
+        if mutation_error is not None:
+            raise mutation_error
         if document is None:
             raise AdminError(AdminErrorCategory.CONFIG_INVALID)
         return document
@@ -602,6 +649,23 @@ class AdminConfigService:
             failed = True
         if failed:
             raise AdminError(AdminErrorCategory.CONFIG_RELOAD_ERROR)
+
+    def _write_adoption_backup(self, original: bytes) -> None:
+        """Backup byte a byte dos bytes originais, so na adocao (secao 5.4).
+
+        `write_backup` cria `<config>.bak.<epoch>` com `O_EXCL` e `0600` e nunca
+        sobrescreve: colisao de nome ou qualquer falha vira `CONFIG_WRITE_ERROR`,
+        levantado FORA do `except` (D-017). O epoch vem do relogio injetavel, e
+        nao dos bytes: dois backups no mesmo segundo colidem, e a colisao e
+        justamente o que a secao 5.4 exige recusar.
+        """
+        failed = False
+        try:
+            self._store.write_backup(original, epoch=self._clock())
+        except BaseException:
+            failed = True
+        if failed:
+            raise AdminError(AdminErrorCategory.CONFIG_WRITE_ERROR)
 
     def _persist(self, data: bytes) -> _Persisted:
         """Passos 8 e 9. O `os.replace` do store e o ponto de nao-retorno."""

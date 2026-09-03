@@ -25,9 +25,9 @@ entao nao compartilha objeto com o runtime publicado (D-055).
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, Strict, model_validator
+from pydantic import BaseModel, ConfigDict, Field, JsonValue, Strict, model_validator
 
 from maskgw.config.ids import EXCEPTION_ID_PATTERN, RULE_ID_PATTERN
 from maskgw.config.models import (
@@ -52,6 +52,16 @@ _STRICT = ConfigDict(extra="forbid", frozen=True)
 #: um `StrEnum` — `mode` fica de fora e continua aceitando esses valores.
 StrictInt = Annotated[int, Strict()]
 StrictBool = Annotated[bool, Strict()]
+
+#: Tipo dos campos `allowed_pg_functions` de escrita (secao 11.3, D-059). E
+#: `JsonValue | None` — QUALQUER valor JSON, ou ausente — de proposito: o campo
+#: aceita toda forma para que a presenca vire `IMMUTABLE_FIELD` administrativo, e
+#: nao `SCHEMA_INVALID`. A presenca e decidida EXCLUSIVAMENTE por
+#: `model_fields_set`, nunca pelo valor: `null` explicito e um campo presente.
+#: `JsonValue` e totalmente serializavel — sem `object` arbitrario dentro do
+#: modelo —, entao `model_json_schema()`, `model_dump()` e `model_dump_json()`
+#: funcionam sem warning nem erro, e nenhum sentinela vaza para schema ou dump.
+JsonOrAbsent = JsonValue | None
 
 
 class SecretState(StrEnum):
@@ -107,9 +117,10 @@ class AdminCounters(BaseModel):
     #: vez (D-054), entao isto e a contagem de queries.
     queries_total: int
 
-    #: Operacoes administrativas de escrita/reload TENTADAS desde o start. Na
-    #: Etapa 7 nao ha rota de escrita, entao so cresce por uso programatico da
-    #: secao critica.
+    #: Operacoes administrativas de escrita/reload TENTADAS desde o start. Desde
+    #: a Etapa 9 cada uma das onze rotas de escrita incrementa este contador ao
+    #: entrar na secao critica — sucesso ou recusa, e uma tentativa e uma
+    #: tentativa. `config:validate` NAO conta: nao e uma escrita.
     admin_operations_total: int
 
 
@@ -497,3 +508,293 @@ class ConfigValidateResponse(BaseModel):
     schema_validated: bool
     policy_compiled: bool
     database_checks_performed: bool
+
+
+# -- escrita e adocao (Etapa 9) ------------------------------------------------
+#
+# Todo request de escrita carrega `expected_revision` (inteiro estrito, >= 0) e o
+# payload da operacao. Cada modelo e PROPRIO da fronteira, com `extra="forbid"` e
+# `frozen=True`, escalares estritos como na Etapa 8, e nenhum compartilhamento com
+# o MCP. A resposta de sucesso e sempre `{"revision", "applied"}`, e nada mais.
+#
+# Tres regras estruturais que estes modelos existem para tornar impossiveis de
+# violar por engano:
+#
+# - um corpo GRANULAR (criar/substituir regra ou exception) NAO tem `id`,
+#   `position` (salvo o create de regra), `revision` nem, numa exception,
+#   `transformer`/`config`. IDs sao identidade do servidor (secao 5.5): um `id`
+#   no corpo cairia no `extra="forbid"` e viraria `SCHEMA_INVALID`;
+# - `allowed_pg_functions` NAO e administravel (secao 11.3). Em `PUT /sql` e `PUT
+#   /config` ele e um campo OPCIONAL declarado so para ser recusado com
+#   `IMMUTABLE_FIELD` quando presente — declara-lo permite distinguir "presente"
+#   (imutavel) de "ausente" (valor atual preservado). Omiti-lo do schema o
+#   transformaria em `SCHEMA_INVALID`, que e a categoria errada;
+# - `expected_revision` e sempre estrito e nao negativo.
+
+
+class WriteResponse(BaseModel):
+    """Sucesso de qualquer escrita: a revision nova e a confirmacao (secao 4.4).
+
+    Exatamente dois campos. Sem conteudo do documento, sem digest, sem secret:
+    o cliente relê o estado com um `GET` se precisar do resto.
+    """
+
+    model_config = _STRICT
+
+    revision: int
+    applied: Literal[True] = True
+
+
+class AdoptRequest(BaseModel):
+    """`POST /admin/v1/config:adopt` (secao 5.3).
+
+    `confirm_comment_loss` deve ser o booleano JSON literal `true`. Uma volta por
+    Pydantic/PyYAML destroi os comentarios do arquivo, e isso e irreversivel —
+    precisa ser dito antes, sem ambiguidade.
+    """
+
+    model_config = _STRICT
+
+    expected_revision: StrictInt = Field(ge=0)
+    #: Estrito por DOIS motivos, e por isso NAO e `Literal[True]` sozinho:
+    #: `Literal[True]` aceita o inteiro `1`, porque `1 == True` em Python. Com
+    #: `StrictBool`, `1`, `0`, `"true"` e `null` sao recusados pelo tipo — so um
+    #: booleano JSON passa —, e o `model_validator` abaixo exige que seja `true`.
+    #: Ausencia, `false`, `0`, `1`, `"true"` e `null`: todos `SCHEMA_INVALID`.
+    confirm_comment_loss: StrictBool
+
+    @model_validator(mode="after")
+    def _must_confirm(self) -> AdoptRequest:
+        if self.confirm_comment_loss is not True:
+            msg = "adoption requires confirm_comment_loss to be true"
+            raise ValueError(msg)
+        return self
+
+
+class DeleteRequest(BaseModel):
+    """Corpo de um `DELETE` de regra/exception: so `expected_revision`."""
+
+    model_config = _STRICT
+
+    expected_revision: StrictInt = Field(ge=0)
+
+
+class RuleContent(BaseModel):
+    """O conteudo de uma regra num corpo granular: sem `id`, sem `position`.
+
+    Espelha `RuleConfig` (mesmos defaults do loader), mas sem os campos que sao
+    identidade do servidor ou ordem. Um `id` ou `position` aqui cai no
+    `extra="forbid"` — `SCHEMA_INVALID`.
+    """
+
+    model_config = _STRICT
+
+    match: str = Field(min_length=1)
+    mode: MatchMode = MatchMode.CONTAINS
+    case_sensitive: StrictBool = False
+    transformer: str = Field(min_length=1)
+    config: dict[str, Any] = Field(default_factory=dict)
+
+
+class ExceptionContent(BaseModel):
+    """O conteudo de uma exception num corpo granular: sem `id`, sem `position`.
+
+    Sem `transformer` nem `config`: uma exception que os trouxesse cairia no
+    `extra="forbid"`.
+    """
+
+    model_config = _STRICT
+
+    match: str = Field(min_length=1)
+    mode: MatchMode = MatchMode.EXACT
+    case_sensitive: StrictBool = False
+
+
+class RuleCreateRequest(BaseModel):
+    """`POST /admin/v1/rules`: cria uma regra. `position` opcional (default fim)."""
+
+    model_config = _STRICT
+
+    expected_revision: StrictInt = Field(ge=0)
+    rule: RuleContent
+    #: Zero-based, de 0 a `len(rules)`. `None` = fim. A validade dependente do
+    #: estado (0..len) e conferida na mutacao, e vira `CONFIG_INVALID`, nao aqui:
+    #: o schema so garante que, se presente, e inteiro estrito e >= 0.
+    position: StrictInt | None = Field(default=None, ge=0)
+
+
+class RuleReplaceRequest(BaseModel):
+    """`PUT /admin/v1/rules/{rule_id}`: substitui o conteudo, preserva ID/posicao."""
+
+    model_config = _STRICT
+
+    expected_revision: StrictInt = Field(ge=0)
+    rule: RuleContent
+
+
+class RuleReorderRequest(BaseModel):
+    """`POST /admin/v1/rules:reorder`: a lista completa de IDs na nova ordem.
+
+    Cada item de `rule_ids` deve casar `RULE_ID_PATTERN` NO SCHEMA: um ID
+    malformado e `SCHEMA_INVALID`, nao `CONFIG_INVALID` — o formato e uma falha de
+    forma do request. A lista PODE ser vazia: e a permutacao completa do conjunto
+    vazio, valida quando a configuracao nao tem regra alguma.
+
+    Ja a semantica — permutacao completa, sem duplicata, sem ID estranho — depende
+    do estado e e conferida na mutacao, que a recusa com `CONFIG_INVALID`.
+    """
+
+    model_config = _STRICT
+
+    expected_revision: StrictInt = Field(ge=0)
+    #: Formato por item, no schema; sem `min_length`, para aceitar a lista vazia.
+    rule_ids: list[Annotated[str, Field(pattern=RULE_ID_PATTERN)]] = Field(default_factory=list)
+
+
+class ExceptionCreateRequest(BaseModel):
+    """`POST /admin/v1/exceptions`: cria uma exception, sempre ao final."""
+
+    model_config = _STRICT
+
+    expected_revision: StrictInt = Field(ge=0)
+    exception: ExceptionContent
+
+
+class ExceptionReplaceRequest(BaseModel):
+    """`PUT /admin/v1/exceptions/{exception_id}`: substitui, preserva ID/posicao."""
+
+    model_config = _STRICT
+
+    expected_revision: StrictInt = Field(ge=0)
+    exception: ExceptionContent
+
+
+class DatabaseWriteRequest(BaseModel):
+    """`PUT /admin/v1/database`: substitui os dois limites, ambos obrigatorios.
+
+    Nao ha DSN, host, usuario, senha nem parametro de conexao — um campo desses
+    cai no `extra="forbid"`.
+    """
+
+    model_config = _STRICT
+
+    expected_revision: StrictInt = Field(ge=0)
+    statement_timeout_ms: StrictInt = Field(
+        ge=MIN_STATEMENT_TIMEOUT_MS,
+        le=MAX_STATEMENT_TIMEOUT_MS,
+    )
+    max_rows: StrictInt = Field(ge=MIN_MAX_ROWS, le=MAX_MAX_ROWS)
+
+
+class SqlWriteRequest(BaseModel):
+    """`PUT /admin/v1/sql`: aditivo em `denied_functions` (secao 11.3).
+
+    `allowed_pg_functions` NAO e administravel. Ele e declarado aqui apenas para
+    que sua PRESENCA — em QUALQUER forma, inclusive `null`, `[]`, string, objeto,
+    booleano ou numero — seja recusada com `IMMUTABLE_FIELD` na mutacao.
+
+    A presenca e detectada por `model_fields_set`, nunca pelo VALOR: `null`
+    explicito e um campo presente, e trata-lo como ausente (checando `is not
+    None`) era o bypass corrigido. O tipo do campo e `object` de proposito — nao
+    `list[str] | None` —, para que qualquer forma seja ACEITA pelo schema e a
+    recusa seja `IMMUTABLE_FIELD` (administrativa), e nao `SCHEMA_INVALID`. O
+    default e um sentinela privado, distinto de qualquer valor JSON, para que a
+    ausencia seja inequivoca mesmo se `model_fields_set` fosse insuficiente.
+    """
+
+    model_config = _STRICT
+
+    expected_revision: StrictInt = Field(ge=0)
+    denied_functions: list[str] = Field(default_factory=list)
+    allowed_pg_functions: JsonOrAbsent = None
+
+    @property
+    def allowed_pg_functions_present(self) -> bool:
+        """`True` se o cliente enviou o campo, em qualquer forma (inclusive `null`)."""
+        return "allowed_pg_functions" in self.model_fields_set
+
+
+class ConfigReplaceRule(BaseModel):
+    """Uma regra no corpo de `PUT /config`. `id` OPCIONAL: presente preserva a
+    identidade; ausente cria (secao 11.3)."""
+
+    model_config = _STRICT
+
+    match: str = Field(min_length=1)
+    mode: MatchMode = MatchMode.CONTAINS
+    case_sensitive: StrictBool = False
+    transformer: str = Field(min_length=1)
+    config: dict[str, Any] = Field(default_factory=dict)
+    #: Formato conferido pelo schema; pertinencia ao documento, pela mutacao.
+    id: str | None = Field(default=None, pattern=RULE_ID_PATTERN)
+
+
+class ConfigReplaceException(BaseModel):
+    """Uma exception no corpo de `PUT /config`. `id` OPCIONAL, como nas regras."""
+
+    model_config = _STRICT
+
+    match: str = Field(min_length=1)
+    mode: MatchMode = MatchMode.EXACT
+    case_sensitive: StrictBool = False
+    id: str | None = Field(default=None, pattern=EXCEPTION_ID_PATTERN)
+
+
+class ConfigReplaceDatabase(BaseModel):
+    """Os dois limites no corpo de `PUT /config`, ambos obrigatorios."""
+
+    model_config = _STRICT
+
+    statement_timeout_ms: StrictInt = Field(
+        ge=MIN_STATEMENT_TIMEOUT_MS,
+        le=MAX_STATEMENT_TIMEOUT_MS,
+    )
+    max_rows: StrictInt = Field(ge=MIN_MAX_ROWS, le=MAX_MAX_ROWS)
+
+
+class ConfigReplaceSql(BaseModel):
+    """A secao `sql` no corpo de `PUT /config`: `denied_functions` obrigatorio.
+
+    `denied_functions` e OBRIGATORIO numa substituicao integral: com um default
+    vazio, `sql: {}` apagaria em silencio todas as negacoes. Ausente ->
+    `SCHEMA_INVALID`.
+
+    `allowed_pg_functions` presente em QUALQUER forma (inclusive `null`) ->
+    `IMMUTABLE_FIELD` na mutacao, detectado por `model_fields_set`. Ausente -> o
+    valor atual e preservado. E o unico modo de preservar o allowlist imutavel.
+    """
+
+    model_config = _STRICT
+
+    denied_functions: list[str]
+    allowed_pg_functions: JsonOrAbsent = None
+
+    @property
+    def allowed_pg_functions_present(self) -> bool:
+        return "allowed_pg_functions" in self.model_fields_set
+
+
+class ConfigReplaceRequest(BaseModel):
+    """`PUT /admin/v1/config`: substituicao integral da configuracao administravel.
+
+    `masking`, `exceptions`, `database` e `sql` (so `denied_functions`) sao
+    obrigatorios. A `revision` e escolhida pelo servidor. Regras de ID (secao
+    11.3, D-059):
+
+    - item com `id` existente: identidade preservada;
+    - item sem `id`: criacao, recebe ID do servidor;
+    - `id` que nao pertence ao documento corrente: tentativa de escolher
+      identidade -> `IMMUTABLE_FIELD` (na mutacao);
+    - IDs atuais omitidos: removidos.
+
+    `sql.allowed_pg_functions` presente em qualquer forma -> `IMMUTABLE_FIELD`;
+    ausente -> o valor atual e preservado em conteudo e ordem (secao 11.3).
+    """
+
+    model_config = _STRICT
+
+    expected_revision: StrictInt = Field(ge=0)
+    masking: list[ConfigReplaceRule]
+    exceptions: list[ConfigReplaceException]
+    database: ConfigReplaceDatabase
+    sql: ConfigReplaceSql

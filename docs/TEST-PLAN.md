@@ -16,14 +16,15 @@ inteira, sem nenhum deselect e sem skip por ausência de `MASKGW_TEST_DSN`. Com
 dois deles marcados `integration` — o reload contra banco real —, e os dois
 executam.
 
-Estado medido ao final da Etapa 8, contra PostgreSQL 16.15 real: **1995
-coletados, 1986 passed e os mesmos 9 skips condicionais de plataforma** — sem
-nenhum deselect e sem skip por ausência de DSN. Com `-m integration`, **415
-passed e 0 skipped**. A Etapa 8 acrescentou 80 testes de `config:validate` — 61
-na primeira entrega e mais 19 na correção de D-058 (adotado sem ID como
-`SCHEMA_INVALID` e escalares estritos); a Etapa 7 havia acrescentado 406, cinco
-deles marcados `integration` — a coexistência dos dois planos num processo real,
-que continua verde com a rota nova ativa.
+Estado medido ao final da Etapa 9 (já com as duas rodadas corretivas), contra
+PostgreSQL 16.15 real: **2121 coletados, 2111 passed e 10 skips condicionais de
+plataforma** — sem nenhum deselect e sem skip por ausência de DSN. Com
+`-m integration`, **485 passed e 1 skip** (o teste POSIX de fsync de diretório,
+que no Windows não se aplica). A Etapa 9 soma **129 testes**: 69 de escrita/adoção
+contra PostgreSQL real (`test_admin_http_writes.py`), 58 regressões adversariais
+(`test_admin_http_writes_adversarial.py`) e 2 provas end-to-end pela porta HTTP
+administrativa real (`test_admin_http_writes_e2e.py`); a Etapa 8 havia acrescentado
+80 de `config:validate` e a Etapa 7, 406.
 
 **Como rodar neste host Windows.** `test_large_query_payload_does_not_crash`,
 da Fase 6, monta uma consulta com 100.000 termos e estoura a pilha da thread na
@@ -656,5 +657,106 @@ ali, o app interno recebe `http.disconnect` e qualquer resposta dele é engolida
 A contraprova mede as duas coisas: sem a correção, o chunked na rota dá `400`; e
 sem a rota registrada, a suíte de superfície e a de validação quebram.
 
-As rotas de escrita e a adoção com backup são a Etapa 9; `AdminAudit` é a Etapa
-10; a suíte adversarial HTTP é a Etapa 11.
+### Etapa 9 — Rotas de escrita e adoção com backup (§1.3, §5–§7, §12, D-059)
+
+`tests/test_admin_http_writes.py`, **50 testes**, todos `integration` contra
+PostgreSQL real — cada escrita compila, conecta e verifica um runtime candidato
+de verdade.
+
+- **Sucesso de cada uma das onze rotas.** Create/replace/delete/reorder de regra,
+  create/replace/delete de exception, `PUT /database`, `PUT /sql` aditivo,
+  `PUT /config` integral e `config:adopt`. Cada uma responde `{revision, applied:
+  true}`, o `GET` seguinte reflete exatamente a mudança e a `revision` incrementa
+  **uma vez**.
+- **Concorrência (§12.1).** Seis requests paralelos com o mesmo
+  `expected_revision`: exatamente um `200`, os demais `409 REVISION_CONFLICT`,
+  revision final = inicial + 1.
+- **Adoção (§5, §12.9).** IDs atribuídos, `revision 0 → 1`, `adopted: true` no
+  `GET`; escrita antes da adoção → `CONFIG_NOT_ADOPTED`; `adopt` sem
+  `confirm_comment_loss` ou com `false` → `SCHEMA_INVALID`; `expected_revision ≠
+  0` → `REVISION_CONFLICT`; **segunda adoção recusada sem efeito** (bytes idênticos,
+  IDs iguais, nenhum novo backup); **a adoção não altera nenhuma decisão de
+  masking** (veredito do engine idêntico antes e depois sobre regra, exception,
+  alias e coluna sem correspondência).
+- **Backup (§5.4, §12.9).** Byte a byte igual ao original (comentário preservado),
+  modo `0600`, criado com `O_EXCL`; **colisão de nome → `CONFIG_WRITE_ERROR`, e o
+  backup preexistente e o `masking.yaml` ficam intactos** — via relógio injetável
+  que força o nome.
+- **Identidade de IDs (D-059).** Update e reorder preservam os IDs; create gera ID
+  novo; delete + create gera ID diferente; `id` escolhido pelo cliente que não
+  pertence ao documento → `IMMUTABLE_FIELD`.
+- **Imutabilidade (§11.3).** `allowed_pg_functions` presente em `PUT /sql` ou
+  `PUT /config` (inclusive `[]`) → `IMMUTABLE_FIELD`; ausente → o valor atual é
+  preservado **em conteúdo e ordem** (modelo validado contra modelo validado).
+- **Recusas sanitizadas.** Alvo inexistente → `NOT_FOUND` sem ecoar o ID; posição
+  fora de `0..len` e reorder que não é permutação completa → `CONFIG_INVALID`;
+  transformer inexistente → `CONFIG_RELOAD_ERROR`.
+- **Falha injetada (§12.4, §7.6).** No POSIX, `fsync` de diretório falho publica o
+  runtime novo com `500 CONFIG_DURABILITY_ERROR`, `applied: true`,
+  `current_revision` = a nova, e uma retentativa cega recebe `REVISION_CONFLICT`;
+  no Windows, o passo é **omitido** e um teste-par afirma a omissão (a escrita
+  conclui com `200`). `CONFIG_OUT_OF_SYNC` da segunda verificação: arquivo
+  alterado por fora entre a validação e o `replace` → `409`, conteúdo do editor
+  preservado.
+- **Reload com query em voo (§12.2, §12.3).** Uma referência adquirida antes do
+  swap continua sendo a antiga; um aposentado ainda em uso faz o próximo reload
+  bater em `RELOAD_BUSY` sem construir candidato.
+- **Sem efeito nas recusas.** Para cada categoria de recusa: bytes do arquivo,
+  identidade do runtime publicado, revision e digest de referência inalterados.
+- **Leakage.** Nem HMAC nem a senha do DSN aparecem em corpo ou header, em sucesso
+  ou erro.
+
+**Rodadas corretivas (`test_admin_http_writes_adversarial.py`, 58 testes; mais
+regressões HTTP em `test_admin_http_writes.py` e as provas e2e).** Cada teste
+nasceu de um defeito reproduzido contra o commit anterior:
+
+- **`confirm_comment_loss` estritamente booleano.** `1`, `0`, `"true"`, `null` e
+  ausência → `SCHEMA_INVALID`; só o booleano `true` passa. `Literal[True]`
+  sozinho aceitava o inteiro `1` (`1 == True`), então o campo é `StrictBool` mais
+  um `model_validator`.
+- **`allowed_pg_functions` por presença, não por valor.** Presente em qualquer
+  forma — `null`, `[]`, lista, string, objeto, booleano, número — →
+  `IMMUTABLE_FIELD`, detectado por `model_fields_set`. `null` explícito
+  contornava a checagem `is not None`. Ausente preserva o allowlist. A recusa não
+  altera arquivo, digest, revisão nem runtime.
+- **O campo `allowed_pg_functions` é totalmente serializável.** O tipo é
+  `JsonValue | None`, não um `object()` sentinela: `model_json_schema()` não gera
+  `PydanticJsonSchemaWarning`, `model_dump()`/`model_dump_json()` funcionam com o
+  campo ausente, nenhum sentinela vaza no dump, e a presença continua decidida só
+  por `model_fields_set` — todas as formas presentes ainda produzem
+  `IMMUTABLE_FIELD`.
+- **`PUT /config` exige `sql.denied_functions`.** `sql: {}` apagaria as negações
+  em silêncio; agora é `SCHEMA_INVALID`.
+- **`rules:reorder` valida o formato de cada ID no schema.** ID malformado →
+  `SCHEMA_INVALID`; lista vazia é permutação válida do conjunto vazio (aceita
+  quando há zero regras); duplicata, item ausente e ID desconhecido continuam
+  `CONFIG_INVALID` na mutação.
+- **Deduplicação semântica em `PUT /sql`.** `Foo`/`foo`/`FOO`/` foo ` colapsam
+  pela mesma chave da política (`strip().casefold()`), preservando a primeira
+  grafia persistida e a ordem de primeira aparição das novas; a repetição do
+  request é idempotente.
+- **Robustez do backup, completa.** Fault injection depois da criação exclusiva,
+  em cada ponto: `write`, `flush`, fechamento controlado e short write (via stream
+  substituído, sem hooks de produção); `fsync` levantando `OSError` e também algo
+  **não** derivado de `OSError`; hook após a criação. Para cada falha:
+  `CONFIG_WRITE_ERROR`, incompleto removido, principal byte a byte intacto, backup
+  preexistente (com outro nome) intocado, nenhum fd vazado (contado por
+  `/proc/self/fd` no POSIX). **Exceções de controle** — `KeyboardInterrupt`,
+  `SystemExit`, `GeneratorExit` — não viram `CONFIG_WRITE_ERROR`: o cleanup roda
+  (incompleto removido, principal intacto, sem fd vazado) e a exceção original é
+  relançada intacta.
+- **End-to-end pela porta HTTP administrativa real
+  (`test_admin_http_writes_e2e.py`).** A aplicação sobe com HTTP administrativo e
+  MCP compartilhando o mesmo registry. Uma escrita autêntica `PUT /admin/v1/config`
+  — token, headers e payload completos, pela porta admin — devolve `200` e a nova
+  revisão; a consulta seguinte pela tool MCP `query_database` (cliente in-memory),
+  no mesmo processo e sem restart, vê a política nova, e o valor original nunca
+  aparece na resposta MCP (nem antes, nem depois). Segunda prova: uma escrita já na
+  seção crítica quando o shutdown começa **termina com exatamente `200`** antes do
+  fechamento dos recursos — `close()` não retorna enquanto a escrita está presa; o
+  arquivo persiste exatamente a revisão nova; as threads `writer`/`closer`/
+  `maskgw-admin-http` não ficam vivas; uma escrita subsequente nem conecta (porta
+  fechada) e o serviço reporta `closed`. Determinístico, com eventos/barreiras e
+  joins, sem `sleep`.
+
+`AdminAudit` é a Etapa 10; a suíte adversarial HTTP é a Etapa 11.

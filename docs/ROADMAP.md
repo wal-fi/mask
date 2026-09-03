@@ -338,11 +338,12 @@ porta de rede hoje é uma decisão de segurança (D-036), não uma lacuna.
 
 ## Estado atual
 
-Fases 1 a 6.1 concluídas. Fase 7 em andamento, Etapas 1–8 concluídas; Etapa 9
-não iniciada. Estado validado contra PostgreSQL 16.15 real, com a suíte
-inteira: 1995 testes coletados, 1986 aprovados e 9 pulados por condição de
-plataforma, sem nenhum deselect. Com `-m integration`, 415 aprovados e nenhum
-skip por falta de DSN. Neste host Windows o pytest precisa de pilha de thread
+Fases 1 a 6.1 concluídas. Fase 7 em andamento, Etapas 1–9 concluídas; Etapa 10
+(`AdminAudit`) não iniciada. Estado validado contra PostgreSQL 16.15 real, com a
+suíte inteira: 2121 testes coletados, 2111 aprovados e 10 pulados por condição de
+plataforma, sem nenhum deselect. Com `-m integration`, 486 selecionados (485
+aprovados e 1 pulado por condição de plataforma), nenhum skip por falta de DSN.
+Neste host Windows o pytest precisa de pilha de thread
 ampliada (64 MiB) por causa de um teste adversarial da Fase 6; é ajuste de
 ambiente, não correção de produto. Detalhes em `docs/HANDOFF.md`, seções 6
 e 11.

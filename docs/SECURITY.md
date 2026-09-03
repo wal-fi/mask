@@ -300,24 +300,36 @@ desligada por default, e cercada. O que vale:
   impede `run()` sobre uma aplicação em desmontagem (D-057);
 - **cada resposta administrativa nasce de UMA leitura do runtime publicado**
   (D-057): revision, documento e política vêm do mesmo snapshot, e `adopted` sai
-  da revision capturada. Não é só higiene de leitura — a Etapa 9 vai aceitar
+  da revision capturada. Não é só higiene de leitura — a Etapa 9 aceita
   `expected_revision`, e essa proteção só vale se a revision que o administrador
   leu descrever o conteúdo que ele leu. Com o par misturado, uma escrita passaria
   pelo controle de concorrência e sobrescreveria em silêncio a mudança de outra
   pessoa.
 
-- **`config:validate` valida sem tocar em nada** (Etapa 8, D-058): a única rota
-  com corpo compila o documento candidato — inclusive os transformers e a policy,
-  usando o `SecretProvider` atual — e descarta o resultado. Não conecta ao
-  PostgreSQL, não persiste, não altera revision, não entra na seção crítica e não
-  incrementa contador. A ausência de efeito é propriedade da assinatura de
-  `validate_candidate`, que não recebe registry, store nem serviço, e é provada
-  por contadores estruturais. Os erros são sanitizados: `SCHEMA_INVALID` sem o
-  valor submetido, `CONFIG_INVALID` sem a causa (nome de transformer, padrão,
-  mensagem do pglast), `INTERNAL_ERROR` sem `str(exc)`.
+- **`config:validate` valida sem tocar em nada** (Etapa 8, D-058): a rota compila
+  o documento candidato — inclusive os transformers e a policy, usando o
+  `SecretProvider` atual — e descarta o resultado. Não conecta, não persiste, não
+  altera revision, não entra na seção crítica. A ausência de efeito é propriedade
+  da assinatura de `validate_candidate`, provada por contadores estruturais. Os
+  erros são sanitizados.
 
-O que ainda não existe, e não deve ser presumido: qualquer rota de escrita, a
-adoção com backup e `AdminAudit`.
+- **As onze rotas de escrita são só uma tradução para a seção crítica** (Etapa 9,
+  D-059): cada handler valida o corpo, constrói um `ConfigMutation` e chama
+  `AdminConfigService.apply()`. Nenhuma delas replica lock, `expected_revision`,
+  digest, compilação, conexão, persistência ou swap; a mutação roda **dentro** do
+  lock, sobre a cópia profunda do documento corrente — não há `snapshot()` antes
+  da escrita para decidir a mutação, e portanto não há janela TOCTOU. Os handlers
+  são `async def` sem `to_thread`: uma escrita não sobrevive ao graceful shutdown.
+  As proteções estruturais permanecem inalcançáveis pela escrita —
+  `allowed_pg_functions` no corpo é `IMMUTABLE_FIELD` (§11.3, D-050), e não há rota
+  que edite `denied_relations`, o validator, a sessão read-only ou o default
+  ALLOW. A adoção grava um backup byte a byte dos bytes originais com `O_EXCL` e
+  `0600`, dentro da seção crítica, e recusa colisão sem sobrescrever nada. Os
+  erros da mutação — `NOT_FOUND`, `IMMUTABLE_FIELD`, `CONFIG_INVALID` — chegam com
+  categoria fechada, sem citar o ID pedido, o campo recusado, o valor nem a causa.
+
+O que ainda não existe, e não deve ser presumido: `AdminAudit` (Etapa 10) e a
+suíte adversarial geral (Etapa 11).
 
 **Isto não muda a conclusão de exposição.** A Admin API é loopback, sem TLS, com
 um token estático e um único papel. Ela não torna o Gateway adequado a

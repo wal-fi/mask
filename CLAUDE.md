@@ -15,9 +15,9 @@ IA → MCP → Gateway → SQL Validator → PostgreSQL → provenance
 O produto executa fim a fim: um cliente MCP real consulta um PostgreSQL real e
 recebe dados mascarados.
 
-A Fase 7 foi iniciada de forma incremental. As **Etapas 1–8 estão concluídas**;
-a próxima tarefa é exclusivamente a Etapa 9 — rotas de escrita e adoção com
-backup —, ainda não iniciada. Antes de alterar qualquer coisa, leia `docs/HANDOFF.md` — é
+A Fase 7 foi iniciada de forma incremental. As **Etapas 1–9 estão concluídas**;
+a próxima tarefa é exclusivamente a Etapa 10 — `AdminAudit` —, ainda não
+iniciada. Antes de alterar qualquer coisa, leia `docs/HANDOFF.md` — é
 o documento de entrada e diz exatamente onde o projeto parou.
 
 ## Leitura obrigatória antes de alterar código
@@ -119,7 +119,7 @@ riscos aceitos em `docs/SECURITY-REVIEW.md`.
 ## Evolução em andamento — Fase 7 / Admin API
 
 A **Fase 7 — Admin API** está em implementação incremental conforme
-`docs/PHASE-7-SPEC.md`. As Etapas 1–8 estão concluídas:
+`docs/PHASE-7-SPEC.md`. As Etapas 1–9 estão concluídas:
 
 - Etapa 1 — IDs e revision no modelo do arquivo: `053cf66`;
 - Etapa 2 — `RuntimeRegistry`: `3114c14`;
@@ -128,7 +128,8 @@ A **Fase 7 — Admin API** está em implementação incremental conforme
 - Etapa 5 — filesystem seguro: `d651fe0`;
 - Etapa 6 — seção crítica administrativa e escrita/reload;
 - Etapa 7 — fronteira HTTP e rotas de leitura;
-- Etapa 8 — `POST /admin/v1/config:validate`, validação sem efeito.
+- Etapa 8 — `POST /admin/v1/config:validate`, validação sem efeito;
+- Etapa 9 — as onze rotas de escrita e a adoção com backup.
 
 Confira a sincronização com `origin/master` pelo Git em vez de inferi-la deste
 documento. A Etapa 4 criou `maskgw/bootstrap/` como composition root, removeu
@@ -203,9 +204,16 @@ Invariantes da fronteira, todos com teste:
   funções de `views.py` recebem esse snapshot em vez do serviço — não misturam
   porque não têm como fazer a segunda leitura.
 
-A próxima tarefa é a **Etapa 9**, ainda não iniciada: rotas de escrita e adoção
-com backup. `AdminAudit` é a Etapa 10; a suíte adversarial HTTP é a Etapa 11. Não
-antecipe as Etapas 9–11.
+A Etapa 9 acrescentou as **onze rotas de escrita** e a adoção com backup. Cada
+rota é só uma tradução para `AdminConfigService.apply()`: valida o corpo pelo
+schema, constrói um `ConfigMutation` (em `admin/http/mutations.py`) e chama o
+serviço. A mutação roda **dentro** da seção crítica, sobre a cópia profunda do
+documento corrente — sem janela TOCTOU. `IMMUTABLE_FIELD` entrou no vocabulário
+fechado; a identidade de IDs, a imutabilidade de `allowed_pg_functions` e o
+backup transacional estão em D-059.
+
+A próxima tarefa é a **Etapa 10** (`AdminAudit`), ainda não iniciada; a suíte
+adversarial HTTP é a Etapa 11. Não antecipe as Etapas 10–11.
 
 Dois pontos que valem como invariante:
 
@@ -285,6 +293,20 @@ lê o corpo dentro de `wrap_app_handling_exceptions` e capturava a exceção int
 antes que ela voltasse ao middleware, produzindo um status do framework no lugar
 do `413`.
 
+D-059 registra o contrato da escrita (Etapa 9): toda rota é uma tradução para
+`AdminConfigService.apply()`, com a mutação rodando dentro da seção crítica sobre
+a cópia profunda do documento corrente (sem TOCTOU) e os handlers `async` sem
+`to_thread` (uma escrita não sobrevive ao graceful shutdown). Os erros da mutação
+— `NOT_FOUND`, `IMMUTABLE_FIELD`, `CONFIG_INVALID` — preservam a categoria fechada
+por `_next_document`, sem reencadear. IDs são identidade do servidor: criação gera
+ID novo, `PUT` preserva o do path, um `id` que não pertence ao documento num
+`PUT /config` é `IMMUTABLE_FIELD`, e IDs repetidos numa configuração adotada
+passaram a ser recusados no carregamento. `allowed_pg_functions` presente em
+`PUT /sql` ou `PUT /config` (inclusive `[]`) é `IMMUTABLE_FIELD`; ausente, o valor
+atual é preservado em conteúdo e ordem. O backup byte a byte da adoção vive no
+`ConfigFileStore.write_backup` (`O_EXCL`, `0600`, `fsync`, nunca sobrescreve) e é
+chamado pelo serviço dentro da seção crítica, com relógio injetável.
+
 ## Fora do escopo
 
 Front-end, OAuth/RBAC, multi-tenant, deployment, HTTP MCP, pool de conexões,
@@ -292,7 +314,7 @@ MySQL, migrations, schema browser, JSONB deep inspection, lineage completo de
 view, controle de inferência (WHERE/ORDER BY/GROUP BY), supressão de
 agregações, transformers Python customizados, default deny.
 
-As Etapas 8–11 da Admin API não fazem parte do fechamento atual.
+As Etapas 10–11 da Admin API não fazem parte do fechamento atual.
 
 Propostas avaliadas e adiadas estão em `docs/FUTURE-HARDENING.md` com custo e
 impacto — consulte antes de propor de novo.

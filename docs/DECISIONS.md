@@ -1607,3 +1607,153 @@ o app ainda tente enviar. O desfecho e sempre `413`, independentemente do que o
 roteador faca com o `disconnect`. As garantias da Etapa 7 continuam: o chunk que
 estoura o limite nao e repassado, nada alem do limite existe em memoria, e a
 suite de fronteira — que ja provava o corte com corpo lido — permanece verde.
+
+## D-059 — Escrita administrativa: rotas, mutacoes e identidade de IDs (Etapa 9)
+
+A Etapa 9 acrescentou as onze rotas de escrita da §1.3. A especificacao fixa o
+comportamento — `expected_revision`, adocao com backup, imutabilidade de
+`allowed_pg_functions`, IDs estaveis — mas nao fixava algumas escolhas de
+contrato e de implementacao. Estas foram aprovadas para a Etapa 9.
+
+### Toda rota de escrita e uma traducao para `AdminConfigService.apply()`
+
+O handler HTTP valida o corpo pelo schema, constroi um `ConfigMutation` — uma
+funcao `MaskingFileConfig -> Mapping` — e chama `apply`. **Nenhuma logica de
+lock, adocao, `expected_revision`, digest, limite de aposentado, compilacao,
+conexao, persistencia, swap ou backup e replicada na rota ou na mutacao**: tudo
+isso e o fluxo de onze passos do servico, ja existente da Etapa 6. A mutacao roda
+DENTRO da secao critica, sobre a copia profunda do documento corrente — nunca
+uma leitura anterior. Isso fecha a janela TOCTOU: nao ha `snapshot()` antes da
+escrita para decidir a mutacao e re-ler o estado na hora de aplicar; a mutacao
+recebe o documento vivo no momento em que o lock ja esta seguro.
+
+Os handlers sao `async def` e chamam o fluxo SINCRONO direto no event loop, sem
+`to_thread`, executor ou worker. Uma escrita nao pode sobreviver ao graceful
+shutdown de D-057 e continuar alterando arquivo/runtime depois de a requisicao
+ter sido cancelada.
+
+### Erros da mutacao preservam a categoria fechada
+
+A mutacao decide os erros ESPECIFICOS da operacao: alvo inexistente ->
+`NOT_FOUND`; campo imutavel -> `IMMUTABLE_FIELD`; payload invalido dependente do
+estado (posicao fora de `0..len`, reorder que nao e permutacao completa) ->
+`CONFIG_INVALID`. Para que a categoria escolhida pela mutacao chegue a resposta,
+`_next_document` passou a capturar `AdminError` separadamente e reergue-lo com a
+categoria preservada, antes do ramo generico que traduz falha de validacao em
+`CONFIG_INVALID`. Nada e reencadeado (D-017). `IMMUTABLE_FIELD` entrou no
+vocabulario fechado (§10.2), status `422`, texto fixo, sem citar o campo.
+
+### IDs sao identidade do servidor, e sao unicos
+
+`rul_<32 hex>` / `exc_<32 hex>`, aleatorios (`secrets`, D-005), opacos, imutaveis
+pela vida do item (D-051). A Etapa 9 fixa o que a §5.5 e a §11.3 implicavam:
+
+- criacao granular gera ID novo; `PUT` preserva o ID do path; `DELETE` seguido de
+  `POST` gera ID diferente; o cliente nunca escolhe nem altera um ID;
+- num corpo GRANULAR, `id` cai no `extra="forbid"` do schema — `SCHEMA_INVALID`;
+- em `PUT /config`, `id` e OPCIONAL por item: presente e pertencente ao documento
+  corrente preserva a identidade; ausente cria; **presente mas nao pertencente e
+  tentativa de escolher identidade -> `IMMUTABLE_FIELD`**; IDs atuais omitidos sao
+  removidos; a ordem da lista e a nova ordem;
+- **IDs sao unicos numa configuracao adotada.** O `model_validator` de
+  `MaskingFileConfig` passou a recusar IDs repetidos em regras ou exceptions, no
+  carregamento — dois itens com o mesmo `id` tornariam CRUD por ID ambiguo. E
+  coerente com "adotado exige ID": um estado inconsistente nao sobe.
+
+### `allowed_pg_functions` imutavel: declarado para ser recusado
+
+Em `PUT /sql` e `PUT /config`, `allowed_pg_functions` e um campo OPCIONAL
+declarado no schema — nao omitido. Omiti-lo faria sua presenca virar
+`SCHEMA_INVALID`; declara-lo permite distinguir "presente" (imutavel, qualquer
+forma, inclusive `[]`) de "ausente" (`None`, e o valor atual e preservado em
+conteudo e ordem). A recusa e `IMMUTABLE_FIELD`, produzida pela mutacao. O
+loader nao muda (§11.3, D-050).
+
+### O backup da adocao e transacional, com relogio injetavel
+
+O backup byte a byte (§5.4) vive no `ConfigFileStore.write_backup`, chamado pelo
+servico DENTRO da secao critica, so na adocao, antes de persistir. Cria
+`<config>.bak.<epoch>` com `O_CREAT | O_EXCL`, `0600`, `O_NOFOLLOW`, arquivo
+regular conferido por `fstat`, `fsync` do arquivo; **nunca sobrescreve** — colisao
+de nome ou qualquer falha vira `CONFIG_WRITE_ERROR`, e o backup preexistente e o
+arquivo principal ficam intactos, porque `_persist` ainda nao rodou. O epoch vem
+de um relogio injetavel no servico, para que o teste force um nome deterministico
+— inclusive uma colisao — sem depender do relogio real. Os bytes copiados sao os
+do passo 3 (a verificacao de digest), ja comprovados iguais ao runtime publicado:
+os originais, com comentarios, sem re-ler o arquivo.
+
+### A ordem de registro das rotas: `/rules:reorder` antes da dinamica
+
+`/rules:reorder` e registrada antes de `/rules/{rule_id}` entre as escritas. Nao
+ha `POST /rules/{rule_id}`, entao nenhum path dinamico compete hoje com o `POST
+/rules:reorder` — o Starlette continua o casamento quando o metodo nao bate —,
+mas registrar `:reorder` primeiro e a garantia estrutural de que, se um
+`POST /rules/{rule_id}` aparecer, `:reorder` ainda casa antes.
+
+### Rodada corretiva: seis endurecimentos de contrato
+
+A revisao da Etapa 9 encontrou seis desvios do contrato, cada um virado teste de
+regressao antes da correcao:
+
+- **`confirm_comment_loss` e `StrictBool` mais `model_validator`, nao
+  `Literal[True]`.** `Literal[True]` aceita o inteiro `1`, porque `1 == True` em
+  Python. So o booleano JSON `true` deve passar; `1`, `0`, `"true"`, `null` e
+  ausencia sao `SCHEMA_INVALID`.
+- **`allowed_pg_functions` e detectado por PRESENCA, nao por valor.** Um `null`
+  explicito e um campo presente; trata-lo como ausente (checando `is not None`)
+  reabria a imutabilidade. O campo passou a ser tipado `object` — para aceitar
+  qualquer forma e recusar com `IMMUTABLE_FIELD` administrativo, nao
+  `SCHEMA_INVALID` —, com default num sentinela privado (`_FIELD_ABSENT`) e a
+  presenca conferida por `model_fields_set`.
+- **`PUT /config` exige `sql.denied_functions`.** Com default vazio, `sql: {}`
+  apagaria as negacoes em silencio. Na substituicao integral o campo e
+  obrigatorio; ausente e `SCHEMA_INVALID`. Omitir `allowed_pg_functions` continua
+  sendo o unico modo de preservar o allowlist imutavel.
+- **`rules:reorder` valida `RULE_ID_PATTERN` por item no schema.** ID malformado e
+  `SCHEMA_INVALID` (falha de forma), nao `CONFIG_INVALID`. A lista pode ser vazia
+  — permutacao completa do conjunto vazio, valida quando ha zero regras —, entao o
+  `min_length` saiu; a permutacao em si segue conferida na mutacao.
+- **Deduplicacao SEMANTICA em `denied_functions`.** A chave e
+  `canonical_function_name` (`strip().casefold()`), a MESMA da politica, agora
+  exposta em `sql/policy.py` como fonte unica. `Foo`/`foo`/`FOO`/` foo ` colapsam;
+  a lista preserva a primeira grafia persistida e a ordem de primeira aparicao das
+  novas, e a repeticao do request e idempotente.
+- **Backup com ponto de fault injection depois da criacao exclusiva.**
+  `FilesystemHooks` ganhou `after_backup_create`, e `write_backup` isolou a
+  criacao exclusiva num `try` proprio, ANTES do bloco de escrita, para que uma
+  colisao (`FileExistsError`) nunca alcance o caminho que remove — o preexistente
+  jamais e tocado.
+
+### Segunda rodada corretiva: cinco endurecimentos adicionais
+
+A revisao seguinte encontrou cinco pontos, cada um virado teste antes da correcao:
+
+- **`allowed_pg_functions` totalmente serializavel.** O sentinela `object()` era
+  nao serializavel: `model_json_schema()` emitia `PydanticJsonSchemaWarning` e
+  `model_dump_json()` de um request sem o campo levantava
+  `PydanticSerializationError`, alem de o objeto cru vazar no `model_dump()`. O
+  tipo passou a ser `JsonValue | None` — totalmente serializavel —, e a presenca
+  continua decidida SO por `model_fields_set`: campo ausente preserva o allowlist,
+  campo presente em qualquer forma (inclusive `null`) e `IMMUTABLE_FIELD`.
+- **`write_backup` converte so excecoes operacionais.** O `except BaseException`
+  transformava `KeyboardInterrupt`, `SystemExit` e `GeneratorExit` em
+  `CONFIG_WRITE_ERROR`, engolindo um Ctrl-C ou um pedido de encerramento. Agora
+  `except Exception` converte as falhas operacionais e `except BaseException`
+  RELANCA as de controle — o cleanup (fechar fd, remover incompleto) roda nos dois
+  ramos, mas so as operacionais viram `CONFIG_WRITE_ERROR`.
+- **Ponto unico de escrita testavel diretamente.** A escrita/`flush`/`fsync` do
+  backup foi extraida para `_write_backup_stream`, que os testes exercitam
+  substituindo `os.fdopen` por um stream que falha em `write`, `flush`,
+  fechamento ou faz short write — sem acrescentar hooks de producao so para
+  facilitar teste. `_write_backup_stream` assume a posse do fd, e o cleanup nunca
+  fecha um fd ja fechado (o numero poderia ter sido reusado).
+- **O teste MCP usa a rota HTTP administrativa real.** A versao anterior chamava
+  `app.admin.apply()` direto; agora envia `PUT /admin/v1/config` autenticado pela
+  porta administrativa, exige `200` e a nova revision, e so entao consulta pela
+  tool MCP — provando o caminho fim a fim, e que o valor original nunca aparece na
+  resposta MCP.
+- **A prova de shutdown tem desfecho unico.** Antes aceitava `(200, 500, 503,
+  409)`; agora exige que a escrita em voo, ja na secao critica quando o shutdown
+  comeca, termine com EXATAMENTE `200`, que o arquivo persista a revisao nova, que
+  `writer`/`closer`/`maskgw-admin-http` nao fiquem vivas, que uma escrita
+  subsequente nem conecte e que o servico reporte `closed`.

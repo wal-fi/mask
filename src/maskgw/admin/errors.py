@@ -36,10 +36,10 @@ class AdminErrorCategory(StrEnum):
     escrita/reload da Etapa 6; a segunda nasceu com a aplicacao HTTP, e nenhum
     caminho da secao critica pode produzi-la.
 
-    `IMMUTABLE_FIELD`, tambem prevista na secao 10.2, NAO esta aqui: ela so e
-    alcancavel por uma rota de escrita com corpo, e a Etapa 7 nao registra
-    nenhuma. Declara-la agora fixaria, sem necessidade, o status HTTP de uma
-    operacao da Etapa 9.
+    `IMMUTABLE_FIELD` (secao 10.2) entrou na Etapa 9: e alcancavel por uma rota
+    de escrita que tente alterar um campo protegido — `allowed_pg_functions` num
+    `PUT /sql` ou `PUT /config`, ou um `id` escolhido pelo cliente num `PUT
+    /config`. Status `422`, texto fixo, sem citar o campo recusado.
 
     Quatro categorias — `HOST_NOT_ALLOWED`, `CROSS_ORIGIN_REJECTED`,
     `UNSUPPORTED_MEDIA_TYPE` e `PAYLOAD_TOO_LARGE` — nao constam da secao 10.2.
@@ -60,6 +60,11 @@ class AdminErrorCategory(StrEnum):
     CONFIG_ALREADY_ADOPTED = "CONFIG_ALREADY_ADOPTED"
     REVISION_CONFLICT = "REVISION_CONFLICT"
     RELOAD_BUSY = "RELOAD_BUSY"
+    #: Tentativa de alterar um campo que a Admin API nao administra (secao
+    #: 11.3): `allowed_pg_functions` no corpo, ou um `id` escolhido pelo cliente
+    #: que nao pertence ao documento corrente. Produzido pela mutacao, dentro da
+    #: secao critica, e nunca cita o campo recusado. Status `422`.
+    IMMUTABLE_FIELD = "IMMUTABLE_FIELD"
     INTERNAL_ERROR = "INTERNAL_ERROR"
 
     # -- fronteira HTTP (Etapa 7) -----------------------------------------
@@ -96,6 +101,7 @@ CATEGORY_DETAILS: Final[dict[AdminErrorCategory, str]] = {
         "The expected revision does not match the current revision."
     ),
     AdminErrorCategory.RELOAD_BUSY: "A retired runtime is still in use; retry later.",
+    AdminErrorCategory.IMMUTABLE_FIELD: "A field in the request cannot be modified.",
     AdminErrorCategory.INTERNAL_ERROR: "The administrative operation could not be completed.",
     # Fronteira HTTP. Nenhum destes cita header recebido, caminho, metodo,
     # tamanho medido ou qualquer coisa que o chamador tenha enviado: um texto

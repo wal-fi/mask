@@ -157,4 +157,18 @@ class MaskingFileConfig(BaseModel):
                 f"`revision` para voltar ao estado nao adotado."
             )
             raise ValueError(msg)
+
+        # IDs sao identidade estavel (D-051, D-059): dois itens com o mesmo `id`
+        # tornam CRUD por ID ambiguo — um `PUT /rules/{id}` nao saberia qual
+        # substituir. Prefixos distintos ja impedem um ID de regra colidir com um
+        # de exception, entao a checagem por lista basta. Recusar no carregamento
+        # e coerente com "adotado exige ID": um estado inconsistente nao sobe.
+        rule_ids = [item.id for item in self.masking if item.id is not None]
+        exception_ids = [item.id for item in self.exceptions if item.id is not None]
+        if len(set(rule_ids)) != len(rule_ids) or len(set(exception_ids)) != len(exception_ids):
+            msg = (
+                f"configuracao adotada (revision={self.revision}) exige `id` UNICO em cada "
+                f"regra e em cada exception; ha IDs repetidos."
+            )
+            raise ValueError(msg)
         return self

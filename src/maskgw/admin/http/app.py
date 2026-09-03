@@ -1,19 +1,21 @@
-"""A aplicacao HTTP administrativa: rotas de leitura, `config:validate` e erros.
+"""A aplicacao HTTP administrativa: leitura, `config:validate`, escrita e erros.
 
-Etapas 7 e 8 da Fase 7. As oito rotas de leitura da Etapa 7 continuam sendo
-**somente leitura**. A Etapa 8 acrescenta UMA rota com corpo,
-`POST /admin/v1/config:validate`, que **nao e uma escrita**: valida o schema,
-compila os transformers e a policy, e descarta o resultado. Ela nao persiste,
-nao altera `revision`, nao conecta ao PostgreSQL e nao entra na secao critica
-administrativa (secao 1.2). As rotas de escrita e a adocao com backup sao a
-Etapa 9; `AdminAudit` e a Etapa 10.
+Etapas 7, 8 e 9 da Fase 7. As oito rotas de leitura da Etapa 7 sao `GET`/`HEAD`.
+A Etapa 8 acrescentou `POST /admin/v1/config:validate`, que valida e compila um
+documento candidato **sem efeito algum** (nao e uma escrita: nao persiste, nao
+altera `revision`, nao conecta, nao entra na secao critica). A Etapa 9
+acrescentou as **onze rotas de escrita** (secao 1.3): cada uma valida o corpo,
+constroi um `ConfigMutation` (em `mutations.py`) e chama `AdminConfigService.apply()`,
+que executa o fluxo de onze passos DENTRO da secao critica. `AdminAudit` e a
+Etapa 10.
 
 ## O conjunto de rotas e literal
 
-Prefixo unico `/admin/v1`, e nada fora dele. As oito rotas de leitura estao em
-`READ_PATHS` e a unica rota com corpo em `VALIDATE_PATH`; um teste compara o que
-o router registrou com essas listas — rota nova quebra a suite em vez de
-aparecer sem que ninguem tenha decidido (secao 12.7).
+Prefixo unico `/admin/v1`, e nada fora dele. As oito leituras estao em
+`READ_PATHS`, o `config:validate` em `VALIDATE_PATH` e as onze escritas em
+`WRITE_ROUTES`; um teste compara o que o router registrou com essas listas —
+rota nova quebra a suite em vez de aparecer sem que ninguem tenha decidido
+(secao 12.7). Nao ha `PATCH`.
 
 O que **nao existe**, e nao e "recusado" mas inexistente (D-049):
 
@@ -66,6 +68,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.types import ASGIApp
 
 from maskgw.admin.errors import AdminError, AdminErrorCategory
+from maskgw.admin.http import mutations
 from maskgw.admin.http.middleware import (
     AuthenticationMiddleware,
     BodyLimitMiddleware,
@@ -89,8 +92,19 @@ from maskgw.admin.http.schemas import (
     AdminRulesResponse,
     AdminStatusResponse,
     AdminTransformersResponse,
+    AdoptRequest,
+    ConfigReplaceRequest,
     ConfigValidateRequest,
     ConfigValidateResponse,
+    DatabaseWriteRequest,
+    DeleteRequest,
+    ExceptionCreateRequest,
+    ExceptionReplaceRequest,
+    RuleCreateRequest,
+    RuleReorderRequest,
+    RuleReplaceRequest,
+    SqlWriteRequest,
+    WriteResponse,
 )
 from maskgw.admin.http.validate import validate_candidate
 from maskgw.admin.http.views import (
@@ -103,7 +117,7 @@ from maskgw.admin.http.views import (
     find_exception,
     find_rule,
 )
-from maskgw.admin.service import AdminConfigService
+from maskgw.admin.service import AdminConfigService, AdminOperation, ConfigMutation
 from maskgw.masking.transformers.hashes import HMAC_KEY_ENV
 from maskgw.secretsource import EnvSecretProvider, SecretProvider
 
@@ -137,6 +151,28 @@ VALIDATE_PATH: Final = f"{API_PREFIX}/config:validate"
 #: Os metodos de `config:validate`. Declarado como as leituras, para que o teste
 #: de superficie compare o que foi DECIDIDO, e nao o que o framework acrescentou.
 VALIDATE_METHODS: Final[frozenset[str]] = frozenset({"POST"})
+
+#: As onze rotas de escrita da Etapa 9 (secao 1.3), cada uma com o seu unico
+#: metodo. Declaradas literalmente, como as leituras, para que o teste de
+#: superficie compare o conjunto DECIDIDO — uma rota nova, ou um metodo a mais
+#: numa rota existente, quebra a suite em vez de aparecer sem decisao (secao 12.7).
+#:
+#: A ordem importa para o roteamento: `/rules:reorder` e uma rota ESTATICA e
+#: precisa ser registrada ANTES de `/rules/{rule_id}`, senao o `:reorder` seria
+#: capturado como um `rule_id`. O FastAPI casa na ordem de registro.
+WRITE_ROUTES: Final[tuple[tuple[str, str], ...]] = (
+    (f"{API_PREFIX}/config:adopt", "POST"),
+    (f"{API_PREFIX}/config", "PUT"),
+    (f"{API_PREFIX}/rules:reorder", "POST"),
+    (f"{API_PREFIX}/rules", "POST"),
+    (f"{API_PREFIX}/rules/{{rule_id}}", "PUT"),
+    (f"{API_PREFIX}/rules/{{rule_id}}", "DELETE"),
+    (f"{API_PREFIX}/exceptions", "POST"),
+    (f"{API_PREFIX}/exceptions/{{exception_id}}", "PUT"),
+    (f"{API_PREFIX}/exceptions/{{exception_id}}", "DELETE"),
+    (f"{API_PREFIX}/database", "PUT"),
+    (f"{API_PREFIX}/sql", "PUT"),
+)
 
 #: Status HTTP -> categoria, para traduzir o que o Starlette levanta sozinho:
 #: o `404` de caminho desconhecido e o `405` de metodo nao registrado.
@@ -328,7 +364,115 @@ def build_router(
         # poderia sobreviver ao graceful shutdown de D-057.
         return validate_candidate(candidate, secrets=secrets)
 
+    _register_write_routes(app, service)
+
     return app
+
+
+def _write_response(
+    service: AdminConfigService,
+    mutation: ConfigMutation,
+    *,
+    expected_revision: int,
+    operation: AdminOperation = AdminOperation.WRITE,
+) -> WriteResponse:
+    """Traduz `service.apply` na resposta `{revision, applied}` (secao 4.4).
+
+    Toda a semantica — lock, adocao, `expected_revision`, digest, compilacao,
+    conexao, persistencia, swap, backup — e do servico. A rota so constroi a
+    mutacao e chama isto. `apply` levanta `AdminError` de categoria fechada, que
+    o handler de `AdminError` traduz no envelope uniforme. `async def` chama este
+    fluxo SINCRONO direto no event loop (secao 4.4): nada de `to_thread`, para
+    que uma escrita nao sobreviva ao graceful shutdown alterando arquivo/runtime
+    depois de a requisicao ter sido cancelada (D-057).
+    """
+    result = service.apply(mutation, expected_revision=expected_revision, operation=operation)
+    return WriteResponse(revision=result.revision)
+
+
+def _register_write_routes(app: FastAPI, service: AdminConfigService) -> None:
+    """As onze rotas de escrita da Etapa 9 (secao 1.3).
+
+    Cada handler e `async def` e delega a `_write_response`, que chama
+    `service.apply`. `/rules:reorder` e registrada ANTES de `/rules/{rule_id}`:
+    a ordem de registro no FastAPI e a ordem de casamento, e sem isso `:reorder`
+    seria capturado como um `rule_id` (secao 12.7).
+    """
+
+    @app.post(f"{API_PREFIX}/config:adopt", response_model=WriteResponse)
+    async def config_adopt(body: AdoptRequest) -> WriteResponse:
+        return _write_response(
+            service,
+            mutations.adopt(),
+            expected_revision=body.expected_revision,
+            operation=AdminOperation.ADOPT,
+        )
+
+    @app.put(f"{API_PREFIX}/config", response_model=WriteResponse)
+    async def config_replace(body: ConfigReplaceRequest) -> WriteResponse:
+        return _write_response(
+            service, mutations.replace_config(body), expected_revision=body.expected_revision
+        )
+
+    @app.post(f"{API_PREFIX}/rules:reorder", response_model=WriteResponse)
+    async def rules_reorder(body: RuleReorderRequest) -> WriteResponse:
+        return _write_response(
+            service, mutations.reorder_rules(body), expected_revision=body.expected_revision
+        )
+
+    @app.post(f"{API_PREFIX}/rules", response_model=WriteResponse)
+    async def rules_create(body: RuleCreateRequest) -> WriteResponse:
+        return _write_response(
+            service, mutations.create_rule(body), expected_revision=body.expected_revision
+        )
+
+    @app.put(f"{API_PREFIX}/rules/{{rule_id}}", response_model=WriteResponse)
+    async def rules_replace(rule_id: str, body: RuleReplaceRequest) -> WriteResponse:
+        return _write_response(
+            service,
+            mutations.replace_rule(rule_id, body),
+            expected_revision=body.expected_revision,
+        )
+
+    @app.delete(f"{API_PREFIX}/rules/{{rule_id}}", response_model=WriteResponse)
+    async def rules_delete(rule_id: str, body: DeleteRequest) -> WriteResponse:
+        return _write_response(
+            service, mutations.delete_rule(rule_id), expected_revision=body.expected_revision
+        )
+
+    @app.post(f"{API_PREFIX}/exceptions", response_model=WriteResponse)
+    async def exceptions_create(body: ExceptionCreateRequest) -> WriteResponse:
+        return _write_response(
+            service, mutations.create_exception(body), expected_revision=body.expected_revision
+        )
+
+    @app.put(f"{API_PREFIX}/exceptions/{{exception_id}}", response_model=WriteResponse)
+    async def exceptions_replace(exception_id: str, body: ExceptionReplaceRequest) -> WriteResponse:
+        return _write_response(
+            service,
+            mutations.replace_exception(exception_id, body),
+            expected_revision=body.expected_revision,
+        )
+
+    @app.delete(f"{API_PREFIX}/exceptions/{{exception_id}}", response_model=WriteResponse)
+    async def exceptions_delete(exception_id: str, body: DeleteRequest) -> WriteResponse:
+        return _write_response(
+            service,
+            mutations.delete_exception(exception_id),
+            expected_revision=body.expected_revision,
+        )
+
+    @app.put(f"{API_PREFIX}/database", response_model=WriteResponse)
+    async def database_replace(body: DatabaseWriteRequest) -> WriteResponse:
+        return _write_response(
+            service, mutations.replace_database(body), expected_revision=body.expected_revision
+        )
+
+    @app.put(f"{API_PREFIX}/sql", response_model=WriteResponse)
+    async def sql_replace(body: SqlWriteRequest) -> WriteResponse:
+        return _write_response(
+            service, mutations.replace_sql(body), expected_revision=body.expected_revision
+        )
 
 
 def wrap_boundary(app: ASGIApp, *, token: str, port: int) -> ASGIApp:
@@ -339,9 +483,10 @@ def wrap_boundary(app: ASGIApp, *, token: str, port: int) -> ASGIApp:
 
     Exposta separadamente para que a pilha inteira possa ser exercitada sobre
     uma aplicacao ASGI de teste — em particular o limite de corpo e o
-    `Content-Type`, que nenhuma rota desta etapa alcanca, porque nenhuma tem
-    corpo. Testa-los assim evita registrar um endpoint de producao so para
-    provoca-los.
+    `Content-Type`. Desde a Etapa 9 ha rotas com corpo (`config:validate` e as
+    onze escritas), e a fronteira as protege igualmente; testar a pilha sobre um
+    app de teste minimo continua util para provocar os cortes de corpo sem
+    depender de uma rota especifica.
     """
     stack: ASGIApp = ContentTypeMiddleware(app)
     stack = AuthenticationMiddleware(stack, token=token)

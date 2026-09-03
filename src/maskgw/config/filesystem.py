@@ -34,6 +34,9 @@ from typing import Final
 from maskgw.errors import CapabilityError, MaskGatewayError
 
 _LOCK_SUFFIX: Final = ".lock"
+#: Prefixo do backup da adocao (secao 5.4). O nome completo e
+#: `<config>.bak.<epoch>`, no mesmo diretorio, criado com `O_EXCL` e `0600`.
+_BACKUP_INFIX: Final = ".bak."
 _TEMP_TOKEN_BYTES: Final = 8
 _PRIVATE_MODE: Final = 0o600
 _UNSAFE_WRITE_BITS: Final = stat.S_IWGRP | stat.S_IWOTH
@@ -56,12 +59,17 @@ def _random_temp_token() -> str:
     return secrets.token_hex(_TEMP_TOKEN_BYTES)
 
 
+def _ignore_backup_create(_path: str) -> None:
+    return None
+
+
 @dataclass(frozen=True, slots=True, repr=False)
 class FilesystemHooks:
     """Pontos controlados para testar corridas e falhas de durabilidade.
 
     Os defaults sao as operacoes reais. A API nao transporta dados sensiveis
-    aos callbacks: o hook de digest recebe somente o ponto fixo da operacao.
+    aos callbacks: os hooks recebem o ponto fixo da operacao ou o caminho alvo,
+    nunca os bytes.
     """
 
     before_digest_check: Callable[[DigestCheckPoint], None] = _ignore_digest_check
@@ -69,6 +77,11 @@ class FilesystemHooks:
     replace: Callable[[str, str], None] = os.replace
     directory_fsync: Callable[[int], None] = os.fsync
     temp_token: Callable[[], str] = _random_temp_token
+    #: Chamado no backup da adocao DEPOIS da criacao exclusiva e ANTES de escrever
+    #: (secao 5.4, D-059). Ponto de injecao de falha: um teste levanta aqui e
+    #: confirma que o incompleto e removido, o preexistente fica intacto e nenhum
+    #: fd vaza. Recebe so o caminho alvo, nunca os bytes.
+    after_backup_create: Callable[[str], None] = _ignore_backup_create
 
 
 class UnsafeConfigFilesystemError(CapabilityError):
@@ -143,6 +156,18 @@ class AtomicWriteResult:
 
     def __repr__(self) -> str:
         return f"AtomicWriteResult(directory_fsync_performed={self.directory_fsync_performed!r})"
+
+
+@dataclass(frozen=True, slots=True, repr=False)
+class BackupResult:
+    """Resultado de um backup byte a byte concluido (secao 5.4)."""
+
+    #: Nome do arquivo criado, sem o diretorio. Nao carrega bytes nem caminho
+    #: absoluto: e so o suficiente para o teste conferir o padrao `.bak.<epoch>`.
+    name: str
+
+    def __repr__(self) -> str:
+        return "BackupResult(<redacted>)"
 
 
 def digest_bytes(data: bytes) -> str:
@@ -597,6 +622,138 @@ class ConfigFileStore:
                 with suppress(OSError):
                     os.close(descriptor)
         return succeeded
+
+    def backup_path(self, epoch: int) -> Path:
+        """Caminho do backup `<config>.bak.<epoch>` no mesmo diretorio."""
+        return self._config_path.with_name(f"{self._config_path.name}{_BACKUP_INFIX}{epoch}")
+
+    def write_backup(self, data: bytes, *, epoch: int) -> BackupResult:
+        """Grava `data` byte a byte em `<config>.bak.<epoch>` (secao 5.4).
+
+        `O_CREAT | O_EXCL`, modo `0600`, `O_NOFOLLOW`, arquivo regular conferido
+        por `fstat`, `fsync` do arquivo antes de retornar. **Nunca sobrescreve:**
+        se o nome ja existe, ou qualquer passo falha, levanta `ConfigWriteError`
+        e o arquivo alvo, se ja existia, fica intacto — sobrescrever um backup
+        destruiria o unico registro dos comentarios originais.
+
+        Diferente de `write_atomic`, isto NAO e uma instalacao atomica: e a
+        criacao de um arquivo NOVO, ao lado do principal, sem `replace`. O
+        principal nao e tocado aqui.
+        """
+        self._ensure_open()
+        path = self.backup_path(epoch)
+
+        # A criacao exclusiva vem PRIMEIRO e SOZINHA no seu proprio try: uma
+        # `FileExistsError` aqui e colisao de nome, e o arquivo existente e o
+        # backup de alguem — nunca o removemos (secao 5.4). Nenhum passo de
+        # escrita/fsync/cleanup pertence a este bloco, entao a colisao nunca
+        # alcanca o caminho que apaga o incompleto.
+        descriptor = -1
+        try:
+            descriptor = os.open(
+                path,
+                os.O_CREAT | os.O_EXCL | os.O_WRONLY | _BINARY_FLAG | _NOFOLLOW_FLAG,
+                _PRIVATE_MODE,
+            )
+        except FileExistsError:
+            raise ConfigWriteError() from None
+        except OSError:
+            raise ConfigWriteError() from None
+
+        # A partir daqui o arquivo e NOSSO e recem-criado. O CLEANUP — fechar o
+        # descritor e remover o incompleto — acontece SEMPRE que este bloco
+        # falha, seja qual for a excecao. Mas a CONVERSAO e seletiva:
+        #
+        # - `Exception` (write/flush/fsync/close, short write, hook operacional)
+        #   -> `ConfigWriteError`, depois do cleanup;
+        # - `BaseException` de controle — `KeyboardInterrupt`, `SystemExit`,
+        #   `GeneratorExit` — NAO e mascarada: o cleanup roda e a excecao original
+        #   e RELANCADA. Converte-la em `ConfigWriteError` engoliria um Ctrl-C ou
+        #   um pedido de encerramento, que precisam subir intactos.
+        try:
+            opened = os.fstat(descriptor)
+            valid = stat.S_ISREG(opened.st_mode)
+            if os.name == "posix":
+                valid = valid and stat.S_IMODE(opened.st_mode) == _PRIVATE_MODE
+            if not valid:
+                raise ConfigWriteError()
+            # Ponto de injecao de falha, depois da criacao exclusiva. A partir de
+            # `_write_backup_stream`, o descritor e consumido — `os.fdopen` com
+            # `closefd=True` passa a posse ao stream, cujo `with` fecha em todos
+            # os caminhos —, entao ele nao pode ser fechado de novo aqui (o numero
+            # poderia ja ter sido reusado por outro arquivo).
+            self._hooks.after_backup_create(os.fspath(path))
+            fd_to_close = descriptor
+            descriptor = -1
+            self._write_backup_stream(fd_to_close, data)
+        except Exception:
+            # Operacional (write/flush/fsync/close, short write, hook): cleanup e
+            # entao converte em ConfigWriteError. Excecoes de controle nao caem
+            # aqui — sao `BaseException` e nao `Exception`.
+            self._cleanup_incomplete_backup(descriptor, path)
+            raise ConfigWriteError() from None
+        except BaseException:
+            # Controle (Ctrl-C, exit): mesmo cleanup, mas a original SOBE intacta.
+            self._cleanup_incomplete_backup(descriptor, path)
+            raise
+
+        return BackupResult(name=path.name)
+
+    def _write_backup_stream(self, descriptor: int, data: bytes) -> None:
+        """Escreve, flush e fsync do backup, ASSUMINDO a posse do descritor.
+
+        Ponto unico de escrita — e o lugar que os testes de falha exercitam
+        diretamente (patch em `os.fdopen` ou no stream), sem precisar de hooks de
+        producao para `write`/`flush`/`close`. Um short write levanta
+        `ConfigWriteError`; o `with` fecha o stream mesmo quando `write`, `flush`
+        ou `fsync` levantam, e um erro no proprio fechamento propaga. Se
+        `os.fdopen` levantar antes de tomar posse, o descritor e fechado aqui,
+        exatamente uma vez.
+        """
+        try:
+            stream = os.fdopen(descriptor, "wb", closefd=True)
+        except BaseException:
+            with suppress(OSError):
+                os.close(descriptor)
+            raise
+        with stream:
+            written = stream.write(data)
+            stream.flush()
+            self._hooks.file_fsync(stream.fileno())
+            if written != len(data):
+                raise ConfigWriteError()
+
+    def _cleanup_incomplete_backup(self, descriptor: int, path: Path) -> None:
+        """Fecha o descritor (se ainda aberto) e remove o backup incompleto.
+
+        Chamado no caminho de falha, SEMPRE — inclusive quando a falha e de
+        controle. `descriptor` so e >= 0 quando a falha ocorreu ANTES de o stream
+        assumir a posse do fd (validacao, hook `after_backup_create`); depois
+        disso o `with` de `_write_backup_stream` ja fechou. O unlink acontece de
+        qualquer forma, porque um incompleto nunca pode ficar para tras. Nunca
+        toca o preexistente: a colisao ja falhou antes deste caminho.
+        """
+        if descriptor >= 0:
+            with suppress(OSError):
+                os.close(descriptor)
+        self._unlink_regular_backup(path)
+
+    def _unlink_regular_backup(self, path: Path) -> None:
+        """Remove um backup RECEM-CRIADO por esta operacao, se for regular.
+
+        So e chamado depois de uma criacao com `O_EXCL` bem-sucedida desta mesma
+        chamada, quando um passo posterior falhou: entao o arquivo e nosso e
+        nunca preexistia. Nao segue symlink e ignora ausencia.
+        """
+        info: os.stat_result | None = None
+        try:
+            info = path.lstat()
+        except OSError:
+            return
+        if stat.S_ISLNK(info.st_mode) or not stat.S_ISREG(info.st_mode):
+            return
+        with suppress(OSError):
+            os.unlink(path)
 
     def write_atomic(self, data: bytes, *, expected_digest: str) -> AtomicWriteResult:
         """Instala ``data`` atomicamente se os dois digest checks coincidirem.

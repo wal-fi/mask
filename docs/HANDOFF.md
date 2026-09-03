@@ -60,7 +60,8 @@ Andamento da Fase 7:
 | 6 — secao critica administrativa e fluxo completo de escrita/reload | concluida | `git log -- src/maskgw/admin` |
 | 7 — aplicacao HTTP: auth, bind, anti-CSRF, headers, limites, handlers, rotas de leitura | concluida | `git log -- src/maskgw/admin/http` |
 | 8 — `POST /admin/v1/config:validate` | concluida | `git log -- src/maskgw/admin/http/validate.py` |
-| 9 — rotas de escrita e adocao com backup | proxima, nao iniciada | — |
+| 9 — rotas de escrita e adocao com backup | concluida | `git log -- src/maskgw/admin/http/mutations.py` |
+| 10 — `AdminAudit` | proxima, nao iniciada | — |
 
 O estado atual deve ser conferido com `git status --short --branch` e
 `git rev-list --left-right --count origin/master...HEAD` antes de continuar;
@@ -205,14 +206,15 @@ src/maskgw/
     errors.py            AdminError e as categorias fechadas (10.2 + D-056)
     document.py          MaskingFileConfig <-> bytes YAML, round-trip conferido
     service.py           AdminConfigService: a secao critica e a secao 7.4
-    http/                <- Fase 7, Etapas 7 e 8; leitura + config:validate
+    http/                <- Fase 7, Etapas 7, 8 e 9; leitura + validate + escrita
       settings.py        enable, token, bind e porta: o passo 1 do startup
       middleware.py      Host, Origin, limite de corpo (413 autoritativo), auth, CT
       responses.py       forma unica de erro; categoria -> status HTTP
       schemas.py         modelos de resposta e de request, extra="forbid"/frozen
       views.py           respostas de leitura a partir de UM snapshot (D-057)
       validate.py        config:validate: valida e compila, SEM efeito (Etapa 8)
-      app.py             oito rotas de leitura, config:validate e os handlers
+      mutations.py       o payload de cada escrita: MaskingFileConfig -> Mapping (Etapa 9, D-059)
+      app.py             8 leituras, config:validate e as 11 escritas + handlers
       server.py          uvicorn em thread nao-daemon, com bind confirmado
   bootstrap/             <- Fase 7, Etapas 4, 6 e 7; composition root
     application.py       construcao e lifecycle ordenado dos dois planos
@@ -416,6 +418,28 @@ pytest     80 testes de config:validate (61 da entrega + 19 da correcao D-058)
 ruff     All checks passed
 ruff     112 files already formatted  (src + tests)
 mypy     Success: no issues found in 112 source files  (strict, mypy 2.3.1)
+git      diff --check sem erros
+```
+
+Medido ao final da Etapa 9, ja com as duas rodadas corretivas (as onze rotas de
+escrita, a adocao com backup, e as correcoes das duas revisoes), contra
+PostgreSQL 16.15 descartavel:
+
+```text
+pytest   2111 passed, 10 skipped  (2121 coletados)
+         suite INTEIRA: nenhum deselect, nenhum skip por ausencia de DSN
+           os 9 skips condicionais de plataforma do baseline, mais 1 skip novo:
+           o teste POSIX de fsync de diretorio falho, que no Windows nao se
+           aplica — a omissao do fsync e afirmada por um teste-par proprio
+pytest    485 passed, 1 skipped  (-m integration)
+           o unico skip e o teste POSIX de fsync de diretorio, condicional de
+           plataforma; nenhum skip por ausencia de DSN
+pytest    129 testes da Etapa 9: 69 de escrita/adocao (test_admin_http_writes.py),
+           58 adversariais (test_admin_http_writes_adversarial.py) e 2 e2e pela
+           porta HTTP admin real (test_admin_http_writes_e2e.py)
+ruff     All checks passed
+ruff     116 files already formatted  (src + tests)
+mypy     Success: no issues found in 116 source files  (strict, mypy 2.3.1)
 git      diff --check sem erros
 ```
 
@@ -823,10 +847,11 @@ automatico, banco de configuracao, Redis, background workers.
 ### Antes de iniciar a proxima etapa
 
 - `git status --short` vazio: a arvore precisa estar limpa
-- suite verde: **1995 testes coletados**, 1986 passed e 9 skips condicionais
+- suite verde: **2121 testes coletados**, 2111 passed e 10 skips condicionais
   de plataforma; `ruff check`, `ruff format --check` e `mypy --strict` sem erros
-- PostgreSQL real disponivel via `MASKGW_TEST_DSN`: 415 testes marcados como
-  integracao, todos executando, sem skip por ausencia dele
+- PostgreSQL real disponivel via `MASKGW_TEST_DSN`: 486 testes marcados como
+  integracao (485 passed + 1 skip POSIX condicional de plataforma), sem skip por
+  ausencia dele
 - neste host Windows, rode o pytest com pilha de thread ampliada (64 MiB), ou o
   teste de payload gigante derruba o processo. Nunca o transforme em `skip`
   (D-041); a limitacao esta na secao 11

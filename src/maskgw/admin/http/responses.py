@@ -47,6 +47,8 @@ STATUS_BY_CATEGORY: Final[dict[AdminErrorCategory, int]] = {
     # Documento candidato recusado.
     AdminErrorCategory.CONFIG_INVALID: 422,
     AdminErrorCategory.CONFIG_RELOAD_ERROR: 422,
+    # Campo protegido/imutavel no corpo de uma escrita (secao 11.3, Etapa 9).
+    AdminErrorCategory.IMMUTABLE_FIELD: 422,
     # Falhas do servidor. `CONFIG_DURABILITY_ERROR` e 500 COM `applied: true`
     # (secao 7.6): a mudanca valeu, e a durabilidade dela nao esta confirmada.
     AdminErrorCategory.CONFIG_WRITE_ERROR: 500,

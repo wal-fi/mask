@@ -98,9 +98,21 @@ DEFAULT_DENIED_FUNCTIONS: Final[frozenset[str]] = frozenset(
 )
 
 
+def canonical_function_name(name: str) -> str:
+    """Chave semantica de um nome de funcao: `strip().casefold()`.
+
+    Funcoes SQL sao case-insensitive e o parser do PostgreSQL ja normaliza o
+    caixa e as aspas — `pg_read_file`, `PG_READ_FILE` e ` pg_read_file ` sao a
+    MESMA funcao. Esta e a unica fonte da chave: a politica a usa para comparar,
+    e a Admin API a usa para deduplicar `denied_functions` (D-059), de modo que
+    duas grafias da mesma funcao nunca sejam persistidas como entradas distintas.
+    """
+    return name.strip().casefold()
+
+
 def _normalize(names: Iterable[str]) -> frozenset[str]:
     """Nomes de funcao sao case-insensitive: o parser ja os normaliza."""
-    return frozenset(name.strip().casefold() for name in names if name.strip())
+    return frozenset(canonical_function_name(name) for name in names if name.strip())
 
 
 @dataclass(frozen=True, slots=True)

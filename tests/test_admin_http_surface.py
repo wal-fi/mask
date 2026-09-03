@@ -25,7 +25,7 @@ from maskgw.admin.http import (
     VALIDATE_PATH,
     build_router,
 )
-from maskgw.admin.http.app import API_PREFIX
+from maskgw.admin.http.app import API_PREFIX, WRITE_ROUTES
 from maskgw.admin.service import AdminConfigService
 from maskgw.secretsource import MappingSecretProvider
 from tests.admin_http_support import (
@@ -36,9 +36,11 @@ from tests.admin_http_support import (
 )
 
 #: Caminhos que a secao 1.5 declara inexistentes. Nao "recusados": inexistentes.
+#: `/admin/v1/sql` e `/admin/v1/database` SAIRAM desta lista na Etapa 9 — passaram
+#: a existir como `PUT`, entao um `GET` nelas e `405`, nao `404`. Continuam sem
+#: DSN, sem execucao de SQL e sem `config:reload`.
 FORBIDDEN_PATHS = [
     "/admin/v1/query",
-    "/admin/v1/sql",
     "/admin/v1/execute",
     "/admin/v1/explain",
     "/admin/v1/schema",
@@ -56,14 +58,10 @@ FORBIDDEN_PATHS = [
 ]
 
 #: Rotas de etapas futuras. Existirem AGORA seria antecipacao. `config:validate`
-#: SAIU desta lista na Etapa 8 — ela existe agora, e e testada em
-#: `test_admin_http_validate.py`. Todas as rotas de escrita da Etapa 9 continuam
-#: inexistentes.
+#: saiu na Etapa 8; as onze rotas de escrita sairam na Etapa 9 — existem agora e
+#: sao testadas em `test_admin_http_writes.py`. So `AdminAudit` (Etapa 10)
+#: continua inexistente.
 FUTURE_PATHS = [
-    "/admin/v1/config:adopt",
-    "/admin/v1/rules:reorder",
-    "/admin/v1/database",
-    "/admin/v1/sql",
     "/admin/v1/audit",
     "/admin/v1/audit/entries",
 ]
@@ -101,52 +99,88 @@ class TestRouteSet:
             if isinstance(route, APIRoute)
         }
 
-    def test_o_conjunto_de_rotas_e_exatamente_o_da_especificacao(self) -> None:
-        """As oito leituras da Etapa 7 mais a unica rota POST da Etapa 8.
+    def _expected(self) -> set[tuple[str, frozenset[str]]]:
+        """O conjunto literal da secao 1: 8 leituras + 1 validate + 11 escritas.
 
-        Comparacao literal: uma rota nova — inclusive uma de escrita da Etapa 9
-        acrescentada por engano — quebra este teste em vez de aparecer.
+        Cada rota de escrita entra com o seu unico metodo. Onde dois metodos de
+        escrita compartilham um path — `PUT` e `DELETE` de `/rules/{rule_id}` —,
+        cada um e uma entrada `(path, {metodo})` separada, exatamente como o
+        FastAPI registra.
         """
         expected = {(path, READ_METHODS) for path in READ_PATHS}
         expected.add((VALIDATE_PATH, VALIDATE_METHODS))
-        assert self.registered() == expected
+        for path, method in WRITE_ROUTES:
+            expected.add((path, frozenset({method})))
+        return expected
 
-    def test_sao_oito_leituras_mais_um_validate(self) -> None:
+    def test_o_conjunto_de_rotas_e_exatamente_o_da_especificacao(self) -> None:
+        """As oito leituras, o `config:validate` e as onze escritas da Etapa 9.
+
+        Comparacao literal: uma rota nova — inclusive uma de escrita da Etapa 9
+        acrescentada por engano, ou uma da Etapa 10 antecipada — quebra este
+        teste em vez de aparecer.
+        """
+        assert self.registered() == self._expected()
+
+    def test_contagem_de_rotas(self) -> None:
         assert len(READ_PATHS) == 8
         assert set(VALIDATE_METHODS) == {"POST"}
-        assert len(self.registered()) == 9
+        assert len(WRITE_ROUTES) == 11
+        # 20 entradas distintas `(path, metodos)`: 8 leituras GET/HEAD, 1 POST
+        # validate, e 11 escritas — as duas de `/rules/{rule_id}` e as duas de
+        # `/exceptions/{exception_id}` sao entradas separadas por metodo.
+        assert len(self.registered()) == 20
 
     def test_todas_sob_o_prefixo_unico(self) -> None:
         assert all(path.startswith(f"{API_PREFIX}/") for path in READ_PATHS)
         assert VALIDATE_PATH.startswith(f"{API_PREFIX}/")
+        assert all(path.startswith(f"{API_PREFIX}/") for path, _method in WRITE_ROUTES)
 
-    def test_a_unica_rota_de_corpo_e_config_validate(self) -> None:
-        """`config:validate` NAO e uma escrita, mas tem corpo e usa `POST`.
+    def test_as_rotas_de_corpo_sao_validate_mais_as_onze_escritas(self) -> None:
+        """`config:validate` mais as onze escritas — e nada alem delas.
 
-        Nenhuma OUTRA rota registra metodo com corpo: as de escrita sao a Etapa
-        9. Registrar um `PUT`/`DELETE` aqui, ou um segundo `POST`, seria
-        antecipacao.
+        Nenhum `PATCH`, nenhuma rota de corpo fora do conjunto decidido.
+        Registrar uma rota de escrita da Etapa 10, ou um `PATCH`, quebra aqui.
         """
         with_body = {
             (path, methods)
             for path, methods in self.registered()
             if methods & {"POST", "PUT", "PATCH", "DELETE"}
         }
-        assert with_body == {(VALIDATE_PATH, VALIDATE_METHODS)}
+        expected = {(VALIDATE_PATH, VALIDATE_METHODS)}
+        for path, method in WRITE_ROUTES:
+            expected.add((path, frozenset({method})))
+        assert with_body == expected
 
-    def test_config_validate_e_post_only(self) -> None:
-        """Nem `GET`, `HEAD`, `PUT`, `PATCH`, `DELETE` ou `OPTIONS` na rota."""
-        methods = {m for path, ms in self.registered() if path == VALIDATE_PATH for m in ms}
-        assert methods == {"POST"}
+    def test_nenhum_patch_em_lugar_algum(self) -> None:
+        """Nao ha `PATCH`: merge parcial num documento de seguranca (secao 1.3)."""
+        for _path, methods in self.registered():
+            assert "PATCH" not in methods
+
+    def test_reorder_registrada_antes_da_rota_dinamica_de_escrita(self) -> None:
+        """`/rules:reorder` casa antes de `/rules/{rule_id}` no MESMO metodo.
+
+        Nao ha `POST /rules/{rule_id}`, entao nenhum path dinamico compete com o
+        `POST /rules:reorder` — mas registrar `:reorder` primeiro entre as
+        escritas e a garantia estrutural de que, se um `POST /rules/{rule_id}`
+        aparecer um dia, `:reorder` ainda casa antes. Confere a ordem de registro
+        das rotas de escrita (secao 12.7). O casamento em si e teste de
+        comportamento em `test_admin_http_writes.py`.
+        """
+        write_paths = [path for path, _method in WRITE_ROUTES]
+        assert write_paths.index(f"{API_PREFIX}/rules:reorder") < write_paths.index(
+            f"{API_PREFIX}/rules/{{rule_id}}"
+        )
 
     def test_options_nunca_e_registrado(self) -> None:
         """Sem preflight handler: e o que faz a camada 1 da secao 3.3 valer."""
         for _path, methods in self.registered():
             assert "OPTIONS" not in methods
 
-    def test_head_acompanha_todo_get(self) -> None:
+    def test_head_acompanha_todo_get_de_leitura(self) -> None:
+        write_paths_methods = {(path, method) for path, method in WRITE_ROUTES}
         for path, methods in self.registered():
-            if path == VALIDATE_PATH:
+            if path == VALIDATE_PATH or any(path == wp for wp, _m in write_paths_methods):
                 continue
             assert methods == frozenset({"GET", "HEAD"})
 
@@ -238,11 +272,15 @@ class TestMethods:
 
     @pytest.mark.parametrize("method", ["POST", "PUT", "PATCH", "DELETE"])
     def test_metodo_de_escrita_com_json_valido_e_405(self, harness: Harness, method: str) -> None:
-        """Com `Content-Type` correto, a recusa vem do router: a rota nao aceita."""
+        """Com `Content-Type` correto, a recusa vem do router: a rota nao aceita.
+
+        `/admin/v1/status` e somente leitura (`GET`/`HEAD`): nenhum metodo de
+        escrita e registrado nela, entao o router responde `405`.
+        """
         reply = request(
             harness.port,
             method,
-            "/admin/v1/config",
+            "/admin/v1/status",
             content_type="application/json",
             body=b"{}",
         )
@@ -261,7 +299,7 @@ class TestMethods:
         reply = request(
             harness.port,
             method,
-            "/admin/v1/config",
+            "/admin/v1/status",
             content_type="text/plain",
             body=b"x",
         )

@@ -118,6 +118,8 @@ select = [
 "tests/test_admin_http_reads.py" = ["N802", "PLC0415", "RUF012", "S105"]
 "tests/test_admin_http_settings.py" = ["S104", "S105"]
 "tests/test_admin_http_surface.py" = ["N802", "PLC0415", "S106"]
+"tests/test_admin_http_writes.py" = ["S105"]
+"tests/test_admin_http_writes_e2e.py" = ["S105", "S608"]
 # O subprocesso mede o que `maskgw.admin` carrega; interpretador e programa sao
 # constantes do proprio teste, como em `test_purity.py`.
 "tests/test_plan_separation.py" = ["S603"]

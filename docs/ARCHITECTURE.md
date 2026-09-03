@@ -434,10 +434,11 @@ seção crítica da Etapa 6 permanece utilizável — e testável — sem servid
 admin/http/settings.py    enable, token, bind e porta; o passo 1 do startup
 admin/http/middleware.py  as camadas de fronteira, ASGI puro
 admin/http/responses.py   forma única de erro e categoria -> status HTTP
-admin/http/schemas.py     modelos de resposta, extra="forbid" e frozen=True
+admin/http/schemas.py     modelos de resposta e de request, extra="forbid"/frozen
 admin/http/views.py       respostas de leitura derivadas do modelo validado
 admin/http/validate.py    config:validate: valida e compila, sem efeito (Etapa 8)
-admin/http/app.py         leitura, config:validate e os handlers de erro
+admin/http/mutations.py   o payload de cada escrita: documento -> documento (Etapa 9)
+admin/http/app.py         leitura, config:validate, as 11 escritas e os handlers
 admin/http/server.py      uvicorn numa thread não-daemon, com bind confirmado
 ```
 
@@ -445,11 +446,18 @@ As oito rotas de leitura são `GET`/`HEAD` sob `/admin/v1`: `status`, `config`,
 `rules`, `rules/{id}`, `exceptions`, `exceptions/{id}`, `transformers` e
 `protected`. A Etapa 8 acrescentou **uma** rota com corpo,
 `POST /admin/v1/config:validate` — que valida e compila um documento candidato
-**sem efeito algum** (não conecta, não persiste, não altera revision, não entra
-na seção crítica). O conjunto — oito leituras mais o `POST` — é comparado com a
-lista literal da especificação por teste; rota nova quebra a suíte. `/docs`, `/redoc` e `/openapi.json` são desligados na
-construção; `redirect_slashes` é desligado, então `/rules/` é `404` e nunca um
-`307`; `OPTIONS` não é registrado e não há header CORS em resposta alguma.
+**sem efeito algum**. A Etapa 9 acrescentou as **onze rotas de escrita** (§1.3):
+`config:adopt`, `PUT config`, create/replace/delete/reorder de regra,
+create/replace/delete de exception, `PUT database` e `PUT sql`. Cada escrita é uma
+tradução para `AdminConfigService.apply()`: o handler valida o corpo, constrói um
+`ConfigMutation` (em `mutations.py`) e chama o serviço, que executa o fluxo de onze
+passos dentro da seção crítica. A mutação recebe a cópia profunda do documento
+corrente **dentro** do lock — sem janela TOCTOU (D-059). O conjunto — oito
+leituras, o `POST config:validate` e as onze escritas — é comparado com a lista
+literal da especificação por teste; rota nova quebra a suíte. `/docs`, `/redoc` e
+`/openapi.json` são desligados na construção; `redirect_slashes` é desligado,
+então `/rules/` é `404` e nunca um `307`; `OPTIONS` não é registrado e não há
+header CORS em resposta alguma. Não há `PATCH`.
 
 **A ordem das camadas de fronteira** (D-056), de fora para dentro: `Host` fora
 da allowlist `400`; `Origin`/`Referer` presentes `403`; `Content-Length` acima
