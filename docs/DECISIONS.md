@@ -1496,3 +1496,114 @@ Com o `join` integral, a fronteira de processo nao precisa de laco de retomada:
 `main()` chama `close()`, que bloqueia ate a thread morrer e so entao fecha
 runtimes e solta o lock. Nao existe caminho em que o processo termine com
 cleanup pendente.
+
+## D-058 — Contrato de `config:validate` (Etapa 8)
+
+A especificacao (§1.2, §12.11) fixa o comportamento de `config:validate` — valida
+o schema, compila a policy, nao conecta, nao persiste, nao altera revision — mas
+nao fixa o envelope do request, a forma da resposta de sucesso nem a categoria
+dos erros de compilacao. Estas decisoes foram aprovadas para a Etapa 8.
+
+### O request e o documento candidato na raiz, com schema HTTP proprio
+
+O corpo e o proprio documento — `revision`, `masking`, `exceptions`, `database`,
+`sql` —, com um schema Pydantic v2 **proprio** da fronteira (`extra="forbid"`,
+`frozen=True`), nao compartilhado com o MCP e distinto dos modelos de
+`config/models.py`. A distincao importa: o schema HTTP e o que produz
+`SCHEMA_INVALID`, e reusar `MaskingFileConfig` diretamente misturaria a validacao
+de schema com a compilacao. O documento validado pelo schema e entao reparseado
+por `validate_file_config` e compilado por `compile_policy`, de modo que o
+veredito seja EXATAMENTE o que a escrita real daria.
+
+**As recusas de FORMA sao estruturais no schema HTTP, nao delegadas ao loader.**
+A tabela abaixo classifica "adotado sem ID" e "tipo errado" como `SCHEMA_INVALID`,
+e isso so vale se o proprio schema os recusar no binding — antes de
+`validate_candidate` e `compile_policy` correrem. Por isso o schema HTTP:
+
+- reproduz o `model_validator` de adocao de `MaskingFileConfig` num
+  `model_validator` proprio: `revision == 0` deixa os `id` opcionais, mas
+  `revision >= 1` exige `id` em toda regra e exception, e a falta vira
+  `SCHEMA_INVALID` no parsing. Delegar isso so ao `validate_file_config` o
+  transformaria em `CONFIG_INVALID`, contradizendo a tabela;
+- aplica validacao **estrita por campo** (`Strict()`) nos escalares `revision`,
+  `statement_timeout_ms`, `max_rows` e `case_sensitive`, para que o Pydantic
+  nao coaja `"1"` -> `1`, `1` -> `True` nem `True` -> `1`. Tipo JSON errado e
+  `SCHEMA_INVALID`, nao um valor silenciosamente normalizado. O `Strict()` e
+  campo a campo de proposito: um `strict=True` no modelo inteiro recusaria os
+  enums textuais legitimos (`"contains"`, `"exact"`), que sao string JSON valida
+  para o `StrEnum` `mode` — que fica de fora e continua aceitando-os.
+
+A mensagem desses erros nao sai: o handler de `RequestValidationError` emite so o
+CAMINHO do campo e um reason code fechado, nunca o valor submetido, o indice, o
+ID ou o texto interno do validator.
+
+**`expected_revision` nao existe no schema.** Enviado, cai no `extra="forbid"` e
+vira `422 SCHEMA_INVALID`. O resultado do `validate` e funcao exclusiva do
+documento; aceitar o campo sugeriria uma garantia de concorrencia que a operacao
+nao presta — entre o `validate` e a escrita real, qualquer coisa pode acontecer.
+
+### A resposta de sucesso sao quatro booleanos, e nada mais
+
+```json
+{"valid": true, "schema_validated": true, "policy_compiled": true,
+ "database_checks_performed": false}
+```
+
+Sem `revision`, `applied`, conteudo normalizado, secret, detalhe de transformer
+ou representacao do objeto compilado: a operacao nao le estado nem publica nada,
+entao a resposta nao carrega identidade de configuracao alguma.
+`database_checks_performed` e sempre `false` — `config:validate` nao conecta ao
+PostgreSQL (§1.2) —, e a resposta diz isso na propria forma em vez de omitir.
+Erros continuam usando o envelope uniforme ja existente; nao ha `valid: false`.
+
+### As categorias: SCHEMA_INVALID, CONFIG_INVALID, INTERNAL_ERROR
+
+| falha | categoria | status |
+|---|---|---|
+| JSON malformado; schema HTTP recusa (tipo, limite, campo desconhecido, `expected_revision`, formato de ID, adotado sem ID) | `SCHEMA_INVALID` | 422 |
+| passa pelo schema mas a validacao/compilacao recusa (regex, transformer inexistente, parametro ausente/desconhecido, HMAC sem chave) | `CONFIG_INVALID` | 422 |
+| falha interna inesperada | `INTERNAL_ERROR` | 500 |
+
+Nunca sai `str(exc)`, mensagem do Pydantic/PyYAML/regex/pglast, `match`, valor de
+`config`, traceback, causa ou contexto. Toda falha vira `AdminError` de categoria
+fechada, levantado FORA do `except` que o originou (D-017): `__cause__` e
+`__context__` ficam nulos. Um handler novo de `AdminError` em `app.py` traduz a
+categoria no envelope uniforme.
+
+### O handler roda no event loop, sem worker thread
+
+A validacao e limitada pelo corpo de 1 MiB e nao toca I/O, entao roda no event
+loop — sem `to_thread`, executor ou worker. Um worker aqui poderia sobreviver ao
+graceful shutdown de D-057, e a rota nao introduz trabalho abandonavel.
+
+### Ausencia de efeito e propriedade da assinatura
+
+`validate_candidate` recebe o documento, `secrets` e `registry`. Nao recebe — e
+portanto nao pode tocar — o `AdminConfigService`, o `RuntimeRegistry`, o
+`ConfigFileStore` nem a secao critica. Nao le `snapshot()`, revision nem digest;
+nao cria `PostgresAdapter`; nao conecta; nao persiste; nao incrementa
+`admin_operations_total`. O que nao chega a funcao nao pode ser alcancado, e um
+conjunto de testes com contadores estruturais prova a identidade de
+`registry.current`, dos bytes do arquivo, do digest e dos contadores antes e
+depois, para sucesso e para cada tipo de falha.
+
+### Correcao de fronteira exigida pela rota: limite de corpo autoritativo
+
+`config:validate` e a **primeira rota com corpo** do projeto, e expos que o
+`BodyLimitMiddleware` da Etapa 7 nao compunha com o roteador do FastAPI. O
+middleware sinalizava o excesso levantando uma excecao interna e a capturava no
+proprio `__call__` — o que funciona quando o app interno deixa a excecao
+propagar (um ASGI cru que le o corpo, como o `EchoApp` dos testes), mas o
+roteador do FastAPI le o corpo dentro de `wrap_app_handling_exceptions`, que
+captura qualquer `Exception` e a traduz numa resposta do framework antes que ela
+volte ao middleware. O resultado era um `400` do framework — pior, rotulado
+`HOST_NOT_ALLOWED` pelo mapeamento `status -> categoria` — no lugar do `413` que
+a §12.7 exige.
+
+Correcao: o corte passou a ser **autoritativo no proprio `receive`**. Assim que a
+soma dos bytes passa de 1 MiB, o middleware envia o `413` uma vez, devolve
+`http.disconnect` ao app interno (que para de ler) e engole qualquer resposta que
+o app ainda tente enviar. O desfecho e sempre `413`, independentemente do que o
+roteador faca com o `disconnect`. As garantias da Etapa 7 continuam: o chunk que
+estoura o limite nao e repassado, nada alem do limite existe em memoria, e a
+suite de fronteira — que ja provava o corte com corpo lido — permanece verde.

@@ -1,16 +1,19 @@
-"""A aplicacao HTTP administrativa: rotas de leitura e handlers de erro.
+"""A aplicacao HTTP administrativa: rotas de leitura, `config:validate` e erros.
 
-Etapa 7 da Fase 7. **Somente leitura.** Nenhuma rota desta etapa escreve,
-persiste, valida documento candidato, altera `revision` ou entra na secao
-critica administrativa. `POST /admin/v1/config:validate` e a Etapa 8; as rotas
-de escrita e a adocao com backup sao a Etapa 9; `AdminAudit` e a Etapa 10.
+Etapas 7 e 8 da Fase 7. As oito rotas de leitura da Etapa 7 continuam sendo
+**somente leitura**. A Etapa 8 acrescenta UMA rota com corpo,
+`POST /admin/v1/config:validate`, que **nao e uma escrita**: valida o schema,
+compila os transformers e a policy, e descarta o resultado. Ela nao persiste,
+nao altera `revision`, nao conecta ao PostgreSQL e nao entra na secao critica
+administrativa (secao 1.2). As rotas de escrita e a adocao com backup sao a
+Etapa 9; `AdminAudit` e a Etapa 10.
 
 ## O conjunto de rotas e literal
 
 Prefixo unico `/admin/v1`, e nada fora dele. As oito rotas de leitura estao em
-`READ_PATHS`, e um teste compara o que o router registrou com essa lista — rota
-nova quebra a suite em vez de aparecer sem que ninguem tenha decidido (secao
-12.7).
+`READ_PATHS` e a unica rota com corpo em `VALIDATE_PATH`; um teste compara o que
+o router registrou com essas listas — rota nova quebra a suite em vez de
+aparecer sem que ninguem tenha decidido (secao 12.7).
 
 O que **nao existe**, e nao e "recusado" mas inexistente (D-049):
 
@@ -37,15 +40,16 @@ sairia com o conteudo de um runtime e a revision de outro. Como as funcoes de
 `views.py` recebem `AdminSnapshot`, elas nao teriam nem como fazer a segunda
 leitura (D-057).
 
-## Os tres handlers substituidos (secao 10.3)
+## Os handlers substituidos (secao 10.3)
 
-| handler | por que trocar |
+| handler | por que |
 |---|---|
-| `RequestValidationError` | o default inclui o valor `input` que falhou |
+| `RequestValidationError` | o default inclui o valor `input` que falhou -> `SCHEMA_INVALID` |
+| `AdminError` | traduz a categoria fechada de `config:validate` em resposta uniforme |
 | `HTTPException` | o default ecoa `detail` arbitrario |
 | `Exception` | sem ele a excecao sobe para o servidor, que registra o traceback |
 
-O terceiro nao basta sozinho: o `ServerErrorMiddleware` do Starlette responde e
+O ultimo nao basta sozinho: o `ServerErrorMiddleware` do Starlette responde e
 em seguida **relevanta**. Quem realmente contem a excecao e o
 `BoundaryMiddleware`, fora dele. Ver `middleware.py`.
 """
@@ -61,7 +65,7 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.types import ASGIApp
 
-from maskgw.admin.errors import AdminErrorCategory
+from maskgw.admin.errors import AdminError, AdminErrorCategory
 from maskgw.admin.http.middleware import (
     AuthenticationMiddleware,
     BodyLimitMiddleware,
@@ -85,7 +89,10 @@ from maskgw.admin.http.schemas import (
     AdminRulesResponse,
     AdminStatusResponse,
     AdminTransformersResponse,
+    ConfigValidateRequest,
+    ConfigValidateResponse,
 )
+from maskgw.admin.http.validate import validate_candidate
 from maskgw.admin.http.views import (
     build_config,
     build_exceptions,
@@ -109,7 +116,7 @@ API_PREFIX: Final = "/admin/v1"
 #: DECIDIDO, e nao o que o framework acrescentou.
 READ_METHODS: Final[frozenset[str]] = frozenset({"GET", "HEAD"})
 
-#: O conjunto literal de caminhos desta etapa (secao 1.1).
+#: O conjunto literal de caminhos de leitura (secao 1.1).
 READ_PATHS: Final[tuple[str, ...]] = (
     f"{API_PREFIX}/status",
     f"{API_PREFIX}/config",
@@ -120,6 +127,16 @@ READ_PATHS: Final[tuple[str, ...]] = (
     f"{API_PREFIX}/transformers",
     f"{API_PREFIX}/protected",
 )
+
+#: A unica rota com corpo desta fase (secao 1.2). `POST` e so `POST`: nenhum
+#: `GET`, `HEAD`, `PUT`, `PATCH`, `DELETE` ou `OPTIONS` e registrado nela. Um
+#: `HEAD` implicito seria pior que inutil — sugeriria que a validacao tem uma
+#: forma sem corpo, que ela nao tem.
+VALIDATE_PATH: Final = f"{API_PREFIX}/config:validate"
+
+#: Os metodos de `config:validate`. Declarado como as leituras, para que o teste
+#: de superficie compare o que foi DECIDIDO, e nao o que o framework acrescentou.
+VALIDATE_METHODS: Final[frozenset[str]] = frozenset({"POST"})
 
 #: Status HTTP -> categoria, para traduzir o que o Starlette levanta sozinho:
 #: o `404` de caminho desconhecido e o `405` de metodo nao registrado.
@@ -173,6 +190,14 @@ def install_error_handlers(app: FastAPI) -> None:
         # etapa futura, poderia carregar o que um handler tenha posto ali.
         category = _CATEGORY_BY_STATUS.get(exc.status_code, AdminErrorCategory.INTERNAL_ERROR)
         return error_response(category)
+
+    @app.exception_handler(AdminError)
+    async def _admin_error(_request: Request, exc: AdminError) -> JSONResponse:
+        # `config:validate` (e, na Etapa 9, as escritas) levanta `AdminError` de
+        # categoria fechada. So a categoria e lida — nunca `str(exc)`, que ja e
+        # o texto fixo da categoria, e nunca a cadeia, que `raise_admin_error`
+        # deixou nula. `current_revision` viaja quando a categoria o carrega.
+        return error_response(exc.category, current_revision=exc.current_revision)
 
     @app.exception_handler(Exception)
     async def _unexpected(_request: Request, _exc: Exception) -> JSONResponse:
@@ -286,6 +311,22 @@ def build_router(
     )
     async def protected() -> AdminProtectedResponse:
         return build_protected(service.snapshot())
+
+    @app.api_route(
+        VALIDATE_PATH,
+        methods=sorted(VALIDATE_METHODS),
+        response_model=ConfigValidateResponse,
+    )
+    async def config_validate(candidate: ConfigValidateRequest) -> ConfigValidateResponse:
+        # O corpo ja passou pelo schema HTTP (senao o handler de
+        # `RequestValidationError` teria respondido `SCHEMA_INVALID`). A funcao
+        # compila e descarta; ela NAO recebe o `service`, entao nao alcanca
+        # snapshot, registry, filesystem nem secao critica (secao 1.2, D-058).
+        #
+        # `async def` e sem `to_thread`: a validacao e limitada pelo corpo de
+        # 1 MiB e nao toca I/O, entao roda no event loop. Um worker thread aqui
+        # poderia sobreviver ao graceful shutdown de D-057.
+        return validate_candidate(candidate, secrets=secrets)
 
     return app
 

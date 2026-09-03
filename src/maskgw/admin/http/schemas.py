@@ -25,15 +25,33 @@ entao nao compartilha objeto com o runtime publicado (D-055).
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Any
+from typing import Annotated, Any
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, Strict, model_validator
 
+from maskgw.config.ids import EXCEPTION_ID_PATTERN, RULE_ID_PATTERN
+from maskgw.config.models import (
+    MAX_MAX_ROWS,
+    MAX_STATEMENT_TIMEOUT_MS,
+    MIN_MAX_ROWS,
+    MIN_STATEMENT_TIMEOUT_MS,
+    UNADOPTED_REVISION,
+)
 from maskgw.masking.rules import MatchMode
 
 #: Mesmo perfil dos modelos de configuracao: chave desconhecida e erro, e o
 #: modelo nao aceita reatribuicao de campo.
 _STRICT = ConfigDict(extra="forbid", frozen=True)
+
+#: Escalares do request de `config:validate` com validacao ESTRITA por campo
+#: (D-058). Sem isto o Pydantic coage `"1"` -> `1`, `1` -> `True` e `True` -> `1`,
+#: e o contrato classifica tipo JSON errado como `SCHEMA_INVALID`, nao como um
+#: valor silenciosamente normalizado. `Strict()` e aplicado campo a campo, e
+#: NUNCA ao modelo inteiro: um `strict=True` global recusaria tambem os enums
+#: textuais legitimos (`"contains"`, `"exact"`), que sao string JSON valida para
+#: um `StrEnum` — `mode` fica de fora e continua aceitando esses valores.
+StrictInt = Annotated[int, Strict()]
+StrictBool = Annotated[bool, Strict()]
 
 
 class SecretState(StrEnum):
@@ -321,3 +339,161 @@ class AdminProtectedResponse(BaseModel):
     #: Sempre `false`. O campo existe para que a resposta AFIRME a propriedade,
     #: em vez de deixa-la implicita na ausencia de rotas de escrita.
     editable: bool
+
+
+# -- config:validate (Etapa 8) -------------------------------------------------
+#
+# O request e o proprio documento candidato na raiz, com os mesmos campos
+# administrativos de `MaskingFileConfig`. Estes modelos sao PROPRIOS da fronteira
+# HTTP: nao sao compartilhados com o plano MCP (secao 4.1), e tampouco sao os
+# modelos de `config/models.py` — reusar aqueles arrastaria os defaults do loader
+# para dentro da fronteira e apagaria a distincao entre o que a validacao de
+# SCHEMA recusa (tipos, limites, campo desconhecido, formato de ID, adotado sem
+# ID) e o que so a COMPILACAO recusa (regex, transformer, parametro, HMAC). O
+# schema aqui produz `SCHEMA_INVALID`; a compilacao, feita depois com
+# `validate_file_config` + `compile_policy`, produz `CONFIG_INVALID` (D-058).
+#
+# `expected_revision` NAO existe neste schema. Enviado, cai no `extra="forbid"`
+# e vira `422 SCHEMA_INVALID`: o resultado do `validate` e funcao exclusiva do
+# documento, e aceitar o campo sugeriria uma garantia de concorrencia que a
+# operacao nao presta (secao 1.2).
+
+
+class ValidateMatchRequest(BaseModel):
+    """Campos comuns a regra e exception no request de validacao.
+
+    Espelha `MatchConfig`: `match` nao vazio, `mode` do enum, `case_sensitive`.
+    Os defaults sao os MESMOS do loader (`contains` para regra, `exact` para
+    exception), para que o documento validado aqui seja identico ao que a
+    escrita real compilaria.
+    """
+
+    model_config = _STRICT
+
+    match: str = Field(min_length=1)
+    #: Estrito: `1`/`0` JSON nao viram `True`/`False` (D-058).
+    case_sensitive: StrictBool = False
+
+
+class ValidateRuleRequest(ValidateMatchRequest):
+    """Uma regra candidata. `mode` default `contains`, como em `RuleConfig`."""
+
+    mode: MatchMode = MatchMode.CONTAINS
+    transformer: str = Field(min_length=1)
+
+    #: Herdada de §4.1: o unico `dict[str, Any]` da fronteira, validado pelo
+    #: transformer alvo na COMPILACAO — que aqui acontece de fato.
+    config: dict[str, Any] = Field(default_factory=dict)
+
+    #: Ausente num documento nao adotado; obrigatorio quando `revision >= 1`. O
+    #: formato e conferido pelo schema, entao um ID malformado e `SCHEMA_INVALID`.
+    id: str | None = Field(default=None, pattern=RULE_ID_PATTERN)
+
+
+class ValidateExceptionRequest(ValidateMatchRequest):
+    """Uma exception candidata. `mode` default `exact`, como `ExceptionConfig`.
+
+    Nao tem `transformer` nem `config`: uma exception que os trouxesse cairia no
+    `extra="forbid"` e viraria `SCHEMA_INVALID`, que e o comportamento exigido.
+    """
+
+    mode: MatchMode = MatchMode.EXACT
+    id: str | None = Field(default=None, pattern=EXCEPTION_ID_PATTERN)
+
+
+class ValidateDatabaseRequest(BaseModel):
+    """Limites de execucao candidatos. Mesmos limites de `DatabaseConfig`.
+
+    Nao ha DSN, host nem credencial — nem para leitura, nem para validacao.
+    """
+
+    model_config = _STRICT
+
+    #: Estritos: string numerica JSON (`"100"`) nao e aceita como inteiro (D-058).
+    statement_timeout_ms: StrictInt = Field(
+        default=30_000,
+        ge=MIN_STATEMENT_TIMEOUT_MS,
+        le=MAX_STATEMENT_TIMEOUT_MS,
+    )
+    max_rows: StrictInt = Field(default=1_000, ge=MIN_MAX_ROWS, le=MAX_MAX_ROWS)
+
+
+class ValidateSqlRequest(BaseModel):
+    """Extensoes de politica candidatas.
+
+    `allowed_pg_functions` e aceito aqui porque `config:validate` valida o
+    documento inteiro tal como seria escrito — o campo pode existir no arquivo.
+    O que a Etapa 8 NAO faz e administra-lo: nao ha rota que o altere, e este
+    request nunca persiste nada (D-050, secao 11.3).
+    """
+
+    model_config = _STRICT
+
+    allowed_pg_functions: list[str] = Field(default_factory=list)
+    denied_functions: list[str] = Field(default_factory=list)
+
+
+class ConfigValidateRequest(BaseModel):
+    """`POST /admin/v1/config:validate`: o documento candidato na raiz.
+
+    Os defaults reproduzem os de `MaskingFileConfig`, entao um documento minimo
+    — corpo `{}` — e valido, exatamente como um `masking.yaml` vazio carrega.
+    """
+
+    model_config = _STRICT
+
+    #: Estrito: `"1"` JSON nao vira `1` (D-058). O tipo errado e `SCHEMA_INVALID`.
+    revision: StrictInt = Field(default=UNADOPTED_REVISION, ge=0)
+    masking: list[ValidateRuleRequest] = Field(default_factory=list)
+    exceptions: list[ValidateExceptionRequest] = Field(default_factory=list)
+    database: ValidateDatabaseRequest = Field(default_factory=ValidateDatabaseRequest)
+    sql: ValidateSqlRequest = Field(default_factory=ValidateSqlRequest)
+
+    @model_validator(mode="after")
+    def _adopted_requires_ids(self) -> ConfigValidateRequest:
+        """Documento adotado tem `id` em TODO item — recusa no BINDING do schema.
+
+        Mesma regra estrutural de `MaskingFileConfig._adopted_requires_ids`, mas
+        aplicada aqui, durante o parsing HTTP, para que "adotado sem ID" seja
+        `SCHEMA_INVALID` e nao `CONFIG_INVALID` (D-058): a ausencia de ID num
+        documento com `revision >= 1` e uma falha de FORMA do request, e o schema
+        e quem a classifica. Como falha no binding, `validate_candidate` e
+        `compile_policy` nem chegam a ser chamados.
+
+        A mensagem e generica de proposito e, de todo modo, nao sai: o handler de
+        `RequestValidationError` emite apenas o CAMINHO do campo (`body`) e um
+        reason code fechado. Nenhum indice, ID, padrao ou valor submetido aparece
+        na resposta.
+        """
+        if self.revision == UNADOPTED_REVISION:
+            return self
+        adopted_without_id = any(item.id is None for item in self.masking) or any(
+            item.id is None for item in self.exceptions
+        )
+        if adopted_without_id:
+            msg = "adopted configuration requires an id on every rule and exception"
+            raise ValueError(msg)
+        return self
+
+
+class ConfigValidateResponse(BaseModel):
+    """Resposta de sucesso de `config:validate`. Quatro booleanos, e nada mais.
+
+    Sem `revision`, sem `applied`, sem conteudo normalizado, sem secret, sem
+    detalhe de transformer e sem representacao do objeto compilado: a operacao
+    nao le estado nem publica nada, entao a resposta nao carrega identidade de
+    configuracao alguma (D-058).
+
+    `database_checks_performed` e sempre `false` nesta fase: `config:validate`
+    NAO conecta ao PostgreSQL. Conectar tem custo e efeito no servidor, e a
+    verificacao de conexao pertence ao fluxo real de escrita, onde ha um
+    candidato a publicar (secao 1.2). A resposta diz isso na propria forma, em
+    vez de omitir e deixar o chamador supor.
+    """
+
+    model_config = _STRICT
+
+    valid: bool
+    schema_validated: bool
+    policy_compiled: bool
+    database_checks_performed: bool

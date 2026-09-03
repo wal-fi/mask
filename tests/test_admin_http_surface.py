@@ -18,7 +18,13 @@ from typing import cast
 import pytest
 from fastapi.routing import APIRoute
 
-from maskgw.admin.http import READ_METHODS, READ_PATHS, build_router
+from maskgw.admin.http import (
+    READ_METHODS,
+    READ_PATHS,
+    VALIDATE_METHODS,
+    VALIDATE_PATH,
+    build_router,
+)
 from maskgw.admin.http.app import API_PREFIX
 from maskgw.admin.service import AdminConfigService
 from maskgw.secretsource import MappingSecretProvider
@@ -49,9 +55,11 @@ FORBIDDEN_PATHS = [
     "/execute",
 ]
 
-#: Rotas de etapas futuras. Existirem AGORA seria antecipacao.
+#: Rotas de etapas futuras. Existirem AGORA seria antecipacao. `config:validate`
+#: SAIU desta lista na Etapa 8 — ela existe agora, e e testada em
+#: `test_admin_http_validate.py`. Todas as rotas de escrita da Etapa 9 continuam
+#: inexistentes.
 FUTURE_PATHS = [
-    "/admin/v1/config:validate",
     "/admin/v1/config:adopt",
     "/admin/v1/rules:reorder",
     "/admin/v1/database",
@@ -94,19 +102,42 @@ class TestRouteSet:
         }
 
     def test_o_conjunto_de_rotas_e_exatamente_o_da_especificacao(self) -> None:
-        assert self.registered() == {(path, READ_METHODS) for path in READ_PATHS}
+        """As oito leituras da Etapa 7 mais a unica rota POST da Etapa 8.
 
-    def test_sao_oito_rotas_e_nenhuma_a_mais(self) -> None:
+        Comparacao literal: uma rota nova — inclusive uma de escrita da Etapa 9
+        acrescentada por engano — quebra este teste em vez de aparecer.
+        """
+        expected = {(path, READ_METHODS) for path in READ_PATHS}
+        expected.add((VALIDATE_PATH, VALIDATE_METHODS))
+        assert self.registered() == expected
+
+    def test_sao_oito_leituras_mais_um_validate(self) -> None:
         assert len(READ_PATHS) == 8
-        assert len(self.registered()) == 8
+        assert set(VALIDATE_METHODS) == {"POST"}
+        assert len(self.registered()) == 9
 
     def test_todas_sob_o_prefixo_unico(self) -> None:
         assert all(path.startswith(f"{API_PREFIX}/") for path in READ_PATHS)
+        assert VALIDATE_PATH.startswith(f"{API_PREFIX}/")
 
-    def test_nenhuma_rota_registra_metodo_de_escrita(self) -> None:
-        """Escrita e a Etapa 9. Um `POST` registrado aqui seria antecipacao."""
-        for _path, methods in self.registered():
-            assert methods & {"POST", "PUT", "PATCH", "DELETE"} == set()
+    def test_a_unica_rota_de_corpo_e_config_validate(self) -> None:
+        """`config:validate` NAO e uma escrita, mas tem corpo e usa `POST`.
+
+        Nenhuma OUTRA rota registra metodo com corpo: as de escrita sao a Etapa
+        9. Registrar um `PUT`/`DELETE` aqui, ou um segundo `POST`, seria
+        antecipacao.
+        """
+        with_body = {
+            (path, methods)
+            for path, methods in self.registered()
+            if methods & {"POST", "PUT", "PATCH", "DELETE"}
+        }
+        assert with_body == {(VALIDATE_PATH, VALIDATE_METHODS)}
+
+    def test_config_validate_e_post_only(self) -> None:
+        """Nem `GET`, `HEAD`, `PUT`, `PATCH`, `DELETE` ou `OPTIONS` na rota."""
+        methods = {m for path, ms in self.registered() if path == VALIDATE_PATH for m in ms}
+        assert methods == {"POST"}
 
     def test_options_nunca_e_registrado(self) -> None:
         """Sem preflight handler: e o que faz a camada 1 da secao 3.3 valer."""
@@ -114,7 +145,9 @@ class TestRouteSet:
             assert "OPTIONS" not in methods
 
     def test_head_acompanha_todo_get(self) -> None:
-        for _path, methods in self.registered():
+        for path, methods in self.registered():
+            if path == VALIDATE_PATH:
+                continue
             assert methods == frozenset({"GET", "HEAD"})
 
 

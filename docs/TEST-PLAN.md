@@ -16,12 +16,14 @@ inteira, sem nenhum deselect e sem skip por ausência de `MASKGW_TEST_DSN`. Com
 dois deles marcados `integration` — o reload contra banco real —, e os dois
 executam.
 
-Estado medido ao final da Etapa 7, já com as duas correções de D-057, contra
-PostgreSQL 16.15 real: **1915 coletados, 1906 passed e os mesmos 9 skips
-condicionais de plataforma** — sem nenhum deselect e sem skip por ausência de
-DSN. Com `-m integration`, **415 passed e 0 skipped**. A Etapa 7 acrescentou
-406 testes, cinco deles marcados `integration` — a coexistência dos dois planos
-num processo real.
+Estado medido ao final da Etapa 8, contra PostgreSQL 16.15 real: **1995
+coletados, 1986 passed e os mesmos 9 skips condicionais de plataforma** — sem
+nenhum deselect e sem skip por ausência de DSN. Com `-m integration`, **415
+passed e 0 skipped**. A Etapa 8 acrescentou 80 testes de `config:validate` — 61
+na primeira entrega e mais 19 na correção de D-058 (adotado sem ID como
+`SCHEMA_INVALID` e escalares estritos); a Etapa 7 havia acrescentado 406, cinco
+deles marcados `integration` — a coexistência dos dois planos num processo real,
+que continua verde com a rota nova ativa.
 
 **Como rodar neste host Windows.** `test_large_query_payload_does_not_crash`,
 da Fase 6, monta uma consulta com 100.000 termos e estoura a pilha da thread na
@@ -593,5 +595,66 @@ capturados provaria o contrário do que se quer. O teste afirma a **configuraç�
 — sem handler próprio e sem propagação — e a ausência real é verificada onde a
 instrumentação não alcança: no subprocesso do teste de coexistência.
 
-`config:validate` é a Etapa 8; as rotas de escrita e a adoção com backup são a
-Etapa 9; `AdminAudit` é a Etapa 10; a suíte adversarial HTTP é a Etapa 11.
+### Etapa 8 — `config:validate` (§12.11, D-058)
+
+`tests/test_admin_http_validate.py`, **80 testes**. A rota valida o schema,
+compila os transformers e a policy, e descarta o resultado.
+
+- **Sucesso.** Documento mínimo (`{}`) e documento adotado completo → `200` com
+  a forma exata `{"valid": true, "schema_validated": true, "policy_compiled":
+  true, "database_checks_performed": false}` — nada além dos quatro campos, sem
+  `revision`, `applied`, conteúdo normalizado, secret ou `current_revision`.
+  `no-store` e ausência de CORS. Cada um dos oito transformers válidos (md5,
+  sha256, sha512, hmac_sha256, regex, fixed, truncate, random) compila.
+- **Compila, não só valida schema.** Uma regex **válida** passa; a mesma rota com
+  regex **inválida** recusa. As duas juntas provam que a regex é de fato
+  compilada — uma string qualquer passaria pelo schema.
+- **Autenticação e fronteira.** Sem token, token errado, token em query e em
+  cookie → `401`; sem token e corpo inválido → `401`, nunca `422`; `text/plain`
+  → `415`; JSON malformado → `422 SCHEMA_INVALID` sanitizado; `Origin`/`Referer`
+  → `403`; `Host` alheio → `400`; corpo acima de 1 MiB por `Content-Length` e
+  **chunked** → `413`. Os demais métodos (GET/HEAD → `405`, PUT/PATCH/DELETE com
+  `text/plain` → `415`) não executam a validação.
+- **As duas categorias de `422`.** `SCHEMA_INVALID` para `expected_revision`,
+  campo desconhecido em qualquer nível, tipo errado, limite inválido, ID ausente
+  em documento adotado, ID malformado, exception com transformer. `CONFIG_INVALID`
+  para regex inválida, transformer inexistente, parâmetro obrigatório ausente,
+  parâmetro desconhecido e HMAC sem chave. Nenhum `SCHEMA_INVALID` carrega o
+  valor submetido; nenhum `CONFIG_INVALID` cita a causa. Os testes afirmam a
+  **categoria** no corpo, não só o status `422` — as duas classes são `422`, e
+  conferir só o status não distinguiria uma da outra.
+- **Schema estrito, por regressão (D-058).** "Documento adotado sem ID" é
+  `SCHEMA_INVALID`, não `CONFIG_INVALID`, tanto para regra quanto para exception,
+  e a recusa acontece no binding: espiões provam que `validate_file_config` e
+  `compile_policy` **não são chamados** nesse caso. Os escalares são estritos:
+  string numérica (`"1"`) não é aceita como inteiro em `revision`,
+  `statement_timeout_ms` e `max_rows`; `0`/`1` não são aceitos como booleano em
+  `case_sensitive`; um booleano não é aceito como inteiro. A contraparte fica
+  intacta: o enum textual JSON (`"contains"`, `"exact"`) continua aceito, e o
+  booleano legítimo passa. Nenhum valor rejeitado aparece na resposta, e cada
+  falha continua sem efeito (é mais um caso da parametrização de ausência de
+  efeito).
+- **Ausência de efeito**, para sucesso e para cada tipo de falha, parametrizado:
+  bytes do arquivo idênticos, revision idêntica, `registry.current` é o **mesmo
+  objeto**, digest de referência inalterado, `admin_operations_total` e
+  `queries_total` inalterados, nenhum adapter novo, o adapter existente sem
+  `connect`/`execute`/`close`, nenhuma thread `maskgw-admin-http` a mais. Um
+  espião prova que `snapshot()` **nunca é chamado**, e que a seção crítica nunca
+  é adquirida (o contador de operações não sobe).
+- **Leakage.** Nem HMAC nem partes do DSN aparecem em corpo ou header, em sucesso
+  ou erro. Uma exceção **não-`ConfigError`** injetada na compilação vira
+  `INTERNAL_ERROR` sem `str(exc)`. O erro sanitizado tem `__cause__` e
+  `__context__` nulos (D-017).
+
+**A rota é a primeira com corpo, e expôs uma correção de fronteira** (D-058). O
+`BodyLimitMiddleware` sinalizava o excesso levantando uma exceção interna e a
+capturava no próprio `__call__` — o que funciona com um app que deixa a exceção
+propagar (o `EchoApp` dos testes de fronteira), mas o roteador do FastAPI lê o
+corpo dentro de `wrap_app_handling_exceptions`, que captura a exceção antes que
+ela volte. O corte passou a ser **autoritativo no `receive`**: o `413` é enviado
+ali, o app interno recebe `http.disconnect` e qualquer resposta dele é engolida.
+A contraprova mede as duas coisas: sem a correção, o chunked na rota dá `400`; e
+sem a rota registrada, a suíte de superfície e a de validação quebram.
+
+As rotas de escrita e a adoção com backup são a Etapa 9; `AdminAudit` é a Etapa
+10; a suíte adversarial HTTP é a Etapa 11.

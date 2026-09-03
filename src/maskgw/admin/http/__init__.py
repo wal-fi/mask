@@ -10,8 +10,8 @@ separados, e so o composition root em `bootstrap/` conhece os dois (secao 9).
 Ele tambem nao importa `logging` — `audit/` continua sendo o unico modulo
 autorizado, e `AdminAudit` e a Etapa 10.
 
-Somente leitura nesta etapa. `config:validate` e a Etapa 8; escrita e adocao,
-a Etapa 9.
+Leitura (Etapa 7) mais `config:validate` (Etapa 8), que valida e compila um
+documento candidato sem efeito algum. Escrita e adocao sao a Etapa 9.
 """
 
 from __future__ import annotations
@@ -20,6 +20,8 @@ from maskgw.admin.http.app import (
     API_PREFIX,
     READ_METHODS,
     READ_PATHS,
+    VALIDATE_METHODS,
+    VALIDATE_PATH,
     build_admin_app,
     build_router,
     install_error_handlers,
@@ -73,6 +75,8 @@ __all__ = [
     "READ_METHODS",
     "READ_PATHS",
     "STATUS_BY_CATEGORY",
+    "VALIDATE_METHODS",
+    "VALIDATE_PATH",
     "AdminHttpServer",
     "AdminHttpSettings",
     "AdminHttpUnavailableError",

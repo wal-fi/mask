@@ -435,15 +435,19 @@ admin/http/settings.py    enable, token, bind e porta; o passo 1 do startup
 admin/http/middleware.py  as camadas de fronteira, ASGI puro
 admin/http/responses.py   forma única de erro e categoria -> status HTTP
 admin/http/schemas.py     modelos de resposta, extra="forbid" e frozen=True
-admin/http/views.py       respostas derivadas do modelo validado do arquivo
-admin/http/app.py         as oito rotas de leitura e os três handlers
+admin/http/views.py       respostas de leitura derivadas do modelo validado
+admin/http/validate.py    config:validate: valida e compila, sem efeito (Etapa 8)
+admin/http/app.py         leitura, config:validate e os handlers de erro
 admin/http/server.py      uvicorn numa thread não-daemon, com bind confirmado
 ```
 
-As oito rotas são `GET`/`HEAD` sob `/admin/v1`: `status`, `config`, `rules`,
-`rules/{id}`, `exceptions`, `exceptions/{id}`, `transformers` e `protected`. O
-conjunto é comparado com a lista literal da especificação por teste — rota nova
-quebra a suíte. `/docs`, `/redoc` e `/openapi.json` são desligados na
+As oito rotas de leitura são `GET`/`HEAD` sob `/admin/v1`: `status`, `config`,
+`rules`, `rules/{id}`, `exceptions`, `exceptions/{id}`, `transformers` e
+`protected`. A Etapa 8 acrescentou **uma** rota com corpo,
+`POST /admin/v1/config:validate` — que valida e compila um documento candidato
+**sem efeito algum** (não conecta, não persiste, não altera revision, não entra
+na seção crítica). O conjunto — oito leituras mais o `POST` — é comparado com a
+lista literal da especificação por teste; rota nova quebra a suíte. `/docs`, `/redoc` e `/openapi.json` são desligados na
 construção; `redirect_slashes` é desligado, então `/rules/` é `404` e nunca um
 `307`; `OPTIONS` não é registrado e não há header CORS em resposta alguma.
 
@@ -457,7 +461,12 @@ o que garante que **sem credencial válida nunca ocorre um `422`**.
 
 O limite de corpo conta os bytes no `receive` cru, sem bufferizar: um envio
 chunked de vários MiB é cortado em 1 MiB, e o chunk que estoura o limite não é
-repassado adiante.
+repassado adiante. Desde a Etapa 8 o corte é **autoritativo**: assim que o
+limite é ultrapassado, o middleware responde o `413` no próprio `receive` e
+devolve `http.disconnect` ao app interno, engolindo qualquer resposta que ele
+ainda tente enviar. Sem isso, o roteador do FastAPI — a primeira rota com corpo é
+`config:validate` — captura a exceção interna antes que ela volte ao middleware,
+e o resultado seria um status do framework no lugar do `413` (D-058).
 
 A camada mais externa é um middleware próprio, **por fora do Starlette**. Ela
 põe `Cache-Control: no-store` e apaga qualquer header CORS em toda resposta —
@@ -505,5 +514,5 @@ aplicação a partir daí e `repr()` reporta `closing`, nunca `ready`.
 primeiro compõe a seção crítica, o segundo acrescenta a fronteira HTTP. O
 segundo implica o primeiro, nunca o contrário.
 
-`POST /admin/v1/config:validate` é a Etapa 8; as rotas de escrita e a adoção com
-backup são a Etapa 9; `AdminAudit` é a Etapa 10.
+As rotas de escrita e a adoção com backup são a Etapa 9; `AdminAudit` é a Etapa
+10.

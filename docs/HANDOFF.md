@@ -2,10 +2,10 @@
 
 **Documento de entrada. Comece por aqui.**
 
-Estado do projeto ao final da Etapa 7 da Fase 7. O MVP esta completo, as
-Etapas 1–7 da Fase 7 estao concluidas e a suite esta verde contra PostgreSQL 16
-real. A proxima tarefa e a Etapa 8 — `POST /admin/v1/config:validate` —, ainda
-nao iniciada (secao 10).
+Estado do projeto ao final da Etapa 8 da Fase 7. O MVP esta completo, as
+Etapas 1–8 da Fase 7 estao concluidas e a suite esta verde contra PostgreSQL 16
+real. A proxima tarefa e a Etapa 9 — rotas de escrita e adocao com backup —,
+ainda nao iniciada (secao 10).
 
 Antes de comecar qualquer fase, confira `git status --short`: a arvore precisa
 estar limpa. **Confira, nao presuma** — este documento nao pode afirmar o
@@ -59,7 +59,8 @@ Andamento da Fase 7:
 | 5 — filesystem seguro: verificações, lock exclusivo, escrita atômica, digest e limpeza de temporários | concluida | `d651fe0` |
 | 6 — secao critica administrativa e fluxo completo de escrita/reload | concluida | `git log -- src/maskgw/admin` |
 | 7 — aplicacao HTTP: auth, bind, anti-CSRF, headers, limites, handlers, rotas de leitura | concluida | `git log -- src/maskgw/admin/http` |
-| 8 — `POST /admin/v1/config:validate` | proxima, nao iniciada | — |
+| 8 — `POST /admin/v1/config:validate` | concluida | `git log -- src/maskgw/admin/http/validate.py` |
+| 9 — rotas de escrita e adocao com backup | proxima, nao iniciada | — |
 
 O estado atual deve ser conferido com `git status --short --branch` e
 `git rev-list --left-right --count origin/master...HEAD` antes de continuar;
@@ -204,13 +205,14 @@ src/maskgw/
     errors.py            AdminError e as categorias fechadas (10.2 + D-056)
     document.py          MaskingFileConfig <-> bytes YAML, round-trip conferido
     service.py           AdminConfigService: a secao critica e a secao 7.4
-    http/                <- Fase 7, Etapa 7; SOMENTE LEITURA
+    http/                <- Fase 7, Etapas 7 e 8; leitura + config:validate
       settings.py        enable, token, bind e porta: o passo 1 do startup
-      middleware.py      Host, Origin, limite de corpo, auth, Content-Type
+      middleware.py      Host, Origin, limite de corpo (413 autoritativo), auth, CT
       responses.py       forma unica de erro; categoria -> status HTTP
-      schemas.py         modelos de resposta, extra="forbid" e frozen=True
-      views.py           respostas a partir de UM snapshot (D-057)
-      app.py             as oito rotas de leitura e os tres handlers
+      schemas.py         modelos de resposta e de request, extra="forbid"/frozen
+      views.py           respostas de leitura a partir de UM snapshot (D-057)
+      validate.py        config:validate: valida e compila, SEM efeito (Etapa 8)
+      app.py             oito rotas de leitura, config:validate e os handlers
       server.py          uvicorn em thread nao-daemon, com bind confirmado
   bootstrap/             <- Fase 7, Etapas 4, 6 e 7; composition root
     application.py       construcao e lifecycle ordenado dos dois planos
@@ -353,6 +355,7 @@ da Etapa 7, e D-057 as duas correcoes exigidas na revisao da Etapa 7:
 | D-055 | Runtime candidato construido do documento reparseado dos bytes que serao persistidos; callback e leitura administrativa recebem copia profunda, nunca o documento do runtime publicado; vocabulario de erro proprio do admin; `admin_enabled` como parametro de composicao |
 | D-056 | Escolhas da fronteira HTTP: cinco categorias de erro novas, ordem dos middlewares, contencao da excecao por fora do Starlette, bind na thread chamadora, parametros de transformer no registry e contadores de `/status`. Aprovada como decisao de contrato na revisao da Etapa 7 |
 | D-057 | Snapshot administrativo coerente (`AdminSnapshot`, uma leitura por resposta); shutdown SEM timeout, com `join` integral da thread HTTP; referencia do servidor adotada antes de `start()`; `_closing` permanente, que impede `run()` e nunca se apresenta como `ready` |
+| D-058 | Contrato de `config:validate` (Etapa 8): request e o documento candidato na raiz com schema HTTP proprio; `expected_revision` no corpo -> `422 SCHEMA_INVALID`; resposta de sucesso sao quatro booleanos; falha de compilacao -> `CONFIG_INVALID`; sem efeito, provado por contadores estruturais; correcao do `BodyLimitMiddleware` para cortar em `413` autoritativamente sob o roteador do FastAPI |
 
 ## 6. Resultado das verificacoes
 
@@ -398,6 +401,21 @@ pytest    371 testes novos da Etapa 7
 ruff     All checks passed
 ruff     109 files already formatted  (src + tests)
 mypy     Success: no issues found in 109 source files  (strict, mypy 2.3.1)
+git      diff --check sem erros
+```
+
+Medido ao final da Etapa 8 (ja com a correcao de D-058 — adotado sem ID como
+`SCHEMA_INVALID` e escalares estritos), contra PostgreSQL 16.15 descartavel:
+
+```text
+pytest   1986 passed, 9 skipped  (1995 coletados)
+         suite INTEIRA: nenhum deselect, nenhum skip por ausencia de DSN
+           os MESMOS 9 skips condicionais de plataforma do baseline
+pytest    415 passed, 0 skipped  (-m integration)
+pytest     80 testes de config:validate (61 da entrega + 19 da correcao D-058)
+ruff     All checks passed
+ruff     112 files already formatted  (src + tests)
+mypy     Success: no issues found in 112 source files  (strict, mypy 2.3.1)
 git      diff --check sem erros
 ```
 
@@ -638,8 +656,8 @@ Mudancas internas que nao alteram comportamento observavel do MCP:
 
 ## 10. Como continuar
 
-A Fase 7 esta em andamento, com as Etapas 1–7 concluidas. A proxima tarefa e
-**exclusivamente a Etapa 8** — `POST /admin/v1/config:validate` —, ainda nao
+A Fase 7 esta em andamento, com as Etapas 1–8 concluidas. A proxima tarefa e
+**exclusivamente a Etapa 9** — rotas de escrita e adocao com backup —, ainda nao
 iniciada. A regra de nao avancar de etapa sem aprovacao continua valendo.
 
 ### A. Endurecer o que resta (inventario preservado; nao e a proxima etapa)
@@ -668,7 +686,7 @@ Fase em andamento:
 Fase 7 — Admin API, Etapas 1–7 concluidas
 
 Proxima tarefa:
-Etapa 8 — POST /admin/v1/config:validate — NAO INICIADA
+Etapa 9 — rotas de escrita e adocao com backup — NAO INICIADA
 ```
 
 A Etapa 5 concluiu os primitivos de filesystem seguro em
@@ -695,11 +713,9 @@ escrita —, e `admin_http` acrescenta a fronteira HTTP — thread, socket e rot
 O segundo implica o primeiro, nunca o contrario. `resolve_admin_settings()` le
 o ambiente e e o passo 1 do startup, antes de qualquer arquivo ser aberto.
 
-O que a Etapa 7 deliberadamente **nao** fez, e nao deve ser presumido pronto:
+O que as Etapas 7 e 8 deliberadamente **nao** fizeram, e nao deve ser presumido
+pronto:
 
-- `POST /admin/v1/config:validate` — Etapa 8. Nao ha rota com corpo, e por isso
-  o `RequestValidationError` handler existe mas nao e alcancavel pelas rotas
-  registradas;
 - as rotas de escrita, a operacao `config:adopt` completa (IDs aleatorios,
   `confirm_comment_loss` e backup dos bytes originais) e o backup — Etapa 9.
   O que existe e a **pre-condicao assimetrica** do passo 1, que e parte da
@@ -807,7 +823,7 @@ automatico, banco de configuracao, Redis, background workers.
 ### Antes de iniciar a proxima etapa
 
 - `git status --short` vazio: a arvore precisa estar limpa
-- suite verde: **1880 testes coletados**, 1871 passed e 9 skips condicionais
+- suite verde: **1995 testes coletados**, 1986 passed e 9 skips condicionais
   de plataforma; `ruff check`, `ruff format --check` e `mypy --strict` sem erros
 - PostgreSQL real disponivel via `MASKGW_TEST_DSN`: 415 testes marcados como
   integracao, todos executando, sem skip por ausencia dele

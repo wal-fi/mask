@@ -2,7 +2,7 @@
 
 > **Documento histórico e registro de andamento.** As seis fases estão
 > concluídas, mais a Fase 6.1 de hardening. A Fase 7 está em andamento, com as
-> Etapas 1–7 concluídas. Para o estado atual, leia `docs/HANDOFF.md`.
+> Etapas 1–8 concluídas. Para o estado atual, leia `docs/HANDOFF.md`.
 >
 > Cada seção abaixo registra o escopo original **e** o que a medição obrigou a
 > corrigir no plano — é aí que está o valor de reler isto.
@@ -309,8 +309,16 @@ Etapa 9 — e o **shutdown sem timeout**, em que `stop()` espera a thread HTTP a
 fim, a referência do servidor é adotada antes de `start()` e `_closing` impede
 que uma aplicação em desmontagem volte a ser usada.
 
-**Próximo passo: Etapa 8, somente após autorização.** Ela fará
-`POST /admin/v1/config:validate`; não foi antecipada.
+A Etapa 8 acrescentou `POST /admin/v1/config:validate`: valida o schema, compila
+os transformers e a policy, e descarta o resultado — sem conectar, persistir,
+alterar revision ou entrar na seção crítica. D-058 fixa o contrato (request na
+raiz com schema HTTP próprio, resposta de quatro booleanos, `CONFIG_INVALID` para
+falha de compilação) e a correção do `BodyLimitMiddleware`, que passou a cortar
+em `413` autoritativamente porque a rota é a primeira com corpo sob o roteador do
+FastAPI.
+
+**Próximo passo: Etapa 9, somente após autorização.** Rotas de escrita e adoção
+com backup; não foram antecipadas.
 
 ---
 
@@ -330,9 +338,9 @@ porta de rede hoje é uma decisão de segurança (D-036), não uma lacuna.
 
 ## Estado atual
 
-Fases 1 a 6.1 concluídas. Fase 7 em andamento, Etapas 1–7 concluídas; Etapa 8
+Fases 1 a 6.1 concluídas. Fase 7 em andamento, Etapas 1–8 concluídas; Etapa 9
 não iniciada. Estado validado contra PostgreSQL 16.15 real, com a suíte
-inteira: 1915 testes coletados, 1906 aprovados e 9 pulados por condição de
+inteira: 1995 testes coletados, 1986 aprovados e 9 pulados por condição de
 plataforma, sem nenhum deselect. Com `-m integration`, 415 aprovados e nenhum
 skip por falta de DSN. Neste host Windows o pytest precisa de pilha de thread
 ampliada (64 MiB) por causa de um teste adversarial da Fase 6; é ajuste de

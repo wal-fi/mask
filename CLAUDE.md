@@ -15,9 +15,9 @@ IA → MCP → Gateway → SQL Validator → PostgreSQL → provenance
 O produto executa fim a fim: um cliente MCP real consulta um PostgreSQL real e
 recebe dados mascarados.
 
-A Fase 7 foi iniciada de forma incremental. As **Etapas 1–7 estão concluídas**;
-a próxima tarefa é exclusivamente a Etapa 8 — `POST /admin/v1/config:validate` —,
-ainda não iniciada. Antes de alterar qualquer coisa, leia `docs/HANDOFF.md` — é
+A Fase 7 foi iniciada de forma incremental. As **Etapas 1–8 estão concluídas**;
+a próxima tarefa é exclusivamente a Etapa 9 — rotas de escrita e adoção com
+backup —, ainda não iniciada. Antes de alterar qualquer coisa, leia `docs/HANDOFF.md` — é
 o documento de entrada e diz exatamente onde o projeto parou.
 
 ## Leitura obrigatória antes de alterar código
@@ -28,7 +28,7 @@ Nesta ordem:
 2. `docs/ARCHITECTURE.md` — módulos e responsabilidades
 3. `docs/SECURITY.md` — invariantes de segurança
 4. `docs/SECURITY-REVIEW.md` — o que foi atacado, o que resistiu, o que não
-5. `docs/DECISIONS.md` — 57 decisões (D-001 a D-057) e o porquê de cada uma
+5. `docs/DECISIONS.md` — 58 decisões (D-001 a D-058) e o porquê de cada uma
 6. `docs/MASKING-SPEC.md` — semântica exata do pipeline de masking
 7. `docs/TEST-PLAN.md`, `docs/THREAT-MODEL.md`, `docs/FUTURE-HARDENING.md`
 
@@ -119,7 +119,7 @@ riscos aceitos em `docs/SECURITY-REVIEW.md`.
 ## Evolução em andamento — Fase 7 / Admin API
 
 A **Fase 7 — Admin API** está em implementação incremental conforme
-`docs/PHASE-7-SPEC.md`. As Etapas 1–7 estão concluídas:
+`docs/PHASE-7-SPEC.md`. As Etapas 1–8 estão concluídas:
 
 - Etapa 1 — IDs e revision no modelo do arquivo: `053cf66`;
 - Etapa 2 — `RuntimeRegistry`: `3114c14`;
@@ -127,7 +127,8 @@ A **Fase 7 — Admin API** está em implementação incremental conforme
 - Etapa 4 — composition root e lifecycle: `7c06132`;
 - Etapa 5 — filesystem seguro: `d651fe0`;
 - Etapa 6 — seção crítica administrativa e escrita/reload;
-- Etapa 7 — fronteira HTTP e rotas de leitura.
+- Etapa 7 — fronteira HTTP e rotas de leitura;
+- Etapa 8 — `POST /admin/v1/config:validate`, validação sem efeito.
 
 Confira a sincronização com `origin/master` pelo Git em vez de inferi-la deste
 documento. A Etapa 4 criou `maskgw/bootstrap/` como composition root, removeu
@@ -155,6 +156,16 @@ opcional e desligada por default. Oito rotas `GET`/`HEAD` sob `/admin/v1`:
 stack, e são usados só ali: `maskgw.admin` continua importável sem carregar
 FastAPI, e isso é teste com contraprova.
 
+A Etapa 8 acrescentou **uma** rota com corpo, `POST /admin/v1/config:validate`,
+que **não é uma escrita**: valida o schema, compila os transformers e a policy,
+e descarta o resultado. Não conecta ao PostgreSQL, não persiste, não altera
+`revision`, não entra na seção crítica e não incrementa contador — a ausência de
+efeito é propriedade da assinatura de `validate_candidate`, provada por
+contadores estruturais. O request é o documento candidato na raiz, com schema
+HTTP próprio; `expected_revision` no corpo dá `422 SCHEMA_INVALID`. A resposta de
+sucesso são quatro booleanos; falha de compilação é `422 CONFIG_INVALID` (D-058).
+O conjunto literal de rotas passou a ser oito leituras mais um `POST`.
+
 O admin passa a ser habilitado por `MASKGW_ADMIN_ENABLED=1` (qualquer outro
 valor **não** habilita), com `MASKGW_ADMIN_TOKEN` (≥ 32 caracteres),
 `MASKGW_ADMIN_BIND` (só `127.0.0.1`, `::1`, `localhost`) e `MASKGW_ADMIN_PORT`
@@ -169,7 +180,10 @@ Invariantes da fronteira, todos com teste:
   mesmo `401`; **sem credencial válida nunca ocorre um `422`**;
 - **`Origin`/`Referer` presentes → `403`** (pela presença, não pelo valor);
   **`Host` fora da allowlist → `400`**; **`Content-Type` ≠ JSON em método com
-  corpo → `415`**; **corpo > 1 MiB → `413`**, cortando streaming sem bufferizar;
+  corpo → `415`**; **corpo > 1 MiB → `413`**, cortando streaming sem bufferizar
+  e de forma **autoritativa** — a Etapa 8 corrigiu o `BodyLimitMiddleware` para
+  responder o `413` no próprio `receive`, porque o roteador do FastAPI captura a
+  exceção interna antes que ela volte ao middleware (D-058);
 - **`Cache-Control: no-store` em toda resposta** e **nenhum header CORS**;
   `OPTIONS` não registrado, `redirect_slashes` desligado, `/docs`, `/redoc` e
   `/openapi.json` desligados;
@@ -189,9 +203,9 @@ Invariantes da fronteira, todos com teste:
   funções de `views.py` recebem esse snapshot em vez do serviço — não misturam
   porque não têm como fazer a segunda leitura.
 
-A próxima tarefa é a **Etapa 8**, ainda não iniciada: `config:validate`. As
-rotas de escrita e a adoção completa com backup são a Etapa 9; `AdminAudit` é a
-Etapa 10; a suíte adversarial HTTP é a Etapa 11. Não antecipe as Etapas 8–11.
+A próxima tarefa é a **Etapa 9**, ainda não iniciada: rotas de escrita e adoção
+com backup. `AdminAudit` é a Etapa 10; a suíte adversarial HTTP é a Etapa 11. Não
+antecipe as Etapas 9–11.
 
 Dois pontos que valem como invariante:
 
@@ -258,6 +272,18 @@ mudança que ninguém viu; e o **shutdown sem timeout**, porque
 abandonada enquanto o processo seguia fechando runtimes e soltando o lock, e
 conferir `is_alive()` apenas trocaria o abandono por um retorno parcial que todo
 chamador teria de saber interpretar.
+
+D-058 registra o contrato de `config:validate` (Etapa 8) que a especificação não
+fixava: o request é o documento candidato na raiz com schema HTTP próprio (não
+compartilhado com o MCP, distinto de `config/models.py`); `expected_revision`
+recusado por `extra="forbid"`; a resposta de sucesso são quatro booleanos, sem
+identidade de configuração; falha de compilação vira `CONFIG_INVALID` e falha
+inesperada `INTERNAL_ERROR`, sempre sanitizados. E registra a correção de
+fronteira que a primeira rota com corpo exigiu: o `BodyLimitMiddleware` passou a
+cortar em `413` **autoritativamente** no `receive`, porque o roteador do FastAPI
+lê o corpo dentro de `wrap_app_handling_exceptions` e capturava a exceção interna
+antes que ela voltasse ao middleware, produzindo um status do framework no lugar
+do `413`.
 
 ## Fora do escopo
 

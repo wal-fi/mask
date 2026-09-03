@@ -306,8 +306,18 @@ desligada por default, e cercada. O que vale:
   pelo controle de concorrência e sobrescreveria em silêncio a mudança de outra
   pessoa.
 
-O que ainda não existe, e não deve ser presumido: `config:validate`, qualquer
-rota de escrita, a adoção com backup e `AdminAudit`.
+- **`config:validate` valida sem tocar em nada** (Etapa 8, D-058): a única rota
+  com corpo compila o documento candidato — inclusive os transformers e a policy,
+  usando o `SecretProvider` atual — e descarta o resultado. Não conecta ao
+  PostgreSQL, não persiste, não altera revision, não entra na seção crítica e não
+  incrementa contador. A ausência de efeito é propriedade da assinatura de
+  `validate_candidate`, que não recebe registry, store nem serviço, e é provada
+  por contadores estruturais. Os erros são sanitizados: `SCHEMA_INVALID` sem o
+  valor submetido, `CONFIG_INVALID` sem a causa (nome de transformer, padrão,
+  mensagem do pglast), `INTERNAL_ERROR` sem `str(exc)`.
+
+O que ainda não existe, e não deve ser presumido: qualquer rota de escrita, a
+adoção com backup e `AdminAudit`.
 
 **Isto não muda a conclusão de exposição.** A Admin API é loopback, sem TLS, com
 um token estático e um único papel. Ela não torna o Gateway adequado a

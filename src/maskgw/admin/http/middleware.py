@@ -206,14 +206,6 @@ class BrowserOriginMiddleware:
         await self._app(scope, receive, send)
 
 
-class _BodyLimitExceededError(Exception):
-    """Sinal interno: o corpo passou do limite durante a leitura.
-
-    Existe para interromper o `receive` de dentro, sem que o middleware precise
-    bufferizar o corpo para descobrir o tamanho. Nunca sai deste modulo.
-    """
-
-
 class BodyLimitMiddleware:
     """Corta o corpo em `MAX_BODY_BYTES`, com ou sem `Content-Length`.
 
@@ -223,10 +215,26 @@ class BodyLimitMiddleware:
       unico byte do corpo;
     - **sem `Content-Length`** — `Transfer-Encoding: chunked` —, o tamanho so
       se conhece recebendo. O `receive` e envolvido e os bytes sao CONTADOS a
-      medida que chegam; assim que a soma passa do limite, a leitura para. O
-      chunk que estoura o limite **nao e repassado** para baixo, entao nada
-      alem do proprio limite chega a existir em memoria. Nao ha bufferizacao
-      intermediaria aqui: este middleware nunca guarda o corpo, so o mede.
+      medida que chegam; assim que a soma passa do limite, o proprio middleware
+      **responde `413` ali mesmo** e passa a devolver `http.disconnect` para o
+      app interno, que entao para de ler. O chunk que estoura o limite **nao e
+      repassado** para baixo, entao nada alem do proprio limite chega a existir
+      em memoria. Nao ha bufferizacao intermediaria: este middleware nunca
+      guarda o corpo, so o mede.
+
+    ## Por que o middleware responde, e nao apenas levanta
+
+    A abordagem ingenua — levantar uma excecao interna e captura-la no `__call__`
+    — funciona quando o app interno deixa a excecao propagar (um ASGI cru que le
+    o corpo). Mas o roteador do FastAPI le o corpo dentro de
+    `wrap_app_handling_exceptions`, que **captura qualquer `Exception`** e a
+    traduz em resposta antes que ela volte ate aqui. O resultado seria um status
+    do framework, nao o `413` que a secao 12.7 exige.
+
+    Por isso o corte e AUTORITATIVO no proprio `receive`: assim que o limite e
+    ultrapassado, `_reply_413` envia a resposta uma vez, e `guarded_send`
+    engole qualquer resposta que o app interno ainda tente enviar. O desfecho e
+    sempre `413`, independentemente do que o app faca com o `http.disconnect`.
     """
 
     __slots__ = ("_app", "_limit")
@@ -244,28 +252,43 @@ class BodyLimitMiddleware:
             await _send_error(AdminErrorCategory.PAYLOAD_TOO_LARGE, scope, receive, send)
             return
 
-        state = _ResponseState()
         received = 0
+        # Verdadeiro assim que o limite e ultrapassado. A partir dai a resposta
+        # `413` ja foi enviada, e nenhuma outra pode sair.
+        exceeded = False
+        our_response_sent = False
+
+        async def _reply_413() -> None:
+            nonlocal our_response_sent
+            if not our_response_sent:
+                our_response_sent = True
+                await error_response(AdminErrorCategory.PAYLOAD_TOO_LARGE)(scope, receive, send)
 
         async def counting_receive() -> Message:
-            nonlocal received
+            nonlocal received, exceeded
+            if exceeded:
+                # Ja cortamos e ja respondemos. O app interno recebe um
+                # `disconnect` e para de ler — nenhum byte a mais e contado nem
+                # repassado.
+                return {"type": "http.disconnect"}
             message = await receive()
             if message["type"] == "http.request":
                 received += len(message.get("body", b""))
                 if received > self._limit:
-                    raise _BodyLimitExceededError
+                    exceeded = True
+                    await _reply_413()
+                    return {"type": "http.disconnect"}
             return message
 
-        async def tracking_send(message: Message) -> None:
-            if message["type"] == "http.response.start":
-                state.started = True
+        async def guarded_send(message: Message) -> None:
+            # Depois do corte, a resposta e nossa: o que o app interno tente
+            # enviar — inclusive um erro que ele derivou do `disconnect` — e
+            # descartado, para nao corromper o `413` ja em transito.
+            if exceeded:
+                return
             await send(message)
 
-        try:
-            await self._app(scope, counting_receive, tracking_send)
-        except _BodyLimitExceededError:
-            if not state.started:
-                await _send_error(AdminErrorCategory.PAYLOAD_TOO_LARGE, scope, receive, send)
+        await self._app(scope, counting_receive, guarded_send)
 
     def _declared_length_exceeds(self, headers: Headers) -> bool:
         raw = headers.get("content-length")

@@ -19,8 +19,14 @@
 > corpo, handlers de erro e o lifecycle com bind confirmado. FastAPI e uvicorn
 > entraram na stack (§14.2).
 >
-> **A Etapa 8 é a próxima e não foi iniciada:** não existe
-> `POST /admin/v1/config:validate`, nenhuma rota de escrita (Etapa 9) e nenhum
+> A Etapa 8 implementa §1.2 e §12.11 em `maskgw/admin/http/validate.py`:
+> `POST /admin/v1/config:validate` valida o schema, compila os transformers e a
+> policy, e descarta o resultado, sem conectar, persistir, alterar revision ou
+> entrar na seção crítica. O contrato de request/resposta e a categoria dos erros
+> de compilação estão registrados em D-058, junto da correção do
+> `BodyLimitMiddleware` que a primeira rota com corpo exigiu.
+>
+> **A Etapa 9 é a próxima e não foi iniciada:** nenhuma rota de escrita e nenhum
 > `AdminAudit` (Etapa 10).
 >
 > **Um ponto que esta especificação não fixava**, decidido na implementação e
