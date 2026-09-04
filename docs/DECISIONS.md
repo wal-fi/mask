@@ -1757,3 +1757,173 @@ A revisao seguinte encontrou cinco pontos, cada um virado teste antes da correca
   comeca, termine com EXATAMENTE `200`, que o arquivo persista a revisao nova, que
   `writer`/`closer`/`maskgw-admin-http` nao fiquem vivas, que uma escrita
   subsequente nem conecte e que o servico reporte `closed`.
+
+## D-060 — Auditoria administrativa: schema fechado e instrumentacao sem TOCTOU (Etapa 10)
+
+`AdminAudit` fecha o schema de auditoria administrativa por CONSTRUCAO, como
+`QueryAudit`: uma dataclass congelada, com slots e exatamente os nove campos da
+§13.2 — `request_id`, `operation`, `target_kind`, `target_id`, `outcome`,
+`revision_before`, `revision_after`, `duration_ms`, `error_category`. Sem
+`**kwargs`, sem dicionario livre, sem campo de texto aberto. Nenhum parametro para
+`match`, nome de coluna, config de transformer, corpo da requisicao, token, HMAC,
+DSN, SQL, valor, digest, bytes do arquivo ou mensagem original de excecao — eles
+nem existem na assinatura, e um teste de construcao o prova. A exclusao do `match`
+e a mesma consistencia de D-035 e `docs/SECURITY.md`: o `match` de uma regra E um
+nome de coluna, e um nome pode ser revelador (§13.3).
+
+`operation`, `target_kind` e `outcome` sao enums fechados (`AdminOperationName`
+com as doze operacoes, `AdminTargetKind` com cinco, `AdminOutcome` com tres),
+todos em `audit/`. `AuditLog` serve os DOIS planos com o MESMO logger —
+`record` para consulta, `record_admin` para administracao —, e `audit/` continua
+sendo o unico modulo que importa `logging`. `admin/` e `admin/http/` NAO importam
+`logging`: a instrumentacao (`admin/http/audit.py`) recebe um `AuditLog` injetado
+pelo composition root e o usa; o mesmo `AuditLog` do plano MCP, sem handler global
+nem configuracao implicita.
+
+### Uma entrada por operacao que ALCANCA o handler, e nenhuma alem
+
+Exatamente um `AdminAudit` por execucao que alcanca o handler de `config:validate`
+ou de uma das onze escritas — sucesso, recusa 4xx ou erro 5xx. As oito leituras,
+as recusas ANTERIORES ao handler (auth, host, origin, content-type, corpo grande),
+os paths desconhecidos, os metodos nao registrados e as falhas de schema NAO
+geram evento: o enum aprovado nao tem operacao para eles, e nao se inventa uma.
+Uma falha de schema impede o handler de executar, entao nao ha o que auditar.
+
+`config:validate` gera operacao `validate`, mas NAO e escrita: `target_kind` e
+`config`, `revision_before` e `revision_after` sao `None`, o contador
+`admin_operations_total` nao e tocado (a operacao nao entra na secao critica), e o
+runtime nao e lido so para preencher auditoria.
+
+### `revision_before` observada DENTRO da secao critica: `AdminAuditProbe`
+
+`revision_before` deve ser a revision efetivamente observada dentro da secao
+critica, ja depois de esperar pelo lock — nao um snapshot tomado antes. Le-la no
+handler, antes ou depois de `apply`, seria uma segunda leitura da referencia
+publicada, com a mesma janela TOCTOU que D-057 existe para fechar. A solucao e um
+`AdminAuditProbe` — um carrier mutavel de saida — que `apply` PREENCHE dentro do
+lock: `revision_before` logo apos ler a revision corrente, e `revision_after`
+quando algo foi publicado (sucesso e `CONFIG_DURABILITY_ERROR`, os dois casos da
+§7.6). O handler le o probe DEPOIS que `apply` retorna, ja fora do lock, e emite o
+log ali. A instrumentacao nao abre janela, nao faz uma segunda publicacao e nao
+altera a ordem dos onze passos — preencher um campo de leitura sob o lock nao e
+efeito. A prova esta no teste de duas escritas concorrentes: a que perde observa
+`revision_before` = a revision JA publicada pela vencedora (nao a inicial),
+porque so entra na secao critica depois dela.
+
+### `target_id`: so ID canonico de um alvo unico, nunca texto cru do path
+
+`target_id` existe apenas para update/delete de UMA regra ou exception, e mesmo
+assim so quando o path casa `RULE_ID_PATTERN`/`EXCEPTION_ID_PATTERN`. Um ID
+malformado ou fora do padrao vira `target_id=None`, mesmo que a operacao seja
+recusada — registrar o texto cru recebido no path abriria um canal para valores no
+log (§13.3). Create, reorder, config, database, sql, adopt e validate usam `None`.
+A resposta HTTP existente nao muda para facilitar auditoria: um segmento sem barra
+casa a rota dinamica e ALCANCA o handler (a mutacao entao recusa com `NOT_FOUND`),
+e a operacao e auditada com `target_id=None`.
+
+### Outcome pela faixa de status; duracao monotonica
+
+O desfecho deriva do status que a categoria produz: sucesso -> `success`; recusa
+4xx -> `rejected`; falha 5xx -> `error`. `CONFIG_DURABILITY_ERROR` e 500, entao
+`error`, e ainda assim `revision_after` e a revision nova publicada (§7.6).
+`request_id` e um UUID novo por operacao, gerado pelo servidor — nunca vindo de
+header, query string ou corpo. `duration_ms` vem de `time.monotonic_ns`, imune a
+ajuste de relogio, inteiro e nao negativo por construcao.
+
+### Falha da propria auditoria e best-effort
+
+`AuditLog.record_admin` isola a emissao: uma excecao do logger (`except Exception`)
+e contida e nao sobe — a auditoria nunca desfaz nem repete uma escrita, nao muda o
+status/body HTTP, nao impede o fechamento de candidato/runtime, nao cria um segundo
+evento e nao re-emite nada da excecao contida (§13, falha da auditoria). So
+`Exception`: `KeyboardInterrupt`/`SystemExit` continuam subindo. O caminho HTTP —
+status e corpo — e definido pelo `AdminError` que sobe, independentemente de a
+auditoria ter sido emitida; um teste com logger que sempre levanta prova que a
+escrita valeu e a resposta e a normal.
+
+### O que a Etapa 10 NAO faz
+
+Nao ha `GET /admin/v1/audit`, nem store, buffer, retencao, rotacao ou consulta de
+historico; nao ha novo contador, nova rota, novo campo de resposta nem header de
+request ID. O conjunto literal de rotas permanece exatamente o da Etapa 9 (oito
+leituras, `config:validate`, onze escritas), e um teste o afirma.
+
+### Rodada corretiva: o schema so era fechado na aparencia
+
+A revisao mostrou que "fechado por construcao" nao era verdade: `AdminAudit`
+declarava `operation`, `target_kind`, `outcome` e `error_category` como `str`. Os
+enums existiam, mas o construtor aceitava qualquer conteudo — a contraprova criou
+um evento com `operation="inventada"`, `outcome="talvez"`, `duration_ms=-99`,
+`error_category="SEGREDO"` e um CPF em `target_id`. Um campo autorizado virava
+canal para conteudo arbitrario. A correcao, com contraprovas escritas primeiro:
+
+- **os campos categoricos GUARDAM os enums, nao suas strings.** `operation:
+  AdminOperationName`, `target_kind: AdminTargetKind | None`, `outcome:
+  AdminOutcome`, `error_category: AdminErrorCategoryName | None`. O codigo produtor
+  passa os membros dos enums; `as_fields()` os converte para os valores string,
+  entregando so dados JSON-compativeis (nenhum objeto de enum vaza para o
+  `LogRecord`).
+- **`error_category` e fechado sem fechar o ciclo `audit -> admin -> audit`.** O
+  plano administrativo ja importa `audit/` para registrar, entao `audit/` nao pode
+  importar `maskgw.admin.errors`. A saida foi declarar `AdminErrorCategoryName` no
+  modulo neutro `audit/`, com os MESMOS valores de `AdminErrorCategory`, e provar a
+  **paridade exata** por teste (`test_admin_audit.py`): se um lado ganhar ou perder
+  uma categoria, o teste quebra. A traducao entre os dois e por valor
+  (`AdminErrorCategoryName(categoria.value)`), sem segunda tabela. Importar
+  `maskgw.audit` continua sem puxar `maskgw.admin`, `maskgw.config`, FastAPI ou
+  psycopg — provado por teste de isolamento.
+- **validacao estrutural incontornavel em `__post_init__`.** Um evento incoerente
+  e RECUSADO com `TypeError`/`ValueError` antes de qualquer chance de chegar ao
+  logger: `request_id` deve ser o `uuid4().hex` no formato do servidor (32 hex,
+  versao 4); `duration_ms` inteiro nao booleano e `>= 0`; revisoes inteiras nao
+  booleanas e `>= 0` ou `None`; `target_id`, quando presente, casa exatamente
+  `RULE_ID_PATTERN`/`EXCEPTION_ID_PATTERN` e concorda com o `target_kind`; so
+  update/delete de regra ou exception carregam `target_id`, e create/reorder/adopt/
+  validate/config/database/sql exigem `None`; operacao e `target_kind` obedecem ao
+  mapping fechado; `success` exige `error_category=None`, `rejected`/`error` exigem
+  categoria; `validate` exige revisoes `None`; sucesso de escrita exige revisoes
+  coerentes (a publicada sucede a observada); falha sem publicacao exige
+  `revision_after=None`; `CONFIG_DURABILITY_ERROR` exige `outcome=error` e
+  `revision_after` preenchida.
+- **um so mapping, centralizado.** `OPERATION_TARGET_KIND` vive em `audit/` e e a
+  FONTE UNICA: `AdminAudit` valida contra ele, e o `AdminAuditor` DERIVA o
+  `target_kind` dele (via `AuditContext.target_kind`) em vez de passar um segundo
+  valor por rota — nao ha mais duas tabelas que possam divergir.
+- **os padroes de ID sao duplicados no modulo neutro, com paridade testada.**
+  `audit/` nao importa `maskgw.config.ids` (o `__init__` do pacote arrastaria
+  modulos pesados), entao os dois regex vivem em `audit/` e um teste prova que sao
+  identicos aos de `config/ids.py`.
+
+A construcao invalida levanta DENTRO do `AdminAuditor` (o `AdminAudit` e montado
+antes de `record_admin`), nao no `record_admin` — que so contem falha de I/O do
+logger. Isso e proposital: um evento invalido deve ser recusado, nao registrado
+silenciosamente. Todos os fluxos reais produzem eventos validos, provado pela
+suite de instrumentacao HTTP contra PostgreSQL real.
+
+### Segunda rodada corretiva: coerencia outcome<->categoria e revisoes exatas
+
+A revisao seguinte mostrou que o `__post_init__` ainda aceitava duas classes de
+incoerencia, cada uma virada regressao antes da correcao (todas falhavam contra
+`2ff2d43`):
+
+- **`outcome` tem de bater com a FAIXA DE STATUS do `error_category`.**
+  `2ff2d43` aceitava `REJECTED` com uma categoria 5xx (`INTERNAL_ERROR`,
+  `CONFIG_WRITE_ERROR`) e `ERROR` com uma 4xx (`REVISION_CONFLICT`,
+  `CONFIG_INVALID`). A classificacao vive agora em `CATEGORY_OUTCOME`, no modulo
+  neutro `audit/`: `error` para as 5xx (`CONFIG_WRITE_ERROR`,
+  `CONFIG_DURABILITY_ERROR`, `INTERNAL_ERROR`), `rejected` para as demais. Ela NAO
+  deriva de `STATUS_BY_CATEGORY` (que vive em `admin.http`, e importa-lo fecharia o
+  ciclo) — a paridade EXATA com a faixa de status daquela tabela e provada por
+  teste. `AdminAudit` valida contra `CATEGORY_OUTCOME`, e o `AdminAuditor` DERIVA o
+  desfecho da MESMA tabela (`_outcome_for` deixou de ler `STATUS_BY_CATEGORY`),
+  entao o desfecho emitido jamais diverge do que o record exige.
+- **revisoes exatas.** Um sucesso de escrita exige `revision_after ==
+  revision_before + 1` (antes bastava `after > before`). `CONFIG_DURABILITY_ERROR`
+  exige `outcome=error`, as duas revisoes presentes e `after == before + 1` — a
+  publicacao apesar do erro e sempre da PROXIMA revision (secao 7.6). Uma falha que
+  nao seja de durabilidade nunca declara `revision_after`. `config:validate`
+  permanece sem revisoes.
+
+As duas classificacoes — `OPERATION_TARGET_KIND`, `CATEGORY_OUTCOME` — sao a fonte
+UNICA: `AdminAudit` valida e o `AdminAuditor` deriva das mesmas tabelas, sem uma
+segunda copia que possa divergir.

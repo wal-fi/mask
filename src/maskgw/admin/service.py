@@ -166,6 +166,32 @@ class AdminSnapshot:
         return self.revision != UNADOPTED_REVISION
 
 
+@dataclass(slots=True)
+class AdminAuditProbe:
+    """Carrega para fora da secao critica as revisions que ela observou (secao 13).
+
+    A auditoria administrativa precisa de `revision_before` — a revision
+    EFETIVAMENTE observada dentro da secao critica, e nao um snapshot tomado
+    antes de esperar pelo lock — e de `revision_after`, a publicada. Ler o
+    registry no handler, antes ou depois de `apply`, seria uma segunda leitura,
+    com a janela TOCTOU que o proprio D-057 existe para fechar. Em vez disso,
+    `apply` PREENCHE este carrier dentro do lock e o handler o le depois, ja fora
+    do lock, para emitir o log — a instrumentacao nao abre janela, nao faz uma
+    segunda publicacao e nao altera a ordem dos onze passos.
+
+    Mutavel de proposito: e um carrier de saida, escrito uma vez sob o lock. Nao
+    e frozen porque o valor so existe apos a leitura interna.
+
+    `revision_before` fica `None` so quando a operacao nem chegou a ler a
+    revision corrente (o servico ja estava fechado). `revision_after` fica
+    preenchido no sucesso e no `CONFIG_DURABILITY_ERROR` — os dois casos em que
+    algo foi publicado —, e `None` em toda recusa sem publicacao.
+    """
+
+    revision_before: int | None = None
+    revision_after: int | None = None
+
+
 @dataclass(frozen=True, slots=True)
 class AdminWriteResult:
     """Sucesso de escrita: a revision nova e a confirmacao de que foi aplicada."""
@@ -361,6 +387,7 @@ class AdminConfigService:
         *,
         expected_revision: int,
         operation: AdminOperation = AdminOperation.WRITE,
+        audit_probe: AdminAuditProbe | None = None,
     ) -> AdminWriteResult:
         """Executa o fluxo de onze passos inteiro, serializado.
 
@@ -369,6 +396,12 @@ class AdminConfigService:
         uma instancia NOVA, levantada fora de qualquer handler, entao
         `__cause__` e `__context__` ficam nulos mesmo quando o passo que falhou
         levantou de dentro de um `except` (D-017).
+
+        Quando `audit_probe` e passado, ele e preenchido DENTRO da secao critica
+        com as revisions observadas — `revision_before` e, quando algo foi
+        publicado, `revision_after`. E leitura, nao efeito: preencher o carrier
+        nao muda a ordem dos onze passos, nao publica de novo e nao abre TOCTOU
+        (secao 13). O chamador o le depois, ja fora do lock, para emitir o log.
         """
         failure: AdminError | None = None
         result: AdminWriteResult | None = None
@@ -376,7 +409,7 @@ class AdminConfigService:
         with self._critical_section:
             self._operations_total += 1
             try:
-                result = self._execute(mutation, expected_revision, operation)
+                result = self._execute(mutation, expected_revision, operation, audit_probe)
             except AdminError as exc:
                 # Reconstruida: o objeto original pode carregar `__context__`
                 # do handler interno em que nasceu.
@@ -410,11 +443,18 @@ class AdminConfigService:
         mutation: ConfigMutation,
         expected_revision: int,
         operation: AdminOperation,
+        audit_probe: AdminAuditProbe | None = None,
     ) -> AdminWriteResult:
         self._require_open()
 
         published = self._registry.current
         current_revision = published.revision
+        # `revision_before` da auditoria: a revision observada DENTRO da secao
+        # critica, ja depois de ter esperado pelo lock (secao 13). Preenchida
+        # aqui, antes de qualquer passo poder recusar, para que toda recusa —
+        # inclusive `REVISION_CONFLICT` — a carregue.
+        if audit_probe is not None:
+            audit_probe.revision_before = current_revision
 
         self._check_adoption(current_revision, operation)
         self._check_revision(current_revision, expected_revision)
@@ -457,6 +497,13 @@ class AdminConfigService:
             if self._registry.current is not candidate:
                 candidate.adapter.close()
             raise
+
+        # A partir do swap, `revision` E a publicada, nos dois desfechos: o
+        # sucesso e o `CONFIG_DURABILITY_ERROR`, que publica mas nao confirma
+        # durabilidade (secao 7.6). A auditoria registra `revision_after` nos
+        # dois, porque nos dois algo foi publicado.
+        if audit_probe is not None:
+            audit_probe.revision_after = revision
 
         if not persisted.durable:
             raise AdminError(

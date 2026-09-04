@@ -16,15 +16,16 @@ inteira, sem nenhum deselect e sem skip por ausência de `MASKGW_TEST_DSN`. Com
 dois deles marcados `integration` — o reload contra banco real —, e os dois
 executam.
 
-Estado medido ao final da Etapa 9 (já com as duas rodadas corretivas), contra
-PostgreSQL 16.15 real: **2121 coletados, 2111 passed e 10 skips condicionais de
-plataforma** — sem nenhum deselect e sem skip por ausência de DSN. Com
-`-m integration`, **485 passed e 1 skip** (o teste POSIX de fsync de diretório,
-que no Windows não se aplica). A Etapa 9 soma **129 testes**: 69 de escrita/adoção
-contra PostgreSQL real (`test_admin_http_writes.py`), 58 regressões adversariais
-(`test_admin_http_writes_adversarial.py`) e 2 provas end-to-end pela porta HTTP
-administrativa real (`test_admin_http_writes_e2e.py`); a Etapa 8 havia acrescentado
-80 de `config:validate` e a Etapa 7, 406.
+Estado medido ao final da Etapa 10 (auditoria administrativa, já com a rodada
+corretiva de segurança que fechou o schema de verdade), contra PostgreSQL 16.15
+real: **2274 coletados, 2267 passed e 7 skips condicionais de plataforma POSIX**
+(contagens por JUnit XML) — sem nenhum deselect e sem skip por ausência de DSN. Com
+`-m integration`, **521 passed e 2 skips** de 523 selecionados (os dois testes
+POSIX de fsync de diretório, que no Windows não se aplicam). A Etapa 10 soma **153 testes**: 77 de unidade
+(`test_admin_audit.py`), 39 de fechamento real (`test_admin_audit_closed.py`), 36
+de instrumentação HTTP contra PostgreSQL real (`test_admin_http_audit.py`) e 1 de
+`stdout` MCP limpo sob auditoria (`test_admin_http_mcp_coexistence.py`). A Etapa 9
+somou 129, a Etapa 8, 80 de `config:validate`, e a Etapa 7, 406.
 
 **Como rodar neste host Windows.** `test_large_query_payload_does_not_crash`,
 da Fase 6, monta uma consulta com 100.000 termos e estoura a pilha da thread na
@@ -294,6 +295,33 @@ Todos os testes de protocolo passam pelo cliente in-memory do SDK
   levanta `TypeError`
 - nenhum registro contém o CPF, o nome ou a palavra `SELECT`
 - `audit/log.py` é o único arquivo de `src/` que importa `logging`
+- `AdminAudit` (Etapa 10, `tests/test_admin_audit.py`): schema fechado **de
+  verdade** — os campos categóricos guardam os enums, não strings —, imutável, com
+  slots; `as_fields()` converte os enums para strings JSON-compatíveis, sem objeto
+  de enum no `LogRecord`; rejeição construtiva de ~25 parâmetros proibidos
+  (`match`, `column`, `config`, `body`, `token`, `secret`, `hmac_key`, `dsn`,
+  `sql`, `traceback`, `message`, …); enum completo das doze operações, cinco
+  `target_kind`, três `outcome`; **paridade exata** de `AdminErrorCategoryName` com
+  `AdminErrorCategory`, de `CATEGORY_OUTCOME` com a faixa de status de
+  `STATUS_BY_CATEGORY`, e dos padrões de ID com `config/ids.py` (o teste vive fora
+  dos dois módulos, para não fechar o ciclo `audit -> admin`);
+  `OPERATION_TARGET_KIND` e `CATEGORY_OUTCOME` são as fontes únicas do mapping e da
+  classe de desfecho; `AuditLog.record_admin` best-effort — um logger que levanta
+  não sobe e não re-emite nada; `QueryAudit` sem regressão
+- `AdminAudit` fechamento real (Etapa 10, `tests/test_admin_audit_closed.py`, as
+  contraprovas escritas antes da correção — todas falhavam contra `2ff2d43`):
+  `operation="inventada"`, `outcome="talvez"`, `error_category="SEGREDO"`,
+  `duration_ms` negativa/booleana, revisão negativa/booleana, `request_id` que não
+  é UUID v4, e um **CPF em `target_id`** são todos RECUSADOS na construção, antes de
+  chegar ao logger; o mapping operação↔alvo, a exigência de `target_id=None` fora
+  de update/delete, e a concordância prefixo↔`target_kind` são impostas por
+  `__post_init__`. Duas classes de coerência da 2ª rodada corretiva:
+  **outcome↔categoria** (`REJECTED` com categoria 5xx como `INTERNAL_ERROR`, e
+  `ERROR` com categoria 4xx como `REVISION_CONFLICT`/`CONFIG_INVALID`, são
+  recusados; as combinações corretas passam) e **revisões exatas**
+  (sucesso de escrita e `CONFIG_DURABILITY_ERROR` exigem `revision_after ==
+  revision_before + 1`; falha não-durabilidade não declara `revision_after`;
+  `validate` permanece sem revisões)
 
 ## Sensitividade por AST (Fase 6.1)
 
@@ -759,4 +787,60 @@ nasceu de um defeito reproduzido contra o commit anterior:
   fechada) e o serviço reporta `closed`. Determinístico, com eventos/barreiras e
   joins, sem `sleep`.
 
-`AdminAudit` é a Etapa 10; a suíte adversarial HTTP é a Etapa 11.
+### Etapa 10 — Auditoria administrativa (§13, D-060)
+
+Dois arquivos. `tests/test_admin_audit.py` (unidade, sem servidor nem banco) cobre
+o schema fechado de `AdminAudit`, a imutabilidade, a serialização, a rejeição
+construtiva de campos proibidos, os três enums e o comportamento best-effort do
+`AuditLog` — resumido em **Auditoria**, acima.
+
+`tests/test_admin_http_audit.py`, `integration` contra PostgreSQL real, prova a
+instrumentação ponta a ponta pela porta HTTP administrativa real (mesmo harness de
+`test_admin_http_writes.py`, com um `AuditLog` injetado sobre um logger próprio por
+teste):
+
+- **uma entrada por operação, mapping completo.** Cada uma das onze escritas e
+  `config:adopt` emite exatamente um `AdminAudit` com a `operation`, o
+  `target_kind` e o `target_id` corretos; update/delete de regra e de exception
+  carregam o `target_id`; create, reorder, config, database, sql e adopt usam
+  `None`.
+- **`config:validate` auditado, mas não é escrita.** Operação `validate`,
+  `target_kind` `config`, `revision_before`/`revision_after` `None`; não
+  incrementa `admin_operations_total` e não toca revision — provado lendo o
+  contador e a revision antes e depois.
+- **recusas representativas.** `REVISION_CONFLICT` (409), `NOT_FOUND` (404),
+  `IMMUTABLE_FIELD` (422), `CONFIG_INVALID` (422), `CONFIG_RELOAD_ERROR` (422) e
+  `CONFIG_WRITE_ERROR` (500) com `outcome` (`rejected`/`error`) e `error_category`
+  coerentes; a que falha antes do `replace` tem `revision_after` `None`.
+- **durabilidade (POSIX).** `fsync` de diretório injetado → `outcome=error`,
+  `error_category=CONFIG_DURABILITY_ERROR`, `revision_after` = a revisão nova
+  publicada (§7.6). Skip condicional no Windows, como o teste-par de escrita.
+- **`revision_before` observada dentro da seção crítica.** Duas escritas
+  concorrentes com o mesmo `expected_revision`: a que vence observa 3 e publica 4;
+  a que perde só entra na seção crítica depois e observa **4**, não 3 — prova de
+  que a instrumentação não toma um snapshot antes do lock (sem TOCTOU).
+- **UUIDs distintos sob concorrência.** Cinco escritas concorrentes → cinco
+  `request_id` distintos.
+- **duração monotônica e não negativa**, inteira.
+- **target ID malformado nunca registrado.** Um segmento sem barra alcança a rota
+  dinâmica, é auditado com `outcome=rejected` e `target_id=None`; um ID canônico
+  inexistente é auditado com o próprio ID.
+- **fora do handler não gera evento.** Leitura, auth ausente, schema inválido,
+  path desconhecido e método não registrado: nenhum `AdminAudit`.
+- **nada sensível.** Marcadores no `match`, na config de transformer e em
+  `denied_functions`, além de token, HMAC, `postgres`, `password` e `SELECT`: nada
+  aparece em record algum; a categoria fechada é registrada, nunca a mensagem
+  interna do compilador.
+- **falha do logger não altera resposta nem estado.** Com um handler que sempre
+  levanta, a escrita ainda devolve `200`/nova revisão e o `GET` seguinte reflete a
+  mudança; e uma recusa ainda devolve `409`.
+- **nenhuma rota de auditoria.** `GET /admin/v1/audit[...]` é `404`, e o conjunto
+  de rotas permanece o da Etapa 9 (afirmado em `test_admin_http_surface.py`).
+
+**`stdout` do MCP limpo sob auditoria** (`test_admin_http_mcp_coexistence.py`): no
+processo real, `python -m maskgw.mcp` com a Admin API ativa, uma sessão MCP por
+stdio martelada com `config:validate` (rota auditada, com corpo) concorrentemente
+— cada chamada emite um `AdminAudit` — mantém o enquadramento JSON-RPC intacto: o
+próprio protocolo é o detector.
+
+A suíte adversarial administrativa geral é a Etapa 11.

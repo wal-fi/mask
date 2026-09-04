@@ -2,7 +2,7 @@
 
 > **Documento histórico e registro de andamento.** As seis fases estão
 > concluídas, mais a Fase 6.1 de hardening. A Fase 7 está em andamento, com as
-> Etapas 1–8 concluídas. Para o estado atual, leia `docs/HANDOFF.md`.
+> Etapas 1–10 concluídas. Para o estado atual, leia `docs/HANDOFF.md`.
 >
 > Cada seção abaixo registra o escopo original **e** o que a medição obrigou a
 > corrigir no plano — é aí que está o valor de reler isto.
@@ -237,7 +237,10 @@ A implementação segue `docs/PHASE-7-SPEC.md` de forma incremental:
 | 5 — filesystem seguro: verificações, lock exclusivo, escrita atômica, digest e limpeza de temporários | concluída | `d651fe0` |
 | 6 — seção crítica administrativa e fluxo completo de escrita/reload | concluída | `git log -- src/maskgw/admin` |
 | 7 — aplicação HTTP/FastAPI e sua segurança e rotas de leitura | concluída | `git log -- src/maskgw/admin/http` |
-| 8 — `POST /admin/v1/config:validate` | próxima; não iniciada | — |
+| 8 — `POST /admin/v1/config:validate` | concluída | `git log -- src/maskgw/admin/http/validate.py` |
+| 9 — rotas de escrita e adoção com backup | concluída | `git log -- src/maskgw/admin/http/mutations.py` |
+| 10 — `AdminAudit`: auditoria administrativa | concluída | `git log -- src/maskgw/admin/http/audit.py` |
+| 11 — suíte adversarial administrativa | próxima; não iniciada | — |
 
 A sincronização com `origin/master` deve ser conferida pelo Git, não inferida
 deste documento. A Etapa 4 criou `bootstrap/` como composition root, removeu
@@ -317,8 +320,20 @@ falha de compilação) e a correção do `BodyLimitMiddleware`, que passou a cor
 em `413` autoritativamente porque a rota é a primeira com corpo sob o roteador do
 FastAPI.
 
-**Próximo passo: Etapa 9, somente após autorização.** Rotas de escrita e adoção
-com backup; não foram antecipadas.
+A Etapa 9 acrescentou as onze rotas de escrita, a adoção com backup byte a byte e
+`IMMUTABLE_FIELD`. Cada rota é só uma tradução para `AdminConfigService.apply()`,
+com a mutação dentro da seção crítica sobre a cópia profunda do documento corrente
+(D-059).
+
+A Etapa 10 acrescentou a auditoria administrativa: `AdminAudit` em `audit/`,
+fechado por construção com os nove campos da §13.2, emitido uma vez por operação
+que alcança o handler de `config:validate` ou de uma escrita. `admin/http/audit.py`
+recebe o `AuditLog` injetado — o mesmo do plano MCP — e `admin/` continua sem
+importar `logging`. `revision_before` é observada dentro da seção crítica, via
+`AdminAuditProbe` que `apply` preenche sob o lock, sem TOCTOU (D-060).
+
+**Próximo passo: Etapa 11, somente após autorização.** Suíte adversarial
+administrativa; não foi antecipada.
 
 ---
 
@@ -338,11 +353,13 @@ porta de rede hoje é uma decisão de segurança (D-036), não uma lacuna.
 
 ## Estado atual
 
-Fases 1 a 6.1 concluídas. Fase 7 em andamento, Etapas 1–9 concluídas; Etapa 10
-(`AdminAudit`) não iniciada. Estado validado contra PostgreSQL 16.15 real, com a
-suíte inteira: 2121 testes coletados, 2111 aprovados e 10 pulados por condição de
-plataforma, sem nenhum deselect. Com `-m integration`, 486 selecionados (485
-aprovados e 1 pulado por condição de plataforma), nenhum skip por falta de DSN.
+Fases 1 a 6.1 concluídas. Fase 7 em andamento, Etapas 1–10 concluídas; Etapa 11
+(suíte adversarial administrativa) não iniciada. Estado validado contra
+PostgreSQL 16.15 real, com a suíte inteira: 2274 testes coletados, 2267 aprovados
+e 7 pulados por condição de plataforma POSIX, sem nenhum deselect (contagens por
+JUnit XML). Com `-m integration`, 523 selecionados (521 aprovados e 2 pulados por
+condição de plataforma — os `fsync` de diretório POSIX), nenhum skip por falta de
+DSN.
 Neste host Windows o pytest precisa de pilha de thread
 ampliada (64 MiB) por causa de um teste adversarial da Fase 6; é ajuste de
 ambiente, não correção de produto. Detalhes em `docs/HANDOFF.md`, seções 6

@@ -73,9 +73,13 @@ interface MCP conhece — handlers nunca falam com `PostgresAdapter`.
 Levanta apenas `GatewayError`, com uma de cinco categorias externas.
 
 ### Audit
-Log estruturado, somente metadata: `request_id`, desfecho, duração, contagem de
-linhas, `truncated` e categoria de erro. Único módulo do projeto autorizado a
-importar `logging`. Nunca a SQL, nunca valores (D-035).
+Log estruturado, somente metadata. Dois registros fechados por construção:
+`QueryAudit` — `request_id`, desfecho, duração, contagem de linhas, `truncated` e
+categoria de erro — e, desde a Etapa 10, `AdminAudit` — `request_id`, operação,
+`target_kind`, `target_id`, desfecho, `revision_before`/`revision_after`, duração
+e categoria de erro (D-060). Único módulo do projeto autorizado a importar
+`logging`, e o mesmo `AuditLog` serve os dois planos. Nunca a SQL, nunca valores,
+nunca o `match` de uma regra — que é um nome de coluna (D-035, §13.3).
 
 ### Query Validator
 Parsing com pglast (`sql/`). Allowlist de nós, nunca blocklist de texto.
@@ -278,7 +282,7 @@ sql/       parser, validator, politica de funcoes e analise de sensitividade
 db/        adapter PostgreSQL: execucao, proveniencia, sanitizacao de erro
 masking/   matcher, exceptions, registry, engine  <- nucleo PURO, sem I/O
 config/    loader validado, imutavel; filesystem seguro da configuracao
-audit/     log estruturado, somente metadata; unico modulo que loga
+audit/     log estruturado, so metadata (QueryAudit + AdminAudit); unico que loga
 ```
 
 `masking/` não depende de rede, banco ou MCP e deve ser testável isoladamente.
@@ -438,6 +442,7 @@ admin/http/schemas.py     modelos de resposta e de request, extra="forbid"/froze
 admin/http/views.py       respostas de leitura derivadas do modelo validado
 admin/http/validate.py    config:validate: valida e compila, sem efeito (Etapa 8)
 admin/http/mutations.py   o payload de cada escrita: documento -> documento (Etapa 9)
+admin/http/audit.py       instrumentacao: um AdminAudit por operacao (Etapa 10)
 admin/http/app.py         leitura, config:validate, as 11 escritas e os handlers
 admin/http/server.py      uvicorn numa thread não-daemon, com bind confirmado
 ```
@@ -482,10 +487,17 @@ inclusive o `404` do roteador e o `405` do Starlette —, e contém qualquer
 exceção: sem isso, o `ServerErrorMiddleware` responde e **relevanta**, e o
 uvicorn registraria o traceback com `exc_info` (D-056, mesmo trap de D-038).
 
-`admin/` continua **não importando `logging`**: `AdminAudit` é a Etapa 10, e o
-registro será feito por `audit/`. O uvicorn sobe com `log_config=None` e
+`admin/` continua **não importando `logging`**. A auditoria administrativa da
+Etapa 10 registra por `audit/`: `admin/http/audit.py` recebe um `AuditLog`
+injetado pelo composition root — o **mesmo** do plano MCP — e emite exatamente um
+`AdminAudit` por operação que alcança o handler de `config:validate` ou de uma
+escrita. As leituras, as recusas de fronteira, os paths desconhecidos e as falhas
+de schema não geram evento. `revision_before` é lida **dentro** da seção crítica
+por `AdminConfigService.apply`, que preenche um `AdminAuditProbe`; o handler emite
+o log depois, já fora do lock — sem TOCTOU, sem segunda publicação e sem alterar a
+ordem dos onze passos (D-060). O uvicorn sobe com `log_config=None` e
 `access_log=False`, então nenhum byte vai para `stdout` — que continua sendo
-exclusivamente o canal do protocolo MCP.
+exclusivamente o canal do protocolo MCP, mesmo sob operações auditadas.
 
 **Cada resposta nasce de UMA leitura do runtime publicado** (D-057).
 `AdminConfigService.snapshot()` devolve `revision`, documento e `SqlPolicy` do
@@ -522,5 +534,6 @@ aplicação a partir daí e `repr()` reporta `closing`, nunca `ready`.
 primeiro compõe a seção crítica, o segundo acrescenta a fronteira HTTP. O
 segundo implica o primeiro, nunca o contrário.
 
-As rotas de escrita e a adoção com backup são a Etapa 9; `AdminAudit` é a Etapa
-10.
+As rotas de escrita e a adoção com backup são a Etapa 9; a auditoria
+administrativa (`AdminAudit`) é a Etapa 10. A suíte adversarial administrativa é
+a Etapa 11, ainda não iniciada.

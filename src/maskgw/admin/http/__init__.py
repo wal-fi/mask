@@ -8,10 +8,13 @@ testa-la, e usa-la, sem servidor. Um teste afirma essa separacao.
 Este subpacote tampouco importa `maskgw.mcp` ou `maskgw.gateway`: os planos sao
 separados, e so o composition root em `bootstrap/` conhece os dois (secao 9).
 Ele tambem nao importa `logging` — `audit/` continua sendo o unico modulo
-autorizado, e `AdminAudit` e a Etapa 10.
+autorizado. A auditoria administrativa da Etapa 10 registra ATRAVES de `audit/`:
+`admin/http/audit.py` recebe um `AuditLog` injetado e o usa, sem importar
+`logging` nem configurar logging.
 
 Leitura (Etapa 7) mais `config:validate` (Etapa 8), que valida e compila um
-documento candidato sem efeito algum. Escrita e adocao sao a Etapa 9.
+documento candidato sem efeito algum. Escrita e adocao sao a Etapa 9; a
+auditoria de `config:validate` e das onze escritas e a Etapa 10.
 """
 
 from __future__ import annotations
@@ -27,6 +30,12 @@ from maskgw.admin.http.app import (
     build_router,
     install_error_handlers,
     wrap_boundary,
+)
+from maskgw.admin.http.audit import (
+    AdminAuditor,
+    AuditContext,
+    exception_target_id,
+    rule_target_id,
 )
 from maskgw.admin.http.middleware import (
     MAX_BODY_BYTES,
@@ -79,9 +88,11 @@ __all__ = [
     "VALIDATE_METHODS",
     "VALIDATE_PATH",
     "WRITE_ROUTES",
+    "AdminAuditor",
     "AdminHttpServer",
     "AdminHttpSettings",
     "AdminHttpUnavailableError",
+    "AuditContext",
     "AuthenticationMiddleware",
     "BodyLimitMiddleware",
     "BoundaryMiddleware",
@@ -94,8 +105,10 @@ __all__ = [
     "build_settings",
     "error_payload",
     "error_response",
+    "exception_target_id",
     "install_error_handlers",
     "is_enabled",
     "resolve",
+    "rule_target_id",
     "wrap_boundary",
 ]

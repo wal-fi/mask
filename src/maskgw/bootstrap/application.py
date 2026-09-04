@@ -402,7 +402,11 @@ def build_application(  # noqa: PLR0913 - parametros de composicao, keyword-only
                 adapter=adapter,
             )
         )
-        gateway = Gateway(registry, audit if audit is not None else AuditLog())
+        # UM unico `AuditLog` para os dois planos: o Gateway (MCP) e a fronteira
+        # HTTP administrativa registram pelo mesmo, sem handler global nem
+        # configuracao implicita de logging (secao 13).
+        audit_log = audit if audit is not None else AuditLog()
+        gateway = Gateway(registry, audit_log)
 
         # O admin plane e o registry mais o filesystem, e nada do plano de
         # dados: ele nao conhece Gateway nem MCP. O digest de referencia sao os
@@ -430,7 +434,7 @@ def build_application(  # noqa: PLR0913 - parametros de composicao, keyword-only
         # pularia o `stop()` e fecharia registry e store. A propriedade de um
         # recurso nao pode depender de a construcao dele ter dado certo.
         if admin_http is not None and admin is not None:
-            http_server = _build_admin_http(admin, admin_http, secrets=secrets)
+            http_server = _build_admin_http(admin, admin_http, secrets=secrets, audit=audit_log)
             http_server.start()
 
         # Passo 7: o MCP e construido por ultimo e ainda nao esta disponivel.
@@ -471,6 +475,7 @@ def _build_admin_http(
     settings: AdminHttpSettings,
     *,
     secrets: SecretProvider | None,
+    audit: AuditLog,
 ) -> AdminHttpServer:
     """Monta a fronteira HTTP **sem** inicia-la.
 
@@ -486,6 +491,9 @@ def _build_admin_http(
     modulo: `admin/` nao importa `bootstrap/`, e nao deve adivinhar como o
     plano de dados nomeia seu segredo. O VALOR do DSN continua sem atravessar —
     o que a Admin API publica e `configured`/`missing`, nunca o conteudo.
+
+    `audit` e o MESMO `AuditLog` do plano MCP: a fronteira administrativa
+    registra por ele, sem criar handler global nem configurar logging (secao 13).
     """
 
     def factory(bound_port: int) -> ASGIApp:
@@ -495,6 +503,7 @@ def _build_admin_http(
             port=bound_port,
             secrets=secrets,
             database_dsn_env=DSN_ENV,
+            audit=audit,
         )
 
     # Sem `start()`: quem chama adota a referencia e so entao inicia.

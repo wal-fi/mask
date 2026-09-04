@@ -30,6 +30,7 @@ from maskgw.admin.errors import (
 )
 from maskgw.admin.service import (
     AdapterFactory,
+    AdminAuditProbe,
     AdminConfigService,
     AdminOperation,
     AdminSnapshot,
@@ -41,6 +42,7 @@ __all__ = [
     "APPLIED_CATEGORIES",
     "CATEGORY_DETAILS",
     "AdapterFactory",
+    "AdminAuditProbe",
     "AdminConfigService",
     "AdminError",
     "AdminErrorCategory",

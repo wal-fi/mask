@@ -19,6 +19,7 @@ processo como ele roda em producao.
 
 from __future__ import annotations
 
+import json
 import os
 import socket
 import sys
@@ -121,6 +122,26 @@ def admin_get(port: int, path: str, *, token: str | None = TOKEN) -> tuple[int, 
         return int(error.code), error.read()
 
 
+def admin_post(
+    port: int, path: str, body: bytes, *, token: str | None = TOKEN
+) -> tuple[int, bytes]:
+    """POST administrativo com corpo JSON, para exercitar rotas AUDITADAS."""
+    request = urllib.request.Request(
+        f"http://127.0.0.1:{port}{path}",
+        method="POST",
+        data=body,
+    )
+    request.add_header("Host", f"127.0.0.1:{port}")
+    request.add_header("Content-Type", "application/json")
+    if token is not None:
+        request.add_header("Authorization", f"Bearer {token}")
+    try:
+        with urllib.request.urlopen(request, timeout=10) as response:
+            return int(response.status), response.read()
+    except urllib.error.HTTPError as error:
+        return int(error.code), error.read()
+
+
 def wait_for_port(port: int, *, timeout: float = 30.0) -> bool:
     deadline = threading.Event()
     waited = 0.0
@@ -210,6 +231,78 @@ class TestSessaoMcpComAdminAtivo:
         # A carga administrativa foi atendida durante a sessao.
         assert len(respostas_admin) == 15 * 5
         assert {status for status, _body in respostas_admin} == {200, 404}
+
+    def test_atividade_administrativa_auditada_nao_suja_stdout(
+        self,
+        environment: tuple[dict[str, str], int],
+        tmp_path: Path,
+    ) -> None:
+        """Etapa 10: com operacoes AUDITADAS em voo, `stdout` continua so MCP.
+
+        `config:validate` e uma rota auditada com corpo (secao 13.2): cada
+        chamada emite um `AdminAudit` pelo `AuditLog`, que vai para `stderr` via
+        `logging` — nunca para `stdout`. Marteando-a concorrente com uma sessao
+        MCP real, um unico byte de auditoria perdido em `stdout` quebraria o
+        enquadramento JSON-RPC. O proprio protocolo e o detector.
+        """
+        env, port = environment
+        errlog_path = tmp_path / "stderr.txt"
+        resultados: list[CallToolResult] = []
+        respostas_admin: list[tuple[int, bytes]] = []
+
+        candidate = json.dumps({"masking": [{"match": "cpf", "transformer": "md5"}]}).encode()
+
+        async def run() -> None:
+            parameters = StdioServerParameters(
+                command=sys.executable,
+                args=["-m", "maskgw.mcp"],
+                env=env,
+                cwd=str(REPO_ROOT),
+            )
+            with errlog_path.open("w", encoding="utf-8") as errlog:
+                async with (
+                    stdio_client(parameters, errlog=errlog) as (read, write),
+                    ClientSession(read, write) as session,
+                ):
+                    await session.initialize()
+                    assert wait_for_port(port), "a Admin API nao subiu junto com o MCP"
+
+                    def hammer() -> None:
+                        for _ in range(20):
+                            respostas_admin.append(
+                                admin_post(port, "/admin/v1/config:validate", candidate)
+                            )
+
+                    worker = threading.Thread(target=hammer, name="admin-audit-load")
+                    worker.start()
+                    try:
+                        for _ in range(5):
+                            resultados.append(
+                                await session.call_tool(
+                                    "query_database",
+                                    {"sql": f"SELECT nome, cpf FROM {TABLE}"},
+                                )
+                            )
+                    finally:
+                        worker.join(timeout=60)
+                        assert not worker.is_alive()
+
+        anyio.run(run)
+
+        # A sessao inteira funcionou: `stdout` carregou so o protocolo, apesar de
+        # cada `config:validate` ter emitido uma entrada de auditoria.
+        assert len(resultados) == 5
+        for resultado in resultados:
+            assert resultado.is_error is not True
+            rendered = "".join(
+                block.text for block in resultado.content if isinstance(block, TextContent)
+            )
+            assert CPF not in rendered
+            assert NOME in rendered
+
+        # As validacoes auditadas foram atendidas durante a sessao.
+        assert len(respostas_admin) == 20
+        assert {status for status, _body in respostas_admin} == {200}
 
     def test_o_stderr_do_processo_carrega_so_metadata_fechada(
         self,

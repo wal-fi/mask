@@ -6,8 +6,10 @@ documento candidato **sem efeito algum** (nao e uma escrita: nao persiste, nao
 altera `revision`, nao conecta, nao entra na secao critica). A Etapa 9
 acrescentou as **onze rotas de escrita** (secao 1.3): cada uma valida o corpo,
 constroi um `ConfigMutation` (em `mutations.py`) e chama `AdminConfigService.apply()`,
-que executa o fluxo de onze passos DENTRO da secao critica. `AdminAudit` e a
-Etapa 10.
+que executa o fluxo de onze passos DENTRO da secao critica. A Etapa 10 acrescentou
+a **auditoria administrativa** (`audit.py`): `config:validate` e cada escrita que
+alcanca o handler emitem exatamente um `AdminAudit` pelo `AuditLog` injetado, sem
+que `admin/http/` importe `logging` (secao 13).
 
 ## O conjunto de rotas e literal
 
@@ -69,6 +71,12 @@ from starlette.types import ASGIApp
 
 from maskgw.admin.errors import AdminError, AdminErrorCategory
 from maskgw.admin.http import mutations
+from maskgw.admin.http.audit import (
+    AdminAuditor,
+    AuditContext,
+    exception_target_id,
+    rule_target_id,
+)
 from maskgw.admin.http.middleware import (
     AuthenticationMiddleware,
     BodyLimitMiddleware,
@@ -117,7 +125,11 @@ from maskgw.admin.http.views import (
     find_exception,
     find_rule,
 )
-from maskgw.admin.service import AdminConfigService, AdminOperation, ConfigMutation
+from maskgw.admin.service import AdminConfigService, AdminOperation
+from maskgw.audit import (
+    AdminOperationName,
+    AuditLog,
+)
 from maskgw.masking.transformers.hashes import HMAC_KEY_ENV
 from maskgw.secretsource import EnvSecretProvider, SecretProvider
 
@@ -248,13 +260,20 @@ def build_router(
     *,
     secrets: SecretProvider,
     database_dsn_env: str,
+    audit: AuditLog,
     hmac_key_env: str = HMAC_KEY_ENV,
 ) -> FastAPI:
-    """Aplicacao FastAPI com as oito rotas de leitura e os handlers.
+    """Aplicacao FastAPI com as rotas de leitura, `config:validate`, escrita e handlers.
 
     Sem middleware: a fronteira e composta por fora, em `build_admin_app`, para
     que a ordem das camadas seja explicita e testavel separadamente.
+
+    `audit` e o `AuditLog` — o mesmo do plano MCP — por onde toda operacao
+    administrativa que alcanca um handler emite exatamente um `AdminAudit`
+    (secao 13). Vem de fora porque `admin/` nao importa `logging`: quem loga e
+    `audit/`.
     """
+    auditor = AdminAuditor(audit)
     app = FastAPI(
         title="maskgw admin",
         version="1",
@@ -362,117 +381,167 @@ def build_router(
         # `async def` e sem `to_thread`: a validacao e limitada pelo corpo de
         # 1 MiB e nao toca I/O, entao roda no event loop. Um worker thread aqui
         # poderia sobreviver ao graceful shutdown de D-057.
-        return validate_candidate(candidate, secrets=secrets)
+        #
+        # Auditado como operacao `validate` (secao 13.2): UM evento, alvo
+        # `config`, `revision_before`/`after` None, e sem tocar o contador de
+        # operacoes — `validate_candidate` nao entra na secao critica.
+        return auditor.validate(lambda: validate_candidate(candidate, secrets=secrets))
 
-    _register_write_routes(app, service)
+    _register_write_routes(app, service, auditor)
 
     return app
 
 
-def _write_response(
+def _register_write_routes(
+    app: FastAPI,
     service: AdminConfigService,
-    mutation: ConfigMutation,
-    *,
-    expected_revision: int,
-    operation: AdminOperation = AdminOperation.WRITE,
-) -> WriteResponse:
-    """Traduz `service.apply` na resposta `{revision, applied}` (secao 4.4).
+    auditor: AdminAuditor,
+) -> None:
+    """As onze rotas de escrita da Etapa 9 (secao 1.3), auditadas na Etapa 10.
 
-    Toda a semantica — lock, adocao, `expected_revision`, digest, compilacao,
-    conexao, persistencia, swap, backup — e do servico. A rota so constroi a
-    mutacao e chama isto. `apply` levanta `AdminError` de categoria fechada, que
-    o handler de `AdminError` traduz no envelope uniforme. `async def` chama este
-    fluxo SINCRONO direto no event loop (secao 4.4): nada de `to_thread`, para
-    que uma escrita nao sobreviva ao graceful shutdown alterando arquivo/runtime
-    depois de a requisicao ter sido cancelada (D-057).
+    Cada handler e `async def` e delega a `auditor.write`, que gera o
+    `request_id`, mede a duracao, chama `service.apply` com um `AdminAuditProbe`
+    e emite exatamente um `AdminAudit`. Toda a semantica — lock, adocao,
+    `expected_revision`, digest, compilacao, conexao, persistencia, swap, backup —
+    continua no servico; a rota so constroi a mutacao, o contexto de auditoria e
+    chama `write`. `async def` chama o fluxo SINCRONO direto no event loop
+    (secao 4.4): nada de `to_thread`, para que uma escrita nao sobreviva ao
+    graceful shutdown (D-057). Uma recusa relevanta o `AdminError` sem alteracao,
+    entao status e corpo permanecem os da Etapa 9.
+
+    `/rules:reorder` e registrada ANTES de `/rules/{rule_id}`: a ordem de registro
+    no FastAPI e a ordem de casamento, e sem isso `:reorder` seria capturado como
+    um `rule_id` (secao 12.7).
+
+    Mapeamento de alvo (secao 13.2): fixado por `OPERATION_TARGET_KIND` em
+    `audit/`, e derivado dele por `AuditContext.target_kind` — o handler nao
+    escolhe o `target_kind`, so a operacao. `target_id` so existe em update/delete
+    de uma unica regra/exception, e so quando o path e um ID canonico (secao 13.3).
     """
-    result = service.apply(mutation, expected_revision=expected_revision, operation=operation)
-    return WriteResponse(revision=result.revision)
 
-
-def _register_write_routes(app: FastAPI, service: AdminConfigService) -> None:
-    """As onze rotas de escrita da Etapa 9 (secao 1.3).
-
-    Cada handler e `async def` e delega a `_write_response`, que chama
-    `service.apply`. `/rules:reorder` e registrada ANTES de `/rules/{rule_id}`:
-    a ordem de registro no FastAPI e a ordem de casamento, e sem isso `:reorder`
-    seria capturado como um `rule_id` (secao 12.7).
-    """
+    def _ctx(operation: AdminOperationName, target_id: str | None = None) -> AuditContext:
+        return AuditContext(operation=operation, target_id=target_id)
 
     @app.post(f"{API_PREFIX}/config:adopt", response_model=WriteResponse)
     async def config_adopt(body: AdoptRequest) -> WriteResponse:
-        return _write_response(
+        revision = auditor.write(
             service,
             mutations.adopt(),
             expected_revision=body.expected_revision,
             operation=AdminOperation.ADOPT,
+            context=_ctx(AdminOperationName.ADOPT),
         )
+        return WriteResponse(revision=revision)
 
     @app.put(f"{API_PREFIX}/config", response_model=WriteResponse)
     async def config_replace(body: ConfigReplaceRequest) -> WriteResponse:
-        return _write_response(
-            service, mutations.replace_config(body), expected_revision=body.expected_revision
+        revision = auditor.write(
+            service,
+            mutations.replace_config(body),
+            expected_revision=body.expected_revision,
+            operation=AdminOperation.WRITE,
+            context=_ctx(AdminOperationName.CONFIG_PUT),
         )
+        return WriteResponse(revision=revision)
 
     @app.post(f"{API_PREFIX}/rules:reorder", response_model=WriteResponse)
     async def rules_reorder(body: RuleReorderRequest) -> WriteResponse:
-        return _write_response(
-            service, mutations.reorder_rules(body), expected_revision=body.expected_revision
+        revision = auditor.write(
+            service,
+            mutations.reorder_rules(body),
+            expected_revision=body.expected_revision,
+            operation=AdminOperation.WRITE,
+            context=_ctx(AdminOperationName.RULES_REORDER),
         )
+        return WriteResponse(revision=revision)
 
     @app.post(f"{API_PREFIX}/rules", response_model=WriteResponse)
     async def rules_create(body: RuleCreateRequest) -> WriteResponse:
-        return _write_response(
-            service, mutations.create_rule(body), expected_revision=body.expected_revision
+        revision = auditor.write(
+            service,
+            mutations.create_rule(body),
+            expected_revision=body.expected_revision,
+            operation=AdminOperation.WRITE,
+            context=_ctx(AdminOperationName.RULE_CREATE),
         )
+        return WriteResponse(revision=revision)
 
     @app.put(f"{API_PREFIX}/rules/{{rule_id}}", response_model=WriteResponse)
     async def rules_replace(rule_id: str, body: RuleReplaceRequest) -> WriteResponse:
-        return _write_response(
+        revision = auditor.write(
             service,
             mutations.replace_rule(rule_id, body),
             expected_revision=body.expected_revision,
+            operation=AdminOperation.WRITE,
+            context=_ctx(AdminOperationName.RULE_UPDATE, rule_target_id(rule_id)),
         )
+        return WriteResponse(revision=revision)
 
     @app.delete(f"{API_PREFIX}/rules/{{rule_id}}", response_model=WriteResponse)
     async def rules_delete(rule_id: str, body: DeleteRequest) -> WriteResponse:
-        return _write_response(
-            service, mutations.delete_rule(rule_id), expected_revision=body.expected_revision
+        revision = auditor.write(
+            service,
+            mutations.delete_rule(rule_id),
+            expected_revision=body.expected_revision,
+            operation=AdminOperation.WRITE,
+            context=_ctx(AdminOperationName.RULE_DELETE, rule_target_id(rule_id)),
         )
+        return WriteResponse(revision=revision)
 
     @app.post(f"{API_PREFIX}/exceptions", response_model=WriteResponse)
     async def exceptions_create(body: ExceptionCreateRequest) -> WriteResponse:
-        return _write_response(
-            service, mutations.create_exception(body), expected_revision=body.expected_revision
+        revision = auditor.write(
+            service,
+            mutations.create_exception(body),
+            expected_revision=body.expected_revision,
+            operation=AdminOperation.WRITE,
+            context=_ctx(AdminOperationName.EXCEPTION_CREATE),
         )
+        return WriteResponse(revision=revision)
 
     @app.put(f"{API_PREFIX}/exceptions/{{exception_id}}", response_model=WriteResponse)
     async def exceptions_replace(exception_id: str, body: ExceptionReplaceRequest) -> WriteResponse:
-        return _write_response(
+        revision = auditor.write(
             service,
             mutations.replace_exception(exception_id, body),
             expected_revision=body.expected_revision,
+            operation=AdminOperation.WRITE,
+            context=_ctx(AdminOperationName.EXCEPTION_UPDATE, exception_target_id(exception_id)),
         )
+        return WriteResponse(revision=revision)
 
     @app.delete(f"{API_PREFIX}/exceptions/{{exception_id}}", response_model=WriteResponse)
     async def exceptions_delete(exception_id: str, body: DeleteRequest) -> WriteResponse:
-        return _write_response(
+        revision = auditor.write(
             service,
             mutations.delete_exception(exception_id),
             expected_revision=body.expected_revision,
+            operation=AdminOperation.WRITE,
+            context=_ctx(AdminOperationName.EXCEPTION_DELETE, exception_target_id(exception_id)),
         )
+        return WriteResponse(revision=revision)
 
     @app.put(f"{API_PREFIX}/database", response_model=WriteResponse)
     async def database_replace(body: DatabaseWriteRequest) -> WriteResponse:
-        return _write_response(
-            service, mutations.replace_database(body), expected_revision=body.expected_revision
+        revision = auditor.write(
+            service,
+            mutations.replace_database(body),
+            expected_revision=body.expected_revision,
+            operation=AdminOperation.WRITE,
+            context=_ctx(AdminOperationName.DATABASE_PUT),
         )
+        return WriteResponse(revision=revision)
 
     @app.put(f"{API_PREFIX}/sql", response_model=WriteResponse)
     async def sql_replace(body: SqlWriteRequest) -> WriteResponse:
-        return _write_response(
-            service, mutations.replace_sql(body), expected_revision=body.expected_revision
+        revision = auditor.write(
+            service,
+            mutations.replace_sql(body),
+            expected_revision=body.expected_revision,
+            operation=AdminOperation.WRITE,
+            context=_ctx(AdminOperationName.SQL_PUT),
         )
+        return WriteResponse(revision=revision)
 
 
 def wrap_boundary(app: ASGIApp, *, token: str, port: int) -> ASGIApp:
@@ -503,6 +572,7 @@ def build_admin_app(  # noqa: PLR0913 - parametros de composicao, keyword-only
     port: int,
     secrets: SecretProvider | None = None,
     database_dsn_env: str,
+    audit: AuditLog | None = None,
     hmac_key_env: str = HMAC_KEY_ENV,
 ) -> ASGIApp:
     """A aplicacao administrativa completa, pronta para o servidor.
@@ -514,12 +584,19 @@ def build_admin_app(  # noqa: PLR0913 - parametros de composicao, keyword-only
     `database_dsn_env` chega de fora porque o nome dessa variavel pertence ao
     composition root: `admin/` nao importa `bootstrap/`, e nao deve adivinhar
     como o plano de dados nomeia seu segredo.
+
+    `audit` e o `AuditLog` por onde as operacoes administrativas registram
+    (secao 13). O default constroi um `AuditLog` sobre o logger padrao — util em
+    teste; em producao o composition root injeta o MESMO do plano MCP, para nao
+    criar handler global nem duplicar configuracao de logging.
     """
     provider = secrets if secrets is not None else EnvSecretProvider()
+    audit_log = audit if audit is not None else AuditLog()
     router = build_router(
         service,
         secrets=provider,
         database_dsn_env=database_dsn_env,
+        audit=audit_log,
         hmac_key_env=hmac_key_env,
     )
     return wrap_boundary(router, token=token, port=port)

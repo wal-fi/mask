@@ -27,6 +27,7 @@ from maskgw.admin.http import (
 )
 from maskgw.admin.http.app import API_PREFIX, WRITE_ROUTES
 from maskgw.admin.service import AdminConfigService
+from maskgw.audit import AuditLog
 from maskgw.secretsource import MappingSecretProvider
 from tests.admin_http_support import (
     TOKEN,
@@ -92,6 +93,7 @@ class TestRouteSet:
             _service_stub(),
             secrets=MappingSecretProvider({}),
             database_dsn_env="MASKGW_DATABASE_DSN",
+            audit=AuditLog(),
         )
         return {
             (route.path, frozenset(route.methods or set()))

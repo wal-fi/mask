@@ -9,7 +9,7 @@
 >
 > Decisões que este documento implementa, sem reabrir: **D-047 a D-054**.
 >
-> **Estado da implementação.** Etapas 1–7 concluídas. A Etapa 5 implementa os
+> **Estado da implementação.** Etapas 1–10 concluídas. A Etapa 5 implementa os
 > primitivos de §7.1–§7.3 e §7.5 em `maskgw/config/filesystem.py`. A Etapa 6
 > implementa §6, §7.4, §7.6, §12.1 e §12.4 em `maskgw/admin/`, sem HTTP: seção
 > crítica, runtime candidato, persistência, swap e digest de referência,
@@ -33,8 +33,19 @@
 > corrente, sem janela TOCTOU. `IMMUTABLE_FIELD` entrou no conjunto fechado. O
 > contrato de escrita, a identidade de IDs e o backup transacional estão em D-059.
 >
-> **A Etapa 10 (`AdminAudit`) é a próxima e não foi iniciada;** a Etapa 11 (suíte
-> adversarial geral) também não.
+> A Etapa 10 implementa §13 em `maskgw/audit/` e `maskgw/admin/http/audit.py`:
+> `AdminAudit` é emitido uma vez por operação que alcança o handler de
+> `config:validate` ou de uma das onze escritas, pelo `AuditLog` injetado — o
+> mesmo do plano MCP —, sem que `admin/` importe `logging`. O schema é **fechado
+> por construção**: os campos categóricos guardam os enums, e `__post_init__`
+> recusa evento incoerente antes do logger, impondo a coerência entre operação,
+> alvo (`target_kind` e `target_id`), `outcome`, `error_category` (paridade com a
+> faixa de status) e revisões (`revision_after == revision_before + 1` no sucesso
+> de escrita e no `CONFIG_DURABILITY_ERROR`). A emissão é **best-effort e fora da
+> seção crítica** — `revision_before` é observada sob o lock via `AdminAuditProbe`,
+> e o log sai depois, sem TOCTOU nem segunda publicação. Detalhes em D-060.
+>
+> **A Etapa 11 (suíte adversarial geral) é a única próxima e não foi iniciada.**
 >
 > **Um ponto que esta especificação não fixava**, decidido na implementação e
 > registrado em D-056: as recusas de fronteira de §3.3 e do limite de §12.7 têm

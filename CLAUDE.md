@@ -15,10 +15,11 @@ IA → MCP → Gateway → SQL Validator → PostgreSQL → provenance
 O produto executa fim a fim: um cliente MCP real consulta um PostgreSQL real e
 recebe dados mascarados.
 
-A Fase 7 foi iniciada de forma incremental. As **Etapas 1–9 estão concluídas**;
-a próxima tarefa é exclusivamente a Etapa 10 — `AdminAudit` —, ainda não
-iniciada. Antes de alterar qualquer coisa, leia `docs/HANDOFF.md` — é
-o documento de entrada e diz exatamente onde o projeto parou.
+A Fase 7 foi iniciada de forma incremental. As **Etapas 1–10 estão concluídas**;
+a próxima tarefa é exclusivamente a Etapa 11 — a suíte adversarial
+administrativa —, ainda não iniciada. Antes de alterar qualquer coisa, leia
+`docs/HANDOFF.md` — é o documento de entrada e diz exatamente onde o projeto
+parou.
 
 ## Leitura obrigatória antes de alterar código
 
@@ -28,7 +29,7 @@ Nesta ordem:
 2. `docs/ARCHITECTURE.md` — módulos e responsabilidades
 3. `docs/SECURITY.md` — invariantes de segurança
 4. `docs/SECURITY-REVIEW.md` — o que foi atacado, o que resistiu, o que não
-5. `docs/DECISIONS.md` — 58 decisões (D-001 a D-058) e o porquê de cada uma
+5. `docs/DECISIONS.md` — 60 decisões (D-001 a D-060) e o porquê de cada uma
 6. `docs/MASKING-SPEC.md` — semântica exata do pipeline de masking
 7. `docs/TEST-PLAN.md`, `docs/THREAT-MODEL.md`, `docs/FUTURE-HARDENING.md`
 
@@ -119,7 +120,7 @@ riscos aceitos em `docs/SECURITY-REVIEW.md`.
 ## Evolução em andamento — Fase 7 / Admin API
 
 A **Fase 7 — Admin API** está em implementação incremental conforme
-`docs/PHASE-7-SPEC.md`. As Etapas 1–9 estão concluídas:
+`docs/PHASE-7-SPEC.md`. As Etapas 1–10 estão concluídas:
 
 - Etapa 1 — IDs e revision no modelo do arquivo: `053cf66`;
 - Etapa 2 — `RuntimeRegistry`: `3114c14`;
@@ -129,7 +130,8 @@ A **Fase 7 — Admin API** está em implementação incremental conforme
 - Etapa 6 — seção crítica administrativa e escrita/reload;
 - Etapa 7 — fronteira HTTP e rotas de leitura;
 - Etapa 8 — `POST /admin/v1/config:validate`, validação sem efeito;
-- Etapa 9 — as onze rotas de escrita e a adoção com backup.
+- Etapa 9 — as onze rotas de escrita e a adoção com backup;
+- Etapa 10 — `AdminAudit`: auditoria administrativa por `audit/`.
 
 Confira a sincronização com `origin/master` pelo Git em vez de inferi-la deste
 documento. A Etapa 4 criou `maskgw/bootstrap/` como composition root, removeu
@@ -212,8 +214,21 @@ documento corrente — sem janela TOCTOU. `IMMUTABLE_FIELD` entrou no vocabulár
 fechado; a identidade de IDs, a imutabilidade de `allowed_pg_functions` e o
 backup transacional estão em D-059.
 
-A próxima tarefa é a **Etapa 10** (`AdminAudit`), ainda não iniciada; a suíte
-adversarial HTTP é a Etapa 11. Não antecipe as Etapas 10–11.
+A Etapa 10 acrescentou a **auditoria administrativa**. `AdminAudit` — em
+`audit/`, fechado por construção como `QueryAudit`, com os nove campos da §13.2 —
+é emitido uma vez por operação que alcança o handler de `config:validate` ou de
+uma das onze escritas; leitura, recusa de fronteira, path desconhecido e falha de
+schema não geram evento. `admin/http/audit.py` recebe um `AuditLog` injetado pelo
+composition root — o **mesmo** do plano MCP — e `admin/` continua sem importar
+`logging`. `revision_before` é a revision observada **dentro** da seção crítica,
+via `AdminAuditProbe` que `apply` preenche sob o lock; o log é emitido depois,
+fora do lock — sem TOCTOU, sem segunda publicação, sem alterar a ordem dos onze
+passos. `target_id` é só um ID administrativo canônico de um alvo único; um path
+malformado vira `None`. A falha do logger é best-effort e não muda a resposta nem
+o estado. Não há `GET /admin/v1/audit`, store ou histórico. Detalhes em D-060.
+
+A próxima tarefa é a **Etapa 11** (suíte adversarial administrativa), ainda não
+iniciada. Não antecipe a Etapa 11.
 
 Dois pontos que valem como invariante:
 
@@ -314,7 +329,7 @@ MySQL, migrations, schema browser, JSONB deep inspection, lineage completo de
 view, controle de inferência (WHERE/ORDER BY/GROUP BY), supressão de
 agregações, transformers Python customizados, default deny.
 
-As Etapas 10–11 da Admin API não fazem parte do fechamento atual.
+A Etapa 11 da Admin API não faz parte do fechamento atual.
 
 Propostas avaliadas e adiadas estão em `docs/FUTURE-HARDENING.md` com custo e
 impacto — consulte antes de propor de novo.

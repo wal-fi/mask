@@ -58,14 +58,23 @@ Desde a Fase 5 existe log, e só em `audit/` — o único módulo do projeto
 autorizado a importar `logging`, verificado por teste global. `masking/`
 continua proibido.
 
-Os campos auditados são fechados por construção (`QueryAudit`): `request_id`,
-`outcome`, `duration_ms`, `row_count`, `truncated`, `error_category`. Não
-existe parâmetro para SQL, valores ou segredos.
+Os campos auditados são fechados por construção. `QueryAudit`: `request_id`,
+`outcome`, `duration_ms`, `row_count`, `truncated`, `error_category`. Desde a
+Etapa 10, `AdminAudit` faz o mesmo para o plano administrativo: `request_id`,
+`operation`, `target_kind`, `target_id`, `outcome`, `revision_before`,
+`revision_after`, `duration_ms`, `error_category` — nada além dos nove campos, e
+sem `**kwargs` nem dicionário livre (D-060). O mesmo `AuditLog` serve os dois
+planos. Não existe parâmetro para SQL, valores, o `match` de uma regra, o corpo
+da requisição, o token, o HMAC, o DSN, o digest ou a mensagem original de uma
+exceção — eles nem existem na assinatura, e um teste de construção o prova.
 
 **Nomes de coluna não são registrados**, ao contrário do que esta seção previa:
-uma coluna pode ter nome revelador, e o benefício não compensa. Correlação usa
-`request_id`; digest da SQL foi descartado por ser um oráculo sobre predicados
-(D-035).
+uma coluna pode ter nome revelador, e o benefício não compensa. Isso vale também
+para o `match` de uma regra na auditoria administrativa — o `match` **é** um nome
+de coluna (§13.3). Registra-se o `target_id` administrativo (`rul_…`, `exc_…`),
+que correlaciona sem revelar; um ID malformado no path vira `target_id=None`.
+Correlação usa `request_id`; digest da SQL foi descartado por ser um oráculo
+sobre predicados (D-035).
 
 Nunca registrar a chave HMAC.
 
@@ -227,7 +236,9 @@ isso pertence à Etapa 7. Os invariantes que já valem:
   nulos. Um erro do PostgreSQL na verificação do candidato vira
   `CONFIG_RELOAD_ERROR`, como no plano MCP;
 - **`admin/` não importa `logging`** e não escreve em `stdout`, que continua
-  sendo exclusivamente o canal do protocolo MCP.
+  sendo exclusivamente o canal do protocolo MCP. A auditoria administrativa da
+  Etapa 10 registra por `audit/` — o único módulo autorizado —, com o `AuditLog`
+  injetado pelo composition root.
 
 ## Fronteira HTTP administrativa (Etapa 7)
 
@@ -328,8 +339,19 @@ desligada por default, e cercada. O que vale:
   erros da mutação — `NOT_FOUND`, `IMMUTABLE_FIELD`, `CONFIG_INVALID` — chegam com
   categoria fechada, sem citar o ID pedido, o campo recusado, o valor nem a causa.
 
-O que ainda não existe, e não deve ser presumido: `AdminAudit` (Etapa 10) e a
-suíte adversarial geral (Etapa 11).
+- **Cada operação administrativa que alcança o handler é auditada** (Etapa 10,
+  D-060): `config:validate` e cada uma das onze escritas emitem exatamente um
+  `AdminAudit` pelo `AuditLog` injetado. As leituras, as recusas de fronteira, os
+  paths desconhecidos e as falhas de schema não geram evento — o enum não tem
+  operação para eles. `revision_before` é a revision observada **dentro** da seção
+  crítica, via `AdminAuditProbe` que `apply` preenche sob o lock; o log é emitido
+  depois, fora do lock, sem TOCTOU, sem segunda publicação e sem alterar a ordem
+  dos onze passos. Uma falha do logger é best-effort e não muda a resposta HTTP
+  nem o estado. Nada sensível entra no registro (§13.3), e não há
+  `GET /admin/v1/audit` — não existe store consultável.
+
+O que ainda não existe, e não deve ser presumido: a suíte adversarial
+administrativa geral (Etapa 11).
 
 **Isto não muda a conclusão de exposição.** A Admin API é loopback, sem TLS, com
 um token estático e um único papel. Ela não torna o Gateway adequado a

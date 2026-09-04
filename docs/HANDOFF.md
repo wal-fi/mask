@@ -2,9 +2,9 @@
 
 **Documento de entrada. Comece por aqui.**
 
-Estado do projeto ao final da Etapa 8 da Fase 7. O MVP esta completo, as
-Etapas 1–8 da Fase 7 estao concluidas e a suite esta verde contra PostgreSQL 16
-real. A proxima tarefa e a Etapa 9 — rotas de escrita e adocao com backup —,
+Estado do projeto ao final da Etapa 10 da Fase 7. O MVP esta completo, as
+Etapas 1–10 da Fase 7 estao concluidas e a suite esta verde contra PostgreSQL 16
+real. A proxima tarefa e a Etapa 11 — a suite adversarial administrativa —,
 ainda nao iniciada (secao 10).
 
 Antes de comecar qualquer fase, confira `git status --short`: a arvore precisa
@@ -61,7 +61,8 @@ Andamento da Fase 7:
 | 7 — aplicacao HTTP: auth, bind, anti-CSRF, headers, limites, handlers, rotas de leitura | concluida | `git log -- src/maskgw/admin/http` |
 | 8 — `POST /admin/v1/config:validate` | concluida | `git log -- src/maskgw/admin/http/validate.py` |
 | 9 — rotas de escrita e adocao com backup | concluida | `git log -- src/maskgw/admin/http/mutations.py` |
-| 10 — `AdminAudit` | proxima, nao iniciada | — |
+| 10 — `AdminAudit` | concluida | `git log -- src/maskgw/admin/http/audit.py` |
+| 11 — suite adversarial administrativa | proxima, nao iniciada | — |
 
 O estado atual deve ser conferido com `git status --short --branch` e
 `git rev-list --left-right --count origin/master...HEAD` antes de continuar;
@@ -214,6 +215,7 @@ src/maskgw/
       views.py           respostas de leitura a partir de UM snapshot (D-057)
       validate.py        config:validate: valida e compila, SEM efeito (Etapa 8)
       mutations.py       o payload de cada escrita: MaskingFileConfig -> Mapping (Etapa 9, D-059)
+      audit.py           instrumentacao: um AdminAudit por operacao (Etapa 10, D-060)
       app.py             8 leituras, config:validate e as 11 escritas + handlers
       server.py          uvicorn em thread nao-daemon, com bind confirmado
   bootstrap/             <- Fase 7, Etapas 4, 6 e 7; composition root
@@ -223,8 +225,8 @@ src/maskgw/
   mcp/                   <- Fase 5
     server.py            build_mcp_server; a tool query_database
     __main__.py          python -m maskgw.mcp -> bootstrap
-  audit/                 <- Fase 5
-    log.py               QueryAudit, AuditLog; UNICO modulo que importa logging
+  audit/                 <- Fase 5, ampliado na Fase 7 / Etapa 10
+    log.py               QueryAudit, AdminAudit, AuditLog; UNICO modulo que importa logging
 
 tests/
   conftest.py                    fixtures, DSN e dublês de conexao/cursor
@@ -358,6 +360,8 @@ da Etapa 7, e D-057 as duas correcoes exigidas na revisao da Etapa 7:
 | D-056 | Escolhas da fronteira HTTP: cinco categorias de erro novas, ordem dos middlewares, contencao da excecao por fora do Starlette, bind na thread chamadora, parametros de transformer no registry e contadores de `/status`. Aprovada como decisao de contrato na revisao da Etapa 7 |
 | D-057 | Snapshot administrativo coerente (`AdminSnapshot`, uma leitura por resposta); shutdown SEM timeout, com `join` integral da thread HTTP; referencia do servidor adotada antes de `start()`; `_closing` permanente, que impede `run()` e nunca se apresenta como `ready` |
 | D-058 | Contrato de `config:validate` (Etapa 8): request e o documento candidato na raiz com schema HTTP proprio; `expected_revision` no corpo -> `422 SCHEMA_INVALID`; resposta de sucesso sao quatro booleanos; falha de compilacao -> `CONFIG_INVALID`; sem efeito, provado por contadores estruturais; correcao do `BodyLimitMiddleware` para cortar em `413` autoritativamente sob o roteador do FastAPI |
+| D-059 | Escrita administrativa (Etapa 9): toda rota traduz para `apply()`, mutacao dentro da secao critica sobre copia profunda (sem TOCTOU); IDs sao identidade do servidor; `allowed_pg_functions` presente em qualquer forma -> `IMMUTABLE_FIELD`; backup byte a byte da adocao com `O_EXCL`/`0600`/`fsync`, nunca sobrescreve, relogio injetavel |
+| D-060 | Auditoria administrativa (Etapa 10): `AdminAudit` fechado por construcao com os nove campos da §13.2; uma entrada por operacao que ALCANCA o handler, nenhuma para leitura/recusa-de-fronteira/schema; `revision_before` observada dentro da secao critica via `AdminAuditProbe` (sem TOCTOU nem segunda publicacao); `target_id` so ID canonico de alvo unico; best-effort no logger; `audit/` continua o unico a importar `logging`; sem `GET /admin/v1/audit` |
 
 ## 6. Resultado das verificacoes
 
@@ -442,6 +446,39 @@ ruff     116 files already formatted  (src + tests)
 mypy     Success: no issues found in 116 source files  (strict, mypy 2.3.1)
 git      diff --check sem erros
 ```
+
+Medido ao final da Etapa 10 (auditoria administrativa), contra PostgreSQL 16.15
+descartavel:
+
+```text
+pytest   2267 passed, 7 skipped  (2274 coletados; JUnit XML)
+         suite INTEIRA: nenhum deselect, nenhum skip por ausencia de DSN
+           os 7 skips sao condicionais de plataforma POSIX neste host Windows:
+           tres de fsync de diretorio de durabilidade (writes, admin service e a
+           nova auditoria de durabilidade), tres de bits de permissao POSIX do
+           filesystem e um de fsync de diretorio do filesystem
+pytest    521 passed, 2 skipped  (-m integration, 523 selecionados; JUnit XML)
+           os 2 skips sao POSIX de fsync de diretorio, condicionais de
+           plataforma; nenhum skip por ausencia de DSN
+pytest    153 testes da Etapa 10: 77 de unidade (test_admin_audit.py, com a
+           paridade de enums, o mapping fechado e a paridade CATEGORY_OUTCOME <->
+           STATUS_BY_CATEGORY), 39 de fechamento real (test_admin_audit_closed.py —
+           as contraprovas de schema fechado e as regressoes de coerencia
+           outcome/categoria e de revisoes exatas), 36 de instrumentacao HTTP
+           contra PostgreSQL real (test_admin_http_audit.py) e 1 de stdout MCP
+           limpo sob auditoria (test_admin_http_mcp_coexistence.py)
+ruff     All checks passed
+ruff     120 files already formatted  (src + tests)
+mypy     Success: no issues found in 120 source files  (strict, mypy 2.3.1)
+git      diff --check sem erros
+```
+
+A rodada corretiva de seguranca fechou o schema de verdade: `AdminAudit` guarda
+os enums (nao strings), com validacao incontornavel em `__post_init__`;
+`error_category` e o enum neutro `AdminErrorCategoryName`; o desfecho tem de bater
+com a faixa de status da categoria (`CATEGORY_OUTCOME`); e as revisoes de sucesso
+e de durabilidade sao exatas (`before + 1`). As classificacoes vivem no modulo
+neutro `audit/`, com paridade provada por teste, sem ciclo. Detalhes em D-060.
 
 **A suite integral exigiu pilha ampliada neste host.** Com a pilha default do
 Windows, `test_large_query_payload_does_not_crash` — a consulta com 100.000
@@ -680,8 +717,8 @@ Mudancas internas que nao alteram comportamento observavel do MCP:
 
 ## 10. Como continuar
 
-A Fase 7 esta em andamento, com as Etapas 1–8 concluidas. A proxima tarefa e
-**exclusivamente a Etapa 9** — rotas de escrita e adocao com backup —, ainda nao
+A Fase 7 esta em andamento, com as Etapas 1–10 concluidas. A proxima tarefa e
+**exclusivamente a Etapa 11** — a suite adversarial administrativa —, ainda nao
 iniciada. A regra de nao avancar de etapa sem aprovacao continua valendo.
 
 ### A. Endurecer o que resta (inventario preservado; nao e a proxima etapa)
@@ -707,10 +744,10 @@ Os que precisam de codigo, com custo em `docs/FUTURE-HARDENING.md`:
 
 ```text
 Fase em andamento:
-Fase 7 — Admin API, Etapas 1–7 concluidas
+Fase 7 — Admin API, Etapas 1–10 concluidas
 
 Proxima tarefa:
-Etapa 9 — rotas de escrita e adocao com backup — NAO INICIADA
+Etapa 11 — suite adversarial administrativa — NAO INICIADA
 ```
 
 A Etapa 5 concluiu os primitivos de filesystem seguro em
@@ -737,21 +774,25 @@ escrita —, e `admin_http` acrescenta a fronteira HTTP — thread, socket e rot
 O segundo implica o primeiro, nunca o contrario. `resolve_admin_settings()` le
 o ambiente e e o passo 1 do startup, antes de qualquer arquivo ser aberto.
 
-O que as Etapas 7 e 8 deliberadamente **nao** fizeram, e nao deve ser presumido
-pronto:
+A Etapa 9 acrescentou as onze rotas de escrita, a operacao `config:adopt`
+completa (IDs aleatorios, `confirm_comment_loss` e backup byte a byte dos bytes
+originais) e `IMMUTABLE_FIELD`. Cada rota e so uma traducao para
+`AdminConfigService.apply()`, com a mutacao rodando DENTRO da secao critica sobre
+a copia profunda do documento corrente (D-059).
 
-- as rotas de escrita, a operacao `config:adopt` completa (IDs aleatorios,
-  `confirm_comment_loss` e backup dos bytes originais) e o backup — Etapa 9.
-  O que existe e a **pre-condicao assimetrica** do passo 1, que e parte da
-  secao critica: `AdminOperation.ADOPT` exige estado nao adotado e
-  `expected_revision: 0`; as demais escritas exigem estado adotado;
-- `AdminAudit` — Etapa 10. `admin/` nao importa `logging`, e isso e teste. Os
-  contadores de `/status` sao inteiros em memoria, nao historico;
-- a suite adversarial HTTP — Etapa 11.
+A Etapa 10 acrescentou a **auditoria administrativa** (`admin/http/audit.py` e
+`AdminAudit` em `audit/`): `config:validate` e cada uma das onze escritas que
+alcanca o handler emitem exatamente um `AdminAudit` pelo `AuditLog` injetado —
+o MESMO do plano MCP. `admin/` e `admin/http/` continuam sem importar `logging`;
+`audit/` segue sendo o unico autorizado, e isso e teste. `revision_before` e a
+revision observada DENTRO da secao critica, via `AdminAuditProbe` preenchido por
+`apply` — sem TOCTOU, sem segunda publicacao, sem alterar a ordem dos onze passos
+(D-060). Nao ha `GET /admin/v1/audit`, nem store, retencao ou consulta de
+historico; o conjunto de rotas permanece o da Etapa 9.
 
-**`IMMUTABLE_FIELD` nao foi declarada** (D-056): ela so e alcancavel por rota de
-escrita com corpo, e declara-la agora fixaria o status HTTP de uma operacao da
-Etapa 9. A Etapa 9 a acrescenta.
+O que a Etapa 10 deliberadamente **nao** fez, e nao deve ser presumido pronto:
+
+- a suite adversarial administrativa — Etapa 11.
 
 A especificacao aprovada esta em `docs/PHASE-7-SPEC.md`.
 Ela cobre endpoints, autenticacao, bind e CORS, schemas, IDs e migracao,
@@ -777,7 +818,7 @@ filesystem na Etapa 5, a serializacao com as duas verificacoes de digest e a
 semantica de durabilidade na Etapa 6, e os itens de HTTP — bind so em loopback,
 porta e autenticacao — na Etapa 7.
 
-As Etapas 8–11 ainda nao foram iniciadas.
+A Etapa 11 ainda nao foi iniciada.
 
 Objetivo: superficie administrativa separada do MCP para gerenciar
 configuracao, policies, status e auditoria sem editar arquivo a mao.
@@ -869,9 +910,10 @@ automatico, banco de configuracao, Redis, background workers.
    (D-021). O Gateway e read-only sobre schema estavel; nao ha invalidacao.
 6. **Argumentos extras do MCP sao ignorados, nao recusados** pelo SDK 2.1.1
    (D-037). Nao alteram nada; a expectativa de recusa e que nao se cumpre.
-7. **`audit/` e in-memory-free**: escreve via `logging`, sem storage proprio.
-   Nao ha historico consultavel — qualquer feature que precise disso comeca do
-   zero.
+7. **`audit/` e in-memory-free**: escreve via `logging`, sem storage proprio —
+   tanto a auditoria de consulta (`QueryAudit`) quanto a administrativa
+   (`AdminAudit`, Etapa 10). Nao ha historico consultavel e nao existe
+   `GET /admin/v1/audit` — qualquer feature que precise disso comeca do zero.
 8. **Consulta com dezenas de milhares de termos pode derrubar o processo.** A
    analise da AST e recursiva, e uma expressao com 100.000 somas estoura a
    pilha da thread antes de qualquer limite do produto. **Nao existe controle
