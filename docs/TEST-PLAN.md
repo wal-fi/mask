@@ -16,12 +16,13 @@ inteira, sem nenhum deselect e sem skip por ausência de `MASKGW_TEST_DSN`. Com
 dois deles marcados `integration` — o reload contra banco real —, e os dois
 executam.
 
-Estado medido ao final da Etapa 10 (auditoria administrativa, já com a rodada
-corretiva de segurança que fechou o schema de verdade), contra PostgreSQL 16.15
-real: **2274 coletados, 2267 passed e 7 skips condicionais de plataforma POSIX**
-(contagens por JUnit XML) — sem nenhum deselect e sem skip por ausência de DSN. Com
-`-m integration`, **521 passed e 2 skips** de 523 selecionados (os dois testes
-POSIX de fsync de diretório, que no Windows não se aplicam). A Etapa 10 soma **153 testes**: 77 de unidade
+Estado medido ao final da Etapa 11 (suíte adversarial administrativa; a Fase 7
+está concluída), contra PostgreSQL 16 real: **2312 coletados, 2304 passed e 8
+skips condicionais de plataforma POSIX** (contagens por JUnit XML) — sem nenhum
+deselect e sem skip por ausência de DSN. Com `-m integration`, **558 passed e 3
+skips** de 561 selecionados (os três testes POSIX de fsync de diretório, que no
+Windows não se aplicam). A Etapa 11 somou **38 testes** de
+`test_admin_adversarial.py` (37 executados + 1 skip POSIX de plataforma). A Etapa 10 soma **153 testes**: 77 de unidade
 (`test_admin_audit.py`), 39 de fechamento real (`test_admin_audit_closed.py`), 36
 de instrumentação HTTP contra PostgreSQL real (`test_admin_http_audit.py`) e 1 de
 `stdout` MCP limpo sob auditoria (`test_admin_http_mcp_coexistence.py`). A Etapa 9
@@ -843,4 +844,95 @@ stdio martelada com `config:validate` (rota auditada, com corpo) concorrentement
 — cada chamada emite um `AdminAudit` — mantém o enquadramento JSON-RPC intacto: o
 próprio protocolo é o detector.
 
-A suíte adversarial administrativa geral é a Etapa 11.
+### Etapa 11 — Suíte adversarial administrativa (§12.6–§12.8)
+
+A Etapa 11 **não reimplementa** a cobertura já existente. Ela começou por uma
+**matriz de rastreabilidade** de cada requisito de §12.6–§12.8 contra os testes
+que já o fechavam, e só então acrescentou o necessário para as lacunas reais.
+
+#### Matriz de rastreabilidade §12.6–§12.8
+
+| requisito | onde já é coberto | lacuna fechada na Etapa 11 |
+|---|---|---|
+| §12.6 token/HMAC/DSN nunca em corpo/header/erro (leitura) | `test_admin_http_leakage.py` | — |
+| §12.6 idem nos grupos de **erro de escrita** e falhas injetadas **antes** do `replace` | parcial (só reads) | `TestLeakageNasFalhasDeEscrita` (revision_conflict, reload_error exato, write_error injetado, out_of_sync injetado) |
+| §12.6 idem em falha injetada **depois** do `replace` (`CONFIG_DURABILITY_ERROR`) | — | `test_durability_error_depois_do_replace_nao_vaza` (POSIX; `500`/`applied:true`/rev 3→4/runtime e arquivo coerentes/audit `error` 3→4/retry rev 3 → `409` sem efeito; skip de plataforma no Windows, onde o fsync de diretório é omitido) |
+| §12.6 leakage no **`AdminAudit`** emitido | — | `TestLeakageNasFalhasDeEscrita` varre `audit_text()` em cada falha, inclusive durabilidade |
+| §12.6 nenhum `str(exc)`/`__cause__`/`__context__` | `test_admin_http_leakage.py`, `test_admin_http_boundary.py` | `test_error_category_de_falha_e_fechada_nunca_str_exc` (afirma `__cause__`/`__context__` nulos num `AdminError` real) |
+| §12.6 leakage no **caminho de adoção** (bytes originais, backup, caminho) | — | `TestLeakageNaAdocao` |
+| §12.6 `repr` app/registry/runtime/serviço/servidor sem secret | `test_admin_http_leakage.py::TestReprs`, `TestSuperficieDoApp` | — |
+| §12.6 MCP stdio limpo com admin + auditoria concorrente | `test_admin_http_mcp_coexistence.py` | — |
+| §12.7 inventário exato de rotas; extras quebram | `test_admin_http_surface.py::TestRouteSet` | — |
+| §12.7 `/query`,`/sql`,`/execute`,`/config:reload`,`/docs`,`/redoc`,`/openapi.json`,auditoria → 404 | `test_admin_http_surface.py` (`FORBIDDEN_PATHS`, `FUTURE_PATHS`, `DOC_PATHS`) | — |
+| §12.7 token ausente/errado/vazio/truncado/query/cookie/corpo nunca autentica; sem bypass por prefixo/case/Unicode; `compare_digest` | `test_admin_http_boundary.py::TestAuthentication`, `test_admin_http_surface.py::TestAuthenticationOverTheWire` | — |
+| §12.7 `401` antes de `422` | `test_admin_http_surface.py`, `test_admin_http_boundary.py::TestStackOrder` | — |
+| §12.7 `Origin`/`Referer` → 403; `Host` alheio/porta errada → 400 | `test_admin_http_boundary.py`, `test_admin_http_surface.py::TestBrowserProtections` | — |
+| §12.7 `Content-Type` só onde há corpo; `HEAD`/`OPTIONS`/redirects/métodos | `test_admin_http_boundary.py::TestContentType`, `test_admin_http_surface.py` | — |
+| §12.7 `Cache-Control: no-store` em toda resposta; nenhum CORS | `test_admin_http_surface.py::TestResponseHeaders`, `test_admin_http_boundary.py` | — |
+| §12.7 limite 1 MiB com/sem `Content-Length`/chunked; corte em streaming; memória não acompanha | `test_admin_http_boundary.py::TestBodyLimit`, `TestChunkedOverTheWire` | — |
+| §12.7 corpo hostil **não persiste/candidato/swap/audita** numa rota de escrita real | parcial (`TestSemEfeitoNasRecusas` cobre recusas de schema/estado) | `TestCorpoHostilSemEfeito` (grande, tipo errado, sem token, JSON malformado, schema inválido, campos extras, JSON profundamente aninhado, `Content-Length` declarado > 1 MiB — todos sem tocar estado, **sem construir candidato** (contador na `adapter_factory`) e sem auditar) |
+| §12.7 parsing: JSON truncado, profundamente aninhado, campos extras, `Content-Length` | `test_admin_http_boundary.py::TestErrorHandlers` (JSON malformado, campo desconhecido, tipos), `TestBodyLimit::test_content_length_acima_do_limite_falha_ANTES_de_ler` e `test_content_length_ilegivel_nao_e_lido_como_cabe` (app interna) | `TestCorpoHostilSemEfeito` os replica **numa rota de escrita real**, provando ausência de efeito. **Limite da prova:** só o `Content-Length` *declarado* é verificado; comprimento *incompatível* com o corpo é território de request smuggling/proxy/TLS, que uma app local não pode provar, e não é alegado |
+| §12.7 estado completo sob ataque: bytes, digest, revision, runtime publicado, **IDs**, **decisões de masking** | `test_admin_http_writes.py::TestSemEfeitoNasRecusas` (bytes/digest/revision/runtime) | `TestEstadoCompletoSobAtaque` acrescenta os dois que faltavam: IDs de regras/exceptions idênticos e vereditos do engine idênticos após cada recusa |
+| §12.7 `allowed_pg_functions` presente → `IMMUTABLE_FIELD`; ausente preserva | `test_admin_http_writes.py::TestImutabilidade`, `_adversarial.py` | `TestImutabilidadeAdversarial` (alias por capitalização → `SCHEMA_INVALID`; aninhado/misturado → `IMMUTABLE_FIELD`; todos sem efeito) |
+| §12.7 MCP sem caminho para configuração | `test_mcp_server.py` (tool única, só `sql`), `test_plan_separation.py` | `TestMcpNaoAlcancaConfig` (superfície pública do `Gateway`; gateway não importa admin) |
+| §12.8 separação de planos por AST; `admin/` sem `logging`; `mcp/`↛admin; só `bootstrap/`; `runtime/`↛planos; `masking` puro | `test_plan_separation.py`, `test_purity.py` | — |
+| §12.1 concorrência serializada, revisão e auditoria coerentes, sem secret | `test_admin_http_writes.py::TestConcorrenciaERevision`, `test_admin_http_audit.py::TestConcorrencia` | `TestConcorrenciaAdversarial` (N conflitos + ataques mistos: um vencedor, estado e auditoria coerentes, sem leakage) |
+
+#### O que a Etapa 11 acrescentou (`tests/test_admin_adversarial.py`, `integration`)
+
+38 cenários (37 executados + 1 skip POSIX de plataforma), todos `BLOCKED` (a
+proteção existe e o teste a afirma), sobre o caminho de **escrita real** contra
+PostgreSQL e a **auditoria** — território que os testes de leitura com adapter
+falso não alcançam:
+
+- **`TestLeakageNasFalhasDeEscrita`** — em `REVISION_CONFLICT`, `CONFIG_RELOAD_ERROR`
+  (regex inválido com marcador — categoria **exata**, é compilação durante escrita,
+  passo 6), `CONFIG_WRITE_ERROR` (`os.replace` injetado com mensagem cheia de
+  secret), `CONFIG_OUT_OF_SYNC` (editor externo injetado **antes** do `replace`) e
+  `CONFIG_DURABILITY_ERROR` (`fsync` de diretório injetado **depois** do `replace`,
+  POSIX), nenhum secret/SQL/marcador/caminho/traceback aparece na resposta **nem no
+  `AdminAudit`**; o `AdminError` de uma falha real tem `__cause__`/`__context__`
+  nulos. O caso de durabilidade também prova `500`/`applied:true`/revisão 3→4/runtime
+  e arquivo novos coerentes/audit `error` com `revision_before=3`, `revision_after=4`
+  e categoria exata/retentativa com revisão 3 → `409` sem mudar estado. **No Windows
+  é skip de plataforma legítimo** (o `fsync` de diretório é omitido, §7.6), não um
+  finding ignorado.
+- **`TestLeakageNaAdocao`** — o comentário original (que só deve viver no backup),
+  o caminho do arquivo e o do diretório não vazam em adoção bem-sucedida nem na
+  segunda adoção recusada — esta com a varredura **completa** (corpo, headers,
+  auditoria, caminhos).
+- **`TestImutabilidadeAdversarial`** — `allowed_pg_functions` em qualquer valor →
+  `IMMUTABLE_FIELD` sem efeito; por alias de capitalização → `SCHEMA_INVALID` (o
+  `extra=forbid` nunca abre o campo real); aninhado em `sql` ou misturado com
+  campos válidos → `IMMUTABLE_FIELD`; omissão preserva conteúdo e ordem.
+- **`TestMcpNaoAlcancaConfig`** — a superfície pública do `Gateway` é `{query,
+  revision, close}`, sem `apply`/`adopt`/`snapshot`; nenhum módulo de `gateway/`
+  importa `maskgw.admin`.
+- **`TestCorpoHostilSemEfeito`** — corpo > 1 MiB (413), `Content-Type` errado
+  (415), sem token (401), JSON malformado (422), schema inválido (422), campos
+  extras (422), JSON profundamente aninhado (422) e `Content-Length` declarado
+  > 1 MiB (413, cortado antes de ler) numa rota **de escrita real** não alteram
+  bytes/runtime/revision/digest, não incrementam `admin_operations_total`, **não
+  constroem candidato** (contador na `adapter_factory` inalterado) e **não emitem
+  auditoria** — o handler não roda. O comprimento *incompatível* com o corpo é
+  território de request smuggling/proxy/TLS e não é alegado.
+- **`TestEstadoCompletoSobAtaque`** — completa `TestSemEfeitoNasRecusas`: após
+  cada recusa (immutable, not_found, conflict, schema), os IDs de regras/exceptions
+  e os vereditos do engine de masking (sobre cpf/email/tipo_cpf/documento/saldo)
+  são idênticos, o objeto runtime publicado é o **mesmo**, e bytes/digest/revisão
+  não mudam.
+- **`TestConcorrenciaAdversarial`** — 8 escritas concorrentes com o mesmo
+  `expected_revision` → um `200` e sete `409`; revision publicada 4; exatamente 8
+  eventos de auditoria com `request_id` distintos, um `success` (3→4) e sete
+  `rejected` (cada um observou 4 na seção crítica); nenhum secret sob concorrência.
+  E uma mistura de ataques (immutable, not_found, schema, conflict) em paralelo com
+  uma escrita legítima: só a legítima publica, e o estado final é exatamente uma
+  publicação.
+
+Repetida 5×+ sem intermitência; os cenários de concorrência e streaming repetidos
+à parte. **Nenhum finding virou `skip` nem `xfail`** (D-041): cada limite conhecido
+já era afirmado por teste (o payload gigante em `docs/HANDOFF.md` §11, o oráculo
+por predicado e a view que renomeia em `docs/SECURITY-REVIEW.md`), e a Etapa 11 não
+encontrou violação inequívoca da especificação que exigisse correção de produção.
+O único skip da suíte (a leakage de durabilidade) é condicional de plataforma
+POSIX no host Windows, não um finding ignorado.

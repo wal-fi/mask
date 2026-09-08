@@ -1,8 +1,9 @@
 # Implementation Roadmap
 
 > **Documento histórico e registro de andamento.** As seis fases estão
-> concluídas, mais a Fase 6.1 de hardening. A Fase 7 está em andamento, com as
-> Etapas 1–10 concluídas. Para o estado atual, leia `docs/HANDOFF.md`.
+> concluídas, mais a Fase 6.1 de hardening. **A Fase 7 (Admin API) está
+> concluída**, com as onze etapas fechadas. Para o estado atual, leia
+> `docs/HANDOFF.md`.
 >
 > Cada seção abaixo registra o escopo original **e** o que a medição obrigou a
 > corrigir no plano — é aí que está o valor de reler isto.
@@ -240,7 +241,7 @@ A implementação segue `docs/PHASE-7-SPEC.md` de forma incremental:
 | 8 — `POST /admin/v1/config:validate` | concluída | `git log -- src/maskgw/admin/http/validate.py` |
 | 9 — rotas de escrita e adoção com backup | concluída | `git log -- src/maskgw/admin/http/mutations.py` |
 | 10 — `AdminAudit`: auditoria administrativa | concluída | `git log -- src/maskgw/admin/http/audit.py` |
-| 11 — suíte adversarial administrativa | próxima; não iniciada | — |
+| 11 — suíte adversarial administrativa | concluída | `git log -- tests/test_admin_adversarial.py` |
 
 A sincronização com `origin/master` deve ser conferida pelo Git, não inferida
 deste documento. A Etapa 4 criou `bootstrap/` como composition root, removeu
@@ -332,8 +333,14 @@ recebe o `AuditLog` injetado — o mesmo do plano MCP — e `admin/` continua se
 importar `logging`. `revision_before` é observada dentro da seção crítica, via
 `AdminAuditProbe` que `apply` preenche sob o lock, sem TOCTOU (D-060).
 
-**Próximo passo: Etapa 11, somente após autorização.** Suíte adversarial
-administrativa; não foi antecipada.
+A Etapa 11 fechou a suíte adversarial administrativa (§12.6–§12.8): uma matriz de
+rastreabilidade de cada requisito contra os testes existentes, e o necessário
+para as lacunas reais em `tests/test_admin_adversarial.py` — leakage em todo grupo
+de erro de escrita e no `AdminAudit`, imutabilidade adversarial, corpo hostil sem
+efeito, e concorrência preservando estado, auditoria e sigilo. Nenhum finding
+novo; todos os cenários `BLOCKED`.
+
+**A Fase 7 está concluída.** Não há próxima etapa nesta fase.
 
 ---
 
@@ -353,13 +360,12 @@ porta de rede hoje é uma decisão de segurança (D-036), não uma lacuna.
 
 ## Estado atual
 
-Fases 1 a 6.1 concluídas. Fase 7 em andamento, Etapas 1–10 concluídas; Etapa 11
-(suíte adversarial administrativa) não iniciada. Estado validado contra
-PostgreSQL 16.15 real, com a suíte inteira: 2274 testes coletados, 2267 aprovados
-e 7 pulados por condição de plataforma POSIX, sem nenhum deselect (contagens por
-JUnit XML). Com `-m integration`, 523 selecionados (521 aprovados e 2 pulados por
-condição de plataforma — os `fsync` de diretório POSIX), nenhum skip por falta de
-DSN.
+Fases 1 a 6.1 concluídas. **Fase 7 (Admin API) concluída**, com as onze etapas
+fechadas. Estado validado contra PostgreSQL 16.15 real, com a suíte inteira:
+2312 testes coletados, 2304 aprovados e 8 pulados por condição de plataforma
+POSIX, sem nenhum deselect (contagens por JUnit XML). Com `-m integration`, 561
+selecionados (558 aprovados e 3 pulados por condição de plataforma — os `fsync`
+de diretório POSIX), nenhum skip por falta de DSN.
 Neste host Windows o pytest precisa de pilha de thread
 ampliada (64 MiB) por causa de um teste adversarial da Fase 6; é ajuste de
 ambiente, não correção de produto. Detalhes em `docs/HANDOFF.md`, seções 6

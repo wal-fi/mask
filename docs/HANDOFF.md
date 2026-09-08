@@ -2,10 +2,11 @@
 
 **Documento de entrada. Comece por aqui.**
 
-Estado do projeto ao final da Etapa 10 da Fase 7. O MVP esta completo, as
-Etapas 1–10 da Fase 7 estao concluidas e a suite esta verde contra PostgreSQL 16
-real. A proxima tarefa e a Etapa 11 — a suite adversarial administrativa —,
-ainda nao iniciada (secao 10).
+Estado do projeto ao final da Fase 7. O MVP esta completo, **as onze etapas da
+Fase 7 estao concluidas** e a suite esta verde contra PostgreSQL 16 real. Nao ha
+proxima etapa nesta fase: a Etapa 11 fechou a suite adversarial administrativa
+(secao 10). As proximas fases sao a 8 (front-end) e a 9 (deployment), nao
+iniciadas.
 
 Antes de comecar qualquer fase, confira `git status --short`: a arvore precisa
 estar limpa. **Confira, nao presuma** — este documento nao pode afirmar o
@@ -62,7 +63,11 @@ Andamento da Fase 7:
 | 8 — `POST /admin/v1/config:validate` | concluida | `git log -- src/maskgw/admin/http/validate.py` |
 | 9 — rotas de escrita e adocao com backup | concluida | `git log -- src/maskgw/admin/http/mutations.py` |
 | 10 — `AdminAudit` | concluida | `git log -- src/maskgw/admin/http/audit.py` |
-| 11 — suite adversarial administrativa | proxima, nao iniciada | — |
+| 11 — suite adversarial administrativa | concluida | `git log -- tests/test_admin_adversarial.py` |
+
+**A Fase 7 esta CONCLUIDA:** as onze etapas fecharam, e a suite adversarial da
+Etapa 11 nao encontrou finding novo — cada cenario e `BLOCKED`, e os limites
+conhecidos continuam afirmados por teste (D-041).
 
 O estado atual deve ser conferido com `git status --short --branch` e
 `git rev-list --left-right --count origin/master...HEAD` antes de continuar;
@@ -480,6 +485,33 @@ com a faixa de status da categoria (`CATEGORY_OUTCOME`); e as revisoes de sucess
 e de durabilidade sao exatas (`before + 1`). As classificacoes vivem no modulo
 neutro `audit/`, com paridade provada por teste, sem ciclo. Detalhes em D-060.
 
+Medido ao final da Etapa 11 (suite adversarial administrativa, ja com a rodada
+corretiva), contra PostgreSQL 16 real:
+
+```text
+pytest   2304 passed, 8 skipped  (2312 coletados; JUnit XML)
+         suite INTEIRA: nenhum deselect, nenhum skip por ausencia de DSN
+           os 8 skips condicionais de plataforma POSIX (os 7 anteriores mais a
+           leakage de durabilidade da Etapa 11, POSIX-only)
+pytest    558 passed, 3 skipped  (-m integration, 561 selecionados; JUnit XML)
+           os 3 skips sao POSIX de fsync de diretorio; nenhum skip por falta de DSN
+pytest    38 testes da Etapa 11 (test_admin_adversarial.py, integration; 37
+           executados + 1 skip POSIX): leakage em todo grupo de erro de escrita
+           (inclusive durabilidade DEPOIS do replace) e no AdminAudit; categoria
+           exata em CONFIG_RELOAD_ERROR; imutabilidade adversarial; corpo hostil
+           sem efeito e SEM construir candidato; IDs e decisoes de masking
+           preservados sob ataque; concorrencia com estado/auditoria coerentes e
+           sem leakage. A matriz de rastreabilidade §12.6-§12.8 esta em TEST-PLAN.
+ruff     All checks passed
+ruff     121 files already formatted  (src + tests)
+mypy     Success: no issues found in 121 source files  (strict, mypy 2.3.1)
+git      diff --check sem erros
+```
+
+A Etapa 11 nao encontrou finding novo: cada cenario e `BLOCKED`, e os limites
+conhecidos (payload gigante, ACL no Windows, editor nao cooperante) continuam
+afirmados por teste (D-041). Nenhuma correcao de producao foi necessaria.
+
 **A suite integral exigiu pilha ampliada neste host.** Com a pilha default do
 Windows, `test_large_query_payload_does_not_crash` — a consulta com 100.000
 termos somados — estoura a pilha da thread no walk recursivo da AST e derruba o
@@ -717,9 +749,9 @@ Mudancas internas que nao alteram comportamento observavel do MCP:
 
 ## 10. Como continuar
 
-A Fase 7 esta em andamento, com as Etapas 1–10 concluidas. A proxima tarefa e
-**exclusivamente a Etapa 11** — a suite adversarial administrativa —, ainda nao
-iniciada. A regra de nao avancar de etapa sem aprovacao continua valendo.
+A Fase 7 esta **CONCLUIDA**: as onze etapas fecharam. Nao ha proxima etapa nesta
+fase. As proximas fases sao a 8 (front-end) e a 9 (deployment), ainda nao
+iniciadas, e a regra de nao avancar de fase sem aprovacao continua valendo.
 
 ### A. Endurecer o que resta (inventario preservado; nao e a proxima etapa)
 
@@ -744,10 +776,10 @@ Os que precisam de codigo, com custo em `docs/FUTURE-HARDENING.md`:
 
 ```text
 Fase em andamento:
-Fase 7 — Admin API, Etapas 1–10 concluidas
+Fase 7 — Admin API, CONCLUIDA (Etapas 1–11)
 
 Proxima tarefa:
-Etapa 11 — suite adversarial administrativa — NAO INICIADA
+Nenhuma nesta fase. Fase 8 (front-end) e Fase 9 (deployment) — NAO INICIADAS
 ```
 
 A Etapa 5 concluiu os primitivos de filesystem seguro em
@@ -790,9 +822,15 @@ revision observada DENTRO da secao critica, via `AdminAuditProbe` preenchido por
 (D-060). Nao ha `GET /admin/v1/audit`, nem store, retencao ou consulta de
 historico; o conjunto de rotas permanece o da Etapa 9.
 
-O que a Etapa 10 deliberadamente **nao** fez, e nao deve ser presumido pronto:
-
-- a suite adversarial administrativa — Etapa 11.
+A Etapa 11 fechou a **suite adversarial administrativa** (§12.6–§12.8). Comecou
+por uma matriz de rastreabilidade de cada requisito contra os testes existentes
+(em `docs/TEST-PLAN.md`) e acrescentou so as lacunas reais, em
+`tests/test_admin_adversarial.py`: leakage em todo grupo de erro de escrita
+(inclusive falhas injetadas antes/depois de `os.replace`) e no `AdminAudit`,
+`__cause__`/`__context__` nulos num `AdminError` real, imutabilidade por
+alias/aninhamento/mistura, corpo hostil sem efeito nem auditoria, e concorrencia
+preservando estado, serializacao, auditoria e sigilo. Todos `BLOCKED`; nenhum
+finding virou `skip`/`xfail`.
 
 A especificacao aprovada esta em `docs/PHASE-7-SPEC.md`.
 Ela cobre endpoints, autenticacao, bind e CORS, schemas, IDs e migracao,
@@ -818,7 +856,7 @@ filesystem na Etapa 5, a serializacao com as duas verificacoes de digest e a
 semantica de durabilidade na Etapa 6, e os itens de HTTP — bind so em loopback,
 porta e autenticacao — na Etapa 7.
 
-A Etapa 11 ainda nao foi iniciada.
+Todas as onze etapas foram concluidas; a Fase 7 esta fechada.
 
 Objetivo: superficie administrativa separada do MCP para gerenciar
 configuracao, policies, status e auditoria sem editar arquivo a mao.

@@ -58,10 +58,11 @@ FORBIDDEN_PATHS = [
     "/execute",
 ]
 
-#: Rotas de etapas futuras. Existirem AGORA seria antecipacao. `config:validate`
-#: saiu na Etapa 8; as onze rotas de escrita sairam na Etapa 9 — existem agora e
-#: sao testadas em `test_admin_http_writes.py`. So `AdminAudit` (Etapa 10)
-#: continua inexistente.
+#: Rotas que NAO existem por decisao, e continuam nao existindo. A auditoria da
+#: Etapa 10 e emitida por `audit/` via `logging`, sem armazenamento consultavel:
+#: nao ha `GET /admin/v1/audit` nem historico (secao 13.1, D-060). Estes caminhos
+#: respondem `404`, e um teste o afirma — se algum dia uma rota de auditoria for
+#: registrada por engano, quebra aqui.
 FUTURE_PATHS = [
     "/admin/v1/audit",
     "/admin/v1/audit/entries",

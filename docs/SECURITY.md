@@ -350,8 +350,16 @@ desligada por default, e cercada. O que vale:
   nem o estado. Nada sensível entra no registro (§13.3), e não há
   `GET /admin/v1/audit` — não existe store consultável.
 
-O que ainda não existe, e não deve ser presumido: a suíte adversarial
-administrativa geral (Etapa 11).
+- **A suíte adversarial administrativa (Etapa 11)** fecha §12.6–§12.8: a matriz de
+  rastreabilidade em `docs/TEST-PLAN.md` liga cada requisito ao teste que o cobre,
+  e `tests/test_admin_adversarial.py` acrescenta as lacunas reais sobre o caminho
+  de escrita e a auditoria — leakage em todo grupo de erro (inclusive falhas
+  injetadas antes/depois de `os.replace`) e no `AdminAudit`, `__cause__`/`__context__`
+  nulos num `AdminError` real, imutabilidade por alias/aninhamento/mistura,
+  corpo hostil sem efeito nem auditoria, e concorrência preservando estado,
+  serialização, auditoria e sigilo. Todos `BLOCKED`; nenhum finding virou
+  `skip`/`xfail` (D-041), e os limites conhecidos seguem afirmados por teste. **A
+  Fase 7 está concluída.**
 
 **Isto não muda a conclusão de exposição.** A Admin API é loopback, sem TLS, com
 um token estático e um único papel. Ela não torna o Gateway adequado a

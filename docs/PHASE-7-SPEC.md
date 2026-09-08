@@ -9,7 +9,8 @@
 >
 > Decisões que este documento implementa, sem reabrir: **D-047 a D-054**.
 >
-> **Estado da implementação.** Etapas 1–10 concluídas. A Etapa 5 implementa os
+> **Estado da implementação. A Fase 7 está CONCLUÍDA — as onze etapas fecharam.**
+> A Etapa 5 implementa os
 > primitivos de §7.1–§7.3 e §7.5 em `maskgw/config/filesystem.py`. A Etapa 6
 > implementa §6, §7.4, §7.6, §12.1 e §12.4 em `maskgw/admin/`, sem HTTP: seção
 > crítica, runtime candidato, persistência, swap e digest de referência,
@@ -45,7 +46,15 @@
 > seção crítica** — `revision_before` é observada sob o lock via `AdminAuditProbe`,
 > e o log sai depois, sem TOCTOU nem segunda publicação. Detalhes em D-060.
 >
-> **A Etapa 11 (suíte adversarial geral) é a única próxima e não foi iniciada.**
+> A Etapa 11 fechou a **suíte adversarial administrativa** (§12.6–§12.8):
+> começou por uma matriz de rastreabilidade de cada requisito contra os testes
+> existentes (em `docs/TEST-PLAN.md`) e acrescentou só as lacunas reais, em
+> `tests/test_admin_adversarial.py` — leakage em todo grupo de erro de escrita e
+> no `AdminAudit`, `__cause__`/`__context__` nulos num `AdminError` real,
+> imutabilidade adversarial de `allowed_pg_functions`, corpo hostil sem efeito nem
+> auditoria, e concorrência preservando estado, serialização, auditoria e sigilo.
+> Todos os cenários `BLOCKED`; nenhum finding virou `skip`/`xfail` (D-041), e não
+> houve violação inequívoca da especificação a corrigir. **Não há próxima etapa.**
 >
 > **Um ponto que esta especificação não fixava**, decidido na implementação e
 > registrado em D-056: as recusas de fronteira de §3.3 e do limite de §12.7 têm

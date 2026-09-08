@@ -9,17 +9,16 @@ IA → MCP → Gateway → SQL Validator → PostgreSQL → provenance
    → Masking Engine → row limit → resposta segura → MCP → IA
 ```
 
-## Estado: MVP completo + Fase 7 em andamento
+## Estado: MVP completo + Fase 7 concluída
 
-**As seis fases do roadmap estão concluídas**, mais a Fase 6.1 de hardening.
-O produto executa fim a fim: um cliente MCP real consulta um PostgreSQL real e
-recebe dados mascarados.
+**As seis fases do roadmap estão concluídas**, mais a Fase 6.1 de hardening e a
+**Fase 7 (Admin API) inteira**. O produto executa fim a fim: um cliente MCP real
+consulta um PostgreSQL real e recebe dados mascarados.
 
-A Fase 7 foi iniciada de forma incremental. As **Etapas 1–10 estão concluídas**;
-a próxima tarefa é exclusivamente a Etapa 11 — a suíte adversarial
-administrativa —, ainda não iniciada. Antes de alterar qualquer coisa, leia
-`docs/HANDOFF.md` — é o documento de entrada e diz exatamente onde o projeto
-parou.
+A **Fase 7 está concluída**: as onze etapas fecharam, incluindo a Etapa 11 (suíte
+adversarial administrativa). Não há próxima etapa nesta fase. Antes de alterar
+qualquer coisa, leia `docs/HANDOFF.md` — é o documento de entrada e diz exatamente
+onde o projeto parou.
 
 ## Leitura obrigatória antes de alterar código
 
@@ -117,10 +116,10 @@ consulta em vez de escolher (D-043, D-044).
 default do PostgreSQL e é a única mitigação do finding F-04. Detalhes e demais
 riscos aceitos em `docs/SECURITY-REVIEW.md`.
 
-## Evolução em andamento — Fase 7 / Admin API
+## Fase 7 / Admin API — concluída
 
-A **Fase 7 — Admin API** está em implementação incremental conforme
-`docs/PHASE-7-SPEC.md`. As Etapas 1–10 estão concluídas:
+A **Fase 7 — Admin API** está **concluída** conforme `docs/PHASE-7-SPEC.md`. As
+onze etapas fecharam:
 
 - Etapa 1 — IDs e revision no modelo do arquivo: `053cf66`;
 - Etapa 2 — `RuntimeRegistry`: `3114c14`;
@@ -131,7 +130,8 @@ A **Fase 7 — Admin API** está em implementação incremental conforme
 - Etapa 7 — fronteira HTTP e rotas de leitura;
 - Etapa 8 — `POST /admin/v1/config:validate`, validação sem efeito;
 - Etapa 9 — as onze rotas de escrita e a adoção com backup;
-- Etapa 10 — `AdminAudit`: auditoria administrativa por `audit/`.
+- Etapa 10 — `AdminAudit`: auditoria administrativa por `audit/`;
+- Etapa 11 — suíte adversarial administrativa (§12.6–§12.8), sem finding novo.
 
 Confira a sincronização com `origin/master` pelo Git em vez de inferi-la deste
 documento. A Etapa 4 criou `maskgw/bootstrap/` como composition root, removeu
@@ -227,8 +227,13 @@ passos. `target_id` é só um ID administrativo canônico de um alvo único; um 
 malformado vira `None`. A falha do logger é best-effort e não muda a resposta nem
 o estado. Não há `GET /admin/v1/audit`, store ou histórico. Detalhes em D-060.
 
-A próxima tarefa é a **Etapa 11** (suíte adversarial administrativa), ainda não
-iniciada. Não antecipe a Etapa 11.
+A Etapa 11 fechou a **suíte adversarial administrativa** (§12.6–§12.8): uma matriz
+de rastreabilidade de cada requisito contra os testes existentes e o necessário
+para as lacunas reais em `tests/test_admin_adversarial.py` — leakage em todo grupo
+de erro de escrita e no `AdminAudit`, imutabilidade adversarial, corpo hostil sem
+efeito nem auditoria, e concorrência preservando estado, auditoria e sigilo. Todos
+os cenários `BLOCKED`; nenhum finding virou `skip`/`xfail` (D-041). **A Fase 7 está
+concluída.**
 
 Dois pontos que valem como invariante:
 
@@ -329,7 +334,7 @@ MySQL, migrations, schema browser, JSONB deep inspection, lineage completo de
 view, controle de inferência (WHERE/ORDER BY/GROUP BY), supressão de
 agregações, transformers Python customizados, default deny.
 
-A Etapa 11 da Admin API não faz parte do fechamento atual.
+A Fase 7 (Admin API) está concluída, com as onze etapas fechadas.
 
 Propostas avaliadas e adiadas estão em `docs/FUTURE-HARDENING.md` com custo e
 impacto — consulte antes de propor de novo.

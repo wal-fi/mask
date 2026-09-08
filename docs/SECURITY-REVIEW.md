@@ -415,7 +415,12 @@ continua mascarada.
 | Concorrência | **OK** — 30 chamadas paralelas: nenhum erro, mascaramento consistente, nenhuma resposta trocada, 20 `request_id` distintos |
 | Row limit | **OK** — valor sensível colocado exclusivamente na linha N+1 não aparece no resultado, no log nem em exceção |
 | Escrita | **BLOCKED** — a transação read-only barra INSERT/UPDATE/DELETE/DDL inclusive via função de usuário; tabela verificada intacta por conexão de controle |
-| Filesystem administrativo (Etapa 5) | **PREPARADO, NÃO EXPOSTO** — lock entre processos, symlink/tipo/modo inseguros, colisão `O_EXCL`, órfãos, corridas de digest e falhas antes/depois do `replace` têm testes; HTTP/admin ainda não existe |
+| Filesystem administrativo (Etapa 5) | **BLOCKED** — lock entre processos, symlink/tipo/modo inseguros, colisão `O_EXCL`, órfãos, corridas de digest e falhas antes/depois do `replace` têm testes |
+| Fronteira HTTP administrativa (Etapa 11) | **BLOCKED** — inventário literal de rotas, auth (token ausente/errado/vazio/truncado/query/cookie/corpo; sem bypass por prefixo/case/Unicode; `compare_digest`), `401` antes de `422`, `Origin`/`Referer`→403, `Host` alheio→400, `Content-Type` só com corpo, limite de 1 MiB streaming/chunked sem bufferizar, `no-store` em toda resposta, nenhum CORS, `/docs`/`/query`/auditoria→404 |
+| Leakage administrativo (Etapa 11) | **BLOCKED** — token, HMAC, DSN, `match` (nome de coluna), config de transformer, caminho, SQL, traceback e mensagem interna não aparecem em corpo, header, `repr` **nem no `AdminAudit`**, em sucesso ou em qualquer grupo de erro, inclusive falhas injetadas antes/depois de `os.replace`; `AdminError` real com `__cause__`/`__context__` nulos |
+| Imutabilidade administrativa (Etapa 11) | **BLOCKED** — `allowed_pg_functions` por presença (qualquer valor)→`IMMUTABLE_FIELD`, por alias de capitalização→`SCHEMA_INVALID`, aninhado/misturado→`IMMUTABLE_FIELD`, sempre sem efeito; IDs, revision e demais campos estruturais protegidos; a Admin API não executa SQL e o MCP não alcança configuração |
+| Estado sob ataque e concorrência (Etapa 11) | **BLOCKED** — recusas e corpos hostis não mudam bytes/digest/revision/runtime/IDs nem emitem auditoria indevida; sob N escritas concorrentes um só vence, o estado fica coerente e há exatamente uma auditoria por tentativa, com `request_id` distintos e sem leakage |
+| Separação de planos (Etapa 11) | **BLOCKED** — por AST: `admin/` não importa `mcp/` nem `logging`; `mcp/` não importa `admin/`; só `bootstrap/` conhece os dois; `runtime/` não importa plano nem gateway; importar `maskgw.masking` não carrega admin, FastAPI nem psycopg |
 
 ### Limitação: payload grande depende do tamanho da pilha, e não há proteção
 
@@ -440,8 +445,17 @@ A revisão da Etapa 5 também confirmou que erros e `repr` não carregam caminho
 sensível, bytes da configuração, DSN, SQL, valor ou traceback. A validação de
 ACL do Windows não é prometida, filesystem remoto não é suportado e a janela
 entre a segunda conferência de digest e `os.replace` permanece uma limitação
-portável declarada, não um controle omitido. A suíte adversarial da superfície
-HTTP continua reservada à Etapa 11.
+portável declarada, não um controle omitido.
+
+A **suíte adversarial administrativa (Etapa 11)** fechou a superfície HTTP: a
+matriz de rastreabilidade de §12.6–§12.8 em `docs/TEST-PLAN.md` liga cada
+requisito ao teste que o cobre, e `tests/test_admin_adversarial.py` acrescentou as
+lacunas reais sobre o caminho de escrita e a auditoria. Nenhum finding novo: cada
+cenário é `BLOCKED`, e os limites conhecidos que atravessam a Admin API — o payload
+gigante (acima), a validação de ACL no Windows e a janela final contra editor não
+cooperante — continuam afirmados por teste, nunca `skip`/`xfail` (D-041). A Admin
+API permanece **loopback-only, sem TLS, com token estático e papel único**: ela
+autentica o plano administrativo, e não muda a conclusão de exposição do produto.
 
 ---
 
