@@ -346,7 +346,7 @@ Dois testes garantem que a análise é **por consulta, nunca por linha**: um com
 10.000 linhas comparando o custo contra uma única linha, e um contador de
 chamadas ao analisador que exige exatamente 1 por query.
 
-## Fase 7 — Etapas 1–6 concluídas
+## Fase 7 — Etapas 1–11 concluídas
 
 Commits de referência:
 
@@ -936,3 +936,32 @@ por predicado e a view que renomeia em `docs/SECURITY-REVIEW.md`), e a Etapa 11 
 encontrou violação inequívoca da especificação que exigisse correção de produção.
 O único skip da suíte (a leakage de durabilidade) é condicional de plataforma
 POSIX no host Windows, não um finding ignorado.
+
+## Fase 8 — plano aprovado e baseline da Etapa 1
+
+**Aprovada; Etapa 1 concluída.** Contrato integral em
+`docs/PHASE-8-SPEC.md`; requisitos F8-001 a F8-065, componentes previstos,
+etapas e contraprovas em `docs/PHASE-8-TRACEABILITY.md`. Resultados medidos
+desta rodada em `docs/PHASE-8-STAGE-1-VALIDATION.md`; os números das etapas
+anteriores acima são evidência histórica, não execução desta rodada.
+
+A Etapa 1 exige a suíte Python completa sem deselect, PostgreSQL 16 real com
+MASKGW_TEST_DSN presente, Ruff, format check, mypy strict e git diff --check.
+No Windows, aplicar temporariamente threading.stack_size(64 * 1024 * 1024)
+no processo pytest, conforme o comando documentado neste arquivo. Não alterar
+produto/testes, nem instalar dependências para contornar o gate. Distinguir
+skips de plataforma de skips por DSN; estes últimos bloqueiam o fechamento.
+
+As Etapas 2–9 acumulam a tipagem estrita, Node, componentes Playwright,
+browsers reais, integração real e pacote instalado de §6, nos marcos de §7.1.
+Browser/Node ausente não será substituído por mock ou skip quando seu gate
+for devido. Na Etapa 1, esses artefatos e dependências ainda não existem e
+sua criação/instalação não está autorizada; não declarar esses gates como
+executados. Nenhum teste novo de código é necessário para a entrega documental.
+
+A revisão final deve provar inventários por igualdade, contraprovas de bytes
+públicos e autenticação, origem exata e CSRF, XSS armazenado, token leakage,
+headers/caminhos hostis, lifecycle/BFCache, concorrência, pós-commit e
+indisponibilidade. Nunca converter finding em skip/xfail. Não gravar tokens
+ou dados administrativos em traces, HAR, screenshots, vídeos ou logs dos
+ensaios. A rastreabilidade não substitui os testes ainda por implementar.

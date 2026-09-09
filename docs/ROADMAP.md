@@ -225,7 +225,7 @@ ou CRITICAL exigindo mudança de código permanece aberto.
 
 ## FASE 7 — Admin API
 
-**STATUS: EM ANDAMENTO — ETAPAS 1–6 CONCLUÍDAS.**
+**STATUS: CONCLUÍDA — ETAPAS 1–11 CONCLUÍDAS.**
 
 A implementação segue `docs/PHASE-7-SPEC.md` de forma incremental:
 
@@ -273,8 +273,9 @@ ganha `admin_http` ao lado de `admin_enabled`, e o segundo implica o primeiro.
 O startup confirma o bind antes de liberar o MCP, e o shutdown faz `join` da
 thread HTTP antes de fechar os runtimes.
 
-Continua **não havendo** rota de escrita, `config:validate`, adoção com backup
-ou `AdminAudit`: são as Etapas 8, 9 e 10, e não foram antecipadas.
+Ao final da Etapa 7 ainda não havia rota de escrita, `config:validate`, adoção
+com backup ou `AdminAudit`: essas entregas pertenciam às Etapas 8, 9 e 10.
+Todas foram posteriormente concluídas, como registrado abaixo.
 
 Objetivo: criar uma superfície administrativa separada do MCP para
 gerenciamento seguro de configuração, policies, status e auditoria.
@@ -346,19 +347,30 @@ novo; todos os cenários `BLOCKED`.
 
 ## FASE 8 — Front-end
 
-**STATUS: NÃO INICIADA.** Depende da Fase 7 — sem Admin API não há o que
-consumir.
+**STATUS: APROVADA; ETAPA 1 CONCLUÍDA.** A Fase 7 está concluída.
+
+Contrato integral em `docs/PHASE-8-SPEC.md`, decisões D-061 a D-064 e matriz
+em `docs/PHASE-8-TRACEABILITY.md`. A Etapa 1 entrega somente documentação e
+baseline real; nenhuma UI ou dependência é implementada nesta rodada.
+A sequência das Etapas 2–9 está em §7.1 da especificação e exige autorização
+antes de avançar. Evidência desta rodada: `docs/PHASE-8-STAGE-1-VALIDATION.md`.
 
 ---
 
 ## FASE 9 — Deployment
 
-**STATUS: NÃO INICIADA.** Streamable HTTP, autenticação, OAuth. A ausência de
-porta de rede hoje é uma decisão de segurança (D-036), não uma lacuna.
+**STATUS: NÃO INICIADA.** Streamable HTTP, autenticação, OAuth. O MCP
+permanece stdio por decisão de segurança (D-036); a Admin API já possui porta
+HTTP opcional somente loopback. A Fase 8 não autoriza exposição externa nem
+alteração do transporte MCP.
 
 ---
 
 ## Estado atual
+
+Fase 8 aprovada; Etapa 1 concluída, exclusivamente documental. A medição
+desta rodada está em `docs/PHASE-8-STAGE-1-VALIDATION.md`; os números abaixo
+registram o fechamento anterior da Fase 7.
 
 Fases 1 a 6.1 concluídas. **Fase 7 (Admin API) concluída**, com as onze etapas
 fechadas. Estado validado contra PostgreSQL 16.15 real, com a suíte inteira:

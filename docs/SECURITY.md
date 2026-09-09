@@ -445,8 +445,9 @@ para o nome de uma exception, e o hazard H-1.
 - uma view que renomeia coluna sensível continua expondo o valor.
 
 Com o `EXECUTE` revogado e o oráculo aceito: uso interno com cliente
-semi-confiável. Não adequado a exposição externa — não há autenticação e o
-transporte é stdio.
+semi-confiável. Não adequado a exposição externa: o MCP permanece stdio, sem
+autenticação própria; a autenticação bearer da Admin API se aplica somente
+ao plano administrativo HTTP local.
 
 ## Fora do escopo do MVP
 
@@ -462,3 +463,34 @@ detalhados em `docs/FUTURE-HARDENING.md`:
 - inspeção profunda de JSONB
 - transformers Python customizados
 - multi-tenant
+
+## Fase 8 — fronteira de navegador aprovada; Etapa 1 documental
+
+**Aprovada; Etapa 1 concluída.** O contrato normativo completo de segurança
+está em `docs/PHASE-8-SPEC.md`, especialmente §§3.14–3.16, 4 e 5; os gates
+estão em `docs/PHASE-8-TRACEABILITY.md`. D-061 a D-064 registram a aprovação.
+Nenhuma proteção prevista da UI deve ser confundida com controle já entregue.
+
+O código atual continua com a fronteira da Fase 7: rejeição por presença de
+Origin/Referer, bearer exclusivamente no header, Host loopback, sem CORS ou
+UI. A futura exceção só vale com a UI explicitamente ligada e exige comparação
+exata de esquema, host e porta, origens externas bloqueadas, catálogo de rotas
+fechado e precedência de recusas comprovada em navegador real. Não há TLS,
+proxy, bind externo nem relaxamento genérico de CORS nesta fase.
+
+A apresentação administrativa é privada e autenticada; somente o bootstrap
+canônico fechado é público. A gramática e a exposição residual aceita são
+exatamente as da especificação. Token inválido não pode revelar schema ou
+estado. Token e rascunhos ficam só em memória; reload/BFCache não preservam
+sessão. Valores administrativos são texto, sem innerHTML; payloads armazenados
+em match, parâmetros ou mensagens entram nos testes de XSS. CSP sem
+unsafe-inline/unsafe-eval, headers, caches, recursos locais e fetch têm
+contrato fechado, incluindo erros, HEAD, caminhos não canônicos e recusas.
+
+O navegador comprometido, extensões e processo local privilegiado continuam
+limites declarados. CSP não torna um token em sessão imune a XSS. Erro de
+transporte ou durabilidade não autoriza inferir rollback; nunca reenviar
+escrita automaticamente. SQL, resultados do banco, auditoria consultável,
+edição de secrets/allowed_pg_functions/IDs/revision e expansão do MCP seguem
+excluídos. A reprodução da baseline nesta etapa não comprova controles de UI
+futuros e não encerra os findings previamente aceitos.

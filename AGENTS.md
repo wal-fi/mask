@@ -23,7 +23,23 @@ Permitir que IAs consultem bancos de dados sem expor dados sensíveis.
 - configuração externa
 - testes automatizados
 
-Não implementar agora: CI/CD, RBAC complexo, interface web, gerenciamento de schema, migrations, MySQL ou funcionalidades de DBA.
+Não implementar agora: CI/CD, RBAC complexo, interfaces genéricas, gerenciamento de schema, migrations, MySQL ou funcionalidades de DBA.
+
+### Exceção aprovada — Fase 8
+
+A partir da aprovação de 2026-09-09, somente a UI administrativa **local,
+opt-in e estritamente delimitada por `docs/PHASE-8-SPEC.md`** está autorizada
+como escopo de front-end. A especificação foi aprovada integralmente, incluindo
+as quatro decisões da seção 8 (D-061 a D-064 em `docs/DECISIONS.md`).
+
+Esta rodada autoriza exclusivamente a **Etapa 1 documental e sua baseline**.
+As Etapas 2–9 e qualquer código funcional aguardam revisão e autorização
+explícita; aprovação do escopo não autoriza antecipar etapas.
+
+Interfaces genéricas, editor ou execução de SQL, resultados do banco, funções
+de DBA, auditoria consultável, front-end para MCP e expansões não previstas
+continuam fora do escopo. Nenhum bind externo, TLS, proxy, deployment ou
+serviço externo é autorizado pela Fase 8.
 
 ## Matching
 Por padrão: case-insensitive + substring/contains.

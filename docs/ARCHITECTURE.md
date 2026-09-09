@@ -306,7 +306,7 @@ tracebacks e mensagens do PostgreSQL.
 
 ---
 
-## Separação de planos (Fase 7 em implementação)
+## Separação de planos (Fase 7 concluída)
 
 A composition root em `bootstrap/` centraliza a construção e o lifecycle dos
 dois planos. Desde a Etapa 6 o admin plane existe como **seção crítica**, sem
@@ -534,6 +534,30 @@ aplicação a partir daí e `repr()` reporta `closing`, nunca `ready`.
 primeiro compõe a seção crítica, o segundo acrescenta a fronteira HTTP. O
 segundo implica o primeiro, nunca o contrário.
 
-As rotas de escrita e a adoção com backup são a Etapa 9; a auditoria
-administrativa (`AdminAudit`) é a Etapa 10. A suíte adversarial administrativa é
-a Etapa 11, ainda não iniciada.
+As rotas de escrita e a adoção com backup foram concluídas na Etapa 9; a
+auditoria administrativa (`AdminAudit`), na Etapa 10. A Etapa 11 concluiu a
+suíte adversarial administrativa; as onze etapas da Fase 7 estão encerradas.
+
+## Fase 8 — arquitetura aprovada, ainda sem implementação funcional
+
+**Aprovada; Etapa 1 concluída.** O contrato integral está em
+`docs/PHASE-8-SPEC.md`; D-061 a D-064 registram as decisões e
+`docs/PHASE-8-TRACEABILITY.md` relaciona requisitos, componentes previstos e gates.
+
+A UI será administrativa local, embarcada no pacote Python e servida pelo
+mesmo processo/origem, com ativação opt-in e rollback pela flag. O bootstrap
+público conterá um interpretador declarativo fechado; modelos, chamadas,
+mensagens e apresentação administrativos virão de `presentation.json`
+autenticado. A divisão, seus limites e a exposição residual estão em §3.14–3.16
+da especificação. Não há engine de templates arbitrários ou código recebido.
+
+As quatro rotas UI e a comparação exata de origem serão condicionais à UI
+ligada, após validação integral dos recursos embarcados antes de lock, conexão
+e bind. Com UI desligada, o contrato da Fase 7 será preservado. O cliente usará
+operações granulares existentes, sem `PUT /config`, reorder de exceptions,
+SQL executável ou expansão do MCP. Token e rascunhos viverão apenas em memória.
+
+**Estado executável nesta Etapa 1:** o servidor continua exatamente na Fase 7;
+rejeita a presença de Origin/Referer, não oferece UI/assets e não implementa
+`MASKGW_ADMIN_UI_ENABLED`. As Etapas 2–9 aguardam autorização; estes parágrafos
+descrevem arquitetura aprovada, não componentes já entregues.

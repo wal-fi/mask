@@ -1,8 +1,9 @@
 # Decisions
 
-Decisoes tomadas durante a implementacao que nao estavam especificadas nos
-documentos. Criterio aplicado: a alternativa mais simples e segura compativel
-com `CLAUDE.md` e `docs/`.
+Decisões arquiteturais e de implementação, inclusive decisões aprovadas antes
+do código. Critério aplicado: a alternativa mais simples e segura compatível
+com `CLAUDE.md` e `docs/`. Aprovação arquitetural não significa implementação:
+o estado e os limites de cada fase estão no handoff e na especificação.
 
 ---
 
@@ -851,16 +852,17 @@ propagacao de tipos, nao ha reescrita. E um mapa de nomes.
 
 ---
 
-# Fase 7 — Admin API (decisoes aprovadas, implementacao em andamento)
+# Fase 7 — Admin API (decisoes aprovadas, onze etapas concluidas)
 
-As decisoes D-047 a D-054 foram aprovadas antes de qualquer codigo. A
-implementacao esta nas etapas ordenadas da especificacao final; ate a Etapa 6
-existe o pacote `admin/` com a secao critica, e ainda NAO ha FastAPI no
-`pyproject.toml`. Elas existem para que cada etapa nao reabra questoes ja
-resolvidas.
+As decisões D-047 a D-054 foram aprovadas antes de qualquer código. A
+implementação seguiu as etapas ordenadas da especificação final. Ao final da
+Etapa 6 existia `admin/` com a seção crítica, ainda sem FastAPI; a Etapa 7
+acrescentou a fronteira HTTP e suas dependências. As onze etapas estão
+concluídas. As decisões evitam reabrir questões já resolvidas.
 
-D-055 e posterior: registra escolhas de implementacao da Etapa 6 que nao
-estavam na especificacao e nao alteram nenhuma decisao aprovada.
+D-055 a D-060 registram escolhas e fechamento da implementação das Etapas
+6–10, sem alterar as decisões previamente aprovadas; a Etapa 11 concluiu a
+suíte adversarial e encerrou a Fase 7. D-061 em diante pertence à Fase 8.
 
 ## D-047 — A fonte administrativa e o arquivo validado, nao o runtime compilado
 
@@ -1927,3 +1929,116 @@ incoerencia, cada uma virada regressao antes da correcao (todas falhavam contra
 As duas classificacoes — `OPERATION_TARGET_KIND`, `CATEGORY_OUTCOME` — sao a fonte
 UNICA: `AdminAudit` valida e o `AdminAuditor` deriva das mesmas tabelas, sem uma
 segunda copia que possa divergir.
+
+---
+
+# Fase 8 — decisões aprovadas em 2026-09-09; Etapa 1 documental
+
+A aprovação humana foi integral para `docs/PHASE-8-SPEC.md` e suas quatro
+decisões da seção 8. Os registros abaixo explicam as escolhas, sem substituir
+ou reduzir o contrato normativo integral. Nesta rodada somente a Etapa 1 e
+sua baseline estão autorizadas; as Etapas 2–9 aguardam revisão e autorização.
+
+## D-061 — UI administrativa embarcada, opt-in e na mesma origem
+
+**Decisão aprovada:** embarcar a UI local no pacote Python e servi-la no mesmo
+processo e origem da Admin API, sem serviço auxiliar. Ativação futura somente
+por `MASKGW_ADMIN_UI_ENABLED=1` bruto e dependente da Admin API habilitada;
+qualquer outro valor não ativa. Validar os recursos antes de lock, conexão,
+bind e liberação do MCP. Nesta Etapa 1, a flag não é implementada.
+
+A rejeição atual de qualquer Origin/Referer conflita com escritas de um
+navegador real. Somente com UI ligada, comparar exatamente esquema, host e
+porta, após parsing estrito de Host loopback, sem equivalência entre aliases,
+CORS, proxy ou bind externo. As regras exatas e a precedência são §§4.2 e
+5.2–5.4; não basta aceitar um Host pertencente à allowlist. Com UI desligada,
+preservar a superfície da Fase 7 byte a byte nos termos de §1.5.
+
+UI em porta separada foi rejeitada pelo custo de CORS/preflight, segundo
+lifecycle e distribuição. Aplicação nativa preservaria mais da fronteira
+atual, mas acrescentaria instalação e integração por plataforma; webview
+não elimina o risco de XSS. A comparação completa permanece em §2.
+
+**Custo aceito:** ampliar condicionalmente a fronteira HTTP com quatro rotas
+e validar navegação real, origens, recursos e pacote. **Rollback:** desligar
+a flag e reiniciar pelo lifecycle normal; nunca desfazer automaticamente
+configuração, adoção, IDs ou revision. Referências: §§1, 2, 4.2, 5 e 7.3;
+matriz F8-001 a F8-006, F8-029 a F8-031, F8-038 a F8-051 e F8-065.
+
+## D-062 — Bootstrap público e apresentação privada declarativa fechada
+
+**Decisão aprovada:** somente HTML, JS e CSS canônicos de bootstrap são
+públicos. `presentation.json` exige bearer válido e contém os modelos,
+chamadas, vistas, editores, bindings e mensagens administrativos. O JS público
+é um interpretador limitado, não um bundle de negócio ofuscado. O vocabulário
+público permitido e o privado proibido são os de §3.14, sem ampliar a exceção
+por conveniência. Token inválido não recebe schema ou estado privado.
+
+Gramática, catálogo e limites são fechados: sem código, HTML, templates
+arbitrários, URLs livres ou projeções capazes de enviar o token. O servidor
+valida a apresentação e o catálogo exato antes do bind; o cliente verifica
+o hash privado fixado no JS e valida estrutura antes de renderizar ou chamar
+a API. Bytes UTF-8, tamanhos, manifesto e hashes seguem §5.5. Os únicos
+recursos públicos ficam sem interpolação de Host, credencial ou estado.
+
+**Custo e exposição residual aceitos:** manter um interpretador com tipagem,
+validação e contraprovas, além da autoria privada de apresentação. A
+existência da UI, seus três recursos públicos, o prefixo público, a gramática
+abstrata e o material residual expressamente permitido em §3.14 continuam
+observáveis. Isso não promete sigilo do código instalado nem proteção contra
+processo local, extensão ou navegador comprometido. Nenhum detalhe de negócio
+adicional pode ser movido ao público sem nova aprovação.
+
+Referências: §§3.14–3.16, 4.4–4.5, 5.1–5.5 e 6.3–6.4; matriz F8-023 a
+F8-027, F8-032 a F8-033, F8-038 a F8-050 e F8-057.
+
+## D-063 — Operações granulares e SQL policy somente aditiva
+
+**Decisão aprovada:** usar a Admin API existente para status, configuração,
+CRUD granular de rules/exceptions, reorder apenas de regras, database,
+validação e adoção legada com confirmação explícita. A UI nunca utiliza
+`PUT /config`, não reordena exceptions e não executa SQL. SQL policy só admite
+as adições previstas na especificação; campos protegidos continuam protegidos.
+
+IDs, revision e `allowed_pg_functions` não têm edição. Secrets são somente
+`configured`/`missing`; DSN não vira campo. Não há editor SQL, resultados do
+banco, DBA, auditoria consultável, endpoint/store de auditoria ou front-end
+para MCP. `config:validate` envia o candidato na raiz, sem `expected_revision`,
+e não produz persistência. A adoção exige ciência sobre backup e perda de
+comentários, checkbox inicialmente desmarcado e confirmação expressa.
+
+**Custo aceito:** mais operações e formulários específicos, sem substituição
+completa ou transação conjunta de várias edições. O usuário reconcilia
+explicitamente conflitos e estados parcialmente aplicados. Runtime,
+persistência, schemas e contratos de negócio da Fase 7 não mudam.
+
+Referências: §§3.1–3.13, 3.15, 5.6 e 7.2; matriz F8-007 a F8-022,
+F8-025, F8-035 a F8-037, F8-051 e F8-060 a F8-064.
+
+## D-064 — Memória volátil, recuperação explícita e gates reais
+
+**Decisão aprovada:** token e rascunhos somente em memória. Token só entra no
+header Authorization, nunca em URL, cookie, HTML, bundle, logs, erros,
+localStorage, sessionStorage ou IndexedDB. Reload exige nova entrada;
+pagehide/BFCache e logout descartam sessão e conteúdo administrativo. Nenhum
+asset, fonte, script, analytics ou recurso externo é carregado.
+
+Transportes e estados têm tipagem estrita; revision deve ser inteiro seguro,
+uma escrita por vez e nenhum rebase silencioso. Não há retry ou rollback
+automático. `409`, reload busy, durabilidade pós-commit com `applied=true` e
+resultado desconhecido são estados distintos, sem apresentar erro como prova
+de que nada foi aplicado. Sem confirmação de estado atual, não liberar nova
+escrita. As transições exatas são §§3.11–3.12 e 4.1–4.3.
+
+**Gates aceitos:** JSDoc/checkJs com TypeScript strict e opções de §6.1, versões
+fixadas, contraprovas dos bytes públicos e do interpretador, componentes,
+três navegadores reais, PostgreSQL real e pacote instalado. Não afrouxar tipos,
+limites ou transformar finding em skip/xfail. Os gates acumulam por etapa;
+a Etapa 1 reproduz a baseline Python com PostgreSQL 16, sem instalar a stack
+frontend, conforme a autorização específica desta rodada.
+
+**Custo aceito:** autenticar e reconstruir rascunhos após reload, reconciliação
+humana de resultados incertos e manutenção da matriz real de navegadores.
+Nenhuma promessa de revogação da requisição em voo após fechar a página ou
+de segredo contra XSS com sessão ativa. Referências: §§3.11–3.13, 4, 6 e 7;
+matriz F8-016 a F8-022, F8-028 a F8-037 e F8-052 a F8-065.

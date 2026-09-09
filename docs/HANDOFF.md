@@ -2,11 +2,15 @@
 
 **Documento de entrada. Comece por aqui.**
 
-Estado do projeto ao final da Fase 7. O MVP esta completo, **as onze etapas da
-Fase 7 estao concluidas** e a suite esta verde contra PostgreSQL 16 real. Nao ha
-proxima etapa nesta fase: a Etapa 11 fechou a suite adversarial administrativa
-(secao 10). As proximas fases sao a 8 (front-end) e a 9 (deployment), nao
-iniciadas.
+Estado: **Fase 8 aprovada; Etapa 1 concluída**. O MVP e as onze etapas da
+Fase 7 estão concluídos. A Etapa 1 da Fase 8 entrega somente a especificação
+integral aprovada, decisões D-061 a D-064, matriz e reprodução da baseline.
+Não há UI, flag, assets, rotas ou dependências novas no produto.
+
+Leia `docs/PHASE-8-SPEC.md`, `docs/PHASE-8-TRACEABILITY.md` e
+`docs/PHASE-8-STAGE-1-VALIDATION.md`. **Parar ao final da Etapa 1:** as Etapas
+2–9 aguardam revisão e autorização explícita; não publicar nem implementar.
+A Fase 9 não foi iniciada.
 
 Antes de comecar qualquer fase, confira `git status --short`: a arvore precisa
 estar limpa. **Confira, nao presuma** — este documento nao pode afirmar o
@@ -49,7 +53,7 @@ Entregue na Fase 6.1:
 - H-1 corrigido: `mode` default das exceptions passou a `exact`
 - 96 testes novos (1304 no total)
 
-Andamento da Fase 7:
+Histórico das etapas concluídas da Fase 7:
 
 | etapa | estado | commit |
 |---|---|---|
@@ -528,7 +532,8 @@ aberta, na secao 11 e em `docs/SECURITY-REVIEW.md`.
 .venv/Scripts/python.exe -c "import threading, pytest; threading.stack_size(64 * 1024 * 1024); raise SystemExit(pytest.main(['-q']))"
 ```
 
-Os nove skips condicionais do host Windows sao quatro criacoes de symlink sem
+Na medição histórica da Etapa 6, os nove skips condicionais do host Windows
+foram quatro criacoes de symlink sem
 privilegio, tres verificacoes de bits POSIX e dois `fsync` de diretorio POSIX
 (um do filesystem, um do fluxo administrativo). Os testes Windows reais,
 inclusive `msvcrt` entre processos e a omissao de `fsync` de diretorio,
@@ -749,9 +754,10 @@ Mudancas internas que nao alteram comportamento observavel do MCP:
 
 ## 10. Como continuar
 
-A Fase 7 esta **CONCLUIDA**: as onze etapas fecharam. Nao ha proxima etapa nesta
-fase. As proximas fases sao a 8 (front-end) e a 9 (deployment), ainda nao
-iniciadas, e a regra de nao avancar de fase sem aprovacao continua valendo.
+A Fase 7 está **CONCLUÍDA**: as onze etapas fecharam. A Fase 8 foi aprovada
+integralmente, mas nesta rodada somente a Etapa 1 documental e sua baseline
+estão autorizadas. Parar ao concluir a Etapa 1; a Etapa 2 exige revisão e nova
+autorização. A Fase 9 permanece não iniciada.
 
 ### A. Endurecer o que resta (inventario preservado; nao e a proxima etapa)
 
@@ -775,11 +781,12 @@ Os que precisam de codigo, com custo em `docs/FUTURE-HARDENING.md`:
 ### B. Fase 7 — Admin API
 
 ```text
-Fase em andamento:
+Fase encerrada:
 Fase 7 — Admin API, CONCLUIDA (Etapas 1–11)
 
-Proxima tarefa:
-Nenhuma nesta fase. Fase 8 (front-end) e Fase 9 (deployment) — NAO INICIADAS
+Trabalho autorizado nesta rodada:
+Fase 8 — Etapa 1 documental e baseline; parar antes da Etapa 2.
+Fase 9 — NAO INICIADA
 ```
 
 A Etapa 5 concluiu os primitivos de filesystem seguro em
@@ -905,16 +912,21 @@ em D-047 a D-054 com o motivo de cada um:
 - bind HTTP futuro em **`127.0.0.1`** por default, **sem CORS wildcard**
 - **sem front-end** nesta fase
 
-### C. Fase 8 — Front-end · NAO INICIADA
+### C. Fase 8 — Front-end · APROVADA; ETAPA 1 CONCLUÍDA
 
-Depende da Fase 7. Sem Admin API nao ha o que consumir.
+Especificação integral: `docs/PHASE-8-SPEC.md`. Matriz normativa por etapa,
+componente e gate: `docs/PHASE-8-TRACEABILITY.md`. Decisões: D-061 a D-064.
+Evidência medida e revisão de escopo: `docs/PHASE-8-STAGE-1-VALIDATION.md`.
+Nenhuma implementação funcional foi iniciada. A UI administrativa local e
+opt-in é a única exceção de interface autorizada em `AGENTS.md`; as Etapas
+2–9 aguardam revisão antes de qualquer código ou publicação.
 
 ### D. Fase 9 — Deployment · NAO INICIADA
 
-Streamable HTTP, autenticacao, OAuth. Hoje so ha stdio, e a ausencia de porta
-de rede e uma **decisao de seguranca** (D-036), nao uma lacuna. Trocar o
-transporte exige um modelo de sessao e de autenticacao; nao e trocar um
-parametro.
+Streamable HTTP, autenticação, OAuth. O MCP permanece stdio por decisão
+de segurança (D-036); a Admin API já oferece HTTP opcional apenas loopback.
+Trocar o transporte MCP exige um modelo de sessão e autenticação. A Fase 8
+não autoriza essa mudança nem abertura de bind externo, TLS ou proxy.
 
 ### Fora do escopo, inalterado
 
@@ -926,11 +938,11 @@ automatico, banco de configuracao, Redis, background workers.
 ### Antes de iniciar a proxima etapa
 
 - `git status --short` vazio: a arvore precisa estar limpa
-- suite verde: **2121 testes coletados**, 2111 passed e 10 skips condicionais
-  de plataforma; `ruff check`, `ruff format --check` e `mypy --strict` sem erros
-- PostgreSQL real disponivel via `MASKGW_TEST_DSN`: 486 testes marcados como
-  integracao (485 passed + 1 skip POSIX condicional de plataforma), sem skip por
-  ausencia dele
+- suíte completa e gates verdes, sem deselect; usar a medição atual em
+  `docs/PHASE-8-STAGE-1-VALIDATION.md`, distinguindo-a dos registros históricos
+- PostgreSQL 16 real disponível via `MASKGW_TEST_DSN`, sem nenhum skip por
+  ausência de DSN; skips condicionais de plataforma discriminados na evidência
+- Etapa 2 somente após revisão e autorização; nenhum push nesta rodada
 - neste host Windows, rode o pytest com pilha de thread ampliada (64 MiB), ou o
   teste de payload gigante derruba o processo. Nunca o transforme em `skip`
   (D-041); a limitacao esta na secao 11
