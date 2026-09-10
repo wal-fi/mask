@@ -27,7 +27,8 @@ startup nem da construção de wheel/sdist: os recursos já estão embarcados.
 sessão ou transporte. A função pública `check` aplica o protocolo fixado no
 asset, e `digest` identifica a apresentação estática correspondente. A leitura
 do recurso privado e a conferência Web Crypto antes da interpretação pertencem
-às etapas posteriores; não existem nesta entrega. Não há flag ou entrega HTTP.
+às etapas posteriores; não existem nesta fundação. A Etapa 3 acrescenta a flag
+e a chamada Python antes do startup; ainda não há entrega HTTP de recursos.
 
 `private/` contém tipos dos onze contratos e a união das dez escritas UI,
 schemas derivados, vocabulário e autoria de apresentação. Nada dessa pasta,

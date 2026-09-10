@@ -306,10 +306,9 @@ def test_public_vocabulary_is_derived_and_not_in_shipped_bytes():
         assert not any(word in text for word in words)
 
 
-def test_no_runtime_or_http_wiring_added():
-
-    source = (ROOT / "src/maskgw/bootstrap").rglob("*.py")
-    for path in source:
+def test_ui_loader_has_no_runtime_or_http_dependency():
+    # Etapa 3 autoriza somente o composition root a carregar os recursos.
+    for path in (ROOT / "src/maskgw/admin/http").rglob("*.py"):
         assert "maskgw.admin.ui" not in path.read_text(encoding="utf-8")
     for path in (ROOT / "src/maskgw/admin/ui").glob("*.py"):
         tree = ast.parse(path.read_text(encoding="utf-8"))

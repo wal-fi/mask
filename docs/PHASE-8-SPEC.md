@@ -1,6 +1,6 @@
 # Fase 8 — Front-end · Especificação aprovada
 
-**Estado:** aprovada; Etapa 1 concluída e publicada; Etapa 2 concluída.
+**Estado:** aprovada; Etapas 1 e 2 concluídas e publicadas; Etapa 3 concluída.
 **Base:** Fase 7 concluída no commit `27d92bd580875e9eb2abb04db102eb98af2054fe`.
 
 ## 1. Arquitetura recomendada e justificativa
@@ -1059,4 +1059,4 @@ Foram aprovadas integralmente as quatro decisões de produto/arquitetura:
 3. **Escopo funcional:** CRUD granular; reorder somente de regras; SQL aditivo; ausência de substituição completa pela UI.
 4. **Contrato operacional:** token/rascunhos apenas em memória, recuperação sem retry ou rollback automático e gates de tipagem, navegador e PostgreSQL reais.
 
-As quatro decisões desta seção foram aprovadas integralmente em 2026-09-09. A Etapa 1 foi concluída, revisada sem ressalvas e publicada sem emenda no commit `aebe31d0dbaba3238e97ae3ad13bf20fdd615211`. A autorização seguinte abrange exclusivamente a Etapa 2 e seus gates; não abrange flag, startup, HTTP, telas funcionais ou transporte administrativo. As Etapas 3–9 e a publicação do commit local da Etapa 2 aguardam nova revisão e autorização explícita. Evidência: `docs/PHASE-8-STAGE-2-VALIDATION.md`.
+As quatro decisões desta seção foram aprovadas integralmente em 2026-09-09. A Etapa 1 foi concluída, revisada sem ressalvas e publicada sem emenda no commit `aebe31d0dbaba3238e97ae3ad13bf20fdd615211`. A Etapa 2 foi revisada sem ressalvas e publicada sem emenda em `d080886352920a663e8b0aa318761a083f54f7f7`. A autorização atual abrange exclusivamente a Etapa 3: flag bruta e validação prévia dos recursos. Não abrange rotas, entrega HTTP, origem/headers/proxy, sessão, telas ou transporte. Etapas 4–9 e o push do commit local da Etapa 3 aguardam autorização. Evidência atual: `docs/PHASE-8-STAGE-3-VALIDATION.md`; evidências anteriores preservadas como históricas.

@@ -11,13 +11,13 @@ IA → MCP → Gateway → SQL Validator → PostgreSQL → provenance
 
 ## Estado: MVP completo + Fase 7 concluída + Fase 8 aprovada
 
-**Fase 8: aprovada; Etapa 2 concluída.** A Etapa 1 foi publicada em
-`aebe31d0dbaba3238e97ae3ad13bf20fdd615211`. A Etapa 2 entrega stack frontend
-fixada, tipos e protocolo fechado, apresentação estática, recursos embarcados
-e validador Python independente. Não há flag, integração de startup, entrega
-HTTP, sessão, polling ou telas funcionais. As Etapas 3–9 aguardam revisão;
-não publicar o commit local desta etapa. Leia `docs/PHASE-8-SPEC.md`,
-`docs/PHASE-8-TRACEABILITY.md` e `docs/PHASE-8-STAGE-2-VALIDATION.md`.
+**Fase 8: aprovada; Etapa 3 concluída.** A Etapa 2 foi publicada sem emenda
+em `d080886352920a663e8b0aa318761a083f54f7f7`. Esta rodada acrescenta somente
+flag bruta e validação prévia dos recursos no composition root. A
+`Application` conserva bytes imutáveis, sem passá-los ao HTTP. Não há rotas
+UI, política de navegador nova, sessão ou telas. Etapas 4–9 e o push da
+Etapa 3 aguardam autorização. Leia `docs/PHASE-8-SPEC.md`,
+`docs/PHASE-8-TRACEABILITY.md` e `docs/PHASE-8-STAGE-3-VALIDATION.md`.
 
 **As seis fases do roadmap estão concluídas**, mais a Fase 6.1 de hardening e a
 **Fase 7 (Admin API) inteira**. O produto executa fim a fim: um cliente MCP real
@@ -41,7 +41,7 @@ Nesta ordem:
 7. `docs/TEST-PLAN.md`, `docs/THREAT-MODEL.md`, `docs/FUTURE-HARDENING.md`
 
 `docs/ROADMAP.md` preserva o histórico das seis fases fechadas e registra o
-fechamento da Fase 7 e a Etapa 2 da Fase 8. Para a Fase 8, também
+fechamento da Fase 7 e a Etapa 3 da Fase 8. Para a Fase 8, também
 é obrigatória a leitura integral de `docs/PHASE-8-SPEC.md` e da sua matriz.
 
 ## Objetivo
@@ -338,7 +338,7 @@ chamado pelo serviço dentro da seção crítica, com relógio injetável.
 
 ## Fora do escopo
 
-Front-end, OAuth/RBAC, multi-tenant, deployment, HTTP MCP, pool de conexões,
+Interfaces genéricas fora da Fase 8 aprovada, OAuth/RBAC, multi-tenant, deployment, HTTP MCP, pool de conexões,
 MySQL, migrations, schema browser, JSONB deep inspection, lineage completo de
 view, controle de inferência (WHERE/ORDER BY/GROUP BY), supressão de
 agregações, transformers Python customizados, default deny.

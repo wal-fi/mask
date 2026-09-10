@@ -2,21 +2,21 @@
 
 **Documento de entrada. Comece por aqui.**
 
-Estado: **Fase 8 aprovada; Etapa 2 concluída**. MVP e Fase 7 concluídos.
-A Etapa 1 foi publicada sem emenda em `aebe31d0dbaba3238e97ae3ad13bf20fdd615211`;
-o fetch posterior confirmou HEAD e origin/master nesse commit, 0/0 e árvore
-limpa antes de iniciar esta etapa.
+Estado: **Fase 8 aprovada; Etapa 3 concluída**. MVP e Fase 7 concluídos.
+A Etapa 2 foi revisada sem ressalvas e publicada exatamente em
+`d080886352920a663e8b0aa318761a083f54f7f7`. O fetch confirmou HEAD igual a
+origin/master, 0/0 e árvore limpa antes desta implementação.
 
-A Etapa 2 entrega stack fixada e instalação congelada, tipos dos onze contratos,
-catálogo das dez escritas UI, protocolo/presentation estáticos, build e recursos
-Python embarcados com validador independente. Nenhuma flag, integração de
-startup, entrega HTTP, autenticação ou comportamento da Admin API foi alterado.
-Não há sessão, polling, formulários funcionais ou transporte de escrita na UI.
+A Etapa 3 entrega somente `MASKGW_ADMIN_UI_ENABLED` por fonte bruta, dependência
+UI/Admin, validação de settings e recursos antes de configuração/lock/runtime,
+e ownership imutável dos bytes. Mesmo ligada, a flag ainda não disponibiliza
+rotas UI, recursos HTTP ou política de navegador. Nenhuma etapa funcional foi
+antecipada. A normalização dos secrets e a fronteira HTTP anterior permanecem.
 
 Leia `docs/PHASE-8-SPEC.md`, `docs/PHASE-8-TRACEABILITY.md` e
-`docs/PHASE-8-STAGE-2-VALIDATION.md`. **Parar ao final da Etapa 2:** Etapas 3–9
-exigem revisão e autorização; não publicar o commit local da Etapa 2.
-A Fase 9 permanece não iniciada. A evidência anterior da Etapa 1 é histórica.
+`docs/PHASE-8-STAGE-3-VALIDATION.md`. **Parar antes da Etapa 4 e não publicar o
+commit local da Etapa 3.** Etapas 4–9 aguardam revisão/autorização. Os registros
+de validação das Etapas 1 e 2 são históricos. Fase 9 não iniciada.
 
 Antes de comecar qualquer fase, confira `git status --short`: a arvore precisa
 estar limpa. **Confira, nao presuma** — este documento nao pode afirmar o
@@ -760,9 +760,9 @@ Mudancas internas que nao alteram comportamento observavel do MCP:
 
 ## 10. Como continuar
 
-A Fase 7 está **CONCLUÍDA**: as onze etapas fecharam. A Etapa 1 da Fase 8 foi
-revisada, aprovada e publicada. Nesta rodada somente a Etapa 2 está autorizada;
-parar antes da Etapa 3 e manter seu commit local sem publicação. A Fase 9 permanece não iniciada.
+A Fase 7 está **CONCLUÍDA**. As Etapas 1 e 2 da Fase 8 foram publicadas.
+Nesta rodada somente a Etapa 3 está autorizada; parar antes da Etapa 4 e
+manter o commit local da Etapa 3 sem publicação. A Fase 9 permanece não iniciada.
 
 ### A. Endurecer o que resta (inventario preservado; nao e a proxima etapa)
 
@@ -790,7 +790,7 @@ Fase encerrada:
 Fase 7 — Admin API, CONCLUIDA (Etapas 1–11)
 
 Trabalho autorizado nesta rodada:
-Fase 8 — Etapa 2: protocolo, build e recursos; parar antes da Etapa 3.
+Fase 8 — Etapa 3: flag bruta e validação prévia; parar antes da Etapa 4.
 Fase 9 — NAO INICIADA
 ```
 
@@ -917,25 +917,28 @@ em D-047 a D-054 com o motivo de cada um:
 - bind HTTP futuro em **`127.0.0.1`** por default, **sem CORS wildcard**
 - **sem front-end** nesta fase
 
-### C. Fase 8 — Front-end · APROVADA; ETAPA 2 CONCLUÍDA
+### C. Fase 8 — APROVADA; ETAPA 3 CONCLUÍDA
 
-Especificação: `docs/PHASE-8-SPEC.md`. Matriz e cobertura parcial por etapa:
-`docs/PHASE-8-TRACEABILITY.md`. Evidência: `docs/PHASE-8-STAGE-2-VALIDATION.md`.
-D-061 a D-064 continuam vigentes. A implementação está em `frontend/` e
-`src/maskgw/admin/ui/`, sem chamada a partir de bootstrap/HTTP. Os quatro
-recursos existem no pacote, mas não são servidos; a superfície continua a da
-Fase 7. `frontend/README.md` descreve o build e o protocolo.
+Especificação: `docs/PHASE-8-SPEC.md`; matriz: `docs/PHASE-8-TRACEABILITY.md`;
+evidência atual: `docs/PHASE-8-STAGE-3-VALIDATION.md`. D-061–D-064 vigentes.
+
+`bootstrap/settings.py` define `RawSettings.get_raw`, `EnvRawSettings` e
+`MappingRawSettings`. Somente o valor bruto `1` solicita UI; espaços não são
+normalizados. `SecretProvider` continua normalizando os valores antigos.
+A dependência UI/Admin falha antes de settings e recursos. O processo valida
+token/bind/porta antes de `build_application`; chamadas diretas com UI ligada
+também revalidam settings. O carregador retorna bytes imutáveis antes do
+filesystem; `Application.admin_ui_resources` conserva essa execução sem entrega
+HTTP. Alteração posterior em disco não troca esses bytes; novo startup revalida.
 
 Node 24.20.0 / npm 11.19.0, TypeScript 5.9.3, Playwright 1.63.0 e declarações
-Node 24.0.0 fixados. O build usa a `.venv` existente, não altera dependências
-Python e não participa do startup. Rodar `npm ci --ignore-scripts`, typecheck,
-Node tests, build duas vezes e inspeção nesta pasta com a toolchain correta.
-Instalar o pacote final não exige Node ou checkout. Não executar build enquanto
-uma suíte lê seus recursos: a troca coordenada de assets/âncoras é de build,
-não uma atualização atômica de pacote em uso.
+Node 24.0.0 seguem fixados. O build de `frontend/` deve terminar antes dos
+testes que consomem os recursos. Nesta rodada, os 14 arquivos gerados devem
+permanecer idênticos à Etapa 2. Não instalar browsers ou antecipar a Etapa 4.
 
-Parar ao final da Etapa 2, antes da flag e de qualquer integração de startup.
-O commit desta etapa deve permanecer local até nova revisão/publicação.
+A flag ligada ainda preserva o inventário 20/28 da Fase 7: todas as quatro
+rotas UI continuam ausentes; Origin/Referer continuam recusados por presença.
+Não interpretar a flag implementada como interface disponível ao navegador.
 
 ### D. Fase 9 — Deployment · NAO INICIADA
 
@@ -955,10 +958,10 @@ automatico, banco de configuracao, Redis, background workers.
 
 - `git status --short` vazio: a arvore precisa estar limpa
 - suíte completa e gates verdes, sem deselect; usar a medição atual em
-  `docs/PHASE-8-STAGE-2-VALIDATION.md`, distinguindo-a dos registros históricos
+  `docs/PHASE-8-STAGE-3-VALIDATION.md`, distinguindo-a dos registros históricos
 - PostgreSQL 16 real disponível via `MASKGW_TEST_DSN`, sem nenhum skip por
   ausência de DSN; skips condicionais de plataforma discriminados na evidência
-- Etapa 3 somente após revisão e autorização; nenhum push da Etapa 2
+- Etapa 4 somente após revisão e autorização; nenhum push da Etapa 3
 - neste host Windows, rode o pytest com pilha de thread ampliada (64 MiB), ou o
   teste de payload gigante derruba o processo. Nunca o transforme em `skip`
   (D-041); a limitacao esta na secao 11
@@ -1016,3 +1019,7 @@ revisao:
 
 Regra do projeto: nao avancar de fase ou etapa sem aprovacao, nem com teste
 falhando.
+
+A fonte bruta em `bootstrap/settings.py` depende somente de stdlib; a resolução
+e a checagem da dependência UI/Admin ficam em `bootstrap/application.py`,
+preservando-o como único importador do plano administrativo no composition root.

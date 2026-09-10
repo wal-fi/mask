@@ -5,6 +5,11 @@ plane. Os planos nao se importam entre si: `mcp/` conhece somente o Gateway, e
 `admin/` conhece somente o `RuntimeRegistry`, o `ConfigFileStore` e a propria
 fronteira HTTP.
 
+Fase 8, Etapa 3: a fronteira de processo resolve primeiro a flag UI bruta e
+sua dependencia da Admin API. Apos os settings abaixo, `build_application`
+valida os recursos antes do filesystem. Seus bytes imutaveis pertencem a
+`Application`; nao sao passados ao HTTP nesta etapa.
+
 Ordem de startup (secao 9.2), e falha em qualquer passo termina o processo:
 
 1. ler e validar `MASKGW_ADMIN_ENABLED`, `MASKGW_ADMIN_TOKEN` (>= 32),
@@ -60,7 +65,9 @@ testavel — sem abrir porta nenhuma, e porque `admin_http` implica
 from __future__ import annotations
 
 import threading
+from collections.abc import Mapping
 from pathlib import Path
+from types import MappingProxyType
 from typing import Final
 
 from mcp.server import MCPServer
@@ -69,7 +76,11 @@ from starlette.types import ASGIApp
 from maskgw.admin import AdapterFactory, AdminConfigService, decode_document
 from maskgw.admin.http import AdminHttpServer, AdminHttpSettings, build_admin_app
 from maskgw.admin.http import resolve as resolve_admin_http_settings
+from maskgw.admin.http.settings import build as validate_admin_http_settings
+from maskgw.admin.http.settings import is_enabled as is_admin_http_enabled
+from maskgw.admin.ui.resources import load_resources
 from maskgw.audit import AuditLog
+from maskgw.bootstrap.settings import ADMIN_UI_ENABLED_ENV, EnvRawSettings, RawSettings
 from maskgw.config import (
     ConfigFileStore,
     GatewayConfig,
@@ -111,6 +122,7 @@ class Application:
     __slots__ = (
         "_admin",
         "_admin_http",
+        "_admin_ui_resources",
         "_close_lock",
         "_closed",
         "_closing",
@@ -133,6 +145,7 @@ class Application:
         admin: AdminConfigService | None = None,
         config_store: ConfigFileStore | None = None,
         admin_http: AdminHttpServer | None = None,
+        admin_ui_resources: Mapping[str, bytes] | None = None,
     ) -> None:
         self._gateway = gateway
         self._config = config
@@ -141,6 +154,9 @@ class Application:
         self._admin = admin
         self._config_store = config_store
         self._admin_http = admin_http
+        self._admin_ui_resources = (
+            None if admin_ui_resources is None else MappingProxyType(dict(admin_ui_resources))
+        )
         self._lifecycle_lock = threading.Lock()
         # Curto: cobre so as transicoes de estado, nunca o `join` da thread
         # HTTP nem o fechamento das conexoes.
@@ -182,6 +198,11 @@ class Application:
         depois da confirmacao de bind (secao 9.2, passo 6).
         """
         return self._admin_http
+
+    @property
+    def admin_ui_resources(self) -> Mapping[str, bytes] | None:
+        """Bytes verificados pertencentes a esta execucao; ainda sem entrega HTTP."""
+        return self._admin_ui_resources
 
     @property
     def revision(self) -> int:
@@ -293,10 +314,25 @@ class Application:
                 state = "running"
             else:
                 state = "ready"
+        ui = ", admin_ui=True" if self._admin_ui_resources is not None else ""
         return (
             f"Application(revision={self._registry.current.revision}, state={state!r}, "
-            f"admin={self._admin is not None}, admin_http={self._admin_http is not None})"
+            f"admin={self._admin is not None}, admin_http={self._admin_http is not None}{ui})"
         )
+
+
+def resolve_admin_ui_enabled(
+    raw_settings: RawSettings | None = None,
+    *,
+    secrets: SecretProvider | None = None,
+) -> bool:
+    """Resolve a flag bruta e a dependencia, sem deslocar a composicao de planos."""
+    source = raw_settings if raw_settings is not None else EnvRawSettings()
+    enabled = source.get_raw(ADMIN_UI_ENABLED_ENV) == "1"
+    if enabled and not is_admin_http_enabled(secrets):
+        msg = "UI administrativa exige Admin API habilitada"
+        raise ConfigError(msg)
+    return enabled
 
 
 def resolve_admin_settings(secrets: SecretProvider | None = None) -> AdminHttpSettings | None:
@@ -355,16 +391,30 @@ def build_application(  # noqa: PLR0913 - parametros de composicao, keyword-only
     audit: AuditLog | None = None,
     admin_enabled: bool = False,
     admin_http: AdminHttpSettings | None = None,
+    admin_ui_enabled: bool = False,
 ) -> Application:
     """Constroi os planos inteiros ou levanta sem deixar recurso de pe.
 
-    Com `admin_enabled=False` e `admin_http=None` — os defaults — o processo e
-    exatamente o de hoje: nenhuma porta, nenhuma thread, nenhum lock de arquivo,
-    nenhuma secao critica administrativa e nenhum caminho de escrita.
+    Com `admin_ui_enabled=False`, `admin_enabled=False` e `admin_http=None`
+    — os defaults — o processo e exatamente o de hoje: nenhuma porta ou thread,
+    nenhum lock de arquivo, secao critica administrativa ou caminho de escrita.
 
     `admin_http` implica a secao critica: nao existe fronteira HTTP sobre uma
     configuracao que o processo nao esteja segurando com o lock exclusivo.
     """
+    # Fase 8, Etapa 3: nenhum recurso operacional existe antes desta barreira.
+    # Revalidar settings tambem protege chamadas diretas ao composition root.
+    # A UI nunca implica Admin HTTP: a dependencia deve estar satisfeita.
+    ui_resources: Mapping[str, bytes] | None = None
+    if admin_ui_enabled:
+        if admin_http is None:
+            msg = "UI administrativa exige Admin API habilitada"
+            raise ConfigError(msg)
+        admin_http = validate_admin_http_settings(
+            token=admin_http.token, host=admin_http.host, port=admin_http.port
+        )
+        ui_resources = load_resources()
+
     # A fronteira HTTP so existe sobre a secao critica.
     admin_enabled = admin_enabled or admin_http is not None
 
@@ -448,6 +498,7 @@ def build_application(  # noqa: PLR0913 - parametros de composicao, keyword-only
             admin=admin,
             config_store=store,
             admin_http=http_server,
+            admin_ui_resources=ui_resources,
         )
     except BaseException:
         # Falha parcial: desmontar na mesma ordem do shutdown. A thread HTTP

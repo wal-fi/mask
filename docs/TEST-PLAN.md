@@ -967,7 +967,7 @@ ou dados administrativos em traces, HAR, screenshots, vídeos ou logs dos
 ensaios. A rastreabilidade não substitui os testes ainda por implementar.
 
 
-## Fase 8 — Etapa 2 concluída
+## Fase 8 — Etapa 2 concluída (registro histórico, publicada)
 
 Contrato e limites em `docs/PHASE-8-SPEC.md`; rastreabilidade parcial atualizada
 em `docs/PHASE-8-TRACEABILITY.md`. A evidência desta rodada é
@@ -1002,3 +1002,30 @@ zero skips por DSN, zero falhas; Ruff/format/mypy aprovados (127 arquivos).
 As evidências completas estão no registro da etapa. Browser real, CSP, autenticação/origem HTTP, sessão,
 BFCache e renderização XSS pertencem às etapas seguintes e não são alegados
 como cobertos pela fundação desta etapa.
+
+## Fase 8 — Etapa 3 concluída
+
+`tests/test_admin_ui_startup.py` cobre a matriz bruta de 16 valores por fonte
+real/injetada e pelo entrypoint, preservação da normalização de secrets,
+dependência antes de settings/recursos, settings inválidos antes de assets,
+falhas em cada recurso/manifesto e incompatibilidades reancoradas antes de
+qualquer efeito operacional. Testa ordem positiva, shutdown, falha após thread
+HTTP e construção MCP, imutabilidade e repr sem conteúdo.
+
+`tests/admin_ui_compat_support.py` compara 40 respostas reais com
+`tests/fixtures/phase7-ui-off.json`, capturado do commit d080886 em cópia isolada:
+status, corpo hex (bytes exatos) e headers determinísticos; somente Date é
+excluído. A comparação cobre os dois modos nesta etapa, pois nenhum HTTP novo
+está autorizado. O fixture também fixa as fontes HTTP e SecretProvider. Essa
+regra de Etapa 3 precisará de revisão explícita ao implementar a Etapa 4.
+O antigo teste estrutural da Etapa 2 passou a permitir a chamada autorizada
+pelo composition root, mantendo a proibição de dependência HTTP/runtime/MCP
+no loader e de importação dos recursos pelo HTTP. Nenhum teste virou skip/xfail.
+
+Os 183 testes direcionados passaram: 91 de startup, 74 de recursos e 18 de
+separação de planos, sem falhas ou skips. Suíte completa: 2.477 coletados,
+2.469 aprovados, oito skips exclusivamente POSIX, zero skips por DSN, falhas,
+erros ou deselects; PostgreSQL 16.15 real. Ruff, format e mypy strict aprovados
+em 130 arquivos; 70 testes Node e dois builds idênticos. Resultados completos
+em `docs/PHASE-8-STAGE-3-VALIDATION.md`. Builds e testes consumidores são sequenciais.
+Nenhum browser, fetch real ou controle de navegador é alegado nesta etapa.

@@ -464,9 +464,9 @@ detalhados em `docs/FUTURE-HARDENING.md`:
 - transformers Python customizados
 - multi-tenant
 
-## Fase 8 — fundação da Etapa 2, sem integração de navegador
+## Fase 8 — validação prévia da Etapa 3, sem entrega ao navegador
 
-**Aprovada; Etapa 2 concluída.** O contrato normativo completo de segurança
+**Aprovada; Etapa 3 concluída.** O contrato normativo completo de segurança
 está em `docs/PHASE-8-SPEC.md`, especialmente §§3.14–3.16, 4 e 5; os gates
 estão em `docs/PHASE-8-TRACEABILITY.md`. D-061 a D-064 registram a aprovação.
 Nenhuma proteção prevista da UI deve ser confundida com controle já entregue.
@@ -510,5 +510,17 @@ retorna bytes imutáveis e erro fixo sem cadeia. Alterar um pacote enquanto est�
 sendo validado não é operação suportada: o build deve preceder os testes/uso.
 
 Os testes desta etapa não substituem os gates de CSP, origem, BFCache, XSS em
-DOM, sessão e navegador real das Etapas 3–9. Esses controles ainda não foram
+DOM, sessão e navegador real das Etapas 4–9. Esses controles ainda não foram
 implementados, e nenhum resultado da baseline é apresentado como prova deles.
+
+A Etapa 3 integra somente a leitura bruta da flag e a barreira anterior a
+configuração/lock/conexão. ` 1` e `1 ` não habilitam UI; a fonte não altera
+normalização de token, DSN e HMAC. UI sem Admin falha sem efeitos; settings
+inválidos precedem assets; recurso inválido precede todos os recursos
+operacionais. A fronteira de processo emite somente a mensagem fixa de falha.
+Os bytes mantidos pela `Application` não refletem mudanças posteriores em disco.
+Seu repr desligado é idêntico; ligado acrescenta apenas `admin_ui=True`.
+As 40 respostas capturadas do commit aprovado são comparadas literalmente em
+status/corpo/headers determinísticos, excluindo somente Date; o código HTTP e
+a normalização de secrets têm fingerprints da referência, sem flexibilização.
+Mesmo com a flag ligada, nenhuma regra da Etapa 4 foi antecipada.

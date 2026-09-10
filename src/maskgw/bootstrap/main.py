@@ -1,5 +1,6 @@
 """Fronteira de processo, sem saida nao protocolar em stdout.
 
+A flag UI bruta e a dependencia UI/Admin sao resolvidas primeiro.
 O passo 1 da secao 9.2 acontece aqui: `MASKGW_ADMIN_ENABLED`,
 `MASKGW_ADMIN_TOKEN`, `MASKGW_ADMIN_BIND` e `MASKGW_ADMIN_PORT` sao lidos e
 validados ANTES de `build_application` tocar em arquivo, lock ou conexao. Um
@@ -24,7 +25,9 @@ from maskgw.bootstrap.application import (
     DEFAULT_CONFIG_PATH,
     build_application,
     resolve_admin_settings,
+    resolve_admin_ui_enabled,
 )
+from maskgw.bootstrap.settings import RawSettings
 
 STARTUP_FAILURE: Final = "maskgw: falha na inicializacao\n"
 RUNTIME_FAILURE: Final = "maskgw: falha durante a execucao\n"
@@ -38,17 +41,20 @@ def _write_stderr(stream: TextIO, message: str) -> None:
     stream.flush()
 
 
-def main(*, stderr: TextIO | None = None) -> int:
+def main(*, stderr: TextIO | None = None, raw_settings: RawSettings | None = None) -> int:
     """Constroi, executa e encerra o processo. Devolve o codigo de saida."""
     sink = stderr if stderr is not None else sys.stderr
     config_path = os.environ.get(CONFIG_PATH_ENV, "").strip() or DEFAULT_CONFIG_PATH
 
     try:
+        admin_ui_enabled = resolve_admin_ui_enabled(raw_settings)
         # Passo 1 da secao 9.2, antes de qualquer recurso: enable, token, bind
         # e porta. Sem admin habilitado devolve None, e o processo segue
         # exatamente como antes — nenhuma porta, nenhuma thread, nenhum lock.
         admin_http = resolve_admin_settings()
-        application = build_application(config_path=config_path, admin_http=admin_http)
+        application = build_application(
+            config_path=config_path, admin_http=admin_http, admin_ui_enabled=admin_ui_enabled
+        )
     except BaseException:
         # Mensagem fixa: sem DSN, secret, SQL, valor, str(exc) ou traceback.
         # Um token curto e um bind recusado saem por aqui, indistinguiveis de

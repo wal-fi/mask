@@ -1,0 +1,380 @@
+{
+  "base": "d080886352920a663e8b0aa318761a083f54f7f7",
+  "protected_source_sha256": {
+    "src/maskgw/admin/http/__init__.py": "3d7339a9aaee3940bb33f7cf18bbc8ee09191d45b6e6921dbc96c8bd6b463252",
+    "src/maskgw/admin/http/app.py": "d2dcf37b70dfeb5dd45764f6e0f972921df6d188051fcc1dd9c5ba7aaa03c2c5",
+    "src/maskgw/admin/http/audit.py": "8f03b19706c782849f48eaa677d78b2433eefc4c42775a9ecc503c632c032ba3",
+    "src/maskgw/admin/http/middleware.py": "2d33e37ae952d278dda205707529d6fb9f4dd9808c081754048a7fe1a43b1ac5",
+    "src/maskgw/admin/http/mutations.py": "33c42d98d968174a10969143c5d8b037f576168fa898004b385feea941e01a2c",
+    "src/maskgw/admin/http/responses.py": "d88c35e2d79ce972cbbf16ec99ff9b88fa66d069b6f368fc97b8362d2293b2a4",
+    "src/maskgw/admin/http/schemas.py": "ed3b1a1d9e2a7dbbd1069c41e10895fb21c25eb49dcc2d1deeb3855e7ffdf5b9",
+    "src/maskgw/admin/http/server.py": "8a17550d9c5a206556e62a130b238672b2d43b97333f94d2d1bb0f2fed154b23",
+    "src/maskgw/admin/http/settings.py": "0e3f00d966874800f3b028993dc432b1f38ede1d5a07cdf9f558a25a44f1c683",
+    "src/maskgw/admin/http/validate.py": "b0f8f83409c06c5e7a2d3a82957842e6f49748bd93be648223e381b738e493d4",
+    "src/maskgw/admin/http/views.py": "57aaefb9289ca8c351be2ffb6562de054eb6169ea7ca95e5cb24bb64a1f1ab8a",
+    "src/maskgw/secretsource.py": "d4d0a17d4a87207d832e3eed60934630a04e33a86f7296a020de2b42e96d4be8"
+  },
+  "repr": "Application(revision=0, state='ready', admin=True, admin_http=True)",
+  "responses": [
+    {
+      "body": "7b227265766973696f6e223a302c2261646f70746564223a66616c73652c2272756e74696d65223a7b227265766973696f6e223a302c22726574697265645f72756e74696d65735f6f70656e223a307d2c22636f756e74657273223a7b22717565726965735f746f74616c223a302c2261646d696e5f6f7065726174696f6e735f746f74616c223a307d2c2273656372657473223a7b22686d61635f7368613235365f6b6579223a226d697373696e67222c2261646d696e5f746f6b656e223a22636f6e66696775726564222c2264617461626173655f64736e223a226d697373696e67227d7d",
+      "headers": {
+        "cache-control": "no-store",
+        "content-length": "231",
+        "content-type": "application/json"
+      },
+      "status": 200
+    },
+    {
+      "body": "",
+      "headers": {
+        "cache-control": "no-store",
+        "content-length": "231",
+        "content-type": "application/json"
+      },
+      "status": 200
+    },
+    {
+      "body": "7b227265766973696f6e223a302c2261646f70746564223a66616c73652c22636f6e666967223a7b227265766973696f6e223a302c226d61736b696e67223a5b5d2c22657863657074696f6e73223a5b5d2c226461746162617365223a7b2273746174656d656e745f74696d656f75745f6d73223a323030302c226d61785f726f7773223a31307d2c2273716c223a7b22616c6c6f7765645f70675f66756e6374696f6e73223a5b5d2c2264656e6965645f66756e6374696f6e73223a5b5d7d7d7d",
+      "headers": {
+        "cache-control": "no-store",
+        "content-length": "194",
+        "content-type": "application/json"
+      },
+      "status": 200
+    },
+    {
+      "body": "",
+      "headers": {
+        "cache-control": "no-store",
+        "content-length": "194",
+        "content-type": "application/json"
+      },
+      "status": 200
+    },
+    {
+      "body": "7b227265766973696f6e223a302c2261646f70746564223a66616c73652c2272756c6573223a5b5d7d",
+      "headers": {
+        "cache-control": "no-store",
+        "content-length": "41",
+        "content-type": "application/json"
+      },
+      "status": 200
+    },
+    {
+      "body": "",
+      "headers": {
+        "cache-control": "no-store",
+        "content-length": "41",
+        "content-type": "application/json"
+      },
+      "status": 200
+    },
+    {
+      "body": "7b227265766973696f6e223a302c2261646f70746564223a66616c73652c22657863657074696f6e73223a5b5d7d",
+      "headers": {
+        "cache-control": "no-store",
+        "content-length": "46",
+        "content-type": "application/json"
+      },
+      "status": 200
+    },
+    {
+      "body": "",
+      "headers": {
+        "cache-control": "no-store",
+        "content-length": "46",
+        "content-type": "application/json"
+      },
+      "status": 200
+    },
+    {
+      "body": "7b227265766973696f6e223a302c227472616e73666f726d657273223a5b7b226e616d65223a226669786564222c2272657175697265645f706172616d6574657273223a5b2276616c7565225d2c226f7074696f6e616c5f706172616d6574657273223a5b5d7d2c7b226e616d65223a22686d61635f736861323536222c2272657175697265645f706172616d6574657273223a5b5d2c226f7074696f6e616c5f706172616d6574657273223a5b5d7d2c7b226e616d65223a226d6435222c2272657175697265645f706172616d6574657273223a5b5d2c226f7074696f6e616c5f706172616d6574657273223a5b5d7d2c7b226e616d65223a2272616e646f6d222c2272657175697265645f706172616d6574657273223a5b227374726174656779225d2c226f7074696f6e616c5f706172616d6574657273223a5b2270726573657276655f6c656e677468222c226c656e677468225d7d2c7b226e616d65223a227265676578222c2272657175697265645f706172616d6574657273223a5b227061747465726e222c227265706c6163656d656e74225d2c226f7074696f6e616c5f706172616d6574657273223a5b5d7d2c7b226e616d65223a22736861323536222c2272657175697265645f706172616d6574657273223a5b5d2c226f7074696f6e616c5f706172616d6574657273223a5b5d7d2c7b226e616d65223a22736861353132222c2272657175697265645f706172616d6574657273223a5b5d2c226f7074696f6e616c5f706172616d6574657273223a5b5d7d2c7b226e616d65223a227472756e63617465222c2272657175697265645f706172616d6574657273223a5b226c656e677468225d2c226f7074696f6e616c5f706172616d6574657273223a5b5d7d5d7d",
+      "headers": {
+        "cache-control": "no-store",
+        "content-length": "651",
+        "content-type": "application/json"
+      },
+      "status": 200
+    },
+    {
+      "body": "",
+      "headers": {
+        "cache-control": "no-store",
+        "content-length": "651",
+        "content-type": "application/json"
+      },
+      "status": 200
+    },
+    {
+      "body": "7b227265766973696f6e223a302c2264656e6965645f72656c6174696f6e73223a5b2270675f737461746973746963222c2270675f7374617469737469635f657874222c2270675f7374617469737469635f6578745f64617461222c2270675f7374617473222c2270675f73746174735f657874222c2270675f73746174735f6578745f6578707273225d2c2270675f6e616d6573706163655f64656661756c74223a2264656e79222c22616c6c6f7765645f70675f66756e6374696f6e73223a5b2270675f636f6c756d6e5f73697a65222c2270675f73697a655f707265747479222c2270675f747970656f66225d2c2264656e6965645f66756e6374696f6e73223a5b226c6f5f6578706f7274222c226c6f5f696d706f7274222c227365745f636f6e666967222c2273657473656564225d2c2264656e6965645f66756e6374696f6e5f7072656669786573223a5b22637572736f725f746f5f786d6c222c2264617461626173655f746f5f786d6c222c2264626c696e6b222c226c6f5f222c2271756572795f746f5f786d6c222c22736368656d615f746f5f786d6c222c227461626c655f746f5f786d6c225d2c2276616c696461746f725f72756c6573223a5b2265786163746c79206f6e652065786563757461626c652073746174656d656e74222c2274686520726f6f74206e6f6465206d75737420626520612053454c4543542073746174656d656e74222c226e6f206f746865722073746174656d656e74206e6f646520616e79776865726520696e2074686520747265652c20696e636c7564696e67206e65737465642043544573222c22494e544f20616e64206c6f636b696e6720636c6175736573206172652072656a656374656420617420616e79206465707468225d2c2273657373696f6e223a7b22726561645f6f6e6c79223a747275652c2273746174656d656e745f74696d656f75745f656e666f726365645f6279223a22706f737467726573716c222c2270726f76656e616e63655f6361706162696c6974795f7265717569726564223a747275657d2c22706970656c696e65223a5b2244455249564544222c22455843455054494f4e222c224d41534b494e47222c224f524947494e414c225d2c22756e6d6174636865645f706f6c696379223a22616c6c6f77222c226564697461626c65223a66616c73657d",
+      "headers": {
+        "cache-control": "no-store",
+        "content-length": "866",
+        "content-type": "application/json"
+      },
+      "status": 200
+    },
+    {
+      "body": "",
+      "headers": {
+        "cache-control": "no-store",
+        "content-length": "866",
+        "content-type": "application/json"
+      },
+      "status": 200
+    },
+    {
+      "body": "7b226572726f72223a224e4f545f464f554e44222c2264657461696c223a2254686520726571756573746564207265736f7572636520646f6573206e6f742065786973742e227d",
+      "headers": {
+        "cache-control": "no-store",
+        "content-length": "71",
+        "content-type": "application/json"
+      },
+      "status": 404
+    },
+    {
+      "body": "",
+      "headers": {
+        "cache-control": "no-store",
+        "content-length": "71",
+        "content-type": "application/json"
+      },
+      "status": 404
+    },
+    {
+      "body": "7b226572726f72223a224e4f545f464f554e44222c2264657461696c223a2254686520726571756573746564207265736f7572636520646f6573206e6f742065786973742e227d",
+      "headers": {
+        "cache-control": "no-store",
+        "content-length": "71",
+        "content-type": "application/json"
+      },
+      "status": 404
+    },
+    {
+      "body": "",
+      "headers": {
+        "cache-control": "no-store",
+        "content-length": "71",
+        "content-type": "application/json"
+      },
+      "status": 404
+    },
+    {
+      "body": "7b226572726f72223a22554e415554484f52495a4544222c2264657461696c223a2241757468656e7469636174696f6e2069732072657175697265642e227d",
+      "headers": {
+        "cache-control": "no-store",
+        "content-length": "63",
+        "content-type": "application/json"
+      },
+      "status": 401
+    },
+    {
+      "body": "7b226572726f72223a224e4f545f464f554e44222c2264657461696c223a2254686520726571756573746564207265736f7572636520646f6573206e6f742065786973742e227d",
+      "headers": {
+        "cache-control": "no-store",
+        "content-length": "71",
+        "content-type": "application/json"
+      },
+      "status": 404
+    },
+    {
+      "body": "",
+      "headers": {
+        "cache-control": "no-store",
+        "content-length": "63",
+        "content-type": "application/json"
+      },
+      "status": 401
+    },
+    {
+      "body": "",
+      "headers": {
+        "cache-control": "no-store",
+        "content-length": "71",
+        "content-type": "application/json"
+      },
+      "status": 404
+    },
+    {
+      "body": "7b226572726f72223a22554e415554484f52495a4544222c2264657461696c223a2241757468656e7469636174696f6e2069732072657175697265642e227d",
+      "headers": {
+        "cache-control": "no-store",
+        "content-length": "63",
+        "content-type": "application/json"
+      },
+      "status": 401
+    },
+    {
+      "body": "7b226572726f72223a224e4f545f464f554e44222c2264657461696c223a2254686520726571756573746564207265736f7572636520646f6573206e6f742065786973742e227d",
+      "headers": {
+        "cache-control": "no-store",
+        "content-length": "71",
+        "content-type": "application/json"
+      },
+      "status": 404
+    },
+    {
+      "body": "",
+      "headers": {
+        "cache-control": "no-store",
+        "content-length": "63",
+        "content-type": "application/json"
+      },
+      "status": 401
+    },
+    {
+      "body": "",
+      "headers": {
+        "cache-control": "no-store",
+        "content-length": "71",
+        "content-type": "application/json"
+      },
+      "status": 404
+    },
+    {
+      "body": "7b226572726f72223a22554e415554484f52495a4544222c2264657461696c223a2241757468656e7469636174696f6e2069732072657175697265642e227d",
+      "headers": {
+        "cache-control": "no-store",
+        "content-length": "63",
+        "content-type": "application/json"
+      },
+      "status": 401
+    },
+    {
+      "body": "7b226572726f72223a224e4f545f464f554e44222c2264657461696c223a2254686520726571756573746564207265736f7572636520646f6573206e6f742065786973742e227d",
+      "headers": {
+        "cache-control": "no-store",
+        "content-length": "71",
+        "content-type": "application/json"
+      },
+      "status": 404
+    },
+    {
+      "body": "",
+      "headers": {
+        "cache-control": "no-store",
+        "content-length": "63",
+        "content-type": "application/json"
+      },
+      "status": 401
+    },
+    {
+      "body": "",
+      "headers": {
+        "cache-control": "no-store",
+        "content-length": "71",
+        "content-type": "application/json"
+      },
+      "status": 404
+    },
+    {
+      "body": "7b226572726f72223a22554e415554484f52495a4544222c2264657461696c223a2241757468656e7469636174696f6e2069732072657175697265642e227d",
+      "headers": {
+        "cache-control": "no-store",
+        "content-length": "63",
+        "content-type": "application/json"
+      },
+      "status": 401
+    },
+    {
+      "body": "7b226572726f72223a224e4f545f464f554e44222c2264657461696c223a2254686520726571756573746564207265736f7572636520646f6573206e6f742065786973742e227d",
+      "headers": {
+        "cache-control": "no-store",
+        "content-length": "71",
+        "content-type": "application/json"
+      },
+      "status": 404
+    },
+    {
+      "body": "",
+      "headers": {
+        "cache-control": "no-store",
+        "content-length": "63",
+        "content-type": "application/json"
+      },
+      "status": 401
+    },
+    {
+      "body": "",
+      "headers": {
+        "cache-control": "no-store",
+        "content-length": "71",
+        "content-type": "application/json"
+      },
+      "status": 404
+    },
+    {
+      "body": "7b226572726f72223a22554e415554484f52495a4544222c2264657461696c223a2241757468656e7469636174696f6e2069732072657175697265642e227d",
+      "headers": {
+        "cache-control": "no-store",
+        "content-length": "63",
+        "content-type": "application/json"
+      },
+      "status": 401
+    },
+    {
+      "body": "7b226572726f72223a22554e415554484f52495a4544222c2264657461696c223a2241757468656e7469636174696f6e2069732072657175697265642e227d",
+      "headers": {
+        "cache-control": "no-store",
+        "content-length": "63",
+        "content-type": "application/json"
+      },
+      "status": 401
+    },
+    {
+      "body": "7b226572726f72223a2243524f53535f4f524947494e5f52454a4543544544222c2264657461696c223a2242726f777365722d6f726967696e6174656420726571756573747320617265206e6f742061636365707465642e227d",
+      "headers": {
+        "cache-control": "no-store",
+        "content-length": "90",
+        "content-type": "application/json"
+      },
+      "status": 403
+    },
+    {
+      "body": "7b226572726f72223a2243524f53535f4f524947494e5f52454a4543544544222c2264657461696c223a2242726f777365722d6f726967696e6174656420726571756573747320617265206e6f742061636365707465642e227d",
+      "headers": {
+        "cache-control": "no-store",
+        "content-length": "90",
+        "content-type": "application/json"
+      },
+      "status": 403
+    },
+    {
+      "body": "7b226572726f72223a22484f53545f4e4f545f414c4c4f574544222c2264657461696c223a2254686520486f737420686561646572206973206e6f742061636365707465642e227d",
+      "headers": {
+        "cache-control": "no-store",
+        "content-length": "72",
+        "content-type": "application/json"
+      },
+      "status": 400
+    },
+    {
+      "body": "7b226572726f72223a224e4f545f464f554e44222c2264657461696c223a2254686520726571756573746564207265736f7572636520646f6573206e6f742065786973742e227d",
+      "headers": {
+        "cache-control": "no-store",
+        "content-length": "71",
+        "content-type": "application/json"
+      },
+      "status": 404
+    },
+    {
+      "body": "7b226572726f72223a224e4f545f464f554e44222c2264657461696c223a2254686520726571756573746564207265736f7572636520646f6573206e6f742065786973742e227d",
+      "headers": {
+        "cache-control": "no-store",
+        "content-length": "71",
+        "content-type": "application/json"
+      },
+      "status": 404
+    },
+    {
+      "body": "7b226572726f72223a224e4f545f464f554e44222c2264657461696c223a2254686520726571756573746564207265736f7572636520646f6573206e6f742065786973742e227d",
+      "headers": {
+        "cache-control": "no-store",
+        "content-length": "71",
+        "content-type": "application/json"
+      },
+      "status": 404
+    }
+  ]
+}
