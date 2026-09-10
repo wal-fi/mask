@@ -1,0 +1,57 @@
+[
+  {
+    "method": "POST",
+    "path": "/admin/v1/config:adopt",
+    "request": "AdoptRequest"
+  },
+  {
+    "method": "PUT",
+    "path": "/admin/v1/config",
+    "request": "ConfigReplaceRequest"
+  },
+  {
+    "method": "POST",
+    "path": "/admin/v1/rules:reorder",
+    "request": "RuleReorderRequest"
+  },
+  {
+    "method": "POST",
+    "path": "/admin/v1/rules",
+    "request": "RuleCreateRequest"
+  },
+  {
+    "method": "PUT",
+    "path": "/admin/v1/rules/{rule_id}",
+    "request": "RuleReplaceRequest"
+  },
+  {
+    "method": "DELETE",
+    "path": "/admin/v1/rules/{rule_id}",
+    "request": "DeleteRequest"
+  },
+  {
+    "method": "POST",
+    "path": "/admin/v1/exceptions",
+    "request": "ExceptionCreateRequest"
+  },
+  {
+    "method": "PUT",
+    "path": "/admin/v1/exceptions/{exception_id}",
+    "request": "ExceptionReplaceRequest"
+  },
+  {
+    "method": "DELETE",
+    "path": "/admin/v1/exceptions/{exception_id}",
+    "request": "DeleteRequest"
+  },
+  {
+    "method": "PUT",
+    "path": "/admin/v1/database",
+    "request": "DatabaseWriteRequest"
+  },
+  {
+    "method": "PUT",
+    "path": "/admin/v1/sql",
+    "request": "SqlWriteRequest"
+  }
+]

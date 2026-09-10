@@ -139,3 +139,6 @@ plugins = ["pydantic.mypy"]
 [[tool.mypy.overrides]]
 module = "tests.*"
 disallow_untyped_defs = false
+
+[tool.setuptools.package-data]
+"maskgw.admin.ui" = ["assets/*.html", "assets/*.js", "assets/*.css", "assets/*.json"]

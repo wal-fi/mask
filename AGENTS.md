@@ -32,9 +32,12 @@ opt-in e estritamente delimitada por `docs/PHASE-8-SPEC.md`** está autorizada
 como escopo de front-end. A especificação foi aprovada integralmente, incluindo
 as quatro decisões da seção 8 (D-061 a D-064 em `docs/DECISIONS.md`).
 
-Esta rodada autoriza exclusivamente a **Etapa 1 documental e sua baseline**.
-As Etapas 2–9 e qualquer código funcional aguardam revisão e autorização
-explícita; aprovação do escopo não autoriza antecipar etapas.
+A Etapa 1 foi revisada, aprovada e publicada sem emenda. Esta rodada autoriza
+exclusivamente a **Etapa 2: stack, tipos, protocolo declarativo, catálogo,
+recursos embarcados, build e validação independente**. Não integrar startup,
+flag, HTTP, sessão, telas funcionais ou transporte administrativo. As Etapas
+3–9 aguardam revisão e autorização explícita. O commit da Etapa 2 permanece
+local; aprovação do escopo não autoriza antecipar etapas ou publicação.
 
 Interfaces genéricas, editor ou execução de SQL, resultados do banco, funções
 de DBA, auditoria consultável, front-end para MCP e expansões não previstas

@@ -937,9 +937,9 @@ encontrou violação inequívoca da especificação que exigisse correção de p
 O único skip da suíte (a leakage de durabilidade) é condicional de plataforma
 POSIX no host Windows, não um finding ignorado.
 
-## Fase 8 — plano aprovado e baseline da Etapa 1
+## Fase 8 — registro histórico da baseline da Etapa 1
 
-**Aprovada; Etapa 1 concluída.** Contrato integral em
+**Registro histórico: Etapa 1 concluída e posteriormente publicada.** Contrato integral em
 `docs/PHASE-8-SPEC.md`; requisitos F8-001 a F8-065, componentes previstos,
 etapas e contraprovas em `docs/PHASE-8-TRACEABILITY.md`. Resultados medidos
 desta rodada em `docs/PHASE-8-STAGE-1-VALIDATION.md`; os números das etapas
@@ -965,3 +965,40 @@ headers/caminhos hostis, lifecycle/BFCache, concorrência, pós-commit e
 indisponibilidade. Nunca converter finding em skip/xfail. Não gravar tokens
 ou dados administrativos em traces, HAR, screenshots, vídeos ou logs dos
 ensaios. A rastreabilidade não substitui os testes ainda por implementar.
+
+
+## Fase 8 — Etapa 2 concluída
+
+Contrato e limites em `docs/PHASE-8-SPEC.md`; rastreabilidade parcial atualizada
+em `docs/PHASE-8-TRACEABILITY.md`. A evidência desta rodada é
+`docs/PHASE-8-STAGE-2-VALIDATION.md`, distinguindo-a da baseline histórica.
+
+Testes concretos: `tests/test_admin_ui_resources.py` (74 casos isolados verdes)
+e `frontend/test/protocol.test.js` (70 casos Node verdes), com fixtures
+positivas tipadas em `frontend/test/contracts.js` e oito contraprovas de
+compilação. As contraprovas devem falhar por incompatibilidade de tipos, sem
+supressão e sem aceitar erro de importação como evidência. A união tipada
+contém dez escritas UI; o décimo primeiro contrato permanece somente da API.
+
+Cobertura: JSON/UTF-8, chaves duplicadas, vocabulário público, escapes e
+concatenações, identidade de template, prototype pollution em vários níveis,
+referências, ciclos, profundidade, máximos inclusivos, defaults, uniões
+fechadas, fontes de projeção, catálogo/modelos, bytes/hashes e manifesto,
+recursos faltantes/corrompidos e bytes imutáveis. Erro do carregador deve ser
+fixo, sem entrada ou cadeia de exceção. Nenhum teste exige integrar HTTP/UI.
+
+Gates frontend finais: instalação congelada npm ci, typecheck estrito, Node,
+dois builds completos com os mesmos hashes dos 14 arquivos gerados e inspeção
+dos três recursos públicos contra 193 entradas privadas derivadas. Wheel e
+sdist precisam excluir ferramentas, fixtures, sourcemaps e tipos privados;
+os dois pacotes são instalados fora do checkout e validados sem Node/npm.
+Build e testes consumidores dos recursos devem ser sequenciais, pois o build
+regenera assets e âncoras; não testar um conjunto em troca.
+
+O gate Python continua sendo a suíte inteira, sem deselect e com PostgreSQL
+16 real, pilha temporária de 64 MiB no Windows, Ruff, format check, mypy strict
+e diff check. Resultados medidos: 2.378 aprovados, oito skips exclusivos de POSIX,
+zero skips por DSN, zero falhas; Ruff/format/mypy aprovados (127 arquivos).
+As evidências completas estão no registro da etapa. Browser real, CSP, autenticação/origem HTTP, sessão,
+BFCache e renderização XSS pertencem às etapas seguintes e não são alegados
+como cobertos pela fundação desta etapa.

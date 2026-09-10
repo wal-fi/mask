@@ -1,0 +1,5 @@
+recursive-include src/maskgw/admin/ui/assets *.html *.js *.css *.json
+prune frontend
+prune tests
+prune docs
+global-exclude *.map *.d.ts

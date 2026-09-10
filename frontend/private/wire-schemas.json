@@ -1,0 +1,1361 @@
+{
+  "AdminConfigResponse": {
+    "additionalProperties": false,
+    "description": "`GET /admin/v1/config`.",
+    "properties": {
+      "adopted": {
+        "title": "Adopted",
+        "type": "boolean"
+      },
+      "config": {
+        "$ref": "#/$defs/ConfigDocument"
+      },
+      "revision": {
+        "title": "Revision",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "revision",
+      "adopted",
+      "config"
+    ],
+    "title": "AdminConfigResponse",
+    "type": "object"
+  },
+  "AdminCounters": {
+    "additionalProperties": false,
+    "description": "Contadores em memoria desde o start (secao 13.4).\n\n**Sao contadores, nao historico**, e se perdem no restart. Nao existe, e\nnao existira nesta fase, `GET /admin/v1/audit/*`: `audit/` emite metadata\nvia `logging` e nao tem armazenamento consultavel, entao um endpoint de\nhistorico entregaria uma resposta que mente (secao 13.1).",
+    "properties": {
+      "admin_operations_total": {
+        "title": "Admin Operations Total",
+        "type": "integer"
+      },
+      "queries_total": {
+        "title": "Queries Total",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "queries_total",
+      "admin_operations_total"
+    ],
+    "title": "AdminCounters",
+    "type": "object"
+  },
+  "AdminExceptionResponse": {
+    "additionalProperties": false,
+    "description": "`GET /admin/v1/exceptions/{exception_id}`.",
+    "properties": {
+      "adopted": {
+        "title": "Adopted",
+        "type": "boolean"
+      },
+      "exception": {
+        "$ref": "#/$defs/ExceptionView"
+      },
+      "revision": {
+        "title": "Revision",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "revision",
+      "adopted",
+      "exception"
+    ],
+    "title": "AdminExceptionResponse",
+    "type": "object"
+  },
+  "AdminExceptionsResponse": {
+    "additionalProperties": false,
+    "description": "`GET /admin/v1/exceptions`.",
+    "properties": {
+      "adopted": {
+        "title": "Adopted",
+        "type": "boolean"
+      },
+      "exceptions": {
+        "items": {
+          "$ref": "#/$defs/ExceptionView"
+        },
+        "title": "Exceptions",
+        "type": "array"
+      },
+      "revision": {
+        "title": "Revision",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "revision",
+      "adopted",
+      "exceptions"
+    ],
+    "title": "AdminExceptionsResponse",
+    "type": "object"
+  },
+  "AdminProtectedResponse": {
+    "additionalProperties": false,
+    "description": "`GET /admin/v1/protected`: as protecoes estruturais, so leitura (D-050).\n\nItem criado para fechar vulnerabilidade nao pode ser desligado por\nconfiguracao administrativa. Nao ha rota que altere nada disto — e nao e\n\"recusado\", e inexistente. Campos como `read_only`,\n`allow_multiple_statements`, `disable_sql_validation`, `disable_masking`,\n`unmatched_policy`, `denied_relations` e `denied_prefixes` **nao existem**\nno documento administrativo (secao 11.2).",
+    "properties": {
+      "allowed_pg_functions": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Allowed Pg Functions",
+        "type": "array"
+      },
+      "denied_function_prefixes": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Denied Function Prefixes",
+        "type": "array"
+      },
+      "denied_functions": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Denied Functions",
+        "type": "array"
+      },
+      "denied_relations": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Denied Relations",
+        "type": "array"
+      },
+      "editable": {
+        "title": "Editable",
+        "type": "boolean"
+      },
+      "pg_namespace_default": {
+        "title": "Pg Namespace Default",
+        "type": "string"
+      },
+      "pipeline": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Pipeline",
+        "type": "array"
+      },
+      "revision": {
+        "title": "Revision",
+        "type": "integer"
+      },
+      "session": {
+        "$ref": "#/$defs/ProtectedSession"
+      },
+      "unmatched_policy": {
+        "title": "Unmatched Policy",
+        "type": "string"
+      },
+      "validator_rules": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Validator Rules",
+        "type": "array"
+      }
+    },
+    "required": [
+      "revision",
+      "denied_relations",
+      "pg_namespace_default",
+      "allowed_pg_functions",
+      "denied_functions",
+      "denied_function_prefixes",
+      "validator_rules",
+      "session",
+      "pipeline",
+      "unmatched_policy",
+      "editable"
+    ],
+    "title": "AdminProtectedResponse",
+    "type": "object"
+  },
+  "AdminRuleResponse": {
+    "additionalProperties": false,
+    "description": "`GET /admin/v1/rules/{rule_id}`.",
+    "properties": {
+      "adopted": {
+        "title": "Adopted",
+        "type": "boolean"
+      },
+      "revision": {
+        "title": "Revision",
+        "type": "integer"
+      },
+      "rule": {
+        "$ref": "#/$defs/RuleView"
+      }
+    },
+    "required": [
+      "revision",
+      "adopted",
+      "rule"
+    ],
+    "title": "AdminRuleResponse",
+    "type": "object"
+  },
+  "AdminRulesResponse": {
+    "additionalProperties": false,
+    "description": "`GET /admin/v1/rules`, em ordem de avaliacao.",
+    "properties": {
+      "adopted": {
+        "title": "Adopted",
+        "type": "boolean"
+      },
+      "revision": {
+        "title": "Revision",
+        "type": "integer"
+      },
+      "rules": {
+        "items": {
+          "$ref": "#/$defs/RuleView"
+        },
+        "title": "Rules",
+        "type": "array"
+      }
+    },
+    "required": [
+      "revision",
+      "adopted",
+      "rules"
+    ],
+    "title": "AdminRulesResponse",
+    "type": "object"
+  },
+  "AdminRuntimeState": {
+    "additionalProperties": false,
+    "description": "Estado do runtime publicado e dos aposentados (secao 8).",
+    "properties": {
+      "retired_runtimes_open": {
+        "title": "Retired Runtimes Open",
+        "type": "integer"
+      },
+      "revision": {
+        "title": "Revision",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "revision",
+      "retired_runtimes_open"
+    ],
+    "title": "AdminRuntimeState",
+    "type": "object"
+  },
+  "AdminSecrets": {
+    "additionalProperties": false,
+    "description": "Estado dos secrets. Nunca o valor, e nunca um derivado dele.\n\nNao existe endpoint que defina ou rotacione um secret: rotacao e trocar a\nvariavel de ambiente e reiniciar.\n\n`admin_token` e sempre `configured` — sem ele o processo nao teria subido\n(secao 2). O campo existe mesmo assim porque a ausencia dele levantaria a\nduvida de qual token a API usa; o valor constante responde sem revelar nada.",
+    "properties": {
+      "admin_token": {
+        "$ref": "#/$defs/SecretState"
+      },
+      "database_dsn": {
+        "$ref": "#/$defs/SecretState"
+      },
+      "hmac_sha256_key": {
+        "$ref": "#/$defs/SecretState"
+      }
+    },
+    "required": [
+      "hmac_sha256_key",
+      "admin_token",
+      "database_dsn"
+    ],
+    "title": "AdminSecrets",
+    "type": "object"
+  },
+  "AdminStatusResponse": {
+    "additionalProperties": false,
+    "description": "`GET /admin/v1/status`.",
+    "properties": {
+      "adopted": {
+        "title": "Adopted",
+        "type": "boolean"
+      },
+      "counters": {
+        "$ref": "#/$defs/AdminCounters"
+      },
+      "revision": {
+        "title": "Revision",
+        "type": "integer"
+      },
+      "runtime": {
+        "$ref": "#/$defs/AdminRuntimeState"
+      },
+      "secrets": {
+        "$ref": "#/$defs/AdminSecrets"
+      }
+    },
+    "required": [
+      "revision",
+      "adopted",
+      "runtime",
+      "counters",
+      "secrets"
+    ],
+    "title": "AdminStatusResponse",
+    "type": "object"
+  },
+  "AdminTransformersResponse": {
+    "additionalProperties": false,
+    "description": "`GET /admin/v1/transformers`: o catalogo fechado do registry.",
+    "properties": {
+      "revision": {
+        "title": "Revision",
+        "type": "integer"
+      },
+      "transformers": {
+        "items": {
+          "$ref": "#/$defs/TransformerView"
+        },
+        "title": "Transformers",
+        "type": "array"
+      }
+    },
+    "required": [
+      "revision",
+      "transformers"
+    ],
+    "title": "AdminTransformersResponse",
+    "type": "object"
+  },
+  "AdoptRequest": {
+    "additionalProperties": false,
+    "description": "`POST /admin/v1/config:adopt` (secao 5.3).\n\n`confirm_comment_loss` deve ser o booleano JSON literal `true`. Uma volta por\nPydantic/PyYAML destroi os comentarios do arquivo, e isso e irreversivel —\nprecisa ser dito antes, sem ambiguidade.",
+    "properties": {
+      "confirm_comment_loss": {
+        "const": true
+      },
+      "expected_revision": {
+        "minimum": 0,
+        "title": "Expected Revision",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "expected_revision",
+      "confirm_comment_loss"
+    ],
+    "title": "AdoptRequest",
+    "type": "object"
+  },
+  "ConfigDocument": {
+    "additionalProperties": false,
+    "description": "O documento administrativo inteiro, fiel ao arquivo validado.",
+    "properties": {
+      "database": {
+        "$ref": "#/$defs/DatabaseDocument"
+      },
+      "exceptions": {
+        "items": {
+          "$ref": "#/$defs/ExceptionDocument"
+        },
+        "title": "Exceptions",
+        "type": "array"
+      },
+      "masking": {
+        "items": {
+          "$ref": "#/$defs/RuleDocument"
+        },
+        "title": "Masking",
+        "type": "array"
+      },
+      "revision": {
+        "title": "Revision",
+        "type": "integer"
+      },
+      "sql": {
+        "$ref": "#/$defs/SqlDocument"
+      }
+    },
+    "required": [
+      "revision",
+      "masking",
+      "exceptions",
+      "database",
+      "sql"
+    ],
+    "title": "ConfigDocument",
+    "type": "object"
+  },
+  "ConfigReplaceDatabase": {
+    "additionalProperties": false,
+    "description": "Os dois limites no corpo de `PUT /config`, ambos obrigatorios.",
+    "properties": {
+      "max_rows": {
+        "maximum": 1000000,
+        "minimum": 1,
+        "title": "Max Rows",
+        "type": "integer"
+      },
+      "statement_timeout_ms": {
+        "maximum": 600000,
+        "minimum": 100,
+        "title": "Statement Timeout Ms",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "statement_timeout_ms",
+      "max_rows"
+    ],
+    "title": "ConfigReplaceDatabase",
+    "type": "object"
+  },
+  "ConfigReplaceException": {
+    "additionalProperties": false,
+    "description": "Uma exception no corpo de `PUT /config`. `id` OPCIONAL, como nas regras.",
+    "properties": {
+      "case_sensitive": {
+        "default": false,
+        "title": "Case Sensitive",
+        "type": "boolean"
+      },
+      "id": {
+        "anyOf": [
+          {
+            "pattern": "^exc_[0-9a-f]{32}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Id"
+      },
+      "match": {
+        "minLength": 1,
+        "title": "Match",
+        "type": "string"
+      },
+      "mode": {
+        "$ref": "#/$defs/MatchMode",
+        "default": "exact"
+      }
+    },
+    "required": [
+      "match"
+    ],
+    "title": "ConfigReplaceException",
+    "type": "object"
+  },
+  "ConfigReplaceRequest": {
+    "additionalProperties": false,
+    "description": "`PUT /admin/v1/config`: substituicao integral da configuracao administravel.\n\n`masking`, `exceptions`, `database` e `sql` (so `denied_functions`) sao\nobrigatorios. A `revision` e escolhida pelo servidor. Regras de ID (secao\n11.3, D-059):\n\n- item com `id` existente: identidade preservada;\n- item sem `id`: criacao, recebe ID do servidor;\n- `id` que nao pertence ao documento corrente: tentativa de escolher\n  identidade -> `IMMUTABLE_FIELD` (na mutacao);\n- IDs atuais omitidos: removidos.\n\n`sql.allowed_pg_functions` presente em qualquer forma -> `IMMUTABLE_FIELD`;\nausente -> o valor atual e preservado em conteudo e ordem (secao 11.3).",
+    "properties": {
+      "database": {
+        "$ref": "#/$defs/ConfigReplaceDatabase"
+      },
+      "exceptions": {
+        "items": {
+          "$ref": "#/$defs/ConfigReplaceException"
+        },
+        "title": "Exceptions",
+        "type": "array"
+      },
+      "expected_revision": {
+        "minimum": 0,
+        "title": "Expected Revision",
+        "type": "integer"
+      },
+      "masking": {
+        "items": {
+          "$ref": "#/$defs/ConfigReplaceRule"
+        },
+        "title": "Masking",
+        "type": "array"
+      },
+      "sql": {
+        "$ref": "#/$defs/ConfigReplaceSql"
+      }
+    },
+    "required": [
+      "expected_revision",
+      "masking",
+      "exceptions",
+      "database",
+      "sql"
+    ],
+    "title": "ConfigReplaceRequest",
+    "type": "object"
+  },
+  "ConfigReplaceRule": {
+    "additionalProperties": false,
+    "description": "Uma regra no corpo de `PUT /config`. `id` OPCIONAL: presente preserva a\nidentidade; ausente cria (secao 11.3).",
+    "properties": {
+      "case_sensitive": {
+        "default": false,
+        "title": "Case Sensitive",
+        "type": "boolean"
+      },
+      "config": {
+        "additionalProperties": true,
+        "title": "Config",
+        "type": "object"
+      },
+      "id": {
+        "anyOf": [
+          {
+            "pattern": "^rul_[0-9a-f]{32}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Id"
+      },
+      "match": {
+        "minLength": 1,
+        "title": "Match",
+        "type": "string"
+      },
+      "mode": {
+        "$ref": "#/$defs/MatchMode",
+        "default": "contains"
+      },
+      "transformer": {
+        "minLength": 1,
+        "title": "Transformer",
+        "type": "string"
+      }
+    },
+    "required": [
+      "match",
+      "transformer"
+    ],
+    "title": "ConfigReplaceRule",
+    "type": "object"
+  },
+  "ConfigReplaceSql": {
+    "additionalProperties": false,
+    "description": "A secao `sql` no corpo de `PUT /config`: `denied_functions` obrigatorio.\n\n`denied_functions` e OBRIGATORIO numa substituicao integral: com um default\nvazio, `sql: {}` apagaria em silencio todas as negacoes. Ausente ->\n`SCHEMA_INVALID`.\n\n`allowed_pg_functions` presente em QUALQUER forma (inclusive `null`) ->\n`IMMUTABLE_FIELD` na mutacao, detectado por `model_fields_set`. Ausente -> o\nvalor atual e preservado. E o unico modo de preservar o allowlist imutavel.",
+    "properties": {
+      "allowed_pg_functions": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/JsonValue"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "denied_functions": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Denied Functions",
+        "type": "array"
+      }
+    },
+    "required": [
+      "denied_functions"
+    ],
+    "title": "ConfigReplaceSql",
+    "type": "object"
+  },
+  "ConfigValidateRequest": {
+    "additionalProperties": false,
+    "description": "`POST /admin/v1/config:validate`: o documento candidato na raiz.\n\nOs defaults reproduzem os de `MaskingFileConfig`, entao um documento minimo\n— corpo `{}` — e valido, exatamente como um `masking.yaml` vazio carrega.",
+    "properties": {
+      "database": {
+        "$ref": "#/$defs/ValidateDatabaseRequest"
+      },
+      "exceptions": {
+        "items": {
+          "$ref": "#/$defs/ValidateExceptionRequest"
+        },
+        "title": "Exceptions",
+        "type": "array"
+      },
+      "masking": {
+        "items": {
+          "$ref": "#/$defs/ValidateRuleRequest"
+        },
+        "title": "Masking",
+        "type": "array"
+      },
+      "revision": {
+        "default": 0,
+        "minimum": 0,
+        "title": "Revision",
+        "type": "integer"
+      },
+      "sql": {
+        "$ref": "#/$defs/ValidateSqlRequest"
+      }
+    },
+    "title": "ConfigValidateRequest",
+    "type": "object"
+  },
+  "ConfigValidateResponse": {
+    "additionalProperties": false,
+    "description": "Resposta de sucesso de `config:validate`. Quatro booleanos, e nada mais.\n\nSem `revision`, sem `applied`, sem conteudo normalizado, sem secret, sem\ndetalhe de transformer e sem representacao do objeto compilado: a operacao\nnao le estado nem publica nada, entao a resposta nao carrega identidade de\nconfiguracao alguma (D-058).\n\n`database_checks_performed` e sempre `false` nesta fase: `config:validate`\nNAO conecta ao PostgreSQL. Conectar tem custo e efeito no servidor, e a\nverificacao de conexao pertence ao fluxo real de escrita, onde ha um\ncandidato a publicar (secao 1.2). A resposta diz isso na propria forma, em\nvez de omitir e deixar o chamador supor.",
+    "properties": {
+      "database_checks_performed": {
+        "title": "Database Checks Performed",
+        "type": "boolean"
+      },
+      "policy_compiled": {
+        "title": "Policy Compiled",
+        "type": "boolean"
+      },
+      "schema_validated": {
+        "title": "Schema Validated",
+        "type": "boolean"
+      },
+      "valid": {
+        "title": "Valid",
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "valid",
+      "schema_validated",
+      "policy_compiled",
+      "database_checks_performed"
+    ],
+    "title": "ConfigValidateResponse",
+    "type": "object"
+  },
+  "DatabaseDocument": {
+    "additionalProperties": false,
+    "description": "Limites de execucao. Nao ha DSN, host nem credencial — nem para leitura.",
+    "properties": {
+      "max_rows": {
+        "title": "Max Rows",
+        "type": "integer"
+      },
+      "statement_timeout_ms": {
+        "title": "Statement Timeout Ms",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "statement_timeout_ms",
+      "max_rows"
+    ],
+    "title": "DatabaseDocument",
+    "type": "object"
+  },
+  "DatabaseWriteRequest": {
+    "additionalProperties": false,
+    "description": "`PUT /admin/v1/database`: substitui os dois limites, ambos obrigatorios.\n\nNao ha DSN, host, usuario, senha nem parametro de conexao — um campo desses\ncai no `extra=\"forbid\"`.",
+    "properties": {
+      "expected_revision": {
+        "minimum": 0,
+        "title": "Expected Revision",
+        "type": "integer"
+      },
+      "max_rows": {
+        "maximum": 1000000,
+        "minimum": 1,
+        "title": "Max Rows",
+        "type": "integer"
+      },
+      "statement_timeout_ms": {
+        "maximum": 600000,
+        "minimum": 100,
+        "title": "Statement Timeout Ms",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "expected_revision",
+      "statement_timeout_ms",
+      "max_rows"
+    ],
+    "title": "DatabaseWriteRequest",
+    "type": "object"
+  },
+  "DeleteRequest": {
+    "additionalProperties": false,
+    "description": "Corpo de um `DELETE` de regra/exception: so `expected_revision`.",
+    "properties": {
+      "expected_revision": {
+        "minimum": 0,
+        "title": "Expected Revision",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "expected_revision"
+    ],
+    "title": "DeleteRequest",
+    "type": "object"
+  },
+  "ExceptionContent": {
+    "additionalProperties": false,
+    "description": "O conteudo de uma exception num corpo granular: sem `id`, sem `position`.\n\nSem `transformer` nem `config`: uma exception que os trouxesse cairia no\n`extra=\"forbid\"`.",
+    "properties": {
+      "case_sensitive": {
+        "default": false,
+        "title": "Case Sensitive",
+        "type": "boolean"
+      },
+      "match": {
+        "minLength": 1,
+        "title": "Match",
+        "type": "string"
+      },
+      "mode": {
+        "$ref": "#/$defs/MatchMode",
+        "default": "exact"
+      }
+    },
+    "required": [
+      "match"
+    ],
+    "title": "ExceptionContent",
+    "type": "object"
+  },
+  "ExceptionCreateRequest": {
+    "additionalProperties": false,
+    "description": "`POST /admin/v1/exceptions`: cria uma exception, sempre ao final.",
+    "properties": {
+      "exception": {
+        "$ref": "#/$defs/ExceptionContent"
+      },
+      "expected_revision": {
+        "minimum": 0,
+        "title": "Expected Revision",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "expected_revision",
+      "exception"
+    ],
+    "title": "ExceptionCreateRequest",
+    "type": "object"
+  },
+  "ExceptionDocument": {
+    "additionalProperties": false,
+    "description": "Uma exception como o arquivo a descreve. Nao tem transformer.",
+    "properties": {
+      "case_sensitive": {
+        "title": "Case Sensitive",
+        "type": "boolean"
+      },
+      "id": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Id"
+      },
+      "match": {
+        "title": "Match",
+        "type": "string"
+      },
+      "mode": {
+        "$ref": "#/$defs/MatchMode"
+      }
+    },
+    "required": [
+      "id",
+      "match",
+      "mode",
+      "case_sensitive"
+    ],
+    "title": "ExceptionDocument",
+    "type": "object"
+  },
+  "ExceptionReplaceRequest": {
+    "additionalProperties": false,
+    "description": "`PUT /admin/v1/exceptions/{exception_id}`: substitui, preserva ID/posicao.",
+    "properties": {
+      "exception": {
+        "$ref": "#/$defs/ExceptionContent"
+      },
+      "expected_revision": {
+        "minimum": 0,
+        "title": "Expected Revision",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "expected_revision",
+      "exception"
+    ],
+    "title": "ExceptionReplaceRequest",
+    "type": "object"
+  },
+  "ExceptionView": {
+    "additionalProperties": false,
+    "description": "Exception com a posicao no arquivo.\n\nEntre exceptions a ordem **nao** e semantica: toda exception que casa\nproduz o mesmo desfecho, `ORIGINAL`. `position` esta aqui como referencia\nde leitura, e e por isso que nao existe reordenacao de exceptions.",
+    "properties": {
+      "case_sensitive": {
+        "title": "Case Sensitive",
+        "type": "boolean"
+      },
+      "id": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Id"
+      },
+      "match": {
+        "title": "Match",
+        "type": "string"
+      },
+      "mode": {
+        "$ref": "#/$defs/MatchMode"
+      },
+      "position": {
+        "title": "Position",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "id",
+      "match",
+      "mode",
+      "case_sensitive",
+      "position"
+    ],
+    "title": "ExceptionView",
+    "type": "object"
+  },
+  "JsonValue": {},
+  "MatchMode": {
+    "description": "Modo de comparacao de um nome de coluna contra o padrao da regra.",
+    "enum": [
+      "contains",
+      "exact"
+    ],
+    "title": "MatchMode",
+    "type": "string"
+  },
+  "ProtectedSession": {
+    "additionalProperties": false,
+    "description": "Garantias de sessao conferidas apos conectar (D-026, D-028, D-040).",
+    "properties": {
+      "provenance_capability_required": {
+        "title": "Provenance Capability Required",
+        "type": "boolean"
+      },
+      "read_only": {
+        "title": "Read Only",
+        "type": "boolean"
+      },
+      "statement_timeout_enforced_by": {
+        "title": "Statement Timeout Enforced By",
+        "type": "string"
+      }
+    },
+    "required": [
+      "read_only",
+      "statement_timeout_enforced_by",
+      "provenance_capability_required"
+    ],
+    "title": "ProtectedSession",
+    "type": "object"
+  },
+  "RuleContent": {
+    "additionalProperties": false,
+    "description": "O conteudo de uma regra num corpo granular: sem `id`, sem `position`.\n\nEspelha `RuleConfig` (mesmos defaults do loader), mas sem os campos que sao\nidentidade do servidor ou ordem. Um `id` ou `position` aqui cai no\n`extra=\"forbid\"` — `SCHEMA_INVALID`.",
+    "properties": {
+      "case_sensitive": {
+        "default": false,
+        "title": "Case Sensitive",
+        "type": "boolean"
+      },
+      "config": {
+        "additionalProperties": true,
+        "title": "Config",
+        "type": "object"
+      },
+      "match": {
+        "minLength": 1,
+        "title": "Match",
+        "type": "string"
+      },
+      "mode": {
+        "$ref": "#/$defs/MatchMode",
+        "default": "contains"
+      },
+      "transformer": {
+        "minLength": 1,
+        "title": "Transformer",
+        "type": "string"
+      }
+    },
+    "required": [
+      "match",
+      "transformer"
+    ],
+    "title": "RuleContent",
+    "type": "object"
+  },
+  "RuleCreateRequest": {
+    "additionalProperties": false,
+    "description": "`POST /admin/v1/rules`: cria uma regra. `position` opcional (default fim).",
+    "properties": {
+      "expected_revision": {
+        "minimum": 0,
+        "title": "Expected Revision",
+        "type": "integer"
+      },
+      "position": {
+        "anyOf": [
+          {
+            "minimum": 0,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Position"
+      },
+      "rule": {
+        "$ref": "#/$defs/RuleContent"
+      }
+    },
+    "required": [
+      "expected_revision",
+      "rule"
+    ],
+    "title": "RuleCreateRequest",
+    "type": "object"
+  },
+  "RuleDocument": {
+    "additionalProperties": false,
+    "description": "Uma regra como o arquivo a descreve.",
+    "properties": {
+      "case_sensitive": {
+        "title": "Case Sensitive",
+        "type": "boolean"
+      },
+      "config": {
+        "additionalProperties": true,
+        "title": "Config",
+        "type": "object"
+      },
+      "id": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Id"
+      },
+      "match": {
+        "title": "Match",
+        "type": "string"
+      },
+      "mode": {
+        "$ref": "#/$defs/MatchMode"
+      },
+      "transformer": {
+        "title": "Transformer",
+        "type": "string"
+      }
+    },
+    "required": [
+      "id",
+      "match",
+      "mode",
+      "case_sensitive",
+      "transformer",
+      "config"
+    ],
+    "title": "RuleDocument",
+    "type": "object"
+  },
+  "RuleReorderRequest": {
+    "additionalProperties": false,
+    "description": "`POST /admin/v1/rules:reorder`: a lista completa de IDs na nova ordem.\n\nCada item de `rule_ids` deve casar `RULE_ID_PATTERN` NO SCHEMA: um ID\nmalformado e `SCHEMA_INVALID`, nao `CONFIG_INVALID` — o formato e uma falha de\nforma do request. A lista PODE ser vazia: e a permutacao completa do conjunto\nvazio, valida quando a configuracao nao tem regra alguma.\n\nJa a semantica — permutacao completa, sem duplicata, sem ID estranho — depende\ndo estado e e conferida na mutacao, que a recusa com `CONFIG_INVALID`.",
+    "properties": {
+      "expected_revision": {
+        "minimum": 0,
+        "title": "Expected Revision",
+        "type": "integer"
+      },
+      "rule_ids": {
+        "items": {
+          "pattern": "^rul_[0-9a-f]{32}$",
+          "type": "string"
+        },
+        "title": "Rule Ids",
+        "type": "array"
+      }
+    },
+    "required": [
+      "expected_revision"
+    ],
+    "title": "RuleReorderRequest",
+    "type": "object"
+  },
+  "RuleReplaceRequest": {
+    "additionalProperties": false,
+    "description": "`PUT /admin/v1/rules/{rule_id}`: substitui o conteudo, preserva ID/posicao.",
+    "properties": {
+      "expected_revision": {
+        "minimum": 0,
+        "title": "Expected Revision",
+        "type": "integer"
+      },
+      "rule": {
+        "$ref": "#/$defs/RuleContent"
+      }
+    },
+    "required": [
+      "expected_revision",
+      "rule"
+    ],
+    "title": "RuleReplaceRequest",
+    "type": "object"
+  },
+  "RuleView": {
+    "additionalProperties": false,
+    "description": "Regra com a posicao de avaliacao.\n\n`position` e DERIVADO da ordem no arquivo, e nao um campo dele. A ordem\ncontinua semanticamente relevante — *first match wins* (D-004) —, entao o\nID estavel nao a substitui: sao coisas distintas, e reordenar e operacao\npropria (D-051).",
+    "properties": {
+      "case_sensitive": {
+        "title": "Case Sensitive",
+        "type": "boolean"
+      },
+      "config": {
+        "additionalProperties": true,
+        "title": "Config",
+        "type": "object"
+      },
+      "id": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Id"
+      },
+      "match": {
+        "title": "Match",
+        "type": "string"
+      },
+      "mode": {
+        "$ref": "#/$defs/MatchMode"
+      },
+      "position": {
+        "title": "Position",
+        "type": "integer"
+      },
+      "transformer": {
+        "title": "Transformer",
+        "type": "string"
+      }
+    },
+    "required": [
+      "id",
+      "match",
+      "mode",
+      "case_sensitive",
+      "transformer",
+      "config",
+      "position"
+    ],
+    "title": "RuleView",
+    "type": "object"
+  },
+  "SecretState": {
+    "description": "Os dois unicos estados publicaveis de um secret (secao 11.1).",
+    "enum": [
+      "configured",
+      "missing"
+    ],
+    "title": "SecretState",
+    "type": "string"
+  },
+  "SqlDocument": {
+    "additionalProperties": false,
+    "description": "Extensoes de politica declaradas no arquivo.\n\n`allowed_pg_functions` aparece como LEITURA e nada mais. Nenhuma rota o\nacrescenta, remove ou altera: o campo pode liberar `pg_read_file`, e\nadministra-lo por HTTP reabriria leitura de arquivos do servidor por\nchamada de API (secao 11.3, D-050).",
+    "properties": {
+      "allowed_pg_functions": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Allowed Pg Functions",
+        "type": "array"
+      },
+      "denied_functions": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Denied Functions",
+        "type": "array"
+      }
+    },
+    "required": [
+      "allowed_pg_functions",
+      "denied_functions"
+    ],
+    "title": "SqlDocument",
+    "type": "object"
+  },
+  "SqlWriteRequest": {
+    "additionalProperties": false,
+    "description": "`PUT /admin/v1/sql`: aditivo em `denied_functions` (secao 11.3).\n\n`allowed_pg_functions` NAO e administravel. Ele e declarado aqui apenas para\nque sua PRESENCA — em QUALQUER forma, inclusive `null`, `[]`, string, objeto,\nbooleano ou numero — seja recusada com `IMMUTABLE_FIELD` na mutacao.\n\nA presenca e detectada por `model_fields_set`, nunca pelo VALOR: `null`\nexplicito e um campo presente, e trata-lo como ausente (checando `is not\nNone`) era o bypass corrigido. O tipo do campo e `object` de proposito — nao\n`list[str] | None` —, para que qualquer forma seja ACEITA pelo schema e a\nrecusa seja `IMMUTABLE_FIELD` (administrativa), e nao `SCHEMA_INVALID`. O\ndefault e um sentinela privado, distinto de qualquer valor JSON, para que a\nausencia seja inequivoca mesmo se `model_fields_set` fosse insuficiente.",
+    "properties": {
+      "allowed_pg_functions": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/JsonValue"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "denied_functions": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Denied Functions",
+        "type": "array"
+      },
+      "expected_revision": {
+        "minimum": 0,
+        "title": "Expected Revision",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "expected_revision"
+    ],
+    "title": "SqlWriteRequest",
+    "type": "object"
+  },
+  "TransformerView": {
+    "additionalProperties": false,
+    "description": "Um transformer do catalogo: nome e parametros aceitos.\n\nNomes, e nada alem de nomes. Nenhum objeto, nenhum callable, nenhum\ndefault e nenhum exemplo — `hmac_sha256` aparece sem parametro algum\nporque a chave vem do ambiente, e declarar `key` aqui sugeriria que ela\npoderia morar no arquivo.",
+    "properties": {
+      "name": {
+        "title": "Name",
+        "type": "string"
+      },
+      "optional_parameters": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Optional Parameters",
+        "type": "array"
+      },
+      "required_parameters": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Required Parameters",
+        "type": "array"
+      }
+    },
+    "required": [
+      "name",
+      "required_parameters",
+      "optional_parameters"
+    ],
+    "title": "TransformerView",
+    "type": "object"
+  },
+  "ValidateDatabaseRequest": {
+    "additionalProperties": false,
+    "description": "Limites de execucao candidatos. Mesmos limites de `DatabaseConfig`.\n\nNao ha DSN, host nem credencial — nem para leitura, nem para validacao.",
+    "properties": {
+      "max_rows": {
+        "default": 1000,
+        "maximum": 1000000,
+        "minimum": 1,
+        "title": "Max Rows",
+        "type": "integer"
+      },
+      "statement_timeout_ms": {
+        "default": 30000,
+        "maximum": 600000,
+        "minimum": 100,
+        "title": "Statement Timeout Ms",
+        "type": "integer"
+      }
+    },
+    "title": "ValidateDatabaseRequest",
+    "type": "object"
+  },
+  "ValidateExceptionRequest": {
+    "additionalProperties": false,
+    "description": "Uma exception candidata. `mode` default `exact`, como `ExceptionConfig`.\n\nNao tem `transformer` nem `config`: uma exception que os trouxesse cairia no\n`extra=\"forbid\"` e viraria `SCHEMA_INVALID`, que e o comportamento exigido.",
+    "properties": {
+      "case_sensitive": {
+        "default": false,
+        "title": "Case Sensitive",
+        "type": "boolean"
+      },
+      "id": {
+        "anyOf": [
+          {
+            "pattern": "^exc_[0-9a-f]{32}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Id"
+      },
+      "match": {
+        "minLength": 1,
+        "title": "Match",
+        "type": "string"
+      },
+      "mode": {
+        "$ref": "#/$defs/MatchMode",
+        "default": "exact"
+      }
+    },
+    "required": [
+      "match"
+    ],
+    "title": "ValidateExceptionRequest",
+    "type": "object"
+  },
+  "ValidateMatchRequest": {
+    "additionalProperties": false,
+    "description": "Campos comuns a regra e exception no request de validacao.\n\nEspelha `MatchConfig`: `match` nao vazio, `mode` do enum, `case_sensitive`.\nOs defaults sao os MESMOS do loader (`contains` para regra, `exact` para\nexception), para que o documento validado aqui seja identico ao que a\nescrita real compilaria.",
+    "properties": {
+      "case_sensitive": {
+        "default": false,
+        "title": "Case Sensitive",
+        "type": "boolean"
+      },
+      "match": {
+        "minLength": 1,
+        "title": "Match",
+        "type": "string"
+      }
+    },
+    "required": [
+      "match"
+    ],
+    "title": "ValidateMatchRequest",
+    "type": "object"
+  },
+  "ValidateRuleRequest": {
+    "additionalProperties": false,
+    "description": "Uma regra candidata. `mode` default `contains`, como em `RuleConfig`.",
+    "properties": {
+      "case_sensitive": {
+        "default": false,
+        "title": "Case Sensitive",
+        "type": "boolean"
+      },
+      "config": {
+        "additionalProperties": true,
+        "title": "Config",
+        "type": "object"
+      },
+      "id": {
+        "anyOf": [
+          {
+            "pattern": "^rul_[0-9a-f]{32}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Id"
+      },
+      "match": {
+        "minLength": 1,
+        "title": "Match",
+        "type": "string"
+      },
+      "mode": {
+        "$ref": "#/$defs/MatchMode",
+        "default": "contains"
+      },
+      "transformer": {
+        "minLength": 1,
+        "title": "Transformer",
+        "type": "string"
+      }
+    },
+    "required": [
+      "match",
+      "transformer"
+    ],
+    "title": "ValidateRuleRequest",
+    "type": "object"
+  },
+  "ValidateSqlRequest": {
+    "additionalProperties": false,
+    "description": "Extensoes de politica candidatas.\n\n`allowed_pg_functions` e aceito aqui porque `config:validate` valida o\ndocumento inteiro tal como seria escrito — o campo pode existir no arquivo.\nO que a Etapa 8 NAO faz e administra-lo: nao ha rota que o altere, e este\nrequest nunca persiste nada (D-050, secao 11.3).",
+    "properties": {
+      "allowed_pg_functions": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Allowed Pg Functions",
+        "type": "array"
+      },
+      "denied_functions": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Denied Functions",
+        "type": "array"
+      }
+    },
+    "title": "ValidateSqlRequest",
+    "type": "object"
+  },
+  "WriteResponse": {
+    "additionalProperties": false,
+    "description": "Sucesso de qualquer escrita: a revision nova e a confirmacao (secao 4.4).\n\nExatamente dois campos. Sem conteudo do documento, sem digest, sem secret:\no cliente relê o estado com um `GET` se precisar do resto.",
+    "properties": {
+      "applied": {
+        "const": true,
+        "default": true,
+        "title": "Applied",
+        "type": "boolean"
+      },
+      "revision": {
+        "title": "Revision",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "revision",
+      "applied"
+    ],
+    "title": "WriteResponse",
+    "type": "object"
+  }
+}

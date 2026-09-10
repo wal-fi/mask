@@ -1,6 +1,6 @@
 # Fase 8 — Front-end · Especificação aprovada
 
-**Estado:** aprovada; Etapa 1 concluída.
+**Estado:** aprovada; Etapa 1 concluída e publicada; Etapa 2 concluída.
 **Base:** Fase 7 concluída no commit `27d92bd580875e9eb2abb04db102eb98af2054fe`.
 
 ## 1. Arquitetura recomendada e justificativa
@@ -1059,4 +1059,4 @@ Foram aprovadas integralmente as quatro decisões de produto/arquitetura:
 3. **Escopo funcional:** CRUD granular; reorder somente de regras; SQL aditivo; ausência de substituição completa pela UI.
 4. **Contrato operacional:** token/rascunhos apenas em memória, recuperação sem retry ou rollback automático e gates de tipagem, navegador e PostgreSQL reais.
 
-As quatro decisões desta seção foram aprovadas integralmente em 2026-09-09. Nesta rodada, está autorizada exclusivamente a Etapa 1 documental e sua baseline. As Etapas 2–9, qualquer implementação funcional e qualquer publicação aguardam nova revisão e autorização explícita.
+As quatro decisões desta seção foram aprovadas integralmente em 2026-09-09. A Etapa 1 foi concluída, revisada sem ressalvas e publicada sem emenda no commit `aebe31d0dbaba3238e97ae3ad13bf20fdd615211`. A autorização seguinte abrange exclusivamente a Etapa 2 e seus gates; não abrange flag, startup, HTTP, telas funcionais ou transporte administrativo. As Etapas 3–9 e a publicação do commit local da Etapa 2 aguardam nova revisão e autorização explícita. Evidência: `docs/PHASE-8-STAGE-2-VALIDATION.md`.

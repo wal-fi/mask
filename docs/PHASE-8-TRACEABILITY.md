@@ -1,6 +1,6 @@
 # Fase 8 — matriz de rastreabilidade normativa
 
-**Estado:** aprovada; Etapa 1 concluída. **Data:** 2026-09-09.
+**Estado:** aprovada; Etapa 1 publicada; Etapa 2 concluída. **Atualização:** 2026-09-10.
 **Fonte normativa integral:** [PHASE-8-SPEC.md](PHASE-8-SPEC.md), aprovada
 integralmente, com decisões [D-061 a D-064](DECISIONS.md#d-061--ui-administrativa-embarcada-opt-in-e-na-mesma-origem).
 
@@ -8,14 +8,16 @@ Esta matriz é um índice verificável, não uma versão reduzida da especifica�
 Cada linha cobre **todos** os requisitos, listas, limites e contraprovas das
 subseções indicadas, inclusive quando a descrição abaixo não os repete.
 O texto integral prevalece. O mapeamento é muitos-para-muitos: um gate comum
-não dispensa os testes específicos. Nenhuma linha de implementação está
-concluída nesta Etapa 1; todos os componentes de UI e testes novos são previstos.
+não dispensa os testes específicos. A fundação da Etapa 2 está implementada nos limites do quadro de entrega abaixo;
+requisitos que atravessam etapas continuam parcialmente pendentes. Nenhum gate
+de navegador/HTTP ou fluxo funcional é inferido desses testes de fundação.
 
-As Etapas 2–9 somente poderão começar após autorização. Os nomes de componentes
-abaixo são responsabilidades previstas, não arquivos criados ou APIs novas.
+A Etapa 2 foi autorizada após revisão e publicação da Etapa 1. As Etapas 3–9
+continuam sem autorização. A tabela normativa mantém os componentes previstos;
+o quadro de entrega identifica quais já existem, sem antecipar APIs.
 As seções 1–2 e 8 também fundamentam D-061–D-064; a seção 7 fixa ordem, aceite
-e rollback. Evidência da única etapa executada nesta rodada:
-[PHASE-8-STAGE-1-VALIDATION.md](PHASE-8-STAGE-1-VALIDATION.md).
+e rollback. Evidências: [Etapa 1, histórica](PHASE-8-STAGE-1-VALIDATION.md) e
+[Etapa 2, rodada atual](PHASE-8-STAGE-2-VALIDATION.md).
 
 ## Gates acumulados
 
@@ -117,3 +119,27 @@ requisito, reutilizando cobertura existente quando suficiente. Enquanto o teste
 não existir ou o gate não passar, a linha permanece pendente. Não preencher
 resultado de UI com a baseline Python da Etapa 1. Ao fechar cada etapa, revisar
 os IDs que ela entrega e executar todos os gates acumulados aplicáveis.
+
+
+## Entrega da Etapa 2 e pendências preservadas
+
+**Etapa 2 concluída; gates aplicáveis aprovados.** Os resultados medidos
+estão na evidência da etapa. O status abaixo descreve implementação de fundação,
+não conclusão integral dos IDs que também exigem Etapas 3–9.
+
+| IDs | Componente entregue | Teste/gate concreto | O que continua pendente |
+|---|---|---|---|
+| F8-001, 006, 054 | package-data/MANIFEST.in, recursos em `maskgw.admin.ui`, LF fixo por `.gitattributes` | G-PKG: inventário de wheel/sdist e instalação isolada fora do checkout | Processo/origem/lifecycle e entrega HTTP |
+| F8-007–018, 025, 035–037, 053 | `frontend/private/contracts.d.ts`, tipos derivados dos onze contratos, união UiWriteContract de dez, defaults, seis vistas/oito editores estáticos | G-TYPE; `contracts.js`, oito contraprovas de compilação e paridade de catálogo em Node/Python | Renderização, DTOs recebidos em sessão, formulários, transporte e efeitos |
+| F8-023–024, 032, 034, 056–057 | `generate.py` deriva 193 entradas; `inspect.js` examina bytes/literais/identificadores/concatenações | G-UNIT/G-SEC: contraprovas em cada recurso e encodings; inspeção no build e npm run inspect | Respostas HTTP reais, DOM/XSS e lifecycle de token |
+| F8-025–027, 033, 055 | `protocol.py` e `protocol.js`; 110 modelos, 19 chamadas, 35 controles, validação independente de grafo/catálogo | `test_admin_ui_resources.py`, `protocol.test.js`: chaves/refs/ciclos/defaults/uniões/projeções/templates/protótipos e limites 128/16/512 | Interpretador de rendering/projeções e conferência Web Crypto antes de sessão |
+| F8-038–039, 051, 056 | Catálogo privado `_catalog.py` comparado por igualdade; fontes HTTP atuais preservadas | `test_package_catalog_is_exact_and_independent`, `test_catalog_refuses_valid_but_unauthorized_call`, `test_no_runtime_or_http_wiring_added` | Inventário HTTP condicional 24/36 e autenticação das novas rotas |
+| F8-050 | `resources.py`, quatro recursos, manifesto interno, SHA-256 privado/manifesto/modelos; carga limitada e imutável | Corrupção/ausência/UTF-8/JSON/duplicatas/tamanhos máximos+1, manifesto reancorado hostil e erro sem cadeia | Chamar o validador na ordem de startup da Etapa 3 |
+| F8-052–054, 062–063 | Node/npm/TypeScript/Playwright fixados, lock v3, npm ci; sem bibliotecas de runtime | Versões medidas; G-TYPE; dois builds idênticos em 14 arquivos; G-PKG; G-PY completo | Executar gates acumulados novamente em cada etapa futura |
+
+`presentation.json` é metadado estático, não snapshot do Gateway. O HTML é
+somente shell e o JS só verifica o protocolo: não há DOM dinâmico, fetch,
+Storage, polling, formulários funcionais, CRUD ou execução das projeções.
+Não marcar F8-028–031, 040–049, 058–061 ou 064–065 como concluídos por esta
+entrega: seus comportamentos de servidor/navegador/operação ainda não existem.
+O gate PostgreSQL da etapa reproduz e protege o produto Python existente.

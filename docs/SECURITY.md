@@ -464,9 +464,9 @@ detalhados em `docs/FUTURE-HARDENING.md`:
 - transformers Python customizados
 - multi-tenant
 
-## Fase 8 — fronteira de navegador aprovada; Etapa 1 documental
+## Fase 8 — fundação da Etapa 2, sem integração de navegador
 
-**Aprovada; Etapa 1 concluída.** O contrato normativo completo de segurança
+**Aprovada; Etapa 2 concluída.** O contrato normativo completo de segurança
 está em `docs/PHASE-8-SPEC.md`, especialmente §§3.14–3.16, 4 e 5; os gates
 estão em `docs/PHASE-8-TRACEABILITY.md`. D-061 a D-064 registram a aprovação.
 Nenhuma proteção prevista da UI deve ser confundida com controle já entregue.
@@ -494,3 +494,21 @@ escrita automaticamente. SQL, resultados do banco, auditoria consultável,
 edição de secrets/allowed_pg_functions/IDs/revision e expansão do MCP seguem
 excluídos. A reprodução da baseline nesta etapa não comprova controles de UI
 futuros e não encerra os findings previamente aceitos.
+
+A Etapa 2 acrescenta validação independente de recursos e protocolo; não
+altera nenhuma recusa HTTP. Destinos, referências, chaves e segmentos são
+fechados; nomes de identidade em templates também rejeitam prototype pollution.
+O grafo é memoizado, limitado a profundidade 16, e defaults obedecem ao tipo
+referenciado. Projeções só descrevem fontes base/draft e não são executadas.
+
+O verificador dos bytes públicos deriva o vocabulário dos schemas, rotas,
+enums, registry e valores de proteção atuais, descontando somente a lista
+compartilhada aprovada. Testa escapes/concatenações e cada recurso. O JS público
+não contém código de DOM, fetch, armazenamento, log ou execução administrativa.
+A integridade liga apresentação → JS → manifesto → âncora Python; a carga
+retorna bytes imutáveis e erro fixo sem cadeia. Alterar um pacote enquanto está
+sendo validado não é operação suportada: o build deve preceder os testes/uso.
+
+Os testes desta etapa não substituem os gates de CSP, origem, BFCache, XSS em
+DOM, sessão e navegador real das Etapas 3–9. Esses controles ainda não foram
+implementados, e nenhum resultado da baseline é apresentado como prova deles.

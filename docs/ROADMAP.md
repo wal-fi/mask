@@ -347,13 +347,15 @@ novo; todos os cenários `BLOCKED`.
 
 ## FASE 8 — Front-end
 
-**STATUS: APROVADA; ETAPA 1 CONCLUÍDA.** A Fase 7 está concluída.
+**STATUS: APROVADA; ETAPA 2 CONCLUÍDA.** Fase 7 concluída; Etapa 1 da
+Fase 8 revisada e publicada em `aebe31d0dbaba3238e97ae3ad13bf20fdd615211`.
 
-Contrato integral em `docs/PHASE-8-SPEC.md`, decisões D-061 a D-064 e matriz
-em `docs/PHASE-8-TRACEABILITY.md`. A Etapa 1 entrega somente documentação e
-baseline real; nenhuma UI ou dependência é implementada nesta rodada.
-A sequência das Etapas 2–9 está em §7.1 da especificação e exige autorização
-antes de avançar. Evidência desta rodada: `docs/PHASE-8-STAGE-1-VALIDATION.md`.
+A Etapa 2 entrega tipos, gramática/catálogo privados, recursos embarcados,
+build determinístico e validação Python independente. Não há startup, flag,
+rotas, sessão ou UI funcional. Contrato integral em `docs/PHASE-8-SPEC.md`,
+D-061 a D-064 e rastreabilidade em `docs/PHASE-8-TRACEABILITY.md`. Evidência
+medida em `docs/PHASE-8-STAGE-2-VALIDATION.md`. Parar antes da Etapa 3; commit
+local desta etapa sem push.
 
 ---
 
@@ -368,8 +370,8 @@ alteração do transporte MCP.
 
 ## Estado atual
 
-Fase 8 aprovada; Etapa 1 concluída, exclusivamente documental. A medição
-desta rodada está em `docs/PHASE-8-STAGE-1-VALIDATION.md`; os números abaixo
+Fase 8 aprovada; Etapa 2 concluída. A medição desta rodada está em
+`docs/PHASE-8-STAGE-2-VALIDATION.md`; os números abaixo
 registram o fechamento anterior da Fase 7.
 
 Fases 1 a 6.1 concluídas. **Fase 7 (Admin API) concluída**, com as onze etapas

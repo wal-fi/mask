@@ -11,12 +11,13 @@ IA → MCP → Gateway → SQL Validator → PostgreSQL → provenance
 
 ## Estado: MVP completo + Fase 7 concluída + Fase 8 aprovada
 
-**Fase 8: aprovada; Etapa 1 concluída.** A especificação integral está em
-`docs/PHASE-8-SPEC.md`, com rastreabilidade em `docs/PHASE-8-TRACEABILITY.md`
-e decisões D-061 a D-064. Esta rodada é documental e reproduz a baseline;
-nenhuma UI, flag, rota ou dependência nova foi implementada. As Etapas 2–9
-aguardam revisão e autorização explícita. A exceção de escopo em `AGENTS.md`
-é somente para a UI administrativa local e opt-in dessa especificação.
+**Fase 8: aprovada; Etapa 2 concluída.** A Etapa 1 foi publicada em
+`aebe31d0dbaba3238e97ae3ad13bf20fdd615211`. A Etapa 2 entrega stack frontend
+fixada, tipos e protocolo fechado, apresentação estática, recursos embarcados
+e validador Python independente. Não há flag, integração de startup, entrega
+HTTP, sessão, polling ou telas funcionais. As Etapas 3–9 aguardam revisão;
+não publicar o commit local desta etapa. Leia `docs/PHASE-8-SPEC.md`,
+`docs/PHASE-8-TRACEABILITY.md` e `docs/PHASE-8-STAGE-2-VALIDATION.md`.
 
 **As seis fases do roadmap estão concluídas**, mais a Fase 6.1 de hardening e a
 **Fase 7 (Admin API) inteira**. O produto executa fim a fim: um cliente MCP real
@@ -40,7 +41,7 @@ Nesta ordem:
 7. `docs/TEST-PLAN.md`, `docs/THREAT-MODEL.md`, `docs/FUTURE-HARDENING.md`
 
 `docs/ROADMAP.md` preserva o histórico das seis fases fechadas e registra o
-fechamento da Fase 7 e a Etapa 1 documental da Fase 8. Para a Fase 8, também
+fechamento da Fase 7 e a Etapa 2 da Fase 8. Para a Fase 8, também
 é obrigatória a leitura integral de `docs/PHASE-8-SPEC.md` e da sua matriz.
 
 ## Objetivo

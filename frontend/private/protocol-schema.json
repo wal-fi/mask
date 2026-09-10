@@ -1,0 +1,844 @@
+{
+  "$defs": {
+    "Binding": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "model": {
+          "title": "Model",
+          "type": "string"
+        },
+        "path": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ]
+          },
+          "title": "Path",
+          "type": "array"
+        },
+        "role": {
+          "enum": [
+            "version",
+            "identity",
+            "order",
+            "consent",
+            "result"
+          ],
+          "title": "Role",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "role",
+        "model",
+        "path"
+      ],
+      "title": "Binding",
+      "type": "object"
+    },
+    "Boolean": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "boolean",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "Boolean",
+      "type": "object"
+    },
+    "Call": {
+      "additionalProperties": false,
+      "properties": {
+        "error": {
+          "title": "Error",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "identity": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Identity"
+        },
+        "input": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Input"
+        },
+        "method": {
+          "enum": [
+            "GET",
+            "POST",
+            "PUT",
+            "DELETE"
+          ],
+          "title": "Method",
+          "type": "string"
+        },
+        "operation": {
+          "enum": [
+            "read",
+            "create",
+            "replace",
+            "delete",
+            "move",
+            "check",
+            "confirm",
+            "append"
+          ],
+          "title": "Operation",
+          "type": "string"
+        },
+        "output": {
+          "title": "Output",
+          "type": "string"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "method",
+        "path",
+        "input",
+        "output",
+        "error",
+        "operation",
+        "identity"
+      ],
+      "title": "Call",
+      "type": "object"
+    },
+    "Choice": {
+      "additionalProperties": false,
+      "properties": {
+        "choices": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "boolean"
+              }
+            ]
+          },
+          "minItems": 1,
+          "title": "Choices",
+          "type": "array"
+        },
+        "type": {
+          "const": "enum",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "choices"
+      ],
+      "title": "Choice",
+      "type": "object"
+    },
+    "Condition": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ]
+          },
+          "title": "Path",
+          "type": "array"
+        },
+        "type": {
+          "enum": [
+            "present",
+            "equal",
+            "choice",
+            "boolean"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        }
+      },
+      "required": [
+        "type",
+        "path"
+      ],
+      "title": "Condition",
+      "type": "object"
+    },
+    "Control": {
+      "additionalProperties": false,
+      "properties": {
+        "condition": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Condition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "default": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Default"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "model": {
+          "title": "Model",
+          "type": "string"
+        },
+        "path": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ]
+          },
+          "title": "Path",
+          "type": "array"
+        },
+        "projections": {
+          "items": {
+            "$ref": "#/$defs/Projection"
+          },
+          "maxItems": 512,
+          "title": "Projections",
+          "type": "array"
+        },
+        "type": {
+          "enum": [
+            "text",
+            "integer",
+            "checkbox",
+            "select",
+            "table",
+            "list",
+            "read",
+            "confirm"
+          ],
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "path",
+        "model",
+        "label"
+      ],
+      "title": "Control",
+      "type": "object"
+    },
+    "Definition": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "shape": {
+          "discriminator": {
+            "mapping": {
+              "boolean": "#/$defs/Boolean",
+              "enum": "#/$defs/Choice",
+              "integer": "#/$defs/Integer",
+              "list": "#/$defs/Sequence",
+              "nullable": "#/$defs/Sequence",
+              "object": "#/$defs/Object",
+              "string": "#/$defs/Text",
+              "union": "#/$defs/Union"
+            },
+            "propertyName": "type"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Text"
+            },
+            {
+              "$ref": "#/$defs/Integer"
+            },
+            {
+              "$ref": "#/$defs/Boolean"
+            },
+            {
+              "$ref": "#/$defs/Choice"
+            },
+            {
+              "$ref": "#/$defs/Object"
+            },
+            {
+              "$ref": "#/$defs/Sequence"
+            },
+            {
+              "$ref": "#/$defs/Union"
+            }
+          ],
+          "title": "Shape"
+        }
+      },
+      "required": [
+        "id",
+        "shape"
+      ],
+      "title": "Definition",
+      "type": "object"
+    },
+    "Editor": {
+      "additionalProperties": false,
+      "properties": {
+        "controls": {
+          "items": {
+            "$ref": "#/$defs/Control"
+          },
+          "title": "Controls",
+          "type": "array"
+        },
+        "help": {
+          "title": "Help",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "model": {
+          "title": "Model",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "model",
+        "controls",
+        "help"
+      ],
+      "title": "Editor",
+      "type": "object"
+    },
+    "FieldLink": {
+      "additionalProperties": false,
+      "properties": {
+        "default": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Default"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "ref": {
+          "title": "Ref",
+          "type": "string"
+        },
+        "required": {
+          "title": "Required",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "name",
+        "ref",
+        "required"
+      ],
+      "title": "FieldLink",
+      "type": "object"
+    },
+    "Integer": {
+      "additionalProperties": false,
+      "properties": {
+        "max": {
+          "default": 9007199254740991,
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "title": "Max",
+          "type": "integer"
+        },
+        "min": {
+          "default": 0,
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "title": "Min",
+          "type": "integer"
+        },
+        "type": {
+          "const": "integer",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "Integer",
+      "type": "object"
+    },
+    "Message": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "state": {
+          "enum": [
+            "loading",
+            "authentication",
+            "draft",
+            "pending",
+            "success",
+            "conflict",
+            "busy",
+            "incompatible",
+            "unknown",
+            "uncertain"
+          ],
+          "title": "State",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "text",
+        "state"
+      ],
+      "title": "Message",
+      "type": "object"
+    },
+    "Object": {
+      "additionalProperties": false,
+      "properties": {
+        "fields": {
+          "items": {
+            "$ref": "#/$defs/FieldLink"
+          },
+          "title": "Fields",
+          "type": "array"
+        },
+        "type": {
+          "const": "object",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "fields"
+      ],
+      "title": "Object",
+      "type": "object"
+    },
+    "Projection": {
+      "additionalProperties": false,
+      "properties": {
+        "paths": {
+          "items": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array"
+          },
+          "maxItems": 512,
+          "title": "Paths",
+          "type": "array"
+        },
+        "source": {
+          "enum": [
+            "base",
+            "draft"
+          ],
+          "title": "Source",
+          "type": "string"
+        },
+        "target": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ]
+          },
+          "title": "Target",
+          "type": "array"
+        },
+        "type": {
+          "enum": [
+            "copy",
+            "object",
+            "list",
+            "omit",
+            "insert",
+            "replace",
+            "remove",
+            "permute"
+          ],
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "source",
+        "paths",
+        "target"
+      ],
+      "title": "Projection",
+      "type": "object"
+    },
+    "Sequence": {
+      "additionalProperties": false,
+      "properties": {
+        "item": {
+          "title": "Item",
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "list",
+            "nullable"
+          ],
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "item"
+      ],
+      "title": "Sequence",
+      "type": "object"
+    },
+    "Text": {
+      "additionalProperties": false,
+      "properties": {
+        "alphabet": {
+          "default": "",
+          "title": "Alphabet",
+          "type": "string"
+        },
+        "max": {
+          "default": 9007199254740991,
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "title": "Max",
+          "type": "integer"
+        },
+        "min": {
+          "default": 0,
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "title": "Min",
+          "type": "integer"
+        },
+        "prefix": {
+          "default": "",
+          "title": "Prefix",
+          "type": "string"
+        },
+        "type": {
+          "const": "string",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "Text",
+      "type": "object"
+    },
+    "Union": {
+      "additionalProperties": false,
+      "properties": {
+        "tag": {
+          "title": "Tag",
+          "type": "string"
+        },
+        "type": {
+          "const": "union",
+          "title": "Type",
+          "type": "string"
+        },
+        "variants": {
+          "items": {
+            "$ref": "#/$defs/Variant"
+          },
+          "minItems": 1,
+          "title": "Variants",
+          "type": "array"
+        }
+      },
+      "required": [
+        "type",
+        "tag",
+        "variants"
+      ],
+      "title": "Union",
+      "type": "object"
+    },
+    "Variant": {
+      "additionalProperties": false,
+      "properties": {
+        "ref": {
+          "title": "Ref",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "integer"
+            }
+          ],
+          "title": "Value"
+        }
+      },
+      "required": [
+        "value",
+        "ref"
+      ],
+      "title": "Variant",
+      "type": "object"
+    },
+    "View": {
+      "additionalProperties": false,
+      "properties": {
+        "actions": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Actions",
+          "type": "array"
+        },
+        "call": {
+          "title": "Call",
+          "type": "string"
+        },
+        "controls": {
+          "items": {
+            "$ref": "#/$defs/Control"
+          },
+          "title": "Controls",
+          "type": "array"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "call",
+        "controls",
+        "actions"
+      ],
+      "title": "View",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "bindings": {
+      "items": {
+        "$ref": "#/$defs/Binding"
+      },
+      "title": "Bindings",
+      "type": "array"
+    },
+    "calls": {
+      "items": {
+        "$ref": "#/$defs/Call"
+      },
+      "maxItems": 19,
+      "minItems": 19,
+      "title": "Calls",
+      "type": "array"
+    },
+    "editors": {
+      "items": {
+        "$ref": "#/$defs/Editor"
+      },
+      "maxItems": 8,
+      "minItems": 8,
+      "title": "Editors",
+      "type": "array"
+    },
+    "format": {
+      "const": 1,
+      "title": "Format",
+      "type": "integer"
+    },
+    "messages": {
+      "items": {
+        "$ref": "#/$defs/Message"
+      },
+      "title": "Messages",
+      "type": "array"
+    },
+    "models": {
+      "items": {
+        "$ref": "#/$defs/Definition"
+      },
+      "maxItems": 128,
+      "minItems": 1,
+      "title": "Models",
+      "type": "array"
+    },
+    "views": {
+      "items": {
+        "$ref": "#/$defs/View"
+      },
+      "maxItems": 6,
+      "minItems": 6,
+      "title": "Views",
+      "type": "array"
+    }
+  },
+  "required": [
+    "format",
+    "models",
+    "calls",
+    "views",
+    "editors",
+    "bindings",
+    "messages"
+  ],
+  "title": "Presentation",
+  "type": "object"
+}

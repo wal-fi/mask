@@ -540,7 +540,7 @@ suíte adversarial administrativa; as onze etapas da Fase 7 estão encerradas.
 
 ## Fase 8 — arquitetura aprovada, ainda sem implementação funcional
 
-**Aprovada; Etapa 1 concluída.** O contrato integral está em
+**Aprovada; Etapa 2 concluída.** O contrato integral está em
 `docs/PHASE-8-SPEC.md`; D-061 a D-064 registram as decisões e
 `docs/PHASE-8-TRACEABILITY.md` relaciona requisitos, componentes previstos e gates.
 
@@ -557,7 +557,21 @@ e bind. Com UI desligada, o contrato da Fase 7 será preservado. O cliente usar�
 operações granulares existentes, sem `PUT /config`, reorder de exceptions,
 SQL executável ou expansão do MCP. Token e rascunhos viverão apenas em memória.
 
-**Estado executável nesta Etapa 1:** o servidor continua exatamente na Fase 7;
-rejeita a presença de Origin/Referer, não oferece UI/assets e não implementa
-`MASKGW_ADMIN_UI_ENABLED`. As Etapas 2–9 aguardam autorização; estes parágrafos
-descrevem arquitetura aprovada, não componentes já entregues.
+**Estado executável na Etapa 2:** o servidor continua com o comportamento
+da Fase 7: rejeita Origin/Referer por presença, não serve recursos UI e não
+implementa `MASKGW_ADMIN_UI_ENABLED`. A integração aguardará a Etapa 3.
+
+A fundação entregue está isolada em `frontend/` (desenvolvimento/build) e
+`maskgw.admin.ui` (recursos e validação). `protocol.py` valida estrutura,
+referências, ciclos, destinos, defaults e limites. `resources.py` lê somente
+recursos do pacote com limite máximo+1, confere UTF-8, manifesto, hashes,
+catálogo/modelos fechados e devolve bytes em mapping imutável. Nenhum desses
+módulos é chamado pelo bootstrap ou HTTP. Não importam o plano HTTP ou MCP.
+
+O build deriva contratos e vocabulário das fontes atuais, verifica tipos,
+gera apresentação, JS com hash privado, manifesto e âncoras Python. HTML/CSS
+são um shell estático sem telas funcionais; o ESM só valida o protocolo, sem
+DOM, fetch, sessão ou execução de projeções. A autoria privada e ferramentas
+não entram no wheel/sdist. O manifesto é interno e não é um quinto recurso HTTP.
+A Etapa 2 não implementa conferência Web Crypto pelo navegador nem entrega
+HTTP: isso permanece para as etapas correspondentes da especificação.

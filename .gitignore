@@ -5,3 +5,9 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 *.egg-info/
+
+# Fase 8: ferramentas e saidas locais
+node_modules/
+frontend/.type-negative/
+build/
+dist/
