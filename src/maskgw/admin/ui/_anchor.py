@@ -1,3 +1,3 @@
 """Generated integrity anchor; no installation data."""
 
-MANIFEST_SHA256 = "bf39e3bd400a801a549e9279b30fdb1e2b842b4beeb9276d74e05a9962676235"
+MANIFEST_SHA256 = "52eeca4ff270661d6b4d73c0267ef0bfb0089df41c685a03ffcdea92356fa1b4"

@@ -18,7 +18,8 @@ py(["frontend/tools/presentation.py"]);
 const presentation=readFileSync(new URL("../private/presentation.json",import.meta.url));
 const schema=readFileSync(new URL("../private/protocol-schema.json",import.meta.url),"utf8").trim();
 const core=readFileSync(new URL("../src/protocol.js",import.meta.url),"utf8");
-const js=core+"\n/** @type {unknown} */\nconst layout="+schema+";\nexport const digest="+JSON.stringify(hash(presentation))+";\n/** @param {unknown} value */\nexport function check(value) { return inspect(value,layout); }\n";
+const transport=readFileSync(new URL("../src/transport.js",import.meta.url),"utf8").split("\n").slice(1).join("\n");
+const js=core+"\n/** @type {unknown} */\nconst layout="+schema+";\nexport const digest="+JSON.stringify(hash(presentation))+";\n/** @param {unknown} value */\nexport function check(value) { return inspect(value,layout); }\n"+transport;
 const html='<!doctype html>\n<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Administração local</title><link rel="stylesheet" href="/admin/ui/assets/ui.css"><script type="module" src="/admin/ui/assets/ui.js"></script></head><body><main><h1>Administração local</h1></main></body></html>\n';
 const css=':root{font-family:system-ui,sans-serif;color:#18212b;background:#fff}body{margin:0}main{max-width:60rem;margin:auto;padding:1rem}a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid #164dc5;outline-offset:3px}\n';
 const resources=[

@@ -1,4 +1,4 @@
-# Ferramentas privadas da UI administrativa — Etapa 2
+# Ferramentas privadas da UI administrativa — Etapa 4
 
 Node 24.20.0, npm 11.19.0, TypeScript 5.9.3 e Playwright 1.63.0.
 `@types/node` 24.0.0 é uma dependência exclusivamente de declarações para
@@ -23,12 +23,25 @@ e grava manifesto/âncoras. Não lê configuração, secrets ou estado instalado
 Dois builds completos devem produzir os mesmos bytes. O npm não participa do
 startup nem da construção de wheel/sdist: os recursos já estão embarcados.
 
-`src/protocol.js` é somente um verificador declarativo; não contém DOM, fetch,
-sessão ou transporte. A função pública `check` aplica o protocolo fixado no
-asset, e `digest` identifica a apresentação estática correspondente. A leitura
-do recurso privado e a conferência Web Crypto antes da interpretação pertencem
-às etapas posteriores; não existem nesta fundação. A Etapa 3 acrescenta a flag
-e a chamada Python antes do startup; ainda não há entrega HTTP de recursos.
+`src/protocol.js` continua como verificador declarativo sem DOM. A função
+pública `check` aplica o protocolo e `digest` ancora a apresentação estática.
+`src/transport.js` acrescenta somente `open(token)`, chamado explicitamente pelo
+harness: obtém a apresentação com bearer na origem exata, confere Web Crypto e
+estrutura, e só então permite leituras GET sem template e POST abstrato check.
+As dez escritas e templates são recusados antes da rede. Nenhuma sessão,
+login/logout, renderização administrativa, polling ou CRUD foi implementado.
+A Etapa 3 valida bytes antes do bind; a Etapa 4 entrega esses bytes em quatro
+GET/HEAD condicionais, com autenticação, política de origem e headers aprovados.
+
+Para o gate real da Etapa 4, definir `MASKGW_TEST_DSN` para PostgreSQL 16 real
+e executar `npm run test:browser`. Instalar previamente os três binários pelo
+Playwright fixado (`playwright install chromium firefox webkit`), sem atualizar
+versões. Chromium 153.0.8010.12/revisão 1243, Firefox 155.0/1543 e WebKit 26.6/2359.
+O harness usa o composition root real, token aleatório apenas em memória/ambiente
+do processo e config descartável. Inspeciona logs sem gravar registros, fecha os
+contextos antes de relatar falhas e usa reporter de categorias fixas. Trace,
+HAR, vídeo e screenshot não são habilitados. `MASKGW_BROWSER_REDIRECT` e
+`MASKGW_BROWSER_CSRF` existem somente no harness privado, nunca no produto.
 
 `private/` contém tipos dos onze contratos e a união das dez escritas UI,
 schemas derivados, vocabulário e autoria de apresentação. Nada dessa pasta,

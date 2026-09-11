@@ -1,6 +1,6 @@
 # Fase 8 — matriz de rastreabilidade normativa
 
-**Estado:** aprovada; Etapas 1 e 2 publicadas; Etapa 3 concluída. **Atualização:** 2026-09-10.
+**Estado:** aprovada; Etapas 1 e 2 publicadas; Etapa 3 publicada; Etapa 4 concluída. **Atualização:** 2026-09-11.
 **Fonte normativa integral:** [PHASE-8-SPEC.md](PHASE-8-SPEC.md), aprovada
 integralmente, com decisões [D-061 a D-064](DECISIONS.md#d-061--ui-administrativa-embarcada-opt-in-e-na-mesma-origem).
 
@@ -12,13 +12,14 @@ não dispensa os testes específicos. A fundação da Etapa 2 está implementada
 requisitos que atravessam etapas continuam parcialmente pendentes. Nenhum gate
 de navegador/HTTP ou fluxo funcional é inferido desses testes de fundação.
 
-A Etapa 3 foi autorizada após revisão e publicação da Etapa 2. As Etapas 4–9
+A Etapa 4 foi autorizada após revisão e publicação da Etapa 3. As Etapas 5–9
 continuam sem autorização. A tabela normativa mantém os componentes previstos;
 o quadro de entrega identifica quais já existem, sem antecipar APIs.
 As seções 1–2 e 8 também fundamentam D-061–D-064; a seção 7 fixa ordem, aceite
 e rollback. Evidências: [Etapa 1, histórica](PHASE-8-STAGE-1-VALIDATION.md) e
-[Etapa 2, histórica](PHASE-8-STAGE-2-VALIDATION.md). Rodada atual:
-[Etapa 3](PHASE-8-STAGE-3-VALIDATION.md).
+[Etapa 2, histórica](PHASE-8-STAGE-2-VALIDATION.md) e
+[Etapa 3, histórica](PHASE-8-STAGE-3-VALIDATION.md). Rodada atual:
+[Etapa 4](PHASE-8-STAGE-4-VALIDATION.md).
 
 ## Gates acumulados
 
@@ -158,3 +159,29 @@ não mudam. Resultados medidos: `PHASE-8-STAGE-3-VALIDATION.md`.
 | F8-004 | ownership e lifecycle existente preservados | `test_positive_startup_order_and_shutdown`, `test_owned_bytes_survive_disk_changes_and_repr_is_boolean_only`, `test_partial_failure_releases_thread_socket_runtime_and_lock` | Regressões acumuladas nas etapas seguintes |
 | F8-005, 029, 051, 065 | UI off com os mesmos bytes; UI on ainda sem rotas ou políticas novas | `test_http_surface_remains_phase_seven_and_disabled_repr_exact`: 40 respostas reais por modo contra d080886; `test_stage_three_does_not_change_http_policy_or_secret_normalization` e separação de planos | Origem/CSP/headers/rotas condicionais somente na Etapa 4; rollback final na Etapa 9 |
 | F8-054, 062–063 | gates acumulados, recursos inalterados da Etapa 2 | npm ci/typecheck/Node/build/inspect; 14 hashes contra o commit aprovado; Python completo/PostgreSQL real/Ruff/format/mypy/diff | Browsers reais somente no marco devido da Etapa 4 |
+
+
+## Entrega da Etapa 4
+
+Concluída; gates acumulados aprovados em `PHASE-8-STAGE-4-VALIDATION.md`.
+Python: 3.804 coletados, 3.796 aprovados e oito skips POSIX; 75 Node e 21
+browsers aprovados. Ruff/format/mypy strict verdes em 135 arquivos.
+Os quadros anteriores são históricos. Este quadro não encerra requisitos de
+sessão, rendering, CRUD, concorrência ou pacote instalado da Etapa 9.
+
+| IDs | Entrega desta etapa | Prova concreta | Limite restante |
+|---|---|---|---|
+| F8-001, 004, 006, 037, 051 | Composition root passa bytes pré-validados; HTTP adota cópia imutável; nenhum loader no handler | `test_handlers_keep_immutable_snapshot_of_mapping`, startup/falha parcial/shutdown acumulados e `test_plan_separation.py` | Lifecycle de documento/sessão na Etapa 5 |
+| F8-005, 065 | Ramo UI off original; rollback pela flag e restart | 40 respostas literais contra `phase7-ui-off.json` e repr exato; dez fontes compartilhadas com hash protegido | Rollback operacional final de pacote na Etapa 9 |
+| F8-029–030, 033, 060 | Parser literal de Host, origem e Referer exatos, Fetch Metadata e forwarding ignorado | `test_host_parser_*`, `test_origin_refusals`, `test_both_origins_must_agree_and_duplicates_refused`, `test_fetch_metadata`, duplicatas e `test_server_parser_vs_asgi_and_loopback_aliases` | Regressão acumulada; não alegar defesa contra processo/navegador privilegiado comprometido |
+| F8-038–043 | Quatro rotas condicionais; exceção raw canônica; query, variantes, métodos e precedência | `test_inventory_exact_twenty_or_twenty_four`: 20/28 e 24/36; `test_http_product`: 1.224 combinações; `test_precedence`, `test_media_type_before_routing` | Manter inventário fechado nas próximas etapas |
+| F8-044–049 | Bytes, MIME, HEAD, erros fixos, duas CSPs, headers exatos e nenhuma auditoria/estado/PG de UI | `Untouchable` verifica zero acesso em toda a matriz; falha interna pública/privada; `test_head_early_refusals_equal_get`, servidor real com Range/condicionais, API JSON, headers proibidos e controle CSP real | DOM/XSS armazenado e controles de rendering só nas Etapas 5–9 |
+| F8-023–024, 027, 031, 034, 056–057 | Transporte explícito mínimo, origem antes de Authorization, hash Web Crypto e gramática antes do negócio | `transport.test.js`; `transport.spec.js`: fetch GET/POST real, redirects reais sem encaminhamento, hash/metadata inválidos, CSRF, token/log/storage; 193 termos privados e reconstrução continuam recusados | Sem sessão, DTO de tela, transporte granular, máquina de estados ou escrita UI |
+| F8-052–055, 059, 062–063 | Pins/lock preservados; builds repetidos; browsers reais; gates acumulados | npm ci, typecheck strict/checkJs/noEmit, Node, build/inspect, Playwright três engines, Python inteiro com PostgreSQL 16 real, Ruff/format/mypy/diff | Etapas 5–9 e publicação dependem de autorização |
+
+A autorização da Etapa 4 substitui somente a asserção histórica de que UI on
+não muda HTTP. A fixture congelada não foi editada: sua comparação literal
+continua obrigatória em UI off. Os hashes de `app.py` e `server.py` deixam de
+ser exigidos por identidade porque suas mudanças condicionais foram aprovadas;
+os demais dez hashes permanecem protegidos. Não houve skip/xfail para essa
+transição. A matriz nova comprova o contrato on por igualdade e bytes completos.

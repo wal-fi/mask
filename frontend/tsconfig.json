@@ -16,13 +16,21 @@
     ],
     "types": [
       "node"
-    ]
+    ],
+    "paths": {
+      "/admin/ui/assets/ui.js": [
+        "../src/maskgw/admin/ui/assets/ui.js"
+      ]
+    }
   },
   "include": [
     "src/**/*.js",
     "src/**/*.d.ts",
     "private/**/*.d.ts",
     "test/**/*.js",
-    "tools/**/*.js"
+    "tools/**/*.js",
+    "browser/**/*.js",
+    "browser/**/*.d.ts",
+    "playwright.config.js"
   ]
 }

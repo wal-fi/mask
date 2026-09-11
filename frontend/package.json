@@ -12,7 +12,8 @@
     "typecheck": "tsc -p tsconfig.json",
     "test": "node --test test/*.test.js",
     "build": "node tools/build.js",
-    "inspect": "node tools/inspect.js"
+    "inspect": "node tools/inspect.js",
+    "test:browser": "playwright test"
   },
   "devDependencies": {
     "@playwright/test": "1.63.0",

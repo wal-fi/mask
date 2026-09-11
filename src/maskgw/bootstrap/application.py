@@ -5,10 +5,10 @@ plane. Os planos nao se importam entre si: `mcp/` conhece somente o Gateway, e
 `admin/` conhece somente o `RuntimeRegistry`, o `ConfigFileStore` e a propria
 fronteira HTTP.
 
-Fase 8, Etapa 3: a fronteira de processo resolve primeiro a flag UI bruta e
+Fase 8, Etapas 3 e 4: a fronteira de processo resolve primeiro a flag UI bruta e
 sua dependencia da Admin API. Apos os settings abaixo, `build_application`
 valida os recursos antes do filesystem. Seus bytes imutaveis pertencem a
-`Application`; nao sao passados ao HTTP nesta etapa.
+`Application`; sao passados ao HTTP condicionalmente na Etapa 4.
 
 Ordem de startup (secao 9.2), e falha em qualquer passo termina o processo:
 
@@ -201,7 +201,7 @@ class Application:
 
     @property
     def admin_ui_resources(self) -> Mapping[str, bytes] | None:
-        """Bytes verificados pertencentes a esta execucao; ainda sem entrega HTTP."""
+        """Bytes verificados pertencentes a esta execucao."""
         return self._admin_ui_resources
 
     @property
@@ -484,7 +484,9 @@ def build_application(  # noqa: PLR0913 - parametros de composicao, keyword-only
         # pularia o `stop()` e fecharia registry e store. A propriedade de um
         # recurso nao pode depender de a construcao dele ter dado certo.
         if admin_http is not None and admin is not None:
-            http_server = _build_admin_http(admin, admin_http, secrets=secrets, audit=audit_log)
+            http_server = _build_admin_http(
+                admin, admin_http, secrets=secrets, audit=audit_log, ui_resources=ui_resources
+            )
             http_server.start()
 
         # Passo 7: o MCP e construido por ultimo e ainda nao esta disponivel.
@@ -527,6 +529,7 @@ def _build_admin_http(
     *,
     secrets: SecretProvider | None,
     audit: AuditLog,
+    ui_resources: Mapping[str, bytes] | None = None,
 ) -> AdminHttpServer:
     """Monta a fronteira HTTP **sem** inicia-la.
 
@@ -555,6 +558,7 @@ def _build_admin_http(
             secrets=secrets,
             database_dsn_env=DSN_ENV,
             audit=audit,
+            ui_resources=ui_resources,
         )
 
     # Sem `start()`: quem chama adota a referencia e so entao inicia.
@@ -562,6 +566,7 @@ def _build_admin_http(
         app_factory=factory,
         host=settings.host,
         port=settings.port,
+        ui_enabled=ui_resources is not None,
     )
 
 

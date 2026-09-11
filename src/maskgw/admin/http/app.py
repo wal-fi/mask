@@ -13,7 +13,8 @@ que `admin/http/` importe `logging` (secao 13).
 
 ## O conjunto de rotas e literal
 
-Prefixo unico `/admin/v1`, e nada fora dele. As oito leituras estao em
+Na Fase 7: prefixo unico `/admin/v1`. Na Fase 8, Etapa 4, somente
+com recursos UI injetados, acrescentam-se quatro GET/HEAD sob `/admin/ui`. As oito leituras estao em
 `READ_PATHS`, o `config:validate` em `VALIDATE_PATH` e as onze escritas em
 `WRITE_ROUTES`; um teste compara o que o router registrou com essas listas —
 rota nova quebra a suite em vez de aparecer sem que ninguem tenha decidido
@@ -60,7 +61,7 @@ em seguida **relevanta**. Quem realmente contem a excecao e o
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from typing import Final, NoReturn
 
 from fastapi import FastAPI, Request
@@ -77,6 +78,7 @@ from maskgw.admin.http.audit import (
     exception_target_id,
     rule_target_id,
 )
+from maskgw.admin.http.browser import BrowserAdmission, BrowserHeaders
 from maskgw.admin.http.middleware import (
     AuthenticationMiddleware,
     BodyLimitMiddleware,
@@ -114,6 +116,7 @@ from maskgw.admin.http.schemas import (
     SqlWriteRequest,
     WriteResponse,
 )
+from maskgw.admin.http.ui import UiAuthentication, UiRouting, register_ui
 from maskgw.admin.http.validate import validate_candidate
 from maskgw.admin.http.views import (
     build_config,
@@ -255,13 +258,14 @@ def install_error_handlers(app: FastAPI) -> None:
         return error_response(AdminErrorCategory.INTERNAL_ERROR)
 
 
-def build_router(
+def build_router(  # noqa: PLR0913 - parametros de composicao, keyword-only
     service: AdminConfigService,
     *,
     secrets: SecretProvider,
     database_dsn_env: str,
     audit: AuditLog,
     hmac_key_env: str = HMAC_KEY_ENV,
+    ui_resources: Mapping[str, bytes] | None = None,
 ) -> FastAPI:
     """Aplicacao FastAPI com as rotas de leitura, `config:validate`, escrita e handlers.
 
@@ -388,6 +392,8 @@ def build_router(
         return auditor.validate(lambda: validate_candidate(candidate, secrets=secrets))
 
     _register_write_routes(app, service, auditor)
+    if ui_resources is not None:
+        register_ui(app, ui_resources)
 
     return app
 
@@ -544,7 +550,7 @@ def _register_write_routes(
         return WriteResponse(revision=revision)
 
 
-def wrap_boundary(app: ASGIApp, *, token: str, port: int) -> ASGIApp:
+def wrap_boundary(app: ASGIApp, *, token: str, port: int, ui_enabled: bool = False) -> ASGIApp:
     """Empilha as camadas de fronteira na ordem documentada em `middleware.py`.
 
     A composicao e de dentro para fora, entao a leitura desta funcao e o
@@ -557,6 +563,12 @@ def wrap_boundary(app: ASGIApp, *, token: str, port: int) -> ASGIApp:
     app de teste minimo continua util para provocar os cortes de corpo sem
     depender de uma rota especifica.
     """
+    if ui_enabled:
+        stack_ui: ASGIApp = ContentTypeMiddleware(UiRouting(app))
+        stack_ui = UiAuthentication(stack_ui, token=token)
+        stack_ui = BodyLimitMiddleware(stack_ui)
+        stack_ui = BrowserAdmission(stack_ui, port=port)
+        return BrowserHeaders(BoundaryMiddleware(stack_ui))
     stack: ASGIApp = ContentTypeMiddleware(app)
     stack = AuthenticationMiddleware(stack, token=token)
     stack = BodyLimitMiddleware(stack)
@@ -574,6 +586,7 @@ def build_admin_app(  # noqa: PLR0913 - parametros de composicao, keyword-only
     database_dsn_env: str,
     audit: AuditLog | None = None,
     hmac_key_env: str = HMAC_KEY_ENV,
+    ui_resources: Mapping[str, bytes] | None = None,
 ) -> ASGIApp:
     """A aplicacao administrativa completa, pronta para o servidor.
 
@@ -598,8 +611,9 @@ def build_admin_app(  # noqa: PLR0913 - parametros de composicao, keyword-only
         database_dsn_env=database_dsn_env,
         audit=audit_log,
         hmac_key_env=hmac_key_env,
+        ui_resources=ui_resources,
     )
-    return wrap_boundary(router, token=token, port=port)
+    return wrap_boundary(router, token=token, port=port, ui_enabled=ui_resources is not None)
 
 
 #: Assinatura de uma fabrica de aplicacao que so conhece a porta ja vinculada.

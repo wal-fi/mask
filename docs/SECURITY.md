@@ -464,63 +464,51 @@ detalhados em `docs/FUTURE-HARDENING.md`:
 - transformers Python customizados
 - multi-tenant
 
-## Fase 8 — validação prévia da Etapa 3, sem entrega ao navegador
+## Fase 8 — fronteira de navegador da Etapa 4
 
-**Aprovada; Etapa 3 concluída.** O contrato normativo completo de segurança
-está em `docs/PHASE-8-SPEC.md`, especialmente §§3.14–3.16, 4 e 5; os gates
-estão em `docs/PHASE-8-TRACEABILITY.md`. D-061 a D-064 registram a aprovação.
-Nenhuma proteção prevista da UI deve ser confundida com controle já entregue.
+**Aprovada; Etapas 1–3 publicadas; Etapa 4 concluída.** O contrato normativo
+integral está em `docs/PHASE-8-SPEC.md`, especialmente §§3.14–3.16, 4 e 5;
+a evidência desta rodada está em `docs/PHASE-8-STAGE-4-VALIDATION.md`.
 
-O código atual continua com a fronteira da Fase 7: rejeição por presença de
-Origin/Referer, bearer exclusivamente no header, Host loopback, sem CORS ou
-UI. A futura exceção só vale com a UI explicitamente ligada e exige comparação
-exata de esquema, host e porta, origens externas bloqueadas, catálogo de rotas
-fechado e precedência de recusas comprovada em navegador real. Não há TLS,
-proxy, bind externo nem relaxamento genérico de CORS nesta fase.
+Somente UI on instala quatro rotas, três exceções públicas raw/canônicas,
+origem exata e headers. Query não vazia nunca entrega recurso; a recusa segue
+a matriz 404 público e 401/404 privado. Variantes encoded, slash, traversal e
+lookalikes não ganham acesso público. Host aceita apenas três formas loopback
+literais na porta efetiva, sem DNS, ambiguidades ou equivalência entre aliases.
+Origin e Referer precisam concordar; Fetch Metadata same-site/cross-site ou
+inválido é recusado. Forwarding é ignorado e proxy_headers=False nesse modo.
 
-A apresentação administrativa é privada e autenticada; somente o bootstrap
-canônico fechado é público. A gramática e a exposição residual aceita são
-exatamente as da especificação. Token inválido não pode revelar schema ou
-estado. Token e rascunhos ficam só em memória; reload/BFCache não preservam
-sessão. Valores administrativos são texto, sem innerHTML; payloads armazenados
-em match, parâmetros ou mensagens entram nos testes de XSS. CSP sem
-unsafe-inline/unsafe-eval, headers, caches, recursos locais e fetch têm
-contrato fechado, incluindo erros, HEAD, caminhos não canônicos e recusas.
+Precedência: contenção/headers → Host → origem/Fetch Metadata → tamanho
+declarado → autenticação/exceção exata → media type → roteamento → bytes.
+Nenhum CORS, cookie, Server, ETag, Last-Modified, Allow novo, 304, 206,
+compressão ou redirect. MIME, Content-Length, HEAD, CSP e headers seguem §5.4.
+Os recursos não geram AdminAudit, contador, configuração ou consulta PostgreSQL.
+A fixture off da Fase 7 permanece intocada e comparada em status/corpo/headers
+determinísticos, excluindo Date. As mudanças de app/server são condicionais;
+primitivas HTTP compartilhadas e SecretProvider permanecem protegidos.
 
-O navegador comprometido, extensões e processo local privilegiado continuam
-limites declarados. CSP não torna um token em sessão imune a XSS. Erro de
-transporte ou durabilidade não autoriza inferir rollback; nunca reenviar
-escrita automaticamente. SQL, resultados do banco, auditoria consultável,
-edição de secrets/allowed_pg_functions/IDs/revision e expansão do MCP seguem
-excluídos. A reprodução da baseline nesta etapa não comprova controles de UI
-futuros e não encerra os findings previamente aceitos.
+O transporte anexa Authorization somente após a comparação de origem; todas
+as chamadas usam cors/omit/error/no-store/no-referrer. Token explícito precede
+apresentação; hash e gramática precedem chamadas de negócio. Não há chamadas
+automáticas ou escritas, nem armazenamento, log, erro ou URL com token. Os
+193 termos privados permanecem proibidos; permitir fetch não libera encoding,
+concatenação, execução dinâmica ou armazenamento. Os bytes administrativos
+continuam exclusivamente no recurso autenticado e nos envelopes já existentes.
 
-A Etapa 2 acrescenta validação independente de recursos e protocolo; não
-altera nenhuma recusa HTTP. Destinos, referências, chaves e segmentos são
-fechados; nomes de identidade em templates também rejeitam prototype pollution.
-O grafo é memoizado, limitado a profundidade 16, e defaults obedecem ao tipo
-referenciado. Projeções só descrevem fontes base/draft e não são executadas.
+A integridade conserva a cadeia apresentação → JS → manifesto → âncora Python.
+O carregamento validado antes do bind e a fonte bruta da Etapa 3 permanecem.
+Somente o valor bruto `1` habilita UI; UI sem Admin falha sem efeitos, settings
+inválidos precedem assets e recurso inválido precede configuração/lock/conexão.
+Token, DSN e HMAC mantêm a normalização anterior; repr ligado acrescenta apenas
+`admin_ui=True`. Secrets continuam somente `configured`/`missing`, e IDs,
+revision e `allowed_pg_functions` permanecem sem edição pela UI.
+Recursos são servidos de memória; alteração em disco não altera esta execução.
 
-O verificador dos bytes públicos deriva o vocabulário dos schemas, rotas,
-enums, registry e valores de proteção atuais, descontando somente a lista
-compartilhada aprovada. Testa escapes/concatenações e cada recurso. O JS público
-não contém código de DOM, fetch, armazenamento, log ou execução administrativa.
-A integridade liga apresentação → JS → manifesto → âncora Python; a carga
-retorna bytes imutáveis e erro fixo sem cadeia. Alterar um pacote enquanto está
-sendo validado não é operação suportada: o build deve preceder os testes/uso.
-
-Os testes desta etapa não substituem os gates de CSP, origem, BFCache, XSS em
-DOM, sessão e navegador real das Etapas 4–9. Esses controles ainda não foram
-implementados, e nenhum resultado da baseline é apresentado como prova deles.
-
-A Etapa 3 integra somente a leitura bruta da flag e a barreira anterior a
-configuração/lock/conexão. ` 1` e `1 ` não habilitam UI; a fonte não altera
-normalização de token, DSN e HMAC. UI sem Admin falha sem efeitos; settings
-inválidos precedem assets; recurso inválido precede todos os recursos
-operacionais. A fronteira de processo emite somente a mensagem fixa de falha.
-Os bytes mantidos pela `Application` não refletem mudanças posteriores em disco.
-Seu repr desligado é idêntico; ligado acrescenta apenas `admin_ui=True`.
-As 40 respostas capturadas do commit aprovado são comparadas literalmente em
-status/corpo/headers determinísticos, excluindo somente Date; o código HTTP e
-a normalização de secrets têm fingerprints da referência, sem flexibilização.
-Mesmo com a flag ligada, nenhuma regra da Etapa 4 foi antecipada.
+Os browsers e os testes de fronteira não encerram os gates futuros de sessão,
+BFCache, DOM/XSS armazenado, acessibilidade, concorrência, CRUD e durabilidade.
+Não há telas autenticadas ou rascunhos nesta etapa. O contrato futuro continua
+exigindo texto, memória, limpeza explícita e ausência de retry/rollback automático.
+CSP não protege contra navegador/extensão/processo privilegiado comprometidos.
+SQL, resultados, auditoria consultável, secrets editáveis, TLS, proxy, bind
+externo, serviços externos e expansão do MCP seguem excluídos. Findings antigos
+aceitos não são encerrados por esta entrega.

@@ -139,9 +139,10 @@ class AdminHttpServer:
         "_startup_timeout",
         "_stopped",
         "_thread",
+        "_ui_enabled",
     )
 
-    def __init__(
+    def __init__(  # noqa: PLR0913 - parametros de servidor, keyword-only
         self,
         *,
         app_factory: AppFactory,
@@ -149,8 +150,10 @@ class AdminHttpServer:
         port: int,
         startup_timeout: float = DEFAULT_STARTUP_TIMEOUT_SECONDS,
         graceful_timeout: int = GRACEFUL_SHUTDOWN_SECONDS,
+        ui_enabled: bool = False,
     ) -> None:
         self._app_factory = app_factory
+        self._ui_enabled = ui_enabled
         self._host = host
         self._requested_port = port
         self._startup_timeout = startup_timeout
@@ -280,7 +283,7 @@ class AdminHttpServer:
         return listener
 
     def _config(self, app: ASGIApp) -> uvicorn.Config:
-        return uvicorn.Config(
+        config = uvicorn.Config(
             app,
             # `log_config=None`: o uvicorn nao instala handler nenhum, e nada
             # e escrito em `stdout`, que e do protocolo MCP (secao 10.4).
@@ -302,6 +305,10 @@ class AdminHttpServer:
             # shutdown continua sendo integral, e nada e abandonado.
             timeout_graceful_shutdown=self._graceful_timeout,
         )
+
+        if self._ui_enabled:
+            config.proxy_headers = False
+        return config
 
     def _await_listening(self, server: uvicorn.Server, thread: threading.Thread) -> None:
         """Espera o uvicorn confirmar que comecou a servir, ou desiste."""

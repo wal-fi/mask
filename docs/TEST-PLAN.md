@@ -1003,7 +1003,7 @@ As evidências completas estão no registro da etapa. Browser real, CSP, autenti
 BFCache e renderização XSS pertencem às etapas seguintes e não são alegados
 como cobertos pela fundação desta etapa.
 
-## Fase 8 — Etapa 3 concluída
+## Fase 8 — Etapa 3 concluída (registro histórico, publicada)
 
 `tests/test_admin_ui_startup.py` cobre a matriz bruta de 16 valores por fonte
 real/injetada e pelo entrypoint, preservação da normalização de secrets,
@@ -1029,3 +1029,59 @@ erros ou deselects; PostgreSQL 16.15 real. Ruff, format e mypy strict aprovados
 em 130 arquivos; 70 testes Node e dois builds idênticos. Resultados completos
 em `docs/PHASE-8-STAGE-3-VALIDATION.md`. Builds e testes consumidores são sequenciais.
 Nenhum browser, fetch real ou controle de navegador é alegado nesta etapa.
+
+
+## Fase 8 — Etapa 4 concluída
+
+A evidência atual é `docs/PHASE-8-STAGE-4-VALIDATION.md`; os números e contratos
+de ausência de HTTP dos quadros anteriores são históricos. A fixture da Fase 7
+continua idêntica e cobre UI desligada; UI ligada é coberta pela nova matriz.
+
+`tests/test_admin_ui_http.py` exige igualdade dos inventários 20/28 e 24/36 e
+produto completo de 17 caminhos (quatro canônicos e treze variantes), oito
+métodos, três queries e três estados de token: 1.224 casos. Cobrir precedência,
+media type, Host duplicado/ambíguo, DNS rebinding, origem e Referer concordantes
+ou divergentes, Fetch Metadata, forwarding, erros sanitizados, MIME, headers,
+HEAD e limites. O parser HTTP pode recusar antes do ASGI: não exigir CSP da
+aplicação nesse caso. Todos os caminhos UI, inclusive falhas, usam monitor de
+acessos que reprova qualquer toque no serviço/auditoria. Snapshot, arquivo,
+contador e chamadas do adapter também são conferidos no servidor real.
+
+`frontend/test/transport.test.js` cobre token explícito, opções normativas de
+fetch, hash incorreto, dez escritas/templates recusados antes da rede, origem
+comparada antes do Authorization e contraprovas de vocabulário/reconstrução.
+Os 193 termos privados derivados continuam exatos, sem nova exceção lexical.
+
+`frontend/browser/transport.spec.js` usa Playwright 1.63.0, três engines reais
+fixados e o composition root com PostgreSQL 16 real. Os sete cenários por engine
+cobrem GET/POST sem efeitos, Origin legítimo, ausência de preflight legítimo,
+redirects reais de mesma origem e de outra porta, hash e metadata hostis,
+CSRF externo e controle CSP com detector positivo. Capturar headers em memória
+com `allHeaders()`; não inferir ausência de Origin pelo subconjunto de
+`request.headers()` do Chromium. Redirecionamento deve vir de HTTP real, pois
+interceptação com fulfill não é prova equivalente nos três engines.
+
+O harness privado inspeciona registros em memória e conserva apenas flags e
+contagens. `tests/test_browser_harness.py` exige controles positivos de leakage,
+auditoria indevida e warning inesperado. Somente no ensaio explícito de CSRF no
+Windows, a desconexão ConnectionResetError/WinError 10054 de asyncio é contada
+(até duas), sem dispensar inspeção de secrets ou aceitar outros erros. Esse
+encerramento TCP pelo navegador não é skip/xfail e não muda o servidor.
+Nenhum token/dado pode entrar em relatório, trace, HAR, vídeo, screenshot ou
+snapshot automático: os contextos fecham antes de reportar falhas e o reporter
+serializa apenas títulos estáticos/status/categorias fechadas.
+
+Rodar npm ci, typecheck, Node, dois builds e inspeção antes dos consumidores.
+Depois, browsers reais e Python completo com MASKGW_TEST_DSN/PostgreSQL 16 real,
+sem filtro/deselect/skip por DSN. Manter a pilha temporária de 64 MiB no launcher
+Windows e executar Ruff, format check, mypy strict e diff check. O fechamento
+exige todos os gates devidos verdes, com contagens efetivas na evidência atual.
+Sessão/BFCache, rendering/XSS armazenado, acessibilidade e fluxo CRUD continuam
+nos marcos futuros; os testes desta etapa não os substituem.
+
+Resultado final medido: 3.804 coletados, 3.796 aprovados, oito skips somente
+POSIX, zero falhas/erros/skips por DSN/deselects; PostgreSQL 16.15 real.
+Os casos incluem 1.325 testes de fronteira UI, 90 de startup e três do monitor
+do harness. Ruff/format/mypy strict aprovados em 135 arquivos; 75 testes Node,
+21 de navegador e dois builds idênticos nos 14 arquivos gerados. As durações,
+hashes, inventários de wheel/sdist e ressalvas estão na evidência da Etapa 4.

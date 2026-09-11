@@ -11,13 +11,14 @@ IA → MCP → Gateway → SQL Validator → PostgreSQL → provenance
 
 ## Estado: MVP completo + Fase 7 concluída + Fase 8 aprovada
 
-**Fase 8: aprovada; Etapa 3 concluída.** A Etapa 2 foi publicada sem emenda
-em `d080886352920a663e8b0aa318761a083f54f7f7`. Esta rodada acrescenta somente
-flag bruta e validação prévia dos recursos no composition root. A
-`Application` conserva bytes imutáveis, sem passá-los ao HTTP. Não há rotas
-UI, política de navegador nova, sessão ou telas. Etapas 4–9 e o push da
-Etapa 3 aguardam autorização. Leia `docs/PHASE-8-SPEC.md`,
-`docs/PHASE-8-TRACEABILITY.md` e `docs/PHASE-8-STAGE-3-VALIDATION.md`.
+**Fase 8: aprovada; Etapas 1–3 publicadas; Etapa 4 concluída.**
+A Etapa 3 foi publicada sem emenda em `dd921d52e6a0475e3301621a547f50972d4cccbb`.
+Esta rodada integra os bytes imutáveis ao HTTP somente com UI ligada: quatro
+GET/HEAD, três públicos e apresentação autenticada, origem exata, headers e
+transporte mínimo com verificação Web Crypto. UI desligada preserva a Fase 7.
+Não há sessão, telas autenticadas, polling, CRUD ou escrita pela UI. Etapas 5–9
+e o push da Etapa 4 aguardam autorização. Leia `docs/PHASE-8-SPEC.md`,
+`docs/PHASE-8-TRACEABILITY.md` e `docs/PHASE-8-STAGE-4-VALIDATION.md`.
 
 **As seis fases do roadmap estão concluídas**, mais a Fase 6.1 de hardening e a
 **Fase 7 (Admin API) inteira**. O produto executa fim a fim: um cliente MCP real
@@ -41,7 +42,7 @@ Nesta ordem:
 7. `docs/TEST-PLAN.md`, `docs/THREAT-MODEL.md`, `docs/FUTURE-HARDENING.md`
 
 `docs/ROADMAP.md` preserva o histórico das seis fases fechadas e registra o
-fechamento da Fase 7 e a Etapa 3 da Fase 8. Para a Fase 8, também
+fechamento da Fase 7 e a Etapa 4 da Fase 8. Para a Fase 8, também
 é obrigatória a leitura integral de `docs/PHASE-8-SPEC.md` e da sua matriz.
 
 ## Objetivo

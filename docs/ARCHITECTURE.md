@@ -538,50 +538,43 @@ As rotas de escrita e a adoção com backup foram concluídas na Etapa 9; a
 auditoria administrativa (`AdminAudit`), na Etapa 10. A Etapa 11 concluiu a
 suíte adversarial administrativa; as onze etapas da Fase 7 estão encerradas.
 
-## Fase 8 — arquitetura aprovada, ainda sem implementação funcional
+## Fase 8 — fronteira HTTP condicional, ainda sem telas funcionais
 
-**Aprovada; Etapa 3 concluída.** O contrato integral está em
-`docs/PHASE-8-SPEC.md`; D-061 a D-064 registram as decisões e
-`docs/PHASE-8-TRACEABILITY.md` relaciona requisitos, componentes previstos e gates.
+**Aprovada; Etapas 1–3 publicadas; Etapa 4 concluída.** Contrato integral em
+`docs/PHASE-8-SPEC.md`, decisões D-061–D-064 e rastreabilidade em
+`docs/PHASE-8-TRACEABILITY.md`.
 
-A UI será administrativa local, embarcada no pacote Python e servida pelo
-mesmo processo/origem, com ativação opt-in e rollback pela flag. O bootstrap
-público conterá um interpretador declarativo fechado; modelos, chamadas,
-mensagens e apresentação administrativos virão de `presentation.json`
-autenticado. A divisão, seus limites e a exposição residual estão em §3.14–3.16
-da especificação. Não há engine de templates arbitrários ou código recebido.
+A fonte `bootstrap/settings.py` depende somente de stdlib. A resolução UI/Admin
+continua em `bootstrap/application.py`, único importador administrativo do
+composition root. Settings e recursos são validados antes de configuração,
+lock, PostgreSQL, HTTP e MCP. `Application` mantém bytes imutáveis; o HTTP
+recebe uma cópia do mapping e nunca lê pacote, estado ou banco para servir UI.
 
-As quatro rotas UI e a comparação exata de origem serão condicionais à UI
-ligada, após validação integral dos recursos embarcados antes de lock, conexão
-e bind. Com UI desligada, o contrato da Fase 7 será preservado. O cliente usará
-operações granulares existentes, sem `PUT /config`, reorder de exceptions,
-SQL executável ou expansão do MCP. Token e rascunhos viverão apenas em memória.
+UI off conserva a pilha original e 20 entradas/28 pares método-caminho. UI on
+registra exatamente quatro GET/HEAD, somando 24/36. `http/ui.py` registra bytes,
+exceções públicas por raw_path e guardas de roteamento. `http/browser.py` aplica
+Host/origem/Fetch Metadata exatos e headers/CSP. As primitivas antigas de limite,
+autenticação e media type continuam reutilizadas; a política antiga é mantida
+como ramo independente. Uvicorn recebe proxy_headers=False somente no modo UI.
+Os handlers de recurso não recebem serviço, auditoria ou runtime.
 
-**Estado executável na Etapa 3:** o servidor preserva a fronteira da Fase 7,
-inclusive com UI solicitada. Rejeita Origin/Referer por presença e não serve
-recursos UI. `MASKGW_ADMIN_UI_ENABLED` controla somente a validação prévia.
-`bootstrap/settings.py` lê o valor bruto por uma fonte injetável separada dos
-secrets; a dependência precede settings e recursos. O composition root revalida
-settings em chamadas diretas e carrega os recursos antes de configuração,
-lock, PostgreSQL, HTTP e MCP. `Application` mantém uma cópia imutável do mapping
-validado; nenhum byte ou metadado é passado ao servidor HTTP nesta etapa.
+O ESM possui verificador declarativo e transporte mínimo explícito, sem chamada
+automática. Após token, busca a apresentação privada, confere SHA-256 Web Crypto
+e estrutura; só então cria acesso por IDs opacos a GET sem templates e ao POST
+abstrato check, usado pelo harness para validação sem efeito. Não há escrita,
+sessão, DOM administrativo ou máquina de estados. O transporte completo e a
+validação de DTOs consumidos pelas telas permanecem nas etapas correspondentes.
 
-A fundação entregue está isolada em `frontend/` (desenvolvimento/build) e
-`maskgw.admin.ui` (recursos e validação). `protocol.py` valida estrutura,
-referências, ciclos, destinos, defaults e limites. `resources.py` lê somente
-recursos do pacote com limite máximo+1, confere UTF-8, manifesto, hashes,
-catálogo/modelos fechados e devolve bytes em mapping imutável. O bootstrap chama
-o carregador somente com UI ligada; HTTP não o chama. Os validadores não
-importam o plano HTTP ou MCP.
+`frontend/` contém build/testes privados. O build deriva os onze contratos e as
+dez escritas permitidas do catálogo, sem incluir PUT /config na UI. A gramática
+continua limitada, e 193 entradas privadas continuam ausentes dos bytes públicos.
+O JS, manifesto e âncora são regenerados; HTML, CSS, apresentação e catálogo
+privado não mudam. Os quatro recursos pertencem ao pacote Python; o manifesto
+é interno. `resources.py` mantém leitura limitada, UTF-8, hashes, catálogo e
+modelos verificados; `protocol.py` mantém gramática, referências, ciclos e
+limites independentes do validador JavaScript. Nenhuma projeção é executada. Fontes, tipos, fixtures e ferramentas não são recursos HTTP.
 
-O build deriva contratos e vocabulário das fontes atuais, verifica tipos,
-gera apresentação, JS com hash privado, manifesto e âncoras Python. HTML/CSS
-são um shell estático sem telas funcionais; o ESM só valida o protocolo, sem
-DOM, fetch, sessão ou execução de projeções. A autoria privada e ferramentas
-não entram no wheel/sdist. O manifesto é interno e não é um quinto recurso HTTP.
-A Etapa 2 não implementa conferência Web Crypto pelo navegador nem entrega
-HTTP: isso permanece para as etapas correspondentes da especificação.
-
-A fonte bruta em `bootstrap/settings.py` depende somente de stdlib; a resolução
-e a checagem da dependência UI/Admin ficam em `bootstrap/application.py`,
-preservando-o como único importador do plano administrativo no composition root.
+A integração real de browser usa harness privado, PostgreSQL real e o
+composition root. Fault injection de redirect existe somente no harness,
+sem endpoint ou opção no produto. Logs são inspecionados em memória sem
+persistir registros. Etapas 5–9 e publicação desta etapa exigem autorização.

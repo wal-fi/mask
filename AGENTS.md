@@ -32,14 +32,16 @@ opt-in e estritamente delimitada por `docs/PHASE-8-SPEC.md`** está autorizada
 como escopo de front-end. A especificação foi aprovada integralmente, incluindo
 as quatro decisões da seção 8 (D-061 a D-064 em `docs/DECISIONS.md`).
 
-As Etapas 1 e 2 foram revisadas, aprovadas e publicadas sem emenda. Esta rodada
-autoriza exclusivamente a **Etapa 3: flag bruta e validação dos recursos antes
-do bind**, conforme `docs/PHASE-8-SPEC.md`. A UI solicitada exige Admin API;
-settings e recursos devem ser validados antes de configuração, lock e runtime.
-Não servir recursos, alterar HTTP/origem/headers/proxy, criar sessão ou telas.
-A Etapa 3 está concluída com os gates registrados em
-`docs/PHASE-8-STAGE-3-VALIDATION.md`. As Etapas 4–9 e o push do commit local
-da Etapa 3 exigem nova autorização.
+As Etapas 1–3 foram revisadas, aprovadas e publicadas sem emenda. Esta rodada
+autoriza exclusivamente a **Etapa 4: rotas UI, autenticação, origem exata,
+headers e transporte mínimo para testes reais**, conforme `docs/PHASE-8-SPEC.md`.
+Somente os quatro recursos previstos; três públicos e apresentação com bearer.
+UI desligada preserva a Fase 7. Nenhuma sessão, tela autenticada, polling,
+máquina de estados, CRUD ou escrita de configuração pela UI está autorizada.
+Os testes reais usam os três browsers fixados e PostgreSQL 16 real.
+A Etapa 4 está concluída; seus gates foram registrados em
+`docs/PHASE-8-STAGE-4-VALIDATION.md`. As Etapas 5–9 e o push do commit local
+da Etapa 4 exigem nova autorização.
 
 Interfaces genéricas, editor ou execução de SQL, resultados do banco, funções
 de DBA, auditoria consultável, front-end para MCP e expansões não previstas

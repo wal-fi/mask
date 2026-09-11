@@ -31,7 +31,7 @@ export function inspectPublic(text,words,javascript=false) {
       const value=folded(node);
       if (value !== undefined) scan(value,words);
     }
-    if (ts.isIdentifier(node) && ["eval","atob","btoa","fromCharCode","fromCodePoint","Function","innerHTML","localStorage","sessionStorage","indexedDB","fetch"].includes(node.text)) throw new Error("Executable reconstruction or runtime feature in bootstrap.");
+    if (ts.isIdentifier(node) && ["eval","atob","btoa","fromCharCode","fromCodePoint","Function","innerHTML","localStorage","sessionStorage","indexedDB","outerHTML","insertAdjacentHTML","write","serviceWorker","BroadcastChannel"].includes(node.text)) throw new Error("Executable reconstruction or runtime feature in bootstrap.");
     ts.forEachChild(node,visit);
   }
   visit(tree);

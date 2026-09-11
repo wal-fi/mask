@@ -347,14 +347,16 @@ novo; todos os cenários `BLOCKED`.
 
 ## FASE 8 — Front-end
 
-**STATUS: APROVADA; ETAPA 3 CONCLUÍDA.** A Etapa 2 foi publicada sem emenda
-em `d080886352920a663e8b0aa318761a083f54f7f7`.
+**STATUS: APROVADA; ETAPAS 1–3 PUBLICADAS; ETAPA 4 CONCLUÍDA.**
+A Etapa 3 foi publicada sem emenda em
+`dd921d52e6a0475e3301621a547f50972d4cccbb`.
 
-Etapa 3: flag bruta, dependência UI/Admin, validação prévia de settings/recursos
-e bytes imutáveis no composition root. Nenhuma rota, entrega HTTP ou UI
-funcional. Contrato em `docs/PHASE-8-SPEC.md`, D-061–D-064 e matriz em
-`docs/PHASE-8-TRACEABILITY.md`. Resultados desta rodada em
-`docs/PHASE-8-STAGE-3-VALIDATION.md`. Parar antes da Etapa 4; sem push desta etapa.
+Etapa 4: quatro rotas GET/HEAD sobre bytes imutáveis, três recursos públicos,
+apresentação autenticada, origem exata, headers e transporte mínimo com
+Web Crypto. UI desligada preserva a Fase 7. Não há sessão, telas autenticadas,
+polling ou escrita de configuração pela UI. Contrato em `docs/PHASE-8-SPEC.md`,
+D-061–D-064 e matriz em `docs/PHASE-8-TRACEABILITY.md`. Evidência desta rodada:
+`docs/PHASE-8-STAGE-4-VALIDATION.md`. Parar antes da Etapa 5; sem push da Etapa 4.
 
 ---
 
@@ -369,8 +371,8 @@ alteração do transporte MCP.
 
 ## Estado atual
 
-Fase 8 aprovada; Etapa 3 concluída. A medição desta rodada está em
-`docs/PHASE-8-STAGE-3-VALIDATION.md`; os números abaixo
+Fase 8 aprovada; Etapa 4 concluída. A medição desta rodada está em
+`docs/PHASE-8-STAGE-4-VALIDATION.md`; os números abaixo
 registram o fechamento anterior da Fase 7.
 
 Fases 1 a 6.1 concluídas. **Fase 7 (Admin API) concluída**, com as onze etapas

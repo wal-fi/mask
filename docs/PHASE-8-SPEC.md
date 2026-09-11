@@ -1,6 +1,6 @@
 # Fase 8 — Front-end · Especificação aprovada
 
-**Estado:** aprovada; Etapas 1 e 2 concluídas e publicadas; Etapa 3 concluída.
+**Estado:** aprovada; Etapas 1 e 2 concluídas e publicadas; Etapa 3 publicada; Etapa 4 concluída.
 **Base:** Fase 7 concluída no commit `27d92bd580875e9eb2abb04db102eb98af2054fe`.
 
 ## 1. Arquitetura recomendada e justificativa
@@ -1059,4 +1059,4 @@ Foram aprovadas integralmente as quatro decisões de produto/arquitetura:
 3. **Escopo funcional:** CRUD granular; reorder somente de regras; SQL aditivo; ausência de substituição completa pela UI.
 4. **Contrato operacional:** token/rascunhos apenas em memória, recuperação sem retry ou rollback automático e gates de tipagem, navegador e PostgreSQL reais.
 
-As quatro decisões desta seção foram aprovadas integralmente em 2026-09-09. A Etapa 1 foi concluída, revisada sem ressalvas e publicada sem emenda no commit `aebe31d0dbaba3238e97ae3ad13bf20fdd615211`. A Etapa 2 foi revisada sem ressalvas e publicada sem emenda em `d080886352920a663e8b0aa318761a083f54f7f7`. A autorização atual abrange exclusivamente a Etapa 3: flag bruta e validação prévia dos recursos. Não abrange rotas, entrega HTTP, origem/headers/proxy, sessão, telas ou transporte. Etapas 4–9 e o push do commit local da Etapa 3 aguardam autorização. Evidência atual: `docs/PHASE-8-STAGE-3-VALIDATION.md`; evidências anteriores preservadas como históricas.
+As quatro decisões desta seção foram aprovadas integralmente em 2026-09-09. A Etapa 1 foi concluída, revisada sem ressalvas e publicada sem emenda no commit `aebe31d0dbaba3238e97ae3ad13bf20fdd615211`. A Etapa 2 foi revisada sem ressalvas e publicada sem emenda em `d080886352920a663e8b0aa318761a083f54f7f7`. A Etapa 3 foi revisada sem ressalvas e publicada sem emenda em `dd921d52e6a0475e3301621a547f50972d4cccbb`. A autorização atual abrange exclusivamente a Etapa 4: quatro rotas, autenticação, origem exata, headers e transporte mínimo necessário aos testes reais. Não abrange sessão, lifecycle de login/logout/BFCache, telas autenticadas, polling, máquina de estados, reconciliação ou CRUD. Etapas 5–9 e o push do commit local da Etapa 4 aguardam autorização. Evidência atual: `docs/PHASE-8-STAGE-4-VALIDATION.md`; evidências anteriores preservadas como históricas.
