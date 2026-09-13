@@ -11,14 +11,19 @@ IA → MCP → Gateway → SQL Validator → PostgreSQL → provenance
 
 ## Estado: MVP completo + Fase 7 concluída + Fase 8 aprovada
 
-**Fase 8: aprovada; Etapas 1–3 publicadas; Etapa 4 concluída.**
-A Etapa 3 foi publicada sem emenda em `dd921d52e6a0475e3301621a547f50972d4cccbb`.
-Esta rodada integra os bytes imutáveis ao HTTP somente com UI ligada: quatro
-GET/HEAD, três públicos e apresentação autenticada, origem exata, headers e
-transporte mínimo com verificação Web Crypto. UI desligada preserva a Fase 7.
-Não há sessão, telas autenticadas, polling, CRUD ou escrita pela UI. Etapas 5–9
-e o push da Etapa 4 aguardam autorização. Leia `docs/PHASE-8-SPEC.md`,
-`docs/PHASE-8-TRACEABILITY.md` e `docs/PHASE-8-STAGE-4-VALIDATION.md`.
+**Fase 8: aprovada; Etapas 1–4 publicadas; Etapa 5 concluída.**
+A Etapa 4 foi revisada e publicada sem emenda em
+`7e8e39988b38438128a51fc414ecae68cdde01c1`; o fetch confirmou master, HEAD igual
+a origin/master, árvore limpa e 0/0, com autoria e trailer preservados.
+A autorização atual é exclusivamente a Etapa 5: sessão em memória, lifecycle
+e seis telas somente leitura. Etapas 6–9 e push da Etapa 5 não estão autorizados.
+Evidência desta rodada: `docs/PHASE-8-STAGE-5-VALIDATION.md`.
+
+A UI exige entrada explícita; token somente na closure do transporte, DTOs
+validados antes do estado e DOM de texto. Logout, 401, pagehide/pageshow e
+BFCache retornam ao login. Polling somente visível; nenhuma escrita ou
+validação pela UI. A fronteira HTTP e UI off da Etapa 4 permanecem intactas.
+Leia `docs/PHASE-8-SPEC.md` e `docs/PHASE-8-TRACEABILITY.md`.
 
 **As seis fases do roadmap estão concluídas**, mais a Fase 6.1 de hardening e a
 **Fase 7 (Admin API) inteira**. O produto executa fim a fim: um cliente MCP real
@@ -42,7 +47,7 @@ Nesta ordem:
 7. `docs/TEST-PLAN.md`, `docs/THREAT-MODEL.md`, `docs/FUTURE-HARDENING.md`
 
 `docs/ROADMAP.md` preserva o histórico das seis fases fechadas e registra o
-fechamento da Fase 7 e a Etapa 4 da Fase 8. Para a Fase 8, também
+fechamento da Fase 7 e a Etapa 5 da Fase 8. Para a Fase 8, também
 é obrigatória a leitura integral de `docs/PHASE-8-SPEC.md` e da sua matriz.
 
 ## Objetivo

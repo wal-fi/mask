@@ -538,9 +538,9 @@ As rotas de escrita e a adoção com backup foram concluídas na Etapa 9; a
 auditoria administrativa (`AdminAudit`), na Etapa 10. A Etapa 11 concluiu a
 suíte adversarial administrativa; as onze etapas da Fase 7 estão encerradas.
 
-## Fase 8 — fronteira HTTP condicional, ainda sem telas funcionais
+## Fase 8 — sessão local e seis vistas somente leitura
 
-**Aprovada; Etapas 1–3 publicadas; Etapa 4 concluída.** Contrato integral em
+**Aprovada; Etapas 1–4 publicadas; Etapa 5 concluída.** Contrato integral em
 `docs/PHASE-8-SPEC.md`, decisões D-061–D-064 e rastreabilidade em
 `docs/PHASE-8-TRACEABILITY.md`.
 
@@ -558,18 +558,22 @@ autenticação e media type continuam reutilizadas; a política antiga é mantid
 como ramo independente. Uvicorn recebe proxy_headers=False somente no modo UI.
 Os handlers de recurso não recebem serviço, auditoria ou runtime.
 
-O ESM possui verificador declarativo e transporte mínimo explícito, sem chamada
-automática. Após token, busca a apresentação privada, confere SHA-256 Web Crypto
-e estrutura; só então cria acesso por IDs opacos a GET sem templates e ao POST
-abstrato check, usado pelo harness para validação sem efeito. Não há escrita,
-sessão, DOM administrativo ou máquina de estados. O transporte completo e a
-validação de DTOs consumidos pelas telas permanecem nas etapas correspondentes.
+O ESM público monta a entrada sem rede administrativa. `screen.js` mantém
+apenas seleção, geração, leitura e elementos transitórios; `transport.js`
+conserva a credencial em closure, autentica apresentação/hash/gramática e
+expõe encerramento/cancelamento. `reader.js` interpreta os modelos privados:
+campos fechados, inteiros seguros, identidade/ordem e revisions coerentes.
+Somente dados validados chegam ao renderer de texto. Seis vistas somente
+leitura, erro/retry manual e status serial a cada 15 s visível; nenhum endpoint
+novo ou sessão de servidor. O check abstrato da Etapa 4 permanece no transporte,
+mas as telas não o invocam. Cleanup descarta token/metadados/DTOs/DOM, invalida
+geração e aborta requests; callbacks antigos não restauram estado.
 
 `frontend/` contém build/testes privados. O build deriva os onze contratos e as
 dez escritas permitidas do catálogo, sem incluir PUT /config na UI. A gramática
 continua limitada, e 193 entradas privadas continuam ausentes dos bytes públicos.
-O JS, manifesto e âncora são regenerados; HTML, CSS, apresentação e catálogo
-privado não mudam. Os quatro recursos pertencem ao pacote Python; o manifesto
+O JS, CSS, apresentação, manifesto e âncora são regenerados; HTML, catálogo,
+gramática, contratos e vocabulário privado não mudam. Os quatro recursos pertencem ao pacote Python; o manifesto
 é interno. `resources.py` mantém leitura limitada, UTF-8, hashes, catálogo e
 modelos verificados; `protocol.py` mantém gramática, referências, ciclos e
 limites independentes do validador JavaScript. Nenhuma projeção é executada. Fontes, tipos, fixtures e ferramentas não são recursos HTTP.
@@ -577,4 +581,6 @@ limites independentes do validador JavaScript. Nenhuma projeção é executada. 
 A integração real de browser usa harness privado, PostgreSQL real e o
 composition root. Fault injection de redirect existe somente no harness,
 sem endpoint ou opção no produto. Logs são inspecionados em memória sem
-persistir registros. Etapas 5–9 e publicação desta etapa exigem autorização.
+persistir registros. As telas exigem zero auditoria administrativa, escritas
+ou mudança de arquivo/snapshot/contador. Etapas 6–9 e publicação da Etapa 5
+exigem autorização. Evidência: `docs/PHASE-8-STAGE-5-VALIDATION.md`.

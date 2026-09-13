@@ -8,6 +8,8 @@ from tempfile import TemporaryDirectory
 from typing import Any
 from unittest.mock import patch
 
+import psycopg
+import yaml
 from starlette.responses import RedirectResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
 
@@ -78,6 +80,11 @@ def network_probe(probe: MemoryProbe) -> None:
 
         async def inspect(scope: Scope, receive: Receive, send: Send) -> None:
             if scope["type"] == "http":
+                if os.environ.get("MASKGW_BROWSER_READ_ONLY") == "1" and scope["method"] not in {
+                    "GET",
+                    "HEAD",
+                }:
+                    probe.failed = True
                 headers = dict(scope["headers"])
                 origin = headers.get(b"origin")
                 expected = b"http://" + headers.get(b"host", b"")
@@ -110,6 +117,24 @@ def main() -> int:
         with TemporaryDirectory(prefix="maskgw-browser-") as directory:
             config = Path(directory) / "masking.yaml"
             text = "masking: []\nexceptions: []\n"
+            if os.environ.get("MASKGW_BROWSER_HOSTILE") == "1":
+                payloads = [
+                    '<img src=x onerror="document.documentElement.dataset.compromised=1">',
+                    "</script><script>document.documentElement.dataset.compromised=1</script>",
+                    "javascript:document.documentElement.dataset.compromised=1",
+                    '<svg onload="document.documentElement.dataset.compromised=1">',
+                    "__proto__",
+                    '<a href="https://outside.invalid/">outside</a>',
+                ]
+                text = yaml.safe_dump(
+                    {
+                        "masking": [
+                            {"match": value, "transformer": "fixed", "config": {"value": value}}
+                            for value in payloads
+                        ],
+                        "exceptions": [{"match": value} for value in payloads],
+                    }
+                )
             config.write_text(text, encoding="utf-8")
             try:
                 app = build_application(
@@ -121,7 +146,19 @@ def main() -> int:
                 assert app.admin_http is not None and app.admin is not None
                 before = app.admin.snapshot()
                 print(app.admin_http.port, flush=True)
-                sys.stdin.readline()
+                for command in sys.stdin:
+                    if command.strip() == "disconnect":
+                        with psycopg.connect(dsn) as connection:
+                            connection.execute(
+                                "SELECT pg_terminate_backend(pid) FROM pg_stat_activity "
+                                "WHERE datname=current_database() AND pid<>pg_backend_pid()"
+                            )
+                        print("ok", flush=True)
+                    elif command.strip() == "stop-api":
+                        app.admin_http.stop()
+                        print("ok", flush=True)
+                    else:
+                        break
                 assert config.read_text(encoding="utf-8") == text
                 assert app.admin.snapshot() == before and app.admin.operations_total == 0
             finally:
@@ -129,6 +166,8 @@ def main() -> int:
                     app.close()
             assert not probe.leaked and not probe.failed and probe.admin_events <= 1
             assert probe.peer_resets <= 2
+            if os.environ.get("MASKGW_BROWSER_READ_ONLY") == "1":
+                assert probe.admin_events == 0
 
     except BaseException:
         sys.stderr.write("Browser harness failed.\n")

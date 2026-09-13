@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { open } from "../../src/maskgw/admin/ui/assets/ui.js";
+import { open, reader } from "../../src/maskgw/admin/ui/assets/ui.js";
+import { book, responseFor } from "./samples.js";
 import { inspectPublic } from "../tools/inspect.js";
 
 const bytes=readFileSync(new URL("../../src/maskgw/admin/ui/assets/presentation.json",import.meta.url));
@@ -13,7 +14,7 @@ Object.defineProperty(globalThis,"window",{value:{location:{origin:"http://127.0
 globalThis.fetch=async (input, init) => {
   assert.ok(input instanceof URL && init);
   calls.push({url:input,init});
-  return new Response(input.pathname.endsWith("presentation.json") ? (broken ? "{}" : bytes) : "{}",{headers:{"Content-Type":"application/json"}});
+  return new Response(input.pathname.endsWith("presentation.json") ? (broken ? "{}" : bytes) : JSON.stringify(responseFor(input.pathname.endsWith(":validate") ? "c8" : "c0")),{headers:{"Content-Type":"application/json"}});
 };
 test.beforeEach(()=>{calls=[];broken=false;});
 
@@ -49,7 +50,7 @@ test("approved fetch does not weaken private vocabulary or reconstruction guard"
   /** @type {unknown} */ const words=JSON.parse(readFileSync(new URL("../private/vocabulary.json",import.meta.url),"utf8"));
   assert.ok(Array.isArray(words));assert.equal(words.length,193);
   inspectPublic('fetch(new URL("/admin/ui/presentation.json",window.location.origin));',["revision"],true);
-  for(const source of ['fetch("/admin/v1/config");','const x="rev"+"ision";','atob("eA==")','localStorage.x=1','document.write("x")']) {
+  for(const source of ['fetch("/admin/v1/config");','const x="rev"+"ision";','atob("eA==")','localStorage.x=1','document.write("x")','postMessage("x")','caches.open("x")']) {
     assert.throws(()=>inspectPublic(source,["revision","/admin/v1/config"],true));
   }
 });
@@ -59,4 +60,41 @@ test("origin equality gate runs before Authorization or network",async()=>{
   Object.defineProperty(window.location,"origin",{configurable:true,get:()=>++reads === 1 ? "http://127.0.0.1:8765" : "http://localhost:8765"});
   try {await assert.rejects(()=>open(token));assert.equal(calls.length,0);}
   finally {Object.defineProperty(window.location,"origin",{configurable:true,value:"http://127.0.0.1:8765"});}
+});
+
+
+test("closed transport cannot resurrect and aborts pending requests",async()=>{
+  const client=await open(token);client.close();
+  await assert.rejects(()=>client.read("c0"));assert.throws(()=>client.describe());
+  assert.equal(calls.length,1);
+  const controller=new AbortController();controller.abort();await assert.rejects(()=>open(token,controller.signal));
+  assert.equal(calls.length,1);
+});
+
+for(const action of ["close","abort","401"]) test("late successful response cannot survive "+action,async()=>{
+  const previous=globalThis.fetch;
+  const stop=new AbortController();let expired=0;
+  const client=await open(token,stop.signal,()=>{expired++;});
+  let release=()=>{};
+  const held=new Promise(resolve=>{release=()=>resolve(undefined);});
+  globalThis.fetch=async()=>{await held;return new Response(JSON.stringify(responseFor("c0")),{headers:{"Content-Type":"application/json"}});};
+  try {
+    const read=client.read("c0");
+    if(action === "close")client.close();
+    if(action === "abort")stop.abort();
+    if(action === "401") {
+      globalThis.fetch=async()=>new Response(token,{status:401});
+      await assert.rejects(()=>client.read("c0"));assert.equal(expired,1);
+    }
+    release();await assert.rejects(()=>read,/Request failed/);assert.throws(()=>client.describe());
+  } finally {globalThis.fetch=previous;client.close();}
+});
+
+for(const suffix of ["", '"\\end']) test("reflected credential including escapes is rejected "+suffix.length,async()=>{
+  const previous=globalThis.fetch;const secret=token+suffix;const client=await open(secret);
+  const data={revision:0,adopted:false,exceptions:[{id:null,match:secret,mode:"contains",case_sensitive:false,position:0}]};
+  assert.equal(reader(book).inspectDataFor("c4",data),0);
+  globalThis.fetch=async()=>new Response(JSON.stringify(data),{headers:{"Content-Type":"application/json"}});
+  try {await assert.rejects(()=>client.read("c4"),/^Error: Request failed\.$/);}
+  finally {globalThis.fetch=previous;client.close();}
 });

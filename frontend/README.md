@@ -1,4 +1,4 @@
-# Ferramentas privadas da UI administrativa — Etapa 4
+# Ferramentas privadas da UI administrativa — Etapa 5
 
 Node 24.20.0, npm 11.19.0, TypeScript 5.9.3 e Playwright 1.63.0.
 `@types/node` 24.0.0 é uma dependência exclusivamente de declarações para
@@ -25,15 +25,20 @@ startup nem da construção de wheel/sdist: os recursos já estão embarcados.
 
 `src/protocol.js` continua como verificador declarativo sem DOM. A função
 pública `check` aplica o protocolo e `digest` ancora a apresentação estática.
-`src/transport.js` acrescenta somente `open(token)`, chamado explicitamente pelo
-harness: obtém a apresentação com bearer na origem exata, confere Web Crypto e
-estrutura, e só então permite leituras GET sem template e POST abstrato check.
-As dez escritas e templates são recusados antes da rede. Nenhuma sessão,
-login/logout, renderização administrativa, polling ou CRUD foi implementado.
-A Etapa 3 valida bytes antes do bind; a Etapa 4 entrega esses bytes em quatro
-GET/HEAD condicionais, com autenticação, política de origem e headers aprovados.
+`src/transport.js` conserva a credencial em closure privada, autentica e verifica
+apresentação/hash/gramática e suporta encerramento/cancelamento. `reader.js`
+interpreta modelos privados para validar DTOs fechados, inteiros seguros,
+identidades/ordem e revisions coerentes antes do estado. `screen.js` monta o
+login explícito e seis vistas somente leitura a partir da apresentação. Não
+faz rede administrativa antes da entrada, não invoca check/escritas, não usa
+URL/histórico ou stores. Logout/401/pagehide/pageshow/BFCache descartam estado,
+DOM, metadados e token; cancelamento e geração bloqueiam respostas tardias.
+Status é lido a cada 15 s somente visível, sem sobreposição; falha suspende
+polling e retry é manual. O transporte check da Etapa 4 permanece apenas para
+compatibilidade do seu gate, sem uso pelas telas. Etapas 6–9 não iniciadas.
+A Etapa 3 valida bytes antes do bind; a fronteira HTTP da Etapa 4 não muda.
 
-Para o gate real da Etapa 4, definir `MASKGW_TEST_DSN` para PostgreSQL 16 real
+Para o gate real da Etapa 5, definir `MASKGW_TEST_DSN` para PostgreSQL 16 real
 e executar `npm run test:browser`. Instalar previamente os três binários pelo
 Playwright fixado (`playwright install chromium firefox webkit`), sem atualizar
 versões. Chromium 153.0.8010.12/revisão 1243, Firefox 155.0/1543 e WebKit 26.6/2359.
@@ -66,7 +71,8 @@ default escalar, quando aplicável. Defaults nulos representam ausência de um
 default de formulário. Ciclos ou caminhos ausentes invalidam tudo. O grafo é
 memoizado para não expandir repetidamente subgrafos compartilhados.
 
-Views, editores e controles são descrições estáticas, ainda sem renderização.
+Views, editores e controles são descrições estáticas; somente as seis vistas
+de leitura são renderizadas nesta etapa.
 Condições só descrevem presença/igualdade/escolha/booleano. Projeções descrevem
 copy/object/list/omit/insert/replace/remove/permute com fontes fechadas base ou
 draft, paths vetoriais e destino vetorial; não são executadas nesta etapa.
@@ -86,3 +92,22 @@ decodificados, concatenações constantes, entidades HTML e escapes CSS. Recusa
 mecanismos de reconstrução executável; não alega prova contra inferência geral.
 O vocabulário vem de schemas, enums, rotas, registry e proteções existentes,
 subtraindo exclusivamente os dez nomes compartilhados normativos.
+
+## Componentes e lifecycle
+
+`browser/reading.spec.js` combina leitura real e transporte controlado para
+falhas, DTOs hostis e relógio/visibilidade; `browser/lifecycle.spec.js` usa uma
+página-fixture local com os mesmos bytes do componente. Os fixtures não entram
+no pacote ou nas rotas do produto. O harness READ_ONLY exige zero escrita,
+audit administrativo ou mudança de arquivo/snapshot/contador. PostgreSQL
+indisponível após startup e API encerrada são injetados no harness privado.
+
+Playwright 1.63.0 documenta nos tipos de `Page.goBack` que BFCache não é suportado
+pelo seu acompanhamento de navegação e fica desligado por padrão. Os três
+engines executam cleanup com PageTransitionEvent persisted=true e navegação
+real/reload. Uma prova adicional usa Chromium completo do mesmo pin, habilita
+BFCache removendo somente o argumento que o desliga e observa restauração
+nativa por CDP, sem usar goBack do Playwright. O fixture é elegível a cache;
+a política no-store do produto permanece intacta. Não alegar restauração
+nativa do Firefox/WebKit automatizados. Detalhes, resultados e limitações em
+`docs/PHASE-8-STAGE-5-VALIDATION.md` na raiz.

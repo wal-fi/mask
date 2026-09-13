@@ -228,13 +228,25 @@ def control(kind, owner, path, label, default=None, condition=None):
 
 
 views = []
-labels = ["Visão geral", "Configuração", "Regras", "Exceptions", "Database", "SQL policy"]
+labels = ["Visão geral", "Configuração", "Regras", "Exceções", "Banco", "Política SQL"]
 view_calls = [0, 1, 2, 4, 1, 7]
 view_actions = [[], [8, 9], [10, 11, 12, 13], [14, 15, 16], [17], [18]]
 for i, (label, index, actions) in enumerate(zip(labels, view_calls, view_actions, strict=True)):
     owner = calls[index]["output"]
     shape = next(m["shape"] for m in models if m["id"] == owner)
     fields = [control("read", owner, [f["name"]], f["name"]) for f in shape["fields"]]
+    if label == "Configuração":
+        for field in fields:
+            if field["path"] == ["config"]:
+                field["label"] = "Documento declarado — somente leitura"
+    if label == "Banco":
+        fields = [
+            control("read", owner, ["revision"], "Revision"),
+            control("read", owner, ["config", "database"], "Limites declarados"),
+        ]
+    if label == "Política SQL":
+        for field in fields:
+            field["label"] = "Proteção efetiva: " + field["label"]
     views.append(
         {
             "id": "v" + str(i),
@@ -413,7 +425,7 @@ print(
     "models;",
     len(calls),
     "calls;",
-    len(controls),
+    sum(len(owner["controls"]) for owner in views + editors),
     "controls;",
     len(encoded),
     "bytes",

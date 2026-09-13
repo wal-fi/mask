@@ -1031,9 +1031,9 @@ em `docs/PHASE-8-STAGE-3-VALIDATION.md`. Builds e testes consumidores são seque
 Nenhum browser, fetch real ou controle de navegador é alegado nesta etapa.
 
 
-## Fase 8 — Etapa 4 concluída
+## Fase 8 — Etapa 4 concluída (registro histórico, publicada)
 
-A evidência atual é `docs/PHASE-8-STAGE-4-VALIDATION.md`; os números e contratos
+A evidência histórica é `docs/PHASE-8-STAGE-4-VALIDATION.md`; os números e contratos
 de ausência de HTTP dos quadros anteriores são históricos. A fixture da Fase 7
 continua idêntica e cobre UI desligada; UI ligada é coberta pela nova matriz.
 
@@ -1085,3 +1085,42 @@ Os casos incluem 1.325 testes de fronteira UI, 90 de startup e três do monitor
 do harness. Ruff/format/mypy strict aprovados em 135 arquivos; 75 testes Node,
 21 de navegador e dois builds idênticos nos 14 arquivos gerados. As durações,
 hashes, inventários de wheel/sdist e ressalvas estão na evidência da Etapa 4.
+
+## Fase 8 — Etapa 5
+
+Evidência atual: `docs/PHASE-8-STAGE-5-VALIDATION.md`. Repetir integralmente os
+gates anteriores; produto HTTP/startup, fixture off, catálogo e pins intactos.
+
+`reader.test.js` cobre DTOs fechados, revisions inseguras/incoerentes, identidade,
+ordem e conteúdo textual hostil. `transport.test.js` cobre encerramento, 401 e
+abort com fetch simulado que ignora cancelamento; resposta tardia ou reflexão
+de token não retorna dados ao estado. Typecheck strict inclui fontes, testes,
+harness, contratos e bundle final, sem any/supressões.
+
+`reading.spec.js` percorre as seis vistas reais; exige zero chamadas antes da
+entrada, campo limpo imediatamente, token ausente de persistência/URL/DOM/attrs,
+logout/401/reload, leituras tardias, estados/erro/retry, snapshots incompatíveis,
+polling visível sem sobreposição ou retry automático, teclado/foco/320 px/200%
+e reduced motion. Configuração hostil é persistida pelo harness antes do startup
+e lida em outra sessão. Cada string de DTO é substituída isoladamente por HTML
+hostil: renderizar como texto quando admitida pelo modelo, recusar DTO inválido
+antes do estado. Preservar os detectores positivos de CSP/execução e rede.
+
+`lifecycle.spec.js` cobre metadata pendente e uma página-fixture local dos bytes
+reais. Os três engines executam eventos persisted=true e volta no histórico;
+Chromium acrescenta restauração nativa BFCache observada por CDP. Playwright
+1.63.0 desliga BFCache e não acompanha sua restauração por goBack; não apresentar
+Firefox/WebKit recarregados como restauração nativa. O fixture elegível não muda
+no-store, rotas ou headers do produto. Nenhum finding vira skip/xfail.
+
+O harness readonly reprova qualquer método fora de GET/HEAD, evento AdminAudit,
+ou mudança de arquivo/snapshot/contador. Encerra conexões PostgreSQL reais e a
+Admin API somente pelo canal privado do harness, sem endpoint de controle no
+produto. Trace/HAR/screenshots/vídeo ficam desligados; o reporter só emite título,
+status, categoria fechada e número de linha de teste, jamais erro/corpo/DOM.
+As Etapas 6–9 permanecem fora desta rodada, inclusive validação/adoção/CRUD.
+
+Medição final da Etapa 5: 99 testes Node e 78 testes de navegador aprovados;
+3.804 Python coletados, 3.796 aprovados e oito skips POSIX, sem DSN ausente
+ou deselects. PostgreSQL 16.15 real; typecheck, Ruff/format/mypy strict, build
+duplo/193 termos e wheel/sdist isolados aprovados. Tempos e hashes na evidência.

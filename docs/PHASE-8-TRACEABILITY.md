@@ -1,6 +1,6 @@
 # Fase 8 — matriz de rastreabilidade normativa
 
-**Estado:** aprovada; Etapas 1 e 2 publicadas; Etapa 3 publicada; Etapa 4 concluída. **Atualização:** 2026-09-11.
+**Estado:** aprovada; Etapas 1–4 publicadas; Etapa 5 concluída. **Atualização:** 2026-09-13.
 **Fonte normativa integral:** [PHASE-8-SPEC.md](PHASE-8-SPEC.md), aprovada
 integralmente, com decisões [D-061 a D-064](DECISIONS.md#d-061--ui-administrativa-embarcada-opt-in-e-na-mesma-origem).
 
@@ -12,14 +12,15 @@ não dispensa os testes específicos. A fundação da Etapa 2 está implementada
 requisitos que atravessam etapas continuam parcialmente pendentes. Nenhum gate
 de navegador/HTTP ou fluxo funcional é inferido desses testes de fundação.
 
-A Etapa 4 foi autorizada após revisão e publicação da Etapa 3. As Etapas 5–9
+A Etapa 5 foi autorizada após revisão e publicação da Etapa 4. As Etapas 6–9
 continuam sem autorização. A tabela normativa mantém os componentes previstos;
 o quadro de entrega identifica quais já existem, sem antecipar APIs.
 As seções 1–2 e 8 também fundamentam D-061–D-064; a seção 7 fixa ordem, aceite
 e rollback. Evidências: [Etapa 1, histórica](PHASE-8-STAGE-1-VALIDATION.md) e
 [Etapa 2, histórica](PHASE-8-STAGE-2-VALIDATION.md) e
-[Etapa 3, histórica](PHASE-8-STAGE-3-VALIDATION.md). Rodada atual:
-[Etapa 4](PHASE-8-STAGE-4-VALIDATION.md).
+[Etapa 3, histórica](PHASE-8-STAGE-3-VALIDATION.md) e
+[Etapa 4, histórica](PHASE-8-STAGE-4-VALIDATION.md). Rodada atual:
+[Etapa 5](PHASE-8-STAGE-5-VALIDATION.md).
 
 ## Gates acumulados
 
@@ -161,7 +162,7 @@ não mudam. Resultados medidos: `PHASE-8-STAGE-3-VALIDATION.md`.
 | F8-054, 062–063 | gates acumulados, recursos inalterados da Etapa 2 | npm ci/typecheck/Node/build/inspect; 14 hashes contra o commit aprovado; Python completo/PostgreSQL real/Ruff/format/mypy/diff | Browsers reais somente no marco devido da Etapa 4 |
 
 
-## Entrega da Etapa 4
+## Entrega da Etapa 4 (registro histórico, publicada)
 
 Concluída; gates acumulados aprovados em `PHASE-8-STAGE-4-VALIDATION.md`.
 Python: 3.804 coletados, 3.796 aprovados e oito skips POSIX; 75 Node e 21
@@ -185,3 +186,24 @@ continua obrigatória em UI off. Os hashes de `app.py` e `server.py` deixam de
 ser exigidos por identidade porque suas mudanças condicionais foram aprovadas;
 os demais dez hashes permanecem protegidos. Não houve skip/xfail para essa
 transição. A matriz nova comprova o contrato on por igualdade e bytes completos.
+
+## Entrega da Etapa 5
+
+A Etapa 4 foi publicada sem emenda em
+`7e8e39988b38438128a51fc414ecae68cdde01c1`. Esta tabela identifica a entrega
+exclusiva de leitura; não encerra requisitos de escrita das Etapas 6–9.
+Evidência medida: [Etapa 5](PHASE-8-STAGE-5-VALIDATION.md).
+
+| IDs | Entrega concreta | Prova/gate | Pendência preservada |
+|---|---|---|---|
+| F8-007–010, 022, 058 | `screen.js`, seis vistas autenticadas e seleção em memória; leitura declarada distinta de proteção efetiva | `reading.spec.js`: login explícito, seis vistas/teclado/URL, vazio/loading/erro/retry, polling visível serial, PG/API indisponíveis, zoom/320 px/reduced motion | Ações de escrita/validação/adoção/CRUD ausentes; Etapas 6–9 |
+| F8-018, 026–027, 053, 055 | `reader.js` interpreta somente modelos/bindings privados; unknown validado antes do estado, revisions seguras, envelopes e listas coerentes | `reader.test.js`, `transport.test.js`, DTOs unsafe/shape/incoherent e snapshots diferentes em browser; G-TYPE | Revision de escritas, expected_revision e reconciliação: Etapa 6 |
+| F8-028, 034, 058, 060 | Token na closure, geração/cancelamento e erase de DOM; nenhum store/URL/global | `reading.spec.js` e `lifecycle.spec.js`: logout/401/pagehide/pageshow/reload, metadata/leitura tardia, sessão nova, storage/atributos/logs; Node ignora abort propositalmente e não ressuscita | Rascunhos não implementados. BFCache nativo adicional Chromium; eventos persisted nos três; limite de automação Firefox/WebKit documentado |
+| F8-023–027, 032–036, 048, 057 | DOM somente texto, vocabulário fechado, secrets só enum de estado, todos os controles readonly | XSS persistido em outra sessão, reflexão em cada string dos DTOs, campos inválidos recusados; controles positivos de execução/rede acumulados; 193 termos/contraprovas | Editores, projeções e mensagens de escrita não executados |
+| F8-004–005, 029–031, 037–051, 065 | Fronteira/startup da Etapa 4 inalterados; telas usam somente GETs já existentes | G-PY/G-HTTP; fixture off literal, matriz 20/28 e 24/36, testes de planos; harness readonly reprova escrita/audit/efeitos | Fechamento/rollback final da Etapa 9 |
+| F8-052–055, 059, 062–063 | Pins/lock preservados, build duplo e pacote isolado, gates acumulados | G-TYPE/G-UNIT/G-COMP/G-E2E/G-PKG/G-PY; resultados medidos na evidência | Etapas 6–9 e publicação desta etapa aguardam autorização |
+
+Medição final da Etapa 5: 99 testes Node e 78 testes de navegador aprovados;
+3.804 Python coletados, 3.796 aprovados e oito skips POSIX, sem DSN ausente
+ou deselects. PostgreSQL 16.15 real; typecheck, Ruff/format/mypy strict, build
+duplo/193 termos e wheel/sdist isolados aprovados. Tempos e hashes na evidência.
