@@ -2,18 +2,19 @@
 
 **Documento de entrada. Comece por aqui.**
 
-Estado: **Fase 8 aprovada; Etapas 1–5 publicadas; Etapa 6 concluída**.
-MVP e Fase 7 concluídos. A Etapa 5 foi revisada e publicada sem emenda em
-`0d42f5d0d9a835177dd1c5e4a6c608161f585896`; o fetch confirmou master, HEAD igual
+Estado: **Fase 8 aprovada; Etapas 1–6 publicadas; Etapa 7 concluída**.
+MVP e Fase 7 concluídos. A Etapa 6 foi revisada e publicada sem emenda em
+`db33fa770e1b675ee23ad554a84c93a7e9e2f358`; o fetch confirmou master, HEAD igual
 a origin/master, árvore limpa e 0/0, com autoria e trailer preservados.
-A autorização atual é exclusivamente a Etapa 6: máquina de estados e transporte
-granular. As seis telas permanecem somente leitura. Etapas 7–9 e push da Etapa 6
-não estão autorizados. Evidência: `docs/PHASE-8-STAGE-6-VALIDATION.md`.
+A autorização atual é exclusivamente a Etapa 7: adoção legada, validação
+explícita e CRUD granular de regras/exceptions. Reorder, edição de database/SQL,
+Etapas 8–9 e push da Etapa 7 não estão autorizados. Evidência: `docs/PHASE-8-STAGE-7-VALIDATION.md`.
 
 A UI agora recebe token explicitamente, valida metadados e DTOs e apresenta
-seis vistas readonly. Token somente na closure do transporte; navegação em
-memória, limpeza no lifecycle e polling somente visível. Nenhuma escrita,
-config:validate, adoção ou CRUD pela UI. Fronteira HTTP da Etapa 4 intacta.
+seis vistas declarativas. Token somente na closure do transporte; navegação em
+memória, limpeza no lifecycle e polling visível suspenso durante edição.
+Adoção, config:validate e CRUD granular exigem gestos explícitos; database/SQL
+continuam readonly e reorder ausente. Fronteira HTTP da Etapa 4 intacta.
 Leia `docs/PHASE-8-SPEC.md` e `docs/PHASE-8-TRACEABILITY.md`. Fase 9 não iniciada.
 
 Antes de comecar qualquer fase, confira `git status --short`: a arvore precisa
@@ -758,9 +759,9 @@ Mudancas internas que nao alteram comportamento observavel do MCP:
 
 ## 10. Como continuar
 
-A Fase 7 está **CONCLUÍDA**. As Etapas 1–5 da Fase 8 foram publicadas.
-Nesta rodada somente a Etapa 6 está autorizada; parar antes da Etapa 7 e
-manter o commit local da Etapa 6 sem publicação. A Fase 9 permanece não iniciada.
+A Fase 7 está **CONCLUÍDA**. As Etapas 1–6 da Fase 8 foram publicadas.
+Nesta rodada somente a Etapa 7 está autorizada; parar antes da Etapa 8 e
+manter o commit local da Etapa 7 sem publicação. A Fase 9 permanece não iniciada.
 
 ### A. Endurecer o que resta (inventario preservado; nao e a proxima etapa)
 
@@ -788,7 +789,7 @@ Fase encerrada:
 Fase 7 — Admin API, CONCLUIDA (Etapas 1–11)
 
 Trabalho autorizado nesta rodada:
-Fase 8 — Etapa 6: estados e transporte granular; parar antes da Etapa 7.
+Fase 8 — Etapa 7: adoção, validação explícita e CRUD; parar antes da Etapa 8.
 Fase 9 — NAO INICIADA
 ```
 
@@ -915,10 +916,10 @@ em D-047 a D-054 com o motivo de cada um:
 - bind HTTP opcional em **`127.0.0.1`** por default, **sem CORS wildcard**
 - **sem front-end** nesta fase
 
-### C. Fase 8 — APROVADA; ETAPA 6 CONCLUÍDA
+### C. Fase 8 — APROVADA; ETAPA 7 CONCLUÍDA
 
 Especificação: `docs/PHASE-8-SPEC.md`; matriz: `docs/PHASE-8-TRACEABILITY.md`;
-evidência atual: `docs/PHASE-8-STAGE-6-VALIDATION.md`. D-061–D-064 vigentes.
+evidência atual: `docs/PHASE-8-STAGE-7-VALIDATION.md`. D-061–D-064 vigentes.
 
 A fonte bruta e a ordem de validação da Etapa 3 permanecem. Os bytes validados
 são copiados para os handlers; nenhuma releitura em HTTP. A pilha original é
@@ -940,16 +941,17 @@ check retido para compatibilidade dos testes de transporte da Etapa 4.
 Node 24.20.0 / npm 11.19.0, TypeScript 5.9.3, Playwright 1.63.0 e declarações
 Node 24.0.0 seguem fixados. Chromium 153.0.8010.12 (1243), Firefox 155.0 (1543)
 e WebKit 26.6 (2359) são reutilizados, sem atualização. Build termina antes
-dos consumidores. Na Etapa 6, JS/apresentação/modelos privados e âncoras mudam;
-HTML, CSS, gramática, contratos de negócio e vocabulário permanecem intactos.
+dos consumidores. Na Etapa 7, JS/CSS/apresentação/modelos privados e âncoras mudam;
+HTML, gramática, contratos de negócio e vocabulário permanecem intactos.
 
 O coordenador genérico mantém base/rascunho/comando congelados, uma pendência e
 releitura após confirmação. Erros são mapeados pela apresentação privada;
 conflito conserva rascunho e exige revisão de base separada, busy só permite
 nova tentativa manual, e durabilidade/resultado desconhecido continuam bloqueados.
 O transporte projeta corpos fechados, valida template/identidade/modelos e nunca
-recebe URL/método livres. Nenhum desses componentes expõe ação nas seis telas.
-Etapas 7–9, inclusive adoção, validação pela tela e CRUD, não foram iniciadas.
+recebe URL/método livres. `workbench.js` integra somente adoção, validação e
+CRUD de regras/exceptions; `author.js` constrói candidatos transitórios fechados.
+Reorder e edição de database/SQL continuam futuros. Etapas 8–9 não iniciadas.
 
 ### D. Fase 9 — Deployment · NAO INICIADA
 
@@ -969,10 +971,10 @@ automatico, banco de configuracao, Redis, background workers.
 
 - `git status --short` vazio: a arvore precisa estar limpa
 - suíte completa e gates verdes, sem deselect; usar a medição atual em
-  `docs/PHASE-8-STAGE-6-VALIDATION.md`, distinguindo-a dos registros históricos
+  `docs/PHASE-8-STAGE-7-VALIDATION.md`, distinguindo-a dos registros históricos
 - PostgreSQL 16 real disponível via `MASKGW_TEST_DSN`, sem nenhum skip por
   ausência de DSN; skips condicionais de plataforma discriminados na evidência
-- Etapa 7 somente após revisão e autorização; nenhum push da Etapa 6
+- Etapa 8 somente após revisão e autorização; nenhum push da Etapa 7
 - neste host Windows, rode o pytest com pilha de thread ampliada (64 MiB), ou o
   teste de payload gigante derruba o processo. Nunca o transforme em `skip`
   (D-041); a limitacao esta na secao 11

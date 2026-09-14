@@ -1,6 +1,6 @@
 # Fase 8 — matriz de rastreabilidade normativa
 
-**Estado:** aprovada; Etapas 1–5 publicadas; Etapa 6 concluída. **Atualização:** 2026-09-13.
+**Estado:** aprovada; Etapas 1–6 publicadas; Etapa 7 concluída. **Atualização:** 2026-09-14.
 **Fonte normativa integral:** [PHASE-8-SPEC.md](PHASE-8-SPEC.md), aprovada
 integralmente, com decisões [D-061 a D-064](DECISIONS.md#d-061--ui-administrativa-embarcada-opt-in-e-na-mesma-origem).
 
@@ -12,15 +12,15 @@ não dispensa os testes específicos. A fundação da Etapa 2 está implementada
 requisitos que atravessam etapas continuam parcialmente pendentes. Nenhum gate
 de navegador/HTTP ou fluxo funcional é inferido desses testes de fundação.
 
-A Etapa 6 foi autorizada após revisão e publicação da Etapa 5. As Etapas 7–9
+A Etapa 7 foi autorizada após revisão e publicação da Etapa 6. As Etapas 8–9
 continuam sem autorização. A tabela normativa mantém os componentes previstos;
 o quadro de entrega identifica quais já existem, sem antecipar APIs.
 As seções 1–2 e 8 também fundamentam D-061–D-064; a seção 7 fixa ordem, aceite
 e rollback. Evidências: [Etapa 1, histórica](PHASE-8-STAGE-1-VALIDATION.md) e
 [Etapa 2, histórica](PHASE-8-STAGE-2-VALIDATION.md) e
 [Etapa 3, histórica](PHASE-8-STAGE-3-VALIDATION.md) e
-[Etapa 4, histórica](PHASE-8-STAGE-4-VALIDATION.md). [Etapa 5, histórica](PHASE-8-STAGE-5-VALIDATION.md). Rodada atual:
-[Etapa 6](PHASE-8-STAGE-6-VALIDATION.md).
+[Etapa 4, histórica](PHASE-8-STAGE-4-VALIDATION.md). [Etapa 5, histórica](PHASE-8-STAGE-5-VALIDATION.md). [Etapa 6, histórica](PHASE-8-STAGE-6-VALIDATION.md). Rodada atual:
+[Etapa 7](PHASE-8-STAGE-7-VALIDATION.md).
 
 ## Gates acumulados
 
@@ -227,3 +227,30 @@ tela, formulários, CRUD, reorder ou edição de database/SQL nesta entrega.
 | F8-023–027, 050, 052–057, 062–063 | Build duplo, manifesto/modelos reancorados e inspeção pública sem exceções | npm ci, checkJs strict/noEmit, Node, `node --check` no ESM final, 193 termos, wheel/sdist fora do checkout e sem Node/npm | Não publicar Etapa 6 nem iniciar Etapa 7 nesta rodada |
 
 Medição final da Etapa 6: 176 testes Node e 114 testes de navegador aprovados; 3804 Python coletados, 3796 aprovados e oito skips POSIX. PostgreSQL 16.15 real, sem deselect/skip por DSN. Typecheck, build duplo/193 termos, pacote isolado e Ruff/format/mypy strict aprovados. Evidência detalhada em `PHASE-8-STAGE-6-VALIDATION.md`.
+
+## Entrega da Etapa 7
+
+A Etapa 6 foi publicada sem emenda em
+`db33fa770e1b675ee23ad554a84c93a7e9e2f358`. Esta entrega conecta somente adoção
+legada, validação explícita e CRUD granular; os quadros anteriores preservam
+seus limites históricos. Etapas 8–9 e publicação desta etapa não autorizadas.
+Evidência: [Etapa 7](PHASE-8-STAGE-7-VALIDATION.md).
+
+| IDs | Componente/contrato concreto | Prova/gate nesta entrega | Limite preservado |
+|---|---|---|---|
+| F8-007, 011–013, 025–027, 035–036 | `author.js`, controles privados e `workbench.js`: dois perfis CRUD, defaults distintos, oito editores/registry, parâmetros fechados e match literal | `author.test.js`, `editing.spec.js`: corpos completos, limites/dependências, unknown bloqueado, proteção de IDs/revision, posição preservada e cancelamentos | Reorder de regras e database/SQL: Etapa 8; nenhum reorder de exceptions |
+| F8-016, 018, 026, 055 | Candidato raiz transitório, sem IDs/revision/expected_revision, conservando valores protegidos; quatro booleanos exatos | Node: base imutável, múltiplos itens sem IDs, alteração/exclusão, getters/protótipos; browser: validação explícita, nenhuma escrita/efeito em arquivo/runtime/digest/contador, reasons conhecidos, invalidação e resposta tardia | Validação não salva, não reserva revision, não testa conexão nem prova proteção integral |
+| F8-017, 028, 058 | Adoção com aviso privado completo, checkbox falso e gesto final único | Browser: cancelamento, falso, sucesso, duas abas/já adotado, backup original sem exposição e releitura; regressões Python de conflito/adoption | Nenhuma adoção implícita; legado só leitura/validação |
+| F8-019–021, 061 | Coordenador por edição; release sem fechar sessão; base/rascunho preservados; bloqueio durável na sessão após unknown/uncertain | Browser real: duplo clique, duas abas, conflito/review, busy com lease real, falha antes de persistir, reload inválido, pós-commit incerto, resposta perdida e readback falho; Node/componentes acumulados | Sem fila/retry/rebase/rollback automático; revision maior não prova autoria |
+| F8-022, 028, 032–034, 058–060 | Formulários/diálogos semânticos, foco preso/restaurado, descarte explícito e DOM somente texto | Três engines: teclado, 320 px, escala 200%, reduced motion, XSS persistido, reasons hostis, 401/pagehide/pageshow limpam formulário e diálogo aninhado; controles positivos acumulados | BFCache nativo adicional Chromium; limite Firefox/WebKit já documentado |
+| F8-004–005, 029–031, 037–051, 062, 065 | Fronteira/backend intactos; harness privado de edição usa composition root e PG reais | G-PY/G-HTTP, fixture UI off literal, planos, audit por operação/alvo/outcome/revisions, HTTP → runtime → MCP e restart | Nenhuma rota, SQL UI, auditoria consultável, schema ou domínio alterado; fechamento da Etapa 9 futuro |
+| F8-023–027, 050, 052–057, 059, 063 | Novos controles/modelos privados e JS/CSS reancorados; gramática, catálogo de chamadas, pins e vocabulário preservados | Instalação congelada; checkJs strict/noEmit; Node; 14 saídas iguais; 193 termos; wheel/sdist isolados; três engines/PG16 e Python inteiro | Não publicar Etapa 7 nem iniciar Etapa 8 nesta rodada |
+
+
+Medição final da Etapa 7: 195 testes Node e 156 de navegador aprovados (52 por
+engine), sem skips/retries; 3808 Python coletados, 3800 aprovados e oito skips
+POSIX. PostgreSQL 16.15 real, sem deselect/skip por DSN; Ruff/format/mypy strict
+em 137 arquivos, tipagem, build duplo/193 termos e wheel/sdist isolados verdes.
+A falha inicial de startup MCP e o diagnóstico/repetição integral posteriores
+estão discriminados em `PHASE-8-STAGE-7-VALIDATION.md`. Não publicar esta etapa
+nem iniciar a Etapa 8 sem revisão e autorização.

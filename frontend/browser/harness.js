@@ -17,7 +17,7 @@ export function requireTrue(condition, label="assertion") {
 
 /** No reporter receives captured requests, token or administrative values.
  * @param {keyof typeof engines} name
- * @param {(page:import("@playwright/test").Page, origin:string, token:string, command:(value:"disconnect" | "stop-api")=>Promise<void>) => Promise<void>} action
+ * @param {(page:import("@playwright/test").Page, origin:string, token:string, command:(value:string)=>Promise<void>) => Promise<void>} action
  * @param {Record<string,string>} extra
  */
 export async function scenario(name, action, extra={}) {
@@ -25,7 +25,7 @@ export async function scenario(name, action, extra={}) {
   const token = randomBytes(32).toString("hex");
   const browser = await engines[name].launch(name === "chromium" && extra.MASKGW_BROWSER_BFCACHE === "1" ? {channel:"chromium",ignoreDefaultArgs:["--disable-back-forward-cache"]} : {});
   const child = spawn(join(root, process.platform === "win32" ? ".venv/Scripts/python.exe" : ".venv/bin/python"),
-    ["-u", "-m", "tests.browser_server"], {cwd:root, env:{...process.env,...extra,MASKGW_BROWSER_TOKEN:token}, stdio:["pipe","pipe","pipe"]});
+    ["-u", "-m", extra.MASKGW_BROWSER_EDIT === "1" ? "tests.browser_edit_server" : "tests.browser_server"], {cwd:root, env:{...process.env,...extra,MASKGW_BROWSER_TOKEN:token}, stdio:["pipe","pipe","pipe"]});
   let stderrText = "";
   child.stderr.on("data", data => { stderrText += String(data); });
   let failed = false;
@@ -41,16 +41,21 @@ export async function scenario(name, action, extra={}) {
     const context = await browser.newContext();
     const page = await context.newPage();
     stage = "action";
-    /** @param {"disconnect" | "stop-api"} value */
+    /** @param {string} value */
     async function command(value) {
-      const answer=once(child.stdout,"data");child.stdin.write(value+"\n");
-      const [data]=await answer;requireTrue(String(data).trim() === "ok");
+      const answer=new Promise((resolve,reject)=>{
+        /** @param {Buffer} data */ const got=data=>{cleanup();resolve(data);};
+        const exited=()=>{cleanup();reject(new Error("Harness exited."));};
+        const cleanup=()=>{child.stdout.removeListener("data",got);child.removeListener("exit",exited);};
+        child.stdout.once("data",got);child.once("exit",exited);
+      });child.stdin.write(value+"\n");
+      const data=await answer;requireTrue(String(data).trim() === "ok");
     }
     await action(page, "http://127.0.0.1:"+port, token, command);
   } catch (error) {
     failed = true;
     if(error instanceof Error) {
-      for(const found of (error.stack ?? "").matchAll(/[\\/](?:reading|lifecycle)\.spec\.js:(\d+):\d+/g)) {
+      for(const found of (error.stack ?? "").matchAll(/[\\/](?:reading|lifecycle|editing)\.spec\.js:(\d+):\d+/g)) {
         if(found[1]) test.info().annotations.push({type:"check",description:"source-line-"+found[1]});
       }
     }
@@ -63,7 +68,7 @@ export async function scenario(name, action, extra={}) {
     const result = await finished;
     if (result[0] !== 0) { failed = true; stage = "exit"; }
     if (stderrText) {
-
+      for(const found of stderrText.matchAll(/check-line-([0-9]+)/g)) test.info().annotations.push({type:"check",description:"source-line-"+found[1]});
       failed = true;
       stage = ["Browser harness failed."].filter(v=>stderrText.includes(v)).join("|") || "other";
     }

@@ -538,9 +538,9 @@ As rotas de escrita e a adoção com backup foram concluídas na Etapa 9; a
 auditoria administrativa (`AdminAudit`), na Etapa 10. A Etapa 11 concluiu a
 suíte adversarial administrativa; as onze etapas da Fase 7 estão encerradas.
 
-## Fase 8 — sessão de leitura e coordenador granular
+## Fase 8 — sessão, coordenador e edição granular
 
-**Aprovada; Etapas 1–5 publicadas; Etapa 6 concluída.** Contrato integral em
+**Aprovada; Etapas 1–6 publicadas; Etapa 7 concluída.** Contrato integral em
 `docs/PHASE-8-SPEC.md`, decisões D-061–D-064 e rastreabilidade em
 `docs/PHASE-8-TRACEABILITY.md`.
 
@@ -563,8 +563,8 @@ apenas seleção, geração, leitura e elementos transitórios; `transport.js`
 conserva a credencial em closure, autentica apresentação/hash/gramática e
 expõe encerramento/cancelamento. `reader.js` interpreta os modelos privados:
 campos fechados, inteiros seguros, identidade/ordem e revisions coerentes.
-Somente dados validados chegam ao renderer de texto. Seis vistas somente
-leitura, erro/retry manual e status serial a cada 15 s visível; nenhum endpoint
+Somente dados validados chegam ao renderer de texto. Seis vistas,
+adoção/validação/CRUD explícitos, erro/retry manual e status serial a cada 15 s visível; nenhum endpoint
 novo ou sessão de servidor. O check abstrato da Etapa 4 permanece no transporte,
 mas as telas não o invocam. Cleanup descarta token/metadados/DTOs/DOM, invalida
 geração e aborta requests; callbacks antigos não restauram estado.
@@ -572,8 +572,8 @@ geração e aborta requests; callbacks antigos não restauram estado.
 `frontend/` contém build/testes privados. O build deriva os onze contratos e as
 dez escritas permitidas do catálogo, sem incluir PUT /config na UI. A gramática
 continua limitada, e 193 entradas privadas continuam ausentes dos bytes públicos.
-Na Etapa 6, JS, apresentação, nomes de modelos, catálogo, manifesto e âncora
-são regenerados; HTML, CSS, gramática, contratos e vocabulário não mudam. Os quatro recursos pertencem ao pacote Python; o manifesto
+Na Etapa 7, JS, CSS, apresentação, nomes de modelos, catálogo, manifesto e âncora
+são regenerados; HTML, gramática, contratos e vocabulário não mudam. Os quatro recursos pertencem ao pacote Python; o manifesto
 é interno. `resources.py` mantém leitura limitada, UTF-8, hashes, catálogo e
 modelos verificados; `protocol.py` mantém gramática, referências, ciclos e
 limites independentes do validador JavaScript. Fontes, tipos, fixtures e
@@ -582,9 +582,10 @@ ferramentas não são recursos HTTP.
 A integração real de browser usa harness privado, PostgreSQL real e o
 composition root. Fault injection de redirect existe somente no harness,
 sem endpoint ou opção no produto. Logs são inspecionados em memória sem
-persistir registros. As telas exigem zero auditoria administrativa, escritas
-ou mudança de arquivo/snapshot/contador. Etapas 7–9 e publicação da Etapa 6
-exigem autorização. Evidência: `docs/PHASE-8-STAGE-6-VALIDATION.md`.
+persistir registros. O harness de leitura continua exigindo zero auditoria/escritas/efeitos.
+O novo harness de edição confere cada operação, alvo, outcome e revisions,
+com persistência/runtime reais e controles de falha somente por stdin.
+Etapas 8–9 e publicação da Etapa 7 exigem autorização. Evidência: `docs/PHASE-8-STAGE-7-VALIDATION.md`.
 
 `commands.js` interpreta o catálogo autenticado e usa os modelos fechados como
 plano de seleção/cópia e construção de objetos/listas. A revision-base entra
@@ -601,8 +602,12 @@ apenas registra observação separada. Uma escrita pendente, sem fila; sucesso
 exige confirmação aplicada e releitura. Conflito conserva a base original e
 carrega outra separada; revisão explícita é necessária. Busy permite tentativa
 manual. Desconhecido e durabilidade incerta continuam bloqueados após releitura,
-pois revision maior não atribui autoria. Não há rollback. O coordenador não é
-montado por `screen.js` e não acrescenta timer, botão ou formulário funcional.
+pois revision maior não atribui autoria. Não há rollback. `workbench.js` monta um
+coordenador por edição e o libera sem encerrar o transporte compartilhado.
+Token e base/rascunho permanecem somente em memória; polling da tela suspende
+enquanto houver edição. `author.js` interpreta os controles/modelos privados,
+constrói candidatos sem IDs/revision e confronta os oito editores com o registry.
+Reorder, database e SQL continuam sem controles de escrita.
 
 Toda reconciliação invalida primeiro a base de releitura anterior. Uma falha
 posterior não permite review/finish sobre um snapshot que acabou de ficar

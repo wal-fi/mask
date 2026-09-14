@@ -1,4 +1,4 @@
-# Ferramentas privadas da UI administrativa — Etapa 6
+# Ferramentas privadas da UI administrativa — Etapa 7
 
 Node 24.20.0, npm 11.19.0, TypeScript 5.9.3 e Playwright 1.63.0.
 `@types/node` 24.0.0 é uma dependência exclusivamente de declarações para
@@ -29,16 +29,17 @@ pública `check` aplica o protocolo e `digest` ancora a apresentação estática
 apresentação/hash/gramática e suporta encerramento/cancelamento. `reader.js`
 interpreta modelos privados para validar DTOs fechados, inteiros seguros,
 identidades/ordem e revisions coerentes antes do estado. `screen.js` monta o
-login explícito e seis vistas somente leitura a partir da apresentação. Não
-faz rede administrativa antes da entrada, não invoca check/escritas, não usa
+login explícito e seis vistas a partir da apresentação. Não
+faz rede administrativa antes da entrada, não usa
 URL/histórico ou stores. Logout/401/pagehide/pageshow/BFCache descartam estado,
 DOM, metadados e token; cancelamento e geração bloqueiam respostas tardias.
 Status é lido a cada 15 s somente visível, sem sobreposição; falha suspende
 polling e retry é manual. O transporte check da Etapa 4 permanece apenas para
-compatibilidade do seu gate, sem uso pelas telas. Etapas 7–9 não iniciadas.
+compatibilidade do seu gate. `assess` é a validação explícita nova.
+`workbench.js` conecta adoção e CRUD; Etapas 8–9 não iniciadas.
 A Etapa 3 valida bytes antes do bind; a fronteira HTTP da Etapa 4 não muda.
 
-Para o gate acumulado da Etapa 6, definir `MASKGW_TEST_DSN` para PostgreSQL 16 real
+Para o gate acumulado da Etapa 7, definir `MASKGW_TEST_DSN` para PostgreSQL 16 real
 e executar `npm run test:browser`. Instalar previamente os três binários pelo
 Playwright fixado (`playwright install chromium firefox webkit`), sem atualizar
 versões. Chromium 153.0.8010.12/revisão 1243, Firefox 155.0/1543 e WebKit 26.6/2359.
@@ -71,13 +72,13 @@ default escalar, quando aplicável. Defaults nulos representam ausência de um
 default de formulário. Ciclos ou caminhos ausentes invalidam tudo. O grafo é
 memoizado para não expandir repetidamente subgrafos compartilhados.
 
-Views, editores e controles são descrições estáticas; somente as seis vistas
-de leitura são renderizadas nesta etapa.
+Views, editores e controles são descrições estáticas. A Etapa 7 renderiza
+edição somente para regras/exceptions, adoção e validação explícita.
 Condições só descrevem presença/igualdade/escolha/booleano. Projeções descrevem
 copy/object/list/omit/insert/replace/remove/permute com fontes fechadas base ou
 draft, paths vetoriais e destino vetorial. A Etapa 6 executa seleção/cópia e
 construção de objetos/listas a partir dos modelos privados; operações de
-edição de candidato/formulários permanecem nos marcos seguintes.
+edição de candidato/formulários são interpretadas por `author.js` na Etapa 7.
 Não há fonte token, ambiente, função ou código. Não existe merge genérico.
 As ligações usam papéis abstratos; `consent` representa adoção sem expor o
 literal privado da operação. Nenhuma exceção lexical foi adicionada à lista
@@ -120,8 +121,8 @@ nativa do Firefox/WebKit automatizados. Detalhes, resultados e limitações em
 identidade/modelos e projeta corpo fechado a partir do rascunho e versão-base.
 `transport.js` expõe prepare/mutate além das leituras, sem qualquer chamada
 implícita. `coordinator.js` expõe load, begin/change, confirm, cancel, reconcile,
-review, finish, discard e close; não é instalado por screen e não expõe controles
-de escrita. getState/getObservation devolvem referências congeladas.
+review, finish, discard, release e close; `workbench.js` monta um coordenador
+por edição explícita e release o limpa sem fechar a sessão compartilhada. getState/getObservation devolvem referências congeladas.
 
 load é explícito. begin/change conservam o snapshot-base e congelam conteúdo;
 confirm revalida o comando e admite uma pendência. Polling durante rascunho
@@ -134,4 +135,26 @@ Logout/401/pagehide/pageshow limpam o coordenador; respostas antigas são ignora
 
 Testes específicos: test/commands.test.js, test/coordinator.test.js e
 browser/coordinator.spec.js. Evidência atual na raiz:
-`docs/PHASE-8-STAGE-6-VALIDATION.md`. Não publicar Etapa 6 nem iniciar Etapa 7.
+`docs/PHASE-8-STAGE-7-VALIDATION.md`. Não publicar Etapa 7 nem iniciar Etapa 8.
+
+
+## Edição autorizada da Etapa 7
+
+`author.js` deriva dois perfis de escrita dos controles privados; copia campos
+fechados e constrói o candidato completo transitório sem IDs/revision. A base
+permanece congelada; database/SQL/proteções são conservados. Não há fonte token,
+expressão executável ou merge livre. O leitor admite IDs opcionais ausentes em
+vários itens transitórios; IDs exigidos nas leituras continuam obrigatórios.
+
+`workbench.js` administra diálogo, rascunho, validação explícita e coordenador.
+O transporte `assess` exige o modelo de entrada e quatro flags exatas de saída;
+reasons são associados apenas a controles conhecidos. Alterar rascunho/base
+invalida o resultado. CRUD legado é bloqueado; adoção exige aviso e checkbox
+falso até confirmação. Exception criada/editada sempre pede confirmação,
+inclusive em alterações que não ampliam a correspondência. Valores são texto.
+
+O novo harness `tests.browser_edit_server` é selecionado somente nos testes de
+edição. Ele verifica auditoria e efeitos reais; o harness de leitura original
+continua exigindo zero escrita/efeito. Nenhuma instrumentação entra no pacote.
+Gates: `test/author.test.js`, `browser/editing.spec.js`, suíte Python inteira e
+matriz acumulada dos três engines/PG16. Reorder, database e SQL não têm editor.

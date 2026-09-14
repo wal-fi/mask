@@ -134,6 +134,6 @@ export function coordinate(client,readId) {
     if(closed || occupied || state.tag !== "draft") return false;
     state={tag:"reading",snapshot:state.edit.base};observed=undefined;return true;
   }
-  return Object.freeze({load,begin,poll,confirm,cancel,reconcile,review,finish,change,discard,close,
+  return Object.freeze({load,begin,poll,confirm,cancel,reconcile,review,finish,change,discard,close,release:clear,
     getState:()=>Object.freeze(state),getObservation:()=>observed});
 }

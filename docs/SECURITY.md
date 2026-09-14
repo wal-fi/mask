@@ -466,9 +466,9 @@ detalhados em `docs/FUTURE-HARDENING.md`:
 
 ## Fase 8 — fronteira, sessão e concorrência local
 
-**Aprovada; Etapas 1–5 publicadas; Etapa 6 concluída.** O contrato normativo
+**Aprovada; Etapas 1–6 publicadas; Etapa 7 concluída.** O contrato normativo
 integral está em `docs/PHASE-8-SPEC.md`, especialmente §§3.14–3.16, 4 e 5;
-a evidência desta rodada está em `docs/PHASE-8-STAGE-6-VALIDATION.md`.
+a evidência desta rodada está em `docs/PHASE-8-STAGE-7-VALIDATION.md`.
 
 Somente UI on instala quatro rotas, três exceções públicas raw/canônicas,
 origem exata e headers. Query não vazia nunca entrega recurso; a recusa segue
@@ -490,9 +490,10 @@ primitivas HTTP compartilhadas e SecretProvider permanecem protegidos.
 O transporte anexa Authorization somente após a comparação de origem; todas
 as chamadas usam cors/omit/error/no-store/no-referrer. Token explícito precede
 apresentação; hash e gramática precedem chamadas de negócio. Não há chamadas
-administrativas antes da entrada explícita. As telas fazem apenas leituras, incluindo
-status visível a cada 15 s, sem sobreposição e suspenso após falha. Nenhuma
-escrita ou validação pelas telas, nem armazenamento, log, erro ou URL com token. Os
+administrativas antes da entrada explícita. As leituras incluem
+status visível a cada 15 s, sem sobreposição e suspenso após falha ou na edição.
+Validação, adoção e CRUD exigem gesto explícito; não há armazenamento, log,
+erro ou URL com token. Os
 193 termos privados permanecem proibidos; permitir fetch não libera encoding,
 concatenação, execução dinâmica ou armazenamento. Os bytes administrativos
 continuam exclusivamente no recurso autenticado e nos envelopes já existentes.
@@ -513,9 +514,12 @@ abortam requests e invalidam a geração. Respostas tardias não restauram estad
 Objetos fechados, revisões seguras e coerentes precedem qualquer estado/DOM;
 conteúdo hostil é texto, nunca HTML/URL/atributo executável. Navegação não muda
 URL/histórico. Não há stores web, cookies, SW, postMessage ou BroadcastChannel.
-O renderer não chama escrita nem config:validate; não há controles de CRUD.
-O coordenador da Etapa 6 suporta rascunhos abstratos somente em memória; os
-fluxos funcionais e gates das Etapas 7–9 permanecem futuros.
+A Etapa 7 integra o coordenador aos controles restritos de adoção, validação e
+CRUD. Base/rascunho ficam em memória; validação usa projeção transitória sem
+IDs/revision, conserva proteções e não salva nem testa conexão. Reasons só se
+associam a controles conhecidos, com texto privado fixo, sem detail remoto.
+Desconhecido/durabilidade incerta mantêm bloqueio de escritas na sessão, inclusive
+após descartar o diálogo. Etapas 8–9 permanecem futuras.
 CSP não protege contra navegador/extensão/processo privilegiado comprometidos.
 SQL, resultados, auditoria consultável, secrets editáveis, TLS, proxy, bind
 externo, serviços externos e expansão do MCP seguem excluídos. Findings antigos

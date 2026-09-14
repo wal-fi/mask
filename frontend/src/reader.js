@@ -66,6 +66,7 @@ export function reader(book) {
         if(!acceptsData(node.item,child,depth+1,next,versions,consents)) return false;
         for(const link of links.filter(l=>l.model === node.item)) {
           const found=at(child,link.path);
+          if(found === undefined) continue;
           if(link.role === "order" && found !== index) return false;
           if(link.role === "identity" && found !== null) { if(ids.has(found)) return false; ids.add(found); }
         }

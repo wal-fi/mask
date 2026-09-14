@@ -1038,7 +1038,7 @@ const layout={
   "title": "Presentation",
   "type": "object"
 };
-export const digest="9dda0f7bf0994e08f3b2340e0b3336e192aabccac9a41fde3cc17fbc258d75e2";
+export const digest="58667c237b89912f66bd035457778be0bcb11ba730d44cefcca22fe5405f2825";
 /** @param {unknown} value */
 export function check(value) { return inspect(value,layout); }
 /** @param {unknown} item @returns {item is Record<string, unknown>} */
@@ -1109,6 +1109,7 @@ export function reader(book) {
         if(!acceptsData(node.item,child,depth+1,next,versions,consents)) return false;
         for(const link of links.filter(l=>l.model === node.item)) {
           const found=at(child,link.path);
+          if(found === undefined) continue;
           if(link.role === "order" && found !== index) return false;
           if(link.role === "identity" && found !== null) { if(ids.has(found)) return false; ids.add(found); }
         }
@@ -1266,6 +1267,151 @@ export function commands(source) {
 }
 
 
+/** @param {unknown} value @returns {Record<string,unknown>[]} */
+function rows(value) {if(!Array.isArray(value) || !value.every(entry)) throw new Error("Request refused.");return value;}
+/** @param {unknown} value @returns {string} */
+function word(value) {if(typeof value !== "string") throw new Error("Request refused.");return value;}
+/** @param {unknown} value @returns {Record<string,unknown>} */
+function authorRecord(value) {if(!entry(value)) throw new Error("Request refused.");return value;}
+/** @param {unknown} value @returns {string[]} */
+function trail(value) {if(!Array.isArray(value) || !value.every(v=>typeof v === "string" && !["__proto__","constructor","prototype"].includes(v))) throw new Error("Request refused.");return value;}
+/** @param {unknown} source */
+export function author(source) {
+  const book=capture(source);if(!entry(book)) throw new Error("Request refused.");
+  const calls=rows(book.calls), views=rows(book.views), models=rows(book.models), links=rows(book.bindings), editors=rows(book.editors), messages=rows(book.messages), lens=reader(book);
+  /** @param {unknown} key */
+  function shape(key) {const value=models.find(m=>m.id === key)?.shape;if(!entry(value)) throw new Error("Request refused.");return value;}
+  /** @param {unknown} key */
+  function fields(key) {return rows(shape(key).fields);}
+  /** @param {unknown} key @param {string} role */
+  function slot(key,role) {return links.filter(l=>l.model === key && l.role === role).map(l=>trail(l.path)[0]).filter(v=>v !== undefined);}
+  const checkCall=authorRecord(calls.find(c=>c.operation === "check")), consentCall=authorRecord(calls.find(c=>c.operation === "confirm"));
+  if(!checkCall || !consentCall) throw new Error("Request refused.");
+  const home=views.find(v=>Array.isArray(v.actions) && v.actions.includes(checkCall.id));if(!home) throw new Error("Request refused.");
+  const homeCall=authorRecord(calls.find(c=>c.id === home.call));
+  const documentField=authorRecord(fields(homeCall.output).find(f=>shape(f.ref).type === "object"));
+  const consent=rows(home.controls).find(c=>c.type === "confirm" && c.model === consentCall.input);if(!consent) throw new Error("Request refused.");
+  /** @param {unknown} value */
+  function documentValue(value) {const clean=capture(value);lens.inspectData(homeCall.output,clean);const doc=at(clean,[word(documentField.name)]);if(!entry(doc)) throw new Error("Request refused.");return doc;}
+  /** @param {unknown} key @param {unknown} value @param {boolean} transient @returns {unknown} */
+  function omit(key,value,transient) {
+    const node=shape(key);
+    if(node.type === "nullable") return value === null ? null : omit(node.item,value,transient);
+    if(node.type === "list") {if(!Array.isArray(value)) throw new Error("Request refused.");return value.map(v=>omit(node.item,v,transient));}
+    if(node.type !== "object") return value;
+    if(!entry(value)) throw new Error("Request refused.");
+    const excluded=[...slot(key,"order"),...(transient ? [...slot(key,"identity"),...slot(key,"version")] : [])];
+    return Object.fromEntries(fields(key).filter(f=>!excluded.includes(word(f.name)) && Object.hasOwn(value,word(f.name))).map(f=>[word(f.name),omit(f.ref,value[word(f.name)],transient)]));
+  }
+  const profiles=views.flatMap(view=>{
+    const actions=calls.filter(c=>Array.isArray(view.actions) && view.actions.includes(c.id));
+    const create=actions.find(c=>c.operation === "create");if(!create) return [];
+    const replace=actions.find(c=>c.operation === "replace"), remove=actions.find(c=>c.operation === "delete");if(!replace || !remove) throw new Error("Request refused.");
+    const container=fields(create.input).find(f=>shape(f.ref).type === "object");if(!container) throw new Error("Request refused.");
+    const controls=rows(view.controls).filter(c=>c.model === container.ref && c.type !== "confirm");
+    const target=trail(rows(controls[0]?.projections)[0]?.target);if(target.length !== 1) throw new Error("Request refused.");
+    const listField=fields(documentField.ref).find(f=>f.name === target[0]);if(!listField || shape(listField.ref).type !== "list") throw new Error("Request refused.");
+    const itemKey=shape(listField.ref).item, identity=slot(itemKey,"identity")[0];if(!identity) throw new Error("Request refused.");
+    const nested=fields(container.ref).find(f=>shape(f.ref).type === "object");
+    const choice=controls.find(c=>c.type === "select" && shape(fields(container.ref).find(f=>f.name === trail(c.path)[0])?.ref).type === "string");
+    const warning=rows(view.controls).find(c=>c.type === "confirm");
+    const listing=calls.find(c=>c.id === view.call);if(!listing) throw new Error("Request refused.");
+    const list=fields(listing.output).find(f=>shape(f.ref).type === "list");if(!list) throw new Error("Request refused.");
+    return [{id:word(view.id),label:word(view.label),create:word(create.id),replace:word(replace.id),remove:word(remove.id),member:word(container.name),model:word(container.ref),controls,target,itemKey,identity,listing:word(list.name),output:listing.output,nested:nested ? word(nested.name) : undefined,choice:choice ? trail(choice.path)[0] : undefined,warning:warning ? word(warning.label) : undefined}];
+  });
+  /** @param {string} id */
+  function profile(id) {const result=profiles.find(p=>p.id === id);if(!result) throw new Error("Request refused.");return result;}
+  /** @param {string} id @param {unknown} value */
+  function items(id,value) {const p=profile(id), list=at(documentValue(value),p.target);if(!Array.isArray(list)) throw new Error("Request refused.");return list;}
+  /** @param {string} id @param {unknown} value */
+  function content(id,value) {
+    const p=profile(id), clean=authorRecord(capture(value));
+    const result=Object.fromEntries(fields(p.model).filter(f=>Object.hasOwn(clean,word(f.name))).map(f=>[word(f.name),clean[word(f.name)]]));
+    lens.inspectData(p.model,result);return capture(result);
+  }
+  /** @param {string} id @param {unknown} value */
+  function defaults(id,value=undefined) {
+    const p=profile(id);if(value !== undefined) return content(id,value);
+    return capture(Object.fromEntries(p.controls.filter(c=>c.default !== null).map(c=>[word(trail(c.path)[0]),c.default])));
+  }
+  /** @param {string} id @param {unknown} value @param {unknown} registry */
+  function checkedContent(id,value,registry) {
+    const p=profile(id), clean=capture(value);lens.inspectData(p.model,clean);
+    if(p.choice && p.nested) {
+      const name=at(clean,[p.choice]), editor=editors.find(e=>e.name === name);
+      if(!editor || !available(registry).includes(word(name))) throw new Error("Request refused.");
+      const detail=at(clean,[p.nested]);lens.inspectData(editor.model,detail);
+      for(const control of rows(editor.controls)) {
+        const present=at(detail,control.path) !== undefined;
+        if(entry(control.condition)) {
+          const enabled=at(detail,control.condition.path) === control.condition.value;
+          if(enabled !== present) throw new Error("Request refused.");
+        }
+      }
+    }
+    return clean;
+  }
+  // The sole unassociated, non-template read with a list of editor names is the registry.
+  const registryCall=authorRecord(calls.find(c=>c.method === "GET" && c.identity === null && !views.some(v=>v.call === c.id)));
+  /** @param {unknown} registry */
+  function available(registry) {
+    lens.inspectData(registryCall.output,registry);
+    const list=fields(registryCall.output).find(f=>shape(f.ref).type === "list");if(!list) throw new Error("Request refused.");
+    const values=at(registry,[word(list.name)]);if(!Array.isArray(values)) throw new Error("Request refused.");
+    return editors.filter(e=>values.some(v=>{
+      if(!entry(v) || v.name !== e.name) return false;
+      const names=Object.values(v).flatMap(x=>Array.isArray(x) ? x : []);
+      const wanted=rows(e.controls).map(c=>trail(c.path)[0]);
+      return names.length === wanted.length && wanted.every(n=>names.includes(n));
+    })).map(e=>word(e.name));
+  }
+  /** @param {unknown} base @param {{page:string,operation:"create"|"replace"|"delete",value:unknown,identity:string|undefined} | undefined} edit */
+  function candidate(base,edit=undefined) {
+    const doc=documentValue(base);let draft={...doc};
+    if(edit) {
+      const p=profile(edit.page), list=items(p.id,base), index=list.findIndex(v=>at(v,[p.identity]) === edit.identity);
+      if(edit.operation !== "create" && index < 0) throw new Error("Request refused.");
+      const value=capture(edit.value);if(edit.operation !== "delete") lens.inspectData(p.model,value);
+      const next=[...list];
+      if(edit.operation === "create") next.push(value);
+      else if(edit.operation === "delete") next.splice(index,1);
+      else {const prior=next[index];if(!entry(prior) || !entry(value)) throw new Error("Request refused.");next[index]={...value,[p.identity]:prior[p.identity]};}
+      draft={...draft,[word(p.target[0])]:next};
+    }
+    // New identities never enter this transient projection. The snapshot stays intact.
+    const result=capture(omit(documentField.ref,draft,true));lens.inspectData(checkCall.input,result);return result;
+  }
+  /** @param {unknown} value */
+  function consented(value) {lens.inspectData(homeCall.output,value);return lens.bound(homeCall.output,value,"consent")[0] === true;}
+  return Object.freeze({profiles,profile,items,content,defaults,checkedContent,available,candidate,consented,shape,fields,editors,
+    /** @param {string} id @param {unknown} value */ listed:(id,value)=>{const p=profile(id);lens.inspectData(p.output,value);return rows(at(value,[p.listing]));},
+    /** @param {string} id @param {unknown} value */ changeable:(id,value)=>{const p=profile(id);lens.inspectData(p.output,value);return lens.bound(p.output,value,"consent")[0] === true;},
+    home:word(home.id),read:word(home.call),registry:word(registryCall.id),check:word(checkCall.id),
+    consent:{call:word(consentCall.id),field:word(trail(consent.path)[0]),text:word(consent.label),label:word(rows(home.controls).find(c=>c.type === "confirm" && Array.isArray(c.path) && c.path.length === 0)?.label)},
+    /** @param {unknown} value */ inspectCheck:value=>{lens.inspectData(checkCall.output,value);},
+    /** @param {unknown} value */ inspectError:value=>{lens.inspectData(checkCall.error,value);return messages;},
+    /** @param {string} id @param {unknown} base @param {unknown} value @param {string|undefined} identity */ known:(id,base,value,identity)=>{
+      const p=profile(id), list=items(id,base), index=identity === undefined ? list.length : list.findIndex(v=>at(v,[p.identity]) === identity);
+      if(index < 0) throw new Error("Request refused.");
+      const common=p.controls.map(c=>({path:[...p.target,index,...trail(c.path)].join("."),label:word(c.label)}));
+      const selected=p.choice ? at(value,[p.choice]) : undefined, editor=editors.find(e=>e.name === selected);
+      if(editor && p.nested) for(const c of rows(editor.controls)) common.push({path:[...p.target,index,p.nested,...trail(c.path)].join("."),label:word(c.label)});
+      return common;
+    },
+    /** @param {unknown} value @param {{path:string,label:string}[]} known */ reasons:(value,known)=>{
+      lens.inspectData(checkCall.error,value);
+      if(!entry(value) || !Array.isArray(value.fields)) return [];
+      return value.fields.flatMap(item=>{
+        if(!entry(item)) return [];
+        const control=known.find(k=>k.path === item.path);
+        const message=messages.find(m=>Object.entries(item).some(([k,v])=>k !== "path" && v === m.name));
+        return control && message ? [{label:control.label,text:word(message.text)}] : [];
+      });
+    },
+  });
+}
+
+
 /** @param {unknown} value @returns {value is Record<string, unknown>} */
 function object(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -1294,7 +1440,8 @@ export async function open(token, signal=undefined, expired=()=>{}) {
   /** @type {Map<string, {path:string, method:"GET" | "POST", operation:string, output:string}>} */ const calls = new Map();
   /** @type {ReturnType<typeof reader> | undefined} */ let lens;
   /** @type {ReturnType<typeof commands> | undefined} */ let actions;
-  function close() { ended=true; token=""; calls.clear(); lens=undefined; actions=undefined; stop.abort(); signal?.removeEventListener("abort",close); for(const listener of listeners) listener(); listeners.clear(); }
+  /** @type {ReturnType<typeof author> | undefined} */ let forms;
+  function close() { ended=true; token=""; calls.clear(); lens=undefined; actions=undefined; forms=undefined; stop.abort(); signal?.removeEventListener("abort",close); for(const listener of listeners) listener(); listeners.clear(); }
   signal?.addEventListener("abort",close,{once:true});
   if(signal?.aborted) close();
   /** @param {string} path @param {string} method @param {string | undefined} body @param {boolean} first @param {AbortSignal | undefined} extra @param {boolean} errors */
@@ -1355,6 +1502,20 @@ export async function open(token, signal=undefined, expired=()=>{}) {
       close,
       /** @param {() => void} listener */ onClose: listener=>{ if(ended) listener(); else listeners.add(listener); return ()=>{listeners.delete(listener);}; },
       describe: () => { if(ended || !lens) throw new AccessError("authentication"); return lens; },
+      design: () => {if(ended) throw new AccessError("authentication");forms ??= author(frozen);return forms;},
+      /** @param {unknown} candidate @param {{path:string,label:string}[]} known @param {AbortSignal | undefined} extra */
+      assess: async(candidate,known=[],extra=undefined)=>{
+        if(ended || writing || !lens || !actions) throw new AccessError("incompatible");
+        forms ??= author(frozen);
+        const plan=forms, call=actions.lookup(plan.check), clean=capture(candidate);
+        lens.inspectData(call.input,clean);
+        const response=await send(call.path,call.method,JSON.stringify(clean),false,extra,true);
+        /** @type {unknown} */ const value=await response.json();
+        if(ended || extra?.aborted) throw new AccessError("authentication");
+        if(JSON.stringify(value).includes(JSON.stringify(token).slice(1,-1))) throw new AccessError("incompatible");
+        if(response.ok) {plan.inspectCheck(value);return {ok:true,issues:[]};}
+        return {ok:false,issues:plan.reasons(value,known)};
+      },
       /** @param {Command} command */ prepare: command=>{
         if(ended || !actions) throw new AccessError("authentication");
         const prepared=actions.prepare(command);
@@ -1529,15 +1690,252 @@ export function coordinate(client,readId) {
     if(closed || occupied || state.tag !== "draft") return false;
     state={tag:"reading",snapshot:state.edit.base};observed=undefined;return true;
   }
-  return Object.freeze({load,begin,poll,confirm,cancel,reconcile,review,finish,change,discard,close,
+  return Object.freeze({load,begin,poll,confirm,cancel,reconcile,review,finish,change,discard,close,release:clear,
     getState:()=>Object.freeze(state),getObservation:()=>observed});
 }
 
 
+/** @typedef {Awaited<ReturnType<typeof open>>} WorkClient */
+/** @typedef {ReturnType<WorkClient["design"]>} Design */
+/** @typedef {{page:string,operation:"create"|"replace"|"delete",identity:string|undefined}} Intent */
+/** Local editing owns one coordinator and one modal. No operation starts implicitly.
+ * @param {WorkClient} client @param {HTMLElement} root @param {() => void} refreshed
+ */
+export function workbench(client,root,refreshed) {
+  const plan=client.design();
+  /** @type {ReturnType<typeof coordinate> | undefined} */ let flow;
+  /** @type {HTMLDialogElement | undefined} */ let dialog;
+  /** @type {HTMLElement | undefined} */ let restore;
+  /** @type {Intent | undefined} */ let intent;
+  /** @type {unknown} */ let base;
+  /** @type {unknown} */ let raw;
+  /** @type {unknown} */ let registry;
+  /** @type {AbortController | undefined} */ let active;
+  let ended=false, engaged=false, dirty=false, waiting=false, serial=0, checked=false, locked=false, examining=false;
+  /** @type {HTMLParagraphElement | undefined} */ let note;
+  /** @type {HTMLElement | undefined} */ let proof;
+  /** @type {() => void} */ let detach=()=>{};
+  function dismiss() {if(dialog) {dialog.close();erase(dialog);dialog.remove();dialog=undefined;}if(restore?.isConnected) restore.focus();}
+  function reset() {serial++;active?.abort();active=undefined;flow?.release();flow=undefined;intent=undefined;base=undefined;raw=undefined;registry=undefined;dirty=false;engaged=false;waiting=false;examining=false;checked=false;proof=undefined;note=undefined;dismiss();}
+  function close() {ended=true;reset();detach();restore=undefined;}
+  detach=client.onClose(close);
+  /** @param {string} text @param {() => void} action */
+  function button(text,action) {const b=element("button",text);b.type="button";b.addEventListener("click",action);return b;}
+  /** @param {string} text */
+  function announce(text) {if(note) note.textContent=text;}
+  /** @param {HTMLDialogElement} box */
+  function trap(box) {
+    box.addEventListener("keydown",event=>{
+      if(event.key !== "Tab") return;
+      const focusable=Array.from(box.querySelectorAll("button,input,select,textarea,[tabindex]"))
+        .filter(n=>n instanceof HTMLElement && n.tabIndex >= 0 && !n.hasAttribute("disabled") && n.getClientRects().length > 0);
+      const index=focusable.indexOf(document.activeElement ?? box), target=event.shiftKey ? focusable.at(-1) : focusable[0];
+      if(index < 0 || (event.shiftKey ? index === 0 : index === focusable.length-1)) {event.preventDefault();if(target instanceof HTMLElement) target.focus();else box.focus();}
+    });
+  }
+  /** @param {string} title @param {() => void} cancel */
+  function modal(title,cancel) {
+    dismiss();dialog=element("dialog");const heading=element("h2",title);heading.id="edit-title";heading.tabIndex=-1;
+    dialog.setAttribute("aria-labelledby",heading.id);note=element("p");note.setAttribute("role","status");note.setAttribute("aria-live","polite");
+    dialog.append(heading,note);dialog.addEventListener("cancel",event=>{event.preventDefault();cancel();});
+    trap(dialog);root.append(dialog);dialog.showModal();heading.focus();return dialog;
+  }
+  /** @param {() => void} action */
+  function leave(action) {
+    if(waiting) {announce("Operação pendente. Aguarde o desfecho.");return;}
+    if(!engaged || !dirty) {reset();action();return;}
+    const prior=dialog;if(!prior) return;
+    // Keep the original controls in memory, inert under the nested modal.
+    const confirm=element("dialog"), title=element("h2","Descartar rascunho?");title.id="discard-title";
+    confirm.setAttribute("aria-labelledby",title.id);confirm.append(title,element("p","As alterações não salvas serão descartadas."));
+    const keep=()=>{confirm.close();erase(confirm);confirm.remove();prior.focus();};
+    confirm.append(button("Continuar editando",keep),button("Descartar",()=>{keep();reset();action();}));
+    confirm.addEventListener("cancel",event=>{event.preventDefault();keep();});trap(confirm);root.append(confirm);confirm.showModal();
+  }
+  /** @param {string} title */
+  async function start(title) {
+    if(ended || engaged) return false;
+    engaged=true;restore=document.activeElement instanceof HTMLElement ? document.activeElement : undefined;
+    active=new AbortController();flow=coordinate(client,plan.read);const ticket=++serial;waiting=true;
+    const box=modal(title,()=>leave(()=>{}));box.append(button("Cancelar",()=>leave(()=>{})));announce("Carregando…");
+    const good=await flow.load();
+    if(ended || ticket !== serial) return false;
+    waiting=false;const state=flow.getState();
+    if(!good || state.tag !== "reading") {announce("Leitura indisponível. Feche e tente novamente.");return false;}
+    base=state.snapshot.value;return true;
+  }
+  /** @param {string} page @param {"create"|"replace"|"delete"} operation @param {string | undefined} identity */
+  async function edit(page,operation,identity=undefined) {
+    try {
+      if(locked) return;
+      if(!await start(operation === "create" ? "Criar item" : operation === "replace" ? "Editar item" : "Excluir item")) return;
+      const p=plan.profile(page);if(!plan.consented(base)) {announce("Adoção explícita necessária antes de editar.");return;}
+      const selected=operation === "create" ? undefined : plan.items(page,base).find(v=>at(v,[p.identity]) === identity);
+      if(operation !== "create" && selected === undefined) {announce("Item indisponível. Atualize a leitura.");return;}
+      intent={page,operation,identity};
+      if(operation === "delete") {raw={};renderDelete();return;}
+      const ticket=serial;waiting=true;registry=await client.read(plan.registry,active?.signal);
+      if(ended || ticket !== serial) return;waiting=false;
+      if(client.describe().inspectDataFor(plan.registry,registry) !== client.describe().inspectDataFor(plan.read,base)) throw new Error("Request refused.");
+      raw=plan.defaults(page,selected);
+      if(selected !== undefined) plan.checkedContent(page,raw,registry);
+      renderForm();
+    } catch {if(!ended) {waiting=false;announce("Conteúdo incompatível. A leitura foi preservada; edição bloqueada.");}}
+  }
+  function changedDraft() {checked=false;if(proof) erase(proof);dialog?.querySelectorAll("[aria-describedby]").forEach(n=>n.removeAttribute("aria-describedby"));serial++;active?.abort();active=new AbortController();if(examining) {waiting=false;examining=false;}dirty=true;announce("Rascunho não salvo. Resultado anterior descartado.");}
+  /** @param {Record<string,unknown>} control @param {Record<string,unknown>} values @param {HTMLElement} parent @param {() => void} changed */
+  function controlNode(control,values,parent,changed) {
+    if(!Array.isArray(control.path) || typeof control.path[0] !== "string" || typeof control.label !== "string") throw new Error("Request refused.");
+    const key=control.path[0], field=plan.fields(control.model).find(f=>f.name === key);if(!field) throw new Error("Request refused.");
+    const shape=plan.shape(field.ref), label=element("label",control.label), id="field-"+String(control.id);
+    const node=control.type === "select" ? element("select") : element("input");node.id=id;label.htmlFor=id;
+    if(node instanceof HTMLSelectElement) {
+      const empty=element("option","Escolha explicitamente");empty.value="";node.append(empty);
+      const choices=Array.isArray(shape.choices) ? shape.choices : plan.available(registry);
+      for(const choice of choices) {const option=element("option",String(choice));option.value=String(choice);node.append(option);}
+      node.value=typeof values[key] === "string" ? values[key] : "";
+    } else {
+      node.autocomplete="off";node.spellcheck=false;
+      node.type=control.type === "checkbox" ? "checkbox" : "text";
+      if(control.type === "integer") node.inputMode="numeric";
+      if(node.type === "checkbox") node.checked=values[key] === true;
+      else node.value=values[key] === undefined ? "" : String(values[key]);
+    }
+    const update=()=>{
+      if((waiting && !examining) || ended) return;
+      let value;
+      if(node instanceof HTMLInputElement && node.type === "checkbox") value=node.checked;
+      else if(control.type === "integer") value=/^(0|[1-9][0-9]*)$/.test(node.value) && Number.isSafeInteger(Number(node.value)) ? Number(node.value) : node.value;
+      else value=node.value;
+      values[key]=value;changedDraft();changed();
+    };
+    node.addEventListener(node instanceof HTMLSelectElement || control.type === "checkbox" ? "change" : "input",update);parent.append(label,node);return node;
+  }
+  function renderForm() {
+    if(!intent || !entry(raw)) return;
+    const p=plan.profile(intent.page);let values={...raw};
+    const box=modal(intent.operation === "create" ? "Criar item" : "Editar item",()=>leave(()=>{})), form=element("form");form.noValidate=true;
+    const detail=element("section");
+    function sync() {raw=capture(values);}
+    function nested() {
+      const focusId=document.activeElement instanceof HTMLElement && (detail.compareDocumentPosition(document.activeElement) & Node.DOCUMENT_POSITION_CONTAINED_BY) ? document.activeElement.id : undefined;
+      erase(detail);if(!p.choice || !p.nested) return;
+      const editor=plan.editors.find(e=>e.name === values[p.choice ?? ""]);if(!editor) return;
+      const parentKey=p.nested, prior=values[parentKey];const local=entry(prior) ? {...prior} : {};
+      for(const c of rowsForControls(editor.controls)) if(Array.isArray(c.path) && typeof c.path[0] === "string" && !Object.hasOwn(local,c.path[0]) && c.default !== null) local[c.path[0]]=c.default;
+      values[parentKey]=local;detail.append(element("p",typeof editor.help === "string" ? editor.help : ""));
+      for(const c of rowsForControls(editor.controls)) {
+        if(entry(c.condition) && at(local,c.condition.path) !== c.condition.value) {if(Array.isArray(c.path) && typeof c.path[0] === "string") delete local[c.path[0]];continue;}
+        controlNode(c,local,detail,()=>{sync();if(c.type === "checkbox") nested();});
+      }
+      sync();
+      if(focusId) {const target=document.getElementById(focusId);if(target && (detail.compareDocumentPosition(target) & Node.DOCUMENT_POSITION_CONTAINED_BY)) target.focus();}
+    }
+    for(const c of p.controls) controlNode(c,values,form,()=>{
+      if(Array.isArray(c.path) && c.path[0] === p.choice && p.nested) {values[p.nested]={};nested();}
+      sync();
+    });
+    nested();sync();form.append(detail);
+    const examine=button("Validar proposta",()=>{void examineDraft();});
+    const save=element("button","Salvar");save.type="submit";
+    form.append(examine,save,button("Cancelar",()=>leave(()=>{})));box.append(form);
+    form.addEventListener("submit",event=>{event.preventDefault();if(waiting) return;try {if(!intent) return;plan.checkedContent(intent.page,raw,registry);if(p.warning) confirmNotice(p.warning,()=>{void commit();});else void commit();} catch {announce("Confira os campos conhecidos antes de salvar.");}});
+  }
+  /** @param {string} text @param {() => void} action */
+  function confirmNotice(text,action) {
+    const box=modal("Confirmar operação",()=>renderForm());box.append(element("p",text),button("Cancelar",()=>renderForm()),button("Confirmar",action));
+  }
+  function renderDelete() {
+    const box=modal("Excluir item",()=>leave(()=>{}));box.append(element("p","Confirme a exclusão somente deste item."),button("Cancelar",()=>leave(()=>{})),button("Excluir",()=>{void commit();}));
+  }
+  async function examineDraft() {
+    if(ended || waiting || !base) return;
+    let ticket=serial;
+    try {
+      const edit=intent ? {...intent,value:plan.checkedContent(intent.page,raw,registry)} : undefined;
+      const candidate=plan.candidate(base,edit);ticket=++serial;waiting=true;examining=true;active=new AbortController();announce("Validando conteúdo…");
+      const known=intent ? plan.known(intent.page,base,raw,intent.identity) : [];
+      const result=await client.assess(candidate,known,active.signal);
+      if(ended || ticket !== serial) return;
+      checked=result.ok;announce(result.ok ? "Conteúdo e compilação válidos. Não salvo; conexão não testada; não garante segurança para todos os dados." : "Proposta inválida. Confira os campos conhecidos.");
+      if(proof) {erase(proof);proof.remove();}proof=element("section");dialog?.append(proof);
+      if(!result.ok) for(const [index,issue] of result.issues.entries()) {
+        const message=element("p",issue.label+": "+issue.text);message.id="reason-"+index;proof.append(message);
+        const label=Array.from(dialog?.querySelectorAll("label") ?? []).find(n=>n.textContent === issue.label);
+        label?.control?.setAttribute("aria-describedby",message.id);
+      }
+    } catch {if(!ended && ticket === serial) announce("Validação indisponível ou incompatível. Nenhuma gravação foi solicitada.");}
+    finally {if(ticket === serial) {waiting=false;examining=false;}}
+  }
+  async function commit() {
+    if(ended || waiting || !flow) return;
+    try {
+      if(intent) {
+        const p=plan.profile(intent.page), body=intent.operation === "delete" ? {} : {[p.member]:plan.checkedContent(intent.page,raw,registry)};
+        const call=intent.operation === "create" ? p.create : intent.operation === "replace" ? p.replace : p.remove;
+        if(flow.getState().tag === "reading") flow.begin(call,body,intent.identity);
+        else if(flow.getState().tag === "draft") flow.change(body);
+      }
+      const ticket=serial;waiting=true;checked=false;dirty=true;
+      const pending=flow.confirm();renderOutcome();await pending;
+      if(ended || ticket !== serial) return;waiting=false;renderOutcome();
+    } catch {if(!ended) {waiting=false;announce("Operação recusada. Rascunho preservado.");}}
+  }
+  function renderOutcome() {
+    if(!flow || ended) return;
+    const state=flow.getState(), box=modal("Resultado da operação",()=>{});
+    if(state.tag === "unknown" || state.tag === "uncertain" || state.tag === "incompatible") locked=true;
+    announce("message" in state ? state.message : state.tag === "pending" ? "Operação pendente. Não repita." : "Confira o estado.");
+    if("edit" in state && state.edit) {box.append(element("h3","Base original"),plain(state.edit.base.value),element("h3","Rascunho preservado"),plain(raw));}
+    if("newBase" in state && state.newBase) box.append(element("h3","Nova base separada"),plain(state.newBase.value));
+    if(waiting) return;
+    if(state.tag === "success" && state.newBase) box.append(button("Concluir",()=>{if(flow?.finish()) {reset();refreshed();}}));
+    if(["success","conflict","unknown","uncertain"].includes(state.tag)) box.append(button("Reler estado",()=>{void (async()=>{if(!flow || waiting) return;waiting=true;const ticket=serial;await flow.reconcile();if(!ended && ticket === serial) {waiting=false;renderOutcome();}})();}));
+    if(state.tag === "busy") box.append(button("Tentar novamente",()=>{void commit();}));
+    if(state.tag === "conflict" && state.newBase && intent && intent.operation !== "delete") box.append(button("Revisar rascunho com nova base",()=>{
+      if(!flow || !intent) return;const p=plan.profile(intent.page);
+      try {if(flow.review({[p.member]:plan.checkedContent(p.id,raw,registry)})) {base=state.newBase?.value;checked=false;renderForm();}} catch {announce("Revisão incompatível. Rascunho preservado.");}
+    }));
+    box.append(button("Fechar e descartar rascunho",()=>leave(()=>refreshed())));
+  }
+  async function consentStart() {
+    if(locked) return;
+    if(!await start("Adoção explícita")) return;
+    if(plan.consented(base)) {announce("Já adotada. Atualize a leitura; não repita a operação.");return;}
+    const box=modal("Adoção explícita",()=>leave(()=>{})), label=element("label","Li e compreendi as consequências"), input=element("input");input.type="checkbox";input.checked=false;input.id="consent-entry";label.htmlFor=input.id;
+    const submit=button(plan.consent.label,()=>{
+      if(waiting || !input.checked || !flow) return;
+      flow.begin(plan.consent.call,{[plan.consent.field]:true});void commit();
+    });submit.disabled=true;input.addEventListener("change",()=>{submit.disabled=!input.checked;});
+    box.append(element("p",plan.consent.text),label,input,button("Cancelar",()=>leave(()=>{})),submit);
+  }
+  /** @param {HTMLElement} panel @param {string} page @param {unknown} value */
+  function attach(panel,page,value) {
+    if(ended || engaged) return;
+    if(page === plan.home) {
+      panel.append(button("Validar documento",()=>{void (async()=>{if(await start("Validar documento")) await examineDraft();})();}));
+      if(!plan.consented(value)) panel.append(button("Adoção explícita",()=>{void consentStart();}));
+    }
+    const p=plan.profiles.find(v=>v.id === page);if(!p) return;
+    const permitted=!locked && plan.changeable(page,value), add=button("Criar",()=>{void edit(page,"create");});add.disabled=!permitted;panel.append(add);
+    if(locked) panel.append(element("p","Escritas bloqueadas nesta sessão. Verificação operacional necessária."));
+    if(!plan.changeable(page,value)) panel.append(element("p","Adoção explícita necessária antes de editar."));
+    for(const [index,item] of plan.listed(page,value).entries()) {
+      const identity=at(item,[p.identity]);if(typeof identity !== "string") continue;
+      const row=element("section");row.append(element("h3","Item "+(index+1)));
+      const change=button("Editar",()=>{void edit(page,"replace",identity);}), remove=button("Excluir",()=>{void edit(page,"delete",identity);});change.disabled=!permitted;remove.disabled=!permitted;row.append(change,remove);panel.append(row);
+    }
+  }
+  return {attach,leave,close,active:()=>engaged,pending:()=>waiting,examined:()=>checked};
+}
+/** @param {unknown} value @returns {Record<string,unknown>[]} */
+function rowsForControls(value) {if(!Array.isArray(value) || !value.every(entry)) throw new Error("Request refused.");return value;}
+
+
 /** @template {keyof HTMLElementTagNameMap} K @param {K} tag @param {string} text */
-function element(tag,text="") { const node=document.createElement(tag); node.textContent=text; return node; }
+export function element(tag,text="") { const node=document.createElement(tag); node.textContent=text; return node; }
 /** @param {unknown} value @returns {HTMLElement} */
-function plain(value) {
+export function plain(value) {
   if(Array.isArray(value)) {
     if(!value.length) return element("p","Lista vazia.");
     const list=element("ol");
@@ -1553,8 +1951,9 @@ function plain(value) {
   return element("span",value === null ? "Não informado" : value === true ? "Sim" : value === false ? "Não" : String(value));
 }
 /** @param {HTMLElement} node */
-function erase(node) {
-  node.querySelectorAll("input").forEach(input=>{input.value="";});
+export function erase(node) {
+  node.querySelectorAll("input,select,textarea").forEach(input=>{if(input instanceof HTMLInputElement || input instanceof HTMLSelectElement || input instanceof HTMLTextAreaElement) input.value="";});
+  node.querySelectorAll("input").forEach(input=>{input.checked=false;});
   node.querySelectorAll("*").forEach(child=>child.replaceChildren());
   node.replaceChildren();
 }
@@ -1575,9 +1974,11 @@ export function mount(root) {
   /** @type {HTMLElement | undefined} */ let panel;
   /** @type {HTMLElement | undefined} */ let notice;
   /** @type {HTMLButtonElement | undefined} */ let retry;
+  /** @type {ReturnType<typeof workbench> | undefined} */ let editor;
   function stopClock() { if(timer !== undefined) clearTimeout(timer); timer=undefined; }
   function clear() {
     generation++; turn++; flight?.abort(); flight=undefined; stopClock(); paused=true; busy=false; sheet=undefined;
+    editor?.close();editor=undefined;
     if(access.tag === "ready") access.client.close();
     if(access.tag !== "authentication") access.stop.abort();
     access={tag:"authentication"}; panel=undefined; notice=undefined; retry=undefined;
@@ -1607,6 +2008,7 @@ export function mount(root) {
       void attempt.then(client=>{
         if(mine !== generation) {client.close();return;}
         access={tag:"ready",client,stop,views:client.describe().views}; selected=0;
+        editor=workbench(client,root,()=>{sheet=undefined;shell();void load(true);});
         shell(); void load(true);
       }).catch(()=>{ if(mine === generation) login("Não foi possível entrar. Tente novamente."); });
     });
@@ -1623,12 +2025,13 @@ export function mount(root) {
       if(index === selected) button.setAttribute("aria-current","page");
       button.addEventListener("click",()=>{
         if(access.tag !== "ready") return;
-        selected=index; sheet=undefined; shell(); void load(true);
+        const navigate=()=>{selected=index; sheet=undefined; shell(); void load(true);};
+        if(editor?.active()) editor.leave(navigate);else navigate();
       });
       nav.append(button);
     }
     notice=element("p");notice.setAttribute("role","status");notice.setAttribute("aria-live","polite");
-    retry=element("button","Atualizar");retry.type="button";retry.addEventListener("click",()=>{void load(true);});
+    retry=element("button","Atualizar");retry.type="button";retry.addEventListener("click",()=>{if(editor?.active()) editor.leave(()=>{void load(true);});else void load(true);});
     panel=element("section"); panel.setAttribute("aria-label","Leitura");
     root.append(top,nav,notice,retry,panel);
   }
@@ -1641,14 +2044,15 @@ export function mount(root) {
     const title=element("h2",view.label); title.tabIndex=-1; panel.append(title);
     if(sheet?.tag === "success") {
       for(const control of view.controls) {
-        if(typeof control.label !== "string") continue;
+        if(control.type !== "read" || typeof control.label !== "string") continue;
         const section=element("section");section.append(element("h3",control.label),plain(at(sheet.value,control.path)));panel.append(section);
       }
       notice.textContent="Respondendo · Última leitura: "+new Date(sheet.time).toLocaleTimeString();
+      editor?.attach(panel,view.id,sheet.value);
     } else if(sheet?.tag === "unknown") {
       notice.textContent=sheet.stale ? "Leitura desatualizada. Tente novamente." : "Leitura indisponível. Tente novamente.";
       if(sheet.prior?.tag === "success") {
-        for(const control of view.controls) if(typeof control.label === "string") {
+        for(const control of view.controls) if(control.type === "read" && typeof control.label === "string") {
           const section=element("section");section.append(element("h3",control.label),plain(at(sheet.prior.value,control.path)));panel.append(section);
         }
       }
@@ -1682,7 +2086,7 @@ export function mount(root) {
     } finally { if(mine === generation && ticket === turn) { busy=false;show(false);schedule(); } }
   }
   async function poll() {
-    if(access.tag !== "ready" || busy || paused || document.visibilityState !== "visible") return;
+    if(access.tag !== "ready" || busy || paused || editor?.active() || document.visibilityState !== "visible") {schedule();return;}
     const client=access.client, first=access.views[0];if(!first) return;
     flight=new AbortController();
     const mine=generation, ticket=++turn;busy=true;show(false);

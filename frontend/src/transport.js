@@ -1,5 +1,6 @@
 import { reader } from "./reader.js";
 import { capture, commands } from "./commands.js";
+import { author } from "./author.js";
 import { check, digest } from "../../src/maskgw/admin/ui/assets/ui.js";
 
 /** @param {unknown} value @returns {value is Record<string, unknown>} */
@@ -30,7 +31,8 @@ export async function open(token, signal=undefined, expired=()=>{}) {
   /** @type {Map<string, {path:string, method:"GET" | "POST", operation:string, output:string}>} */ const calls = new Map();
   /** @type {ReturnType<typeof reader> | undefined} */ let lens;
   /** @type {ReturnType<typeof commands> | undefined} */ let actions;
-  function close() { ended=true; token=""; calls.clear(); lens=undefined; actions=undefined; stop.abort(); signal?.removeEventListener("abort",close); for(const listener of listeners) listener(); listeners.clear(); }
+  /** @type {ReturnType<typeof author> | undefined} */ let forms;
+  function close() { ended=true; token=""; calls.clear(); lens=undefined; actions=undefined; forms=undefined; stop.abort(); signal?.removeEventListener("abort",close); for(const listener of listeners) listener(); listeners.clear(); }
   signal?.addEventListener("abort",close,{once:true});
   if(signal?.aborted) close();
   /** @param {string} path @param {string} method @param {string | undefined} body @param {boolean} first @param {AbortSignal | undefined} extra @param {boolean} errors */
@@ -91,6 +93,20 @@ export async function open(token, signal=undefined, expired=()=>{}) {
       close,
       /** @param {() => void} listener */ onClose: listener=>{ if(ended) listener(); else listeners.add(listener); return ()=>{listeners.delete(listener);}; },
       describe: () => { if(ended || !lens) throw new AccessError("authentication"); return lens; },
+      design: () => {if(ended) throw new AccessError("authentication");forms ??= author(frozen);return forms;},
+      /** @param {unknown} candidate @param {{path:string,label:string}[]} known @param {AbortSignal | undefined} extra */
+      assess: async(candidate,known=[],extra=undefined)=>{
+        if(ended || writing || !lens || !actions) throw new AccessError("incompatible");
+        forms ??= author(frozen);
+        const plan=forms, call=actions.lookup(plan.check), clean=capture(candidate);
+        lens.inspectData(call.input,clean);
+        const response=await send(call.path,call.method,JSON.stringify(clean),false,extra,true);
+        /** @type {unknown} */ const value=await response.json();
+        if(ended || extra?.aborted) throw new AccessError("authentication");
+        if(JSON.stringify(value).includes(JSON.stringify(token).slice(1,-1))) throw new AccessError("incompatible");
+        if(response.ok) {plan.inspectCheck(value);return {ok:true,issues:[]};}
+        return {ok:false,issues:plan.reasons(value,known)};
+      },
       /** @param {import("./commands.js").Command} command */ prepare: command=>{
         if(ended || !actions) throw new AccessError("authentication");
         const prepared=actions.prepare(command);

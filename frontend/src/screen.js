@@ -1,10 +1,11 @@
 import { open, AccessError } from "./transport.js";
 import { at, entry } from "./reader.js";
+import { workbench } from "./workbench.js";
 
 /** @template {keyof HTMLElementTagNameMap} K @param {K} tag @param {string} text */
-function element(tag,text="") { const node=document.createElement(tag); node.textContent=text; return node; }
+export function element(tag,text="") { const node=document.createElement(tag); node.textContent=text; return node; }
 /** @param {unknown} value @returns {HTMLElement} */
-function plain(value) {
+export function plain(value) {
   if(Array.isArray(value)) {
     if(!value.length) return element("p","Lista vazia.");
     const list=element("ol");
@@ -20,8 +21,9 @@ function plain(value) {
   return element("span",value === null ? "Não informado" : value === true ? "Sim" : value === false ? "Não" : String(value));
 }
 /** @param {HTMLElement} node */
-function erase(node) {
-  node.querySelectorAll("input").forEach(input=>{input.value="";});
+export function erase(node) {
+  node.querySelectorAll("input,select,textarea").forEach(input=>{if(input instanceof HTMLInputElement || input instanceof HTMLSelectElement || input instanceof HTMLTextAreaElement) input.value="";});
+  node.querySelectorAll("input").forEach(input=>{input.checked=false;});
   node.querySelectorAll("*").forEach(child=>child.replaceChildren());
   node.replaceChildren();
 }
@@ -42,9 +44,11 @@ export function mount(root) {
   /** @type {HTMLElement | undefined} */ let panel;
   /** @type {HTMLElement | undefined} */ let notice;
   /** @type {HTMLButtonElement | undefined} */ let retry;
+  /** @type {ReturnType<typeof workbench> | undefined} */ let editor;
   function stopClock() { if(timer !== undefined) clearTimeout(timer); timer=undefined; }
   function clear() {
     generation++; turn++; flight?.abort(); flight=undefined; stopClock(); paused=true; busy=false; sheet=undefined;
+    editor?.close();editor=undefined;
     if(access.tag === "ready") access.client.close();
     if(access.tag !== "authentication") access.stop.abort();
     access={tag:"authentication"}; panel=undefined; notice=undefined; retry=undefined;
@@ -74,6 +78,7 @@ export function mount(root) {
       void attempt.then(client=>{
         if(mine !== generation) {client.close();return;}
         access={tag:"ready",client,stop,views:client.describe().views}; selected=0;
+        editor=workbench(client,root,()=>{sheet=undefined;shell();void load(true);});
         shell(); void load(true);
       }).catch(()=>{ if(mine === generation) login("Não foi possível entrar. Tente novamente."); });
     });
@@ -90,12 +95,13 @@ export function mount(root) {
       if(index === selected) button.setAttribute("aria-current","page");
       button.addEventListener("click",()=>{
         if(access.tag !== "ready") return;
-        selected=index; sheet=undefined; shell(); void load(true);
+        const navigate=()=>{selected=index; sheet=undefined; shell(); void load(true);};
+        if(editor?.active()) editor.leave(navigate);else navigate();
       });
       nav.append(button);
     }
     notice=element("p");notice.setAttribute("role","status");notice.setAttribute("aria-live","polite");
-    retry=element("button","Atualizar");retry.type="button";retry.addEventListener("click",()=>{void load(true);});
+    retry=element("button","Atualizar");retry.type="button";retry.addEventListener("click",()=>{if(editor?.active()) editor.leave(()=>{void load(true);});else void load(true);});
     panel=element("section"); panel.setAttribute("aria-label","Leitura");
     root.append(top,nav,notice,retry,panel);
   }
@@ -108,14 +114,15 @@ export function mount(root) {
     const title=element("h2",view.label); title.tabIndex=-1; panel.append(title);
     if(sheet?.tag === "success") {
       for(const control of view.controls) {
-        if(typeof control.label !== "string") continue;
+        if(control.type !== "read" || typeof control.label !== "string") continue;
         const section=element("section");section.append(element("h3",control.label),plain(at(sheet.value,control.path)));panel.append(section);
       }
       notice.textContent="Respondendo · Última leitura: "+new Date(sheet.time).toLocaleTimeString();
+      editor?.attach(panel,view.id,sheet.value);
     } else if(sheet?.tag === "unknown") {
       notice.textContent=sheet.stale ? "Leitura desatualizada. Tente novamente." : "Leitura indisponível. Tente novamente.";
       if(sheet.prior?.tag === "success") {
-        for(const control of view.controls) if(typeof control.label === "string") {
+        for(const control of view.controls) if(control.type === "read" && typeof control.label === "string") {
           const section=element("section");section.append(element("h3",control.label),plain(at(sheet.prior.value,control.path)));panel.append(section);
         }
       }
@@ -149,7 +156,7 @@ export function mount(root) {
     } finally { if(mine === generation && ticket === turn) { busy=false;show(false);schedule(); } }
   }
   async function poll() {
-    if(access.tag !== "ready" || busy || paused || document.visibilityState !== "visible") return;
+    if(access.tag !== "ready" || busy || paused || editor?.active() || document.visibilityState !== "visible") {schedule();return;}
     const client=access.client, first=access.views[0];if(!first) return;
     flight=new AbortController();
     const mine=generation, ticket=++turn;busy=true;show(false);

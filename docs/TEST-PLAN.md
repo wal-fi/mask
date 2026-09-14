@@ -1152,3 +1152,42 @@ componentes não substituem os futuros fluxos reais de escrita das Etapas 7–9.
 BFCache mantém a limitação já aceita em Firefox/WebKit; não ampliar seu escopo.
 
 Medição final da Etapa 6: 176 testes Node e 114 testes de navegador aprovados; 3804 Python coletados, 3796 aprovados e oito skips POSIX. PostgreSQL 16.15 real, sem deselect/skip por DSN. Typecheck, build duplo/193 termos, pacote isolado e Ruff/format/mypy strict aprovados. Evidência detalhada em `PHASE-8-STAGE-6-VALIDATION.md`.
+
+
+## Fase 8 — Etapa 7
+
+Gates acumulados e resultados medidos em `PHASE-8-STAGE-7-VALIDATION.md`.
+`author.test.js` cobre projeções transitórias, base imutável, posições/alvos,
+parâmetros dos oito transformers, campos extras/protegidos, getters/protótipos,
+registry incompatível, quatro flags normativas e reasons sanitizados.
+
+`browser/editing.spec.js` acrescenta adoção/validação/CRUD reais ao runner padrão
+nos três engines fixados, com PostgreSQL 16 real. O módulo privado
+`tests/browser_edit_server.py` usa o composition root, instrumenta cada escrita
+para conferir corpo/auditoria/arquivo/runtime/digest e só admite controles de
+falha por stdin. Não adiciona rota ou opção ao produto. Os quatro testes de
+`test_browser_edit_harness.py` conferem o monitor de auditoria/leakage.
+
+Provas: checkbox falso/cancelamento, adoção concorrente, backup original,
+validação sem efeito, match literal, defaults, CRUD e revisions exatas,
+HTTP → runtime → MCP com masking alterado, restart, conflito/revisão humana,
+busy real, duplo clique, readback falho e resposta perdida após commit.
+Falha pré-persistência e recusa de reload são injetadas antes de aplicar;
+durabilidade incerta é injetada após a escrita real, sem alegar fsync POSIX
+nativo em Windows. Não há retry/rollback automático nem inferência de sucesso
+por revision maior. Lifecycle invalida respostas tardias e limpa diálogos.
+
+Testes de teclado/320 px/escala 200%/reduced motion, XSS persistido e reasons
+hostis complementam os testes acumulados de todas as strings dos DTOs,
+CSP/CSRF/token/rotas/headers. Nenhum trace, screenshot, vídeo, HAR ou log de
+conteúdo administrativo é gravado. Nenhum finding virou skip/xfail.
+Reorder e edição de database/SQL continuam sem UI nesta etapa.
+
+
+Medição final da Etapa 7: 195 testes Node e 156 de navegador aprovados (52 por
+engine), sem skips/retries; 3808 Python coletados, 3800 aprovados e oito skips
+POSIX. PostgreSQL 16.15 real, sem deselect/skip por DSN; Ruff/format/mypy strict
+em 137 arquivos, tipagem, build duplo/193 termos e wheel/sdist isolados verdes.
+A falha inicial de startup MCP e o diagnóstico/repetição integral posteriores
+estão discriminados em `PHASE-8-STAGE-7-VALIDATION.md`. Não publicar esta etapa
+nem iniciar a Etapa 8 sem revisão e autorização.

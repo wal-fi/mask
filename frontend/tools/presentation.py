@@ -114,6 +114,11 @@ wire["Parameters"] = {
         "preserve_length": {"type": "boolean"},
     },
 }
+# The validation response has four exact semantics, not four arbitrary booleans.
+for key in wire["ConfigValidateResponse"]["properties"]:
+    wire["ConfigValidateResponse"]["properties"][key] = {
+        "const": key != "database_checks_performed"
+    }
 # Responses use plain nullable strings in Python. Browser template identities
 # must obey the same authoritative format as candidate document identities.
 # Reuse those source constraints rather than inventing a public ID expression.
@@ -266,6 +271,30 @@ for i, (label, index, actions) in enumerate(zip(labels, view_calls, view_actions
             "actions": [calls[a]["id"] for a in actions],
         }
     )
+# Authoring remains private and uses only the approved control/projection grammar.
+for index, request, member, target, default in (
+    (2, "RuleCreateRequest", "rule", "masking", "contains"),
+    (3, "ExceptionCreateRequest", "exception", "exceptions", "exact"),
+):
+    owner = names[request]
+    content = next(f["ref"] for m in models if m["id"] == owner
+                   for f in m["shape"]["fields"] if f["name"] == member)
+    for key, kind, initial in (
+        ("match", "text", None), ("mode", "select", default),
+        ("case_sensitive", "checkbox", False),
+        *(([("transformer", "select", None)]) if index == 2 else []),
+    ):
+        item = control(kind, content, [key], key, initial)
+        item["projections"] = [{"type": "insert", "source": "draft",
+                                "paths": [], "target": [target]}]
+        views[index]["controls"].append(item)
+    if index == 3:
+        views[index]["controls"].append(control("confirm", content, [],
+            "Exceptions podem liberar o valor original. A correspondência usa o nome autoritativo. Confirme a criação ou alteração."))
+views[1]["controls"].append(control("confirm", names["AdoptRequest"],
+    ["confirm_comment_loss"],
+    "A adoção atribui IDs e publica a revision 1. Comentários e formatação podem ser perdidos. O backend guarda backup dos bytes originais. Não há mudança intencional na política de masking."))
+views[1]["controls"].append(control("confirm", names["AdoptRequest"], [], "Adotar configuração"))
 editors = []
 for i, spec in enumerate(build_default_registry().specs()):
     properties = {
