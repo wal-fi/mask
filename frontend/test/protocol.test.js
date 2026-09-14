@@ -110,6 +110,10 @@ for(const [name,text,js] of [
 test("public benign bytes pass",()=>inspectPublic("export const value=1;",["revision"],true));
 
 const negative=[
+  '/** @type {import("../src/coordinator.js").Flow} */ const value={tag:"pending"};',
+  '/** @type {import("../src/coordinator.js").Flow} */ const value={tag:"success",version:2};',
+  '/** @type {import("../src/commands.js").Command} */ const value={id:"x",version:"1",draft:{},identity:undefined};',
+  '/** @type {import("../src/commands.js").Outcome} */ const value={kind:"success",version:undefined,message:"x"};',
   '/** @type {import("../private/contracts.js").WriteOutcome} */ const value={type:"uncertain",value:{revision:2,applied:true}};',
   '/** @type {import("../private/contracts.js").WriteOutcome} */ const value={type:"rejected",value:{error:"CONFIG_DURABILITY_ERROR",detail:"x",applied:true}};',
 

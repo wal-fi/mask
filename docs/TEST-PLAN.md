@@ -1086,9 +1086,9 @@ do harness. Ruff/format/mypy strict aprovados em 135 arquivos; 75 testes Node,
 21 de navegador e dois builds idênticos nos 14 arquivos gerados. As durações,
 hashes, inventários de wheel/sdist e ressalvas estão na evidência da Etapa 4.
 
-## Fase 8 — Etapa 5
+## Fase 8 — Etapa 5 (histórica, publicada)
 
-Evidência atual: `docs/PHASE-8-STAGE-5-VALIDATION.md`. Repetir integralmente os
+Evidência histórica: `docs/PHASE-8-STAGE-5-VALIDATION.md`. Repetir integralmente os
 gates anteriores; produto HTTP/startup, fixture off, catálogo e pins intactos.
 
 `reader.test.js` cobre DTOs fechados, revisions inseguras/incoerentes, identidade,
@@ -1124,3 +1124,31 @@ Medição final da Etapa 5: 99 testes Node e 78 testes de navegador aprovados;
 3.804 Python coletados, 3.796 aprovados e oito skips POSIX, sem DSN ausente
 ou deselects. PostgreSQL 16.15 real; typecheck, Ruff/format/mypy strict, build
 duplo/193 termos e wheel/sdist isolados aprovados. Tempos e hashes na evidência.
+
+## Fase 8 — Etapa 6
+
+Evidência desta rodada: `docs/PHASE-8-STAGE-6-VALIDATION.md`. Gates acumulados:
+instalação congelada; typecheck de fontes/testes/ESM final; testes Node; dois
+builds e inspeção dos 193 termos; Playwright nos três pins; wheel/sdist instalados
+isoladamente, sem Node/npm; Python inteiro com PostgreSQL 16 real e pilha de
+64 MiB apenas no launcher Windows; Ruff/format/mypy strict em src tests e diff.
+Nenhum deselect, finding convertido em skip/xfail ou dispensa de DSN/browser.
+
+`commands.test.js` verifica as dez projeções e destinos, campos protegidos,
+templates hostis, identidades canônicas, getters/protótipos/ciclos, snapshot sem
+alias mutável, revisões inseguras/overflow e todos os desfechos. O conjunto de
+contraprovas de tipagem acrescenta estados/comandos/desfechos inválidos.
+`coordinator.test.js` executa o transporte e coordenador reais sobre fetch
+controlado: uma pendência, duplo clique, polling durante edição, conflito,
+busy manual, durabilidade, resultado desconhecido, envelopes/JSON/media type,
+perda de resposta, releitura bem-sucedida/falha, expiração e concorrência.
+
+`browser/coordinator.spec.js` executa os mesmos componentes públicos nos três
+engines com corpos/respostas privados controlados. Interceptação impede que
+mutações cheguem ao backend: o harness real readonly compara arquivo/snapshot,
+IDs e contador e reprova qualquer escrita/auditoria. O gate acumulado mantém
+os testes HTTP/CSRF, XSS, leitura real, lifecycle e indisponibilidade. Testes
+componentes não substituem os futuros fluxos reais de escrita das Etapas 7–9.
+BFCache mantém a limitação já aceita em Firefox/WebKit; não ampliar seu escopo.
+
+Medição final da Etapa 6: 176 testes Node e 114 testes de navegador aprovados; 3804 Python coletados, 3796 aprovados e oito skips POSIX. PostgreSQL 16.15 real, sem deselect/skip por DSN. Typecheck, build duplo/193 termos, pacote isolado e Ruff/format/mypy strict aprovados. Evidência detalhada em `PHASE-8-STAGE-6-VALIDATION.md`.

@@ -538,9 +538,9 @@ As rotas de escrita e a adoção com backup foram concluídas na Etapa 9; a
 auditoria administrativa (`AdminAudit`), na Etapa 10. A Etapa 11 concluiu a
 suíte adversarial administrativa; as onze etapas da Fase 7 estão encerradas.
 
-## Fase 8 — sessão local e seis vistas somente leitura
+## Fase 8 — sessão de leitura e coordenador granular
 
-**Aprovada; Etapas 1–4 publicadas; Etapa 5 concluída.** Contrato integral em
+**Aprovada; Etapas 1–5 publicadas; Etapa 6 concluída.** Contrato integral em
 `docs/PHASE-8-SPEC.md`, decisões D-061–D-064 e rastreabilidade em
 `docs/PHASE-8-TRACEABILITY.md`.
 
@@ -572,15 +572,38 @@ geração e aborta requests; callbacks antigos não restauram estado.
 `frontend/` contém build/testes privados. O build deriva os onze contratos e as
 dez escritas permitidas do catálogo, sem incluir PUT /config na UI. A gramática
 continua limitada, e 193 entradas privadas continuam ausentes dos bytes públicos.
-O JS, CSS, apresentação, manifesto e âncora são regenerados; HTML, catálogo,
-gramática, contratos e vocabulário privado não mudam. Os quatro recursos pertencem ao pacote Python; o manifesto
+Na Etapa 6, JS, apresentação, nomes de modelos, catálogo, manifesto e âncora
+são regenerados; HTML, CSS, gramática, contratos e vocabulário não mudam. Os quatro recursos pertencem ao pacote Python; o manifesto
 é interno. `resources.py` mantém leitura limitada, UTF-8, hashes, catálogo e
 modelos verificados; `protocol.py` mantém gramática, referências, ciclos e
-limites independentes do validador JavaScript. Nenhuma projeção é executada. Fontes, tipos, fixtures e ferramentas não são recursos HTTP.
+limites independentes do validador JavaScript. Fontes, tipos, fixtures e
+ferramentas não são recursos HTTP.
 
 A integração real de browser usa harness privado, PostgreSQL real e o
 composition root. Fault injection de redirect existe somente no harness,
 sem endpoint ou opção no produto. Logs são inspecionados em memória sem
 persistir registros. As telas exigem zero auditoria administrativa, escritas
-ou mudança de arquivo/snapshot/contador. Etapas 6–9 e publicação da Etapa 5
-exigem autorização. Evidência: `docs/PHASE-8-STAGE-5-VALIDATION.md`.
+ou mudança de arquivo/snapshot/contador. Etapas 7–9 e publicação da Etapa 6
+exigem autorização. Evidência: `docs/PHASE-8-STAGE-6-VALIDATION.md`.
+
+`commands.js` interpreta o catálogo autenticado e usa os modelos fechados como
+plano de seleção/cópia e construção de objetos/listas. A revision-base entra
+somente no slot indicado pelo binding; o rascunho não pode fornecê-la. Nenhum
+chamador fornece método, URL ou plano executável. Identidades dos templates
+usam o modelo privado canônico, compartilhado com os contratos de documento.
+O transporte verifica novamente tudo antes do fetch, inclusive credencial
+refletida no corpo e limite de bytes; interpreta envelopes antes de mapear
+categorias por `presentation.json`. O binding de current_revision cobre erros.
+
+`coordinator.js` mantém uma união fechada de estados, snapshots/rascunhos/comandos
+congelados, geração e tickets de requests. Polling não troca a base editada;
+apenas registra observação separada. Uma escrita pendente, sem fila; sucesso
+exige confirmação aplicada e releitura. Conflito conserva a base original e
+carrega outra separada; revisão explícita é necessária. Busy permite tentativa
+manual. Desconhecido e durabilidade incerta continuam bloqueados após releitura,
+pois revision maior não atribui autoria. Não há rollback. O coordenador não é
+montado por `screen.js` e não acrescenta timer, botão ou formulário funcional.
+
+Toda reconciliação invalida primeiro a base de releitura anterior. Uma falha
+posterior não permite review/finish sobre um snapshot que acabou de ficar
+desatualizado. O snapshot-base e o rascunho da edição continuam preservados.

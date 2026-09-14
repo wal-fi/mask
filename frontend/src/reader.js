@@ -32,6 +32,7 @@ export function reader(book) {
     }
     for (const link of links.filter(l=>l.model === key)) {
       const found=at(value,link.path);
+      if(found === undefined) continue;
       if(link.role === "version") {
         if(typeof found !== "number" || !Number.isSafeInteger(found) || found < 0) return false;
         versions.push(found);
@@ -103,5 +104,9 @@ export function reader(book) {
     if(version === undefined) throw new Error("Request failed.");
     return version;
   }
-  return {views,inspectData,inspectDataFor};
+  /** @param {unknown} key @param {unknown} value @param {string} role */
+  function bound(key,value,role) {
+    return links.filter(l=>l.model === key && l.role === role).map(l=>at(value,l.path)).filter(v=>v !== undefined);
+  }
+  return {views,inspectData,inspectDataFor,bound};
 }

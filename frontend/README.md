@@ -1,4 +1,4 @@
-# Ferramentas privadas da UI administrativa — Etapa 5
+# Ferramentas privadas da UI administrativa — Etapa 6
 
 Node 24.20.0, npm 11.19.0, TypeScript 5.9.3 e Playwright 1.63.0.
 `@types/node` 24.0.0 é uma dependência exclusivamente de declarações para
@@ -35,10 +35,10 @@ URL/histórico ou stores. Logout/401/pagehide/pageshow/BFCache descartam estado,
 DOM, metadados e token; cancelamento e geração bloqueiam respostas tardias.
 Status é lido a cada 15 s somente visível, sem sobreposição; falha suspende
 polling e retry é manual. O transporte check da Etapa 4 permanece apenas para
-compatibilidade do seu gate, sem uso pelas telas. Etapas 6–9 não iniciadas.
+compatibilidade do seu gate, sem uso pelas telas. Etapas 7–9 não iniciadas.
 A Etapa 3 valida bytes antes do bind; a fronteira HTTP da Etapa 4 não muda.
 
-Para o gate real da Etapa 5, definir `MASKGW_TEST_DSN` para PostgreSQL 16 real
+Para o gate acumulado da Etapa 6, definir `MASKGW_TEST_DSN` para PostgreSQL 16 real
 e executar `npm run test:browser`. Instalar previamente os três binários pelo
 Playwright fixado (`playwright install chromium firefox webkit`), sem atualizar
 versões. Chromium 153.0.8010.12/revisão 1243, Firefox 155.0/1543 e WebKit 26.6/2359.
@@ -75,7 +75,9 @@ Views, editores e controles são descrições estáticas; somente as seis vistas
 de leitura são renderizadas nesta etapa.
 Condições só descrevem presença/igualdade/escolha/booleano. Projeções descrevem
 copy/object/list/omit/insert/replace/remove/permute com fontes fechadas base ou
-draft, paths vetoriais e destino vetorial; não são executadas nesta etapa.
+draft, paths vetoriais e destino vetorial. A Etapa 6 executa seleção/cópia e
+construção de objetos/listas a partir dos modelos privados; operações de
+edição de candidato/formulários permanecem nos marcos seguintes.
 Não há fonte token, ambiente, função ou código. Não existe merge genérico.
 As ligações usam papéis abstratos; `consent` representa adoção sem expor o
 literal privado da operação. Nenhuma exceção lexical foi adicionada à lista
@@ -111,3 +113,25 @@ nativa por CDP, sem usar goBack do Playwright. O fixture é elegível a cache;
 a política no-store do produto permanece intacta. Não alegar restauração
 nativa do Firefox/WebKit automatizados. Detalhes, resultados e limitações em
 `docs/PHASE-8-STAGE-5-VALIDATION.md` na raiz.
+
+## Coordenador e transporte granular
+
+`commands.js` recebe somente metadados autenticados, resolve chamada/método/
+identidade/modelos e projeta corpo fechado a partir do rascunho e versão-base.
+`transport.js` expõe prepare/mutate além das leituras, sem qualquer chamada
+implícita. `coordinator.js` expõe load, begin/change, confirm, cancel, reconcile,
+review, finish, discard e close; não é instalado por screen e não expõe controles
+de escrita. getState/getObservation devolvem referências congeladas.
+
+load é explícito. begin/change conservam o snapshot-base e congelam conteúdo;
+confirm revalida o comando e admite uma pendência. Polling durante rascunho
+registra uma observação separada; durante pendência é recusado. Conflito só
+aceita base nova por review humano; busy só repete por confirm explícito.
+Sucesso relê automaticamente; finish exige a releitura. cancel não cancela a
+operação no servidor. Desconhecido e durabilidade incerta permitem reconcile,
+mas continuam bloqueados para mutação e não têm rollback/retry automático.
+Logout/401/pagehide/pageshow limpam o coordenador; respostas antigas são ignoradas.
+
+Testes específicos: test/commands.test.js, test/coordinator.test.js e
+browser/coordinator.spec.js. Evidência atual na raiz:
+`docs/PHASE-8-STAGE-6-VALIDATION.md`. Não publicar Etapa 6 nem iniciar Etapa 7.

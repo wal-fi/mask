@@ -32,16 +32,18 @@ opt-in e estritamente delimitada por `docs/PHASE-8-SPEC.md`** está autorizada
 como escopo de front-end. A especificação foi aprovada integralmente, incluindo
 as quatro decisões da seção 8 (D-061 a D-064 em `docs/DECISIONS.md`).
 
-As Etapas 1–4 foram revisadas, aprovadas e publicadas sem emenda. Esta rodada
-autoriza exclusivamente a **Etapa 5: sessão local em memória, lifecycle e seis
-telas administrativas somente leitura**, conforme `docs/PHASE-8-SPEC.md`.
+As Etapas 1–5 foram revisadas, aprovadas e publicadas sem emenda. Esta rodada
+autoriza exclusivamente a **Etapa 6: máquina de estados e transporte granular**,
+conforme `docs/PHASE-8-SPEC.md`. As seis telas continuam somente leitura.
 Token somente em closure privada do transporte; dados e apresentação somente
 em memória; logout/401/pagehide/pageshow/BFCache limpam tudo. Nenhuma chamada
-administrativa antes do login, nenhuma escrita, validação de proposta, adoção,
-CRUD ou item das Etapas 6–9. A fronteira HTTP da Etapa 4 permanece intacta.
-A Etapa 5 está concluída; gates reais de componentes/browsers/PostgreSQL
-aprovados. Evidência em `docs/PHASE-8-STAGE-5-VALIDATION.md`. Não publicar seu commit local
-nem iniciar a Etapa 6 sem nova revisão e autorização.
+administrativa antes do login. Coordenador e transporte genéricos podem ser
+executados em testes componentes; nenhuma ação de escrita, validação de
+proposta, adoção, CRUD, reorder ou database/SQL é exposta nas telas. Não iniciar
+as Etapas 7–9. A fronteira HTTP da Etapa 4 permanece intacta.
+A Etapa 6 está concluída; gates reais de componentes/browsers/PostgreSQL
+aprovados. Evidência em `docs/PHASE-8-STAGE-6-VALIDATION.md`. Não publicar seu
+commit local nem iniciar a Etapa 7 sem nova revisão e autorização.
 
 Interfaces genéricas, editor ou execução de SQL, resultados do banco, funções
 de DBA, auditoria consultável, front-end para MCP e expansões não previstas

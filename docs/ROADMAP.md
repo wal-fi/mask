@@ -347,18 +347,19 @@ novo; todos os cenários `BLOCKED`.
 
 ## FASE 8 — Front-end
 
-**STATUS: APROVADA; ETAPAS 1–4 PUBLICADAS; ETAPA 5 CONCLUÍDA.**
-A Etapa 4 foi revisada e publicada sem emenda em
-`7e8e39988b38438128a51fc414ecae68cdde01c1`; o fetch confirmou master, HEAD igual
+**STATUS: APROVADA; ETAPAS 1–5 PUBLICADAS; ETAPA 6 CONCLUÍDA.**
+A Etapa 5 foi revisada e publicada sem emenda em
+`0d42f5d0d9a835177dd1c5e4a6c608161f585896`; o fetch confirmou master, HEAD igual
 a origin/master, árvore limpa e 0/0, com autoria e trailer preservados.
-A autorização atual é exclusivamente a Etapa 5: sessão em memória, lifecycle
-e seis telas somente leitura. Etapas 6–9 e push da Etapa 5 não estão autorizados.
-Evidência desta rodada: `docs/PHASE-8-STAGE-5-VALIDATION.md`.
+A autorização atual é exclusivamente a Etapa 6: máquina de estados e transporte
+granular. As seis telas permanecem somente leitura. Etapas 7–9 e push da Etapa 6
+não estão autorizados. Evidência: `docs/PHASE-8-STAGE-6-VALIDATION.md`.
 
 Sessão explícita em memória, renderer declarativo de seis vistas readonly,
 validação de DTOs/revisions e polling de status visível sem sobreposição.
 Token/estado são descartados no lifecycle; erros sanitizados e retry manual.
-Não há escrita, validação, adoção, CRUD ou item da Etapa 6. Contrato em
+Coordenador e transporte granular sem controles visíveis de escrita; validação,
+adoção, CRUD e fluxos das Etapas 7–9 não foram iniciados. Contrato em
 `docs/PHASE-8-SPEC.md`, D-061–D-064 e `docs/PHASE-8-TRACEABILITY.md`.
 
 ---
@@ -374,8 +375,8 @@ alteração do transporte MCP.
 
 ## Estado atual
 
-Fase 8 aprovada; Etapa 5 concluída. A medição desta rodada está em
-`docs/PHASE-8-STAGE-5-VALIDATION.md`; os números abaixo
+Fase 8 aprovada; Etapa 6 concluída. A medição desta rodada está em
+`docs/PHASE-8-STAGE-6-VALIDATION.md`; os números abaixo
 registram o fechamento anterior da Fase 7.
 
 Fases 1 a 6.1 concluídas. **Fase 7 (Admin API) concluída**, com as onze etapas

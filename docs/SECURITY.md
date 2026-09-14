@@ -464,11 +464,11 @@ detalhados em `docs/FUTURE-HARDENING.md`:
 - transformers Python customizados
 - multi-tenant
 
-## Fase 8 — fronteira de navegador e sessão de leitura
+## Fase 8 — fronteira, sessão e concorrência local
 
-**Aprovada; Etapas 1–4 publicadas; Etapa 5 concluída.** O contrato normativo
+**Aprovada; Etapas 1–5 publicadas; Etapa 6 concluída.** O contrato normativo
 integral está em `docs/PHASE-8-SPEC.md`, especialmente §§3.14–3.16, 4 e 5;
-a evidência desta rodada está em `docs/PHASE-8-STAGE-5-VALIDATION.md`.
+a evidência desta rodada está em `docs/PHASE-8-STAGE-6-VALIDATION.md`.
 
 Somente UI on instala quatro rotas, três exceções públicas raw/canônicas,
 origem exata e headers. Query não vazia nunca entrega recurso; a recusa segue
@@ -490,9 +490,9 @@ primitivas HTTP compartilhadas e SecretProvider permanecem protegidos.
 O transporte anexa Authorization somente após a comparação de origem; todas
 as chamadas usam cors/omit/error/no-store/no-referrer. Token explícito precede
 apresentação; hash e gramática precedem chamadas de negócio. Não há chamadas
-administrativas antes da entrada explícita. Depois, apenas leituras, incluindo
+administrativas antes da entrada explícita. As telas fazem apenas leituras, incluindo
 status visível a cada 15 s, sem sobreposição e suspenso após falha. Nenhuma
-escrita, validação, armazenamento, log, erro ou URL com token. Os
+escrita ou validação pelas telas, nem armazenamento, log, erro ou URL com token. Os
 193 termos privados permanecem proibidos; permitir fetch não libera encoding,
 concatenação, execução dinâmica ou armazenamento. Os bytes administrativos
 continuam exclusivamente no recurso autenticado e nos envelopes já existentes.
@@ -513,9 +513,27 @@ abortam requests e invalidam a geração. Respostas tardias não restauram estad
 Objetos fechados, revisões seguras e coerentes precedem qualquer estado/DOM;
 conteúdo hostil é texto, nunca HTML/URL/atributo executável. Navegação não muda
 URL/histórico. Não há stores web, cookies, SW, postMessage ou BroadcastChannel.
-O renderer não chama escrita nem config:validate; não há rascunhos ou CRUD.
-Concorrência/durabilidade de escrita e os gates das Etapas 6–9 permanecem futuros.
+O renderer não chama escrita nem config:validate; não há controles de CRUD.
+O coordenador da Etapa 6 suporta rascunhos abstratos somente em memória; os
+fluxos funcionais e gates das Etapas 7–9 permanecem futuros.
 CSP não protege contra navegador/extensão/processo privilegiado comprometidos.
 SQL, resultados, auditoria consultável, secrets editáveis, TLS, proxy, bind
 externo, serviços externos e expansão do MCP seguem excluídos. Findings antigos
 aceitos não são encerrados por esta entrega.
+
+Na Etapa 6 o catálogo autenticado é a única origem de operações. Corpo é uma
+projeção fechada do rascunho verificado e da revision-base capturada, nunca do
+token. Campos extras/protegidos, identidades malformadas, segmentos perigosos,
+getters/protótipos/ciclos e próxima revision insegura são recusados antes de
+construir Authorization ou emitir request. Todos os métodos com corpo,
+inclusive DELETE, mantêm JSON e opções Fetch normativas. Mensagens remotas
+não são exibidas: somente textos locais do recurso privado autenticado.
+
+Cancelar localmente ou perder resposta não prova cancelamento no servidor.
+Envelopes inválidos, timeout, desconexão e erro interno são resultado desconhecido;
+nenhuma próxima mutação é liberada por uma revision maior. Durabilidade incerta
+permanece distinta, exige releitura e não admite repetição cega. Sucesso com
+releitura falha conserva a confirmação e informa visualização desatualizada.
+Conflito preserva rascunho/base e exige revisão de base nova separada; busy
+permite apenas tentativa manual. Logout/401/lifecycle fecham também o
+coordenador. Nenhum retry, rebase, rollback ou coordenação entre abas automático.

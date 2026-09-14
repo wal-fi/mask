@@ -1,6 +1,6 @@
 # Fase 8 — Front-end · Especificação aprovada
 
-**Estado:** aprovada; Etapas 1–4 publicadas; Etapa 5 concluída.
+**Estado:** aprovada; Etapas 1–5 publicadas; Etapa 6 concluída.
 **Base:** Fase 7 concluída no commit `27d92bd580875e9eb2abb04db102eb98af2054fe`.
 
 ## 1. Arquitetura recomendada e justificativa
@@ -1059,4 +1059,4 @@ Foram aprovadas integralmente as quatro decisões de produto/arquitetura:
 3. **Escopo funcional:** CRUD granular; reorder somente de regras; SQL aditivo; ausência de substituição completa pela UI.
 4. **Contrato operacional:** token/rascunhos apenas em memória, recuperação sem retry ou rollback automático e gates de tipagem, navegador e PostgreSQL reais.
 
-As quatro decisões desta seção foram aprovadas integralmente em 2026-09-09. A Etapa 1 foi concluída, revisada sem ressalvas e publicada sem emenda no commit `aebe31d0dbaba3238e97ae3ad13bf20fdd615211`. A Etapa 2 foi revisada sem ressalvas e publicada sem emenda em `d080886352920a663e8b0aa318761a083f54f7f7`. A Etapa 3 foi revisada sem ressalvas e publicada sem emenda em `dd921d52e6a0475e3301621a547f50972d4cccbb`. A Etapa 4 foi revisada sem ressalvas e publicada sem emenda em `7e8e39988b38438128a51fc414ecae68cdde01c1`. A autorização atual abrange exclusivamente a Etapa 5: sessão em memória, lifecycle e seis telas administrativas somente leitura. Não abrange escrita, validação de proposta, adoção, CRUD, reconciliação ou qualquer item das Etapas 6–9. O push do commit local da Etapa 5 também aguarda autorização. Evidência atual: `docs/PHASE-8-STAGE-5-VALIDATION.md`; evidências anteriores preservadas como históricas.
+As quatro decisões desta seção foram aprovadas integralmente em 2026-09-09. A Etapa 1 foi concluída, revisada sem ressalvas e publicada sem emenda no commit `aebe31d0dbaba3238e97ae3ad13bf20fdd615211`. A Etapa 2 foi revisada sem ressalvas e publicada sem emenda em `d080886352920a663e8b0aa318761a083f54f7f7`. A Etapa 3 foi revisada sem ressalvas e publicada sem emenda em `dd921d52e6a0475e3301621a547f50972d4cccbb`. A Etapa 4 foi revisada sem ressalvas e publicada sem emenda em `7e8e39988b38438128a51fc414ecae68cdde01c1`. A Etapa 5 foi revisada e publicada sem emenda em `0d42f5d0d9a835177dd1c5e4a6c608161f585896`. A autorização atual abrange exclusivamente a Etapa 6: máquina de estados e transporte granular, sem controles visíveis de escrita. Não abrange adoção, validação pela tela, formulários funcionais, CRUD, reorder, database/SQL ou itens das Etapas 7–9. O commit local da Etapa 6 não será publicado nesta rodada. Evidência atual: `docs/PHASE-8-STAGE-6-VALIDATION.md`; evidências anteriores preservadas como históricas.

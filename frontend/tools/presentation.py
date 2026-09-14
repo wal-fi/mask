@@ -114,6 +114,16 @@ wire["Parameters"] = {
         "preserve_length": {"type": "boolean"},
     },
 }
+# Responses use plain nullable strings in Python. Browser template identities
+# must obey the same authoritative format as candidate document identities.
+# Reuse those source constraints rather than inventing a public ID expression.
+for document, candidate in (
+    ("RuleView", "ValidateRuleRequest"),
+    ("RuleDocument", "ValidateRuleRequest"),
+    ("ExceptionView", "ValidateExceptionRequest"),
+    ("ExceptionDocument", "ValidateExceptionRequest"),
+):
+    wire[document]["properties"]["id"] = wire[candidate]["properties"]["id"]
 outputs = [
     "AdminStatusResponse",
     "AdminConfigResponse",
@@ -312,6 +322,7 @@ for definition in models:
         role = {
             "revision": "version",
             "expected_revision": "version",
+            "current_revision": "version",
             "id": "identity",
             "position": "order",
             "adopted": "consent",

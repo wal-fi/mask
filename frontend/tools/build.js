@@ -19,9 +19,11 @@ const presentation=readFileSync(new URL("../private/presentation.json",import.me
 const schema=readFileSync(new URL("../private/protocol-schema.json",import.meta.url),"utf8").trim();
 const core=readFileSync(new URL("../src/protocol.js",import.meta.url),"utf8");
 const reader=readFileSync(new URL("../src/reader.js",import.meta.url),"utf8");
+const commands=readFileSync(new URL("../src/commands.js",import.meta.url),"utf8").split("\n").filter(line=>!line.startsWith("import ")).join("\n");
+const coordinator=readFileSync(new URL("../src/coordinator.js",import.meta.url),"utf8").split("\n").filter(line=>!line.startsWith("import ")).join("\n");
 const screen=readFileSync(new URL("../src/screen.js",import.meta.url),"utf8").split("\n").filter(line=>!line.startsWith("import ")).join("\n");
 const transport=readFileSync(new URL("../src/transport.js",import.meta.url),"utf8").split("\n").filter(line=>!line.startsWith("import ")).join("\n");
-const js=core+"\n/** @type {unknown} */\nconst layout="+schema+";\nexport const digest="+JSON.stringify(hash(presentation))+";\n/** @param {unknown} value */\nexport function check(value) { return inspect(value,layout); }\n"+reader+"\n"+transport+"\n"+screen;
+const js=(core+"\n/** @type {unknown} */\nconst layout="+schema+";\nexport const digest="+JSON.stringify(hash(presentation))+";\n/** @param {unknown} value */\nexport function check(value) { return inspect(value,layout); }\n"+reader+"\n"+commands+"\n"+transport+"\n"+coordinator+"\n"+screen).replaceAll('import("./commands.js").',"").replaceAll('import("./transport.js").',"");
 const html='<!doctype html>\n<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Administração local</title><link rel="stylesheet" href="/admin/ui/assets/ui.css"><script type="module" src="/admin/ui/assets/ui.js"></script></head><body><main><h1>Administração local</h1></main></body></html>\n';
 const css=':root{font-family:system-ui,sans-serif;color:#18212b;background:#fff;line-height:1.5}*{box-sizing:border-box}body{margin:0}main{max-width:64rem;margin:auto;padding:1rem}header,nav{display:flex;flex-wrap:wrap;gap:.75rem;align-items:center}header{justify-content:space-between}nav{margin-block:1rem}button,input{font:inherit;padding:.6rem;min-height:2.75rem;max-width:100%}button{cursor:pointer;border:1px solid #164dc5;background:#fff;color:#123a80;border-radius:.25rem}button[aria-current]{background:#164dc5;color:#fff}button:disabled{cursor:wait;color:#414a55;border-color:#737c87}label{display:block}form{max-width:28rem;display:grid;gap:.75rem}a:focus-visible,button:focus-visible,input:focus-visible,h2:focus{outline:3px solid #164dc5;outline-offset:3px}section{min-width:0}dt{font-weight:600;margin-top:.5rem}dd{margin-left:1rem}ol{padding-left:1.5rem}span,dd,dt,h1,h2,h3,p,button{overflow-wrap:anywhere;white-space:pre-wrap}[role="status"]{border-left:4px solid #164dc5;padding-left:.75rem}h2{scroll-margin-top:1rem}@media(max-width:24rem){main{padding:.75rem}nav button{width:100%}dd{margin-left:.5rem}}@media(prefers-reduced-motion:reduce){*{animation:none;transition:none;scroll-behavior:auto}}\n';
 const resources=[
@@ -35,6 +37,7 @@ for (const item of resources) {
   write("assets/"+item.path,item.data.toString("utf8"));
 }
 inspectArtifacts();
+execFileSync(process.execPath,["--check","../src/maskgw/admin/ui/assets/ui.js"],{stdio:"inherit"});
 execFileSync(process.execPath,["node_modules/typescript/bin/tsc","-p","tsconfig.json"],{stdio:"inherit"});
 execFileSync(process.execPath,["node_modules/typescript/bin/tsc","--allowJs","--checkJs","--strict","--noEmit","--noUncheckedIndexedAccess","--exactOptionalPropertyTypes","--skipLibCheck","false","--target","ES2022","--module","NodeNext","../src/maskgw/admin/ui/assets/ui.js"],{stdio:"inherit"});
 const manifest=JSON.stringify({format:1,entries:resources.map(({id,path,mime,data})=>({id,path,mime,size:data.length,sha256:hash(data)}))})+"\n";

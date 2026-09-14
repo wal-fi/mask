@@ -1038,7 +1038,7 @@ const layout={
   "title": "Presentation",
   "type": "object"
 };
-export const digest="8be0754cb372819e1593473a50b73d699e28a19f0644a9cea94dc170b9149c2c";
+export const digest="9dda0f7bf0994e08f3b2340e0b3336e192aabccac9a41fde3cc17fbc258d75e2";
 /** @param {unknown} value */
 export function check(value) { return inspect(value,layout); }
 /** @param {unknown} item @returns {item is Record<string, unknown>} */
@@ -1075,6 +1075,7 @@ export function reader(book) {
     }
     for (const link of links.filter(l=>l.model === key)) {
       const found=at(value,link.path);
+      if(found === undefined) continue;
       if(link.role === "version") {
         if(typeof found !== "number" || !Number.isSafeInteger(found) || found < 0) return false;
         versions.push(found);
@@ -1146,7 +1147,122 @@ export function reader(book) {
     if(version === undefined) throw new Error("Request failed.");
     return version;
   }
-  return {views,inspectData,inspectDataFor};
+  /** @param {unknown} key @param {unknown} value @param {string} role */
+  function bound(key,value,role) {
+    return links.filter(l=>l.model === key && l.role === role).map(l=>at(value,l.path)).filter(v=>v !== undefined);
+  }
+  return {views,inspectData,inspectDataFor,bound};
+}
+
+
+/** @typedef {"authentication" | "conflict" | "busy" | "incompatible" | "unknown" | "uncertain"} FailureKind */
+/** @typedef {{kind:"success",version:number,message:string} | {kind:FailureKind,version:number | undefined,message:string}} Outcome */
+/** @typedef {{id:string,version:number,draft:unknown,identity:string | undefined}} Command */
+/** @param {unknown} value @returns {number} */
+export function safeVersion(value) {
+  if(typeof value !== "number" || !Number.isSafeInteger(value) || value < 0) throw new Error("Request refused.");
+  return value;
+}
+/** Copy JSON data without accessors, custom prototypes, coercion or shared references.
+ * @param {unknown} value @param {number} depth @param {Set<object>} seen @returns {unknown}
+ */
+export function capture(value,depth=0,seen=new Set()) {
+  if(depth > 16) throw new Error("Request refused.");
+  if(value === null || typeof value === "string" || typeof value === "boolean") return value;
+  if(typeof value === "number" && Number.isSafeInteger(value)) return value;
+  if(typeof value !== "object" || value === null || seen.has(value) || (!Array.isArray(value) && !entry(value))) throw new Error("Request refused.");
+  const next=new Set([...seen,value]);
+  const descriptors=Object.getOwnPropertyDescriptors(value);
+  if(Reflect.ownKeys(value).some(k=>typeof k !== "string" || ["__proto__","constructor","prototype"].includes(k))) throw new Error("Request refused.");
+  for(const [key,d] of Object.entries(descriptors)) if(!("value" in d) || (!d.enumerable && !(Array.isArray(value) && key === "length"))) throw new Error("Request refused.");
+  if(Array.isArray(value)) {
+    if(Object.keys(value).length !== value.length) throw new Error("Request refused.");
+    return Object.freeze(value.map(v=>capture(v,depth+1,next)));
+  }
+  return Object.freeze(Object.fromEntries(Object.entries(value).map(([k,v])=>[k,capture(v,depth+1,next)])));
+}
+/** @param {unknown} value @returns {value is Record<string,unknown>[]} */
+function commandEntries(value) { return Array.isArray(value) && value.every(entry); }
+/** The model itself is the closed object/list/select-copy projection plan.
+ * No caller supplies field paths, destinations, methods or executable projections.
+ * @param {unknown} source
+ */
+export function commands(source) {
+  const book=capture(source);
+  if(!entry(book) || !commandEntries(book.calls) || !commandEntries(book.models) || !commandEntries(book.bindings) || !commandEntries(book.messages)) throw new Error("Request refused.");
+  const catalog=book.calls, models=new Map(book.models.map(m=>[m.id,m.shape])), links=book.bindings, messages=book.messages;
+  const lens=reader(book);
+  /** @param {string} id */
+  function lookup(id) {
+    const call=catalog.find(c=>c.id === id);
+    if(!call || typeof call.path !== "string" || typeof call.output !== "string" || typeof call.error !== "string"
+      || (call.method !== "GET" && call.method !== "POST" && call.method !== "PUT" && call.method !== "DELETE")
+      || (call.identity !== null && typeof call.identity !== "string")) throw new Error("Request refused.");
+    return {id,path:call.path,output:call.output,error:call.error,input:call.input,operation:call.operation,identity:call.identity,method:call.method};
+  }
+  /** Locate the identity leaf in the paired authenticated read model.
+   * @param {unknown} key @param {number} depth @returns {unknown[]}
+   */
+  function leaves(key,depth=0) {
+    const shape=models.get(key);if(!entry(shape) || depth > 16) throw new Error("Request refused.");
+    if(shape.type === "nullable") return leaves(shape.item,depth+1);
+    if(shape.type !== "object" || !commandEntries(shape.fields)) return [];
+    const fields=shape.fields;
+    return fields.flatMap(f=>links.some(l=>l.model === key && l.role === "identity" && Array.isArray(l.path) && l.path.length === 1 && l.path[0] === f.name) ? [f.ref] : leaves(f.ref,depth+1));
+  }
+  /** @param {ReturnType<typeof lookup>} call @param {string | undefined} identity */
+  function resolve(call,identity) {
+    if(call.identity === null) {if(identity !== undefined) throw new Error("Request refused.");return call.path;}
+    if(typeof identity !== "string" || !identity || /[%/?#\\{}:]|\s/.test(identity) || [".","..","__proto__","constructor","prototype"].includes(identity)) throw new Error("Request refused.");
+    const parts=call.path.split("/"), marker="{"+call.identity+"}";
+    if(parts.filter(p=>p === marker).length !== 1 || parts.some(p=>/[{}]/.test(p) && p !== marker)) throw new Error("Request refused.");
+    const paired=catalog.find(c=>c.path === call.path && c.method === "GET");
+    if(!paired) throw new Error("Request refused.");
+    const keys=leaves(paired.output);if(keys.length !== 1) throw new Error("Request refused.");
+    const shape=models.get(keys[0]);
+    const key=entry(shape) && shape.type === "nullable" ? shape.item : keys[0];
+    lens.inspectData(key,identity);
+    return parts.map(p=>p === marker ? identity : p).join("/");
+  }
+  /** Construct only the declared writable fields; the bound version has a separate source.
+   * @param {Command} command
+   */
+  function prepare(command) {
+    const call=lookup(command.id), version=safeVersion(command.version);
+    if(call.method === "GET" || !["create","replace","delete","move","confirm","append"].includes(String(call.operation)) || version === Number.MAX_SAFE_INTEGER) throw new Error("Request refused.");
+    if(call.operation === "confirm" ? version !== 0 : version === 0) throw new Error("Request refused.");
+    const shape=models.get(call.input), draft=capture(command.draft);
+    if(!entry(shape) || shape.type !== "object" || !commandEntries(shape.fields) || !entry(draft)) throw new Error("Request refused.");
+    const fields=shape.fields;
+    const bindings=links.filter(l=>l.model === call.input && l.role === "version");
+    const binding=bindings[0];
+    if(bindings.length !== 1 || !binding || !Array.isArray(binding.path) || binding.path.length !== 1 || typeof binding.path[0] !== "string") throw new Error("Request refused.");
+    const slot=binding.path[0];
+    if(Object.keys(draft).some(k=>k === slot || !fields.some(f=>f.name === k))) throw new Error("Request refused.");
+    const body=Object.fromEntries(fields.flatMap(f=>typeof f.name !== "string" ? [] : f.name === slot ? [[f.name,version]] : Object.hasOwn(draft,f.name) ? [[f.name,at(draft,[f.name])]] : []));
+    lens.inspectData(call.input,body);
+    return {call,path:resolve(call,command.identity),body:capture(body),version};
+  }
+  /** @param {ReturnType<typeof lookup>} call @param {unknown} value @param {number} status @param {number} base @returns {Outcome} */
+  function outcome(call,value,status,base) {
+    safeVersion(base);
+    const data=capture(value);
+    if(status >= 200 && status < 300) {
+      const version=lens.inspectData(call.output,data);
+      if(version !== base+1 || !Number.isSafeInteger(version) || lens.bound(call.output,data,"result").length !== 1 || lens.bound(call.output,data,"result")[0] !== true) throw new Error("Request refused.");
+      return {kind:"success",version,message:"Salva; visualização ainda não atualizada."};
+    }
+    const version=lens.inspectData(call.error,data), shape=models.get(call.error);
+    if(!entry(shape) || shape.type !== "union" || typeof shape.tag !== "string") throw new Error("Request refused.");
+    const name=at(data,[shape.tag]), message=messages.find(m=>m.name === name);
+    if(!message || typeof message.text !== "string") throw new Error("Request refused.");
+    const kind=message.state;
+    if(kind !== "authentication" && kind !== "conflict" && kind !== "busy" && kind !== "incompatible" && kind !== "unknown" && kind !== "uncertain") throw new Error("Request refused.");
+    if(status < 400 || status > 599 || (kind === "busy" && status !== 409) || (kind === "conflict" && status !== 409 && status !== 404)
+      || (kind === "uncertain" && (status !== 500 || version !== base+1)) || (kind === "authentication" && status !== 401)) throw new Error("Request refused.");
+    return {kind,version,message:message.text};
+  }
+  return Object.freeze({lookup,resolve,prepare,outcome});
 }
 
 
@@ -1173,16 +1289,20 @@ export async function open(token, signal=undefined, expired=()=>{}) {
   if (!token || /[\r\n]/.test(token)) throw new Error("Request refused.");
   const stop = new AbortController();
   let ended = false;
+  let writing = false;
+  /** @type {Set<() => void>} */ const listeners=new Set();
   /** @type {Map<string, {path:string, method:"GET" | "POST", operation:string, output:string}>} */ const calls = new Map();
   /** @type {ReturnType<typeof reader> | undefined} */ let lens;
-  function close() { ended=true; token=""; calls.clear(); lens=undefined; stop.abort(); signal?.removeEventListener("abort",close); }
+  /** @type {ReturnType<typeof commands> | undefined} */ let actions;
+  function close() { ended=true; token=""; calls.clear(); lens=undefined; actions=undefined; stop.abort(); signal?.removeEventListener("abort",close); for(const listener of listeners) listener(); listeners.clear(); }
   signal?.addEventListener("abort",close,{once:true});
   if(signal?.aborted) close();
-  /** @param {string} path @param {"GET" | "POST"} method @param {string | undefined} body @param {boolean} first @param {AbortSignal | undefined} extra */
-  async function send(path, method, body, first, extra=undefined) {
+  /** @param {string} path @param {string} method @param {string | undefined} body @param {boolean} first @param {AbortSignal | undefined} extra @param {boolean} errors */
+  async function send(path, method, body, first, extra=undefined,errors=false) {
     if(ended) throw new AccessError("authentication");
+    if(extra?.aborted) throw new AccessError("unknown");
     const url = destination(path, first);
-    if (body !== undefined && body.includes(token)) throw new Error("Request refused.");
+    if (body !== undefined && (body.includes(JSON.stringify(token).slice(1,-1)) || new TextEncoder().encode(body).length > 1048576)) throw new Error("Request refused.");
     const headers = new Headers();
     headers.set("Authorization", "Bearer " + token);
     if (body !== undefined) headers.set("Content-Type", "application/json");
@@ -1192,7 +1312,7 @@ export async function open(token, signal=undefined, expired=()=>{}) {
     });
     if(ended) throw new AccessError("authentication");
     if(response.status === 401) { close(); expired(); throw new AccessError("authentication"); }
-    if (!response.ok || response.headers.get("Content-Type") !== "application/json") throw new AccessError("unknown");
+    if ((!response.ok && !errors) || response.headers.get("Content-Type") !== "application/json") throw new AccessError("unknown");
     return response;
   }
   try {
@@ -1204,7 +1324,8 @@ export async function open(token, signal=undefined, expired=()=>{}) {
     if (hex !== digest) throw new Error("Request refused.");
     /** @type {unknown} */ const data = JSON.parse(new TextDecoder("utf-8", {fatal:true}).decode(bytes));
     if (!check(data) || !object(data) || !Array.isArray(data.calls)) throw new Error("Request refused.");
-    lens=reader(data);
+    const frozen=capture(data);
+    lens=reader(frozen); actions=commands(frozen);
     /** @type {unknown[]} */ const entries = data.calls;
     for (const item of entries) {
       if (object(item) && typeof item.id === "string" && typeof item.path === "string" && typeof item.output === "string" && item.identity === null
@@ -1217,18 +1338,51 @@ export async function open(token, signal=undefined, expired=()=>{}) {
       try {
         const call = calls.get(id);
         if (!call || call.method !== method) throw new Error("Request refused.");
+        if(method === "POST") {
+          if(!actions || !lens) throw new AccessError("authentication");
+          lens.inspectData(actions.lookup(id).input,capture(body));
+        }
         const response = await send(call.path, method, method === "GET" ? undefined : JSON.stringify(body), false, extra);
         /** @type {unknown} */ const value = await response.json();
         if(ended || extra?.aborted || !lens) throw new AccessError("authentication");
         if(JSON.stringify(value).includes(JSON.stringify(token).slice(1,-1))) throw new AccessError("incompatible");
         lens.inspectData(call.output,value);
-        return value;
+        return capture(value);
       } catch (error) { if(ended) throw new AccessError("authentication"); if(error instanceof AccessError) throw error; throw new AccessError("unknown"); }
     }
     if(ended) throw new AccessError("authentication");
     return Object.freeze({
       close,
+      /** @param {() => void} listener */ onClose: listener=>{ if(ended) listener(); else listeners.add(listener); return ()=>{listeners.delete(listener);}; },
       describe: () => { if(ended || !lens) throw new AccessError("authentication"); return lens; },
+      /** @param {Command} command */ prepare: command=>{
+        if(ended || !actions) throw new AccessError("authentication");
+        const prepared=actions.prepare(command);
+        const body=JSON.stringify(prepared.body);
+        if(body.includes(JSON.stringify(token).slice(1,-1)) || new TextEncoder().encode(body).length > 1048576) throw new AccessError("incompatible");
+        destination(prepared.path,false);
+      },
+      /** @param {Command} command @param {AbortSignal | undefined} extra @returns {Promise<Outcome>} */
+      mutate: async(command,extra=undefined)=>{
+        if(ended || !actions) throw new AccessError("authentication");
+        if(writing) throw new AccessError("incompatible");
+        const prepared=actions.prepare(command);
+        const body=JSON.stringify(prepared.body);
+        // Full checking precedes the flight and every bearer construction.
+        if(extra?.aborted || body.includes(JSON.stringify(token).slice(1,-1)) || new TextEncoder().encode(body).length > 1048576) throw new AccessError("incompatible");
+        destination(prepared.path,false);
+        writing=true;
+        try {
+          const response=await send(prepared.path,prepared.call.method,body,false,extra,true);
+          /** @type {unknown} */ const value=await response.json();
+          if(ended || !actions) throw new AccessError("authentication");
+          if(extra?.aborted || JSON.stringify(value).includes(JSON.stringify(token).slice(1,-1))) throw new AccessError("unknown");
+          return actions.outcome(prepared.call,value,response.status,prepared.version);
+        } catch(error) {
+          if(ended) throw new AccessError("authentication");
+          return {kind:"unknown",version:undefined,message:"Resultado desconhecido. Releia o estado antes de decidir."};
+        } finally {writing=false;}
+      },
       /** @param {string} id @param {AbortSignal | undefined} extra */ read: (id, extra=undefined) => run(id, "GET", undefined,extra),
       /** @param {string} id @param {unknown} body */ check: (id, body) => run(id, "POST", body),
     });
@@ -1239,6 +1393,144 @@ export async function open(token, signal=undefined, expired=()=>{}) {
 export class AccessError extends Error {
   /** @param {"authentication" | "incompatible" | "unknown"} kind */
   constructor(kind) { super("Request failed."); this.kind=kind; }
+}
+
+
+/** @typedef {{value:unknown,version:number}} Snapshot */
+/** @typedef {{base:Snapshot,draft:unknown,command:Command}} Editing */
+/** @typedef {{tag:"authentication"} | {tag:"loading"} | {tag:"reading",snapshot:Snapshot} | {tag:"draft",edit:Editing} | {tag:"pending",edit:Editing} | {tag:"success",edit:Editing,version:number,newBase:Snapshot | undefined,message:string} | {tag:"conflict" | "busy" | "incompatible" | "unknown" | "uncertain",edit:Editing | undefined,newBase:Snapshot | undefined,message:string}} Flow */
+/** @typedef {Awaited<ReturnType<typeof open>>} WriteClient */
+
+/** Pure coordinator: no DOM control, timer, queue or implicit business operation.
+ * The caller must explicitly choose a read and confirm each abstract command.
+ * @param {WriteClient} client @param {string} readId
+ */
+export function coordinate(client,readId) {
+  /** @type {Flow} */ let state={tag:"loading"};
+  let generation=0, sequence=0, closed=false, occupied=false, minimum=0;
+  /** @type {AbortController | undefined} */ let active;
+  /** @type {Snapshot | undefined} */ let observed;
+  /** @type {() => void} */ let detach=()=>{};
+  function clear() {
+    if(closed) return;
+    closed=true;generation++;sequence++;active?.abort();active=undefined;observed=undefined;state={tag:"authentication"};occupied=false;minimum=0;detach();
+    if(typeof window !== "undefined" && typeof window.removeEventListener === "function") {window.removeEventListener("pagehide",close);window.removeEventListener("pageshow",close);}
+  }
+  function close() {clear();client.close();}
+  detach=client.onClose(clear);
+  if(!closed && typeof window !== "undefined" && typeof window.addEventListener === "function") {window.addEventListener("pagehide",close);window.addEventListener("pageshow",close);}
+  /** @param {unknown} value */
+  function snapshot(value) { const clean=capture(value);return Object.freeze({value:clean,version:safeVersion(client.describe().inspectDataFor(readId,clean))}); }
+  /** @param {unknown} error */
+  function expires(error) {if(error instanceof AccessError && error.kind === "authentication") {close();return true;}return false;}
+  async function load() {
+    if(closed || occupied || (state.tag !== "loading" && state.tag !== "reading" && !(state.tag === "incompatible" && !state.edit))) return false;
+    const mine=generation,ticket=++sequence;active?.abort();active=new AbortController();state={tag:"loading"};
+    try {const value=await client.read(readId,active.signal);if(closed || mine !== generation || ticket !== sequence) return false;state={tag:"reading",snapshot:snapshot(value)};return true;}
+    catch(error) {if(!closed && mine === generation && ticket === sequence && !expires(error)) state={tag:"incompatible",edit:undefined,newBase:undefined,message:"Leitura indisponível. Tente novamente."};return false;}
+  }
+  /** Begin/replace an abstract draft only after an explicit, checked read.
+   * @param {string} id @param {unknown} draft @param {string | undefined} identity
+   */
+  function begin(id,draft,identity=undefined) {
+    if(closed || occupied || state.tag !== "reading") return false;
+    const clean=capture(draft), base=state.snapshot;
+    const command=Object.freeze({id,version:safeVersion(base.version),draft:clean,identity});
+    client.prepare(command);
+    sequence++;active?.abort();observed=undefined;minimum=base.version;
+    state={tag:"draft",edit:Object.freeze({base,draft:clean,command})};return true;
+  }
+  /** Polls can only record a separate observation while a draft exists.
+   * @param {unknown} value
+   */
+  function poll(value) {
+    if(closed || occupied || state.tag === "pending" || (state.tag !== "reading" && state.tag !== "draft")) return false;
+    const fresh=snapshot(value);
+    if(state.tag === "reading") {
+      if(fresh.version < state.snapshot.version) return false;
+      if(fresh.version === state.snapshot.version && JSON.stringify(fresh.value) !== JSON.stringify(state.snapshot.value)) throw new Error("Request refused.");
+      state={tag:"reading",snapshot:fresh};
+    } else {
+      if(fresh.version < state.edit.base.version || (observed && fresh.version < observed.version)) return false;
+      if(fresh.version === state.edit.base.version && JSON.stringify(fresh.value) !== JSON.stringify(state.edit.base.value)) throw new Error("Request refused.");
+      observed=fresh;
+    }
+    return true;
+  }
+  /** Readback never attributes a higher version to a lost command. */
+  async function reconcile() {
+    if(closed || occupied || !["success","conflict","unknown","uncertain"].includes(state.tag)) return false;
+    const prior=state;
+    if(prior.tag !== "success" && prior.tag !== "conflict" && prior.tag !== "unknown" && prior.tag !== "uncertain") return false;
+    state={...prior,newBase:undefined,message:prior.tag === "success" ? "Salva; visualização ainda não atualizada." : prior.message};
+    occupied=true;const mine=generation,ticket=++sequence;active=new AbortController();
+    try {
+      const value=await client.read(readId,active.signal);
+      if(closed || mine !== generation || ticket !== sequence) return false;
+      const fresh=snapshot(value), floor=prior.tag === "success" ? prior.version : prior.edit?.base.version;
+      if(fresh.version < minimum || (floor !== undefined && fresh.version < floor)) throw new Error("Request refused.");
+      state={...prior,newBase:fresh,message:prior.tag === "success" ? "Salva; visualização atualizada." : prior.message};return true;
+    } catch(error) {if(!closed && mine === generation && ticket === sequence) expires(error);return false;}
+    finally {if(mine === generation && ticket === sequence) {occupied=false;active=undefined;}}
+  }
+  /** Confirmed content and its base travel as one frozen command. */
+  async function confirm() {
+    if(closed || occupied || (state.tag !== "draft" && state.tag !== "busy")) return false;
+    const edit=state.edit;if(!edit) return false;
+    client.prepare(edit.command);
+    occupied=true;sequence++;active?.abort();active=new AbortController();const mine=generation,ticket=sequence;
+    state={tag:"pending",edit};
+    try {
+      const result=await client.mutate(edit.command,active.signal);
+      if(closed || mine !== generation || ticket !== sequence) return false;
+      if(result.version !== undefined) safeVersion(result.version);
+      minimum=result.version ?? edit.base.version;
+      if(result.kind === "authentication") {close();return false;}
+      if(result.kind === "success") {
+        if(result.version !== edit.base.version+1) throw new Error("Request refused.");
+        state={tag:"success",edit,version:result.version,newBase:undefined,message:result.message};
+      } else state={tag:result.kind,edit,newBase:undefined,message:result.message};
+    } catch(error) {
+      if(closed || mine !== generation || ticket !== sequence || expires(error)) return false;
+      state={tag:"unknown",edit,newBase:undefined,message:"Resultado desconhecido. Releia o estado antes de decidir."};
+    } finally {if(mine === generation && ticket === sequence) {occupied=false;active=undefined;}}
+    if(!closed) await reconcile();
+    return !closed;
+  }
+  // Abort only ends waiting locally; it does not assert server cancellation.
+  function cancel() {
+    if(closed || !occupied) return false;
+    if(state.tag === "pending") {
+      const edit=state.edit;sequence++;active?.abort();active=undefined;occupied=false;
+      state={tag:"unknown",edit,newBase:undefined,message:"Resultado desconhecido. Releia o estado antes de decidir."};return true;
+    }
+    return false;
+  }
+  /** Explicit human review is required to choose a conflict's separate base.
+   * @param {unknown} draft
+   */
+  function review(draft) {
+    if(closed || occupied || state.tag !== "conflict" || !state.newBase || !state.edit) return false;
+    const edit=state.edit, base=state.newBase, clean=capture(draft);
+    const command=Object.freeze({...edit.command,version:safeVersion(base.version),draft:clean});
+    client.prepare(command);state={tag:"draft",edit:Object.freeze({base,draft:clean,command})};observed=undefined;return true;
+  }
+  function finish() {
+    if(closed || occupied || state.tag !== "success" || !state.newBase) return false;
+    state={tag:"reading",snapshot:state.newBase};observed=undefined;return true;
+  }
+  /** @param {unknown} draft */
+  function change(draft) {
+    if(closed || occupied || state.tag !== "draft") return false;
+    const edit=state.edit, clean=capture(draft), command=Object.freeze({...edit.command,draft:clean});
+    client.prepare(command);state={tag:"draft",edit:Object.freeze({...edit,draft:clean,command})};return true;
+  }
+  function discard() {
+    if(closed || occupied || state.tag !== "draft") return false;
+    state={tag:"reading",snapshot:state.edit.base};observed=undefined;return true;
+  }
+  return Object.freeze({load,begin,poll,confirm,cancel,reconcile,review,finish,change,discard,close,
+    getState:()=>Object.freeze(state),getObservation:()=>observed});
 }
 
 

@@ -1,6 +1,6 @@
 # Fase 8 — matriz de rastreabilidade normativa
 
-**Estado:** aprovada; Etapas 1–4 publicadas; Etapa 5 concluída. **Atualização:** 2026-09-13.
+**Estado:** aprovada; Etapas 1–5 publicadas; Etapa 6 concluída. **Atualização:** 2026-09-13.
 **Fonte normativa integral:** [PHASE-8-SPEC.md](PHASE-8-SPEC.md), aprovada
 integralmente, com decisões [D-061 a D-064](DECISIONS.md#d-061--ui-administrativa-embarcada-opt-in-e-na-mesma-origem).
 
@@ -12,15 +12,15 @@ não dispensa os testes específicos. A fundação da Etapa 2 está implementada
 requisitos que atravessam etapas continuam parcialmente pendentes. Nenhum gate
 de navegador/HTTP ou fluxo funcional é inferido desses testes de fundação.
 
-A Etapa 5 foi autorizada após revisão e publicação da Etapa 4. As Etapas 6–9
+A Etapa 6 foi autorizada após revisão e publicação da Etapa 5. As Etapas 7–9
 continuam sem autorização. A tabela normativa mantém os componentes previstos;
 o quadro de entrega identifica quais já existem, sem antecipar APIs.
 As seções 1–2 e 8 também fundamentam D-061–D-064; a seção 7 fixa ordem, aceite
 e rollback. Evidências: [Etapa 1, histórica](PHASE-8-STAGE-1-VALIDATION.md) e
 [Etapa 2, histórica](PHASE-8-STAGE-2-VALIDATION.md) e
 [Etapa 3, histórica](PHASE-8-STAGE-3-VALIDATION.md) e
-[Etapa 4, histórica](PHASE-8-STAGE-4-VALIDATION.md). Rodada atual:
-[Etapa 5](PHASE-8-STAGE-5-VALIDATION.md).
+[Etapa 4, histórica](PHASE-8-STAGE-4-VALIDATION.md). [Etapa 5, histórica](PHASE-8-STAGE-5-VALIDATION.md). Rodada atual:
+[Etapa 6](PHASE-8-STAGE-6-VALIDATION.md).
 
 ## Gates acumulados
 
@@ -207,3 +207,23 @@ Medição final da Etapa 5: 99 testes Node e 78 testes de navegador aprovados;
 3.804 Python coletados, 3.796 aprovados e oito skips POSIX, sem DSN ausente
 ou deselects. PostgreSQL 16.15 real; typecheck, Ruff/format/mypy strict, build
 duplo/193 termos e wheel/sdist isolados aprovados. Tempos e hashes na evidência.
+
+## Entrega da Etapa 6
+
+Concluída; gates acumulados aprovados em `PHASE-8-STAGE-6-VALIDATION.md`. A Etapa 5
+foi publicada sem emenda em `0d42f5d0d9a835177dd1c5e4a6c608161f585896`.
+Os quadros anteriores são evidências históricas. As seis telas e a fronteira
+HTTP continuam intactas. Não há controles de escrita, adoção, validação pela
+tela, formulários, CRUD, reorder ou edição de database/SQL nesta entrega.
+
+| IDs | Componente/contrato concreto | Prova nesta etapa | Limite preservado |
+|---|---|---|---|
+| F8-018, 026, 053, 055 | `commands.js`, `reader.js`: inteiros seguros, próxima versão, versões coerentes e binding privado de current_revision | `commands.test.js`: matriz de tipos/limites, overflow e envelopes contraditórios; contraprovas de `Flow`, `Command` e `Outcome` em `protocol.test.js` | Schemas Python e runtime inalterados |
+| F8-019–021, 061 | `coordinator.js`: base/rascunho/comando congelados, uma pendência, observação separada, revisão humana e releitura | `coordinator.test.js`: duplo clique, concorrência, polling, busy, conflito, durabilidade, resposta perdida, sucesso com releitura falha, invalidação de base após segunda releitura falha, duas sessões e respostas fora de ordem | Integração dos controles e efeitos reais das escritas nas Etapas 7–9 |
+| F8-020–021, 023, 025, 031 | `transport.js` e `commands.js`: catálogo privado, projeção fechada, envelopes antes de mapear por mensagens privadas | Dez operações em `commands.test.js`, DELETE JSON, opções Fetch, zero requests antes de verificar corpo/destino/identidade, erro/timeout/JSON/media type em `coordinator.test.js` | Sem PUT /config, sem interpolação livre, sem retry/rollback automático |
+| F8-026–028, 034, 036 | Cópia profunda congelada; protótipos/accessors/chaves desconhecidas recusados; identidade canônica derivada de modelo privado | Projeções protegidas, token no corpo, getters/ciclos/símbolos, identidade hostil, DTOs imutáveis; expiração do transporte limpa o coordenador | Token somente na closure, nenhuma edição de IDs/revision/proteções |
+| F8-019–022, 028, 058–061 | `browser/coordinator.spec.js`: componentes reais do ESM com transporte controlado | Oito cenários de desfecho e quatro casos de cleanup nos três engines; servidor/harness real permanece readonly e exige zero efeito/auditoria | Nenhuma mutação chega ao backend nesses casos; regressões reais de leitura/HTTP permanecem acumuladas |
+| F8-004–005, 029–030, 037–051, 065 | Python de produto, startup, HTTP, renderer e pins preservados | Suíte Python/PostgreSQL integral, matriz HTTP, fixture off e regressões de leitura/lifecycle; diff de escopo | BFCache Firefox/WebKit com a limitação já aceita; fechamento final na Etapa 9 |
+| F8-023–027, 050, 052–057, 062–063 | Build duplo, manifesto/modelos reancorados e inspeção pública sem exceções | npm ci, checkJs strict/noEmit, Node, `node --check` no ESM final, 193 termos, wheel/sdist fora do checkout e sem Node/npm | Não publicar Etapa 6 nem iniciar Etapa 7 nesta rodada |
+
+Medição final da Etapa 6: 176 testes Node e 114 testes de navegador aprovados; 3804 Python coletados, 3796 aprovados e oito skips POSIX. PostgreSQL 16.15 real, sem deselect/skip por DSN. Typecheck, build duplo/193 termos, pacote isolado e Ruff/format/mypy strict aprovados. Evidência detalhada em `PHASE-8-STAGE-6-VALIDATION.md`.
