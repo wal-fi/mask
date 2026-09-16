@@ -115,7 +115,7 @@ export function mount(root) {
     if(sheet?.tag === "success") {
       for(const control of view.controls) {
         if(control.type !== "read" || typeof control.label !== "string") continue;
-        const section=element("section");section.append(element("h3",control.label),plain(at(sheet.value,control.path)));panel.append(section);
+        const section=element("section");section.append(element("h3",control.label),plain(at(access.client.design().displayed(view.call,sheet.value),control.path)));panel.append(section);
       }
       notice.textContent="Respondendo · Última leitura: "+new Date(sheet.time).toLocaleTimeString();
       editor?.attach(panel,view.id,sheet.value);
@@ -123,7 +123,7 @@ export function mount(root) {
       notice.textContent=sheet.stale ? "Leitura desatualizada. Tente novamente." : "Leitura indisponível. Tente novamente.";
       if(sheet.prior?.tag === "success") {
         for(const control of view.controls) if(control.type === "read" && typeof control.label === "string") {
-          const section=element("section");section.append(element("h3",control.label),plain(at(sheet.prior.value,control.path)));panel.append(section);
+          const section=element("section");section.append(element("h3",control.label),plain(at(access.client.design().displayed(view.call,sheet.prior.value),control.path)));panel.append(section);
         }
       }
     } else notice.textContent="Carregando…";

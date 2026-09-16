@@ -147,6 +147,52 @@ class Faults:
         self.patches.close()
 
 
+def check_batch(route: str, request: dict[str, Any], before: bytes, path: Path) -> None:
+    """Preservacao exata independente da auditoria e do envelope."""
+    if route.endswith((":reorder", "/database", "/sql")):
+        old, new = yaml.safe_load(before), yaml.safe_load(path.read_bytes())
+        assert old["exceptions"] == new["exceptions"]
+        assert old["sql"]["allowed_pg_functions"] == new["sql"]["allowed_pg_functions"]
+        if route.endswith(":reorder"):
+            assert set(request) == {"expected_revision", "rule_ids"}
+            assert new["masking"] == [
+                next(item for item in old["masking"] if item["id"] == key)
+                for key in request["rule_ids"]
+            ]
+            assert old["database"] == new["database"] and old["sql"] == new["sql"]
+        else:
+            assert old["masking"] == new["masking"]
+            if route.endswith("/database"):
+                assert set(request) == {
+                    "expected_revision",
+                    "statement_timeout_ms",
+                    "max_rows",
+                }
+                assert old["sql"] == new["sql"]
+            else:
+                assert set(request) == {"expected_revision", "denied_functions"}
+                assert old["database"] == new["database"]
+                assert set(old["sql"]["denied_functions"]) <= set(new["sql"]["denied_functions"])
+
+
+def operation_target(route: str, method: str) -> tuple[str, str]:
+    """Identidade fechada da operacao observada pelo harness."""
+    if route.endswith(":adopt"):
+        operation, target = "adopt", "config"
+    elif route.endswith(":validate"):
+        operation, target = "validate", "config"
+    elif route.endswith(":reorder"):
+        operation, target = "rules_reorder", "rule"
+    elif route.endswith("/database"):
+        operation, target = "database_put", "database"
+    elif route.endswith("/sql"):
+        operation, target = "sql_put", "sql"
+    else:
+        target = "rule" if "/rules" in route else "exception"
+        operation = target + "_" + {"POST": "create", "PUT": "update", "DELETE": "delete"}[method]
+    return operation, target
+
+
 def check_exchange(probe: EditProbe, path: Path, exchange: Exchange) -> None:
     route, method = exchange.route, exchange.method
     before, events = exchange.before, exchange.events
@@ -157,13 +203,7 @@ def check_exchange(probe: EditProbe, path: Path, exchange: Exchange) -> None:
     assert ".bak." not in output.decode() and str(path.parent) not in output.decode()
     assert len(probe.events) == events + 1
     event = probe.events[-1]
-    if route.endswith(":adopt"):
-        operation, target = "adopt", "config"
-    elif route.endswith(":validate"):
-        operation, target = "validate", "config"
-    else:
-        target = "rule" if "/rules" in route else "exception"
-        operation = target + "_" + {"POST": "create", "PUT": "update", "DELETE": "delete"}[method]
+    operation, target = operation_target(route, method)
     assert event["operation"] == operation and event["target_kind"] == target
     if route.endswith(":validate"):
         assert "expected_revision" not in request and "revision" not in request
@@ -180,6 +220,7 @@ def check_exchange(probe: EditProbe, path: Path, exchange: Exchange) -> None:
                 assert not {"id", "position", "revision"}.intersection(request[member])
         if status == 200 or response.get("applied"):
             assert response["applied"] is True
+            check_batch(route, request, before, path)
             after = response["revision"] if status == 200 else response["current_revision"]
             assert after == request["expected_revision"] + 1
             assert yaml.safe_load(path.read_bytes())["revision"] == after
@@ -188,7 +229,7 @@ def check_exchange(probe: EditProbe, path: Path, exchange: Exchange) -> None:
             assert event["outcome"] == ("success" if status == 200 else "error")
             assert event["revision_before"] == request["expected_revision"]
             assert event["revision_after"] == after
-            if method in {"PUT", "DELETE"}:
+            if method in {"PUT", "DELETE"} and target in {"rule", "exception"}:
                 assert event["target_id"] == route.rsplit("/", 1)[1]
         elif not response.get("applied"):
             assert path.read_bytes() == before
@@ -212,6 +253,12 @@ def instrument(probe: EditProbe, path: Path) -> None:
             permitted = route in {"/admin/v1/config:adopt", "/admin/v1/config:validate"}
             permitted |= route in {"/admin/v1/rules", "/admin/v1/exceptions"}
             permitted |= route.startswith(("/admin/v1/rules/rul_", "/admin/v1/exceptions/exc_"))
+            if os.environ.get("MASKGW_BROWSER_BATCH") == "1":
+                permitted |= route in {
+                    "/admin/v1/rules:reorder",
+                    "/admin/v1/database",
+                    "/admin/v1/sql",
+                }
             assert permitted
             headers = dict(scope["headers"])
             assert headers.get(b"origin") == b"http://" + headers[b"host"]
@@ -268,6 +315,29 @@ def check_command(command: str, app: Application, path: Path, original: bytes) -
     elif command == "backup":
         backups = list(path.parent.glob("*.bak.*"))
         assert len(backups) == 1 and backups[0].read_bytes() == original
+    elif command == "batch-before":
+        result = _mcp_call(
+            app,
+            "SELECT upper('value') AS protected_value, 'kept'::text AS keep "
+            "FROM generate_series(1,3)",
+        )
+        assert not result.is_error
+        payload = result.structured_content
+        assert payload is not None and payload["rows"] == [["first", "kept"]] * 3
+    elif command == "batch-effects":
+        document = app.admin.snapshot().document
+        result = _mcp_call(
+            app,
+            "SELECT 'original'::text AS protected_value, 'kept'::text AS keep "
+            "FROM generate_series(1,3)",
+        )
+        payload = result.structured_content
+        assert payload is not None
+        assert payload["rows"] == [["second", "kept"]]
+        assert document.database.statement_timeout_ms == 100 and document.database.max_rows == 1
+        assert document.sql.denied_functions == ["lower", "UPPER", "Straße"]
+        denied = _mcp_call(app, "SELECT upper('value') AS protected_value")
+        assert denied.is_error
     elif command == "masking":
         result = _mcp_call(app, "SELECT 'original'::text AS protected_value")
         payload = result.structured_content
@@ -299,6 +369,22 @@ def main() -> int:
         with TemporaryDirectory(prefix="maskgw-browser-edit-") as directory:
             path = Path(directory) / "masking.yaml"
             original = b"# original comment\nmasking: []\nexceptions: []\n"
+            if os.environ.get("MASKGW_BROWSER_BATCH") == "1":
+                original = yaml.safe_dump(
+                    {
+                        "masking": [
+                            {
+                                "match": "protected_value",
+                                "mode": "contains",
+                                "transformer": "fixed",
+                                "config": {"value": value},
+                            }
+                            for value in ("first", "second")
+                        ],
+                        "exceptions": [{"match": "keep", "mode": "exact"}],
+                        "sql": {"denied_functions": ["lower"]},
+                    }
+                ).encode()
             path.write_bytes(original)
             instrument(probe, path)
             port = free_port()

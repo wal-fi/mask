@@ -99,6 +99,66 @@ export function author(source) {
       return names.length === wanted.length && wanted.every(n=>names.includes(n));
     })).map(e=>word(e.name));
   }
+  /** Display offsets never change snapshots or transport data.
+   * @param {unknown} key @param {unknown} value @returns {unknown} */
+  function display(key,value) {
+    const node=shape(key);
+    if(node.type === "nullable") return value === null ? null : display(node.item,value);
+    if(node.type === "list") {if(!Array.isArray(value)) throw new Error("Request refused.");return value.map(v=>display(node.item,v));}
+    if(node.type !== "object") return value;
+    const raw=authorRecord(value), offsets=slot(key,"order");
+    return Object.fromEntries(fields(key).filter(f=>Object.hasOwn(raw,word(f.name))).map(f=>{
+      const name=word(f.name), item=raw[name];return [name,offsets.includes(name) && typeof item === "number" ? item+1 : display(f.ref,item)];
+    }));
+  }
+  const batches=views.flatMap(view=>{
+    const action=calls.find(c=>Array.isArray(view.actions) && view.actions.includes(c.id) && c.identity === null && ["move","replace","append"].includes(word(c.operation)));
+    if(!action) return [];
+    const controls=rows(view.controls).filter(c=>c.model === action.input && c.type !== "read");
+    if(!controls.length) throw new Error("Request refused.");
+    return [{id:word(view.id),call:word(action.id),model:action.input,operation:word(action.operation),label:action.operation === "replace" ? "Editar limites" : word(controls[0]?.label),controls}];
+  });
+  /** @param {string} id */
+  function batch(id) {const p=batches.find(v=>v.id === id);if(!p) throw new Error("Request refused.");return p;}
+  /** @param {Record<string,unknown>} control */
+  function targetOf(control) {return trail(rows(control.projections)[0]?.target);}
+  /** @param {string} id @param {unknown} base */
+  function initial(id,base) {
+    const p=batch(id), doc=documentValue(base);
+    return capture(Object.fromEntries(p.controls.map(c=>{
+      const value=at(doc,targetOf(c));
+      if(p.operation === "move") {const q=profile(id);return [word(trail(c.path)[0]),rows(value).map(v=>v[q.identity])];}
+      return [word(trail(c.path)[0]),p.operation === "append" ? [] : value];
+    })));
+  }
+  /** @param {string} id @param {unknown} base @param {unknown} value */
+  function checkedBatch(id,base,value) {
+    const p=batch(id), clean=authorRecord(capture(value)), keys=p.controls.map(c=>word(trail(c.path)[0]));
+    if(Object.keys(clean).length !== keys.length || !keys.every(k=>Object.hasOwn(clean,k))) throw new Error("Request refused.");
+    const version=slot(p.model,"version")[0];if(!version) throw new Error("Request refused.");
+    lens.inspectData(p.model,{...clean,[version]:1});
+    if(!consented(base)) throw new Error("Request refused.");
+    if(p.operation === "move") {
+      const key=word(keys[0]), order=clean[key], original=at(initial(id,base),[key]);
+      if(!Array.isArray(order) || !Array.isArray(original) || order.length !== original.length || new Set(order).size !== order.length || !original.every(v=>order.includes(v))) throw new Error("Request refused.");
+    }
+    if(p.operation === "append" && !keys.every(k=>Array.isArray(clean[k]) && clean[k].length > 0)) throw new Error("Request refused.");
+    return capture(clean);
+  }
+  /** @param {string} id @param {unknown} base @param {unknown} value */
+  function batchCandidate(id,base,value) {
+    const p=batch(id), clean=authorRecord(checkedBatch(id,base,value)), doc=documentValue(base);
+    let next={...doc};
+    for(const control of p.controls) {
+      const target=targetOf(control), key=word(trail(control.path)[0]);let item=clean[key];
+      if(p.operation === "move") {const q=profile(id), original=items(id,base);if(!Array.isArray(item)) throw new Error("Request refused.");item=item.map(v=>original.find(row=>at(row,[q.identity]) === v));}
+      if(p.operation === "append") {const original=at(doc,target);if(!Array.isArray(original) || !Array.isArray(item)) throw new Error("Request refused.");item=[...original,...item];}
+      if(target.length === 1) next={...next,[word(target[0])]:item};
+      else if(target.length === 2) next={...next,[word(target[0])]:{...authorRecord(next[word(target[0])]),[word(target[1])]:item}};
+      else throw new Error("Request refused.");
+    }
+    const result=capture(omit(documentField.ref,next,true));lens.inspectData(checkCall.input,result);return result;
+  }
   /** @param {unknown} base @param {{page:string,operation:"create"|"replace"|"delete",value:unknown,identity:string|undefined} | undefined} edit */
   function candidate(base,edit=undefined) {
     const doc=documentValue(base);let draft={...doc};
@@ -117,7 +177,17 @@ export function author(source) {
   }
   /** @param {unknown} value */
   function consented(value) {lens.inspectData(homeCall.output,value);return lens.bound(homeCall.output,value,"consent")[0] === true;}
-  return Object.freeze({profiles,profile,items,content,defaults,checkedContent,available,candidate,consented,shape,fields,editors,
+  return Object.freeze({
+    /** @param {string} id @param {unknown} value */ displayed:(id,value)=>{const c=calls.find(c=>c.id === id);if(!c) throw new Error("Request refused.");lens.inspectData(c.output,value);return display(c.output,value);},
+    /** @param {string} id @param {unknown} base @param {unknown} value */ batchKnown:(id,base,value)=>{
+      const p=batch(id);if(p.operation === "move") return [];
+      const clean=authorRecord(checkedBatch(id,base,value));
+      return p.controls.flatMap(c=>{
+        const target=targetOf(c), name=word(c.label), data=clean[word(trail(c.path)[0])], current=at(documentValue(base),target);
+        return p.operation === "append" && Array.isArray(data) && Array.isArray(current) ? data.map((_v,i)=>({path:[...target,current.length+i].join("."),label:name})) : [{path:target.join("."),label:name}];
+      });
+    },
+    batches,batch,initial,checkedBatch,batchCandidate,profiles,profile,items,content,defaults,checkedContent,available,candidate,consented,shape,fields,editors,
     /** @param {string} id @param {unknown} value */ listed:(id,value)=>{const p=profile(id);lens.inspectData(p.output,value);return rows(at(value,[p.listing]));},
     /** @param {string} id @param {unknown} value */ changeable:(id,value)=>{const p=profile(id);lens.inspectData(p.output,value);return lens.bound(p.output,value,"consent")[0] === true;},
     home:word(home.id),read:word(home.call),registry:word(registryCall.id),check:word(checkCall.id),

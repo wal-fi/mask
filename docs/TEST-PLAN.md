@@ -1191,3 +1191,33 @@ em 137 arquivos, tipagem, build duplo/193 termos e wheel/sdist isolados verdes.
 A falha inicial de startup MCP e o diagnóstico/repetição integral posteriores
 estão discriminados em `PHASE-8-STAGE-7-VALIDATION.md`. Não publicar esta etapa
 nem iniciar a Etapa 8 sem revisão e autorização.
+
+## Fase 8 — Etapa 8
+
+- `frontend/test/batches.test.js`: conjunto exato dos três perfis, permutações
+  completas/incompletas/duplicadas/estrangeiras/malformadas/obsoletas, captura
+  segura e imutável, preservação de exceptions, conteúdo e campos protegidos;
+  inteiros/limites/extras, corpo database completo, SQL literal somente aditivo
+  e posição apresentada sem modificar DTO.
+- `frontend/browser/batches.spec.js`: três engines reais; teclado/filtro, revisão
+  e cancelamento de reorder, abas concorrentes e remoção de ID, validação
+  explícita, corpos dedicados, tipos inválidos sem request, diferenças de caixa
+  e Unicode com releitura autoritativa, XSS no reorder, 320 px e erros/lifecycle.
+- `tests/browser_edit_server.py`: apenas o harness aceita as três ações extras
+  quando sua flag de teste é explícita; verifica corpo, revision, documento,
+  IDs, exceptions, campos protegidos e auditoria. Efeitos reais via MCP:
+  primeira regra vencedora, limite de linhas e negação SQL, inclusive após
+  restart. Fault injection fica em stdin/patches do teste, sem rota de produto.
+- Gates acumulados: npm ci, tipagem, Node, dois builds idênticos, 193 termos
+  privados, wheel/sdist isolados sem Node/npm, Chromium/Firefox/WebKit fixados,
+  pytest completo com PostgreSQL 16 real e pilha temporária Windows 64 MiB,
+  Ruff/format/mypy strict e diff check. Sem deselect, xfail ou skip criado.
+
+Resultados e limitações medidos em `docs/PHASE-8-STAGE-8-VALIDATION.md`. Não
+publicar o commit desta etapa nem iniciar a Etapa 9 sem revisão/autorização.
+
+O harness de navegador usa `replies.js` para respostas delimitadas por linha,
+com testes de chunks fragmentados/agrupados, EOF parcial, limite e fechamento.
+Os marcadores sanitizados distinguem ações, fechamento do browser e exit do
+subprocesso, sem serializar conteúdo administrativo. Esses testes são privados
+e não integram wheel/sdist, bundle ou rotas HTTP.

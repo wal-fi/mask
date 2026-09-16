@@ -540,7 +540,7 @@ suíte adversarial administrativa; as onze etapas da Fase 7 estão encerradas.
 
 ## Fase 8 — sessão, coordenador e edição granular
 
-**Aprovada; Etapas 1–6 publicadas; Etapa 7 concluída.** Contrato integral em
+**Aprovada; Etapas 1–7 publicadas; Etapa 8 concluída.** Contrato integral em
 `docs/PHASE-8-SPEC.md`, decisões D-061–D-064 e rastreabilidade em
 `docs/PHASE-8-TRACEABILITY.md`.
 
@@ -572,8 +572,8 @@ geração e aborta requests; callbacks antigos não restauram estado.
 `frontend/` contém build/testes privados. O build deriva os onze contratos e as
 dez escritas permitidas do catálogo, sem incluir PUT /config na UI. A gramática
 continua limitada, e 193 entradas privadas continuam ausentes dos bytes públicos.
-Na Etapa 7, JS, CSS, apresentação, nomes de modelos, catálogo, manifesto e âncora
-são regenerados; HTML, gramática, contratos e vocabulário não mudam. Os quatro recursos pertencem ao pacote Python; o manifesto
+Na Etapa 8, JS, CSS, apresentação, manifesto e âncora são regenerados; HTML,
+nomes de modelos, catálogo Python, gramática, contratos e vocabulário não mudam. Os quatro recursos pertencem ao pacote Python; o manifesto
 é interno. `resources.py` mantém leitura limitada, UTF-8, hashes, catálogo e
 modelos verificados; `protocol.py` mantém gramática, referências, ciclos e
 limites independentes do validador JavaScript. Fontes, tipos, fixtures e
@@ -585,7 +585,7 @@ sem endpoint ou opção no produto. Logs são inspecionados em memória sem
 persistir registros. O harness de leitura continua exigindo zero auditoria/escritas/efeitos.
 O novo harness de edição confere cada operação, alvo, outcome e revisions,
 com persistência/runtime reais e controles de falha somente por stdin.
-Etapas 8–9 e publicação da Etapa 7 exigem autorização. Evidência: `docs/PHASE-8-STAGE-7-VALIDATION.md`.
+Etapa 9 e publicação da Etapa 8 exigem autorização. Evidência: `docs/PHASE-8-STAGE-8-VALIDATION.md`.
 
 `commands.js` interpreta o catálogo autenticado e usa os modelos fechados como
 plano de seleção/cópia e construção de objetos/listas. A revision-base entra
@@ -607,8 +607,37 @@ coordenador por edição e o libera sem encerrar o transporte compartilhado.
 Token e base/rascunho permanecem somente em memória; polling da tela suspende
 enquanto houver edição. `author.js` interpreta os controles/modelos privados,
 constrói candidatos sem IDs/revision e confronta os oito editores com o registry.
-Reorder, database e SQL continuam sem controles de escrita.
+Os perfis da Etapa 8 acrescentam reorder, database e SQL aditivo ao mesmo
+coordenador, conforme a seção seguinte.
 
 Toda reconciliação invalida primeiro a base de releitura anterior. Uma falha
 posterior não permite review/finish sobre um snapshot que acabou de ficar
 desatualizado. O snapshot-base e o rascunho da edição continuam preservados.
+
+## Fase 8 — Etapa 8: reorder, limites e inclusões
+
+Os mesmos `author.js` e `workbench.js` derivam três perfis adicionais de
+modelos, chamadas e projeções da apresentação privada: permutação, substituição
+dos dois limites e inclusão em lista. Não há novo contrato de transporte ou
+componente no servidor. As 19 chamadas, os 110 modelos, a gramática, catálogo
+Python e inventários HTTP permanecem iguais. Quatro controles privados foram
+adicionados; total de 48.
+
+Reorder guarda a permutação inteira de IDs da base. A busca filtra somente a
+exibição; mover para cima/baixo troca vizinhos na ordem global. A revisão mostra
+o candidato inteiro, seguida de confirmação. Cancelar e descartar deixam a
+ordem-base intacta. Posições apresentadas são 1-based por cópia de exibição
+orientada pelo binding `order`; os DTOs e corpos mantêm a semântica da API.
+
+Database projeta os dois campos na raiz do corpo dedicado, sempre completos.
+SQL mantém a lista declarada somente leitura e envia somente os novos nomes,
+sem normalização semântica no navegador. A validação explícita concatena base
+e inclusões no candidato, preservando os campos protegidos. O backend confirma
+deduplicação e normalização na releitura.
+
+Todas as ações compartilham o coordenador das Etapas 6–7, a revision-base e
+uma única pendência. Conflito conserva o rascunho e admite nova base somente
+por gesto de revisão. Se a base nova tiver outro conjunto de IDs, a permutação
+antiga é recusada e permanece disponível para leitura/descarte. Não há merge
+automático. Resultado desconhecido e durabilidade incerta bloqueiam novas
+escritas nessa sessão. A Etapa 9 não foi iniciada.

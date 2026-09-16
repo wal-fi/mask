@@ -295,6 +295,16 @@ views[1]["controls"].append(control("confirm", names["AdoptRequest"],
     ["confirm_comment_loss"],
     "A adoção atribui IDs e publica a revision 1. Comentários e formatação podem ser perdidos. O backend guarda backup dos bytes originais. Não há mudança intencional na política de masking."))
 views[1]["controls"].append(control("confirm", names["AdoptRequest"], [], "Adotar configuração"))
+# Stage 8: closed projections; wire names remain private.
+for index, request, kind, key, label, target, projection in (
+    (2, "RuleReorderRequest", "list", "rule_ids", "Reordenar regras", ["masking"], "permute"),
+    (4, "DatabaseWriteRequest", "integer", "statement_timeout_ms", "statement_timeout_ms", ["database", "statement_timeout_ms"], "replace"),
+    (4, "DatabaseWriteRequest", "integer", "max_rows", "max_rows", ["database", "max_rows"], "replace"),
+    (5, "SqlWriteRequest", "list", "denied_functions", "Adicionar funções negadas", ["sql", "denied_functions"], "insert"),
+):
+    item = control(kind, names[request], [key], label)
+    item["projections"] = [{"type": projection, "source": "draft", "paths": [], "target": target}]
+    views[index]["controls"].append(item)
 editors = []
 for i, spec in enumerate(build_default_registry().specs()):
     properties = {

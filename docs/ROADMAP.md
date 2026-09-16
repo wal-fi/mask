@@ -347,19 +347,19 @@ novo; todos os cenários `BLOCKED`.
 
 ## FASE 8 — Front-end
 
-**STATUS: APROVADA; ETAPAS 1–6 PUBLICADAS; ETAPA 7 CONCLUÍDA.**
-A Etapa 6 foi revisada e publicada sem emenda em
-`db33fa770e1b675ee23ad554a84c93a7e9e2f358`; o fetch confirmou master, HEAD igual
+**STATUS: APROVADA; ETAPAS 1–7 PUBLICADAS; ETAPA 8 CONCLUÍDA.**
+A Etapa 7 foi revisada e publicada sem emenda em
+`57cc7522642d3fe3dddd10187b996ba71fc38e3f`; o fetch confirmou master, HEAD igual
 a origin/master, árvore limpa e 0/0, com autoria e trailer preservados.
-A autorização atual é exclusivamente a Etapa 7: adoção legada, validação
-explícita e CRUD granular de regras/exceptions. Reorder, edição de database/SQL,
-Etapas 8–9 e push da Etapa 7 não estão autorizados. Evidência: `docs/PHASE-8-STAGE-7-VALIDATION.md`.
+A autorização atual é exclusivamente a Etapa 8: reorder de regras, edição de
+database e SQL estritamente aditivo. A Etapa 9 e o push da Etapa 8 não estão
+autorizados. Evidência: `docs/PHASE-8-STAGE-8-VALIDATION.md`.
 
 Sessão explícita em memória, renderer declarativo de seis vistas,
 validação de DTOs/revisions e polling de status visível sem sobreposição.
 Token/estado são descartados no lifecycle; erros sanitizados e retry manual.
 Coordenador integrado aos controles de adoção, validação explícita e CRUD.
-Database/SQL continuam readonly; reorder e Etapas 8–9 não foram iniciados. Contrato em
+Reorder, database e SQL aditivo são o escopo desta rodada. Etapa 9 não iniciada. Contrato em
 `docs/PHASE-8-SPEC.md`, D-061–D-064 e `docs/PHASE-8-TRACEABILITY.md`.
 
 ---
@@ -375,8 +375,8 @@ alteração do transporte MCP.
 
 ## Estado atual
 
-Fase 8 aprovada; Etapa 7 concluída. A medição desta rodada está em
-`docs/PHASE-8-STAGE-7-VALIDATION.md`; os números abaixo
+Fase 8 aprovada; Etapa 8 concluída. A medição desta rodada está em
+`docs/PHASE-8-STAGE-8-VALIDATION.md`; os números abaixo
 registram o fechamento anterior da Fase 7.
 
 Fases 1 a 6.1 concluídas. **Fase 7 (Admin API) concluída**, com as onze etapas

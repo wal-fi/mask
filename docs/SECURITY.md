@@ -466,9 +466,9 @@ detalhados em `docs/FUTURE-HARDENING.md`:
 
 ## Fase 8 — fronteira, sessão e concorrência local
 
-**Aprovada; Etapas 1–6 publicadas; Etapa 7 concluída.** O contrato normativo
+**Aprovada; Etapas 1–7 publicadas; Etapa 8 concluída.** O contrato normativo
 integral está em `docs/PHASE-8-SPEC.md`, especialmente §§3.14–3.16, 4 e 5;
-a evidência desta rodada está em `docs/PHASE-8-STAGE-7-VALIDATION.md`.
+a evidência desta rodada está em `docs/PHASE-8-STAGE-8-VALIDATION.md`.
 
 Somente UI on instala quatro rotas, três exceções públicas raw/canônicas,
 origem exata e headers. Query não vazia nunca entrega recurso; a recusa segue
@@ -519,7 +519,8 @@ CRUD. Base/rascunho ficam em memória; validação usa projeção transitória s
 IDs/revision, conserva proteções e não salva nem testa conexão. Reasons só se
 associam a controles conhecidos, com texto privado fixo, sem detail remoto.
 Desconhecido/durabilidade incerta mantêm bloqueio de escritas na sessão, inclusive
-após descartar o diálogo. Etapas 8–9 permanecem futuras.
+após descartar o diálogo. A Etapa 8 amplia somente os controles descritos abaixo;
+a Etapa 9 permanece futura.
 CSP não protege contra navegador/extensão/processo privilegiado comprometidos.
 SQL, resultados, auditoria consultável, secrets editáveis, TLS, proxy, bind
 externo, serviços externos e expansão do MCP seguem excluídos. Findings antigos
@@ -541,3 +542,26 @@ releitura falha conserva a confirmação e informa visualização desatualizada.
 Conflito preserva rascunho/base e exige revisão de base nova separada; busy
 permite apenas tentativa manual. Logout/401/lifecycle fecham também o
 coordenador. Nenhum retry, rebase, rollback ou coordenação entre abas automático.
+
+## Fase 8 — Etapa 8
+
+Reorder aceita apenas a permutação completa e exata dos IDs da base autenticada.
+Não permite IDs extras, ausentes, duplicados, malformados ou uma permutação
+obsoleta sobre outra lista. A busca não produz nem ordena o payload. Database
+exige os dois inteiros literais nos intervalos normativos; booleanos, frações,
+coerções, valores inseguros e campos extras são recusados antes do transporte.
+SQL envia somente inclusões literais; `allowed_pg_functions` nunca integra
+mutações, nem como null. O candidato de validação conserva esse campo protegido
+e as exceptions da base; a autoridade de casefold/deduplicação continua Python.
+
+A confirmação é explícita, sem autosave, fila, retry, rebase ou rollback
+automático. Nenhum ID/revision/proteção efetiva é editável. Token e rascunhos
+continuam somente em memória; o lifecycle existente limpa o estado e impede
+ressurreição por respostas tardias. Busca, revisão e novos nomes usam somente
+texto e controles DOM, nunca HTML interpretado.
+
+Nenhuma rota, header, regra de origem/Host, exceção de autenticação, proxy,
+schema HTTP, persistência, runtime, auditoria ou MCP mudou. Os efeitos MCP
+comprovados pelo harness são testes da consequência das mutações HTTP; a UI
+não consulta nem executa SQL. A revisão final e os gates medidos constam em
+`docs/PHASE-8-STAGE-8-VALIDATION.md`. Etapa 9 permanece fora desta rodada.

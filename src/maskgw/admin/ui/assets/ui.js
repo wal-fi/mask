@@ -1038,7 +1038,7 @@ const layout={
   "title": "Presentation",
   "type": "object"
 };
-export const digest="58667c237b89912f66bd035457778be0bcb11ba730d44cefcca22fe5405f2825";
+export const digest="0ee31f73edd994ac98694ecfac36197e7bac3690879e28c7e459ce11accc9a43";
 /** @param {unknown} value */
 export function check(value) { return inspect(value,layout); }
 /** @param {unknown} item @returns {item is Record<string, unknown>} */
@@ -1365,6 +1365,66 @@ export function author(source) {
       return names.length === wanted.length && wanted.every(n=>names.includes(n));
     })).map(e=>word(e.name));
   }
+  /** Display offsets never change snapshots or transport data.
+   * @param {unknown} key @param {unknown} value @returns {unknown} */
+  function display(key,value) {
+    const node=shape(key);
+    if(node.type === "nullable") return value === null ? null : display(node.item,value);
+    if(node.type === "list") {if(!Array.isArray(value)) throw new Error("Request refused.");return value.map(v=>display(node.item,v));}
+    if(node.type !== "object") return value;
+    const raw=authorRecord(value), offsets=slot(key,"order");
+    return Object.fromEntries(fields(key).filter(f=>Object.hasOwn(raw,word(f.name))).map(f=>{
+      const name=word(f.name), item=raw[name];return [name,offsets.includes(name) && typeof item === "number" ? item+1 : display(f.ref,item)];
+    }));
+  }
+  const batches=views.flatMap(view=>{
+    const action=calls.find(c=>Array.isArray(view.actions) && view.actions.includes(c.id) && c.identity === null && ["move","replace","append"].includes(word(c.operation)));
+    if(!action) return [];
+    const controls=rows(view.controls).filter(c=>c.model === action.input && c.type !== "read");
+    if(!controls.length) throw new Error("Request refused.");
+    return [{id:word(view.id),call:word(action.id),model:action.input,operation:word(action.operation),label:action.operation === "replace" ? "Editar limites" : word(controls[0]?.label),controls}];
+  });
+  /** @param {string} id */
+  function batch(id) {const p=batches.find(v=>v.id === id);if(!p) throw new Error("Request refused.");return p;}
+  /** @param {Record<string,unknown>} control */
+  function targetOf(control) {return trail(rows(control.projections)[0]?.target);}
+  /** @param {string} id @param {unknown} base */
+  function initial(id,base) {
+    const p=batch(id), doc=documentValue(base);
+    return capture(Object.fromEntries(p.controls.map(c=>{
+      const value=at(doc,targetOf(c));
+      if(p.operation === "move") {const q=profile(id);return [word(trail(c.path)[0]),rows(value).map(v=>v[q.identity])];}
+      return [word(trail(c.path)[0]),p.operation === "append" ? [] : value];
+    })));
+  }
+  /** @param {string} id @param {unknown} base @param {unknown} value */
+  function checkedBatch(id,base,value) {
+    const p=batch(id), clean=authorRecord(capture(value)), keys=p.controls.map(c=>word(trail(c.path)[0]));
+    if(Object.keys(clean).length !== keys.length || !keys.every(k=>Object.hasOwn(clean,k))) throw new Error("Request refused.");
+    const version=slot(p.model,"version")[0];if(!version) throw new Error("Request refused.");
+    lens.inspectData(p.model,{...clean,[version]:1});
+    if(!consented(base)) throw new Error("Request refused.");
+    if(p.operation === "move") {
+      const key=word(keys[0]), order=clean[key], original=at(initial(id,base),[key]);
+      if(!Array.isArray(order) || !Array.isArray(original) || order.length !== original.length || new Set(order).size !== order.length || !original.every(v=>order.includes(v))) throw new Error("Request refused.");
+    }
+    if(p.operation === "append" && !keys.every(k=>Array.isArray(clean[k]) && clean[k].length > 0)) throw new Error("Request refused.");
+    return capture(clean);
+  }
+  /** @param {string} id @param {unknown} base @param {unknown} value */
+  function batchCandidate(id,base,value) {
+    const p=batch(id), clean=authorRecord(checkedBatch(id,base,value)), doc=documentValue(base);
+    let next={...doc};
+    for(const control of p.controls) {
+      const target=targetOf(control), key=word(trail(control.path)[0]);let item=clean[key];
+      if(p.operation === "move") {const q=profile(id), original=items(id,base);if(!Array.isArray(item)) throw new Error("Request refused.");item=item.map(v=>original.find(row=>at(row,[q.identity]) === v));}
+      if(p.operation === "append") {const original=at(doc,target);if(!Array.isArray(original) || !Array.isArray(item)) throw new Error("Request refused.");item=[...original,...item];}
+      if(target.length === 1) next={...next,[word(target[0])]:item};
+      else if(target.length === 2) next={...next,[word(target[0])]:{...authorRecord(next[word(target[0])]),[word(target[1])]:item}};
+      else throw new Error("Request refused.");
+    }
+    const result=capture(omit(documentField.ref,next,true));lens.inspectData(checkCall.input,result);return result;
+  }
   /** @param {unknown} base @param {{page:string,operation:"create"|"replace"|"delete",value:unknown,identity:string|undefined} | undefined} edit */
   function candidate(base,edit=undefined) {
     const doc=documentValue(base);let draft={...doc};
@@ -1383,7 +1443,17 @@ export function author(source) {
   }
   /** @param {unknown} value */
   function consented(value) {lens.inspectData(homeCall.output,value);return lens.bound(homeCall.output,value,"consent")[0] === true;}
-  return Object.freeze({profiles,profile,items,content,defaults,checkedContent,available,candidate,consented,shape,fields,editors,
+  return Object.freeze({
+    /** @param {string} id @param {unknown} value */ displayed:(id,value)=>{const c=calls.find(c=>c.id === id);if(!c) throw new Error("Request refused.");lens.inspectData(c.output,value);return display(c.output,value);},
+    /** @param {string} id @param {unknown} base @param {unknown} value */ batchKnown:(id,base,value)=>{
+      const p=batch(id);if(p.operation === "move") return [];
+      const clean=authorRecord(checkedBatch(id,base,value));
+      return p.controls.flatMap(c=>{
+        const target=targetOf(c), name=word(c.label), data=clean[word(trail(c.path)[0])], current=at(documentValue(base),target);
+        return p.operation === "append" && Array.isArray(data) && Array.isArray(current) ? data.map((_v,i)=>({path:[...target,current.length+i].join("."),label:name})) : [{path:target.join("."),label:name}];
+      });
+    },
+    batches,batch,initial,checkedBatch,batchCandidate,profiles,profile,items,content,defaults,checkedContent,available,candidate,consented,shape,fields,editors,
     /** @param {string} id @param {unknown} value */ listed:(id,value)=>{const p=profile(id);lens.inspectData(p.output,value);return rows(at(value,[p.listing]));},
     /** @param {string} id @param {unknown} value */ changeable:(id,value)=>{const p=profile(id);lens.inspectData(p.output,value);return lens.bound(p.output,value,"consent")[0] === true;},
     home:word(home.id),read:word(home.call),registry:word(registryCall.id),check:word(checkCall.id),
@@ -1707,6 +1777,7 @@ export function workbench(client,root,refreshed) {
   /** @type {HTMLDialogElement | undefined} */ let dialog;
   /** @type {HTMLElement | undefined} */ let restore;
   /** @type {Intent | undefined} */ let intent;
+  /** @type {string | undefined} */ let batchPage;
   /** @type {unknown} */ let base;
   /** @type {unknown} */ let raw;
   /** @type {unknown} */ let registry;
@@ -1716,7 +1787,7 @@ export function workbench(client,root,refreshed) {
   /** @type {HTMLElement | undefined} */ let proof;
   /** @type {() => void} */ let detach=()=>{};
   function dismiss() {if(dialog) {dialog.close();erase(dialog);dialog.remove();dialog=undefined;}if(restore?.isConnected) restore.focus();}
-  function reset() {serial++;active?.abort();active=undefined;flow?.release();flow=undefined;intent=undefined;base=undefined;raw=undefined;registry=undefined;dirty=false;engaged=false;waiting=false;examining=false;checked=false;proof=undefined;note=undefined;dismiss();}
+  function reset() {serial++;active?.abort();active=undefined;flow?.release();flow=undefined;intent=undefined;batchPage=undefined;base=undefined;raw=undefined;registry=undefined;dirty=false;engaged=false;waiting=false;examining=false;checked=false;proof=undefined;note=undefined;dismiss();}
   function close() {ended=true;reset();detach();restore=undefined;}
   detach=client.onClose(close);
   /** @param {string} text @param {() => void} action */
@@ -1781,6 +1852,64 @@ export function workbench(client,root,refreshed) {
       if(selected !== undefined) plan.checkedContent(page,raw,registry);
       renderForm();
     } catch {if(!ended) {waiting=false;announce("Conteúdo incompatível. A leitura foi preservada; edição bloqueada.");}}
+  }
+  /** @param {string} page */
+  async function editBatch(page) {
+    try {
+      if(locked) return;
+      const p=plan.batch(page);if(!await start(p.label)) return;
+      if(!plan.consented(base)) {announce("Adoção explícita necessária antes de editar.");return;}
+      batchPage=page;raw=plan.initial(page,base);renderBatch();
+    } catch {if(!ended) {waiting=false;announce("Conteúdo incompatível. Edição bloqueada.");}}
+  }
+  function renderBatch() {
+    if(!batchPage || !entry(raw)) return;
+    const page=batchPage,p=plan.batch(page),values={...raw};
+    const box=modal(p.label,()=>leave(()=>{})), form=element("form");form.noValidate=true;
+    const sync=()=>{raw=capture(values);};
+    if(p.operation === "move") {
+      const q=plan.profile(page), control=p.controls[0], key=control && Array.isArray(control.path) ? control.path[0] : undefined;
+      if(typeof key !== "string" || !Array.isArray(values[key])) throw new Error("Request refused.");
+      const order=[...values[key]], original=plan.items(page,base), list=element("section");
+      const label=element("label","Filtrar exibição"), search=element("input");search.id="local-filter";label.htmlFor=search.id;search.autocomplete="off";
+      form.append(element("p","Posições a partir de 1. O filtro muda somente a exibição; mover usa a ordem completa."),label,search,list);
+      function draw() {
+        erase(list);
+        for(const [index,id] of order.entries()) {
+          const item=original.find(v=>at(v,[q.identity]) === id), view=plan.content(page,item);
+          if(!JSON.stringify(view).toLocaleLowerCase().includes(search.value.toLocaleLowerCase())) continue;
+          const row=element("section");row.append(element("h3","Posição "+(index+1)),plain(view));
+          for(const [text,delta] of [["Mover para cima",-1],["Mover para baixo",1]]) {
+            const next=index+Number(delta), buttonId="move-"+index+"-"+delta;
+            const move=button(String(text),()=>{
+              if(waiting || ended || next<0 || next>=order.length) return;
+              [order[index],order[next]]=[order[next],order[index]];values[key]=order;sync();changedDraft();draw();
+              const target=document.getElementById("move-"+next+"-"+delta);if(target instanceof HTMLButtonElement && !target.disabled) target.focus();else {const fallback=list.querySelector("button:not(:disabled)");if(fallback instanceof HTMLElement) fallback.focus();}
+            });move.id=buttonId;move.disabled=next<0 || next>=order.length;row.append(move);
+          }
+          list.append(row);
+        }
+      }
+      search.addEventListener("input",draw);draw();
+    } else if(p.operation === "append") {
+      const c=p.controls[0], key=c && Array.isArray(c.path) ? c.path[0] : undefined;
+      if(typeof key !== "string") throw new Error("Request refused.");
+      form.append(element("h3","Base somente leitura"),plain(base),element("p","Somente inclusões. A releitura do servidor confirma nomes e duplicatas."));
+      const label=element("label","Novos nomes, um por linha"), input=element("textarea");input.id="new-names";input.autocomplete="off";input.spellcheck=false;label.htmlFor=input.id;
+      input.value=Array.isArray(values[key]) ? values[key].join("\n") : "";
+      input.addEventListener("input",()=>{if(waiting && !examining) return;values[key]=input.value.split("\n");sync();changedDraft();});form.append(label,input);
+    } else for(const c of p.controls) controlNode(c,values,form,sync);
+    const save=button("Revisar alterações",()=>{
+      if(waiting) return;
+      try {plan.checkedBatch(page,base,raw);reviewBatch();} catch {announce("Confira os campos conhecidos antes de salvar.");}
+    });
+    form.addEventListener("submit",event=>{event.preventDefault();});
+    form.append(button("Validar proposta",()=>{void examineDraft();}),save,button("Cancelar",()=>leave(()=>{})));box.append(form);
+  }
+  function reviewBatch() {
+    if(!batchPage) return;
+    const box=modal("Confirmar operação",renderBatch);
+    box.append(element("p","Revise a proposta completa. Nada foi salvo."),plain(plan.batchCandidate(batchPage,base,raw)),button("Voltar ao rascunho",renderBatch),button("Cancelar",()=>leave(()=>{})),button("Confirmar",()=>{void commit();}));
   }
   function changedDraft() {checked=false;if(proof) erase(proof);dialog?.querySelectorAll("[aria-describedby]").forEach(n=>n.removeAttribute("aria-describedby"));serial++;active?.abort();active=new AbortController();if(examining) {waiting=false;examining=false;}dirty=true;announce("Rascunho não salvo. Resultado anterior descartado.");}
   /** @param {Record<string,unknown>} control @param {Record<string,unknown>} values @param {HTMLElement} parent @param {() => void} changed */
@@ -1853,8 +1982,8 @@ export function workbench(client,root,refreshed) {
     let ticket=serial;
     try {
       const edit=intent ? {...intent,value:plan.checkedContent(intent.page,raw,registry)} : undefined;
-      const candidate=plan.candidate(base,edit);ticket=++serial;waiting=true;examining=true;active=new AbortController();announce("Validando conteúdo…");
-      const known=intent ? plan.known(intent.page,base,raw,intent.identity) : [];
+      const candidate=batchPage ? plan.batchCandidate(batchPage,base,raw) : plan.candidate(base,edit);ticket=++serial;waiting=true;examining=true;active=new AbortController();announce("Validando conteúdo…");
+      const known=batchPage ? plan.batchKnown(batchPage,base,raw) : intent ? plan.known(intent.page,base,raw,intent.identity) : [];
       const result=await client.assess(candidate,known,active.signal);
       if(ended || ticket !== serial) return;
       checked=result.ok;announce(result.ok ? "Conteúdo e compilação válidos. Não salvo; conexão não testada; não garante segurança para todos os dados." : "Proposta inválida. Confira os campos conhecidos.");
@@ -1870,7 +1999,11 @@ export function workbench(client,root,refreshed) {
   async function commit() {
     if(ended || waiting || !flow) return;
     try {
-      if(intent) {
+      if(batchPage) {
+        const p=plan.batch(batchPage), body=plan.checkedBatch(batchPage,base,raw);
+        if(flow.getState().tag === "reading") flow.begin(p.call,body);
+        else if(flow.getState().tag === "draft") flow.change(body);
+      } else if(intent) {
         const p=plan.profile(intent.page), body=intent.operation === "delete" ? {} : {[p.member]:plan.checkedContent(intent.page,raw,registry)};
         const call=intent.operation === "create" ? p.create : intent.operation === "replace" ? p.replace : p.remove;
         if(flow.getState().tag === "reading") flow.begin(call,body,intent.identity);
@@ -1896,6 +2029,11 @@ export function workbench(client,root,refreshed) {
       if(!flow || !intent) return;const p=plan.profile(intent.page);
       try {if(flow.review({[p.member]:plan.checkedContent(p.id,raw,registry)})) {base=state.newBase?.value;checked=false;renderForm();}} catch {announce("Revisão incompatível. Rascunho preservado.");}
     }));
+    if(state.tag === "conflict" && state.newBase && batchPage) box.append(button("Revisar rascunho com nova base",()=>{
+      if(!flow || !batchPage) return;
+      try {const body=plan.checkedBatch(batchPage,state.newBase?.value,raw);if(flow.review(body)) {base=state.newBase?.value;checked=false;renderBatch();}}
+      catch {announce("Revisão incompatível. Rascunho preservado; descarte e inicie novamente para usar outra lista.");}
+    }));
     box.append(button("Fechar e descartar rascunho",()=>leave(()=>refreshed())));
   }
   async function consentStart() {
@@ -1916,6 +2054,8 @@ export function workbench(client,root,refreshed) {
       panel.append(button("Validar documento",()=>{void (async()=>{if(await start("Validar documento")) await examineDraft();})();}));
       if(!plan.consented(value)) panel.append(button("Adoção explícita",()=>{void consentStart();}));
     }
+    const bulk=plan.batches.find(v=>v.id === page);
+    if(bulk) {const change=button(bulk.label,()=>{void editBatch(page);});change.disabled=locked;panel.append(change);}
     const p=plan.profiles.find(v=>v.id === page);if(!p) return;
     const permitted=!locked && plan.changeable(page,value), add=button("Criar",()=>{void edit(page,"create");});add.disabled=!permitted;panel.append(add);
     if(locked) panel.append(element("p","Escritas bloqueadas nesta sessão. Verificação operacional necessária."));
@@ -2045,7 +2185,7 @@ export function mount(root) {
     if(sheet?.tag === "success") {
       for(const control of view.controls) {
         if(control.type !== "read" || typeof control.label !== "string") continue;
-        const section=element("section");section.append(element("h3",control.label),plain(at(sheet.value,control.path)));panel.append(section);
+        const section=element("section");section.append(element("h3",control.label),plain(at(access.client.design().displayed(view.call,sheet.value),control.path)));panel.append(section);
       }
       notice.textContent="Respondendo · Última leitura: "+new Date(sheet.time).toLocaleTimeString();
       editor?.attach(panel,view.id,sheet.value);
@@ -2053,7 +2193,7 @@ export function mount(root) {
       notice.textContent=sheet.stale ? "Leitura desatualizada. Tente novamente." : "Leitura indisponível. Tente novamente.";
       if(sheet.prior?.tag === "success") {
         for(const control of view.controls) if(control.type === "read" && typeof control.label === "string") {
-          const section=element("section");section.append(element("h3",control.label),plain(at(sheet.prior.value,control.path)));panel.append(section);
+          const section=element("section");section.append(element("h3",control.label),plain(at(access.client.design().displayed(view.call,sheet.prior.value),control.path)));panel.append(section);
         }
       }
     } else notice.textContent="Carregando…";

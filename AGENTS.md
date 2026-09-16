@@ -32,18 +32,16 @@ opt-in e estritamente delimitada por `docs/PHASE-8-SPEC.md`** está autorizada
 como escopo de front-end. A especificação foi aprovada integralmente, incluindo
 as quatro decisões da seção 8 (D-061 a D-064 em `docs/DECISIONS.md`).
 
-As Etapas 1–6 foram revisadas, aprovadas e publicadas sem emenda. Esta rodada
-autoriza exclusivamente a **Etapa 7: adoção legada, validação explícita e CRUD
-granular de regras e exceptions**, conforme `docs/PHASE-8-SPEC.md`.
-Token somente em closure privada do transporte; dados e apresentação somente
-em memória; logout/401/pagehide/pageshow/BFCache limpam tudo. Nenhuma chamada
-administrativa antes do login. Cada escrita exige gesto explícito; conflitos
-preservam o rascunho, sem retry, rebase ou rollback automático. Não implementar
-reorder, edição de database/SQL, PUT /config ou itens das Etapas 8–9.
-A fronteira HTTP da Etapa 4 permanece intacta. A Etapa 7 está concluída;
-gates reais de componentes/browsers/PostgreSQL aprovados. Evidência em
-`docs/PHASE-8-STAGE-7-VALIDATION.md`. Não publicar seu commit local nem iniciar
-a Etapa 8 sem nova revisão e autorização.
+As Etapas 1–7 foram revisadas, aprovadas e publicadas sem emenda. Esta rodada
+autoriza exclusivamente a **Etapa 8: reorder de regras, database e SQL aditivo**,
+conforme `docs/PHASE-8-SPEC.md`. Preservar os invariantes das Etapas 6–7 e a
+fronteira HTTP. Token, dados e rascunhos somente em memória; uma escrita pendente,
+sem retry, rebase ou rollback automático. Logout/401/pagehide/pageshow/BFCache
+limpam tudo. Nenhuma chamada administrativa antes do login. Não implementar
+reorder de exceptions, PUT /config, edição de campos protegidos ou Etapa 9.
+A Etapa 8 está concluída, com gates acumulados verdes e evidência em
+`docs/PHASE-8-STAGE-8-VALIDATION.md`. O commit deve permanecer local até nova
+revisão e autorização. Nenhum trabalho da Etapa 9 está autorizado.
 
 Interfaces genéricas, editor ou execução de SQL, resultados do banco, funções
 de DBA, auditoria consultável, front-end para MCP e expansões não previstas

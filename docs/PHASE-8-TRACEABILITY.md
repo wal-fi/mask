@@ -1,6 +1,6 @@
 # Fase 8 — matriz de rastreabilidade normativa
 
-**Estado:** aprovada; Etapas 1–6 publicadas; Etapa 7 concluída. **Atualização:** 2026-09-14.
+**Estado:** aprovada; Etapas 1–7 publicadas; Etapa 8 concluída. **Atualização:** 2026-09-16.
 **Fonte normativa integral:** [PHASE-8-SPEC.md](PHASE-8-SPEC.md), aprovada
 integralmente, com decisões [D-061 a D-064](DECISIONS.md#d-061--ui-administrativa-embarcada-opt-in-e-na-mesma-origem).
 
@@ -12,15 +12,15 @@ não dispensa os testes específicos. A fundação da Etapa 2 está implementada
 requisitos que atravessam etapas continuam parcialmente pendentes. Nenhum gate
 de navegador/HTTP ou fluxo funcional é inferido desses testes de fundação.
 
-A Etapa 7 foi autorizada após revisão e publicação da Etapa 6. As Etapas 8–9
-continuam sem autorização. A tabela normativa mantém os componentes previstos;
+A Etapa 8 foi autorizada após revisão e publicação da Etapa 7. A Etapa 9
+continua sem autorização. A tabela normativa mantém os componentes previstos;
 o quadro de entrega identifica quais já existem, sem antecipar APIs.
 As seções 1–2 e 8 também fundamentam D-061–D-064; a seção 7 fixa ordem, aceite
 e rollback. Evidências: [Etapa 1, histórica](PHASE-8-STAGE-1-VALIDATION.md) e
 [Etapa 2, histórica](PHASE-8-STAGE-2-VALIDATION.md) e
 [Etapa 3, histórica](PHASE-8-STAGE-3-VALIDATION.md) e
-[Etapa 4, histórica](PHASE-8-STAGE-4-VALIDATION.md). [Etapa 5, histórica](PHASE-8-STAGE-5-VALIDATION.md). [Etapa 6, histórica](PHASE-8-STAGE-6-VALIDATION.md). Rodada atual:
-[Etapa 7](PHASE-8-STAGE-7-VALIDATION.md).
+[Etapa 4, histórica](PHASE-8-STAGE-4-VALIDATION.md). [Etapa 5, histórica](PHASE-8-STAGE-5-VALIDATION.md). [Etapa 6, histórica](PHASE-8-STAGE-6-VALIDATION.md). [Etapa 7, histórica](PHASE-8-STAGE-7-VALIDATION.md). Rodada atual:
+[Etapa 8](PHASE-8-STAGE-8-VALIDATION.md).
 
 ## Gates acumulados
 
@@ -59,7 +59,7 @@ quando devidos. Ausência de browser/DSN ou finding não vira skip/xfail.
 | F8-013 | §3.7: oito transformers, parâmetros/limites exatos e dependências; sem regex/preview de negócio em JS | 2, 7, 9 | Modelos privados e controles | G-TYPE/G-UNIT/G-COMP; todos os transformers, limites, campos condicionais e random length 0 válido quando permitido |
 | F8-014 | §3.8: database apenas campos/intervalos inteiros aprovados, sem DSN | 2, 8–9 | Editor database | Limites 100–600000 e 1–1000000, tipos inválidos, payload dedicado; G-TYPE/G-E2E |
 | F8-015 | §3.8: SQL policy somente aditiva, proteções efetivas preservadas | 2, 8–9 | Editor de adições SQL | G-COMP/G-E2E; adicionar, duplicatas/recusas e ausência de remoção, allowed_pg_functions readonly |
-| F8-016 | §3.9: config:validate sem expected_revision, raiz candidata e projeção de novos itens sem IDs/revision | 2, 6–7, 9 | Projeção privada e validação | G-TYPE/G-UNIT/G-E2E/G-PY; contrato raiz, proteção preservada e nenhum efeito em disco/runtime/revision |
+| F8-016 | §3.9: config:validate sem expected_revision, raiz candidata e projeção de novos itens sem IDs/revision | 2, 6–9 | Projeção privada e validação | G-TYPE/G-UNIT/G-E2E/G-PY; contrato raiz, proteção preservada e nenhum efeito em disco/runtime/revision |
 | F8-017 | §3.10: adoção legada apenas expected_revision 0 e confirmação explícita, checkbox inicialmente falso | 6–7, 9 | Diálogo de adoção | Cancelar/recusar sem efeito; backup, comentários e confirm true; G-COMP/G-E2E/G-PY |
 | F8-018 | §3.11: revision inteiro seguro não negativo; revision atual/próxima e envelopes coerentes | 2, 6, 9 | DTOs e máquina de estados | Limites MAX_SAFE_INTEGER, booleanos/frações, snapshots incompatíveis, nenhuma coerção; G-TYPE/G-UNIT |
 | F8-019 | §3.11: uma escrita por vez, expected_revision do snapshot confirmado, sem rebase por polling | 6–9 | Transporte e coordenador de sessão | Cliques concorrentes, duas abas, polling atrasado e resposta de geração anterior; G-COMP/G-E2E |
@@ -254,3 +254,24 @@ em 137 arquivos, tipagem, build duplo/193 termos e wheel/sdist isolados verdes.
 A falha inicial de startup MCP e o diagnóstico/repetição integral posteriores
 estão discriminados em `PHASE-8-STAGE-7-VALIDATION.md`. Não publicar esta etapa
 nem iniciar a Etapa 8 sem revisão e autorização.
+
+## Entrega da Etapa 8
+
+Etapa 7 publicada exatamente em `57cc7522642d3fe3dddd10187b996ba71fc38e3f`.
+Esta entrega é exclusivamente reorder de regras, database e SQL aditivo.
+Evidência: [Etapa 8](PHASE-8-STAGE-8-VALIDATION.md). Nenhum item da Etapa 9.
+
+| Requisitos | Componentes entregues | Provas/gates | Limite preservado |
+|---|---|---|---|
+| F8-011–012, 018–020, 022, 036 | Perfis declarativos de permutação; ordem global independente do filtro; teclado, posições 1-based, revisão e confirmação | `batches.test.js` / `batches.spec.js`: malformadas, duplicadas, incompletas, estrangeiras e obsoletas; cancelamento, abas, conteúdo e IDs | Somente rules:reorder; nenhuma reordenação de exceptions ou PUT /config |
+| F8-014, 025–027, 035–036 | Dois controles inteiros; modelo fechado e corpo raiz completo | Limites extremos, tipos/extras sem request; preservação dos demais campos e efeito MCP | Sem DSN, coerção ou edição parcial |
+| F8-015–016, 036 | Inclusões literais e candidato base+rascunho; lista declarada e proteção efetiva readonly | Duplicatas, caixa, Unicode e releitura Python; nenhum allowed_pg_functions nas mutações | Sem remoção, renomeação ou casefold autoritativo no JS |
+| F8-016, 019–021, 028, 034 | Coordenador existente, snapshot/revision/draft, validação explícita e bloqueio da sessão | Node acumulado e browsers: conflito/busy, respostas perdidas/readback falho/durabilidade, 401 e lifecycle | Sem escrita implícita, fila, retry/rebase/rollback automático |
+| F8-022–024, 032–038, 050, 052–057, 059, 063 | Projeções e renderer de texto; mesmos catálogos/gramática/pins/HTTP | XSS filtrado, teclado/320 px, 193 termos, dois builds, pacotes isolados, engines fixados, PG16 e Python completo | Nenhuma expansão de planos, rotas, transporte, auditoria, MCP ou Etapa 9 |
+
+Medição final da Etapa 8: 241 testes Node e 189 de navegador aprovados (63 por
+engine), sem skips/retries; 3808 Python coletados, 3800 aprovados e oito skips
+POSIX, PostgreSQL 16.15 real, sem deselect/skip por DSN. Tipagem estrita, npm ci,
+build duplo/193 termos, wheel/sdist isolados sem Node/npm, Ruff/format/mypy strict
+e diff check verdes. Tentativas anteriores e limites discriminados na evidência.
+Etapa 8 concluída e local; Etapa 9 não iniciada.
