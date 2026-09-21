@@ -23,6 +23,8 @@ export function requireTrue(condition, label="assertion") {
  */
 export async function scenario(name, action, extra={}) {
   if (!process.env.MASKGW_TEST_DSN) throw new Error("PostgreSQL gate requires DSN.");
+  const installed=process.env.MASKGW_BROWSER_PYTHON, directory=process.env.MASKGW_BROWSER_ROOT;
+  if(Boolean(installed)!==Boolean(directory)) throw new Error("Installed harness settings refused.");
   const started=performance.now();
   /** @param {string} step */
   const mark=step=>test.info().annotations.push({type:"check",description:"harness-"+step+"-ms-"+Math.round(performance.now()-started)});
@@ -30,8 +32,11 @@ export async function scenario(name, action, extra={}) {
   const token = randomBytes(32).toString("hex");
   const browser = await engines[name].launch(name === "chromium" && extra.MASKGW_BROWSER_BFCACHE === "1" ? {channel:"chromium",ignoreDefaultArgs:["--disable-back-forward-cache"]} : {});
   mark("launched");
-  const child = spawn(join(root, process.platform === "win32" ? ".venv/Scripts/python.exe" : ".venv/bin/python"),
-    ["-u", "-m", extra.MASKGW_BROWSER_EDIT === "1" ? "tests.browser_edit_server" : "tests.browser_server"], {cwd:root, env:{...process.env,...extra,MASKGW_BROWSER_TOKEN:token}, stdio:["pipe","pipe","pipe"]});
+  const module=extra.MASKGW_BROWSER_EDIT === "1" ? "tests.browser_edit_server" : "tests.browser_server";
+  /** @type {NodeJS.ProcessEnv} */ const env={...process.env,...extra,MASKGW_BROWSER_TOKEN:token};
+  const args=installed && directory ? ["-I","-u","-c","import sys,runpy,atexit; sys.path.insert(0,sys.argv[1]); from tests.installed_support import verify_environment; verify_environment(); atexit.register(verify_environment); runpy.run_module(sys.argv[2],run_name='__main__')",directory,module] : ["-u","-m",module];
+  if(installed) {delete env.PYTHONPATH;env.PATH=join(process.env.SystemRoot ?? "C:/Windows","System32");}
+  const child = spawn(installed ?? join(root,process.platform === "win32" ? ".venv/Scripts/python.exe" : ".venv/bin/python"),args,{cwd:directory ?? root,env,stdio:["pipe","pipe","pipe"]});
   const channel=replies(child.stdout);
   child.once("error",()=>channel.close());
   let stderrText = "";
@@ -59,7 +64,7 @@ export async function scenario(name, action, extra={}) {
     mark("caught");
     failed = true;
     if(error instanceof Error) {
-      for(const found of (error.stack ?? "").matchAll(/[\\/](?:reading|lifecycle|editing|batches)\.spec\.js:(\d+):\d+/g)) {
+      for(const found of (error.stack ?? "").matchAll(/[\\/](?:reading|lifecycle|editing|batches|package)\.spec\.js:(\d+):\d+/g)) {
         if(found[1]) test.info().annotations.push({type:"check",description:"source-line-"+found[1]});
       }
     }

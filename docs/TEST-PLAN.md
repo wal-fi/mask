@@ -1221,3 +1221,58 @@ com testes de chunks fragmentados/agrupados, EOF parcial, limite e fechamento.
 Os marcadores sanitizados distinguem ações, fechamento do browser e exit do
 subprocesso, sem serializar conteúdo administrativo. Esses testes são privados
 e não integram wheel/sdist, bundle ou rotas HTTP.
+
+## Fase 8 — Etapa 9: pacote e revisão final
+
+Esta seção complementa as evidências históricas acima, sem substituir seus
+resultados ou limites. Execução e fechamento em `PHASE-8-STAGE-9-VALIDATION.md`.
+
+- `test_phase8_final_inventory.py`: igualdade da apresentação integral aprovada
+  na Etapa 8, por seção e bytes; 110 modelos, 19 chamadas, seis vistas, oito
+  editores, 48 controles, 56 bindings e 25 mensagens. Contraprovas de remoção,
+  alteração e raiz desconhecida em cada uma das sete seções. Dez escritas por
+  igualdade, sem PUT /config. A gramática mantém o máximo de 128 modelos.
+- `installed_support.py`: somente no harness privado copiado para fora do
+  checkout; Python isolado, sys.path sem checkout, origem de todos os módulos
+  maskgw dentro da instalação esperada e Node/npm ausentes do PATH. Executado
+  antes e depois de cada subprocesso browser. Quatro contraprovas por pacote:
+  site do checkout, site incorreto, Python sem isolamento e Node no PATH.
+- `installed_package_probe.py`: corrupção e ausência reais dos quatro recursos
+  e manifesto, restaurados em finally; stderr/exit exatos e contadores zerados
+  para configuração, lock, PostgreSQL, thread, socket e MCP. CLI instalada real
+  por stdio, requisições HTTP enquanto a sessão está aberta, masking via MCP,
+  shutdown e restart no mesmo arquivo/porta. Harness nunca integra a distribuição.
+- `browser/package.spec.js`: compara bytes HTTP do pacote instalado com os
+  aprovados, incluindo MIME e no-store, apresentação privada com autenticação,
+  igualdade integral e inspeção literal/decodificada dos 193 termos privados nos recursos públicos.
+- `browser/editing.spec.js`: edição externa após validação e antes da escrita;
+  mantém arquivo externo, digest/runtime anterior e rascunho, bloqueia novas
+  escritas. Instrumentação existente confere auditoria e ausência de commit.
+- `browser/batches.spec.js`: validação antes do conflito entre abas; rollback
+  pela flag bruta 0/1 com restart, quatro rotas ausentes no modo off, cliente
+  nativo funcionando e Origin recusado. Compara exatamente documento, arquivo,
+  backup, IDs, revision e efeitos MCP antes e depois do rollback operacional.
+
+Executar a matriz Playwright completa nos três engines contra o wheel instalado,
+sem retry ou skip. Repetir no sdist os fluxos completos de adoção/validação/CRUD,
+reorder/database/SQL, rollback/restart e bytes HTTP nos três engines. Os testes
+de componentes com transporte controlado continuam distintos dos E2E reais;
+as fixtures usam os mesmos bytes aprovados, fora da distribuição.
+
+Repetir npm ci, checkJs strict e suas 12 contraprovas negativas, 241 testes Node,
+dois builds idênticos e 193 termos. Instalar wheel/sdist em venvs fora do checkout,
+com dependências Python da baseline copiadas offline, sem resolver versões novas,
+sem ferramentas frontend nem fallback ao site-packages do checkout. Conservar
+o bootstrap da dependência PyWin32 no Windows; não copiar caminhos editáveis.
+Inspecionar os dois arquivos de distribuição, manifesto, âncora e quatro recursos.
+
+Executar Python integral com PostgreSQL 16 real, sem filtros/deselect/skip por DSN,
+pilha temporária Windows 64 MiB, Ruff, format check, mypy strict e diff check.
+Limites BFCache Firefox/WebKit, fsync/bits POSIX e ausência de auditoria manual
+de acessibilidade permanecem explicitamente delimitados na evidência.
+
+Medição final da Etapa 9: 241 Node aprovados; 195/195 na matriz completa
+(65 por engine) e 9/9 fluxos adicionais do sdist; Python com 3.830 coletados,
+3.822 aprovados e oito skips POSIX, PostgreSQL 16.15 real. Todos os gates
+acima aprovados. A tentativa anterior com timeout Firefox permanece registrada,
+sem causa atribuída. Tempos, hashes e limites na evidência da Etapa 9.

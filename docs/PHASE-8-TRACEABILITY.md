@@ -1,6 +1,8 @@
 # Fase 8 — matriz de rastreabilidade normativa
 
-**Estado:** aprovada; Etapas 1–7 publicadas; Etapa 8 concluída. **Atualização:** 2026-09-16.
+**Estado:** concluída; Etapas 1–9 revisadas e aprovadas; publicação final da Etapa 9 autorizada. **Atualização:** 2026-09-21.
+A Fase 9 não foi iniciada e não está autorizada; nenhuma expansão funcional
+está autorizada.
 **Fonte normativa integral:** [PHASE-8-SPEC.md](PHASE-8-SPEC.md), aprovada
 integralmente, com decisões [D-061 a D-064](DECISIONS.md#d-061--ui-administrativa-embarcada-opt-in-e-na-mesma-origem).
 
@@ -8,19 +10,21 @@ Esta matriz é um índice verificável, não uma versão reduzida da especifica�
 Cada linha cobre **todos** os requisitos, listas, limites e contraprovas das
 subseções indicadas, inclusive quando a descrição abaixo não os repete.
 O texto integral prevalece. O mapeamento é muitos-para-muitos: um gate comum
-não dispensa os testes específicos. A fundação da Etapa 2 está implementada nos limites do quadro de entrega abaixo;
-requisitos que atravessam etapas continuam parcialmente pendentes. Nenhum gate
-de navegador/HTTP ou fluxo funcional é inferido desses testes de fundação.
+não dispensa os testes específicos. Os quadros das Etapas 1–8 são históricos e
+conservam as pendências existentes em cada entrega. O quadro de encerramento
+da Etapa 9 registra a comprovação final de todos os 65 requisitos, com os
+limites explícitos de plataforma, BFCache e acessibilidade da evidência.
 
-A Etapa 8 foi autorizada após revisão e publicação da Etapa 7. A Etapa 9
-continua sem autorização. A tabela normativa mantém os componentes previstos;
+A Etapa 9 foi autorizada após revisão e publicação da Etapa 8. A tabela
+normativa mantém os componentes previstos;
 o quadro de entrega identifica quais já existem, sem antecipar APIs.
 As seções 1–2 e 8 também fundamentam D-061–D-064; a seção 7 fixa ordem, aceite
 e rollback. Evidências: [Etapa 1, histórica](PHASE-8-STAGE-1-VALIDATION.md) e
 [Etapa 2, histórica](PHASE-8-STAGE-2-VALIDATION.md) e
 [Etapa 3, histórica](PHASE-8-STAGE-3-VALIDATION.md) e
-[Etapa 4, histórica](PHASE-8-STAGE-4-VALIDATION.md). [Etapa 5, histórica](PHASE-8-STAGE-5-VALIDATION.md). [Etapa 6, histórica](PHASE-8-STAGE-6-VALIDATION.md). [Etapa 7, histórica](PHASE-8-STAGE-7-VALIDATION.md). Rodada atual:
-[Etapa 8](PHASE-8-STAGE-8-VALIDATION.md).
+[Etapa 4, histórica](PHASE-8-STAGE-4-VALIDATION.md). [Etapa 5, histórica](PHASE-8-STAGE-5-VALIDATION.md). [Etapa 6, histórica](PHASE-8-STAGE-6-VALIDATION.md). [Etapa 7, histórica](PHASE-8-STAGE-7-VALIDATION.md).
+[Etapa 8, histórica](PHASE-8-STAGE-8-VALIDATION.md). Rodada atual:
+[Etapa 9](PHASE-8-STAGE-9-VALIDATION.md).
 
 ## Gates acumulados
 
@@ -275,3 +279,85 @@ POSIX, PostgreSQL 16.15 real, sem deselect/skip por DSN. Tipagem estrita, npm ci
 build duplo/193 termos, wheel/sdist isolados sem Node/npm, Ruff/format/mypy strict
 e diff check verdes. Tentativas anteriores e limites discriminados na evidência.
 Etapa 8 concluída e local; Etapa 9 não iniciada.
+
+
+## Encerramento da Etapa 9 — conferência final
+
+O quadro abaixo é a conferência atual; os quadros de entregas anteriores são
+históricos. Cada linha exige o gate final correspondente nesta rodada, além
+dos testes específicos. Todos os gates desta rodada foram aprovados; os limites
+documentados não foram ampliados. Evidência: [Etapa 9](PHASE-8-STAGE-9-VALIDATION.md).
+
+| Requisito | Prova concreta e gate acumulado | Estado final |
+|---|---|---|
+| F8-001 | G-PKG: wheel/sdist instalados; installed_support.py e package.spec.js; mesma origem/processo em test_admin_ui_http.py | Aprovado |
+| F8-002 | test_admin_ui_startup.py: test_exact_raw_flag, dependência UI/Admin e repr; fonte env/injetada | Aprovado |
+| F8-003 | test_admin_ui_startup.py: falhas antes de todos os efeitos; installed_package_probe.py: dez recusas por pacote | Aprovado |
+| F8-004 | test_admin_http_lifecycle.py, test_admin_http_mcp_coexistence.py; CLI instalada stdio/HTTP e restart | Aprovado |
+| F8-005 | test_admin_ui_startup.py / admin_ui_compat_support.py; fixture literal off e test_admin_ui_startup.py | Aprovado |
+| F8-006 | G-PKG; dependências/pins intactos; test_admin_ui_http.py e transport.spec.js: mesma origem sem CORS | Aprovado |
+| F8-007 | test_phase8_final_inventory.py; commands.test.js; catálogo dez escritas; test_plan_separation.py | Aprovado |
+| F8-008 | reading.spec.js: entrada/seis vistas/URL e history navigation; inventário integral | Aprovado |
+| F8-009 | reading.spec.js: polling visible-only/serial/stops after failure e indisponibilidade | Aprovado |
+| F8-010 | reader.test.js, reading.spec.js: snapshots divergentes, declarada/efetiva e readonly | Aprovado |
+| F8-011 | author.test.js, batches.test.js; editing.spec.js e batches.spec.js: CRUD/reorder/restart reais | Aprovado |
+| F8-012 | author.test.js, editing.spec.js; catálogo exato e preservação de exceptions em batches | Aprovado |
+| F8-013 | author.test.js; editing.spec.js: eight editors, conditional integer e validação; test_admin_http_reads.py | Aprovado |
+| F8-014 | batches.test.js / batches.spec.js: limites/tipos sem request e payload completo | Aprovado |
+| F8-015 | batches.test.js / batches.spec.js: inclusão literal, Unicode/caixa e releitura autoritativa; efeito MCP | Aprovado |
+| F8-016 | author.test.js, batches.test.js, editing.spec.js; test_admin_http_validate.py: candidata raiz sem efeitos | Aprovado |
+| F8-017 | editing.spec.js: adoção/cancelamento/checkbox/backup/concorrência; test_admin_http_writes.py | Aprovado |
+| F8-018 | commands.test.js, reader.test.js, protocol.test.js: versões inseguras e contraprovas de tipagem | Aprovado |
+| F8-019 | coordinator.test.js / coordinator.spec.js: uma pendência/geração; editing e batches: abas/duplo clique/validação | Aprovado |
+| F8-020 | coordinator.test.js, editing.spec.js, batches.spec.js: 409/busy/revisão explícita/edição externa | Aprovado |
+| F8-021 | coordinator.test.js; editing/batches.spec.js: pre/post replace, perda/readback e auditoria; test_admin_service.py | Aprovado |
+| F8-022 | reading/editing/batches.spec.js: API/PG, teclado/foco/320px/200%/reduced motion; limites de acessibilidade na evidência | Aprovado |
+| F8-023 | protocol.test.js, test_admin_ui_resources.py, npm inspect e package.spec.js: 193 termos/literais | Aprovado |
+| F8-024 | vocabulary.json inalterado; protocol.test.js: marcadores/encoding; D-062 e limite residual preservados | Aprovado |
+| F8-025 | test_phase8_final_inventory.py e protocol.test.js: 19 calls, dez escritas, sete seções inteiras | Aprovado |
+| F8-026 | protocol.test.js e test_admin_ui_resources.py: chaves estruturais/URLs/referências/ciclos; commands.test.js | Aprovado |
+| F8-027 | protocol.test.js e test_admin_ui_resources.py: máximos inclusivos/estouro/DAG/catálogo; transporte bloqueado em metadata inválida | Aprovado |
+| F8-028 | reading/lifecycle/editing.spec.js; coordinator.test.js: logout/401/eventos/retorno/respostas tardias; limite BFCache explícito | Aprovado |
+| F8-029 | test_admin_ui_http.py: parser Host/origem, aliases/portas/IPv6/duplicados; transport.spec.js | Aprovado |
+| F8-030 | test_admin_ui_http.py: Origin/Referer devem concordar e Fetch Metadata não é credencial | Aprovado |
+| F8-031 | transport.test.js / transport.spec.js e commands.test.js: opções Fetch, destinos, redirects sem bearer | Aprovado |
+| F8-032 | reading/editing/batches.spec.js: XSS persistido e outra sessão; transport.spec.js: controles positivos | Aprovado |
+| F8-033 | Revisão §4.5, classes adversariais acumuladas e limites na evidência; nenhum finding novo de produto | Aprovado |
+| F8-034 | transport/reading/lifecycle/editing.spec.js e commands.test.js: token sentinela/limpeza; reporter sanitizado e artefatos desativados | Aprovado |
+| F8-035 | reader.test.js e reading.spec.js: secrets somente configured/missing; test_admin_http_leakage.py | Aprovado |
+| F8-036 | commands/author/batches.test.js; editing/batches.spec.js e test_admin_adversarial.py: campos protegidos | Aprovado |
+| F8-037 | test_plan_separation.py / test_purity.py; catálogo exato; installed_package_probe.py: MCP stdio | Aprovado |
+| F8-038 | test_admin_ui_http.py::test_inventory_exact_twenty_or_twenty_four: igualdade 20/28 e 24/36 | Aprovado |
+| F8-039 | test_admin_ui_http.py: produto cartesiano completo; package.spec.js: apresentação privada; nenhuma docs | Aprovado |
+| F8-040 | test_admin_ui_http.py: test_precedence/test_media_type_before_routing; regressão BodyLimit da Fase 7 | Aprovado |
+| F8-041 | test_admin_ui_http.py::test_http_product: queries vazia/x/token × rota/método/token | Aprovado |
+| F8-042 | test_admin_ui_http.py: variantes raw_path, encoding, traversal e servidor real; transport.spec.js | Aprovado |
+| F8-043 | test_admin_ui_http.py: métodos/preflight/recusas; transport.spec.js: CSRF/form/JSON real | Aprovado |
+| F8-044 | test_admin_ui_http.py: Untouchable em toda matriz; browser_server.py compara zero efeitos/auditoria | Aprovado |
+| F8-045 | test_admin_ui_http.py: bytes, erros e contenção; package.spec.js: bytes HTTP idênticos aos aprovados | Aprovado |
+| F8-046 | test_admin_ui_http.py: HEAD/GET, Content-Length e erros precoces; servidor real | Aprovado |
+| F8-047 | test_admin_ui_http.py: igualdade integral de headers/MIME; package.spec.js: MIME/no-store | Aprovado |
+| F8-048 | test_admin_ui_http.py: CSP literal; transport.spec.js: CSP real e controles positivos | Aprovado |
+| F8-049 | test_admin_ui_http.py: headers proibidos/Range/condicionais; fixture Fase 7 off | Aprovado |
+| F8-050 | test_admin_ui_resources.py / test_admin_ui_startup.py; installed_package_probe.py: bytes reais/manifesto/âncora | Aprovado |
+| F8-051 | Diff sem produto nesta etapa; test_plan_separation.py, test_purity.py e regressões completas da Fase 7 | Aprovado |
+| F8-052 | npm ci/lock v3; package.json e browsers.json fixados; versões reais verificadas por scenario | Aprovado |
+| F8-053 | checkJs strict/noEmit; protocol.test.js: 12 contraprovas de tipagem, sem escape novo | Aprovado |
+| F8-054 | 14 hashes idênticos duas vezes e a HEAD; wheel/sdist externos; isolamento positivo e quatro contraprovas por pacote | Aprovado |
+| F8-055 | 241 testes Node e 3830 Python coletados; gramática/contratos/limites/falhas acumulados | Aprovado |
+| F8-056 | test_phase8_final_inventory.py: igualdade/21 contraprovas; test_admin_ui_resources.py e protocol.test.js: catálogos | Aprovado |
+| F8-057 | npm inspect, protocol.test.js e package.spec.js: 193 termos nos bytes/literais públicos e contraprovas | Aprovado |
+| F8-058 | coordinator/reading/editing/batches/lifecycle.spec.js: componentes reais em runner padrão; fixtures privadas | Aprovado |
+| F8-059 | G-E2E instalado: Chromium 153.0.8010.12/1243, Firefox 155.0/1543, WebKit 26.6/2359; PostgreSQL 16.15 | Aprovado |
+| F8-060 | test_admin_ui_http.py e transport/reading/editing/batches.spec.js: matriz adversarial de §6.7 | Aprovado |
+| F8-061 | coordinator.test.js; browser_edit_server.py com editing/batches.spec.js; test_admin_adversarial.py: disco/digest/runtime/IDs/auditoria | Aprovado |
+| F8-062 | Recibos desta Etapa 9: gates acumulados, oito skips POSIX, nenhum DSN ausente/deselect/xfail | Aprovado |
+| F8-063 | Histórico de Etapas 1–8 aprovado/publicado sem emenda; Etapa 9 restrita a verificação; nenhum produto alterado | Aprovado |
+| F8-064 | Quadro de aceite §7.2 na evidência; todos os gates finais devem passar antes do encerramento | Aprovado |
+| F8-065 | batches.spec.js: flag bruta 0/1 e restart preservam bytes/backup/IDs/revision/MCP; matriz Python off Origin/Referer/headers | Aprovado |
+
+Gates finais: 241 Node; 195/195 navegadores (65 por engine); nove E2E adicionais
+do sdist; 3.830 Python coletados, 3.822 aprovados e oito skips POSIX, PostgreSQL
+16.15 real. Instalação congelada, tipagem, dois builds idênticos, 193 termos,
+pacotes isolados, Ruff, format, mypy strict e diff check aprovados. A primeira
+matriz com um timeout permanece registrada, sem causa presumida.

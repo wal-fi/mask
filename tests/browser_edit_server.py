@@ -6,6 +6,7 @@ import json
 import logging
 import os
 import sys
+from collections.abc import Callable
 from contextlib import ExitStack
 from dataclasses import dataclass
 from pathlib import Path
@@ -27,7 +28,7 @@ from maskgw.audit import (
     AdminOutcome,
     AdminTargetKind,
 )
-from maskgw.bootstrap.application import Application, build_application
+from maskgw.bootstrap.application import Application, build_application, resolve_admin_ui_enabled
 from maskgw.config import GatewayConfig
 from maskgw.config.filesystem import (
     AtomicWriteResult,
@@ -315,6 +316,12 @@ def check_command(command: str, app: Application, path: Path, original: bytes) -
     elif command == "backup":
         backups = list(path.parent.glob("*.bak.*"))
         assert len(backups) == 1 and backups[0].read_bytes() == original
+    elif command == "external-edit":
+        snapshot, digest = app.admin.snapshot(), app.admin.reference_digest
+        before = path.read_bytes()
+        path.write_bytes(before + b"\n# external edit after validation\n")
+        assert app.admin.snapshot() == snapshot and app.admin.reference_digest == digest
+        assert path.read_bytes() != before
     elif command == "batch-before":
         result = _mcp_call(
             app,
@@ -357,6 +364,24 @@ def report_failure() -> None:
     sys.stderr.write(f"Browser harness failed. check-line-{line_number}\n")
 
 
+def restart(
+    app: Application, launch: Callable[[str], Application], path: Path, flag: str
+) -> Application:
+    assert app.admin is not None
+    snapshot, before = app.admin.snapshot(), path.read_bytes()
+    backups = {p.name: p.read_bytes() for p in path.parent.glob("*.bak.*")}
+    app.close()
+    replacement = launch(flag)
+    try:
+        assert replacement.admin is not None and replacement.admin.snapshot() == snapshot
+        assert path.read_bytes() == before
+        assert backups == {p.name: p.read_bytes() for p in path.parent.glob("*.bak.*")}
+    except BaseException:
+        replacement.close()
+        raise
+    return replacement
+
+
 def main() -> int:
     root = logging.getLogger()
     old_handlers, old_level = root.handlers[:], root.level
@@ -390,12 +415,14 @@ def main() -> int:
             port = free_port()
             faults = Faults()
 
-            def launch() -> Application:
+            def launch(enabled: str = "1") -> Application:
+                os.environ["MASKGW_ADMIN_ENABLED"] = "1"
+                os.environ["MASKGW_ADMIN_UI_ENABLED"] = enabled
                 return build_application(
                     config_path=path,
                     conninfo=dsn,
                     admin_http=build(token=token, host="127.0.0.1", port=port),
-                    admin_ui_enabled=True,
+                    admin_ui_enabled=resolve_admin_ui_enabled(),
                 )
 
             try:
@@ -407,11 +434,8 @@ def main() -> int:
                     if command == "stop":
                         break
                     assert app.admin is not None
-                    if command == "restart":
-                        snapshot = app.admin.snapshot()
-                        app.close()
-                        app = launch()
-                        assert app.admin is not None and app.admin.snapshot() == snapshot
+                    if command in {"restart", "rollback-off", "rollback-on"}:
+                        app = restart(app, launch, path, "0" if command == "rollback-off" else "1")
                     elif not faults.command(command, app):
                         check_command(command, app, path, original)
                     assert not probe.failed

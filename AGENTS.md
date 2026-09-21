@@ -32,16 +32,16 @@ opt-in e estritamente delimitada por `docs/PHASE-8-SPEC.md`** está autorizada
 como escopo de front-end. A especificação foi aprovada integralmente, incluindo
 as quatro decisões da seção 8 (D-061 a D-064 em `docs/DECISIONS.md`).
 
-As Etapas 1–7 foram revisadas, aprovadas e publicadas sem emenda. Esta rodada
-autoriza exclusivamente a **Etapa 8: reorder de regras, database e SQL aditivo**,
-conforme `docs/PHASE-8-SPEC.md`. Preservar os invariantes das Etapas 6–7 e a
-fronteira HTTP. Token, dados e rascunhos somente em memória; uma escrita pendente,
-sem retry, rebase ou rollback automático. Logout/401/pagehide/pageshow/BFCache
-limpam tudo. Nenhuma chamada administrativa antes do login. Não implementar
-reorder de exceptions, PUT /config, edição de campos protegidos ou Etapa 9.
-A Etapa 8 está concluída, com gates acumulados verdes e evidência em
-`docs/PHASE-8-STAGE-8-VALIDATION.md`. O commit deve permanecer local até nova
-revisão e autorização. Nenhum trabalho da Etapa 9 está autorizado.
+As Etapas 1–9 foram revisadas e aprovadas; a publicação final da Etapa 9 está
+autorizada. As Etapas 1–8 foram publicadas sem emenda. A **Etapa 9:
+pacote instalado, revisão adversarial final e fechamento dos critérios de aceite**
+foi concluída, com todos os gates aprovados. A Fase 8 está concluída conforme
+`docs/PHASE-8-SPEC.md`, com os limites documentados na evidência.
+Nenhuma funcionalidade, rota, modelo, permissão ou dependência foi ampliada.
+Preservar memória volátil, uma escrita pendente, gestos explícitos e ausência
+de retry/rebase/fila/rollback automático. A Fase 9 não foi iniciada e não está
+autorizada. Nenhuma expansão funcional está autorizada.
+Evidência: `docs/PHASE-8-STAGE-9-VALIDATION.md`.
 
 Interfaces genéricas, editor ou execução de SQL, resultados do banco, funções
 de DBA, auditoria consultável, front-end para MCP e expansões não previstas

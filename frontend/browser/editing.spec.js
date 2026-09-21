@@ -30,6 +30,22 @@ async function draft(page,value="masked") {
 /** @param {import("@playwright/test").Page} page @param {string} text */
 async function outcome(page,text) {await expect.poll(async()=> (await page.getByRole("dialog").getByRole("status").textContent())?.includes(text)).toBe(true);}
 
+test("external disk edit after validation blocks writes and preserves draft and runtime",async({},info)=>{
+  await scenario(engine(info.project.name),async(page,origin,token,command)=>{
+    await enter(page,origin,token);await adopt(page);await draft(page);
+    await page.getByRole("button",{name:"Validar proposta",exact:true}).click();await outcome(page,"Conteúdo e compilação válidos");
+    await command("external-edit");let writes=0;page.on("request",r=>{if(r.method()!=="GET")writes++;});
+    await page.getByRole("button",{name:"Salvar",exact:true}).click();
+    await expect(page.getByRole("heading",{name:"Rascunho preservado",exact:true})).toBeVisible();
+    requireTrue(writes===1 && (await page.getByRole("dialog").textContent())?.includes("masked"));
+    requireTrue(await page.getByRole("button",{name:"Tentar novamente",exact:true}).count()===0);
+    requireTrue(await page.getByRole("button",{name:"Revisar rascunho com nova base",exact:true}).count()===0);
+    await command("verify:1");await command("backup");
+    await page.getByRole("button",{name:"Fechar e descartar rascunho",exact:true}).click();await page.getByRole("button",{name:"Descartar",exact:true}).click();await ready(page);
+    requireTrue(await page.getByRole("button",{name:"Criar",exact:true}).isDisabled() && writes===1);
+  },mutable);
+});
+
 test("real adoption, root validation, granular CRUD, audit, MCP and restart",async({},info)=>{
   test.setTimeout(120000);
   await scenario(engine(info.project.name),async(page,origin,token,command)=>{

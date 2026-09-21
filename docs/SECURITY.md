@@ -466,9 +466,9 @@ detalhados em `docs/FUTURE-HARDENING.md`:
 
 ## Fase 8 — fronteira, sessão e concorrência local
 
-**Aprovada; Etapas 1–7 publicadas; Etapa 8 concluída.** O contrato normativo
+**Concluída; Etapas 1–8 publicadas; Etapa 9 concluída, local para revisão.** O contrato normativo
 integral está em `docs/PHASE-8-SPEC.md`, especialmente §§3.14–3.16, 4 e 5;
-a evidência desta rodada está em `docs/PHASE-8-STAGE-8-VALIDATION.md`.
+a evidência desta rodada está em `docs/PHASE-8-STAGE-9-VALIDATION.md`.
 
 Somente UI on instala quatro rotas, três exceções públicas raw/canônicas,
 origem exata e headers. Query não vazia nunca entrega recurso; a recusa segue
@@ -520,7 +520,7 @@ IDs/revision, conserva proteções e não salva nem testa conexão. Reasons só 
 associam a controles conhecidos, com texto privado fixo, sem detail remoto.
 Desconhecido/durabilidade incerta mantêm bloqueio de escritas na sessão, inclusive
 após descartar o diálogo. A Etapa 8 amplia somente os controles descritos abaixo;
-a Etapa 9 permanece futura.
+a Etapa 9 concluiu a revisão final, sem ampliar os controles.
 CSP não protege contra navegador/extensão/processo privilegiado comprometidos.
 SQL, resultados, auditoria consultável, secrets editáveis, TLS, proxy, bind
 externo, serviços externos e expansão do MCP seguem excluídos. Findings antigos
@@ -564,4 +564,24 @@ Nenhuma rota, header, regra de origem/Host, exceção de autenticação, proxy,
 schema HTTP, persistência, runtime, auditoria ou MCP mudou. Os efeitos MCP
 comprovados pelo harness são testes da consequência das mutações HTTP; a UI
 não consulta nem executa SQL. A revisão final e os gates medidos constam em
-`docs/PHASE-8-STAGE-8-VALIDATION.md`. Etapa 9 permanece fora desta rodada.
+`docs/PHASE-8-STAGE-8-VALIDATION.md` (histórica). O fechamento da Etapa 9
+está em `docs/PHASE-8-STAGE-9-VALIDATION.md`.
+
+## Fase 8 — revisão final do pacote
+
+O pacote é verificado fora do checkout, com igualdade de todos os bytes e
+inventários aprovados e contraprovas do isolamento. A apresentação autenticada
+permanece privada no HTTP; sua presença no pacote não promete sigilo contra
+acesso local ao código. A inspeção de 193 termos nos recursos públicos e nos
+literais decodificados não elimina informação residual ou inferência.
+
+Edição externa depois da validação recusa a escrita, conserva o rascunho e
+bloqueia novas mutações. Desligar e religar a UI pelo lifecycle preserva as
+alterações já persistidas e seu efeito MCP; a ausência da UI não é rollback
+de dados. CLI instalada, auditoria existente e stdout protocolar continuam
+separados do harness privado. Nenhuma rota, permissão ou dependência adicional.
+
+Não se amplia a garantia de BFCache em Firefox/WebKit, fsync POSIX no Windows,
+acessibilidade manual ou resistência a processo/extensão/navegador comprometidos.
+Resultados medidos e tentativas anteriores ficam na evidência da Etapa 9;
+findings históricos e riscos aceitos das outras fases permanecem abertos.

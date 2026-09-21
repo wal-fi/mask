@@ -347,26 +347,28 @@ novo; todos os cenários `BLOCKED`.
 
 ## FASE 8 — Front-end
 
-**STATUS: APROVADA; ETAPAS 1–7 PUBLICADAS; ETAPA 8 CONCLUÍDA.**
-A Etapa 7 foi revisada e publicada sem emenda em
-`57cc7522642d3fe3dddd10187b996ba71fc38e3f`; o fetch confirmou master, HEAD igual
+**STATUS: CONCLUÍDA; ETAPAS 1–9 REVISADAS E APROVADAS; PUBLICAÇÃO FINAL DA ETAPA 9 AUTORIZADA.**
+A Etapa 8 foi revisada e publicada sem emenda em
+`20db6f021533230d791cd910b037554c3fe03191`; o fetch confirmou master, HEAD igual
 a origin/master, árvore limpa e 0/0, com autoria e trailer preservados.
-A autorização atual é exclusivamente a Etapa 8: reorder de regras, edição de
-database e SQL estritamente aditivo. A Etapa 9 e o push da Etapa 8 não estão
-autorizados. Evidência: `docs/PHASE-8-STAGE-8-VALIDATION.md`.
+A Etapa 9 concluiu a verificação do pacote instalado e a revisão adversarial
+final, com todos os gates aprovados. As Etapas 1–9 foram revisadas e aprovadas;
+a publicação final da Etapa 9 está autorizada. A Fase 9 não foi iniciada e não
+está autorizada; nenhuma expansão funcional está autorizada. Evidência: `docs/PHASE-8-STAGE-9-VALIDATION.md`.
 
 Sessão explícita em memória, renderer declarativo de seis vistas,
 validação de DTOs/revisions e polling de status visível sem sobreposição.
 Token/estado são descartados no lifecycle; erros sanitizados e retry manual.
 Coordenador integrado aos controles de adoção, validação explícita e CRUD.
-Reorder, database e SQL aditivo são o escopo desta rodada. Etapa 9 não iniciada. Contrato em
+Reorder, database e SQL aditivo foram publicados na Etapa 8. A Etapa 9 comprovou
+o pacote instalado e os critérios de aceite, sem mudança de produto. Contrato em
 `docs/PHASE-8-SPEC.md`, D-061–D-064 e `docs/PHASE-8-TRACEABILITY.md`.
 
 ---
 
 ## FASE 9 — Deployment
 
-**STATUS: NÃO INICIADA.** Streamable HTTP, autenticação, OAuth. O MCP
+**STATUS: NÃO INICIADA E NÃO AUTORIZADA.** Streamable HTTP, autenticação, OAuth. O MCP
 permanece stdio por decisão de segurança (D-036); a Admin API já possui porta
 HTTP opcional somente loopback. A Fase 8 não autoriza exposição externa nem
 alteração do transporte MCP.
@@ -375,8 +377,8 @@ alteração do transporte MCP.
 
 ## Estado atual
 
-Fase 8 aprovada; Etapa 8 concluída. A medição desta rodada está em
-`docs/PHASE-8-STAGE-8-VALIDATION.md`; os números abaixo
+Fase 8 concluída; Etapas 1–9 revisadas e aprovadas; publicação final da Etapa 9 autorizada. A medição desta rodada está em
+`docs/PHASE-8-STAGE-9-VALIDATION.md`; os números abaixo
 registram o fechamento anterior da Fase 7.
 
 Fases 1 a 6.1 concluídas. **Fase 7 (Admin API) concluída**, com as onze etapas

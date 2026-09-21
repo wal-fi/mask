@@ -540,7 +540,7 @@ suíte adversarial administrativa; as onze etapas da Fase 7 estão encerradas.
 
 ## Fase 8 — sessão, coordenador e edição granular
 
-**Aprovada; Etapas 1–7 publicadas; Etapa 8 concluída.** Contrato integral em
+**Concluída; Etapas 1–8 publicadas; Etapa 9 concluída, local para revisão.** Contrato integral em
 `docs/PHASE-8-SPEC.md`, decisões D-061–D-064 e rastreabilidade em
 `docs/PHASE-8-TRACEABILITY.md`.
 
@@ -585,7 +585,8 @@ sem endpoint ou opção no produto. Logs são inspecionados em memória sem
 persistir registros. O harness de leitura continua exigindo zero auditoria/escritas/efeitos.
 O novo harness de edição confere cada operação, alvo, outcome e revisions,
 com persistência/runtime reais e controles de falha somente por stdin.
-Etapa 9 e publicação da Etapa 8 exigem autorização. Evidência: `docs/PHASE-8-STAGE-8-VALIDATION.md`.
+Etapa 8 publicada sem emenda. A Etapa 9 concluiu a validação final, sem
+alteração de produto; seu commit permanece local para revisão. Evidência final: `docs/PHASE-8-STAGE-9-VALIDATION.md`.
 
 `commands.js` interpreta o catálogo autenticado e usa os modelos fechados como
 plano de seleção/cópia e construção de objetos/listas. A revision-base entra
@@ -640,4 +641,20 @@ uma única pendência. Conflito conserva o rascunho e admite nova base somente
 por gesto de revisão. Se a base nova tiver outro conjunto de IDs, a permutação
 antiga é recusada e permanece disponível para leitura/descarte. Não há merge
 automático. Resultado desconhecido e durabilidade incerta bloqueiam novas
-escritas nessa sessão. A Etapa 9 não foi iniciada.
+escritas nessa sessão. A Etapa 9 comprovou esses invariantes no pacote instalado.
+
+## Fase 8 — verificação de distribuição da Etapa 9
+
+A Etapa 9 não modifica o produto. O harness de navegador admite um Python
+instalado em venv externo e uma cópia privada dos testes fora do checkout.
+`installed_support.py` verifica origem de cada módulo maskgw, isolamento do
+interpretador e ausência de Node/npm no PATH da aplicação. Não existe caminho
+de fallback para src/ ou para o site-packages do checkout. Os controles de
+ambiente desse harness não são settings reconhecidos pelo produto.
+
+`installed_package_probe.py` observa a CLI real instalada por MCP stdio, com
+HTTP no mesmo processo, shutdown e restart. As corrupções atingem arquivos
+instalados reais, com restauração em finally e barreiras contra efeitos antes
+da validação. O rollback usa a flag existente e o lifecycle normal, conservando
+documento, backup, IDs, revision e efeitos do runtime. Nenhum comando de teste
+vira rota ou capacidade MCP. Provas e limites em `PHASE-8-STAGE-9-VALIDATION.md`.

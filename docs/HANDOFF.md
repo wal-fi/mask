@@ -2,13 +2,14 @@
 
 **Documento de entrada. Comece por aqui.**
 
-Estado: **Fase 8 aprovada; Etapas 1–7 publicadas; Etapa 8 concluída**.
-MVP e Fase 7 concluídos. A Etapa 7 foi revisada e publicada sem emenda em
-`57cc7522642d3fe3dddd10187b996ba71fc38e3f`; o fetch confirmou master, HEAD igual
+Estado: **Fase 8 concluída; Etapas 1–9 revisadas e aprovadas; publicação final da Etapa 9 autorizada**.
+MVP e Fase 7 concluídos. A Etapa 8 foi revisada e publicada sem emenda em
+`20db6f021533230d791cd910b037554c3fe03191`; o fetch confirmou master, HEAD igual
 a origin/master, árvore limpa e 0/0, com autoria e trailer preservados.
-A autorização atual é exclusivamente a Etapa 8: reorder de regras, edição de
-database e SQL estritamente aditivo. A Etapa 9 e o push da Etapa 8 não estão
-autorizados. Evidência: `docs/PHASE-8-STAGE-8-VALIDATION.md`.
+A Etapa 9 concluiu a verificação do pacote instalado e a revisão adversarial
+final, com todos os gates aprovados. As Etapas 1–9 foram revisadas e aprovadas;
+a publicação final da Etapa 9 está autorizada. A Fase 9 não foi iniciada e não
+está autorizada; nenhuma expansão funcional está autorizada. Evidência: `docs/PHASE-8-STAGE-9-VALIDATION.md`.
 
 A UI agora recebe token explicitamente, valida metadados e DTOs e apresenta
 seis vistas declarativas. Token somente na closure do transporte; navegação em
@@ -759,9 +760,9 @@ Mudancas internas que nao alteram comportamento observavel do MCP:
 
 ## 10. Como continuar
 
-A Fase 7 está **CONCLUÍDA**. As Etapas 1–7 da Fase 8 foram publicadas.
-Nesta rodada somente a Etapa 8 está autorizada; parar antes da Etapa 9 e
-manter o commit local da Etapa 8 sem publicação. A Fase 9 permanece não iniciada.
+As Fases 7 e 8 estão **CONCLUÍDAS**. As Etapas 1–9 da Fase 8 foram revisadas
+e aprovadas, com publicação final da Etapa 9 autorizada. A Fase 9 permanece
+não iniciada e não autorizada; nenhuma expansão funcional está autorizada.
 
 ### A. Endurecer o que resta (inventario preservado; nao e a proxima etapa)
 
@@ -788,9 +789,9 @@ Os que precisam de codigo, com custo em `docs/FUTURE-HARDENING.md`:
 Fase encerrada:
 Fase 7 — Admin API, CONCLUIDA (Etapas 1–11)
 
-Trabalho autorizado nesta rodada:
-Fase 8 — Etapa 8: reorder, database e SQL aditivo; parar antes da Etapa 9.
-Fase 9 — NAO INICIADA
+Entrega concluída, revisada e aprovada:
+Fase 8 — Etapas 1–9 aprovadas; publicação final da Etapa 9 autorizada.
+Fase 9 — NAO INICIADA E NAO AUTORIZADA; nenhuma expansão funcional autorizada.
 ```
 
 A Etapa 5 concluiu os primitivos de filesystem seguro em
@@ -916,10 +917,10 @@ em D-047 a D-054 com o motivo de cada um:
 - bind HTTP opcional em **`127.0.0.1`** por default, **sem CORS wildcard**
 - **sem front-end** nesta fase
 
-### C. Fase 8 — APROVADA; ETAPA 8 CONCLUÍDA
+### C. Fase 8 — CONCLUÍDA; ETAPAS 1–9 REVISADAS E APROVADAS
 
 Especificação: `docs/PHASE-8-SPEC.md`; matriz: `docs/PHASE-8-TRACEABILITY.md`;
-evidência atual: `docs/PHASE-8-STAGE-8-VALIDATION.md`. D-061–D-064 vigentes.
+evidência atual: `docs/PHASE-8-STAGE-9-VALIDATION.md`. D-061–D-064 vigentes.
 
 A fonte bruta e a ordem de validação da Etapa 3 permanecem. Os bytes validados
 são copiados para os handlers; nenhuma releitura em HTTP. A pilha original é
@@ -951,9 +952,10 @@ nova tentativa manual, e durabilidade/resultado desconhecido continuam bloqueado
 O transporte projeta corpos fechados, valida template/identidade/modelos e nunca
 recebe URL/método livres. `workbench.js` integra adoção, validação, CRUD de regras/exceptions, reorder de
 regras, database e SQL aditivo. `author.js` constrói candidatos fechados da base
-e do rascunho. A Etapa 9 não foi iniciada.
+e do rascunho. A Etapa 9 comprovou a distribuição instalada e os critérios de
+aceite, sem modificar o produto ou recursos gerados.
 
-### D. Fase 9 — Deployment · NAO INICIADA
+### D. Fase 9 — Deployment · NAO INICIADA E NAO AUTORIZADA
 
 Streamable HTTP, autenticação, OAuth. O MCP permanece stdio por decisão
 de segurança (D-036); a Admin API já oferece HTTP opcional apenas loopback.
@@ -971,10 +973,10 @@ automatico, banco de configuracao, Redis, background workers.
 
 - `git status --short` vazio: a arvore precisa estar limpa
 - suíte completa e gates verdes, sem deselect; usar a medição atual em
-  `docs/PHASE-8-STAGE-8-VALIDATION.md`, distinguindo-a dos registros históricos
+  `docs/PHASE-8-STAGE-9-VALIDATION.md`, distinguindo-a dos registros históricos
 - PostgreSQL 16 real disponível via `MASKGW_TEST_DSN`, sem nenhum skip por
   ausência de DSN; skips condicionais de plataforma discriminados na evidência
-- Etapa 9 somente após revisão e autorização; nenhum push da Etapa 8
+- publicação final da Etapa 9 autorizada; Fase 9 e expansão funcional não autorizadas
 - neste host Windows, rode o pytest com pilha de thread ampliada (64 MiB), ou o
   teste de payload gigante derruba o processo. Nunca o transforme em `skip`
   (D-041); a limitacao esta na secao 11

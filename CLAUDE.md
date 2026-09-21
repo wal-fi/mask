@@ -9,15 +9,16 @@ IA → MCP → Gateway → SQL Validator → PostgreSQL → provenance
    → Masking Engine → row limit → resposta segura → MCP → IA
 ```
 
-## Estado: MVP completo + Fase 7 concluída + Fase 8 aprovada
+## Estado: MVP completo + Fase 7 concluída + Fase 8 concluída
 
-**Fase 8: aprovada; Etapas 1–7 publicadas; Etapa 8 concluída.**
-A Etapa 7 foi revisada e publicada sem emenda em
-`57cc7522642d3fe3dddd10187b996ba71fc38e3f`; o fetch confirmou master, HEAD igual
+**Fase 8: concluída; Etapas 1–9 revisadas e aprovadas; publicação final da Etapa 9 autorizada.**
+A Etapa 8 foi revisada e publicada sem emenda em
+`20db6f021533230d791cd910b037554c3fe03191`; o fetch confirmou master, HEAD igual
 a origin/master, árvore limpa e 0/0, com autoria e trailer preservados.
-A autorização atual é exclusivamente a Etapa 8: reorder de regras, edição de
-database e SQL estritamente aditivo. A Etapa 9 e o push da Etapa 8 não estão
-autorizados. Evidência: `docs/PHASE-8-STAGE-8-VALIDATION.md`.
+A Etapa 9 concluiu a verificação do pacote instalado e a revisão adversarial
+final, com todos os gates aprovados. As Etapas 1–9 foram revisadas e aprovadas;
+a publicação final da Etapa 9 está autorizada. A Fase 9 não foi iniciada e não
+está autorizada; nenhuma expansão funcional está autorizada. Evidência: `docs/PHASE-8-STAGE-9-VALIDATION.md`.
 
 A UI exige entrada explícita; token somente na closure do transporte, DTOs
 validados antes do estado e DOM de texto. Logout, 401, pagehide/pageshow e
@@ -47,7 +48,7 @@ Nesta ordem:
 7. `docs/TEST-PLAN.md`, `docs/THREAT-MODEL.md`, `docs/FUTURE-HARDENING.md`
 
 `docs/ROADMAP.md` preserva o histórico das seis fases fechadas e registra o
-fechamento da Fase 7 e a Etapa 8 da Fase 8. Para a Fase 8, também
+fechamento da Fase 7 e o estado da Fase 8. Para a Fase 8, também
 é obrigatória a leitura integral de `docs/PHASE-8-SPEC.md` e da sua matriz.
 
 ## Objetivo

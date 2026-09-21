@@ -27,7 +27,7 @@ async function save(page) {await page.getByRole("button",{name:"Revisar alteraç
 async function reorder(page) {await navigate(page,"Regras");await page.getByRole("button",{name:"Reordenar regras",exact:true}).click();await page.getByRole("button",{name:"Mover para baixo",exact:true}).first().click();}
 /** @param {import("@playwright/test").Page} page */
 async function limits(page) {await navigate(page,"Banco");await page.getByRole("button",{name:"Editar limites",exact:true}).click();await page.getByLabel("statement_timeout_ms",{exact:true}).fill("100");await page.getByLabel("max_rows",{exact:true}).fill("1");}
-/** @param {"both"|"first"|"second"|"removed"|"conflict"|"reviewed"|"verified"|"closed"} step */
+/** @param {"entered"|"adopted"|"opened"|"ready"|"drafted"|"checked"|"both"|"first"|"second"|"removed"|"conflict"|"reviewed"|"verified"|"closed"} step */
 function mark(step) {test.info().annotations.push({type:"check",description:"batch-step-"+step});}
 const mutable={MASKGW_BROWSER_EDIT:"1",MASKGW_BROWSER_BATCH:"1"};
 
@@ -56,6 +56,15 @@ test("keyboard filtered full reorder, exact cancel, complete limits, additive SQ
     const added=writes.find(r=>r.path.endsWith("/sql"));requireTrue(added&&JSON.stringify(added.body.denied_functions)===JSON.stringify(["UPPER","upper","LOWER","Straße","STRASSE"]));
     requireTrue(!leak && writes.filter(r=>!r.path.endsWith(":validate")).every(r=>!JSON.stringify(r.body).includes("allowed_pg_functions")));
     await command("batch-effects");await command("restart");await command("batch-effects");
+    await page.goto("about:blank");await command("rollback-off");await command("batch-effects");await command("backup");
+    for(const path of ["/admin/ui","/admin/ui/assets/ui.js","/admin/ui/assets/ui.css","/admin/ui/presentation.json"]) {
+      const absent=await page.request.get(origin+path,{headers:{Authorization:"Bearer "+token}});
+      requireTrue(absent.status()===404 && absent.headers()["content-security-policy"]===undefined);
+    }
+    const native=await page.request.get(origin+"/admin/v1/config",{headers:{Authorization:"Bearer "+token}});
+    requireTrue(native.status()===200 && (await native.json()).revision===4);
+    const foreign=await page.request.get(origin+"/admin/v1/config",{headers:{Authorization:"Bearer "+token,Origin:origin}});requireTrue(foreign.status()===403);
+    await command("rollback-on");await command("batch-effects");await command("verify:4");await enter(page,origin,token);
     await navigate(page,"Política SQL");requireTrue((await page.getByRole("region",{name:"Leitura"}).textContent())?.includes("upper"));
     await page.getByRole("button",{name:"Adicionar funções negadas",exact:true}).click();await expect(page.getByLabel("Novos nomes, um por linha")).toBeVisible();requireTrue((await page.getByRole("dialog").textContent())?.includes("UPPER"));
   },mutable);
@@ -75,8 +84,8 @@ test("literal integer input failures never request and unchanged second limit is
 
 test("two tabs reorder conflict preserves full draft and explicit review only",async({},info)=>{
   await scenario(engine(info.project.name),async(page,origin,token,command)=>{
-    await enter(page,origin,token);await adopt(page);const other=await page.context().newPage();await enter(other,origin,token);
-    await reorder(page);await reorder(other);mark("both");await save(page);await finish(page);mark("first");await save(other);mark("second");await outcome(other,"mudou");await command("verify:2");
+    await enter(page,origin,token);mark("entered");await adopt(page);mark("adopted");const other=await page.context().newPage();mark("opened");await enter(other,origin,token);mark("ready");
+    await reorder(page);mark("drafted");await reorder(other);mark("both");await other.getByRole("button",{name:"Validar proposta",exact:true}).click();await outcome(other,"Conteúdo e compilação válidos");mark("checked");await save(page);await finish(page);mark("first");await save(other);mark("second");await outcome(other,"mudou");await command("verify:2");
     requireTrue(await other.getByRole("heading",{name:"Rascunho preservado",exact:true}).count()===1);
     await other.getByRole("button",{name:"Revisar rascunho com nova base",exact:true}).click();await save(other);await finish(other);await command("verify:3");await other.close();
   },mutable);
