@@ -202,8 +202,9 @@ que uma mudança futura seja percebida.
 
 ## Fase 9 — ameaças aprovadas do plano PGWire e multi-datasource
 
-**Estado:** threat model documental aprovado em 2026-09-22; a superfície ainda
-não foi implementada.
+**Estado:** threat model aprovado em 2026-09-22; a superfície de listener,
+registry e Admin UX ainda não foi implementada. A Etapa 2 implementa somente
+o store/modelo/destino/migração e está coberta em sua validação própria.
 
 A Fase 9 transforma o Gateway em servidor PostgreSQL perante clientes de IDE e
 adiciona destinos administráveis. Isso cria atacantes e ativos novos:
@@ -226,10 +227,10 @@ adiciona destinos administráveis. Isso cria atacantes e ativos novos:
   confiáveis. Um atacante que controla o processo, o ambiente ou a chave pode
   ler segredos em memória e está fora desta fronteira.
 - O atacante local considerado pode copiar ou alterar o arquivo do catálogo,
-  mas não pode alterar a âncora monotônica confiável que a Etapa 2 deverá
-  fornecer fora do arquivo substituível. Se não houver essa âncora, replay de um
-  arquivo inteiro é uma limitação criptográfica real e a implementação deve
-  falhar fechado em vez de alegar proteção.
+  mas não pode alterar a âncora monotônica confiável implementada pela Etapa 2
+  fora do arquivo substituível. O diretório da âncora é um trust boundary
+  operador-gerenciado; se ele também for substituído, replay integral continua
+  fora da garantia local e não é alegado como coberto.
 - O destino upstream pode ser lento ou hostil, mas a política de rede e a
   validação de resolução precisam impedir SSRF, rebinding e destinos proibidos.
 
@@ -273,7 +274,9 @@ store cifrado + master key → segredo em memória → PostgreSQL upstream
 9. **Store:** tamper, truncamento e transplant de ciphertext falham fechado;
    replay de arquivo inteiro só é aceito como coberto com âncora monotônica
    confiável, e sem ela o startup falha fechado. Backup, temporário, erro e
-   auditoria não contêm plaintext.
+   auditoria não contêm plaintext. Rotação confirmada da chave-mestra não deixa
+   backup gerenciado legível pela chave anterior; cópias já obtidas por terceiros
+   só perdem valor com a troca das credenciais upstream.
 10. **Concorrência:** rename/disable/remove/rotate não troca o destino de uma
     sessão admitida e não fecha recurso ainda referenciado.
 11. **Exaustão:** conexões lentas, startup incompleto, idle, prepared statements
@@ -282,9 +285,10 @@ store cifrado + master key → segredo em memória → PostgreSQL upstream
     credenciais, conexões ou resultados com outro.
 
 Os requisitos normativos e as etapas estão em `docs/PHASE-9-SPEC.md`; o índice
-de cobertura aprovado está em `docs/PHASE-9-TRACEABILITY.md`. Nenhum cenário
-acima foi executado nesta Etapa 1; cada etapa futura precisa produzir a
-evidência indicada na matriz.
+de cobertura aprovado está em `docs/PHASE-9-TRACEABILITY.md`. Os cenários de
+store, cifra, replay, recuperação e SSRF da Etapa 2 foram executados na suíte
+local e estão em `docs/PHASE-9-STAGE-2-VALIDATION.md`; PGWire, registry e os
+demais cenários continuam exigindo a evidência indicada na matriz.
 
 ---
 

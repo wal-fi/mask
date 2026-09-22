@@ -586,7 +586,7 @@ acessibilidade manual ou resistência a processo/extensão/navegador comprometid
 Resultados medidos e tentativas anteriores ficam na evidência da Etapa 9;
 findings históricos e riscos aceitos das outras fases permanecem abertos.
 
-## Fase 9 — requisitos aprovados, ainda sem implementação
+## Fase 9 — requisitos aprovados; Etapa 2 implementada localmente
 
 A Fase 9 adiciona uma fronteira PostgreSQL não confiável e um catálogo de
 datasources. O cliente PGWire nunca fornece o destino real: `dbname` é um alias
@@ -616,12 +616,15 @@ capacidade nova está desligada e após restart; não há fallback silencioso.
 
 Há uma limitação criptográfica que não pode ser escondida: autenticar um
 arquivo antigo continua possível se o atacante puder substituir tanto o store
-quanto qualquer estado de confiança que registre sua geração. A Etapa 2 deve
-fornecer uma âncora monotônica confiável fora do arquivo substituível ou falhar
-fechado e não declarar replay de arquivo coberto. Transplantar ciphertext entre
+quanto qualquer estado de confiança que registre sua geração. A Etapa 2 fornece
+uma âncora monotônica confiável fora do arquivo substituível: diretório privado
+separado, sem aceitar outro arquivo comum no diretório do store. Transplantar ciphertext entre
 datasource/campo, adulterar metadata e alterar ciphertext devem falhar fechado
 independentemente dessa âncora.
 
-Esses requisitos são documentais nesta etapa. Não há ainda listener, store,
-registry, credencial, rota v2, UI v2 ou dependência nova; a matriz de provas e
-os gates das Etapas 2–12 estão em `docs/PHASE-9-TRACEABILITY.md`.
+O listener, registry, credencial de Gateway, rota v2 e UI v2 continuam sem
+implementação. A Etapa 2 adicionou apenas modelos, destino, store cifrado,
+dependência criptográfica pinada e migração explícita, sem publicar runtime ou
+alterar o caminho legado. A evidência está em
+`docs/PHASE-9-STAGE-2-VALIDATION.md` e a matriz de provas em
+`docs/PHASE-9-TRACEABILITY.md`.

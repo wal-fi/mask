@@ -18,9 +18,10 @@ a origin/master, árvore limpa e 0/0, com autoria e trailer preservados.
 A Etapa 9 concluiu a verificação do pacote instalado e a revisão adversarial
 final, com todos os gates aprovados. A publicação final ocorreu em `42cd2df`.
 A Etapa 1 documental da Fase 9 foi concluída e aprovada em 2026-09-22. A
-especificação aprovada está em `docs/PHASE-9-SPEC.md`; listener PGWire,
-múltiplos datasources e Admin UX v2 continuam sem implementação funcional, e as
-Etapas 2–12 exigem autorização própria. Evidência da Fase 8:
+Etapa 2 foi autorizada nesta sessão e implementa somente modelos, destino,
+store cifrado/autenticado e migração explícita. A especificação aprovada está
+em `docs/PHASE-9-SPEC.md`; listener PGWire, registry, Admin UX v2 e as Etapas
+3–12 continuam sem implementação funcional. Evidência da Fase 8:
 `docs/PHASE-8-STAGE-9-VALIDATION.md`.
 
 A UI exige entrada explícita; token somente na closure do transporte, DTOs
@@ -46,9 +47,9 @@ Nesta ordem:
 2. `docs/ARCHITECTURE.md` — módulos e responsabilidades
 3. `docs/SECURITY.md` — invariantes de segurança
 4. `docs/SECURITY-REVIEW.md` — o que foi atacado, o que resistiu, o que não
-5. `docs/DECISIONS.md` — 76 decisões (D-001 a D-076) e o porquê de cada uma
+5. `docs/DECISIONS.md` — 86 decisões (D-001 a D-086) e o porquê de cada uma
 6. `docs/MASKING-SPEC.md` — semântica exata do pipeline de masking
-7. `docs/PHASE-9-SPEC.md` — especificação aprovada; Etapa 1 documental concluída
+7. `docs/PHASE-9-SPEC.md` — especificação aprovada; Etapas 1 e 2 delimitadas
 8. `docs/TEST-PLAN.md`, `docs/THREAT-MODEL.md`, `docs/FUTURE-HARDENING.md`
 
 `docs/ROADMAP.md` preserva o histórico das seis fases fechadas e registra o
@@ -64,7 +65,8 @@ access governance. Essa distinção já rejeitou várias propostas; mantenha-a.
 
 ## Stack
 
-Python ≥ 3.11 · psycopg3 · pglast · MCP SDK v2 · Pydantic · PyYAML · pytest.
+Python ≥ 3.11 · psycopg3 · pglast · MCP SDK v2 · Pydantic · PyYAML · pytest ·
+cryptography==50.0.1 para o catálogo da Fase 9, Etapa 2.
 FastAPI + uvicorn desde a Fase 7 / Etapa 7, **só** na fronteira HTTP
 administrativa: o MCP continua stdio only (D-036).
 Versões testadas em `docs/HANDOFF.md`.

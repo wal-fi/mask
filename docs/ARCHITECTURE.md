@@ -663,7 +663,7 @@ vira rota ou capacidade MCP. Provas e limites em `PHASE-8-STAGE-9-VALIDATION.md`
 
 ---
 
-## Fase 9 — arquitetura aprovada, ainda documental
+## Fase 9 — arquitetura aprovada; Etapa 2 localmente implementada
 
 A Fase 9 acrescenta futuramente uma terceira fronteira de entrada ao lado do
 MCP stdio e da Admin API local: um listener PostgreSQL que funciona como façade
@@ -672,10 +672,12 @@ resolve `dbname` como alias, adquire um runtime por alias/generation e passa
 somente pelo Gateway seguro. Não é proxy TCP e não chama `PostgresAdapter`
 bruto para devolver resultados.
 
-O catálogo futuro é persistente, versionado, autenticado e contém ciphertexts
-AEAD para os segredos upstream. `DatasourceRegistry` e os runtimes por sessão
-serão construídos nas Etapas 2–3; não existem no layout atual. A Administração
-v2 continua separada do plano de dados, local/loopback-only e sem executar SQL.
+O catálogo é persistente, versionado, autenticado e contém ciphertexts AEAD
+para os segredos upstream. A Etapa 2 fornece os modelos, a validação de
+destino, o store com âncora/journal e a migração explícita; o
+`DatasourceRegistry` e os runtimes por sessão continuam reservados à Etapa 3.
+A Administração v2 continua separada do plano de dados, local/loopback-only e
+sem executar SQL.
 
 O lifecycle aprovado é: validar settings e recursos; validar e autenticar o
 store; compilar e verificar datasources habilitados; confirmar Admin HTTP;
@@ -686,6 +688,6 @@ todas as três fronteiras; o modo legado só volta por desligamento explícito e
 restart.
 
 O contrato, a ameaça e a cobertura estão em `docs/PHASE-9-SPEC.md`,
-`docs/THREAT-MODEL.md` e `docs/PHASE-9-TRACEABILITY.md`. A aprovação da Etapa 1
-não adiciona pacote Python, dependência, modelo, rota, socket ou alteração de
-runtime ao produto atual.
+`docs/THREAT-MODEL.md` e `docs/PHASE-9-TRACEABILITY.md`. A Etapa 2 adiciona
+somente o pacote interno `maskgw.datasource` e sua dependência criptográfica;
+não adiciona rota, socket, listener, registry ou alteração de runtime.

@@ -14,6 +14,9 @@ dependencies = [
     "psycopg[binary]>=3.1",
     "pydantic>=2.6",
     "PyYAML>=6",
+    # Fase 9, Etapa 2: AES-256-GCM, HKDF e primitives de integridade do
+    # catálogo cifrado. O pin mantém o envelope e os vetores reprodutíveis.
+    "cryptography==50.0.1",
     # Fase 7, Etapa 7: a fronteira HTTP administrativa. Entram juntas e so
     # agora, porque a especificacao condicionava a adocao do FastAPI a
     # aprovacao da Fase 7 (secao 14.2). Sao usadas EXCLUSIVAMENTE pelo plano

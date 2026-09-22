@@ -37,20 +37,21 @@ autorizada. As Etapas 1–8 foram publicadas sem emenda. A **Etapa 9:
 pacote instalado, revisão adversarial final e fechamento dos critérios de aceite**
 foi concluída, com todos os gates aprovados. A Fase 8 está concluída conforme
 `docs/PHASE-8-SPEC.md`, com os limites documentados na evidência.
-Nenhuma funcionalidade, rota, modelo, permissão ou dependência foi ampliada.
-Preservar memória volátil, uma escrita pendente, gestos explícitos e ausência
-de retry/rebase/fila/rollback automático. A Fase 9 foi autorizada em
-2026-09-22 **somente para sua Etapa 1 documental**: especificação, threat model,
-decisões e rastreabilidade do listener PostgreSQL, múltiplos datasources e
-Admin UX v2. A Etapa 1 foi concluída e aprovada; nenhuma implementação funcional
-das Etapas 2–12 está autorizada sem revisão e autorização próprias.
+Nenhuma funcionalidade, rota, modelo, permissão ou dependência da Fase 8 foi
+ampliada. Preservar memória volátil, uma escrita pendente, gestos explícitos e
+ausência de retry/rebase/fila/rollback automático. A Fase 9 foi autorizada em
+2026-09-22 para sua Etapa 1 documental e, nesta sessão, para a Etapa 2:
+modelos, store cifrado/autenticado, validação de destino e migração explícita.
+A Etapa 1 foi concluída e aprovada; as Etapas 3–12 ainda exigem revisão e
+autorização próprias. Não iniciar registry, Admin API v2, UI v2, PGWire,
+integração runtime ou qualquer etapa posterior.
 Evidência: `docs/PHASE-8-STAGE-9-VALIDATION.md`.
 
 Interfaces genéricas, editor SQL administrativo, resultados do banco na UI,
 funções de DBA, auditoria consultável e front-end para MCP continuam fora do
-escopo. Bind PostgreSQL, TLS, façade PGWire, catálogo multi-datasource e
-redesign administrativo são contratos exclusivos da Fase 9; continuam sem
-implementação até a autorização da etapa correspondente.
+escopo. Bind PostgreSQL, TLS, façade PGWire, registry, catálogo publicado e
+redesign administrativo são contratos exclusivos das etapas posteriores da
+Fase 9; continuam sem implementação nesta sessão.
 
 ## Matching
 Por padrão: case-insensitive + substring/contains.

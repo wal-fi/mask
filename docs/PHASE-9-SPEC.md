@@ -1,13 +1,14 @@
 # Fase 9 — PostgreSQL Gateway, múltiplos datasources e Admin UX v2
 
-**Estado:** especificação aprovada em 2026-09-22; Etapa 1 documental concluída.
+**Estado:** especificação aprovada em 2026-09-22; Etapas 1 e 2 concluídas
+localmente nesta sessão.
 **Base:** Fase 8 concluída em `42cd2df8aeef4a1e39ffae0ecf33a6ce86bd8445`.
-**Implementação funcional:** não iniciada.
+**Implementação funcional:** Etapa 2 limitada a modelos, destino, store e
+migração; Etapas 3–12 não iniciadas.
 
-Esta aprovação é documental. As Etapas 2–12 continuam bloqueadas para
-implementação até revisão e autorização próprias, na ordem desta especificação.
-Nenhum módulo, modelo, rota, dependência, listener ou recurso descrito abaixo
-existe no produto atual.
+Esta aprovação normativa não autoriza as Etapas 3–12, que continuam
+condicionadas à revisão e autorização próprias, na ordem desta especificação.
+Não existem listener, registry, rota, UI v2 ou integração runtime no produto.
 
 ## 1. Motivo e resultado esperado
 
@@ -284,9 +285,11 @@ MCP, em logs ou erros externos.
 
 A decisão aprovada é um documento versionado gerido por máquina, com escrita
 atômica já comprovada, catálogo autenticado e campos secretos cifrados
-individualmente por **AES-256-GCM**. A Etapa 2 deverá escolher uma biblioteca
-madura e fixar o envelope binário/JSON versionado antes de escrever código; isso
-é detalhe de implementação, não autorização para criptografia própria.
+individualmente por **AES-256-GCM**. A Etapa 2 fechou a implementação em
+`cryptography==50.0.1`, com envelope JSON versionado, HMAC-SHA-256 separado e
+HKDF para a subchave de autenticação. O desenho executável e seus limites estão
+em `docs/PHASE-9-STAGE-2-DESIGN.md`; não há criptografia própria ou fallback de
+algoritmo.
 
 Requisitos independentes do formato:
 
@@ -311,10 +314,11 @@ Requisitos independentes do formato:
 
 Replay de um arquivo inteiro é diferente de transplantar um campo. Um arquivo
 substituível não consegue detectar sozinho que uma versão autenticada antiga foi
-restaurada. Portanto a Etapa 2 deve fornecer e testar uma âncora monotônica
-confiável, fora do conteúdo substituível do catálogo, ou registrar uma decisão
-de ameaça equivalente antes de implementar. Sem essa âncora, startup fail-closed
-é obrigatório e a Etapa 2 não pode declarar replay de arquivo fechado.
+restaurada. A Etapa 2 fornece e testa uma âncora monotônica confiável em
+diretório privado separado, fora do conteúdo substituível do catálogo; um
+segundo arquivo comum ao lado do store não é aceito como âncora. Se o trust
+boundary operador-gerenciado da âncora for comprometido, a limitação permanece
+explícita e não é mascarada por uma alegação criptográfica.
 
 Não implementar criptografia própria.
 
@@ -326,9 +330,11 @@ catálogo multi-datasource estiverem desligados. A adoção é explícita:
 1. administrador habilita o store;
 2. UI oferece importar o datasource legado;
 3. senha é cifrada e política copiada;
-4. candidato conecta e passa capability checks;
+4. candidato conecta e passa capability checks (integração futura do registry);
 5. estado é persistido e runtime publicado;
-6. somente depois o alias fica disponível.
+6. somente depois o alias fica disponível. A Etapa 2 implementa apenas a cópia
+   explícita, validação de destino, cifra e persistência; não conecta, publica
+   runtime nem ativa alias.
 
 Não apagar nem reescrever automaticamente `masking.yaml`. Rollback desliga a
 nova capacidade e volta ao modo anterior após restart. Se o catálogo novo
@@ -553,9 +559,9 @@ subconjunto implementado. A documentação publica a matriz certificada.
 | 12 | pacote, revisão adversarial e fechamento | gates integrais e rollback real |
 
 Cada etapa termina para revisão e autorização próprias. A Etapa 1 foi aprovada
-em 2026-09-22; isso não autoriza iniciar a Etapa 2 nem qualquer etapa posterior.
-Código funcional só começa dentro da etapa autorizada e após os gates anteriores
-estarem verdes.
+em 2026-09-22. A Etapa 2 foi autorizada nesta sessão e sua implementação local
+fica limitada ao modelo, store, destino e migração descritos acima; as Etapas
+3–12 continuam bloqueadas para implementação funcional.
 
 ## 16. Decisões aprovadas em 2026-09-22
 
@@ -582,8 +588,9 @@ estarem verdes.
 
 As doze decisões acima foram aprovadas integralmente em 2026-09-22 e estão
 registradas como D-065 a D-076 em `docs/DECISIONS.md`. O registro documental
-não autoriza a implementação: cada etapa 2–12 continua condicionada à sua
-própria revisão, aprovação e gates de entrada.
+não autoriza as Etapas 3–12: a Etapa 2 possui autorização própria e evidência
+em `docs/PHASE-9-STAGE-2-VALIDATION.md`; cada etapa posterior continua
+condicionada à sua própria revisão, aprovação e gates de entrada.
 
 ## 17. Critério de conclusão
 

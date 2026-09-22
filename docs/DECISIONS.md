@@ -2152,3 +2152,138 @@ datasource habilitado inválido impede Admin HTTP, PGWire e MCP; não existe
 modo parcialmente funcional, retry automático ou fallback implícito. Um
 datasource desabilitado não é aberto; sua recuperação é explícita. Referências:
 §§5–8, 11–14 e etapas 2–4, 7 e 12.
+
+# Fase 9 — decisões de implementação aprovadas para a Etapa 2
+
+As decisões D-077–D-086 fecham a barreira de projeto da Etapa 2 sem reabrir ou
+reduzir D-065–D-076. Não autorizam registry, Admin API v2, UI v2 ou PGWire.
+
+## D-077 — Biblioteca criptográfica pinada
+
+A implementação usa `cryptography==50.0.1`, `AESGCM`, `HMAC` e `HKDF` da
+biblioteca madura; não há criptografia própria, fallback de algoritmo ou chave
+derivada de senha humana. Referências: PHASE-9-SPEC §6.2 e
+`docs/PHASE-9-STAGE-2-DESIGN.md` §1.
+
+## D-078 — Payload canônico único
+
+O payload do catálogo é JSON UTF-8 canônico (`sort_keys`, separators sem
+espaço, `ensure_ascii=False`) com schema fechado, datasources ordenados por ID
+e `auth` excluído apenas da entrada HMAC. O SHA-256 desses bytes é o digest da
+âncora; digest não substitui autenticação. Referência: desenho §2.
+
+## D-079 — Envelope versionado e AAD fechada
+
+O envelope é `format=1`, `schema_version=1`; cada senha usa AES-256-GCM com
+nonce CSPRNG de 12 bytes e AAD canônica ligada a datasource, campo,
+schema_version e revision. A tag GCM permanece no ciphertext; nenhum segredo
+entra no modelo público ou em diagnósticos. Referências: D-069, PHASE-9-SPEC
+§6.2 e desenho §§3–4.
+
+## D-080 — Âncora fora do diretório substituível
+
+A âncora monotônica fica em diretório privado separado do store, com path
+configurável e default `config/.maskgw-anchor/datasources.anchor`; o diretório
+é o trust boundary operador-gerenciado. Um segundo arquivo comum no diretório
+do store não é aceito como âncora. Referência: PHASE-9-SPEC §6.2 e desenho §4.
+
+## D-081 — Journal de commit entre store e âncora
+
+Toda escrita registra old/new revision e digest em journal durável antes do
+replace do store. A abertura resolve apenas old/old, new/old ou new/new; outra
+combinação falha fechada. A âncora avança depois do store durável e o journal só
+é removido depois da âncora durável, com remoção estrita (falha de remoção é
+erro, não silêncio).
+
+Revisão da Etapa 2 (P1 da rotação): a recuperação é decidida por inteiro antes
+de qualquer escrita. Journal, store e âncora são autenticados e reconciliados
+primeiro — o store sempre por HMAC com a chave fornecida, sem leitura não
+autenticada; a âncora por igualdade com um estado do journal autenticado. Uma
+abertura que terminará em erro de chave nunca consome o journal, nunca avança a
+âncora e nunca executa a limpeza seletiva. Falha antes da tentativa de replace
+do store mantém `CatalogWriteError` e preserva o par antigo; falha a partir da
+tentativa de replace é `CatalogOutcomeUncertainError`, porque o store pode já ser
+o novo e o erro não permite inferir o estado. Motivo: antes desta revisão, uma
+abertura com a chave antiga depois do replace de uma rotação lia o store sem
+autenticação, avançava a âncora, removia o journal e só então falhava por chave
+incompatível — o único registro da transação era destruído por uma tentativa
+que não tinha como concluir. Referências: PHASE-9-SPEC §§6.2, 11 e desenho §5.
+
+## D-082 — Rotação explícita em memória
+
+Rotação recebe a nova master key explicitamente, re-cifra cada segredo com nonce
+novo, incrementa a revision e usa o journal existente. A variável externa só é
+alterada após sucesso; não há fallback silencioso nem período indefinido de
+duas chaves.
+
+Revisão da Etapa 2 (P1 da rotação): erro depois do replace do store tem
+**resultado incerto** e exige preservar as duas chaves. O ponto de commit é a
+âncora nova durável. Abrir com uma única chave só conclui a rotação quando o
+resultado já está fixado e essa chave autentica o store: old/old com a chave
+antiga (descarte da intenção, sem restaurar bytes) ou new/new com a chave nova
+(remoção do journal). new/old, ou uma chave que não autentica o store, falha com
+`CatalogRotationPendingError` sem escrita. A determinação é explícita:
+`inspect_master_key_rotation` (somente leitura) e
+`recover_master_key_rotation` (idempotente) recebem as duas chaves, exigem que a
+antiga autentique o papel antigo e a nova o papel novo do journal, autenticam o
+store com a chave do estado que ele representa, reconciliam a âncora, provam em
+memória que todos os segredos abrem com a chave confirmada e devolvem qual chave
+configurar. Não há rollback automático do store, fallback silencioso nem
+aceitação das duas chaves depois da determinação. Motivo: sem esse contrato, o
+operador que recebia erro e mantinha a chave antiga podia consumir o journal e
+ficar sem saber que o catálogo já estava cifrado com a chave nova, com risco de
+descartá-la.
+
+Revisão da Etapa 2 (retenção de backups): rotação só é declarada concluída
+depois da remoção verificada dos backups gerenciados cifrados com chaves
+anteriores (D-083); a chave antiga não abre mais nenhum arquivo gerenciado do
+diretório do catálogo. Isso não revoga cópias já obtidas por terceiros: suspeita
+de comprometimento da chave-mestra exige também trocar as credenciais upstream
+no PostgreSQL de destino e gravá-las com `rotate_secret`. Referências:
+PHASE-9-SPEC §6.2 e desenho §6.
+
+## D-083 — Filesystem privado e limpeza seletiva
+
+Store, lock, temporários, backups e journal são regulares, não symlinkados,
+criados exclusivamente, fsyncados e escritos por replace no mesmo diretório.
+Somente nomes gerados pelo protocolo podem ser removidos; backups guardam
+somente o envelope cifrado.
+
+Revisão da Etapa 2 (retenção de backups na rotação, aprovada pelo usuário):
+escritas com a mesma chave mantêm os três backups gerenciados mais recentes.
+Numa rotação de master key, os backups são preservados até o ponto de commit
+(âncora nova durável) e, depois dele e antes da remoção do journal, **todos**
+são removidos, porque todos são anteriores à rotação e estão cifrados com
+chaves anteriores. "Backup gerenciado" é só arquivo regular com nome
+`datasources.store.bak.<revision>` estrito; symlinks, diretórios e nomes
+desconhecidos nunca são tocados. A remoção é verificada: `fsync` do diretório
+no POSIX e nova varredura; remoção com erro ou sem efeito é falha. Falha ou
+interrupção mantém o journal e o resultado incerto, e a limpeza é repetida pela
+conclusão da rotação (abertura new/new com a chave nova ou recuperação
+explícita). Motivo: na revisão, uma rotação concluída deixava
+`datasources.store.bak.<revision anterior>` legível pela chave antiga, com a
+senha upstream atual. Referências: D-048–D-050 e desenho §§4–6.
+
+## D-084 — Resolução DNS fixada contra SSRF/rebinding
+
+Host/porta são campos separados; loopback, unspecified, link-local, multicast,
+IPv4-mapped perigoso e metadata cloud são recusados. IP privado é permitido e
+IP global exige allowlist exata. O conjunto completo de endereços resolvidos é
+persistido e qualquer mudança posterior falha fechadamente. Referências:
+PHASE-9-SPEC §12 e desenho §7.
+
+## D-085 — Ausência e corrupção falham fechadas
+
+Com a capacidade desligada, nenhum catálogo é lido e o legado permanece
+inalterado. A abertura do catálogo exige store e âncora coerentes; ausência,
+truncamento, schema futuro, chave ausente/incorreta ou digest divergente não
+recebe autocorreção. Inicialização vazia é operação interna explícita.
+Referências: D-075–D-076 e desenho §8.
+
+## D-086 — Migração legada é explícita e não destrutiva
+
+A migração lê `MASKGW_DATABASE_DSN` somente em memória, separa e cifra os
+campos upstream, preserva `masking.yaml` byte a byte e não publica
+runtime/registry. Falha de parse, destino ou persistência deixa o legado e o
+catálogo anterior intactos; nunca há fallback automático. Referências: D-075,
+PHASE-9-SPEC §6.3 e desenho §8.

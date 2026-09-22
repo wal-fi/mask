@@ -1,7 +1,8 @@
 # Fase 9 — matriz de rastreabilidade normativa
 
-**Estado:** Etapa 1 documental concluída e aprovada em 2026-09-22; nenhuma
-implementação funcional iniciada.
+**Estado:** Etapa 1 documental concluída e aprovada em 2026-09-22; Etapa 2
+implementada localmente nesta sessão. Registry, Admin API v2, UI v2, PGWire e
+as Etapas 3–12 continuam não iniciados.
 
 **Fonte normativa:** [PHASE-9-SPEC.md](PHASE-9-SPEC.md). A matriz cobre todas
 as Etapas 2–12 e distingue requisito, etapa responsável, prova obrigatória e
@@ -27,10 +28,10 @@ fechada com os artefatos e números medidos no seu próprio registro de validaç
 | F9-013 | Protocolo/formato não suportado falha fechado | 5.3–5.5, 12 | 7–10 | frames malformados, máquina de estados, tamanhos e UTF-8 | planejada |
 | F9-014 | Tipos/metadados não expõem proveniência | 5.5, 13 | 8–10 | RowDescription, OID/typmod, NULL, duplicatas e colunas mascaradas como texto | planejada |
 | F9-015 | Limite de linhas observável sem dado extra | 5.5, 14.2 | 8 | NOTICE fixo, linha N+1 descartada antes de masking e sem leakage | planejada |
-| F9-016 | Catálogo persistente multi-datasource, fechado e autenticado | 6.1–6.2 | 2 | roundtrip, schema, metadata tamper, truncamento e integridade | planejada |
-| F9-017 | Segredo upstream write-only e cifrado por AEAD | 4.3, 6.2, 13 | 2, 4, 6 | AES-256-GCM, nonce único, tamper, transplant e canários de leakage | planejada |
-| F9-018 | Chave-mestra externa e rotação explícita | 5.1, 6.2 | 2, 12 | chave ausente/errada, rotação, ausência de fallback e nenhum plaintext | planejada |
-| F9-019 | Migração do DSN único explícita e reversível | 6.3, 10, 17 | 2, 11 | importação, restart, desligamento explícito e retorno real ao legado | planejada |
+| F9-016 | Catálogo persistente multi-datasource, fechado e autenticado | 6.1–6.2 | 2 | roundtrip, schema, metadata tamper, truncamento e integridade | implementada na Etapa 2; evidência local |
+| F9-017 | Segredo upstream write-only e cifrado por AEAD | 4.3, 6.2, 13 | 2, 4, 6 | AES-256-GCM, nonce único, tamper, transplant e canários de leakage | implementada na Etapa 2; evidência local |
+| F9-018 | Chave-mestra externa e rotação explícita | 5.1, 6.2 | 2, 12 | chave ausente/errada, rotação, ausência de fallback e nenhum plaintext | implementada na Etapa 2; evidência local |
+| F9-019 | Migração do DSN único explícita e reversível | 6.3, 10, 17 | 2, 11 | importação, restart, desligamento explícito e retorno real ao legado | migração explícita implementada; rollback/runtime pendentes |
 | F9-020 | Registry por alias/generation com refcount | 7, 11 | 3 | concorrência, fechamento único, aposentadoria e isolamento | planejada |
 | F9-021 | Conexão upstream por sessão e limites | 5.1, 7, 11–12 | 3, 7–10 | sessões máximas, por-datasource, idle, slow clients e cleanup | planejada |
 | F9-022 | Candidato testado antes de persistir/publicar | 6.3, 7–8 | 2–4 | falhas de conexão/capability sem efeito em bytes, runtime ou revision | planejada |
@@ -45,8 +46,8 @@ fechada com os artefatos e números medidos no seu próprio registro de validaç
 | F9-031 | Nenhuma dependência ou recurso externo na UI | 9.2–9.3, 14 | 5–6, 12 | CSP, rede, pacote instalado e inventário de dependências | planejada |
 | F9-032 | MCP aceita alias opcional sem quebrar `sql` | 10 | 11 | clientes antigos, novo cliente e default explícito | planejada |
 | F9-033 | MCP não enumera aliases nem altera catálogo | 10 | 11 | schema/tool único, erros fixos e AST de separação de planos | planejada |
-| F9-034 | SSRF e DNS rebinding no destino são bloqueados | 6.1, 12 | 2, 4, 12 | loopback, link-local, multicast, metadata cloud e resolução mutável | planejada |
-| F9-035 | Nenhuma informação sensível em observabilidade | 2, 6.2, 13 | 2–12 | canários de senhas, chave, SQL, destino, ciphertext, nonce e célula | planejada |
+| F9-034 | SSRF e DNS rebinding no destino são bloqueados | 6.1, 12 | 2, 4, 12 | loopback, link-local, multicast, metadata cloud e resolução mutável | validação da Etapa 2 implementada; integração pendente |
+| F9-035 | Nenhuma informação sensível em observabilidade | 2, 6.2, 13 | 2–12 | canários de senhas, chave, SQL, destino, ciphertext, nonce e célula | redaction da Etapa 2 implementada; cobertura futura pendente |
 | F9-036 | Lifecycle ordenado das três fronteiras | 11 | 3–12 | falha em cada passo, bind confirmado, drain e shutdown sem órfãos | planejada |
 | F9-037 | Riscos F-01 a F-11 não regridem | 2, 5, 12 | 8–12 | suíte de segurança completa por datasource e função/catálogo | planejada |
 | F9-038 | Pacote instalado funciona sem checkout/Node | 14 | 12 | wheel e sdist isolados, sem fallback ao checkout ou Node | planejada |
@@ -57,7 +58,7 @@ fechada com os artefatos e números medidos no seu próprio registro de validaç
 
 | Etapa | Entrega normativa | IDs principais | Gate de saída verificável | Estado |
 |---:|---|---|---|---|
-| 2 | modelo, store autenticado/cifrado e migração | F9-016–019, F9-022–023, F9-034–035 | testes AEAD/metadata, âncora de replay, atomicidade, SSRF, leakage e subprocesso fail-closed | não iniciada |
+| 2 | modelo, store autenticado/cifrado e migração | F9-016–019, F9-022–023, F9-034–035 | testes AEAD/metadata, âncora de replay, atomicidade, SSRF, leakage e subprocesso fail-closed | implementada localmente; F9-022–023 aguardam integração |
 | 3 | registry multi-datasource e lifecycle | F9-002–003, F9-020–023, F9-036 | concorrência, generations, refcount, drain, fechamento único e isolamento | não iniciada |
 | 4 | Admin API v2 de datasources | F9-004–006, F9-022, F9-024–026, F9-034 | auth/CSRF, revisões, teste sem publicação, v1 intacta e destino validado | não iniciada |
 | 5 | UX v2 somente leitura | F9-027–031 | screenshots, a11y, token/draft lifecycle, CSP e três browsers fixados | não iniciada |
@@ -86,6 +87,21 @@ fechada com os artefatos e números medidos no seu próprio registro de validaç
 | D-075 | rollback legado explícito | 6.3, 10–11, 17 | 2, 11–12 |
 | D-076 | fail-closed no startup | 5–8, 11–14 | 2–4, 7, 12 |
 
+## Rastreabilidade das decisões de implementação D-077–D-086
+
+| Decisão | Implementação verificável | Evidência |
+|---|---|---|
+| D-077 | `cryptography==50.0.1`, AESGCM/HKDF/HMAC | `src/maskgw/datasource/crypto.py`; validação de dependência |
+| D-078 | JSON canônico, schema fechado, digest SHA-256 | `crypto.py`, `store.py`; roundtrip/tamper |
+| D-079 | envelope v1, nonce de 12 bytes e AAD por ID/campo/revision | `crypto.py`; cifra, rotação e chave errada |
+| D-080 | âncora em diretório separado, sem arquivo comum confiável | `store.py`; replay/transplant e filesystem |
+| D-081 | journal old/new e recuperação old/old, new/old, new/new decidida antes de qualquer escrita; erro pós-replace incerto | `store.py`; pontos de crash de escrita, inicialização e rotação; abertura com chave errada sem escrita |
+| D-082 | rotação explícita sem fallback; determinação e recuperação explícitas com as duas chaves; conclusão só após remover backups da chave anterior | `CatalogStore.rotate_master_key`, `inspect_master_key_rotation`, `recover_master_key_rotation`; sete limites de crash × chave antiga/nova/errada, idempotência e chaves inválidas |
+| D-083 | locks, temporários, backups, replace, fsync e limpeza seletiva; remoção verificada dos backups após o commit da rotação | `store.py`; testes de lock/recuperação, falha/retomada da remoção, remoção sem efeito, nomes desconhecidos, diretórios e symlinks |
+| D-084 | validação SSRF e conjunto DNS fixado | `destination.py`; metadata e rebinding |
+| D-085 | ausência, corrupção e chave inválida falham fechadas | `CatalogStore.open`; testes de tamper/anchor/key |
+| D-086 | migração DSN explícita, em memória e não destrutiva | `migration.py`; teste byte a byte do legado |
+
 ## Gates comuns e limites desta matriz
 
 - PostgreSQL 16 real em todos os gates de integração; `MASKGW_TEST_DSN` deve
@@ -99,7 +115,6 @@ fechada com os artefatos e números medidos no seu próprio registro de validaç
   o teste adversarial não pode ser deselected, skipped ou xfailed.
 - Nenhum finding pode virar skip/xfail. Skips exclusivamente de plataforma
   devem ser separados e explicados na evidência da etapa.
-- A matriz não autoriza código. Até o fechamento da Etapa 1, todos os itens
-  acima permanecem `planejada`/`não iniciada`; a única evidência executável da
-  Fase 9 é a baseline documental registrada em
-  `docs/PHASE-9-STAGE-1-VALIDATION.md`.
+- A matriz não autoriza as Etapas 3–12. A evidência executável da Etapa 2 está
+  em `docs/PHASE-9-STAGE-2-VALIDATION.md`; os resultados históricos da Fase 8
+  continuam exclusivamente em sua própria evidência e não são reatribuídos.

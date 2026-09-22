@@ -2,7 +2,7 @@
 
 **Documento de entrada. Comece por aqui.**
 
-Estado: **Fase 8 concluída e publicada; Fase 9 — Etapa 1 documental concluída e aprovada**.
+Estado: **Fase 8 concluída e publicada; Fase 9 — Etapa 2 implementada localmente**.
 MVP e Fase 7 concluídos. A Etapa 8 foi revisada e publicada sem emenda em
 `20db6f021533230d791cd910b037554c3fe03191`; o fetch confirmou master, HEAD igual
 a origin/master, árvore limpa e 0/0, com autoria e trailer preservados.
@@ -10,9 +10,10 @@ A Etapa 9 concluiu a verificação do pacote instalado e a revisão adversarial
 final, com todos os gates aprovados. A publicação final ocorreu em `42cd2df`.
 Em 2026-09-22 a Etapa 1 documental da Fase 9 foi concluída e aprovada:
 especificação, threat model, decisões e rastreabilidade de façade PGWire,
-múltiplos datasources e Admin UX v2. A especificação aprovada está em
-`docs/PHASE-9-SPEC.md`; nenhuma implementação funcional das Etapas 2–12 está
-autorizada sem revisão e autorização próprias. Evidência da Fase 8:
+múltiplos datasources e Admin UX v2. Nesta sessão a Etapa 2 foi autorizada e
+implementou somente modelos, store cifrado, destino e migração explícita. A
+especificação aprovada está em `docs/PHASE-9-SPEC.md`; as Etapas 3–12 continuam
+sem autorização de implementação. Evidência da Fase 8:
 `docs/PHASE-8-STAGE-9-VALIDATION.md`.
 
 A UI agora recebe token explicitamente, valida metadados e DTOs e apresenta
@@ -36,7 +37,7 @@ Ordem de leitura sugerida:
 | `docs/ARCHITECTURE.md` | modulos e responsabilidades |
 | `docs/SECURITY.md` | invariantes de seguranca e o que exigir antes de expor |
 | `docs/SECURITY-REVIEW.md` | 11 findings do red team, seis fechados |
-| `docs/DECISIONS.md` | D-001 a D-064, com o motivo de cada uma |
+| `docs/DECISIONS.md` | D-001 a D-086, com o motivo de cada uma |
 | `docs/MASKING-SPEC.md` | semantica exata do pipeline |
 | `docs/TEST-PLAN.md` | o que cada camada de teste cobre |
 | `docs/THREAT-MODEL.md` | cenarios de ataque e o resultado medido |
@@ -106,6 +107,7 @@ Python >= 3.11.
 | mcp | SDK MCP oficial, linha v2 (testado em 2.1.1) | Fase 5 |
 | fastapi | fronteira HTTP administrativa (testado em 0.141.1) | Fase 7, Etapa 7 |
 | uvicorn | servidor ASGI da Admin API (testado em 0.52.4) | Fase 7, Etapa 7 |
+| cryptography | AES-256-GCM, HKDF e HMAC do catálogo | Fase 9, Etapa 2 (`50.0.1`) |
 
 FastAPI e uvicorn sao usados **exclusivamente** pelo plano administrativo. O
 MCP continua stdio only (D-036), e nenhuma porta e aberta sem
@@ -767,9 +769,10 @@ Mudancas internas que nao alteram comportamento observavel do MCP:
 ## 10. Como continuar
 
 As Fases 7 e 8 estão **CONCLUÍDAS** e publicadas. A Etapa 1 documental da Fase 9
-foi concluída e aprovada em 2026-09-22. A especificação, o threat model, as
-decisões D-065–D-076 e a matriz estão fechados; as Etapas 2–12 ainda exigem
-revisão e autorização próprias antes de qualquer implementação funcional.
+foi concluída e aprovada em 2026-09-22. A Etapa 2 foi autorizada nesta sessão e
+implementou somente o pacote interno descrito em
+`docs/PHASE-9-STAGE-2-DESIGN.md`; as Etapas 3–12 ainda exigem revisão e
+autorização próprias.
 
 ### A. Endurecer o que resta (inventario preservado; nao e a proxima etapa)
 
@@ -798,7 +801,7 @@ Fase 7 — Admin API, CONCLUIDA (Etapas 1–11)
 
 Entrega concluída, revisada e aprovada:
 Fase 8 — Etapas 1–9 aprovadas e publicadas em `42cd2df`.
-Fase 9 — ETAPA 1 DOCUMENTAL CONCLUÍDA E APROVADA; implementação funcional não iniciada.
+Fase 9 — ETAPA 2 IMPLEMENTADA LOCALMENTE; PGWire, registry, Admin v2 e UI v2 não iniciados.
 ```
 
 A Etapa 5 concluiu os primitivos de filesystem seguro em
@@ -962,14 +965,21 @@ regras, database e SQL aditivo. `author.js` constrói candidatos fechados da bas
 e do rascunho. A Etapa 9 comprovou a distribuição instalada e os critérios de
 aceite, sem modificar o produto ou recursos gerados.
 
-### D. Fase 9 — PGWire, múltiplos datasources e Admin UX v2 · ETAPA 1 CONCLUÍDA
+### D. Fase 9 — PGWire, múltiplos datasources e Admin UX v2 · ETAPA 2 LOCAL
 
 A especificação aprovada `docs/PHASE-9-SPEC.md` define listener PostgreSQL para IDEs, alias
 em `dbname`, autenticação separada, TLS externo, credenciais upstream cifradas,
 registry multi-datasource e redesign da UI. Especificação, threat model,
 decisões e rastreabilidade estão concluídos. O MCP permanece `stdio`;
-Streamable HTTP/OAuth não fazem parte. Nenhuma implementação funcional foi
-iniciada; a matriz em `docs/PHASE-9-TRACEABILITY.md` governa as Etapas 2–12.
+Streamable HTTP/OAuth não fazem parte. A Etapa 2 adicionou somente o catálogo
+interno e a validação de destino; não adicionou listener, registry, rota v2,
+UI v2 ou publicação de runtime. Erro depois do replace do store tem resultado
+incerto; uma rotação de master key interrompida é resolvida pelo procedimento
+explícito de `docs/PHASE-9-STAGE-2-DESIGN.md` §6.4, com as duas chaves
+preservadas. Rotação confirmada remove os backups cifrados com a chave anterior;
+suspeita de comprometimento da chave exige também trocar as credenciais
+upstream. A matriz em
+`docs/PHASE-9-TRACEABILITY.md` governa as Etapas 3–12.
 
 ### Fora do escopo, inalterado
 
@@ -986,9 +996,9 @@ automatico, banco de configuracao, Redis, background workers.
 - PostgreSQL 16 real disponível via `MASKGW_TEST_DSN`, sem nenhum skip por
   ausência de DSN; skips condicionais de plataforma discriminados na evidência
 - Fase 8 publicada em `42cd2df`; a Etapa 1 documental da Fase 9 foi concluída e
-  aprovada (especificação, threat model, decisões e rastreabilidade). Nenhuma
-  implementação funcional das Etapas 2–12 está autorizada sem revisão e aprovação
-  próprias.
+  aprovada, e a Etapa 2 local foi implementada com evidência em
+  `docs/PHASE-9-STAGE-2-VALIDATION.md`. Nenhuma implementação funcional das
+  Etapas 3–12 está autorizada sem revisão e aprovação próprias.
 - neste host Windows, rode o pytest com pilha de thread ampliada (64 MiB), ou o
   teste de payload gigante derruba o processo. Nunca o transforme em `skip`
   (D-041); a limitacao esta na secao 11
