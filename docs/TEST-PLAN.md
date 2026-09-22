@@ -1276,3 +1276,48 @@ Medição final da Etapa 9: 241 Node aprovados; 195/195 na matriz completa
 3.822 aprovados e oito skips POSIX, PostgreSQL 16.15 real. Todos os gates
 acima aprovados. A tentativa anterior com timeout Firefox permanece registrada,
 sem causa atribuída. Tempos, hashes e limites na evidência da Etapa 9.
+
+## Fase 9 — Etapa 1 documental e gates das Etapas 2–12
+
+**Estado:** Etapa 1 concluída e aprovada em 2026-09-22. Esta seção é um plano
+normativo; não há testes de código da Fase 9 para executar nesta etapa e nenhum
+listener, store, registry, API v2 ou UI v2 foi criado.
+
+### Gates por etapa
+
+| Etapa | Cobertura mínima | Gate de saída |
+|---:|---|---|
+| 2 | modelo fechado, AES-256-GCM, catálogo autenticado, chave externa, SSRF e migração | vetores/tamper/transplant, atomicidade, âncora monotônica ou startup fail-closed, leakage e importação legada |
+| 3 | registry por alias/generation, refcount, drain e limites | concorrência repetida, fechamento único, isolamento e shutdown sem órfãos |
+| 4 | Admin API v2, auth/CSRF, revisions e teste sem publicação | v1 intacta, teste de conexão sem efeito, destino validado e erros sanitizados |
+| 5 | UX v2 somente leitura, sessão e acessibilidade | screenshots aprovados, três browsers fixados, token/drafts voláteis, CSP e sem recurso externo |
+| 6 | CRUD visual, policy, rotação e concorrência | segredo write-only, confirmação destrutiva, revisão e ausência de SQL/resultados |
+| 7 | startup PGWire, framing, TLS e SCRAM | harness binário adversarial, downgrade bloqueado, limites e lifecycle |
+| 8 | simple query, masking e tipos | psql/psycopg contra PostgreSQL 16 real, escrita bloqueada e linha N+1 descartada |
+| 9 | extended query, parâmetros e cancelamento | JDBC/prepared statements, Sync, formatos e cancelamento isolado |
+| 10 | catálogo mínimo e clientes certificados | snapshots de psql/DBeaver/DataGrip/pgAdmin e tabela de suporte fixada |
+| 11 | MCP alias/default e rollback legado | clientes `sql` antigos, alias explícito, ausência de enumeração e restart legado |
+| 12 | pacote, revisão adversarial e aceite final | wheel/sdist isolados, todos os gates da matriz e critérios da §17 |
+
+O detalhamento verificável, com IDs F9-001 a F9-040, seções normativas,
+artefatos de prova e status, está em `docs/PHASE-9-TRACEABILITY.md`. Cada etapa
+deve registrar versões, contagens, duração, PostgreSQL efetivamente usado,
+limitações e skips de plataforma separadamente; não copiar números históricos
+da Fase 8.
+
+### Gates comuns da Fase 9
+
+- PostgreSQL 16 real; usar `MASKGW_TEST_DSN` se definido sem imprimir seu
+  conteúdo. Sem DSN, iniciar PostgreSQL 16 descartável com senha aleatória e
+  porta isolada, sem tocar em instância existente.
+- No Windows, executar a suíte Python com pilha de thread de 64 MiB. O teste
+  adversarial de payload grande não pode ser deselected, skip ou xfail.
+- Ruff check, format check, mypy strict e `git diff --check` continuam
+  obrigatórios. Gates Node/checkJs, instalação congelada, testes Node e build
+  determinístico entram quando existirem/forem exigidos pela etapa; não alterar
+  dependências para satisfazê-los.
+- Browsers, quando exigidos, usam os pins documentados e têm resultados
+  reportados separadamente por engine. Ausência do browser devido não vira
+  aprovação nem skip silencioso.
+- Nenhum finding vira skip/xfail. Segredos, ciphertexts, tokens, SQL e dados
+  originais não entram em logs, traces, HAR, vídeos, screenshots ou artefatos.

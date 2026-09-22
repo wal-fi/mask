@@ -200,6 +200,94 @@ que uma mudança futura seja percebida.
 
 ---
 
+## Fase 9 — ameaças aprovadas do plano PGWire e multi-datasource
+
+**Estado:** threat model documental aprovado em 2026-09-22; a superfície ainda
+não foi implementada.
+
+A Fase 9 transforma o Gateway em servidor PostgreSQL perante clientes de IDE e
+adiciona destinos administráveis. Isso cria atacantes e ativos novos:
+
+- cliente TCP não autenticado controla framing, timing e mensagens de startup;
+- cliente autenticado controla SQL, prepared statements, parâmetros, formatos
+  e cancelamentos;
+- administrador controla host/porta/database/usuário e fornece segredo upstream;
+- destino cadastrado pode ser hostil, lento, mudar DNS ou produzir metadata e
+  erros malformados;
+- atacante local pode copiar ou alterar o store cifrado;
+- IDE executa consultas automáticas que não foram escritas conscientemente pelo
+  usuário.
+
+### Premissas de confiança e limites
+
+- O cliente TCP, a IDE e o usuário SQL são não confiáveis; autenticação não
+  transforma o principal único do MVP em autorização por datasource.
+- O processo do Gateway e o secret provider que entrega a chave-mestra são
+  confiáveis. Um atacante que controla o processo, o ambiente ou a chave pode
+  ler segredos em memória e está fora desta fronteira.
+- O atacante local considerado pode copiar ou alterar o arquivo do catálogo,
+  mas não pode alterar a âncora monotônica confiável que a Etapa 2 deverá
+  fornecer fora do arquivo substituível. Se não houver essa âncora, replay de um
+  arquivo inteiro é uma limitação criptográfica real e a implementação deve
+  falhar fechado em vez de alegar proteção.
+- O destino upstream pode ser lento ou hostil, mas a política de rede e a
+  validação de resolução precisam impedir SSRF, rebinding e destinos proibidos.
+
+### Ativos adicionais
+
+- senha/verifier do principal do Gateway;
+- credenciais upstream de todos os datasources;
+- chave-mestra e nonces;
+- associação alias → destino real;
+- certificados e chave privada TLS;
+- mapa de sessões, cancel keys, prepared statements e parâmetros;
+- disponibilidade de sockets e conexões upstream.
+
+### Fronteiras adicionais
+
+```text
+rede não confiável → TLS/PGWire → sessão autenticada → alias/runtime
+Admin UI → Admin API v2 → validação de destino → store cifrado
+store cifrado + master key → segredo em memória → PostgreSQL upstream
+```
+
+### Cenários obrigatórios
+
+1. **Parser de protocolo:** comprimentos negativos/excessivos, frames truncados,
+   UTF-8 inválido, mensagem fora de ordem e desync não causam alocação sem teto,
+   traceback, hang ou execução parcial.
+2. **Autenticação:** usuário, alias e senha inválidos são indistinguíveis onde
+   necessário; comparação não cria oráculo e brute force recebe limite.
+3. **TLS:** bind externo não inicia sem TLS; SSLRequest não permite downgrade;
+   certificado/chave inválidos falham antes de qualquer plano de dados.
+4. **Máquina extended query:** SQL é validado no `Parse`, identidade é congelada
+   até `Bind/Execute`, parâmetros nunca viram texto SQL e erro exige `Sync`.
+5. **Cancelamento:** chave de uma sessão não cancela outra e valores inválidos
+   não confirmam existência.
+6. **Tipos/formato:** binário, OID, typmod e valores malformados não pulam
+   masking; coluna transformada não conserva tipo enganoso.
+7. **Catálogo de IDE:** nenhuma allowlist ampla de `pg_`; introspecção não lê
+   arquivo, função de usuário, estatística com amostras, configuração ou segredo.
+8. **SSRF:** cadastro não alcança loopback, link-local, multicast, metadata
+   cloud ou destino diferente após resolução, salvo exceção local aprovada.
+9. **Store:** tamper, truncamento e transplant de ciphertext falham fechado;
+   replay de arquivo inteiro só é aceito como coberto com âncora monotônica
+   confiável, e sem ela o startup falha fechado. Backup, temporário, erro e
+   auditoria não contêm plaintext.
+10. **Concorrência:** rename/disable/remove/rotate não troca o destino de uma
+    sessão admitida e não fecha recurso ainda referenciado.
+11. **Exaustão:** conexões lentas, startup incompleto, idle, prepared statements
+    e sessões simultâneas têm limites e cleanup determinístico.
+12. **Isolamento:** falha ou reload de um datasource não mistura policies,
+    credenciais, conexões ou resultados com outro.
+
+Os requisitos normativos e as etapas estão em `docs/PHASE-9-SPEC.md`; o índice
+de cobertura aprovado está em `docs/PHASE-9-TRACEABILITY.md`. Nenhum cenário
+acima foi executado nesta Etapa 1; cada etapa futura precisa produzir a
+evidência indicada na matriz.
+
+---
+
 ## Resultado medido (Fase 6)
 
 `docs/SECURITY-REVIEW.md` substitui a expectativa deste documento pelo que foi

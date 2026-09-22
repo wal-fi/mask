@@ -2,21 +2,26 @@
 
 **Documento de entrada. Comece por aqui.**
 
-Estado: **Fase 8 concluída; Etapas 1–9 revisadas e aprovadas; publicação final da Etapa 9 autorizada**.
+Estado: **Fase 8 concluída e publicada; Fase 9 — Etapa 1 documental concluída e aprovada**.
 MVP e Fase 7 concluídos. A Etapa 8 foi revisada e publicada sem emenda em
 `20db6f021533230d791cd910b037554c3fe03191`; o fetch confirmou master, HEAD igual
 a origin/master, árvore limpa e 0/0, com autoria e trailer preservados.
 A Etapa 9 concluiu a verificação do pacote instalado e a revisão adversarial
-final, com todos os gates aprovados. As Etapas 1–9 foram revisadas e aprovadas;
-a publicação final da Etapa 9 está autorizada. A Fase 9 não foi iniciada e não
-está autorizada; nenhuma expansão funcional está autorizada. Evidência: `docs/PHASE-8-STAGE-9-VALIDATION.md`.
+final, com todos os gates aprovados. A publicação final ocorreu em `42cd2df`.
+Em 2026-09-22 a Etapa 1 documental da Fase 9 foi concluída e aprovada:
+especificação, threat model, decisões e rastreabilidade de façade PGWire,
+múltiplos datasources e Admin UX v2. A especificação aprovada está em
+`docs/PHASE-9-SPEC.md`; nenhuma implementação funcional das Etapas 2–12 está
+autorizada sem revisão e autorização próprias. Evidência da Fase 8:
+`docs/PHASE-8-STAGE-9-VALIDATION.md`.
 
 A UI agora recebe token explicitamente, valida metadados e DTOs e apresenta
 seis vistas declarativas. Token somente na closure do transporte; navegação em
 memória, limpeza no lifecycle e polling visível suspenso durante edição.
 Adoção, config:validate, CRUD, reorder de regras e database/SQL aditivo exigem
 gestos explícitos. Proteções efetivas readonly; fronteira HTTP da Etapa 4 intacta.
-Leia `docs/PHASE-8-SPEC.md` e `docs/PHASE-8-TRACEABILITY.md`. Fase 9 não iniciada.
+Leia `docs/PHASE-8-SPEC.md`, `docs/PHASE-8-TRACEABILITY.md` e a especificação
+`docs/PHASE-9-SPEC.md`.
 
 Antes de comecar qualquer fase, confira `git status --short`: a arvore precisa
 estar limpa. **Confira, nao presuma** — este documento nao pode afirmar o
@@ -37,6 +42,7 @@ Ordem de leitura sugerida:
 | `docs/THREAT-MODEL.md` | cenarios de ataque e o resultado medido |
 | `docs/FUTURE-HARDENING.md` | propostas avaliadas, com custo e impacto |
 | `docs/ROADMAP.md` | histórico e estado das fases |
+| `docs/PHASE-9-SPEC.md` | especificação aprovada de PGWire, multi-datasource e UX v2 |
 
 ---
 
@@ -760,9 +766,10 @@ Mudancas internas que nao alteram comportamento observavel do MCP:
 
 ## 10. Como continuar
 
-As Fases 7 e 8 estão **CONCLUÍDAS**. As Etapas 1–9 da Fase 8 foram revisadas
-e aprovadas, com publicação final da Etapa 9 autorizada. A Fase 9 permanece
-não iniciada e não autorizada; nenhuma expansão funcional está autorizada.
+As Fases 7 e 8 estão **CONCLUÍDAS** e publicadas. A Etapa 1 documental da Fase 9
+foi concluída e aprovada em 2026-09-22. A especificação, o threat model, as
+decisões D-065–D-076 e a matriz estão fechados; as Etapas 2–12 ainda exigem
+revisão e autorização próprias antes de qualquer implementação funcional.
 
 ### A. Endurecer o que resta (inventario preservado; nao e a proxima etapa)
 
@@ -790,8 +797,8 @@ Fase encerrada:
 Fase 7 — Admin API, CONCLUIDA (Etapas 1–11)
 
 Entrega concluída, revisada e aprovada:
-Fase 8 — Etapas 1–9 aprovadas; publicação final da Etapa 9 autorizada.
-Fase 9 — NAO INICIADA E NAO AUTORIZADA; nenhuma expansão funcional autorizada.
+Fase 8 — Etapas 1–9 aprovadas e publicadas em `42cd2df`.
+Fase 9 — ETAPA 1 DOCUMENTAL CONCLUÍDA E APROVADA; implementação funcional não iniciada.
 ```
 
 A Etapa 5 concluiu os primitivos de filesystem seguro em
@@ -955,16 +962,18 @@ regras, database e SQL aditivo. `author.js` constrói candidatos fechados da bas
 e do rascunho. A Etapa 9 comprovou a distribuição instalada e os critérios de
 aceite, sem modificar o produto ou recursos gerados.
 
-### D. Fase 9 — Deployment · NAO INICIADA E NAO AUTORIZADA
+### D. Fase 9 — PGWire, múltiplos datasources e Admin UX v2 · ETAPA 1 CONCLUÍDA
 
-Streamable HTTP, autenticação, OAuth. O MCP permanece stdio por decisão
-de segurança (D-036); a Admin API já oferece HTTP opcional apenas loopback.
-Trocar o transporte MCP exige um modelo de sessão e autenticação. A Fase 8
-não autoriza essa mudança nem abertura de bind externo, TLS ou proxy.
+A especificação aprovada `docs/PHASE-9-SPEC.md` define listener PostgreSQL para IDEs, alias
+em `dbname`, autenticação separada, TLS externo, credenciais upstream cifradas,
+registry multi-datasource e redesign da UI. Especificação, threat model,
+decisões e rastreabilidade estão concluídos. O MCP permanece `stdio`;
+Streamable HTTP/OAuth não fazem parte. Nenhuma implementação funcional foi
+iniciada; a matriz em `docs/PHASE-9-TRACEABILITY.md` governa as Etapas 2–12.
 
 ### Fora do escopo, inalterado
 
-RBAC, OAuth/OIDC, LDAP/SSO, multi-tenant, multi-database, MySQL, pool de
+RBAC, OAuth/OIDC, LDAP/SSO, multi-tenant, MySQL, pool transacional de
 conexoes, `resources`/`prompts` MCP, schema discovery, JSONB deep inspection,
 lineage completo, transformers Python customizados, column-level GRANT
 automatico, banco de configuracao, Redis, background workers.
@@ -976,7 +985,10 @@ automatico, banco de configuracao, Redis, background workers.
   `docs/PHASE-8-STAGE-9-VALIDATION.md`, distinguindo-a dos registros históricos
 - PostgreSQL 16 real disponível via `MASKGW_TEST_DSN`, sem nenhum skip por
   ausência de DSN; skips condicionais de plataforma discriminados na evidência
-- publicação final da Etapa 9 autorizada; Fase 9 e expansão funcional não autorizadas
+- Fase 8 publicada em `42cd2df`; a Etapa 1 documental da Fase 9 foi concluída e
+  aprovada (especificação, threat model, decisões e rastreabilidade). Nenhuma
+  implementação funcional das Etapas 2–12 está autorizada sem revisão e aprovação
+  próprias.
 - neste host Windows, rode o pytest com pilha de thread ampliada (64 MiB), ou o
   teste de payload gigante derruba o processo. Nunca o transforme em `skip`
   (D-041); a limitacao esta na secao 11

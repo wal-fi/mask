@@ -1,8 +1,8 @@
 # Fase 8 — matriz de rastreabilidade normativa
 
-**Estado:** concluída; Etapas 1–9 revisadas e aprovadas; publicação final da Etapa 9 autorizada. **Atualização:** 2026-09-21.
-A Fase 9 não foi iniciada e não está autorizada; nenhuma expansão funcional
-está autorizada.
+**Estado:** concluída; Etapas 1–9 revisadas, aprovadas e publicadas em `42cd2df`. **Atualização:** 2026-09-22.
+A autorização documental da Fase 9 não altera requisitos ou evidências desta
+matriz.
 **Fonte normativa integral:** [PHASE-8-SPEC.md](PHASE-8-SPEC.md), aprovada
 integralmente, com decisões [D-061 a D-064](DECISIONS.md#d-061--ui-administrativa-embarcada-opt-in-e-na-mesma-origem).
 

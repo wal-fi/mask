@@ -39,14 +39,18 @@ foi concluída, com todos os gates aprovados. A Fase 8 está concluída conforme
 `docs/PHASE-8-SPEC.md`, com os limites documentados na evidência.
 Nenhuma funcionalidade, rota, modelo, permissão ou dependência foi ampliada.
 Preservar memória volátil, uma escrita pendente, gestos explícitos e ausência
-de retry/rebase/fila/rollback automático. A Fase 9 não foi iniciada e não está
-autorizada. Nenhuma expansão funcional está autorizada.
+de retry/rebase/fila/rollback automático. A Fase 9 foi autorizada em
+2026-09-22 **somente para sua Etapa 1 documental**: especificação, threat model,
+decisões e rastreabilidade do listener PostgreSQL, múltiplos datasources e
+Admin UX v2. A Etapa 1 foi concluída e aprovada; nenhuma implementação funcional
+das Etapas 2–12 está autorizada sem revisão e autorização próprias.
 Evidência: `docs/PHASE-8-STAGE-9-VALIDATION.md`.
 
-Interfaces genéricas, editor ou execução de SQL, resultados do banco, funções
-de DBA, auditoria consultável, front-end para MCP e expansões não previstas
-continuam fora do escopo. Nenhum bind externo, TLS, proxy, deployment ou
-serviço externo é autorizado pela Fase 8.
+Interfaces genéricas, editor SQL administrativo, resultados do banco na UI,
+funções de DBA, auditoria consultável e front-end para MCP continuam fora do
+escopo. Bind PostgreSQL, TLS, façade PGWire, catálogo multi-datasource e
+redesign administrativo são contratos exclusivos da Fase 9; continuam sem
+implementação até a autorização da etapa correspondente.
 
 ## Matching
 Por padrão: case-insensitive + substring/contains.

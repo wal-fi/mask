@@ -60,10 +60,11 @@ Apenas entrada/saída. Nenhuma regra de masking nos handlers.
 SDK oficial `mcp` v2 (`from mcp.server import MCPServer`). Transporte **stdio
 apenas** — nenhuma porta de rede é aberta (D-036).
 
-Uma única tool, `query_database(sql: str)`, com structured output tipado. Sem
-`resources`, sem `prompts`. O cliente controla exclusivamente a SQL: não existe
-parâmetro para desabilitar masking, escolher transformer, alterar limites ou
-informar credenciais.
+No estado atual, uma única tool, `query_database(sql: str)`, com structured
+output tipado. Sem `resources`, sem `prompts`. O cliente controla exclusivamente
+a SQL: não existe parâmetro para desabilitar masking, escolher transformer,
+alterar limites ou informar credenciais. A extensão documental futura com
+`database: str | None` pertence somente à Etapa 11 da Fase 9 e ainda não existe.
 
 ### Gateway
 Fachada pública. Orquestra validação, execução, provenance, masking e limites,
@@ -429,7 +430,8 @@ digest de referência corresponda exatamente ao runtime publicado (D-055).
 
 ### Fronteira HTTP administrativa (Etapa 7)
 
-`admin/http/` é a superfície HTTP, e é **somente leitura** nesta etapa. Ela vive
+`admin/http/` é a superfície HTTP v1 atual, e é **somente leitura** nesta etapa.
+Ela vive
 num subpacote separado de propósito: importar `maskgw.admin` continua **não**
 carregando FastAPI, uvicorn nem starlette, e isso é teste com contraprova. A
 seção crítica da Etapa 6 permanece utilizável — e testável — sem servidor.
@@ -658,3 +660,32 @@ instalados reais, com restauração em finally e barreiras contra efeitos antes
 da validação. O rollback usa a flag existente e o lifecycle normal, conservando
 documento, backup, IDs, revision e efeitos do runtime. Nenhum comando de teste
 vira rota ou capacidade MCP. Provas e limites em `PHASE-8-STAGE-9-VALIDATION.md`.
+
+---
+
+## Fase 9 — arquitetura aprovada, ainda documental
+
+A Fase 9 acrescenta futuramente uma terceira fronteira de entrada ao lado do
+MCP stdio e da Admin API local: um listener PostgreSQL que funciona como façade
+segura. O plano PGWire termina TLS/autenticação, valida a máquina de estados,
+resolve `dbname` como alias, adquire um runtime por alias/generation e passa
+somente pelo Gateway seguro. Não é proxy TCP e não chama `PostgresAdapter`
+bruto para devolver resultados.
+
+O catálogo futuro é persistente, versionado, autenticado e contém ciphertexts
+AEAD para os segredos upstream. `DatasourceRegistry` e os runtimes por sessão
+serão construídos nas Etapas 2–3; não existem no layout atual. A Administração
+v2 continua separada do plano de dados, local/loopback-only e sem executar SQL.
+
+O lifecycle aprovado é: validar settings e recursos; validar e autenticar o
+store; compilar e verificar datasources habilitados; confirmar Admin HTTP;
+confirmar PGWire; só então liberar MCP. No shutdown, interromper admissão,
+drenar sessões por geração, fechar upstreams/runtimes e liberar o store sem
+deixar thread ou socket abandonado. Um datasource inválido habilitado impede
+todas as três fronteiras; o modo legado só volta por desligamento explícito e
+restart.
+
+O contrato, a ameaça e a cobertura estão em `docs/PHASE-9-SPEC.md`,
+`docs/THREAT-MODEL.md` e `docs/PHASE-9-TRACEABILITY.md`. A aprovação da Etapa 1
+não adiciona pacote Python, dependência, modelo, rota, socket ou alteração de
+runtime ao produto atual.

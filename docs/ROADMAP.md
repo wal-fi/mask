@@ -352,9 +352,9 @@ A Etapa 8 foi revisada e publicada sem emenda em
 `20db6f021533230d791cd910b037554c3fe03191`; o fetch confirmou master, HEAD igual
 a origin/master, árvore limpa e 0/0, com autoria e trailer preservados.
 A Etapa 9 concluiu a verificação do pacote instalado e a revisão adversarial
-final, com todos os gates aprovados. As Etapas 1–9 foram revisadas e aprovadas;
-a publicação final da Etapa 9 está autorizada. A Fase 9 não foi iniciada e não
-está autorizada; nenhuma expansão funcional está autorizada. Evidência: `docs/PHASE-8-STAGE-9-VALIDATION.md`.
+final, com todos os gates aprovados. As Etapas 1–9 foram revisadas, aprovadas e
+publicadas em `42cd2df`. A autorização documental posterior da Fase 9 não muda
+o escopo nem a evidência da Fase 8. Evidência: `docs/PHASE-8-STAGE-9-VALIDATION.md`.
 
 Sessão explícita em memória, renderer declarativo de seis vistas,
 validação de DTOs/revisions e polling de status visível sem sobreposição.
@@ -366,18 +366,30 @@ o pacote instalado e os critérios de aceite, sem mudança de produto. Contrato 
 
 ---
 
-## FASE 9 — Deployment
+## FASE 9 — PostgreSQL Gateway, múltiplos datasources e Admin UX v2
 
-**STATUS: NÃO INICIADA E NÃO AUTORIZADA.** Streamable HTTP, autenticação, OAuth. O MCP
-permanece stdio por decisão de segurança (D-036); a Admin API já possui porta
-HTTP opcional somente loopback. A Fase 8 não autoriza exposição externa nem
-alteração do transporte MCP.
+**STATUS: ETAPA 1 DOCUMENTAL CONCLUÍDA E APROVADA EM 2026-09-22; IMPLEMENTAÇÃO
+FUNCIONAL NÃO INICIADA.**
+
+A necessidade aprovada é permitir que IDEs se conectem ao Gateway usando o
+protocolo PostgreSQL (`host`, `port`, alias em `dbname`, usuário e senha do
+Gateway), mantendo MCP, SELECT-only e masking. A mesma fase propõe catálogo
+administrativo de múltiplos PostgreSQL, credenciais upstream cifradas e um
+redesign integral da interface administrativa.
+
+A especificação aprovada está em `docs/PHASE-9-SPEC.md`; o threat model, as
+decisões D-065–D-076 e a matriz completa estão em seus documentos próprios.
+Listener PGWire, TLS, bind externo, store, APIs, UI nova e mudanças no runtime
+continuam sem implementação e exigem autorização própria antes das Etapas 2–12.
+
+Streamable HTTP/OAuth para MCP e deployment genérico não pertencem a esta fase;
+o MCP permanece `stdio`.
 
 ---
 
 ## Estado atual
 
-Fase 8 concluída; Etapas 1–9 revisadas e aprovadas; publicação final da Etapa 9 autorizada. A medição desta rodada está em
+Fase 8 concluída e publicada. Fase 9 — Etapa 1 exclusivamente documental concluída e aprovada. A medição final da Fase 8 está em
 `docs/PHASE-8-STAGE-9-VALIDATION.md`; os números abaixo
 registram o fechamento anterior da Fase 7.
 

@@ -2042,3 +2042,113 @@ humana de resultados incertos e manutenção da matriz real de navegadores.
 Nenhuma promessa de revogação da requisição em voo após fechar a página ou
 de segredo contra XSS com sessão ativa. Referências: §§3.11–3.13, 4, 6 e 7;
 matriz F8-016 a F8-022, F8-028 a F8-037 e F8-052 a F8-065.
+
+---
+
+# Fase 9 — decisões aprovadas em 2026-09-22; Etapa 1 documental
+
+As decisões abaixo registram as doze decisões da seção 16 de
+`docs/PHASE-9-SPEC.md`. Elas aprovam o contrato documental e seus limites; não
+autorizam a implementação das Etapas 2–12. Cada decisão aponta para as seções
+normativas que deverão ser verificadas na etapa correspondente.
+
+## D-065 — PGWire é façade segura, não proxy transparente
+
+O listener termina TLS e a autenticação do Gateway, interpreta uma máquina de
+estados PostgreSQL fechada e reconstrói respostas a partir de resultados já
+validados, read-only e mascarados. Nunca encaminha bytes, credenciais, SQL ou
+formatos diretamente entre cliente e upstream, e nenhum cliente chama o adapter
+bruto. Referências: §§1–2, 5.3–5.5, 7, 12 e etapas 7–10.
+
+## D-066 — `dbname` é alias administrativo estável
+
+O campo `database` do StartupMessage é um alias validado, comparado exatamente
+e resolvido exclusivamente no catálogo. O cliente nunca fornece host, porta,
+database real ou credencial upstream. Rename não existe no MVP: cria-se outro
+alias e remove-se o anterior com a drenagem definida. Referências: §§4.1,
+6.1, 7, 10 e etapas 2–4, 7 e 11.
+
+## D-067 — Login do Gateway e credencial upstream são identidades separadas
+
+O MVP autentica o único principal do Gateway com SCRAM-SHA-256 a partir de
+`MASKGW_PGWIRE_USERNAME`/`MASKGW_PGWIRE_PASSWORD`. A credencial técnica de cada
+datasource é outro segredo, usado apenas para abrir a conexão upstream. Nenhum
+proof, senha ou identidade do cliente é reutilizado no PostgreSQL de destino.
+Referências: §§4.2–4.3, 5.3, 12 e etapas 2, 6 e 7.
+
+## D-068 — Um principal operacional, sem RBAC implícito
+
+Todo login válido do Gateway tem a mesma capacidade sobre todos os datasources
+habilitados; não há usuários, grupos, grants por alias ou matriz de autorização
+no MVP. A UI e a documentação devem mostrar essa limitação. RBAC, SSO e
+identidade federada exigem decisão própria. Referências: §§3.2, 4.2, 8, 9 e
+etapas 4, 6 e 7.
+
+## D-069 — Segredos upstream são cifrados e autenticados por chave externa
+
+O catálogo usa AES-256-GCM de biblioteca madura, nonce CSPRNG único, chave de
+32 bytes fornecida externamente e Associated Data com datasource, campo,
+versão e revision. O documento inteiro também é autenticado, para que alias,
+destino e policy adulterados falhem fechado. Nenhum plaintext, ciphertext,
+nonce, tamanho de segredo ou backup em claro aparece fora do store protegido.
+Biblioteca e envelope versionado são decisões de implementação obrigatórias da
+Etapa 2 antes de código; criptografia própria é proibida. Replay de arquivo
+inteiro só pode ser declarado fechado com âncora monotônica confiável fora do
+arquivo substituível; sem ela, o startup falha fechado. Referências: §§6.1–6.3,
+12, 13 e etapas 2, 6 e 12.
+
+## D-070 — TLS é obrigatório fora de loopback
+
+Qualquer bind que não seja o literal IP `127.0.0.1` ou `::1` exige certificado,
+chave e contexto TLS válidos antes do startup. `StartupMessage` em claro e
+downgrade após `SSLRequest` são recusados. TLS em loopback é opcional, mas um
+`SSLRequest` só é aceito quando houver contexto válido. Habilitar PGWire nunca
+autoriza bind externo da Admin API. Referências: §§5.1–5.3, 8, 11 e etapas 7 e
+12.
+
+## D-071 — Cada sessão PGWire possui conexão upstream própria
+
+O MVP não usa pooling transacional entre sessões. A sessão mantém seu próprio
+estado de transação e prepared statements, com limites global e por datasource;
+reload, disable e remove usam geração/refcount e drenagem, sem trocar o destino
+de sessão já admitida. Referências: §§7, 11 e 12; etapas 3, 7–10.
+
+## D-072 — Compatibilidade é certificada, não universal
+
+O subconjunto PostgreSQL Protocol 3.0 é certificado inicialmente com `psql`,
+DBeaver, DataGrip e pgAdmin, além dos harnesses psycopg/JDBC fixados. Mensagem,
+tipo, formato ou comportamento fora do subconjunto falha deterministicamente;
+“qualquer IDE” não é promessa. Referências: §§5.3–5.5, 14 e etapas 7–10 e 12.
+
+## D-073 — Admin UX v2 preserva a fronteira segura
+
+A UX v2 continua local, same-origin e embarcada no pacote, sem CORS, recursos
+externos, SQL editor, resultados, auditoria consultável ou frontend MCP. Token e
+rascunhos permanecem voláteis; DTOs fechados e rendering textual permanecem
+obrigatórios. A origem administrativa externa exige decisão separada e não é
+inferida do bind PGWire. Referências: §§2, 8–9, 12–14 e etapas 4–6 e 12.
+
+## D-074 — MCP continua compatível, com alias opcional somente na Etapa 11
+
+O transporte MCP continua exclusivamente `stdio`. Clientes que enviam só `sql`
+continuam funcionando; `database=None` usa o default e um alias explícito só
+seleciona datasource habilitado. A extensão do schema e a migração são adiadas
+à Etapa 11, sem tool para credencial, catálogo ou configuração. Referências:
+§§2, 10–11, 14–15 e etapas 8, 11 e 12.
+
+## D-075 — O modo legado é rollback explícito
+
+`MASKGW_DATABASE_DSN` continua sendo o caminho de operação quando PGWire e o
+catálogo novo estão desligados. A migração é opt-in, não apaga nem reescreve o
+`masking.yaml`, e o erro de um catálogo habilitado não cai silenciosamente no
+DSN legado. Desligar a capacidade e reiniciar é a operação de rollback.
+Referências: §§6.3, 10, 11, 14, 15 e 17; etapas 2, 11 e 12.
+
+## D-076 — Startup fail-closed para datasource habilitado inválido
+
+Flags, store, chave, catálogo autenticado, políticas, capabilities upstream,
+TLS e listeners são validados antes de publicar qualquer fronteira. Um
+datasource habilitado inválido impede Admin HTTP, PGWire e MCP; não existe
+modo parcialmente funcional, retry automático ou fallback implícito. Um
+datasource desabilitado não é aberto; sua recuperação é explícita. Referências:
+§§5–8, 11–14 e etapas 2–4, 7 e 12.

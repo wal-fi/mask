@@ -1,9 +1,11 @@
 # Fase 8 — Evidência da Etapa 9
 
-**Estado:** Fase 8 concluída; Etapas 1–9 revisadas e aprovadas; publicação final
-da Etapa 9 autorizada. Fase 9 não iniciada e não autorizada; nenhuma expansão
-funcional autorizada.
+**Estado:** Fase 8 concluída; Etapas 1–9 revisadas, aprovadas e publicadas em
+`42cd2df`.
 **Fechamento:** 2026-09-21.
+
+**Nota posterior (2026-09-22):** a Etapa 1 documental da Fase 9 foi autorizada.
+Isso não altera código, resultados ou evidências registrados neste fechamento.
 
 ## Checkpoint e publicação
 
@@ -368,5 +370,5 @@ autorizada após amend exclusivamente editorial. Autor/committer
 `w.filho <w.filho@live.com>` e trailer `Co-Authored-By: Codex <noreply@openai.com>`
 permanecem preservados. O hash e a sincronização HEAD igual a origin/master,
 árvore limpa e 0 ahead / 0 behind serão informados no relatório final, sem
-autorreferência no documento. A Fase 9 não foi iniciada e não está autorizada;
-nenhuma expansão funcional está autorizada.
+autorreferência no documento. Na data desta medição, a Fase 9 ainda não havia
+sido iniciada; sua autorização documental posterior não altera esta evidência.

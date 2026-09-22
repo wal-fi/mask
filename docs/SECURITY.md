@@ -585,3 +585,43 @@ Não se amplia a garantia de BFCache em Firefox/WebKit, fsync POSIX no Windows,
 acessibilidade manual ou resistência a processo/extensão/navegador comprometidos.
 Resultados medidos e tentativas anteriores ficam na evidência da Etapa 9;
 findings históricos e riscos aceitos das outras fases permanecem abertos.
+
+## Fase 9 — requisitos aprovados, ainda sem implementação
+
+A Fase 9 adiciona uma fronteira PostgreSQL não confiável e um catálogo de
+datasources. O cliente PGWire nunca fornece o destino real: `dbname` é um alias
+validado. O listener termina SCRAM-SHA-256/TLS quando aplicável, valida
+protocolos e SQL, usa uma conexão upstream por sessão e entrega somente
+resultados que passaram pelo mesmo Gateway, limites e Masking Engine do MCP.
+
+O principal do Gateway e a credencial técnica upstream são segredos distintos.
+A senha do Gateway fica fora do catálogo; cada segredo upstream é write-only na
+Admin API e deve ser cifrado com AES-256-GCM, nonce CSPRNG e chave-mestra
+externa. O documento inteiro do catálogo também precisa de autenticação
+canônica para proteger alias, destino e policy. Nenhum segredo, ciphertext,
+nonce, tamanho de segredo, SQL, célula ou destino real pode entrar em resposta,
+log, auditoria ou métrica.
+
+TLS é obrigatório para qualquer bind que não seja o literal IP `127.0.0.1` ou
+`::1`; `SSLRequest` não pode ser usado para downgrade. O bind PGWire não altera
+o bind da Admin API, que continua local e loopback-only. A autenticação do MVP
+tem um único principal, sem RBAC implícito, e mensagens de falha não enumeram
+usuários ou aliases.
+
+Disable/remove drenam gerações já admitidas e impedem novas admissões; reload
+não fecha conexão em uso nem troca um destino sob uma sessão. Startup com
+datasource habilitado inválido falha antes de publicar Admin HTTP, PGWire ou
+MCP. `MASKGW_DATABASE_DSN` continua como rollback explícito somente quando a
+capacidade nova está desligada e após restart; não há fallback silencioso.
+
+Há uma limitação criptográfica que não pode ser escondida: autenticar um
+arquivo antigo continua possível se o atacante puder substituir tanto o store
+quanto qualquer estado de confiança que registre sua geração. A Etapa 2 deve
+fornecer uma âncora monotônica confiável fora do arquivo substituível ou falhar
+fechado e não declarar replay de arquivo coberto. Transplantar ciphertext entre
+datasource/campo, adulterar metadata e alterar ciphertext devem falhar fechado
+independentemente dessa âncora.
+
+Esses requisitos são documentais nesta etapa. Não há ainda listener, store,
+registry, credencial, rota v2, UI v2 ou dependência nova; a matriz de provas e
+os gates das Etapas 2–12 estão em `docs/PHASE-9-TRACEABILITY.md`.
