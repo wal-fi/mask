@@ -368,8 +368,8 @@ o pacote instalado e os critérios de aceite, sem mudança de produto. Contrato 
 
 ## FASE 9 — PostgreSQL Gateway, múltiplos datasources e Admin UX v2
 
-**STATUS: ETAPA 2 IMPLEMENTADA LOCALMENTE; ETAPA 1 DOCUMENTAL APROVADA EM
-2026-09-22.**
+**STATUS: ETAPA 3 IMPLEMENTADA LOCALMENTE EM 2026-09-23; ETAPA 2 CONCLUÍDA;
+ETAPA 1 DOCUMENTAL APROVADA EM 2026-09-22.**
 
 A necessidade aprovada é permitir que IDEs se conectem ao Gateway usando o
 protocolo PostgreSQL (`host`, `port`, alias em `dbname`, usuário e senha do
@@ -378,10 +378,11 @@ administrativo de múltiplos PostgreSQL, credenciais upstream cifradas e um
 redesign integral da interface administrativa.
 
 A especificação aprovada está em `docs/PHASE-9-SPEC.md`; o threat model, as
-decisões D-065–D-086 e a matriz completa estão em seus documentos próprios.
-Listener PGWire, TLS, bind externo, registry, APIs, UI nova e mudanças no
-runtime continuam sem implementação. A Etapa 2 adicionou somente o pacote
-interno de modelos, destino, store cifrado e migração explícita.
+decisões D-065–D-091 e a matriz completa estão em seus documentos próprios.
+Listener PGWire, TLS, bind externo, APIs e UI nova continuam sem implementação.
+A Etapa 2 adicionou o pacote interno de modelos, destino, store cifrado e
+migração explícita; a Etapa 3, o registry multi-datasource, o coordenador
+interno e o lifecycle fail-closed, ativados somente pelo composition root.
 
 Streamable HTTP/OAuth para MCP e deployment genérico não pertencem a esta fase;
 o MCP permanece `stdio`.
@@ -391,7 +392,7 @@ o MCP permanece `stdio`.
 ## Estado atual
 
 Fase 8 concluída e publicada. Fase 9 — Etapa 1 documental concluída e aprovada;
-Etapa 2 implementada localmente. A medição final da Fase 8 está em
+Etapa 2 concluída; Etapa 3 implementada localmente. A medição final da Fase 8 está em
 `docs/PHASE-8-STAGE-9-VALIDATION.md`; os números abaixo
 registram o fechamento anterior da Fase 7.
 

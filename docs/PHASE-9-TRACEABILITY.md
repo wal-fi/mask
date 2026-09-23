@@ -1,8 +1,9 @@
 # Fase 9 — matriz de rastreabilidade normativa
 
 **Estado:** Etapa 1 documental concluída e aprovada em 2026-09-22; Etapa 2
-implementada localmente nesta sessão. Registry, Admin API v2, UI v2, PGWire e
-as Etapas 3–12 continuam não iniciados.
+concluída; Etapa 3 (registry multi-datasource e lifecycle) implementada
+localmente em 2026-09-23, ativada somente pelo composition root (D-087). Admin
+API v2, UI v2, PGWire e as Etapas 4–12 continuam não iniciados.
 
 **Fonte normativa:** [PHASE-9-SPEC.md](PHASE-9-SPEC.md). A matriz cobre todas
 as Etapas 2–12 e distingue requisito, etapa responsável, prova obrigatória e
@@ -14,8 +15,8 @@ fechada com os artefatos e números medidos no seu próprio registro de validaç
 | ID | Requisito normativo | Seções | Etapa(s) | Evidência obrigatória | Estado |
 |---|---|---:|---:|---|---|
 | F9-001 | IDE usa host/port/dbname/user/password do Gateway | 1, 4.1–4.2 | 7–10 | conexão real nos quatro clientes certificados, sem conexão direta ao destino | planejada |
-| F9-002 | MCP permanece e compartilha o pipeline seguro | 2, 10–11 | 3, 8, 11 | paridade de masking, read-only, timeout e erros entre MCP e PGWire | planejada |
-| F9-003 | Somente SELECT, com defesa também no PostgreSQL | 2, 5.4, 12 | 3, 8–10 | validator, sessão read-only, tentativas de escrita e funções perigosas | planejada |
+| F9-002 | MCP permanece e compartilha o pipeline seguro | 2, 10–11 | 3, 8, 11 | paridade de masking, read-only, timeout e erros entre MCP e PGWire | Etapa 3: sessões de datasource usam o mesmo `execute_validated` e `run_audited` do MCP, provado contra PostgreSQL 16; paridade com PGWire pendente (8, 11) |
+| F9-003 | Somente SELECT, com defesa também no PostgreSQL | 2, 5.4, 12 | 3, 8–10 | validator, sessão read-only, tentativas de escrita e funções perigosas | Etapa 3: cada sessão verifica read-only/timeout/proveniência; escrita recusada pelo validator e pelo PostgreSQL; PGWire pendente (8–10) |
 | F9-004 | Alias fechado resolve datasource, nunca destino informado pelo cliente | 4.1, 6.1 | 2–4, 7 | aliases inválidos, desconhecidos, desabilitados e enumeração bloqueados | planejada |
 | F9-005 | Autenticação Gateway separada da upstream | 4.2–4.3, 5.3 | 2, 7 | SCRAM-SHA-256, proof não reutilizável, credencial upstream nunca retornada | planejada |
 | F9-006 | Um principal operacional; sem RBAC implícito | 4.2, 8–9 | 4, 6, 7 | inventário fechado de identidades e ausência de autorização por alias | planejada |
@@ -32,10 +33,10 @@ fechada com os artefatos e números medidos no seu próprio registro de validaç
 | F9-017 | Segredo upstream write-only e cifrado por AEAD | 4.3, 6.2, 13 | 2, 4, 6 | AES-256-GCM, nonce único, tamper, transplant e canários de leakage | implementada na Etapa 2; evidência local |
 | F9-018 | Chave-mestra externa e rotação explícita | 5.1, 6.2 | 2, 12 | chave ausente/errada, rotação, ausência de fallback e nenhum plaintext | implementada na Etapa 2; evidência local |
 | F9-019 | Migração do DSN único explícita e reversível | 6.3, 10, 17 | 2, 11 | importação, restart, desligamento explícito e retorno real ao legado | migração explícita implementada; rollback/runtime pendentes |
-| F9-020 | Registry por alias/generation com refcount | 7, 11 | 3 | concorrência, fechamento único, aposentadoria e isolamento | planejada |
-| F9-021 | Conexão upstream por sessão e limites | 5.1, 7, 11–12 | 3, 7–10 | sessões máximas, por-datasource, idle, slow clients e cleanup | planejada |
-| F9-022 | Candidato testado antes de persistir/publicar | 6.3, 7–8 | 2–4 | falhas de conexão/capability sem efeito em bytes, runtime ou revision | planejada |
-| F9-023 | Datasource habilitado inválido falha startup | 7, 11 | 2–3 | subprocesso com zero Admin HTTP, PGWire ou MCP publicados | planejada |
+| F9-020 | Registry por alias/generation com refcount | 7, 11 | 3 | concorrência, fechamento único, aposentadoria e isolamento | implementada na Etapa 3; evidência local |
+| F9-021 | Conexão upstream por sessão e limites | 5.1, 7, 11–12 | 3, 7–10 | sessões máximas, por-datasource, idle, slow clients e cleanup | Etapa 3: conexão por sessão, limites globais/por datasource e cleanup implementados; idle e slow clients pendentes (7–10) |
+| F9-022 | Candidato testado antes de persistir/publicar | 6.3, 7–8 | 2–4 | falhas de conexão/capability sem efeito em bytes, runtime ou revision | Etapa 3: coordenador interno implementado e provado; exposição pela Admin API v2 pendente (4) |
+| F9-023 | Datasource habilitado inválido falha startup | 7, 11 | 2–3 | subprocesso com zero Admin HTTP, PGWire ou MCP publicados | implementada na Etapa 3 pelo composition root (D-087); ativação por settings de processo pendente (7) |
 | F9-024 | Admin API v2 não quebra v1 | 8, 11 | 4 | inventário v1 imutável, v2 fechado e regressão byte a byte | planejada |
 | F9-025 | Concorrência otimista por datasource | 6.1, 8 | 4, 6 | revision, conflito, busy, durability e uma publicação por vencedor | planejada |
 | F9-026 | Teste de conexão não publica runtime | 2, 7–8 | 4, 6 | identidade, digest, revision, arquivo e registry inalterados | planejada |
@@ -48,7 +49,7 @@ fechada com os artefatos e números medidos no seu próprio registro de validaç
 | F9-033 | MCP não enumera aliases nem altera catálogo | 10 | 11 | schema/tool único, erros fixos e AST de separação de planos | planejada |
 | F9-034 | SSRF e DNS rebinding no destino são bloqueados | 6.1, 12 | 2, 4, 12 | loopback, link-local, multicast, metadata cloud e resolução mutável | validação da Etapa 2 implementada; integração pendente |
 | F9-035 | Nenhuma informação sensível em observabilidade | 2, 6.2, 13 | 2–12 | canários de senhas, chave, SQL, destino, ciphertext, nonce e célula | redaction da Etapa 2 implementada; cobertura futura pendente |
-| F9-036 | Lifecycle ordenado das três fronteiras | 11 | 3–12 | falha em cada passo, bind confirmado, drain e shutdown sem órfãos | planejada |
+| F9-036 | Lifecycle ordenado das três fronteiras | 11 | 3–12 | falha em cada passo, bind confirmado, drain e shutdown sem órfãos; limite DNS antes da Admin v2 e de trabalho local antes de novo ingresso SQL | Etapa 3: passos 3–7 da §11, drain e shutdown do registry implementados; limites de DNS/trabalho local e novas fronteiras pendentes (4–12) |
 | F9-037 | Riscos F-01 a F-11 não regridem | 2, 5, 12 | 8–12 | suíte de segurança completa por datasource e função/catálogo | planejada |
 | F9-038 | Pacote instalado funciona sem checkout/Node | 14 | 12 | wheel e sdist isolados, sem fallback ao checkout ou Node | planejada |
 | F9-039 | Rollback volta ao modo legado sem fallback silencioso | 6.3, 10–11, 17 | 11–12 | restart com PGWire/store desligados e MCP legado funcionando | planejada |
@@ -58,16 +59,16 @@ fechada com os artefatos e números medidos no seu próprio registro de validaç
 
 | Etapa | Entrega normativa | IDs principais | Gate de saída verificável | Estado |
 |---:|---|---|---|---|
-| 2 | modelo, store autenticado/cifrado e migração | F9-016–019, F9-022–023, F9-034–035 | testes AEAD/metadata, âncora de replay, atomicidade, SSRF, leakage e subprocesso fail-closed | implementada localmente; F9-022–023 aguardam integração |
-| 3 | registry multi-datasource e lifecycle | F9-002–003, F9-020–023, F9-036 | concorrência, generations, refcount, drain, fechamento único e isolamento | não iniciada |
-| 4 | Admin API v2 de datasources | F9-004–006, F9-022, F9-024–026, F9-034 | auth/CSRF, revisões, teste sem publicação, v1 intacta e destino validado | não iniciada |
+| 2 | modelo, store autenticado/cifrado e migração | F9-016–019, F9-022–023, F9-034–035 | testes AEAD/metadata, âncora de replay, atomicidade, SSRF, leakage e subprocesso fail-closed | concluída; F9-022–023 integrados na Etapa 3 |
+| 3 | registry multi-datasource e lifecycle | F9-002–003, F9-020–023, F9-036 | concorrência, generations, refcount, drain, fechamento único e isolamento | implementada localmente; evidência em `PHASE-9-STAGE-3-VALIDATION.md` |
+| 4 | Admin API v2 de datasources | F9-004–006, F9-022, F9-024–026, F9-034, F9-036 | auth/CSRF, revisões, teste sem publicação, v1 intacta, destino validado e resolução DNS com limite efetivo | não iniciada |
 | 5 | UX v2 somente leitura | F9-027–031 | screenshots, a11y, token/draft lifecycle, CSP e três browsers fixados | não iniciada |
 | 6 | CRUD visual de datasources e policies | F9-016–019, F9-025–031, F9-035 | segredo write-only, rotação, concorrência, confirmação destrutiva e sem SQL/resultados | não iniciada |
 | 7 | PGWire startup, TLS e autenticação | F9-001, F9-005–008, F9-011, F9-013, F9-021, F9-036 | harness binário, SCRAM, TLS externo, limites, erro sanitizado e lifecycle | não iniciada |
-| 8 | simple query e masking | F9-002–003, F9-009, F9-014–015, F9-037 | psql/psycopg, PostgreSQL 16 real, SELECT-only, masking e truncamento | não iniciada |
+| 8 | simple query e masking | F9-002–003, F9-009, F9-014–015, F9-036–037 | psql/psycopg, PostgreSQL 16 real, SELECT-only, masking, truncamento e limite efetivo do processamento local | não iniciada |
 | 9 | extended query, parâmetros e cancelamento | F9-010–011, F9-013–015, F9-021, F9-036–037 | JDBC/prepared statements, Sync, formatos, CancelRequest e isolamento | não iniciada |
 | 10 | catálogo seguro e quatro IDEs | F9-001, F9-012–015, F9-040 | navegação real, snapshots fechados, tipos e matriz certificada | não iniciada |
-| 11 | MCP multi-datasource e migração legada | F9-002, F9-004, F9-019, F9-032–033, F9-039 | clientes antigos, alias/default, rollback real e zero enumeração/configuração | não iniciada |
+| 11 | MCP multi-datasource e migração legada | F9-002, F9-004, F9-019, F9-032–033, F9-036, F9-039 | clientes antigos, alias/default, rollback real, zero enumeração/configuração e limite do processamento local antes do novo ingresso | não iniciada |
 | 12 | pacote, revisão adversarial e fechamento | F9-007, F9-018, F9-027–031, F9-034–040 | wheel/sdist, todos os gates, canários de leakage, browsers e critérios da §17 | não iniciada |
 
 ## Rastreabilidade das decisões D-065–D-076
@@ -102,6 +103,16 @@ fechada com os artefatos e números medidos no seu próprio registro de validaç
 | D-085 | ausência, corrupção e chave inválida falham fechadas | `CatalogStore.open`; testes de tamper/anchor/key |
 | D-086 | migração DSN explícita, em memória e não destrutiva | `migration.py`; teste byte a byte do legado |
 
+## Rastreabilidade das decisões da Etapa 3 D-087–D-091
+
+| Decisão | Implementação verificável | Evidência |
+|---|---|---|
+| D-087 | `build_application(datasource_catalog=...)`; import tardio do catálogo | `test_datasource_bootstrap.py`: legado sem módulo de catálogo, ordem de startup, subprocesso fail-closed |
+| D-088 | `effective_database_settings` (mínimo entre policy e limits) | `test_datasource_runtime_service.py` |
+| D-089 | `DatasourceRegistry`, `DatasourceGeneration`, `DatasourceLease`, reservas | `test_datasource_registry.py`: gerações, limites, isolamento e concorrência |
+| D-090 | shutdown em duas fases, `PostgresAdapter.cancel` | `test_datasource_registry.py`, `test_datasource_bootstrap.py` e cancelamento real em `test_datasource_runtime_integration.py` |
+| D-091 | `DatasourceRuntimeService`, `build_candidate` | `test_datasource_runtime_service.py` e `test_datasource_runtime_integration.py` |
+
 ## Gates comuns e limites desta matriz
 
 - PostgreSQL 16 real em todos os gates de integração; `MASKGW_TEST_DSN` deve
@@ -115,6 +126,7 @@ fechada com os artefatos e números medidos no seu próprio registro de validaç
   o teste adversarial não pode ser deselected, skipped ou xfailed.
 - Nenhum finding pode virar skip/xfail. Skips exclusivamente de plataforma
   devem ser separados e explicados na evidência da etapa.
-- A matriz não autoriza as Etapas 3–12. A evidência executável da Etapa 2 está
-  em `docs/PHASE-9-STAGE-2-VALIDATION.md`; os resultados históricos da Fase 8
+- A matriz não autoriza as Etapas 4–12. A evidência executável das Etapas 2 e
+  3 está em `docs/PHASE-9-STAGE-2-VALIDATION.md` e
+  `docs/PHASE-9-STAGE-3-VALIDATION.md`; os resultados históricos da Fase 8
   continuam exclusivamente em sua própria evidência e não são reatribuídos.

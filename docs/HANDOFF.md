@@ -2,7 +2,7 @@
 
 **Documento de entrada. Comece por aqui.**
 
-Estado: **Fase 8 concluída e publicada; Fase 9 — Etapa 2 implementada localmente**.
+Estado: **Fase 8 concluída e publicada; Fase 9 — Etapa 3 implementada localmente**.
 MVP e Fase 7 concluídos. A Etapa 8 foi revisada e publicada sem emenda em
 `20db6f021533230d791cd910b037554c3fe03191`; o fetch confirmou master, HEAD igual
 a origin/master, árvore limpa e 0/0, com autoria e trailer preservados.
@@ -10,11 +10,14 @@ A Etapa 9 concluiu a verificação do pacote instalado e a revisão adversarial
 final, com todos os gates aprovados. A publicação final ocorreu em `42cd2df`.
 Em 2026-09-22 a Etapa 1 documental da Fase 9 foi concluída e aprovada:
 especificação, threat model, decisões e rastreabilidade de façade PGWire,
-múltiplos datasources e Admin UX v2. Nesta sessão a Etapa 2 foi autorizada e
-implementou somente modelos, store cifrado, destino e migração explícita. A
-especificação aprovada está em `docs/PHASE-9-SPEC.md`; as Etapas 3–12 continuam
+múltiplos datasources e Admin UX v2. A Etapa 2 implementou modelos, store
+cifrado, destino e migração explícita. Em 2026-09-23 a Etapa 3 foi autorizada e
+implementou o registry multi-datasource, o coordenador interno e o lifecycle
+fail-closed, ativados somente pelo composition root (D-087–D-091). A
+especificação aprovada está em `docs/PHASE-9-SPEC.md`; as Etapas 4–12 continuam
 sem autorização de implementação. Evidência da Fase 8:
-`docs/PHASE-8-STAGE-9-VALIDATION.md`.
+`docs/PHASE-8-STAGE-9-VALIDATION.md`; da Etapa 3:
+`docs/PHASE-9-STAGE-3-VALIDATION.md`.
 
 A UI agora recebe token explicitamente, valida metadados e DTOs e apresenta
 seis vistas declarativas. Token somente na closure do transporte; navegação em
@@ -37,7 +40,7 @@ Ordem de leitura sugerida:
 | `docs/ARCHITECTURE.md` | modulos e responsabilidades |
 | `docs/SECURITY.md` | invariantes de seguranca e o que exigir antes de expor |
 | `docs/SECURITY-REVIEW.md` | 11 findings do red team, seis fechados |
-| `docs/DECISIONS.md` | D-001 a D-086, com o motivo de cada uma |
+| `docs/DECISIONS.md` | D-001 a D-091, com o motivo de cada uma |
 | `docs/MASKING-SPEC.md` | semantica exata do pipeline |
 | `docs/TEST-PLAN.md` | o que cada camada de teste cobre |
 | `docs/THREAT-MODEL.md` | cenarios de ataque e o resultado medido |
@@ -223,9 +226,14 @@ src/maskgw/
     sensitivity.py       dependencia sensivel por posicao  (Fase 6.1)
   gateway/               <- Fase 5
     models.py            QueryResult, QueryColumn, ErrorCategory, GatewayError
-    service.py           Gateway.query: a fachada publica
-  runtime/               <- Fase 7, Etapas 2 e 3
+    service.py           Gateway.query: a fachada publica; run_audited compartilhado
+    datasources.py       sessao por alias sobre o mesmo pipeline (Fase 9, Etapa 3)
+  runtime/               <- Fase 7, Etapas 2 e 3; Fase 9, Etapa 3
     registry.py          RuntimeRegistry: acquire/release, retired, close unico
+    candidate.py         candidato de datasource: destino, policy, limites, verificacao
+    datasources.py       DatasourceRegistry: geracoes, sessoes, limites, drenagem
+    datasource_service.py startup fail-closed e coordenador interno (sem HTTP)
+  datasource/            <- Fase 9, Etapa 2: modelos, destino, store cifrado, migracao
   admin/                 <- Fase 7, Etapa 6; a secao critica, SEM HTTP
     errors.py            AdminError e as categorias fechadas (10.2 + D-056)
     document.py          MaskingFileConfig <-> bytes YAML, round-trip conferido
@@ -287,6 +295,13 @@ tests/
   test_admin_http_lifecycle.py   35
   test_admin_http_leakage.py     20
   test_admin_http_mcp_coexistence.py  5  (integration)
+
+  test_datasource_catalog.py     <- Fase 9, Etapa 2
+  datasource_runtime_support.py  <- Fase 9, Etapa 3 (apoio, nao e teste)
+  test_datasource_registry.py              <- Fase 9, Etapa 3
+  test_datasource_runtime_service.py       <- Fase 9, Etapa 3
+  test_datasource_runtime_integration.py   <- Fase 9, Etapa 3 (integration)
+  test_datasource_bootstrap.py             <- Fase 9, Etapa 3
 
   security/                      <- Fases 6 e 6.1, 209 testes adversariais
     test_attack_expressions.py        55
@@ -801,7 +816,7 @@ Fase 7 — Admin API, CONCLUIDA (Etapas 1–11)
 
 Entrega concluída, revisada e aprovada:
 Fase 8 — Etapas 1–9 aprovadas e publicadas em `42cd2df`.
-Fase 9 — ETAPA 2 IMPLEMENTADA LOCALMENTE; PGWire, registry, Admin v2 e UI v2 não iniciados.
+Fase 9 — ETAPA 3 IMPLEMENTADA LOCALMENTE (registry e lifecycle); PGWire, Admin v2 e UI v2 não iniciados.
 ```
 
 A Etapa 5 concluiu os primitivos de filesystem seguro em
@@ -965,7 +980,7 @@ regras, database e SQL aditivo. `author.js` constrói candidatos fechados da bas
 e do rascunho. A Etapa 9 comprovou a distribuição instalada e os critérios de
 aceite, sem modificar o produto ou recursos gerados.
 
-### D. Fase 9 — PGWire, múltiplos datasources e Admin UX v2 · ETAPA 2 LOCAL
+### D. Fase 9 — PGWire, múltiplos datasources e Admin UX v2 · ETAPA 3 LOCAL
 
 A especificação aprovada `docs/PHASE-9-SPEC.md` define listener PostgreSQL para IDEs, alias
 em `dbname`, autenticação separada, TLS externo, credenciais upstream cifradas,
@@ -978,8 +993,31 @@ incerto; uma rotação de master key interrompida é resolvida pelo procedimento
 explícito de `docs/PHASE-9-STAGE-2-DESIGN.md` §6.4, com as duas chaves
 preservadas. Rotação confirmada remove os backups cifrados com a chave anterior;
 suspeita de comprometimento da chave exige também trocar as credenciais
-upstream. A matriz em
-`docs/PHASE-9-TRACEABILITY.md` governa as Etapas 3–12.
+upstream.
+
+A Etapa 3 adicionou o runtime multi-datasource, ativado somente por
+`build_application(datasource_catalog=DatasourceCatalogSettings(...))`
+(D-087); nenhuma variável de ambiente o liga e o MCP continua no runtime legado
+até a Etapa 11. Com o parâmetro, o startup abre o store, verifica cada
+datasource habilitado (destino revalidado, policy compilada, conexão com
+read-only, timeout e proveniência) e constrói o registry antes do legado, do
+Admin HTTP e do MCP; um datasource habilitado inválido derruba tudo. Cada
+sessão (`gateway/datasources.py`) captura uma geração e abre a própria conexão;
+troca, desabilitação e remoção drenam sem mudar o destino da sessão. Limites
+(D-089): por datasource `limits.max_sessions`, 1 aposentada e 1 candidato;
+globais 32 sessões, 4 aposentadas e 2 candidatos. Limites efetivos de
+timeout/linhas são o mínimo entre policy e limits (D-088). O coordenador
+`DatasourceRuntimeService` testa o candidato antes de persistir e publicar, e o
+teste de candidato não tem efeito (D-091). Evidência em
+`docs/PHASE-9-STAGE-3-VALIDATION.md`. A matriz em
+`docs/PHASE-9-TRACEABILITY.md` governa as Etapas 4–12.
+
+Limitação aceita da D-090: `connect_timeout` não cobre DNS, e cancelamento/
+`statement_timeout` não cobrem validação e masking locais; portanto o shutdown
+do novo runtime ainda não tem teto total garantido. Antes de expor testes de
+candidato pela Admin API v2 (Etapa 4), limitar a resolução; antes de novos
+ingressos SQL por PGWire (Etapa 8) ou MCP multi-datasource (Etapa 11), limitar
+o processamento local, sem abandonar threads ou conexões.
 
 ### Fora do escopo, inalterado
 
@@ -996,9 +1034,10 @@ automatico, banco de configuracao, Redis, background workers.
 - PostgreSQL 16 real disponível via `MASKGW_TEST_DSN`, sem nenhum skip por
   ausência de DSN; skips condicionais de plataforma discriminados na evidência
 - Fase 8 publicada em `42cd2df`; a Etapa 1 documental da Fase 9 foi concluída e
-  aprovada, e a Etapa 2 local foi implementada com evidência em
-  `docs/PHASE-9-STAGE-2-VALIDATION.md`. Nenhuma implementação funcional das
-  Etapas 3–12 está autorizada sem revisão e aprovação próprias.
+  aprovada, a Etapa 2 foi concluída (`docs/PHASE-9-STAGE-2-VALIDATION.md`) e a
+  Etapa 3 local foi implementada com evidência em
+  `docs/PHASE-9-STAGE-3-VALIDATION.md`. Nenhuma implementação funcional das
+  Etapas 4–12 está autorizada sem revisão e aprovação próprias.
 - neste host Windows, rode o pytest com pilha de thread ampliada (64 MiB), ou o
   teste de payload gigante derruba o processo. Nunca o transforme em `skip`
   (D-041); a limitacao esta na secao 11

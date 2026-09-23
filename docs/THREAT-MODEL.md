@@ -202,9 +202,10 @@ que uma mudança futura seja percebida.
 
 ## Fase 9 — ameaças aprovadas do plano PGWire e multi-datasource
 
-**Estado:** threat model aprovado em 2026-09-22; a superfície de listener,
-registry e Admin UX ainda não foi implementada. A Etapa 2 implementa somente
-o store/modelo/destino/migração e está coberta em sua validação própria.
+**Estado:** threat model aprovado em 2026-09-22; a superfície de listener e
+Admin UX ainda não foi implementada. A Etapa 2 implementa o
+store/modelo/destino/migração e a Etapa 3 o registry e o lifecycle (itens 10–12
+abaixo, no nível do registry), cada uma coberta em sua validação própria.
 
 A Fase 9 transforma o Gateway em servidor PostgreSQL perante clientes de IDE e
 adiciona destinos administráveis. Isso cria atacantes e ativos novos:
@@ -287,8 +288,10 @@ store cifrado + master key → segredo em memória → PostgreSQL upstream
 Os requisitos normativos e as etapas estão em `docs/PHASE-9-SPEC.md`; o índice
 de cobertura aprovado está em `docs/PHASE-9-TRACEABILITY.md`. Os cenários de
 store, cifra, replay, recuperação e SSRF da Etapa 2 foram executados na suíte
-local e estão em `docs/PHASE-9-STAGE-2-VALIDATION.md`; PGWire, registry e os
-demais cenários continuam exigindo a evidência indicada na matriz.
+local e estão em `docs/PHASE-9-STAGE-2-VALIDATION.md`. Concorrência, exaustão
+e isolamento no registry (itens 10–12) estão em
+`docs/PHASE-9-STAGE-3-VALIDATION.md`; PGWire e os demais cenários continuam
+exigindo a evidência indicada na matriz.
 
 ---
 

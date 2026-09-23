@@ -68,7 +68,7 @@ import threading
 from collections.abc import Mapping
 from pathlib import Path
 from types import MappingProxyType
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from mcp.server import MCPServer
 from starlette.types import ASGIApp
@@ -95,6 +95,13 @@ from maskgw.masking.engine import MaskingEngine
 from maskgw.mcp.server import build_mcp_server
 from maskgw.runtime import Runtime, RuntimeRegistry
 from maskgw.secretsource import EnvSecretProvider, SecretProvider
+
+if TYPE_CHECKING:
+    # So para anotacao. Em runtime o catalogo e importado somente quando a
+    # capacidade nova e pedida: com ela desligada, nenhum modulo de
+    # `maskgw.datasource` e carregado (D-087).
+    from maskgw.gateway.datasources import DatasourceGateway
+    from maskgw.runtime.datasource_service import DatasourceCatalogSettings, DatasourceRuntime
 
 #: Variavel de ambiente com o DSN do PostgreSQL. Nunca no `masking.yaml`.
 DSN_ENV: Final = "MASKGW_DATABASE_DSN"
@@ -128,6 +135,8 @@ class Application:
         "_closing",
         "_config",
         "_config_store",
+        "_datasource_gateway",
+        "_datasources",
         "_gateway",
         "_lifecycle_lock",
         "_mcp_server",
@@ -146,6 +155,8 @@ class Application:
         config_store: ConfigFileStore | None = None,
         admin_http: AdminHttpServer | None = None,
         admin_ui_resources: Mapping[str, bytes] | None = None,
+        datasources: DatasourceRuntime | None = None,
+        datasource_gateway: DatasourceGateway | None = None,
     ) -> None:
         self._gateway = gateway
         self._config = config
@@ -157,6 +168,8 @@ class Application:
         self._admin_ui_resources = (
             None if admin_ui_resources is None else MappingProxyType(dict(admin_ui_resources))
         )
+        self._datasources = datasources
+        self._datasource_gateway = datasource_gateway
         self._lifecycle_lock = threading.Lock()
         # Curto: cobre so as transicoes de estado, nunca o `join` da thread
         # HTTP nem o fechamento das conexoes.
@@ -203,6 +216,21 @@ class Application:
     def admin_ui_resources(self) -> Mapping[str, bytes] | None:
         """Bytes verificados pertencentes a esta execucao."""
         return self._admin_ui_resources
+
+    @property
+    def datasources(self) -> DatasourceRuntime | None:
+        """Catalogo, registry e coordenador multi-datasource, ou None.
+
+        Existe somente quando o composition root recebeu
+        `datasource_catalog` (Fase 9, Etapa 3, D-087). Nenhuma fronteira
+        externa o usa nesta etapa.
+        """
+        return self._datasources
+
+    @property
+    def datasource_gateway(self) -> DatasourceGateway | None:
+        """Sessoes de consulta por alias sobre o registry, ou None."""
+        return self._datasource_gateway
 
     @property
     def revision(self) -> int:
@@ -280,15 +308,31 @@ class Application:
             if self._is_closed():
                 return
 
+            # Fase 9, §11: a admissao de sessoes de datasource para primeiro,
+            # antes de qualquer espera — nao ha o que drenar do que nao entrou.
+            if self._datasources is not None:
+                self._datasources.begin_shutdown()
             if self._admin is not None:
                 self._admin.close()
             if self._admin_http is not None:
                 # Bloqueia ate a thread HTTP acabar. So depois disso os
                 # runtimes podem fechar e o lock pode sair (secao 9.2).
                 self._admin_http.stop()
-            self._registry.close_all()
-            if self._config_store is not None:
-                self._config_store.close()
+            # Cada fechamento abaixo roda mesmo que o anterior falhe: um erro
+            # no runtime legado nao pode deixar sessoes upstream nem os locks
+            # do catalogo e do `masking.yaml` presos.
+            try:
+                self._registry.close_all()
+            finally:
+                try:
+                    if self._datasources is not None:
+                        # Espera a escrita em voo, drena/cancela as sessoes,
+                        # descarta as geracoes e so entao solta os locks do
+                        # catalogo.
+                        self._datasources.close()
+                finally:
+                    if self._config_store is not None:
+                        self._config_store.close()
 
             with self._lifecycle_lock:
                 self._closed = True
@@ -315,9 +359,11 @@ class Application:
             else:
                 state = "ready"
         ui = ", admin_ui=True" if self._admin_ui_resources is not None else ""
+        datasources = ", datasources=True" if self._datasources is not None else ""
         return (
             f"Application(revision={self._registry.current.revision}, state={state!r}, "
-            f"admin={self._admin is not None}, admin_http={self._admin_http is not None}{ui})"
+            f"admin={self._admin is not None}, admin_http={self._admin_http is not None}"
+            f"{ui}{datasources})"
         )
 
 
@@ -392,6 +438,7 @@ def build_application(  # noqa: PLR0913 - parametros de composicao, keyword-only
     admin_enabled: bool = False,
     admin_http: AdminHttpSettings | None = None,
     admin_ui_enabled: bool = False,
+    datasource_catalog: DatasourceCatalogSettings | None = None,
 ) -> Application:
     """Constroi os planos inteiros ou levanta sem deixar recurso de pe.
 
@@ -401,6 +448,15 @@ def build_application(  # noqa: PLR0913 - parametros de composicao, keyword-only
 
     `admin_http` implica a secao critica: nao existe fronteira HTTP sobre uma
     configuracao que o processo nao esteja segurando com o lock exclusivo.
+
+    `datasource_catalog` (Fase 9, Etapa 3, D-087) ativa o catalogo e o registry
+    multi-datasource. So o composition root o recebe: nenhuma variavel de
+    ambiente o liga nesta etapa. Com ele `None`, nenhum modulo de
+    `maskgw.datasource` e importado e o processo e o legado byte a byte. Com
+    ele presente, os passos 3-7 da §11 acontecem ANTES do runtime legado, do
+    Admin HTTP e do MCP, e qualquer datasource habilitado invalido desmonta
+    tudo sem que fronteira alguma tenha existido (D-076). O MCP continua no
+    runtime legado ate a Etapa 11 (D-074).
     """
     # Fase 8, Etapa 3: nenhum recurso operacional existe antes desta barreira.
     # Revalidar settings tambem protege chamadas diretas ao composition root.
@@ -422,8 +478,16 @@ def build_application(  # noqa: PLR0913 - parametros de composicao, keyword-only
     adapter: PostgresAdapter | None = None
     registry: RuntimeRegistry | None = None
     http_server: AdminHttpServer | None = None
+    datasources: DatasourceRuntime | None = None
+    datasource_gateway: DatasourceGateway | None = None
 
     try:
+        # Fase 9, §11 passos 3-7: store, lock, chave, catalogo autenticado,
+        # politicas compiladas, datasources habilitados verificados e registry
+        # construido — antes de qualquer recurso legado ou fronteira.
+        if datasource_catalog is not None:
+            datasources = _open_datasources(datasource_catalog, secrets=secrets)
+
         # Passos 2 e 3 da secao 9.2: o filesystem e verificado e o lock
         # exclusivo e adquirido ANTES de qualquer coisa ser construida. Um
         # segundo processo administrativo sobre o mesmo arquivo falha aqui.
@@ -457,6 +521,8 @@ def build_application(  # noqa: PLR0913 - parametros de composicao, keyword-only
         # configuracao implicita de logging (secao 13).
         audit_log = audit if audit is not None else AuditLog()
         gateway = Gateway(registry, audit_log)
+        if datasources is not None:
+            datasource_gateway = _build_datasource_gateway(datasources, audit_log)
 
         # O admin plane e o registry mais o filesystem, e nada do plano de
         # dados: ele nao conhece Gateway nem MCP. O digest de referencia sao os
@@ -501,6 +567,8 @@ def build_application(  # noqa: PLR0913 - parametros de composicao, keyword-only
             config_store=store,
             admin_http=http_server,
             admin_ui_resources=ui_resources,
+            datasources=datasources,
+            datasource_gateway=datasource_gateway,
         )
     except BaseException:
         # Falha parcial: desmontar na mesma ordem do shutdown. A thread HTTP
@@ -512,15 +580,54 @@ def build_application(  # noqa: PLR0913 - parametros de composicao, keyword-only
         # falhou — e por isso que a adocao vem antes dele. `stop()` bloqueia ate
         # a thread terminar, entao nenhum runtime e fechado com ela viva, e
         # `stop()` sobre um servidor que nunca iniciou nao faz nada.
+        if datasources is not None:
+            datasources.begin_shutdown()
         if http_server is not None:
             http_server.stop()
+        _close_partial(registry=registry, adapter=adapter, datasources=datasources, store=store)
+        raise
+
+
+def _close_partial(
+    *,
+    registry: RuntimeRegistry | None,
+    adapter: PostgresAdapter | None,
+    datasources: DatasourceRuntime | None,
+    store: ConfigFileStore | None,
+) -> None:
+    """Desmonta uma construcao parcial; cada passo roda mesmo se outro falhar.
+
+    Chamado depois do `stop()` da thread HTTP, que continua sendo a barreira:
+    se ele falhar, nada abaixo roda com a thread possivelmente viva.
+    """
+    try:
         if registry is not None:
             registry.close_all()
         elif adapter is not None:
             adapter.close()
-        if store is not None:
-            store.close()
-        raise
+    finally:
+        try:
+            if datasources is not None:
+                datasources.close()
+        finally:
+            if store is not None:
+                store.close()
+
+
+def _open_datasources(
+    settings: DatasourceCatalogSettings, *, secrets: SecretProvider | None
+) -> DatasourceRuntime:
+    """Passos 3-7 da §11. Importa o catalogo SO quando a capacidade e pedida."""
+    from maskgw.runtime.datasource_service import open_datasource_runtime  # noqa: PLC0415
+
+    return open_datasource_runtime(settings, secrets=secrets)
+
+
+def _build_datasource_gateway(datasources: DatasourceRuntime, audit: AuditLog) -> DatasourceGateway:
+    """Sessoes por alias com o MESMO `AuditLog` e o MESMO pipeline do MCP."""
+    from maskgw.gateway.datasources import DatasourceGateway as _Gateway  # noqa: PLC0415
+
+    return _Gateway(datasources.registry, audit)
 
 
 def _build_admin_http(

@@ -1,14 +1,18 @@
 # Fase 9 — PostgreSQL Gateway, múltiplos datasources e Admin UX v2
 
-**Estado:** especificação aprovada em 2026-09-22; Etapas 1 e 2 concluídas
-localmente nesta sessão.
+**Estado:** especificação aprovada em 2026-09-22; Etapas 1 e 2 concluídas;
+Etapa 3 (registry multi-datasource e lifecycle) implementada localmente em
+2026-09-23.
 **Base:** Fase 8 concluída em `42cd2df8aeef4a1e39ffae0ecf33a6ce86bd8445`.
 **Implementação funcional:** Etapa 2 limitada a modelos, destino, store e
-migração; Etapas 3–12 não iniciadas.
+migração; Etapa 3 limitada ao registry interno, ao coordenador sem HTTP e ao
+startup/shutdown ativados somente pelo composition root (D-087); Etapas 4–12
+não iniciadas.
 
-Esta aprovação normativa não autoriza as Etapas 3–12, que continuam
+Esta aprovação normativa não autoriza as Etapas 4–12, que continuam
 condicionadas à revisão e autorização próprias, na ordem desta especificação.
-Não existem listener, registry, rota, UI v2 ou integração runtime no produto.
+Não existem listener, rota, UI v2, variável de ambiente nova nem integração do
+registry com MCP ou PGWire no produto.
 
 ## 1. Motivo e resultado esperado
 
@@ -471,6 +475,14 @@ trabalho sob limites, drena sessões PGWire por geração, fecha sessões upstre
 runtimes e stores. Nenhuma thread ou socket fica abandonado. Não há retry,
 rebind ou rollback automático em nenhuma falha de lifecycle.
 
+O `connect_timeout` não limita a resolução DNS anterior à conexão; cancelamento
+e `statement_timeout` não limitam validação e masking locais. A Etapa 3 aceita
+essa ausência de teto total somente enquanto o catálogo não tiver nova
+fronteira externa. Antes de expor candidatos pela Admin API v2 (Etapa 4), a
+resolução precisa de limite efetivo; antes de expor consultas por PGWire
+(Etapa 8) ou MCP multi-datasource (Etapa 11), o processamento local também
+precisa de limite efetivo, sem abandonar threads ou conexões.
+
 ## 12. Ameaças novas
 
 Cobertura obrigatória:
@@ -559,9 +571,11 @@ subconjunto implementado. A documentação publica a matriz certificada.
 | 12 | pacote, revisão adversarial e fechamento | gates integrais e rollback real |
 
 Cada etapa termina para revisão e autorização próprias. A Etapa 1 foi aprovada
-em 2026-09-22. A Etapa 2 foi autorizada nesta sessão e sua implementação local
-fica limitada ao modelo, store, destino e migração descritos acima; as Etapas
-3–12 continuam bloqueadas para implementação funcional.
+em 2026-09-22. A Etapa 2 ficou limitada ao modelo, store, destino e migração
+descritos acima. A Etapa 3 foi autorizada em 2026-09-23 e sua implementação
+local fica limitada ao registry, ao coordenador interno e ao lifecycle, com as
+decisões D-087–D-091; as Etapas 4–12 continuam bloqueadas para implementação
+funcional.
 
 ## 16. Decisões aprovadas em 2026-09-22
 
@@ -588,8 +602,9 @@ fica limitada ao modelo, store, destino e migração descritos acima; as Etapas
 
 As doze decisões acima foram aprovadas integralmente em 2026-09-22 e estão
 registradas como D-065 a D-076 em `docs/DECISIONS.md`. O registro documental
-não autoriza as Etapas 3–12: a Etapa 2 possui autorização própria e evidência
-em `docs/PHASE-9-STAGE-2-VALIDATION.md`; cada etapa posterior continua
+não autoriza as Etapas 4–12: as Etapas 2 e 3 possuem autorização própria e
+evidência em `docs/PHASE-9-STAGE-2-VALIDATION.md` e
+`docs/PHASE-9-STAGE-3-VALIDATION.md`; cada etapa posterior continua
 condicionada à sua própria revisão, aprovação e gates de entrada.
 
 ## 17. Critério de conclusão

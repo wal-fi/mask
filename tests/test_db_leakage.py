@@ -47,8 +47,12 @@ masking:
 
 #: Unico conjunto de nomes publicos que cada tipo pode expor. Ampliar esta
 #: lista tem de ser uma decisao consciente, nao um acidente.
+#:
+#: `cancel` entrou na Fase 9, Etapa 3 (D-090): pede ao servidor o cancelamento
+#: do statement em voo pelo protocolo do PostgreSQL, para o shutdown do
+#: registry. Nao devolve dado, nao expoe conexao nem cursor.
 ADAPTER_PUBLIC_API = frozenset(
-    {"connect", "close", "execute", "execute_validated", "closed", "settings"}
+    {"connect", "cancel", "close", "execute", "execute_validated", "closed", "settings"}
 )
 RESULT_PUBLIC_API = frozenset(
     {"columns", "decisions", "rows", "column_names", "row_count", "truncated"}

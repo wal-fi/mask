@@ -663,7 +663,7 @@ vira rota ou capacidade MCP. Provas e limites em `PHASE-8-STAGE-9-VALIDATION.md`
 
 ---
 
-## Fase 9 — arquitetura aprovada; Etapa 2 localmente implementada
+## Fase 9 — arquitetura aprovada; Etapas 2 e 3 localmente implementadas
 
 A Fase 9 acrescenta futuramente uma terceira fronteira de entrada ao lado do
 MCP stdio e da Admin API local: um listener PostgreSQL que funciona como façade
@@ -674,10 +674,24 @@ bruto para devolver resultados.
 
 O catálogo é persistente, versionado, autenticado e contém ciphertexts AEAD
 para os segredos upstream. A Etapa 2 fornece os modelos, a validação de
-destino, o store com âncora/journal e a migração explícita; o
-`DatasourceRegistry` e os runtimes por sessão continuam reservados à Etapa 3.
-A Administração v2 continua separada do plano de dados, local/loopback-only e
-sem executar SQL.
+destino, o store com âncora/journal e a migração explícita. A Etapa 3 fornece
+o runtime multi-datasource, abaixo dos planos e sem fronteira externa nova:
+
+```text
+runtime/candidate.py          destino revalidado + policy compilada + limites
+                              efetivos (D-088) + conexão de verificação
+runtime/datasources.py        DatasourceRegistry: geração por alias, sessão com
+                              conexão própria, refcount, drenagem, limites
+runtime/datasource_service.py startup fail-closed (§11, 3–7) e coordenador
+                              interno: candidato → store → publicação
+gateway/datasources.py        sessão por alias sobre o MESMO pipeline do MCP
+```
+
+`runtime/` continua sem importar `gateway/`, `admin/` ou `mcp/`; a sessão de
+consulta vive em `gateway/` e reutiliza `run_audited`/`execute_validated`. O
+composition root só importa esses módulos quando recebe `datasource_catalog`
+(D-087). A Administração v2 continua separada do plano de dados,
+local/loopback-only e sem executar SQL.
 
 O lifecycle aprovado é: validar settings e recursos; validar e autenticar o
 store; compilar e verificar datasources habilitados; confirmar Admin HTTP;
@@ -689,5 +703,7 @@ restart.
 
 O contrato, a ameaça e a cobertura estão em `docs/PHASE-9-SPEC.md`,
 `docs/THREAT-MODEL.md` e `docs/PHASE-9-TRACEABILITY.md`. A Etapa 2 adiciona
-somente o pacote interno `maskgw.datasource` e sua dependência criptográfica;
-não adiciona rota, socket, listener, registry ou alteração de runtime.
+somente o pacote interno `maskgw.datasource` e sua dependência criptográfica.
+A Etapa 3 adiciona os módulos acima e `PostgresAdapter.cancel()`, sem rota,
+socket, listener, variável de ambiente ou mudança no contrato MCP; o MCP
+continua no runtime legado até a Etapa 11.

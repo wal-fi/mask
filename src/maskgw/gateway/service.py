@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import time
 import uuid
+from collections.abc import Callable
 from types import TracebackType
 from typing import NoReturn
 
@@ -58,12 +59,8 @@ class Gateway:
 
     def query(self, sql: str) -> QueryResult:
         """Executa uma consulta e devolve o resultado ja seguro."""
-        request_id = uuid.uuid4().hex
-        started = time.perf_counter()
-        category: ErrorCategory | None = None
-        result: QueryResult | None = None
 
-        try:
+        def operation() -> QueryResult:
             # Uma unica aquisicao, usada ate o fim. O `finally` do `borrow`
             # garante o release inclusive quando a query levanta.
             with self._registry.borrow() as runtime:
@@ -78,34 +75,9 @@ class Gateway:
                     masked = runtime.adapter.execute_validated(sql)
                 # Montado ainda dentro da referencia: depois daqui o resultado
                 # e imutavel e nao depende mais do runtime.
-                result = _to_query_result(masked)
-        except BaseException as exc:
-            category = categorize(exc)
+                return to_query_result(masked)
 
-        elapsed_ms = int((time.perf_counter() - started) * 1000)
-
-        if category is not None:
-            self._audit.record(
-                QueryAudit(
-                    request_id=request_id,
-                    outcome=FAILURE,
-                    duration_ms=elapsed_ms,
-                    error_category=category.value,
-                )
-            )
-            _raise_gateway_error(category)
-
-        assert result is not None  # noqa: S101 - invariante do fluxo acima
-        self._audit.record(
-            QueryAudit(
-                request_id=request_id,
-                outcome=SUCCESS,
-                duration_ms=elapsed_ms,
-                row_count=result.row_count,
-                truncated=result.truncated,
-            )
-        )
-        return result
+        return run_audited(self._audit, operation)
 
     def close(self) -> None:
         """Fecha o runtime publicado e os aposentados. Idempotente."""
@@ -127,7 +99,52 @@ class Gateway:
         return "Gateway()"
 
 
-def _to_query_result(masked: object) -> QueryResult:
+def run_audited(audit: AuditLog, operation: Callable[[], QueryResult]) -> QueryResult:
+    """Executa `operation`, audita e traduz a falha em `GatewayError`.
+
+    Unico caminho de saida de uma consulta, compartilhado pelo MCP legado e
+    pelas sessoes de datasource (Fase 9, Etapa 3): as duas fronteiras auditam
+    os mesmos campos e levantam as mesmas categorias fixas. A falha e
+    categorizada DENTRO do handler, mas levantada fora dele, para que nem
+    `__cause__` nem `__context__` apontem para a excecao interna (D-017).
+    """
+    request_id = uuid.uuid4().hex
+    started = time.perf_counter()
+    category: ErrorCategory | None = None
+    result: QueryResult | None = None
+
+    try:
+        result = operation()
+    except BaseException as exc:
+        category = categorize(exc)
+
+    elapsed_ms = int((time.perf_counter() - started) * 1000)
+
+    if category is not None:
+        audit.record(
+            QueryAudit(
+                request_id=request_id,
+                outcome=FAILURE,
+                duration_ms=elapsed_ms,
+                error_category=category.value,
+            )
+        )
+        _raise_gateway_error(category)
+
+    assert result is not None  # noqa: S101 - invariante do fluxo acima
+    audit.record(
+        QueryAudit(
+            request_id=request_id,
+            outcome=SUCCESS,
+            duration_ms=elapsed_ms,
+            row_count=result.row_count,
+            truncated=result.truncated,
+        )
+    )
+    return result
+
+
+def to_query_result(masked: object) -> QueryResult:
     """Traduz o `MaskedResult` interno no modelo publico.
 
     O que se perde na traducao e o que nao deve sair: proveniencia, decisoes

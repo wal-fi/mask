@@ -78,6 +78,7 @@ select = [
 # proprio modulo, nunca de entrada externa. A validacao de SQL do Gateway e da
 # Fase 4.
 "tests/test_db_integration.py" = ["S608"]
+"tests/test_datasource_runtime_integration.py" = ["S608"]
 "tests/test_pgresult_metadata.py" = ["S608"]
 "tests/test_execution_safety.py" = ["S608"]
 # Os testes adversariais do validator PRECISAM montar SQL maliciosa: e o que

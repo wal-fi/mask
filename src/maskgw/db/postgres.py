@@ -56,6 +56,9 @@ from maskgw.sql.validator import validate_select
 #: Linhas buscadas por `fetchmany`. Nao e o limite de resposta: e `max_rows`.
 DEFAULT_BATCH_SIZE: Final = 500
 
+#: Espera maxima, em segundos, do pedido de cancelamento de `cancel`.
+_CANCEL_TIMEOUT_SECONDS: Final = 5.0
+
 #: Limites default, quando nenhuma configuracao e passada.
 DEFAULT_SETTINGS: Final = DatabaseSettings(statement_timeout_ms=30_000, max_rows=1_000)
 
@@ -138,6 +141,29 @@ class PostgresAdapter:
         except CapabilityError:
             self.close()
             raise
+
+    def cancel(self) -> None:
+        """Pede ao servidor o cancelamento do statement em andamento.
+
+        Unico metodo seguro para chamar de OUTRA thread enquanto `execute`
+        roda: usa o protocolo de cancelamento do PostgreSQL por uma conexao
+        propria (`cancel_safe`), sem tocar no estado da conexao em uso. A
+        consulta cancelada termina na thread que a executava, com erro ja
+        sanitizado. Sem conexao aberta, nao faz nada. Falha do pedido e
+        silenciosa: cancelar e melhor esforco, e o `statement_timeout` continua
+        limitando a execucao (Fase 9, Etapa 3).
+        """
+        connection = self._connection
+        if connection is None or connection.closed:
+            return
+        with contextlib.suppress(psycopg.Error):
+            cancel_safe = getattr(connection, "cancel_safe", None)
+            if cancel_safe is not None:
+                cancel_safe(timeout=_CANCEL_TIMEOUT_SECONDS)
+            else:
+                # psycopg < 3.2, ainda aceito pelo pyproject: mesmo protocolo
+                # de cancelamento, sem o timeout configuravel.
+                connection.cancel()
 
     def close(self) -> None:
         """Fecha a conexao. Idempotente."""

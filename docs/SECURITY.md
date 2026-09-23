@@ -586,7 +586,7 @@ acessibilidade manual ou resistência a processo/extensão/navegador comprometid
 Resultados medidos e tentativas anteriores ficam na evidência da Etapa 9;
 findings históricos e riscos aceitos das outras fases permanecem abertos.
 
-## Fase 9 — requisitos aprovados; Etapa 2 implementada localmente
+## Fase 9 — requisitos aprovados; Etapas 2 e 3 implementadas localmente
 
 A Fase 9 adiciona uma fronteira PostgreSQL não confiável e um catálogo de
 datasources. O cliente PGWire nunca fornece o destino real: `dbname` é um alias
@@ -622,9 +622,15 @@ separado, sem aceitar outro arquivo comum no diretório do store. Transplantar c
 datasource/campo, adulterar metadata e alterar ciphertext devem falhar fechado
 independentemente dessa âncora.
 
-O listener, registry, credencial de Gateway, rota v2 e UI v2 continuam sem
+O listener, credencial de Gateway, rota v2 e UI v2 continuam sem
 implementação. A Etapa 2 adicionou apenas modelos, destino, store cifrado,
-dependência criptográfica pinada e migração explícita, sem publicar runtime ou
-alterar o caminho legado. A evidência está em
-`docs/PHASE-9-STAGE-2-VALIDATION.md` e a matriz de provas em
-`docs/PHASE-9-TRACEABILITY.md`.
+dependência criptográfica pinada e migração explícita. A Etapa 3 adicionou o
+registry por geração, com uma conexão upstream verificada (read-only,
+`statement_timeout`, proveniência) por sessão e ligada por `hostaddr` aos
+endereços DNS validados; limites globais e por datasource checados antes de
+qualquer conexão; drenagem sem troca de destino; shutdown com cancelamento e
+sem abandono; e startup que falha antes de qualquer fronteira quando um
+datasource habilitado é inválido (D-087–D-091). A capacidade só é ligada pelo
+composition root e o caminho legado não muda. A evidência está em
+`docs/PHASE-9-STAGE-2-VALIDATION.md` e `docs/PHASE-9-STAGE-3-VALIDATION.md`,
+e a matriz de provas em `docs/PHASE-9-TRACEABILITY.md`.

@@ -1012,6 +1012,16 @@ class CatalogStore:
             return self._closed
 
     @property
+    def requires_reopen(self) -> bool:
+        """Uma persistencia falhou neste objeto; so a reabertura o libera.
+
+        Somente leitura, para que um coordenador (Fase 9, Etapa 3) se bloqueie
+        pela mesma condicao do store, e nao pelo tipo da excecao recebida.
+        """
+        with self._lifecycle_lock:
+            return self._poisoned
+
+    @property
     @_serialized_operation
     def revision(self) -> int:
         return self._revision

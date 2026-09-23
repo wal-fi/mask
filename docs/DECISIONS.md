@@ -2287,3 +2287,126 @@ campos upstream, preserva `masking.yaml` byte a byte e não publica
 runtime/registry. Falha de parse, destino ou persistência deixa o legado e o
 catálogo anterior intactos; nunca há fallback automático. Referências: D-075,
 PHASE-9-SPEC §6.3 e desenho §8.
+
+# Fase 9 — decisões da Etapa 3 (registry multi-datasource e lifecycle)
+
+D-087 a D-089 foram apresentadas antes do código e aprovadas pelo usuário em
+2026-09-23, porque a especificação não as fixava. D-090 e D-091 são escolhas de
+implementação dentro do contrato aprovado (§§7 e 11, D-054, D-071, D-076) e
+ficam sujeitas à revisão da Etapa 3. Nenhuma delas autoriza Admin API v2, UI v2,
+PGWire, rota nova ou extensão da tool MCP.
+
+## D-087 — Ativação interna e coexistência com o legado
+
+Na Etapa 3 o catálogo e o registry só são ativados pelo parâmetro interno
+`build_application(datasource_catalog=DatasourceCatalogSettings(...))`, como
+`admin_enabled` na Fase 7, Etapa 6. `main()` e o ambiente não mudam:
+`MASKGW_PGWIRE_ENABLED` continua sem leitor até a Etapa 7, que valida junto
+usuário, senha, TLS, bind e porta do PGWire. Com o parâmetro ausente, nenhum
+módulo de `maskgw.datasource` é importado e o processo é o legado byte a byte.
+Com ele presente, os passos 3–7 da §11 (store, lock, chave, catálogo
+autenticado, políticas, datasources habilitados verificados, registry)
+acontecem antes do runtime legado, do Admin HTTP e do MCP. Qualquer datasource
+habilitado inválido desmonta tudo sem que fronteira alguma tenha existido. O
+MCP `query_database(sql)` continua no runtime legado, com o DSN obrigatório,
+até a Etapa 11 (D-074); não há fallback do catálogo para o legado (D-075).
+Motivo: ler a flag agora exigiria antecipar a validação de settings da Etapa 7
+ou aceitar uma flag que promete um listener inexistente.
+
+## D-088 — Limites efetivos são os mais restritivos
+
+O registro traz `policy.database` (schema do `masking.yaml`) e `limits`. O
+runtime do datasource usa `statement_timeout_ms = min(policy, limits)` e
+`max_rows = min(policy, limits)`. Nenhum valor configurado é excedido e o
+datasource migrado do legado, que copia a policy e recebe os limites default,
+continua válido. Consequência conhecida: o valor efetivo pode ser menor que o
+exibido num dos campos; a Admin v2 deve mostrá-lo.
+
+## D-089 — Gerações, sessões e limites
+
+Cada datasource habilitado tem uma geração publicada imutável: política
+compilada, limites efetivos e alvo de conexão ligado aos endereços DNS
+validados. O número da geração é monotônico no processo e nunca é reutilizado.
+Uma sessão admitida captura a geração e abre a própria conexão upstream (D-071);
+o refcount da geração é o número dessas sessões. Troca, desabilitação e
+remoção não mudam o destino de sessão admitida: as antigas drenam e a geração
+aposentada é descartada exatamente uma vez no último release, ou na própria
+troca/retirada se já estiver ociosa.
+
+Limites aprovados:
+
+| escopo | sessões | aposentadas drenando | candidatos em voo |
+|---|---:|---:|---:|
+| por datasource | `limits.max_sessions`, contando gerações em drenagem | 1 | 1 |
+| global | 32 (default da §5.1, parâmetro do composition root) | 4 | 2 |
+
+A vaga de candidato é reservada antes de construir ou conectar qualquer coisa.
+A vaga de aposentada só é reservada quando a publicação vai aposentar uma
+geração (troca); criar ou reabilitar não consome essa vaga. Retirar
+(desabilitar/remover) nunca é recusado por limite, porque só reduz exposição. A
+recusa de admissão testa o limite global antes de olhar o alias, para que a
+lotação global não revele o catálogo; alias desconhecido, desabilitado e
+removido têm a mesma mensagem fixa.
+
+## D-090 — Drenagem e shutdown sem abandono
+
+Desabilitar e remover não encerram à força sessões admitidas: elas terminam
+sob os limites da própria sessão (`statement_timeout`; idle da Etapa 7). O
+shutdown para a admissão primeiro e encerra as sessões em duas fases:
+
+1. sessão ociosa é fechada imediatamente; sessão em consulta recebe
+   cancelamento pelo protocolo do PostgreSQL (`cancel_safe`, por conexão
+   própria e seguro entre threads; `cancel()` no psycopg < 3.2) e é marcada;
+2. o shutdown adquire o lock de cada sessão, repetindo o cancelamento a cada
+   segundo enquanto ele estiver ocupado — o primeiro pedido pode ter chegado
+   antes de o statement existir no servidor —, e fecha a sessão. Isso também
+   fecha a janela em que a consulta terminou entre a leitura da marca e a
+   liberação do lock.
+
+Depois disso aguarda todos os releases e todos os candidatos em voo (um teste
+de conexão segura uma conexão de verificação com o segredo upstream) sem
+timeout e só então descarta cada geração uma única vez. O `connect_timeout`
+limita a conexão libpq, **não** a resolução DNS anterior; cancelamento e
+`statement_timeout` limitam o statement no PostgreSQL, **não** a validação ou o
+masking locais. Logo, nesta etapa não há teto finito garantido para o shutdown
+se a resolução ou o processamento local não terminarem. A limitação é aceita
+enquanto o catálogo é ativado somente pelo parâmetro interno do composition
+root, sem nova fronteira de entrada. Antes de expor testes/candidatos pela
+Admin API v2 (Etapa 4), a resolução precisa de um limite efetivo; antes de
+expor consultas pelo PGWire (Etapa 8) ou pelo MCP multi-datasource (Etapa 11),
+o processamento local também precisa de limite efetivo. Nenhum desses limites
+pode simplesmente abandonar uma thread ou conexão. Sessão em `connect` não é
+fechada sob o `connect`: o shutdown marca e a admissão fecha ao terminar.
+`Application.close()` para a admissão de datasources antes de qualquer espera;
+depois fecha o Admin, aguarda
+a thread HTTP, fecha o runtime legado e, por fim, o coordenador (espera a
+escrita em voo), o registry e o store, cujos locks saem por último.
+
+## D-091 — Coordenador interno, candidato e falhas
+
+`DatasourceRuntimeService` é a seção crítica das escritas de datasource, sem
+HTTP: `create`, `update`, `rotate_secret`, `set_enabled` e `remove`, na ordem
+`expected_revision` e pré-condições → reserva → candidato verificado →
+persistência com os endereços que o candidato validou → publicação ou
+retirada. `test_draft` e `test_datasource` usam o mesmo candidato e descartam o
+resultado: não persistem, não publicam, não alteram revision nem `last_test`.
+
+O candidato revalida o destino contra o conjunto DNS persistido (D-084), compila
+a policy pelo mesmo compilador do `masking.yaml`, conecta por `hostaddr` com os
+endereços validados (o nome continua em `host` para verificar TLS),
+`connect_timeout=10` s, e confere read-only, `statement_timeout` e a
+capability de proveniência; a conexão de verificação sempre fecha. Falhas saem
+em quatro categorias fixas — `DESTINATION`, `POLICY`, `CONNECTION`,
+`CAPABILITY` — sem cadeia de exceção.
+
+Rename é recusado (§4.1, D-066). Toda falha que deixa o store exigindo
+reabertura (`CatalogStore.requires_reopen`, propriedade somente leitura sobre o
+bloqueio de D-081) bloqueia o coordenador até o reinício e nunca publica; a
+condição é a do store, não o tipo da exceção. Recusas anteriores ao commit
+(revision, alias, destino) não bloqueiam. Com resultado incerto numa
+desabilitação ou remoção, a geração é retirada mesmo assim, porque reduzir
+exposição não espera confirmação; uma falha certa antes do replace preserva
+disco e runtime concordantes. Desabilitar não depende de DNS: com o mesmo
+destino, o conjunto persistido é reapresentado ao store em vez de uma resolução
+nova, que falharia justamente com o DNS fora do ar ou adulterado; reabilitar
+exige candidato e, portanto, resolução que confira com o persistido.

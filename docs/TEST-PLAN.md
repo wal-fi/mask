@@ -1277,13 +1277,19 @@ Medição final da Etapa 9: 241 Node aprovados; 195/195 na matriz completa
 acima aprovados. A tentativa anterior com timeout Firefox permanece registrada,
 sem causa atribuída. Tempos, hashes e limites na evidência da Etapa 9.
 
-## Fase 9 — Etapa 2 e gates das Etapas 3–12
+## Fase 9 — Etapas 2 e 3 e gates das Etapas 4–12
 
 **Estado:** Etapa 1 concluída e aprovada em 2026-09-22. A Etapa 2 foi
-implementada localmente com testes de modelo, criptografia, store, âncora,
-recuperação, filesystem, SSRF e migração. Listener, registry, API v2 e UI v2
-não foram criados. Evidência e números medidos estão em
-`docs/PHASE-9-STAGE-2-VALIDATION.md`.
+implementada com testes de modelo, criptografia, store, âncora, recuperação,
+filesystem, SSRF e migração (`docs/PHASE-9-STAGE-2-VALIDATION.md`). A Etapa 3
+acrescentou quatro arquivos de teste — `test_datasource_registry.py`
+(gerações, limites, isolamento, shutdown e concorrência com dublês),
+`test_datasource_runtime_service.py` (candidato, coordenador e startup
+fail-closed sobre catálogo real), `test_datasource_runtime_integration.py`
+(PostgreSQL 16 real: pipeline, read-only, conexão por sessão, troca, drenagem e
+cancelamento) e `test_datasource_bootstrap.py` (legado intacto, ordem de
+startup, shutdown e subprocesso fail-closed). Listener, API v2 e UI v2 não
+foram criados. Números medidos em `docs/PHASE-9-STAGE-3-VALIDATION.md`.
 
 ### Gates por etapa
 

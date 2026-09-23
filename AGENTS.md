@@ -40,18 +40,20 @@ foi concluída, com todos os gates aprovados. A Fase 8 está concluída conforme
 Nenhuma funcionalidade, rota, modelo, permissão ou dependência da Fase 8 foi
 ampliada. Preservar memória volátil, uma escrita pendente, gestos explícitos e
 ausência de retry/rebase/fila/rollback automático. A Fase 9 foi autorizada em
-2026-09-22 para sua Etapa 1 documental e, nesta sessão, para a Etapa 2:
-modelos, store cifrado/autenticado, validação de destino e migração explícita.
-A Etapa 1 foi concluída e aprovada; as Etapas 3–12 ainda exigem revisão e
-autorização próprias. Não iniciar registry, Admin API v2, UI v2, PGWire,
-integração runtime ou qualquer etapa posterior.
+2026-09-22 para sua Etapa 1 documental e para a Etapa 2 (modelos, store
+cifrado/autenticado, validação de destino e migração explícita), e em
+2026-09-23 para a Etapa 3: registry multi-datasource e lifecycle, ativados
+somente pelo parâmetro interno `datasource_catalog` do composition root
+(D-087–D-091). As Etapas 4–12 ainda exigem revisão e autorização próprias. Não
+iniciar Admin API v2, UI v2, PGWire, variável de ambiente nova, extensão da
+tool MCP ou qualquer etapa posterior.
 Evidência: `docs/PHASE-8-STAGE-9-VALIDATION.md`.
 
 Interfaces genéricas, editor SQL administrativo, resultados do banco na UI,
 funções de DBA, auditoria consultável e front-end para MCP continuam fora do
-escopo. Bind PostgreSQL, TLS, façade PGWire, registry, catálogo publicado e
-redesign administrativo são contratos exclusivos das etapas posteriores da
-Fase 9; continuam sem implementação nesta sessão.
+escopo. Bind PostgreSQL, TLS, façade PGWire, rotas v2, ativação do catálogo por
+ambiente e redesign administrativo são contratos exclusivos das etapas
+posteriores da Fase 9; continuam sem implementação.
 
 ## Matching
 Por padrão: case-insensitive + substring/contains.
