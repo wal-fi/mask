@@ -378,11 +378,13 @@ administrativo de múltiplos PostgreSQL, credenciais upstream cifradas e um
 redesign integral da interface administrativa.
 
 A especificação aprovada está em `docs/PHASE-9-SPEC.md`; o threat model, as
-decisões D-065–D-091 e a matriz completa estão em seus documentos próprios.
-Listener PGWire, TLS, bind externo, APIs e UI nova continuam sem implementação.
+decisões D-065–D-096 e a matriz completa estão em seus documentos próprios.
+Listener PGWire, TLS, bind externo e UI nova continuam sem implementação.
 A Etapa 2 adicionou o pacote interno de modelos, destino, store cifrado e
 migração explícita; a Etapa 3, o registry multi-datasource, o coordenador
-interno e o lifecycle fail-closed, ativados somente pelo composition root.
+interno e o lifecycle fail-closed, ativados somente pelo composition root; a
+Etapa 4, `/admin/v2` de datasources e o limite efetivo de DNS (D-092–D-096),
+também somente pelo composition root.
 
 Streamable HTTP/OAuth para MCP e deployment genérico não pertencem a esta fase;
 o MCP permanece `stdio`.
@@ -392,7 +394,7 @@ o MCP permanece `stdio`.
 ## Estado atual
 
 Fase 8 concluída e publicada. Fase 9 — Etapa 1 documental concluída e aprovada;
-Etapa 2 concluída; Etapa 3 implementada localmente. A medição final da Fase 8 está em
+Etapa 2 concluída; Etapas 3 e 4 implementadas localmente. A medição final da Fase 8 está em
 `docs/PHASE-8-STAGE-9-VALIDATION.md`; os números abaixo
 registram o fechamento anterior da Fase 7.
 

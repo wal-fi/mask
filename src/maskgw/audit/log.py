@@ -35,7 +35,10 @@ import re
 import uuid
 from dataclasses import asdict, dataclass
 from enum import StrEnum
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
+
+if TYPE_CHECKING:
+    from maskgw.audit.datasource import DatasourceAdminAudit
 
 #: Nome do logger. O operador controla destino e nivel por configuracao de
 #: logging padrao do Python, sem que o Gateway precise saber onde vai parar. E o
@@ -491,6 +494,30 @@ class AuditLog:
             # Best-effort: a auditoria nunca derruba a operacao. So `Exception`,
             # nunca `BaseException` — `KeyboardInterrupt`/`SystemExit` continuam
             # subindo. Nada da excecao contida e re-emitido (secao 13).
+            return
+
+    def record_datasource_admin(self, entry: DatasourceAdminAudit) -> None:
+        """Registra uma operacao da Admin API v2, best-effort como `record_admin`.
+
+        Mesmo logger e mesma mensagem fixa do plano administrativo; o registro e
+        o `DatasourceAdminAudit` fechado (Fase 9, Etapa 4, D-095). Um objeto de
+        outro tipo e recusado ANTES do logger: a assinatura fechada nao pode ser
+        contornada por duck typing.
+        """
+        from maskgw.audit.datasource import (  # noqa: PLC0415 - evita ciclo de import
+            DatasourceAdminAudit as _Record,
+        )
+
+        # Lido como `object`: a anotacao nao vale em runtime, e o mypy
+        # consideraria a recusa inalcancavel, apagando a defesa.
+        received: object = entry
+        if not isinstance(received, _Record):
+            msg = "entry must be a DatasourceAdminAudit"
+            raise TypeError(msg)
+        try:
+            self._logger.info(ADMIN_MESSAGE, extra={"maskgw": entry.as_fields()})
+        except Exception:
+            # Best-effort, pelas mesmas razoes de `record_admin`.
             return
 
     def __repr__(self) -> str:

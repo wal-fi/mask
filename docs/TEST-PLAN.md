@@ -1277,7 +1277,7 @@ Medição final da Etapa 9: 241 Node aprovados; 195/195 na matriz completa
 acima aprovados. A tentativa anterior com timeout Firefox permanece registrada,
 sem causa atribuída. Tempos, hashes e limites na evidência da Etapa 9.
 
-## Fase 9 — Etapas 2 e 3 e gates das Etapas 4–12
+## Fase 9 — Etapas 2 a 4 e gates das Etapas 5–12
 
 **Estado:** Etapa 1 concluída e aprovada em 2026-09-22. A Etapa 2 foi
 implementada com testes de modelo, criptografia, store, âncora, recuperação,
@@ -1290,6 +1290,19 @@ fail-closed sobre catálogo real), `test_datasource_runtime_integration.py`
 cancelamento) e `test_datasource_bootstrap.py` (legado intacto, ordem de
 startup, shutdown e subprocesso fail-closed). Listener, API v2 e UI v2 não
 foram criados. Números medidos em `docs/PHASE-9-STAGE-3-VALIDATION.md`.
+
+A Etapa 4 acrescentou `test_datasource_resolver.py` (prazo efetivo de DNS,
+filho recolhido, sem neto órfão, ambiente sem segredo, host fora de `argv`),
+`test_datasource_service_v2.py` (revision por datasource, mutação e
+confirmação sob lock, probe, teste de desabilitado, política compilada),
+`test_admin_v2_http.py` (inventário, v1 byte a byte, fronteira, schema fechado,
+leituras sem segredo, criar/editar/rotacionar/testar/habilitar/remover/política,
+falhas de persistência e vazamento), `test_admin_v2_audit.py` (registro fechado
+e paridade de vocabulário), `test_admin_v2_concurrency.py` (um vencedor por
+revision e coerência registry × catálogo), `test_admin_v2_lifecycle.py`
+(shutdown com DNS lento em voo e composition root) e
+`test_admin_v2_integration.py` (PostgreSQL 16 real, resolver de produção e
+adapters reais). Números em `docs/PHASE-9-STAGE-4-VALIDATION.md`.
 
 ### Gates por etapa
 

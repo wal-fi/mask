@@ -38,6 +38,29 @@ retirada mesmo assim — reduzir exposicao nunca espera confirmacao.
 Testar candidato (`test_draft`, `test_datasource`) usa os passos 2-3 e
 descarta o resultado: nunca persiste, publica, altera revision nem registra
 `last_test` (F9-022/F9-026).
+
+## Fase 9, Etapa 4 (D-094)
+
+A Admin API v2 e uma traducao para estes metodos. Tres acrescimos vieram com
+ela, todos dentro da mesma secao critica:
+
+- **revision por datasource.** Cada escrita sobre um datasource existente
+  aceita `expected_datasource_revision`, conferida sob o lock contra a revision
+  do PROPRIO registro; a revision do catalogo so guarda a criacao. Edicoes em
+  datasources distintos nao conflitam. Continua aceita a forma da Etapa 3
+  (`expected_revision`, do catalogo) — exatamente uma das duas;
+- **mutacao dentro da secao critica.** `update` aceita uma funcao que recebe o
+  registro corrente, lido sob o lock, e devolve o rascunho; `remove` aceita uma
+  confirmacao sobre o registro lido sob o lock. Nenhum campo e copiado de uma
+  leitura anterior ao lock (sem TOCTOU, como D-059);
+- **probe de revision.** `DatasourceWriteProbe` recebe a revision do catalogo
+  observada sob o lock e a publicada, para a auditoria emitida DEPOIS da secao
+  critica.
+
+E duas correcoes de contrato: testar um datasource desabilitado e recusado
+(spec §6.1: `enabled=false` impede novos testes de conexao), e persistir um
+datasource desabilitado compila a politica — sem candidato, uma politica que
+nao compila seria gravada e so falharia na reabilitacao.
 """
 
 from __future__ import annotations
@@ -62,6 +85,7 @@ from maskgw.runtime.candidate import (
     DatasourceRuntimeError,
     PreparedRuntime,
     build_candidate,
+    verify_policy,
 )
 from maskgw.runtime.datasources import DatasourceRegistry, RegistryLimits
 from maskgw.secretsource import SecretProvider
@@ -89,6 +113,58 @@ class DatasourceRenameError(DatasourceRuntimeError):
 
     def __init__(self) -> None:
         super().__init__("alias de datasource nao pode ser alterado")
+
+
+class DatasourceNotFoundError(CatalogStoreError):
+    """ID ausente do catalogo. Mensagem fixa, sem o ID pedido."""
+
+    def __init__(self) -> None:
+        super().__init__("datasource nao encontrado")
+
+
+class DatasourceAliasConflictError(CatalogStoreError):
+    """Alias ja usado por outro datasource. Mensagem fixa, sem o alias."""
+
+    def __init__(self) -> None:
+        super().__init__("alias ja existe")
+
+
+class DatasourceRevisionConflictError(CatalogRevisionConflictError):
+    """`expected_*revision` divergiu; carrega a revision observada sob o lock.
+
+    Subclasse do erro do store para que chamadores da Etapa 3 continuem
+    recebendo `CatalogRevisionConflictError`. `current_revision` e metadata
+    administrativa, a mesma que o chamador le num GET.
+    """
+
+    def __init__(self, current_revision: int) -> None:
+        super().__init__("revision divergiu")
+        self.current_revision = current_revision
+
+
+class DatasourceDisabledError(DatasourceRuntimeError):
+    """Teste de conexao de datasource desabilitado (spec §6.1)."""
+
+    def __init__(self) -> None:
+        super().__init__("datasource desabilitado")
+
+
+@dataclass(slots=True)
+class DatasourceWriteProbe:
+    """Revisions do catalogo observadas DENTRO da secao critica (D-094).
+
+    `catalog_revision_before` e a revision lida sob o lock, antes de qualquer
+    efeito; `catalog_revision_after`, a revision depois de um commit certo — ou
+    a mesma, quando a operacao nao precisou gravar (habilitar o ja habilitado).
+    Fica `None` quando nada foi confirmado, inclusive no resultado incerto.
+    """
+
+    catalog_revision_before: int | None = None
+    catalog_revision_after: int | None = None
+
+
+#: Rascunho pronto ou funcao que o deriva do registro corrente, sob o lock.
+DraftSource = DatasourceDraft | Callable[[DatasourceRecord], DatasourceDraft]
 
 
 @dataclass(frozen=True, slots=True)
@@ -171,9 +247,15 @@ class DatasourceRuntimeService:
             self._build(CandidateSpec.from_draft(draft, secret))
 
     def test_datasource(self, datasource_id: str) -> None:
-        """Verifica o registro persistido sem publicar, persistir ou alterar revision."""
+        """Verifica o registro persistido sem publicar, persistir ou alterar revision.
+
+        Datasource desabilitado nao e testado (spec §6.1): a desabilitacao
+        impede novos testes de conexao, e reabilitar ja exige candidato.
+        """
         self._ensure_open(allow_blocked=True)
-        record = self._store.get(datasource_id)
+        record = self._get(datasource_id)
+        if not record.enabled:
+            raise DatasourceDisabledError
         secret = self._store.read_upstream_secret(datasource_id)
         with self._registry.reserve(datasource_id, publish=False):
             self._build(CandidateSpec.from_record(record, secret))
@@ -181,15 +263,22 @@ class DatasourceRuntimeService:
     # -- escritas --------------------------------------------------------
 
     def create(
-        self, draft: DatasourceDraft, secret: str, *, expected_revision: int
+        self,
+        draft: DatasourceDraft,
+        secret: str,
+        *,
+        expected_revision: int,
+        probe: DatasourceWriteProbe | None = None,
     ) -> DatasourceRecord:
         with self._lock:
             self._ensure_open()
             self._check_revision(expected_revision)
+            _observe_before(probe, expected_revision)
             if any(record.alias == draft.alias for record in self._store.snapshot().datasources):
-                raise CatalogStoreError("alias ja existe")
+                raise DatasourceAliasConflictError
             if not draft.enabled:
-                return self._persist(
+                verify_policy(draft.policy, draft.limits, secrets=self._secrets)
+                created = self._persist(
                     lambda: self._store.create(
                         draft,
                         secret,
@@ -197,6 +286,8 @@ class DatasourceRuntimeService:
                         resolver=self._resolver,
                     )
                 )
+                self._observe_after(probe)
+                return created
             with self._registry.reserve(_new_key(draft.alias), publish=True) as reservation:
                 prepared = self._build(CandidateSpec.from_draft(draft, secret))
                 pinned = replace(draft, resolved_addresses=prepared.addresses)
@@ -208,6 +299,7 @@ class DatasourceRuntimeService:
                         resolver=self._resolver,
                     )
                 )
+                self._observe_after(probe)
                 reservation.publish(
                     datasource_id=record.id,
                     alias=record.alias,
@@ -217,51 +309,105 @@ class DatasourceRuntimeService:
                 return record
 
     def update(
-        self, datasource_id: str, draft: DatasourceDraft, *, expected_revision: int
+        self,
+        datasource_id: str,
+        draft: DraftSource,
+        *,
+        expected_revision: int | None = None,
+        expected_datasource_revision: int | None = None,
+        probe: DatasourceWriteProbe | None = None,
     ) -> DatasourceRecord:
+        """Substitui os campos nao secretos; `draft` pode derivar do corrente.
+
+        Uma funcao em `draft` recebe o registro lido SOB o lock, depois da
+        conferencia de revision: o rascunho nunca nasce de estado anterior a
+        secao critica.
+        """
         with self._lock:
             self._ensure_open()
-            self._check_revision(expected_revision)
-            return self._update_locked(datasource_id, draft, expected_revision=expected_revision)
+            catalog_revision = self._guard(
+                datasource_id,
+                expected_revision=expected_revision,
+                expected_datasource_revision=expected_datasource_revision,
+                probe=probe,
+            )
+            resolved = draft(self._get(datasource_id)) if callable(draft) else draft
+            record = self._update_locked(
+                datasource_id, resolved, expected_revision=catalog_revision
+            )
+            self._observe_after(probe)
+            return record
 
     def set_enabled(
-        self, datasource_id: str, enabled: bool, *, expected_revision: int
+        self,
+        datasource_id: str,
+        enabled: bool,
+        *,
+        expected_revision: int | None = None,
+        expected_datasource_revision: int | None = None,
+        probe: DatasourceWriteProbe | None = None,
     ) -> DatasourceRecord:
-        """Habilita (com candidato verificado) ou desabilita (com drenagem)."""
+        """Habilita (com candidato verificado) ou desabilita (com drenagem).
+
+        Pedir o estado que ja vale nao grava nada: devolve o registro corrente,
+        e o probe registra a mesma revision antes e depois.
+        """
         with self._lock:
             self._ensure_open()
-            self._check_revision(expected_revision)
-            current = self._store.get(datasource_id)
+            catalog_revision = self._guard(
+                datasource_id,
+                expected_revision=expected_revision,
+                expected_datasource_revision=expected_datasource_revision,
+                probe=probe,
+            )
+            current = self._get(datasource_id)
             if current.enabled == enabled:
+                self._observe_after(probe)
                 return current
-            return self._update_locked(
+            record = self._update_locked(
                 datasource_id,
                 draft_from_record(current, enabled=enabled),
-                expected_revision=expected_revision,
+                expected_revision=catalog_revision,
             )
+            self._observe_after(probe)
+            return record
 
     def rotate_secret(
-        self, datasource_id: str, secret: str, *, expected_revision: int
+        self,
+        datasource_id: str,
+        secret: str,
+        *,
+        expected_revision: int | None = None,
+        expected_datasource_revision: int | None = None,
+        probe: DatasourceWriteProbe | None = None,
     ) -> DatasourceRecord:
         with self._lock:
             self._ensure_open()
-            self._check_revision(expected_revision)
-            current = self._store.get(datasource_id)
+            catalog_revision = self._guard(
+                datasource_id,
+                expected_revision=expected_revision,
+                expected_datasource_revision=expected_datasource_revision,
+                probe=probe,
+            )
+            current = self._get(datasource_id)
             if not current.enabled:
-                return self._persist(
+                rotated = self._persist(
                     lambda: self._store.rotate_secret(
-                        datasource_id, secret, expected_revision=expected_revision
+                        datasource_id, secret, expected_revision=catalog_revision
                     )
                 )
+                self._observe_after(probe)
+                return rotated
             with self._registry.reserve(
                 datasource_id, datasource_id=datasource_id, publish=True
             ) as reservation:
                 prepared = self._build(CandidateSpec.from_record(current, secret))
                 record = self._persist(
                     lambda: self._store.rotate_secret(
-                        datasource_id, secret, expected_revision=expected_revision
+                        datasource_id, secret, expected_revision=catalog_revision
                     )
                 )
+                self._observe_after(probe)
                 reservation.publish(
                     datasource_id=record.id,
                     alias=record.alias,
@@ -270,24 +416,49 @@ class DatasourceRuntimeService:
                 )
                 return record
 
-    def remove(self, datasource_id: str, *, expected_revision: int) -> None:
-        """Remove do catalogo e retira a geracao; sessoes admitidas drenam."""
+    def remove(
+        self,
+        datasource_id: str,
+        *,
+        expected_revision: int | None = None,
+        expected_datasource_revision: int | None = None,
+        probe: DatasourceWriteProbe | None = None,
+        confirm: Callable[[DatasourceRecord], None] | None = None,
+    ) -> None:
+        """Remove do catalogo e retira a geracao; sessoes admitidas drenam.
+
+        `confirm` recebe o registro lido sob o lock, depois da revision, e pode
+        recusar a remocao levantando — a confirmacao destrutiva da Admin v2.
+        """
         with self._lock:
             self._ensure_open()
-            self._check_revision(expected_revision)
-            self._store.get(datasource_id)
+            catalog_revision = self._guard(
+                datasource_id,
+                expected_revision=expected_revision,
+                expected_datasource_revision=expected_datasource_revision,
+                probe=probe,
+            )
+            current = self._get(datasource_id)
+            if confirm is not None:
+                confirm(current)
             self._persist_withdrawal(
                 datasource_id,
-                lambda: self._store.remove(datasource_id, expected_revision=expected_revision),
+                lambda: self._store.remove(datasource_id, expected_revision=catalog_revision),
             )
+            self._observe_after(probe)
 
     def _update_locked(
         self, datasource_id: str, draft: DatasourceDraft, *, expected_revision: int
     ) -> DatasourceRecord:
-        current = self._store.get(datasource_id)
+        current = self._get(datasource_id)
         if draft.alias != current.alias:
             raise DatasourceRenameError()
         if not draft.enabled:
+            # Politica NOVA num datasource desabilitado e compilada, sem
+            # conectar. A mesma politica nao: desabilitar reduz exposicao e nao
+            # pode depender, por exemplo, da chave HMAC ainda estar no ambiente.
+            if draft.policy != current.policy:
+                verify_policy(draft.policy, draft.limits, secrets=self._secrets)
             # Desabilitar so reduz exposicao e nao pode depender de DNS: com o
             # mesmo destino, o conjunto persistido e reapresentado ao store em
             # vez de uma resolucao nova, que falharia justamente quando o DNS
@@ -339,8 +510,49 @@ class DatasourceRuntimeService:
         )
 
     def _check_revision(self, expected_revision: int) -> None:
-        if expected_revision != self._store.revision:
-            raise CatalogRevisionConflictError("revision do catalogo divergiu")
+        current = self._store.revision
+        if expected_revision != current:
+            raise DatasourceRevisionConflictError(current)
+
+    def _guard(
+        self,
+        datasource_id: str,
+        *,
+        expected_revision: int | None,
+        expected_datasource_revision: int | None,
+        probe: DatasourceWriteProbe | None,
+    ) -> int:
+        """Confere a revision pedida sob o lock e devolve a do catalogo.
+
+        Exatamente uma das duas formas. Com a do datasource, a revision do
+        catalogo repassada ao store e a lida AGORA, sob a secao critica: so este
+        coordenador escreve no store, entao ela nao muda ate o commit — e, se
+        mudasse, o proprio store recusaria.
+        """
+        if (expected_revision is None) == (expected_datasource_revision is None):
+            msg = "informe exatamente uma revision esperada"
+            raise ValueError(msg)
+        if expected_revision is not None:
+            self._check_revision(expected_revision)
+            _observe_before(probe, expected_revision)
+            return expected_revision
+        current = self._get(datasource_id)
+        if current.revision != expected_datasource_revision:
+            raise DatasourceRevisionConflictError(current.revision)
+        catalog_revision = self._store.revision
+        _observe_before(probe, catalog_revision)
+        return catalog_revision
+
+    def _get(self, datasource_id: str) -> DatasourceRecord:
+        """Registro pelo ID; ausente ou malformado tem erro proprio e fixo."""
+        for record in self._store.snapshot().datasources:
+            if record.id == datasource_id:
+                return record
+        raise DatasourceNotFoundError
+
+    def _observe_after(self, probe: DatasourceWriteProbe | None) -> None:
+        if probe is not None:
+            probe.catalog_revision_after = self._store.revision
 
     def _persist(self, write: Callable[[], _T]) -> _T:
         """Persiste; se o store exigir reabertura, o servico se bloqueia.
@@ -502,13 +714,24 @@ def _new_key(alias: str) -> str:
     return f"{_NEW_KEY_PREFIX}{alias}"
 
 
+def _observe_before(probe: DatasourceWriteProbe | None, catalog_revision: int) -> None:
+    if probe is not None:
+        probe.catalog_revision_before = catalog_revision
+
+
 __all__ = [
+    "DatasourceAliasConflictError",
     "DatasourceCatalogSettings",
+    "DatasourceDisabledError",
+    "DatasourceNotFoundError",
     "DatasourceRenameError",
+    "DatasourceRevisionConflictError",
     "DatasourceRuntime",
     "DatasourceRuntimeService",
     "DatasourceServiceBlockedError",
     "DatasourceServiceClosedError",
+    "DatasourceWriteProbe",
+    "DraftSource",
     "draft_from_record",
     "open_datasource_runtime",
 ]

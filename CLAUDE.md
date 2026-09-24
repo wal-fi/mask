@@ -23,11 +23,15 @@ explícita. A Etapa 3, autorizada em 2026-09-23, implementa o registry
 multi-datasource (gerações por alias, sessão com conexão própria, refcount,
 drenagem e limites), o coordenador interno sem HTTP e o startup/shutdown
 fail-closed, ativados somente por `build_application(datasource_catalog=...)`
-(D-087–D-091). A especificação aprovada está em `docs/PHASE-9-SPEC.md`;
-listener PGWire, Admin API/UX v2, ativação por ambiente e as Etapas 4–12
-continuam sem implementação funcional. Evidência da Fase 8:
-`docs/PHASE-8-STAGE-9-VALIDATION.md`; da Etapa 3:
-`docs/PHASE-9-STAGE-3-VALIDATION.md`.
+(D-087–D-091). A especificação aprovada está em `docs/PHASE-9-SPEC.md`.
+Em 2026-09-24 a Etapa 4 (Admin API v2 de datasources, `/admin/v2`, §8) foi
+autorizada e implementada localmente, sem push (D-092–D-096): rotas registradas
+somente com catálogo e Admin HTTP no composition root, resolução DNS com prazo
+em processo filho e default do MCP adiado para a Etapa 11. Listener PGWire, UX
+v2, ativação por ambiente e as Etapas 5–12 continuam sem implementação
+funcional. Evidência da Fase 8:
+`docs/PHASE-8-STAGE-9-VALIDATION.md`; das Etapas 3 e 4:
+`docs/PHASE-9-STAGE-3-VALIDATION.md` e `docs/PHASE-9-STAGE-4-VALIDATION.md`.
 
 A UI exige entrada explícita; token somente na closure do transporte, DTOs
 validados antes do estado e DOM de texto. Logout, 401, pagehide/pageshow e
@@ -52,9 +56,9 @@ Nesta ordem:
 2. `docs/ARCHITECTURE.md` — módulos e responsabilidades
 3. `docs/SECURITY.md` — invariantes de segurança
 4. `docs/SECURITY-REVIEW.md` — o que foi atacado, o que resistiu, o que não
-5. `docs/DECISIONS.md` — 91 decisões (D-001 a D-091) e o porquê de cada uma
+5. `docs/DECISIONS.md` — 96 decisões (D-001 a D-096) e o porquê de cada uma
 6. `docs/MASKING-SPEC.md` — semântica exata do pipeline de masking
-7. `docs/PHASE-9-SPEC.md` — especificação aprovada; Etapas 1 a 3 delimitadas
+7. `docs/PHASE-9-SPEC.md` — especificação aprovada; Etapas 1 a 4 delimitadas
 8. `docs/TEST-PLAN.md`, `docs/THREAT-MODEL.md`, `docs/FUTURE-HARDENING.md`
 
 `docs/ROADMAP.md` preserva o histórico das seis fases fechadas e registra o

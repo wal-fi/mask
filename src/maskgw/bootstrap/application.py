@@ -222,8 +222,9 @@ class Application:
         """Catalogo, registry e coordenador multi-datasource, ou None.
 
         Existe somente quando o composition root recebeu
-        `datasource_catalog` (Fase 9, Etapa 3, D-087). Nenhuma fronteira
-        externa o usa nesta etapa.
+        `datasource_catalog` (Fase 9, Etapa 3, D-087). Com `admin_http`, a
+        Admin API v2 (Etapa 4, D-093) o administra pela fronteira local; MCP e
+        PGWire ainda nao o usam.
         """
         return self._datasources
 
@@ -551,7 +552,12 @@ def build_application(  # noqa: PLR0913 - parametros de composicao, keyword-only
         # recurso nao pode depender de a construcao dele ter dado certo.
         if admin_http is not None and admin is not None:
             http_server = _build_admin_http(
-                admin, admin_http, secrets=secrets, audit=audit_log, ui_resources=ui_resources
+                admin,
+                admin_http,
+                secrets=secrets,
+                audit=audit_log,
+                ui_resources=ui_resources,
+                datasources=datasources,
             )
             http_server.start()
 
@@ -630,15 +636,20 @@ def _build_datasource_gateway(datasources: DatasourceRuntime, audit: AuditLog) -
     return _Gateway(datasources.registry, audit)
 
 
-def _build_admin_http(
+def _build_admin_http(  # noqa: PLR0913 - colaboradores da fronteira, keyword-only
     admin: AdminConfigService,
     settings: AdminHttpSettings,
     *,
     secrets: SecretProvider | None,
     audit: AuditLog,
     ui_resources: Mapping[str, bytes] | None = None,
+    datasources: DatasourceRuntime | None = None,
 ) -> AdminHttpServer:
     """Monta a fronteira HTTP **sem** inicia-la.
+
+    Com `datasources` (Fase 9, Etapa 4, D-093), o mesmo app ganha `/admin/v2`
+    sobre o catalogo — pela mesma fronteira, com o mesmo token e o mesmo
+    `AuditLog`. Sem ele, o app e a v1 byte a byte.
 
     Construir e iniciar sao passos separados de proposito: quem chama adota a
     referencia antes de `start()`, e por isso nunca fica sem ela numa falha
@@ -666,6 +677,7 @@ def _build_admin_http(
             database_dsn_env=DSN_ENV,
             audit=audit,
             ui_resources=ui_resources,
+            datasources=datasources,
         )
 
     # Sem `start()`: quem chama adota a referencia e so entao inicia.

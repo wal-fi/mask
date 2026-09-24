@@ -62,7 +62,7 @@ em seguida **relevanta**. Quem realmente contem a excecao e o
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from typing import Final, NoReturn
+from typing import TYPE_CHECKING, Final, NoReturn
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -136,7 +136,13 @@ from maskgw.audit import (
 from maskgw.masking.transformers.hashes import HMAC_KEY_ENV
 from maskgw.secretsource import EnvSecretProvider, SecretProvider
 
-#: Prefixo unico. Nenhuma rota fora dele.
+if TYPE_CHECKING:
+    # So anotacao: a v2 e o catalogo sao importados TARDIAMENTE, e somente
+    # quando o composition root os entrega (Fase 9, Etapa 4, D-093).
+    from maskgw.runtime.datasource_service import DatasourceRuntime
+
+#: Prefixo unico da v1. A v2 (Fase 9, Etapa 4) vive em `/admin/v2` e so existe
+#: com o catalogo de datasources; ver `admin/http/v2/routes.py`.
 API_PREFIX: Final = "/admin/v1"
 
 #: Os metodos de cada rota. `HEAD` acompanha todo `GET`: mesma autenticacao,
@@ -266,8 +272,13 @@ def build_router(  # noqa: PLR0913 - parametros de composicao, keyword-only
     audit: AuditLog,
     hmac_key_env: str = HMAC_KEY_ENV,
     ui_resources: Mapping[str, bytes] | None = None,
+    datasources: DatasourceRuntime | None = None,
 ) -> FastAPI:
     """Aplicacao FastAPI com as rotas de leitura, `config:validate`, escrita e handlers.
+
+    `datasources` (Fase 9, Etapa 4) acrescenta as rotas `/admin/v2` sobre o
+    runtime de datasources. Ausente — o default —, o modulo v2 nem e importado
+    e o roteador e o da v1, rota a rota.
 
     Sem middleware: a fronteira e composta por fora, em `build_admin_app`, para
     que a ordem das camadas seja explicita e testavel separadamente.
@@ -392,6 +403,10 @@ def build_router(  # noqa: PLR0913 - parametros de composicao, keyword-only
         return auditor.validate(lambda: validate_candidate(candidate, secrets=secrets))
 
     _register_write_routes(app, service, auditor)
+    if datasources is not None:
+        from maskgw.admin.http.v2.routes import register_v2  # noqa: PLC0415 - import tardio (D-093)
+
+        register_v2(app, datasources, audit=audit)
     if ui_resources is not None:
         register_ui(app, ui_resources)
 
@@ -587,6 +602,7 @@ def build_admin_app(  # noqa: PLR0913 - parametros de composicao, keyword-only
     audit: AuditLog | None = None,
     hmac_key_env: str = HMAC_KEY_ENV,
     ui_resources: Mapping[str, bytes] | None = None,
+    datasources: DatasourceRuntime | None = None,
 ) -> ASGIApp:
     """A aplicacao administrativa completa, pronta para o servidor.
 
@@ -612,6 +628,7 @@ def build_admin_app(  # noqa: PLR0913 - parametros de composicao, keyword-only
         audit=audit_log,
         hmac_key_env=hmac_key_env,
         ui_resources=ui_resources,
+        datasources=datasources,
     )
     return wrap_boundary(router, token=token, port=port, ui_enabled=ui_resources is not None)
 

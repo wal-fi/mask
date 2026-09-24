@@ -2,7 +2,8 @@
 
 **Documento de entrada. Comece por aqui.**
 
-Estado: **Fase 8 concluída e publicada; Fase 9 — Etapa 3 implementada localmente**.
+Estado: **Fase 8 concluída e publicada; Fase 9 — Etapas 3 e 4 implementadas localmente;
+Etapa 4 (Admin API v2 de datasources) autorizada e implementada em 2026-09-24, sem push**.
 MVP e Fase 7 concluídos. A Etapa 8 foi revisada e publicada sem emenda em
 `20db6f021533230d791cd910b037554c3fe03191`; o fetch confirmou master, HEAD igual
 a origin/master, árvore limpa e 0/0, com autoria e trailer preservados.
@@ -13,11 +14,13 @@ especificação, threat model, decisões e rastreabilidade de façade PGWire,
 múltiplos datasources e Admin UX v2. A Etapa 2 implementou modelos, store
 cifrado, destino e migração explícita. Em 2026-09-23 a Etapa 3 foi autorizada e
 implementou o registry multi-datasource, o coordenador interno e o lifecycle
-fail-closed, ativados somente pelo composition root (D-087–D-091). A
-especificação aprovada está em `docs/PHASE-9-SPEC.md`; as Etapas 4–12 continuam
-sem autorização de implementação. Evidência da Fase 8:
-`docs/PHASE-8-STAGE-9-VALIDATION.md`; da Etapa 3:
-`docs/PHASE-9-STAGE-3-VALIDATION.md`.
+fail-closed, ativados somente pelo composition root (D-087–D-091). Em 2026-09-24
+a Etapa 4 implementou `/admin/v2` de datasources e o limite efetivo de DNS
+(D-092–D-096), registrados somente com catálogo e Admin HTTP no composition
+root. A especificação aprovada está em `docs/PHASE-9-SPEC.md`; as Etapas 5–12
+continuam sem autorização de implementação. Evidência da Fase 8:
+`docs/PHASE-8-STAGE-9-VALIDATION.md`; das Etapas 3 e 4:
+`docs/PHASE-9-STAGE-3-VALIDATION.md` e `docs/PHASE-9-STAGE-4-VALIDATION.md`.
 
 A UI agora recebe token explicitamente, valida metadados e DTOs e apresenta
 seis vistas declarativas. Token somente na closure do transporte; navegação em
@@ -40,7 +43,7 @@ Ordem de leitura sugerida:
 | `docs/ARCHITECTURE.md` | modulos e responsabilidades |
 | `docs/SECURITY.md` | invariantes de seguranca e o que exigir antes de expor |
 | `docs/SECURITY-REVIEW.md` | 11 findings do red team, seis fechados |
-| `docs/DECISIONS.md` | D-001 a D-091, com o motivo de cada uma |
+| `docs/DECISIONS.md` | D-001 a D-096, com o motivo de cada uma |
 | `docs/MASKING-SPEC.md` | semantica exata do pipeline |
 | `docs/TEST-PLAN.md` | o que cada camada de teste cobre |
 | `docs/THREAT-MODEL.md` | cenarios de ataque e o resultado medido |
@@ -234,6 +237,7 @@ src/maskgw/
     datasources.py       DatasourceRegistry: geracoes, sessoes, limites, drenagem
     datasource_service.py startup fail-closed e coordenador interno (sem HTTP)
   datasource/            <- Fase 9, Etapa 2: modelos, destino, store cifrado, migracao
+    resolver.py          DNS em processo filho com prazo de 5 s (Fase 9, Etapa 4, D-092)
   admin/                 <- Fase 7, Etapa 6; a secao critica, SEM HTTP
     errors.py            AdminError e as categorias fechadas (10.2 + D-056)
     document.py          MaskingFileConfig <-> bytes YAML, round-trip conferido
@@ -249,6 +253,12 @@ src/maskgw/
       audit.py           instrumentacao: um AdminAudit por operacao (Etapa 10, D-060)
       app.py             8 leituras, config:validate e as 11 escritas + handlers
       server.py          uvicorn em thread nao-daemon, com bind confirmado
+      v2/                <- Fase 9, Etapa 4: /admin/v2 de datasources, so com catalogo
+        errors.py        vocabulario de erro proprio (D-095)
+        schemas.py       corpos fechados, senha write-only, sem DSN pronto
+        operations.py    traducao para o coordenador; leitura de UM snapshot
+        audit.py         um DatasourceAdminAudit por operacao que alcanca o handler
+        routes.py        inventario literal: 4 leituras (GET/HEAD) e 9 escritas
   bootstrap/             <- Fase 7, Etapas 4, 6 e 7; composition root
     application.py       construcao e lifecycle ordenado dos dois planos
     main.py              entrypoint compartilhado, stderr sanitizado
@@ -258,6 +268,7 @@ src/maskgw/
     __main__.py          python -m maskgw.mcp -> bootstrap
   audit/                 <- Fase 5, ampliado na Fase 7 / Etapa 10
     log.py               QueryAudit, AdminAudit, AuditLog; UNICO modulo que importa logging
+    datasource.py        DatasourceAdminAudit fechado da v2 (Fase 9, Etapa 4), sem logging
 
 tests/
   conftest.py                    fixtures, DSN e dublês de conexao/cursor
@@ -302,6 +313,14 @@ tests/
   test_datasource_runtime_service.py       <- Fase 9, Etapa 3
   test_datasource_runtime_integration.py   <- Fase 9, Etapa 3 (integration)
   test_datasource_bootstrap.py             <- Fase 9, Etapa 3
+  admin_v2_support.py            <- Fase 9, Etapa 4 (apoio, nao e teste)
+  test_datasource_resolver.py              <- Fase 9, Etapa 4 (D-092)
+  test_datasource_service_v2.py            <- Fase 9, Etapa 4 (D-094)
+  test_admin_v2_http.py                    <- Fase 9, Etapa 4
+  test_admin_v2_audit.py                   <- Fase 9, Etapa 4 (D-095)
+  test_admin_v2_concurrency.py             <- Fase 9, Etapa 4
+  test_admin_v2_lifecycle.py               <- Fase 9, Etapa 4
+  test_admin_v2_integration.py             <- Fase 9, Etapa 4 (integration)
 
   security/                      <- Fases 6 e 6.1, 209 testes adversariais
     test_attack_expressions.py        55
@@ -1012,12 +1031,31 @@ teste de candidato não tem efeito (D-091). Evidência em
 `docs/PHASE-9-STAGE-3-VALIDATION.md`. A matriz em
 `docs/PHASE-9-TRACEABILITY.md` governa as Etapas 4–12.
 
-Limitação aceita da D-090: `connect_timeout` não cobre DNS, e cancelamento/
-`statement_timeout` não cobrem validação e masking locais; portanto o shutdown
-do novo runtime ainda não tem teto total garantido. Antes de expor testes de
-candidato pela Admin API v2 (Etapa 4), limitar a resolução; antes de novos
-ingressos SQL por PGWire (Etapa 8) ou MCP multi-datasource (Etapa 11), limitar
-o processamento local, sem abandonar threads ou conexões.
+Limitação da D-090, ainda NÃO corrigida: a resolução DNS ganhou teto na Etapa
+4 (D-092), mas um candidato não tem prazo total. O `connect_timeout` cobre só o
+estabelecimento da conexão; as consultas de verificação depois da autenticação
+dependem do `statement_timeout` do próprio servidor, e um upstream que autentica
+e para de responder prende o handler `async` da v2, o event loop administrativo
+e o shutdown. Dois gates distintos: (1) limite efetivo da verificação
+pós-conexão de candidatos antes da ativação da Admin v2 pelo operador (Etapa 7);
+(2) limite de validação e masking locais antes dos ingressos PGWire (Etapa 8) e
+MCP multi-datasource (Etapa 11). Nenhuma solução pode abandonar thread, processo
+ou conexão, e o mecanismo exige decisão aprovada antes do código.
+
+A Etapa 4 (2026-09-24, local, sem push) acrescentou `/admin/v2` de datasources
+(D-092–D-096), registrada somente quando `build_application` recebe
+`datasource_catalog` e `admin_http`; sem catálogo o app administrativo é a v1
+byte a byte, e nenhuma variável de ambiente nova existe. Leituras sem segredo
+(`credential: {configured: true}`, sem endereços fixados), criação, edição,
+rotação de credencial, teste de rascunho e de persistido sem efeito,
+habilitar/desabilitar, remoção com confirmação pelo alias e política por
+datasource. Concorrência otimista por datasource; handlers síncronos no event
+loop como na v1; vocabulário de erro e auditoria (`DatasourceAdminAudit`)
+próprios. A resolução DNS roda num processo filho com prazo de 5 s, morto e
+recolhido ao fim do prazo. O default do MCP foi adiado para a Etapa 11 (D-096).
+Depois de uma falha de persistência o catálogo exige reinício: escritas e
+leituras v2 respondem `503 CATALOG_BLOCKED`; `/admin/v2/status` segue em modo
+degradado. Evidência em `docs/PHASE-9-STAGE-4-VALIDATION.md`.
 
 ### Fora do escopo, inalterado
 
@@ -1034,10 +1072,11 @@ automatico, banco de configuracao, Redis, background workers.
 - PostgreSQL 16 real disponível via `MASKGW_TEST_DSN`, sem nenhum skip por
   ausência de DSN; skips condicionais de plataforma discriminados na evidência
 - Fase 8 publicada em `42cd2df`; a Etapa 1 documental da Fase 9 foi concluída e
-  aprovada, a Etapa 2 foi concluída (`docs/PHASE-9-STAGE-2-VALIDATION.md`) e a
-  Etapa 3 local foi implementada com evidência em
-  `docs/PHASE-9-STAGE-3-VALIDATION.md`. Nenhuma implementação funcional das
-  Etapas 4–12 está autorizada sem revisão e aprovação próprias.
+  aprovada, a Etapa 2 foi concluída (`docs/PHASE-9-STAGE-2-VALIDATION.md`) e as
+  Etapas 3 e 4 locais foram implementadas com evidência em
+  `docs/PHASE-9-STAGE-3-VALIDATION.md` e `docs/PHASE-9-STAGE-4-VALIDATION.md`.
+  Nenhuma implementação funcional das Etapas 5–12 está autorizada sem revisão e
+  aprovação próprias.
 - neste host Windows, rode o pytest com pilha de thread ampliada (64 MiB), ou o
   teste de payload gigante derruba o processo. Nunca o transforme em `skip`
   (D-041); a limitacao esta na secao 11

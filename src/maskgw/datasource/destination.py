@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import ipaddress
-import socket
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from typing import Final
@@ -41,17 +40,16 @@ class ResolvedDestination:
 
 
 def _system_resolver(host: str, port: int) -> Sequence[str]:
-    try:
-        results = socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)
-    except OSError:
-        raise DestinationValidationError("destino nao resolvido") from None
-    addresses: list[str] = []
-    for result in results:
-        address = result[4][0]
-        if not isinstance(address, str):
-            raise DestinationValidationError("endereco resolvido invalido")
-        addresses.append(address)
-    return tuple(addresses)
+    """Resolver do sistema com prazo efetivo (D-092).
+
+    A resolucao roda num processo filho descartavel, morto e recolhido ao fim
+    do prazo: `getaddrinfo` em processo nao tem timeout, e uma thread presa
+    nela sobreviveria a qualquer `join(timeout=...)` (D-090). Importado aqui
+    porque `resolver` depende das excecoes deste modulo.
+    """
+    from maskgw.datasource.resolver import bounded_system_resolver  # noqa: PLC0415
+
+    return bounded_system_resolver(host, port)
 
 
 def _canonical_addresses(addresses: Sequence[str]) -> tuple[str, ...]:

@@ -622,8 +622,8 @@ separado, sem aceitar outro arquivo comum no diretório do store. Transplantar c
 datasource/campo, adulterar metadata e alterar ciphertext devem falhar fechado
 independentemente dessa âncora.
 
-O listener, credencial de Gateway, rota v2 e UI v2 continuam sem
-implementação. A Etapa 2 adicionou apenas modelos, destino, store cifrado,
+O listener, credencial de Gateway e UI v2 continuam sem implementação; as
+rotas v2 existem desde a Etapa 4, somente com catálogo e Admin HTTP. A Etapa 2 adicionou apenas modelos, destino, store cifrado,
 dependência criptográfica pinada e migração explícita. A Etapa 3 adicionou o
 registry por geração, com uma conexão upstream verificada (read-only,
 `statement_timeout`, proveniência) por sessão e ligada por `hostaddr` aos
@@ -634,3 +634,30 @@ datasource habilitado é inválido (D-087–D-091). A capacidade só é ligada p
 composition root e o caminho legado não muda. A evidência está em
 `docs/PHASE-9-STAGE-2-VALIDATION.md` e `docs/PHASE-9-STAGE-3-VALIDATION.md`,
 e a matriz de provas em `docs/PHASE-9-TRACEABILITY.md`.
+
+A Etapa 4 (D-092–D-096) expõe o catálogo pela Admin API local, com as mesmas
+camadas da v1: token bearer comparado em tempo constante, Host em allowlist,
+`Origin`/`Referer` recusados, corpo até 1 MiB, `application/json`, `no-store`,
+sem CORS, `OPTIONS` ou `/docs`. Invariantes com teste:
+
+- nenhuma rota recebe ou devolve DSN pronto; host, porta, database, usuário e
+  senha são campos distintos, e campo `dsn`/`url`/`conninfo` é recusado sem
+  ecoar o valor;
+- a senha upstream é write-only: só entra ao criar, testar rascunho ou
+  rotacionar, nunca volta em resposta, erro, auditoria ou `repr`; leituras
+  devolvem `credential: {configured: true}` e nunca ciphertext, nonce, tamanho
+  ou os endereços DNS fixados;
+- erros de conexão, capability, destino e persistência saem em categorias
+  fixas, sem host, alias, usuário, senha, endereço ou mensagem do PostgreSQL, e
+  sem `__cause__`/`__context__`;
+- testar candidato não persiste, não publica, não altera revision nem
+  `last_test`; datasource desabilitado não é testado;
+- `allowed_pg_functions` continua não administrável (D-050); o alias é
+  imutável;
+- a resolução DNS tem prazo efetivo de 5 s num processo filho sem segredo no
+  ambiente e sem o host em `argv` (D-092); DNS trocado depois da validação é
+  recusado (D-084).
+
+O token administrativo continua o único principal (D-068); não há bind externo
+nem variável de ambiente nova. Risco aceito: com o mesmo destino, um conjunto
+DNS legitimamente alterado não pode ser refixado pela v2 (recusa fechada).

@@ -205,7 +205,14 @@ que uma mudança futura seja percebida.
 **Estado:** threat model aprovado em 2026-09-22; a superfície de listener e
 Admin UX ainda não foi implementada. A Etapa 2 implementa o
 store/modelo/destino/migração e a Etapa 3 o registry e o lifecycle (itens 10–12
-abaixo, no nível do registry), cada uma coberta em sua validação própria.
+abaixo, no nível do registry), cada uma coberta em sua validação própria. A
+Etapa 4 expõe o catálogo pela Admin API local (`/admin/v2`): o administrador
+autenticado fornece destino e segredo; SSRF/rebinding, destino lento ou hostil,
+corrida administrativa, falha de persistência e vazamento em erro/auditoria
+foram exercitados em `docs/PHASE-9-STAGE-4-VALIDATION.md`. Um administrador
+com o token pode sondar a rede privada pelos testes de candidato (destino
+recusado × conexão falha × capability ausente); é o mesmo principal que já
+configura destinos, e o plano administrativo continua somente em loopback.
 
 A Fase 9 transforma o Gateway em servidor PostgreSQL perante clientes de IDE e
 adiciona destinos administráveis. Isso cria atacantes e ativos novos:

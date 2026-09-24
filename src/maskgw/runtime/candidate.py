@@ -33,7 +33,12 @@ from typing import Final, NoReturn, Protocol
 
 from psycopg.conninfo import make_conninfo
 
-from maskgw.config.gateway import DatabaseSettings, GatewayConfig, parse_config_bundle
+from maskgw.config.gateway import (
+    DatabaseSettings,
+    GatewayConfig,
+    LoadedConfig,
+    parse_config_bundle,
+)
 from maskgw.config.models import MaskingFileConfig
 from maskgw.datasource.destination import (
     AddressResolver,
@@ -307,11 +312,7 @@ def build_candidate(
 
     prepared: PreparedRuntime | None = None
     try:
-        loaded = parse_config_bundle(spec.policy.to_mapping(), secrets=secrets)
-        settings = effective_database_settings(loaded.file_config, spec.limits)
-        config = GatewayConfig(
-            masking=loaded.gateway.masking, database=settings, sql=loaded.gateway.sql
-        )
+        loaded, config = _compile(spec.policy, spec.limits, secrets=secrets)
         prepared = PreparedRuntime(
             file_config=loaded.file_config,
             config=config,
@@ -328,6 +329,41 @@ def build_candidate(
 
     verify_prepared(prepared)
     return prepared
+
+
+def _compile(
+    policy: DatasourcePolicy,
+    limits: DatasourceLimits,
+    *,
+    secrets: SecretProvider | None,
+) -> tuple[LoadedConfig, GatewayConfig]:
+    loaded = parse_config_bundle(policy.to_mapping(), secrets=secrets)
+    settings = effective_database_settings(loaded.file_config, limits)
+    config = GatewayConfig(
+        masking=loaded.gateway.masking, database=settings, sql=loaded.gateway.sql
+    )
+    return loaded, config
+
+
+def verify_policy(
+    policy: DatasourcePolicy,
+    limits: DatasourceLimits,
+    *,
+    secrets: SecretProvider | None = None,
+) -> None:
+    """Compila a politica pelo MESMO caminho do candidato, sem destino nem conexao.
+
+    Usado ao persistir um datasource DESABILITADO (Fase 9, Etapa 4, D-094): sem
+    candidato, uma politica que nao compila seria gravada e so falharia na
+    reabilitacao. Levanta somente `DatasourceCandidateError(POLICY)`.
+    """
+    failure: CandidateFailure | None = None
+    try:
+        MaskingEngine(_compile(policy, limits, secrets=secrets)[1].masking)
+    except (ConfigError, TransformerError, DatasourceValidationError, TypeError, ValueError):
+        failure = CandidateFailure.POLICY
+    if failure is not None:
+        _raise_candidate(failure)
 
 
 def verify_prepared(prepared: PreparedRuntime) -> None:
@@ -368,5 +404,6 @@ __all__ = [
     "build_conninfo",
     "default_adapter_factory",
     "effective_database_settings",
+    "verify_policy",
     "verify_prepared",
 ]

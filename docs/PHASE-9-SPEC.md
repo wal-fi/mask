@@ -2,17 +2,22 @@
 
 **Estado:** especificação aprovada em 2026-09-22; Etapas 1 e 2 concluídas;
 Etapa 3 (registry multi-datasource e lifecycle) implementada localmente em
-2026-09-23.
+2026-09-23; Etapa 4 (Admin API v2 de datasources) implementada localmente em
+2026-09-24, sem push (D-092–D-096).
 **Base:** Fase 8 concluída em `42cd2df8aeef4a1e39ffae0ecf33a6ce86bd8445`.
 **Implementação funcional:** Etapa 2 limitada a modelos, destino, store e
 migração; Etapa 3 limitada ao registry interno, ao coordenador sem HTTP e ao
-startup/shutdown ativados somente pelo composition root (D-087); Etapas 4–12
-não iniciadas.
+startup/shutdown ativados somente pelo composition root (D-087); Etapa 4
+limitada a `/admin/v2` de datasources (§8), registrada somente com catálogo e
+Admin HTTP no composition root, e ao limite de resolução DNS (D-092–D-096),
+autorizada e implementada localmente em 2026-09-24, sem push; Etapas 5–12 não
+iniciadas.
 
-Esta aprovação normativa não autoriza as Etapas 4–12, que continuam
+Esta aprovação normativa não autoriza as Etapas 5–12, que continuam
 condicionadas à revisão e autorização próprias, na ordem desta especificação.
-Não existem listener, rota, UI v2, variável de ambiente nova nem integração do
-registry com MCP ou PGWire no produto.
+Não existem listener, UI v2, variável de ambiente nova nem integração do
+registry com MCP ou PGWire no produto. As rotas `/admin/v2` da Etapa 4 só
+existem quando o composition root recebe o catálogo e a fronteira HTTP.
 
 ## 1. Motivo e resultado esperado
 
@@ -397,6 +402,19 @@ separada com TLS.
 Essa separação é normativa: `/admin/v2` continua usando a fronteira local da
 Admin API, sem CORS, bind externo ou exposição automática por habilitar PGWire.
 
+**Etapa 4 (2026-09-24, D-092–D-096).** O inventário implementado é: leituras
+`GET|HEAD` de `/admin/v2/status`, `/admin/v2/datasources`,
+`/admin/v2/datasources/{id}` e `/admin/v2/datasources/{id}/policy`; e as ações
+`POST /datasources`, `POST /datasources:test`, `POST /datasources/{id}:test`,
+`POST /datasources/{id}:rotate-credential`, `POST /datasources/{id}:enable`,
+`POST /datasources/{id}:disable`, `PUT /datasources/{id}`,
+`DELETE /datasources/{id}` com confirmação pelo alias e
+`PUT /datasources/{id}/policy`. A concorrência otimista é por datasource
+(criação pela revision do catálogo). Vocabulário de erro e auditoria são
+próprios da v2, sem alterar a v1 (D-095). A definição do datasource default do
+MCP foi adiada para a Etapa 11 (D-096): exige campo novo no catálogo autenticado
+e só tem consumidor no MCP multi-datasource.
+
 ## 9. Admin UX v2
 
 O redesign não é somente troca de cores. Deve reduzir carga cognitiva e tornar
@@ -479,9 +497,22 @@ O `connect_timeout` não limita a resolução DNS anterior à conexão; cancelam
 e `statement_timeout` não limitam validação e masking locais. A Etapa 3 aceita
 essa ausência de teto total somente enquanto o catálogo não tiver nova
 fronteira externa. Antes de expor candidatos pela Admin API v2 (Etapa 4), a
-resolução precisa de limite efetivo; antes de expor consultas por PGWire
-(Etapa 8) ou MCP multi-datasource (Etapa 11), o processamento local também
-precisa de limite efetivo, sem abandonar threads ou conexões.
+resolução precisa de limite efetivo — implementado na Etapa 4 por processo
+filho com prazo de 5 s, morto e recolhido ao fim do prazo (D-092).
+
+O limite de DNS não dá prazo total a um candidato. O `connect_timeout` cobre o
+estabelecimento da conexão; as consultas de verificação executadas depois da
+autenticação dependem do `statement_timeout` do próprio servidor, e um upstream
+que autentica e para de responder não tem teto do lado do cliente — prende o
+handler `async` da Admin v2, o event loop administrativo e o shutdown. Ficam dois
+gates distintos, ambos em aberto:
+
+1. a verificação pós-conexão de candidatos precisa de limite efetivo **antes da
+   ativação da Admin API v2 pelo operador, prevista para a Etapa 7**;
+2. validação e masking de consultas locais precisam de limite efetivo antes dos
+   ingressos PGWire (Etapa 8) e MCP multi-datasource (Etapa 11).
+
+Nenhuma solução pode abandonar thread, processo ou conexão (D-090).
 
 ## 12. Ameaças novas
 
@@ -574,8 +605,11 @@ Cada etapa termina para revisão e autorização próprias. A Etapa 1 foi aprova
 em 2026-09-22. A Etapa 2 ficou limitada ao modelo, store, destino e migração
 descritos acima. A Etapa 3 foi autorizada em 2026-09-23 e sua implementação
 local fica limitada ao registry, ao coordenador interno e ao lifecycle, com as
-decisões D-087–D-091; as Etapas 4–12 continuam bloqueadas para implementação
-funcional.
+decisões D-087–D-091. A Etapa 4 foi autorizada em 2026-09-24, localmente e
+sem push, limitada a `/admin/v2` de datasources conforme a §8 e ao limite de
+resolução DNS exigido pela §11, com as decisões D-092–D-096 e evidência em
+`docs/PHASE-9-STAGE-4-VALIDATION.md`; as Etapas 5–12 continuam bloqueadas para
+implementação funcional.
 
 ## 16. Decisões aprovadas em 2026-09-22
 

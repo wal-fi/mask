@@ -707,3 +707,24 @@ somente o pacote interno `maskgw.datasource` e sua dependência criptográfica.
 A Etapa 3 adiciona os módulos acima e `PostgresAdapter.cancel()`, sem rota,
 socket, listener, variável de ambiente ou mudança no contrato MCP; o MCP
 continua no runtime legado até a Etapa 11.
+
+A Etapa 4 (D-092–D-096) acrescenta:
+
+```text
+maskgw/datasource/resolver.py   getaddrinfo em processo filho, prazo de 5 s,
+                                morto e recolhido ao fim do prazo
+maskgw/admin/http/v2/           /admin/v2 de datasources, importado so com catalogo
+  errors.py                     vocabulario de erro proprio, separado da v1
+  schemas.py                    corpos fechados; senha write-only; sem DSN pronto
+  operations.py                 traducao para DatasourceRuntimeService
+  audit.py                      um DatasourceAdminAudit por operacao
+  routes.py                     4 leituras GET/HEAD e 9 escritas, inventario literal
+maskgw/audit/datasource.py      registro fechado DatasourceAdminAudit
+```
+
+A v2 é registrada no mesmo roteador e atrás da mesma pilha de fronteira da v1,
+somente quando o composition root recebe `datasource_catalog` e `admin_http`.
+Cada escrita é uma chamada ao `DatasourceRuntimeService`, que ganhou revision
+por datasource, mutação e confirmação dentro da seção crítica e um probe de
+revisions para a auditoria. `admin/` continua sem importar `logging`, `mcp/` e
+`gateway/`; o MCP não muda.

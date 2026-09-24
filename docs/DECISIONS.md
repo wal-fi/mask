@@ -2375,7 +2375,27 @@ root, sem nova fronteira de entrada. Antes de expor testes/candidatos pela
 Admin API v2 (Etapa 4), a resolução precisa de um limite efetivo; antes de
 expor consultas pelo PGWire (Etapa 8) ou pelo MCP multi-datasource (Etapa 11),
 o processamento local também precisa de limite efetivo. Nenhum desses limites
-pode simplesmente abandonar uma thread ou conexão. Sessão em `connect` não é
+pode simplesmente abandonar uma thread ou conexão.
+
+Correção de contrato da Etapa 4 (2026-09-24): a resolução DNS ganhou limite
+efetivo (D-092), mas isso não dá prazo total a um candidato. O `connect_timeout`
+cobre o estabelecimento da conexão; as consultas de verificação que
+`PostgresAdapter.connect()` executa depois de autenticar (read-only,
+`statement_timeout`, proveniência) dependem do `statement_timeout` do próprio
+servidor, e um upstream que autentica e para de responder não tem teto do lado
+do cliente. Como os handlers v2 são `async` e executam esse trabalho síncrono no
+event loop, a operação prende a fronteira administrativa e o shutdown. Ficam,
+portanto, dois gates distintos, ambos em aberto:
+
+1. **verificação pós-conexão de candidatos** — limite efetivo obrigatório antes
+   da ativação da Admin API v2 pelo operador, prevista para a Etapa 7 (hoje a
+   v2 só existe pelo parâmetro interno do composition root, D-093);
+2. **validação e masking de consultas locais** — limite efetivo obrigatório
+   antes dos ingressos PGWire (Etapa 8) e MCP multi-datasource (Etapa 11).
+
+Nenhuma solução para qualquer dos dois pode abandonar thread, processo ou
+conexão. O mecanismo ainda não foi escolhido e exige decisão própria,
+apresentada para aprovação antes do código. Sessão em `connect` não é
 fechada sob o `connect`: o shutdown marca e a admissão fecha ao terminar.
 `Application.close()` para a admissão de datasources antes de qualquer espera;
 depois fecha o Admin, aguarda
@@ -2410,3 +2430,130 @@ disco e runtime concordantes. Desabilitar não depende de DNS: com o mesmo
 destino, o conjunto persistido é reapresentado ao store em vez de uma resolução
 nova, que falharia justamente com o DNS fora do ar ou adulterado; reabilitar
 exige candidato e, portanto, resolução que confira com o persistido.
+
+# Fase 9 — decisões da Etapa 4 (Admin API v2 de datasources)
+
+A Etapa 4 foi autorizada em 2026-09-24, localmente e sem push. D-092 a D-096
+foram apresentadas antes do código e aprovadas pelo usuário na mesma data,
+porque a especificação não as fixava. Nenhuma delas autoriza UI v2, PGWire,
+variável de ambiente nova, bind externo ou extensão da tool MCP.
+
+## D-092 — Limite efetivo da resolução DNS por processo filho
+
+A §11 e a D-090 exigem, antes de expor candidatos pela Admin API v2, um limite
+efetivo à resolução DNS sem abandonar thread ou conexão. `socket.getaddrinfo`
+não tem timeout nem cancelamento portátil: medido neste host Windows, um nome
+`.invalid` levou 11,08 s em processo. O psycopg 3.3.4 não resolve nome quando
+`hostaddr` está preenchido — o que `build_conninfo` sempre faz —, então o único
+ponto de DNS é `resolve_destination`.
+
+O resolver default (`maskgw/datasource/resolver.py`) roda `getaddrinfo` num
+processo filho descartável (`sys.executable -I -S -c <código fixo>`), com prazo
+total de **5 s** (constante, sem variável de ambiente). Estourado o prazo, o
+filho recebe `kill()` e é recolhido (`communicate()`/`wait()`) antes de a função
+retornar; nenhuma thread deste processo sobrevive, e nenhuma conexão existe
+ainda. Host e porta viajam por `stdin`, nunca por `argv`; o resultado volta por
+`stdout` como JSON limitado (16 KiB, 64 endereços); `stderr` é descartado; o
+ambiente do filho é reduzido a `SYSTEMROOT` no Windows e vazio no POSIX, sem
+chave-mestra, token, DSN ou HMAC. Um semáforo não bloqueante limita a quatro
+filhos simultâneos; sem vaga, a resolução falha fechada. Toda falha é a mesma
+`DnsResolutionError` (subclasse de `DestinationValidationError`), sem host e sem
+cadeia de exceção. O limite vale para todos os caminhos — candidato, store,
+startup e migração. Ele limita somente a resolução: não dá prazo total à
+operação administrativa nem ao shutdown, porque as consultas de verificação
+depois da conexão continuam sem teto do lado do cliente (ver a correção de
+contrato em D-090).
+
+Rejeitadas: thread com `join(timeout)` (abandona a thread); dnspython
+(dependência nova e ignora `hosts`/resolver do sistema); aceitar somente IP
+literal (quebra datasources migrados com hostname); `GetAddrInfoExW`/
+`getaddrinfo_a` via ctypes (código por plataforma). Custo medido: cerca de 0,2 s
+por resolução neste Windows. Limite residual: `connect_timeout=10` vale por
+endereço, e as verificações pós-conexão contra um upstream hostil não têm teto
+do lado do cliente — gate da ativação da v2 pelo operador (Etapa 7), distinto
+do limite de validação e masking locais das Etapas 8/11 (D-090).
+
+## D-093 — Ativação e superfície da v2
+
+As rotas `/admin/v2` são registradas somente quando `build_application` recebe
+`datasource_catalog` **e** `admin_http`; nenhuma variável de ambiente as liga. Sem
+catálogo, o módulo `maskgw.admin.http.v2` nem é importado e o app administrativo
+é a v1 byte a byte — mesmo inventário de rotas e mesmas respostas, provado por
+comparação sonda a sonda. A v2 é registrada no mesmo roteador, por dentro da
+mesma pilha de fronteira: Host na allowlist, `Origin`/`Referer` recusados, corpo
+até 1 MiB, bearer token, `application/json`, `no-store`, sem CORS, `OPTIONS` ou
+`/docs`.
+
+Inventário literal: `GET|HEAD` de `/status`, `/datasources`,
+`/datasources/{id}` e `/datasources/{id}/policy`; `POST /datasources`,
+`POST /datasources:test`, `POST /datasources/{id}:test`,
+`POST /datasources/{id}:rotate-credential`, `POST /datasources/{id}:enable`,
+`POST /datasources/{id}:disable`, `PUT /datasources/{id}`,
+`DELETE /datasources/{id}` (com `confirm_alias`) e
+`PUT /datasources/{id}/policy`. Corpos fechados e escalares estritos; host,
+porta, database, usuário e senha são campos distintos, e não existe campo DSN,
+conninfo ou URL. A senha é write-only (criar, testar rascunho, rotacionar);
+leituras devolvem `credential: {configured: true}` e nunca ciphertext, nonce,
+tamanho ou os endereços DNS fixados. O alias é imutável (`IMMUTABLE_FIELD` em
+qualquer forma); `allowed_pg_functions` segue D-050/D-059 — presente é recusado,
+ausente é preservado. A política trafega sem `revision` nem IDs e é substituída
+por inteiro. O detalhe mostra os limites efetivos de D-088.
+
+## D-094 — Concorrência, revision por datasource e contrato do coordenador
+
+Toda escrita v2 é uma chamada ao `DatasourceRuntimeService`, sob o seu lock, na
+ordem candidato → persistência → publicação (D-091). A concorrência otimista é
+**por datasource** (F9-025): escritas sobre um datasource existente levam a
+revision do próprio registro, conferida sob o lock; a criação leva a revision do
+catálogo. Conflito é `409 REVISION_CONFLICT` com `current_revision` observada sob
+o lock. A forma da Etapa 3 (revision do catálogo) continua aceita no
+coordenador — exatamente uma das duas.
+
+Os rascunhos de edição e de política nascem de uma função que o coordenador
+chama com o registro lido sob a própria seção crítica; a confirmação destrutiva
+também roda sob o lock. Um `DatasourceWriteProbe` recebe as revisions do
+catálogo observadas dentro da seção crítica para a auditoria emitida depois
+dela. Os handlers são `async` sem `to_thread`, como as escritas da v1 (D-059).
+Habilitar o já habilitado (e o inverso) é `200` com `changed: false`, sem commit.
+Com o mesmo host e porta, a edição mantém o conjunto DNS fixado (D-084); destino
+novo é resolvido e fixado de novo.
+
+Duas correções de contrato: testar um datasource desabilitado é recusado (§6.1:
+`enabled=false` impede novos testes de conexão; `409 DATASOURCE_DISABLED`), e
+persistir um datasource desabilitado com política NOVA compila a política sem
+conectar — desabilitar com a mesma política nunca depende de compilação, porque
+reduzir exposição não espera. Depois de uma falha de persistência o store exige
+reabertura e recusa inclusive leituras (D-081): as leituras v2 respondem
+`503 CATALOG_BLOCKED`, e `/admin/v2/status` continua respondendo em modo
+degradado (`catalog_available: false`, contagens do registry).
+
+## D-095 — Vocabulário de erro e auditoria da v2 separados da v1
+
+O gerador da UI v1 (`frontend/tools/presentation.py` e `generate.py`) deriva o
+envelope de erro e o vocabulário de `AdminErrorCategory`, `AdminOperationName` e
+do módulo `admin/http/schemas.py`. Estendê-los mudaria artefatos da v1. A v2 tem
+enum próprio (`DatasourceErrorCategory`: `ALIAS_CONFLICT`,
+`CONFIRMATION_MISMATCH`, `DATASOURCE_BUSY`, `DATASOURCE_DISABLED`,
+`DATASOURCE_DESTINATION_REJECTED`, `DATASOURCE_POLICY_INVALID`,
+`DATASOURCE_CONNECTION_FAILED`, `DATASOURCE_CAPABILITY_MISSING`,
+`CATALOG_WRITE_ERROR`, `CATALOG_OUTCOME_UNCERTAIN`, `CATALOG_BLOCKED`,
+`DATASOURCE_SERVICE_UNAVAILABLE`), schemas próprios em `admin/http/v2/` e o
+registro fechado `DatasourceAdminAudit` em `audit/datasource.py`, emitido por
+`AuditLog.record_datasource_admin` pelo mesmo logger. Os handlers v2 reutilizam
+só cinco categorias da v1 com o mesmo significado (`REVISION_CONFLICT`,
+`NOT_FOUND`, `IMMUTABLE_FIELD`, `SCHEMA_INVALID`, `INTERNAL_ERROR`); as recusas de
+fronteira continuam saindo pelos handlers da v1. O registro de auditoria tem os
+mesmos nove nomes de campo, operação `datasource_*`, alvo `datasource`,
+`target_id` só `dso_<32 hex>`, revisions do catálogo (testes sem revisions;
+commit exatamente `before + 1`; habilitar/desabilitar ocioso `after == before`;
+falha sem `after`) e paridade provada por teste. `AdminAudit` e os enums da v1
+não mudam.
+
+## D-096 — Default do MCP adiado para a Etapa 11
+
+A §8 lista "definir datasource default do MCP", mas o schema autenticado do
+catálogo (Etapa 2) não tem esse campo e o único consumidor é o MCP
+multi-datasource da Etapa 11; a rastreabilidade põe "default explícito" na Etapa
+11. Implementá-lo agora exigiria mudar o schema do catálogo e definir regras de
+desabilitação/remoção do default sem consumidor. A rota não existe nesta etapa e
+fica como pendência explícita da Etapa 11, junto com a extensão da tool MCP.

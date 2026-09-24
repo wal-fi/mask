@@ -44,16 +44,21 @@ ausência de retry/rebase/fila/rollback automático. A Fase 9 foi autorizada em
 cifrado/autenticado, validação de destino e migração explícita), e em
 2026-09-23 para a Etapa 3: registry multi-datasource e lifecycle, ativados
 somente pelo parâmetro interno `datasource_catalog` do composition root
-(D-087–D-091). As Etapas 4–12 ainda exigem revisão e autorização próprias. Não
-iniciar Admin API v2, UI v2, PGWire, variável de ambiente nova, extensão da
-tool MCP ou qualquer etapa posterior.
+(D-087–D-091). Em 2026-09-24 foi autorizada localmente, sem push, somente a
+Etapa 4: Admin API v2 de datasources sob `/admin/v2`, com decisões de contrato,
+concorrência e limite de DNS apresentadas antes do código e aprovadas
+(D-092–D-096); ela foi implementada com evidência em
+`docs/PHASE-9-STAGE-4-VALIDATION.md`. As Etapas 5–12 ainda exigem revisão e
+autorização próprias. Não iniciar UI v2, PGWire, variável de
+ambiente nova, bind externo, extensão da tool MCP ou qualquer etapa posterior.
 Evidência: `docs/PHASE-8-STAGE-9-VALIDATION.md`.
 
 Interfaces genéricas, editor SQL administrativo, resultados do banco na UI,
 funções de DBA, auditoria consultável e front-end para MCP continuam fora do
 escopo. Bind PostgreSQL, TLS, façade PGWire, rotas v2, ativação do catálogo por
 ambiente e redesign administrativo são contratos exclusivos das etapas
-posteriores da Fase 9; continuam sem implementação.
+posteriores da Fase 9; continuam sem implementação. Rotas v2 existem somente
+na Etapa 4 autorizada, delimitadas pela §8 da especificação.
 
 ## Matching
 Por padrão: case-insensitive + substring/contains.
