@@ -64,7 +64,15 @@ function inspect(value, descriptor) {
   if (!accepts(value,descriptor,descriptor.$defs,0) || !record(value)) return false;
   if (!records(value.models) || !records(value.calls) || !records(value.views)
     || !records(value.editors) || !records(value.bindings) || !records(value.messages)) return false;
-  const all = [...value.models,...value.calls,...value.views,...value.editors,...value.bindings,...value.messages];
+  if (!record(value.console)) return false;
+  const surface = value.console;
+  if (!record(surface.summary) || !record(surface.collection) || !record(surface.detail) || !record(surface.guide)) return false;
+  const summary = surface.summary, collection = surface.collection, detail = surface.detail, guide = surface.guide;
+  if (!records(summary.figures) || !records(collection.columns) || !records(detail.tabs) || !records(guide.steps)) return false;
+  /** @type {Record<string,unknown>[]} */ const tabItems=[];
+  for (const tab of detail.tabs) { if (!records(tab.entries)) return false; tabItems.push(...tab.entries); }
+  const all = [...value.models,...value.calls,...value.views,...value.editors,...value.bindings,...value.messages,
+    summary,collection,detail,guide,...summary.figures,...collection.columns,...detail.tabs,...tabItems,...guide.steps];
   /** @type {Record<string,unknown>[]} */ const controls=[];
   for (const owner of [...value.views,...value.editors]) {
     if (!records(owner.controls)) return false;
@@ -162,7 +170,9 @@ function inspect(value, descriptor) {
   for(const control of controls) if(!fits(control.default,leaf(control.model,control.path))) return false;
   const calls=new Map(value.calls.map(c=>[c.id,c]));
   for (const call of value.calls) {
-    if (typeof call.path !== "string" || !call.path.startsWith("/admin/v1/") || /[?#%\\]|\/\//.test(call.path)) return false;
+    if (typeof call.path !== "string" || !(call.path.startsWith("/admin/v1/") || call.path.startsWith("/admin/v2/")) || /[?#%\\]|\/\//.test(call.path)) return false;
+    // The second prefix only carries authenticated reads (Phase 9, Stage 5).
+    if (call.path.startsWith("/admin/v2/") && (call.method !== "GET" || call.operation !== "read")) return false;
     const parts=call.path.split("/").slice(3);
     if (parts.some(p=>!p || p === "." || p === "..")) return false;
     const slots=parts.filter(p=>p.includes("{") || p.includes("}"));
@@ -188,6 +198,26 @@ function inspect(value, descriptor) {
   for (const item of [...controls,...value.bindings]) {
     if (!linked(item.model,item.path)) return false;
     if (item.condition !== null && item.condition !== undefined && (!record(item.condition) || !linked(item.model,item.condition.path))) return false;
+  }
+  /** @param {unknown} id @param {boolean} identity @returns {Record<string,unknown> | undefined} */
+  function surfaceCall(id,identity) {
+    const call=typeof id === "string" ? calls.get(id) : undefined;
+    if (!call || typeof call.path !== "string" || !call.path.startsWith("/admin/v2/") || call.method !== "GET" || call.operation !== "read") return undefined;
+    return (typeof call.identity === "string") === identity ? call : undefined;
+  }
+  const head=surfaceCall(summary.call,false), listing=surfaceCall(collection.call,false);
+  const main=surfaceCall(detail.call,true), aside=surfaceCall(detail.extra,true);
+  if (!head || !listing || !main || !aside || main.identity !== aside.identity) return false;
+  if (!summary.figures.every(f=>linked(head.output,f.path))) return false;
+  const rows=leaf(listing.output,collection.items);
+  if (rows?.type !== "list" || typeof rows.item !== "string") return false;
+  const row=rows.item;
+  if (leaf(row,collection.key)?.type !== "string" || !linked(row,collection.title)) return false;
+  if (!collection.columns.every(c=>linked(row,c.path))) return false;
+  if (!sequence(collection.searchable) || !collection.searchable.every(p=>leaf(row,p)?.type === "string")) return false;
+  for (const tab of detail.tabs) {
+    const owner=tab.source === "main" ? main.output : aside.output;
+    if (!records(tab.entries) || !tab.entries.every(e=>linked(owner,e.path))) return false;
   }
   return true;
 }

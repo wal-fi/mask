@@ -2557,3 +2557,65 @@ multi-datasource da Etapa 11; a rastreabilidade põe "default explícito" na Eta
 11. Implementá-lo agora exigiria mudar o schema do catálogo e definir regras de
 desabilitação/remoção do default sem consumidor. A rota não existe nesta etapa e
 fica como pendência explícita da Etapa 11, junto com a extensão da tool MCP.
+
+# Fase 9 — decisões da Etapa 5 (protótipo e Admin UX v2 somente leitura)
+
+A Etapa 5 foi autorizada em 2026-09-24, localmente e sem push. D-097 a D-100
+foram apresentadas antes do código e aprovadas pelo usuário na mesma data. Não
+autorizam a Etapa 6, escrita de datasources, coleta de senha, PGWire, ativação
+por ambiente ou bind externo, nem declaram fechado o limite pós-conexão da
+D-090, que continua bloqueando a ativação da v2 pelo operador (Etapa 7).
+
+## D-097 — Apresentação declarativa no formato 2, somente leitura na v2
+
+A gramática da Fase 8 fixava exatamente 6 views, 19 chamadas e destino somente
+sob `/admin/v1/` (D-062, spec da Fase 8 §§3.15–3.16). O formato 2 mantém essas
+seções byte a byte — o selo aprovado da Etapa 8 passou a ser aplicado às fatias
+v1 (views, editores, ligações, mensagens, os primeiros 110 modelos e 19
+chamadas) — e acrescenta:
+
+- quatro leituras `GET` sob `/admin/v2/` (status, lista, item e política). Toda
+  chamada sob esse prefixo é `GET` de leitura, verificado no Python, no
+  verificador público e no transporte, que recusa qualquer outro método;
+- a seção fechada `console`: resumo, coleção com busca local, detalhe com abas e
+  um protótipo estático de passos, todos por caminhos declarados, sem código,
+  HTML, URL livre ou template; limites de modelos ampliados para 192;
+- nenhuma ligação de papel para modelos v2 (a lista tem uma revision por item);
+- identidade de leitura de item validada contra o modelo da chave da lista e
+  substituída num único segmento; 404 e 503 da v2 viram estados abstratos por
+  status HTTP, sem nome de categoria no código público.
+
+A divisão público/privado e o interpretador sem framework continuam. A página
+inicial é o Painel v2; se `/admin/v2/status` responder 404 (catálogo desligado),
+a sessão cai na Visão geral da v1 exatamente como antes, e os itens v2 explicam o
+estado.
+
+## D-098 — Capturas de referência somente de fixture sintética
+
+A spec da Fase 8 §4.4 proíbe capturas com token ou dados administrativos. As
+capturas de referência exigidas pela §9.2 da Fase 9 são produzidas por
+`frontend/tools/screenshots.js`: página-fixture local com os bytes do pacote,
+respostas sintéticas e fictícias por interceptação, nenhum backend e valor de
+entrada descartável num campo mascarado. O reporter dos testes continua sem
+screenshot, trace ou vídeo. Os arquivos ficam em `docs/ux-v2/` e não entram no
+pacote.
+
+## D-099 — Vocabulário privado da v2 verificado por token
+
+Os 110 termos da v2 (campos, enums, caminhos, categorias e operações) entram
+numa lista privada nova, verificada por limite de token no HTML, CSS e JS
+públicos; a lista da v1 continua verificada por substring, sem mudança. Somente
+três nomes passam a compartilhados, por serem API do navegador, ARIA ou
+TypeScript: `password` (tipo do campo), `status` (`Response.status`,
+`role="status"`) e `never` (tipo JSDoc). Identificadores da Fase 8 que colidiam
+(`generation`, `changedDraft`, `enabled`, `registry`) e a mensagem interna
+`Request failed.` foram renomeados, sem mudança de comportamento.
+
+## D-100 — Shell v1/v2 e tema em memória
+
+As seis vistas v1 e a edição da Fase 8 ficam intactas num grupo "Política v1" da
+mesma barra lateral (uma única região de navegação e uma única região de
+status). O tema segue `prefers-color-scheme`; a alternância manual (automático,
+escuro, claro) vive só em memória, sem storage. Toolchain: Node 24.20.0 e npm
+11.19.0 oficiais verificados por SHA-256 (lista SHASUMS256 obtida por HTTPS,
+sem verificação GPG) numa pasta local, sem alterar o PATH do sistema.

@@ -18,14 +18,14 @@ export function workbench(client,root,refreshed) {
   /** @type {string | undefined} */ let batchPage;
   /** @type {unknown} */ let base;
   /** @type {unknown} */ let raw;
-  /** @type {unknown} */ let registry;
+  /** @type {unknown} */ let editorList;
   /** @type {AbortController | undefined} */ let active;
   let ended=false, engaged=false, dirty=false, waiting=false, serial=0, checked=false, locked=false, examining=false;
   /** @type {HTMLParagraphElement | undefined} */ let note;
   /** @type {HTMLElement | undefined} */ let proof;
   /** @type {() => void} */ let detach=()=>{};
   function dismiss() {if(dialog) {dialog.close();erase(dialog);dialog.remove();dialog=undefined;}if(restore?.isConnected) restore.focus();}
-  function reset() {serial++;active?.abort();active=undefined;flow?.release();flow=undefined;intent=undefined;batchPage=undefined;base=undefined;raw=undefined;registry=undefined;dirty=false;engaged=false;waiting=false;examining=false;checked=false;proof=undefined;note=undefined;dismiss();}
+  function reset() {serial++;active?.abort();active=undefined;flow?.release();flow=undefined;intent=undefined;batchPage=undefined;base=undefined;raw=undefined;editorList=undefined;dirty=false;engaged=false;waiting=false;examining=false;checked=false;proof=undefined;note=undefined;dismiss();}
   function close() {ended=true;reset();detach();restore=undefined;}
   detach=client.onClose(close);
   /** @param {string} text @param {() => void} action */
@@ -83,11 +83,11 @@ export function workbench(client,root,refreshed) {
       if(operation !== "create" && selected === undefined) {announce("Item indisponível. Atualize a leitura.");return;}
       intent={page,operation,identity};
       if(operation === "delete") {raw={};renderDelete();return;}
-      const ticket=serial;waiting=true;registry=await client.read(plan.registry,active?.signal);
+      const ticket=serial;waiting=true;editorList=await client.read(plan.editorCatalog,active?.signal);
       if(ended || ticket !== serial) return;waiting=false;
-      if(client.describe().inspectDataFor(plan.registry,registry) !== client.describe().inspectDataFor(plan.read,base)) throw new Error("Request refused.");
+      if(client.describe().inspectDataFor(plan.editorCatalog,editorList) !== client.describe().inspectDataFor(plan.read,base)) throw new Error("Request refused.");
       raw=plan.defaults(page,selected);
-      if(selected !== undefined) plan.checkedContent(page,raw,registry);
+      if(selected !== undefined) plan.checkedContent(page,raw,editorList);
       renderForm();
     } catch {if(!ended) {waiting=false;announce("Conteúdo incompatível. A leitura foi preservada; edição bloqueada.");}}
   }
@@ -121,7 +121,7 @@ export function workbench(client,root,refreshed) {
             const next=index+Number(delta), buttonId="move-"+index+"-"+delta;
             const move=button(String(text),()=>{
               if(waiting || ended || next<0 || next>=order.length) return;
-              [order[index],order[next]]=[order[next],order[index]];values[key]=order;sync();changedDraft();draw();
+              [order[index],order[next]]=[order[next],order[index]];values[key]=order;sync();draftTouched();draw();
               const target=document.getElementById("move-"+next+"-"+delta);if(target instanceof HTMLButtonElement && !target.disabled) target.focus();else {const fallback=list.querySelector("button:not(:disabled)");if(fallback instanceof HTMLElement) fallback.focus();}
             });move.id=buttonId;move.disabled=next<0 || next>=order.length;row.append(move);
           }
@@ -135,7 +135,7 @@ export function workbench(client,root,refreshed) {
       form.append(element("h3","Base somente leitura"),plain(base),element("p","Somente inclusões. A releitura do servidor confirma nomes e duplicatas."));
       const label=element("label","Novos nomes, um por linha"), input=element("textarea");input.id="new-names";input.autocomplete="off";input.spellcheck=false;label.htmlFor=input.id;
       input.value=Array.isArray(values[key]) ? values[key].join("\n") : "";
-      input.addEventListener("input",()=>{if(waiting && !examining) return;values[key]=input.value.split("\n");sync();changedDraft();});form.append(label,input);
+      input.addEventListener("input",()=>{if(waiting && !examining) return;values[key]=input.value.split("\n");sync();draftTouched();});form.append(label,input);
     } else for(const c of p.controls) controlNode(c,values,form,sync);
     const save=button("Revisar alterações",()=>{
       if(waiting) return;
@@ -149,16 +149,16 @@ export function workbench(client,root,refreshed) {
     const box=modal("Confirmar operação",renderBatch);
     box.append(element("p","Revise a proposta completa. Nada foi salvo."),plain(plan.batchCandidate(batchPage,base,raw)),button("Voltar ao rascunho",renderBatch),button("Cancelar",()=>leave(()=>{})),button("Confirmar",()=>{void commit();}));
   }
-  function changedDraft() {checked=false;if(proof) erase(proof);dialog?.querySelectorAll("[aria-describedby]").forEach(n=>n.removeAttribute("aria-describedby"));serial++;active?.abort();active=new AbortController();if(examining) {waiting=false;examining=false;}dirty=true;announce("Rascunho não salvo. Resultado anterior descartado.");}
-  /** @param {Record<string,unknown>} control @param {Record<string,unknown>} values @param {HTMLElement} parent @param {() => void} changed */
-  function controlNode(control,values,parent,changed) {
+  function draftTouched() {checked=false;if(proof) erase(proof);dialog?.querySelectorAll("[aria-describedby]").forEach(n=>n.removeAttribute("aria-describedby"));serial++;active?.abort();active=new AbortController();if(examining) {waiting=false;examining=false;}dirty=true;announce("Rascunho não salvo. Resultado anterior descartado.");}
+  /** @param {Record<string,unknown>} control @param {Record<string,unknown>} values @param {HTMLElement} parent @param {() => void} onEdit */
+  function controlNode(control,values,parent,onEdit) {
     if(!Array.isArray(control.path) || typeof control.path[0] !== "string" || typeof control.label !== "string") throw new Error("Request refused.");
     const key=control.path[0], field=plan.fields(control.model).find(f=>f.name === key);if(!field) throw new Error("Request refused.");
     const shape=plan.shape(field.ref), label=element("label",control.label), id="field-"+String(control.id);
     const node=control.type === "select" ? element("select") : element("input");node.id=id;label.htmlFor=id;
     if(node instanceof HTMLSelectElement) {
       const empty=element("option","Escolha explicitamente");empty.value="";node.append(empty);
-      const choices=Array.isArray(shape.choices) ? shape.choices : plan.available(registry);
+      const choices=Array.isArray(shape.choices) ? shape.choices : plan.available(editorList);
       for(const choice of choices) {const option=element("option",String(choice));option.value=String(choice);node.append(option);}
       node.value=typeof values[key] === "string" ? values[key] : "";
     } else {
@@ -174,7 +174,7 @@ export function workbench(client,root,refreshed) {
       if(node instanceof HTMLInputElement && node.type === "checkbox") value=node.checked;
       else if(control.type === "integer") value=/^(0|[1-9][0-9]*)$/.test(node.value) && Number.isSafeInteger(Number(node.value)) ? Number(node.value) : node.value;
       else value=node.value;
-      values[key]=value;changedDraft();changed();
+      values[key]=value;draftTouched();onEdit();
     };
     node.addEventListener(node instanceof HTMLSelectElement || control.type === "checkbox" ? "change" : "input",update);parent.append(label,node);return node;
   }
@@ -206,7 +206,7 @@ export function workbench(client,root,refreshed) {
     const examine=button("Validar proposta",()=>{void examineDraft();});
     const save=element("button","Salvar");save.type="submit";
     form.append(examine,save,button("Cancelar",()=>leave(()=>{})));box.append(form);
-    form.addEventListener("submit",event=>{event.preventDefault();if(waiting) return;try {if(!intent) return;plan.checkedContent(intent.page,raw,registry);if(p.warning) confirmNotice(p.warning,()=>{void commit();});else void commit();} catch {announce("Confira os campos conhecidos antes de salvar.");}});
+    form.addEventListener("submit",event=>{event.preventDefault();if(waiting) return;try {if(!intent) return;plan.checkedContent(intent.page,raw,editorList);if(p.warning) confirmNotice(p.warning,()=>{void commit();});else void commit();} catch {announce("Confira os campos conhecidos antes de salvar.");}});
   }
   /** @param {string} text @param {() => void} action */
   function confirmNotice(text,action) {
@@ -219,7 +219,7 @@ export function workbench(client,root,refreshed) {
     if(ended || waiting || !base) return;
     let ticket=serial;
     try {
-      const edit=intent ? {...intent,value:plan.checkedContent(intent.page,raw,registry)} : undefined;
+      const edit=intent ? {...intent,value:plan.checkedContent(intent.page,raw,editorList)} : undefined;
       const candidate=batchPage ? plan.batchCandidate(batchPage,base,raw) : plan.candidate(base,edit);ticket=++serial;waiting=true;examining=true;active=new AbortController();announce("Validando conteúdo…");
       const known=batchPage ? plan.batchKnown(batchPage,base,raw) : intent ? plan.known(intent.page,base,raw,intent.identity) : [];
       const result=await client.assess(candidate,known,active.signal);
@@ -242,7 +242,7 @@ export function workbench(client,root,refreshed) {
         if(flow.getState().tag === "reading") flow.begin(p.call,body);
         else if(flow.getState().tag === "draft") flow.change(body);
       } else if(intent) {
-        const p=plan.profile(intent.page), body=intent.operation === "delete" ? {} : {[p.member]:plan.checkedContent(intent.page,raw,registry)};
+        const p=plan.profile(intent.page), body=intent.operation === "delete" ? {} : {[p.member]:plan.checkedContent(intent.page,raw,editorList)};
         const call=intent.operation === "create" ? p.create : intent.operation === "replace" ? p.replace : p.remove;
         if(flow.getState().tag === "reading") flow.begin(call,body,intent.identity);
         else if(flow.getState().tag === "draft") flow.change(body);
@@ -265,7 +265,7 @@ export function workbench(client,root,refreshed) {
     if(state.tag === "busy") box.append(button("Tentar novamente",()=>{void commit();}));
     if(state.tag === "conflict" && state.newBase && intent && intent.operation !== "delete") box.append(button("Revisar rascunho com nova base",()=>{
       if(!flow || !intent) return;const p=plan.profile(intent.page);
-      try {if(flow.review({[p.member]:plan.checkedContent(p.id,raw,registry)})) {base=state.newBase?.value;checked=false;renderForm();}} catch {announce("Revisão incompatível. Rascunho preservado.");}
+      try {if(flow.review({[p.member]:plan.checkedContent(p.id,raw,editorList)})) {base=state.newBase?.value;checked=false;renderForm();}} catch {announce("Revisão incompatível. Rascunho preservado.");}
     }));
     if(state.tag === "conflict" && state.newBase && batchPage) box.append(button("Revisar rascunho com nova base",()=>{
       if(!flow || !batchPage) return;

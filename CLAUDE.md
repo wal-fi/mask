@@ -29,7 +29,10 @@ autorizada e implementada localmente, sem push (D-092–D-096): rotas registrada
 somente com catálogo e Admin HTTP no composition root, resolução DNS com prazo
 em processo filho e default do MCP adiado para a Etapa 11. Listener PGWire, UX
 v2, ativação por ambiente e as Etapas 5–12 continuam sem implementação
-funcional. Evidência da Fase 8:
+funcional. Em 2026-09-24 as Etapas 3 e 4 foram publicadas em `c37be36`, e a
+Etapa 5 (protótipo e Admin UX v2 somente leitura) foi autorizada e implementada
+localmente, sem push (D-097–D-100, `docs/PHASE-9-STAGE-5-VALIDATION.md`); a
+Etapa 6 não, e as capturas de `docs/ux-v2/` aguardam aprovação. Evidência da Fase 8:
 `docs/PHASE-8-STAGE-9-VALIDATION.md`; das Etapas 3 e 4:
 `docs/PHASE-9-STAGE-3-VALIDATION.md` e `docs/PHASE-9-STAGE-4-VALIDATION.md`.
 
@@ -56,7 +59,7 @@ Nesta ordem:
 2. `docs/ARCHITECTURE.md` — módulos e responsabilidades
 3. `docs/SECURITY.md` — invariantes de segurança
 4. `docs/SECURITY-REVIEW.md` — o que foi atacado, o que resistiu, o que não
-5. `docs/DECISIONS.md` — 96 decisões (D-001 a D-096) e o porquê de cada uma
+5. `docs/DECISIONS.md` — 100 decisões (D-001 a D-100) e o porquê de cada uma
 6. `docs/MASKING-SPEC.md` — semântica exata do pipeline de masking
 7. `docs/PHASE-9-SPEC.md` — especificação aprovada; Etapas 1 a 4 delimitadas
 8. `docs/TEST-PLAN.md`, `docs/THREAT-MODEL.md`, `docs/FUTURE-HARDENING.md`

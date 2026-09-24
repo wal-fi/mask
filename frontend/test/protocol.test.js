@@ -43,7 +43,7 @@ test("static presentation and digest agree",()=> {
 });
 /** @type {Array<[string,Array<string|number>,unknown]>} */
 const hostile=[
-  ["unknown root key",["extra"],true], ["format boolean",["format"],true], ["format number",["format"],2],
+  ["unknown root key",["extra"],true], ["format boolean",["format"],true], ["format number",["format"],1], ["format future",["format"],3],
   ["remote path",["calls",0,"path"],"https://evil.invalid/admin/v1/status"],
   ["authority",["calls",0,"path"],"//evil.invalid/admin/v1/status"],
   ["query",["calls",0,"path"],"/admin/v1/status?x=1"],

@@ -32,10 +32,12 @@ export async function scenario(name, action, extra={}) {
   const token = randomBytes(32).toString("hex");
   const browser = await engines[name].launch(name === "chromium" && extra.MASKGW_BROWSER_BFCACHE === "1" ? {channel:"chromium",ignoreDefaultArgs:["--disable-back-forward-cache"]} : {});
   mark("launched");
-  const module=extra.MASKGW_BROWSER_EDIT === "1" ? "tests.browser_edit_server" : "tests.browser_server";
+  const module=extra.MASKGW_BROWSER_EDIT === "1" ? "tests.browser_edit_server" : extra.MASKGW_BROWSER_CONSOLE === "1" ? "tests.browser_console_server" : "tests.browser_server";
   /** @type {NodeJS.ProcessEnv} */ const env={...process.env,...extra,MASKGW_BROWSER_TOKEN:token};
   const args=installed && directory ? ["-I","-u","-c","import sys,runpy,atexit; sys.path.insert(0,sys.argv[1]); from tests.installed_support import verify_environment; verify_environment(); atexit.register(verify_environment); runpy.run_module(sys.argv[2],run_name='__main__')",directory,module] : ["-u","-m",module];
   if(installed) {delete env.PYTHONPATH;env.PATH=join(process.env.SystemRoot ?? "C:/Windows","System32");}
+  // Checkout mode imports the checkout, never a stale package installed in the venv.
+  else env.PYTHONPATH=join(root,"src");
   const child = spawn(installed ?? join(root,process.platform === "win32" ? ".venv/Scripts/python.exe" : ".venv/bin/python"),args,{cwd:directory ?? root,env,stdio:["pipe","pipe","pipe"]});
   const channel=replies(child.stdout);
   child.once("error",()=>channel.close());

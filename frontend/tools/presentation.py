@@ -8,6 +8,7 @@ from maskgw.admin.errors import AdminErrorCategory
 from maskgw.admin.http.responses import CLOSED_REASONS
 from maskgw.masking.transformers.registry import build_default_registry
 from maskgw.admin.ui.protocol import validate_presentation
+from console import extend
 
 ROOT = Path(__file__).resolve().parents[2]
 PRIVATE = ROOT / "frontend/private"
@@ -68,7 +69,11 @@ def model(name, node=None):
         }
         if "pattern" in node:
             shape.update(
-                prefix="rul_" if "rul_" in node["pattern"] else "exc_",
+                prefix="rul_"
+                if "rul_" in node["pattern"]
+                else "dso_"
+                if "dso_" in node["pattern"]
+                else "exc_",
                 min=36,
                 max=36,
                 alphabet="0123456789abcdef",
@@ -452,14 +457,17 @@ for name in sorted({*(item.value for item in AdminErrorCategory), *CLOSED_REASON
     )
     state, text = message_overrides.get(name, (state, text))
     messages.append({"id": "t" + str(len(messages)), "name": name, "text": text, "state": state})
+# Fase 9, Etapa 5: somente depois de toda a autoria da v1 (IDs estaveis).
+console = extend(wire, model, put, calls)
 data = {
-    "format": 1,
+    "format": 2,
     "models": models,
     "calls": calls,
     "views": views,
     "editors": editors,
     "bindings": bindings,
     "messages": messages,
+    "console": console,
 }
 encoded = (
     json.dumps(data, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n"

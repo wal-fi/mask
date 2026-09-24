@@ -28,5 +28,17 @@ CALLS: tuple[tuple[str, str, str | None, str, str, str | None, str], ...] = (
     ),
     ("PUT", "/admin/v1/database", "m103", "m93", "replace", None, "m44"),
     ("PUT", "/admin/v1/sql", "m104", "m93", "append", None, "m44"),
+    ("GET", "/admin/v2/status", None, "m125", "read", None, "m120"),
+    ("GET", "/admin/v2/datasources", None, "m133", "read", None, "m120"),
+    ("GET", "/admin/v2/datasources/{datasource_id}", None, "m140", "read", "datasource_id", "m120"),
+    (
+        "GET",
+        "/admin/v2/datasources/{datasource_id}/policy",
+        None,
+        "m146",
+        "read",
+        "datasource_id",
+        "m120",
+    ),
 )
-MODEL_SHA256 = "055840e7d328cc4dbd69dcc8efaa9c143c0f83101d61155bee20a84a744dfd6d"
+MODEL_SHA256 = "bd053d3fed50d1b1faf084ffcaef5466f62583fad6c87bb448eeb9475bae1b3f"

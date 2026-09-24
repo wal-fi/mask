@@ -11,7 +11,12 @@ startup/shutdown ativados somente pelo composition root (D-087); Etapa 4
 limitada a `/admin/v2` de datasources (§8), registrada somente com catálogo e
 Admin HTTP no composition root, e ao limite de resolução DNS (D-092–D-096),
 autorizada e implementada localmente em 2026-09-24, sem push; Etapas 5–12 não
-iniciadas.
+iniciadas. Em 2026-09-24, depois da publicação das Etapas 3 e 4 em `c37be36`, foi
+autorizada localmente, sem push, somente a Etapa 5: protótipo e Admin UX v2
+somente leitura, com estrutura visual, fluxos e decisões apresentados antes do
+código (D-097–D-100), implementada localmente com evidência em
+`docs/PHASE-9-STAGE-5-VALIDATION.md`. A Etapa 6 e posteriores continuam sem
+autorização.
 
 Esta aprovação normativa não autoriza as Etapas 5–12, que continuam
 condicionadas à revisão e autorização próprias, na ordem desta especificação.
@@ -451,6 +456,15 @@ Preservar inicialmente pacote embarcado, mesma origem local, CSP, ausência de C
 token em memória e rendering sem HTML arbitrário. A apresentação declarativa
 pode ser estendida se continuar tipada e testável. Framework ou remoção da
 divisão público/privado de D-062 exige decisão, análise de risco e nova revisão.
+
+**Etapa 5 (2026-09-24, D-097–D-100).** A apresentação passou ao formato 2, com
+as seções da v1 inalteradas e a seção `console` somente leitura: Painel, lista
+de datasources com busca, detalhe com abas e protótipo de passos sem campo,
+envio ou teste. Toda chamada sob `/admin/v2/` na UI é `GET`. O vocabulário
+privado da v2 é verificado por token. Capturas de referência de fixture
+sintética estão em `docs/ux-v2/` e precisam de aprovação antes da Etapa 6. O
+limite pós-conexão da D-090 continua aberto e bloqueia a ativação da v2 pelo
+operador (Etapa 7).
 
 ## 10. MCP multi-datasource
 

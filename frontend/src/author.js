@@ -68,30 +68,31 @@ export function author(source) {
     const p=profile(id);if(value !== undefined) return content(id,value);
     return capture(Object.fromEntries(p.controls.filter(c=>c.default !== null).map(c=>[word(trail(c.path)[0]),c.default])));
   }
-  /** @param {string} id @param {unknown} value @param {unknown} registry */
-  function checkedContent(id,value,registry) {
+  /** @param {string} id @param {unknown} value @param {unknown} editorList */
+  function checkedContent(id,value,editorList) {
     const p=profile(id), clean=capture(value);lens.inspectData(p.model,clean);
     if(p.choice && p.nested) {
       const name=at(clean,[p.choice]), editor=editors.find(e=>e.name === name);
-      if(!editor || !available(registry).includes(word(name))) throw new Error("Request refused.");
+      if(!editor || !available(editorList).includes(word(name))) throw new Error("Request refused.");
       const detail=at(clean,[p.nested]);lens.inspectData(editor.model,detail);
       for(const control of rows(editor.controls)) {
         const present=at(detail,control.path) !== undefined;
         if(entry(control.condition)) {
-          const enabled=at(detail,control.condition.path) === control.condition.value;
-          if(enabled !== present) throw new Error("Request refused.");
+          const holds=at(detail,control.condition.path) === control.condition.value;
+          if(holds !== present) throw new Error("Request refused.");
         }
       }
     }
     return clean;
   }
-  // The sole unassociated, non-template read with a list of editor names is the registry.
-  const registryCall=authorRecord(calls.find(c=>c.method === "GET" && c.identity === null && !views.some(v=>v.call === c.id)));
-  /** @param {unknown} registry */
-  function available(registry) {
-    lens.inspectData(registryCall.output,registry);
-    const list=fields(registryCall.output).find(f=>shape(f.ref).type === "list");if(!list) throw new Error("Request refused.");
-    const values=at(registry,[word(list.name)]);if(!Array.isArray(values)) throw new Error("Request refused.");
+  // The sole unassociated, non-template read with a list of editor names is the editorList.
+  // Only the first prefix: the read-only second prefix never feeds authoring.
+  const editorCatalogCall=authorRecord(calls.find(c=>c.method === "GET" && c.identity === null && typeof c.path === "string" && c.path.startsWith("/admin/v1/") && !views.some(v=>v.call === c.id)));
+  /** @param {unknown} editorList */
+  function available(editorList) {
+    lens.inspectData(editorCatalogCall.output,editorList);
+    const list=fields(editorCatalogCall.output).find(f=>shape(f.ref).type === "list");if(!list) throw new Error("Request refused.");
+    const values=at(editorList,[word(list.name)]);if(!Array.isArray(values)) throw new Error("Request refused.");
     return editors.filter(e=>values.some(v=>{
       if(!entry(v) || v.name !== e.name) return false;
       const names=Object.values(v).flatMap(x=>Array.isArray(x) ? x : []);
@@ -190,7 +191,7 @@ export function author(source) {
     batches,batch,initial,checkedBatch,batchCandidate,profiles,profile,items,content,defaults,checkedContent,available,candidate,consented,shape,fields,editors,
     /** @param {string} id @param {unknown} value */ listed:(id,value)=>{const p=profile(id);lens.inspectData(p.output,value);return rows(at(value,[p.listing]));},
     /** @param {string} id @param {unknown} value */ changeable:(id,value)=>{const p=profile(id);lens.inspectData(p.output,value);return lens.bound(p.output,value,"consent")[0] === true;},
-    home:word(home.id),read:word(home.call),registry:word(registryCall.id),check:word(checkCall.id),
+    home:word(home.id),read:word(home.call),editorCatalog:word(editorCatalogCall.id),check:word(checkCall.id),
     consent:{call:word(consentCall.id),field:word(trail(consent.path)[0]),text:word(consent.label),label:word(rows(home.controls).find(c=>c.type === "confirm" && Array.isArray(c.path) && c.path.length === 0)?.label)},
     /** @param {unknown} value */ inspectCheck:value=>{lens.inspectData(checkCall.output,value);},
     /** @param {unknown} value */ inspectError:value=>{lens.inspectData(checkCall.error,value);return messages;},

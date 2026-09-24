@@ -1342,3 +1342,15 @@ da Fase 8.
   aprovação nem skip silencioso.
 - Nenhum finding vira skip/xfail. Segredos, ciphertexts, tokens, SQL e dados
   originais não entram em logs, traces, HAR, vídeos, screenshots ou artefatos.
+
+### Fase 9, Etapa 5
+
+Node: `test/surface.test.js` (contraexemplos do console e do prefixo v2,
+transporte somente GET, identidade e estados 404/503, inspetor por token).
+Navegador: `browser/console.spec.js` (Painel, lista, busca, detalhe com abas por
+teclado, protótipo sem campos, temas, 320 px/640 px, movimento reduzido,
+contraste AA, catálogo vazio, removido e bloqueado, queda para a v1 sem
+catálogo) nos três engines, além das specs da Fase 8. Python:
+`test_phase8_final_inventory.py` mantém os selos da Etapa 8 sobre as fatias v1
+e sela o que a Etapa 5 acrescentou; `tests/installed_console_probe.py` roda com
+o pacote instalado. Números em `docs/PHASE-9-STAGE-5-VALIDATION.md`.

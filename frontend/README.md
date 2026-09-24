@@ -158,3 +158,26 @@ edição. Ele verifica auditoria e efeitos reais; o harness de leitura original
 continua exigindo zero escrita/efeito. Nenhuma instrumentação entra no pacote.
 Gates: `test/author.test.js`, `browser/editing.spec.js`, suíte Python inteira e
 matriz acumulada dos três engines/PG16. Reorder, database e SQL não têm editor.
+
+## Fase 9, Etapa 5 — console v2 somente leitura
+
+A apresentação é o formato 2: as seções da v1 são as mesmas e a seção
+`console` descreve Painel, lista com busca, detalhe com abas e o protótipo de
+passos (D-097). Toda chamada sob `/admin/v2/` é `GET`; o transporte recusa
+outros métodos, valida a identidade do item contra o modelo da chave da lista e
+traduz 404/503 em estados abstratos só por status HTTP. `generate.py` grava
+`wire-schemas-v2.json` e `vocabulary-tokens.json` sem tocar nos artefatos da
+v1; `inspect.js` verifica o vocabulário da v2 por limite de token (D-099) e
+`node tools/inspect.js --diagnose` nomeia colisões localmente. `console.py`
+contém a autoria privada.
+
+`tools/screenshots.js` gera as capturas de referência em `docs/ux-v2/` a
+partir de uma fixture sintética, sem backend nem token real (D-098). O reporter
+dos testes continua sem screenshot. Abaixo de 48rem, a navegação única fica
+atrás do botão `Menu: <tela atual>`, com `aria-expanded`. `Esc` fecha o menu
+e devolve o foco. Setas e marcadores são desenhados só com CSS, com
+`content:""`, porque um glifo em `content` entraria no nome acessível. `browser/console.spec.js` usa o harness
+`tests.browser_console_server` (catálogo real com datasources fictícios e
+adapters duble). No modo checkout, o harness define `PYTHONPATH=src`: o `.venv`
+pode conter uma instalação antiga de `maskgw` que, de outra forma, seria
+importada no lugar do checkout.

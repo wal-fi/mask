@@ -221,5 +221,67 @@ def main():
     )
 
 
+#: Nomes compartilhados da v1 (Fase 8 §3.14) mais tres nomes de API do
+#: navegador/ARIA/TypeScript aprovados na Fase 9, Etapa 5 (D-099): `password`
+#: (tipo do campo de entrada), `status` (Response.status, role="status") e
+#: `never` (tipo JSDoc). Nenhum outro termo da v2 e subtraido.
+SHARED_V1 = {"id", "name", "value", "type", "mode", "length", "path", "fields", "error", "detail"}
+SHARED_V2 = SHARED_V1 | {"password", "status", "never"}
+
+
+def v2_outputs():
+    """Contratos de leitura e vocabulario privado da Admin API v2 (Etapa 5).
+
+    Arquivos NOVOS: os artefatos privados da v1 continuam byte a byte iguais.
+    O vocabulario v2 e verificado por limite de token no JS/CSS/HTML publicos
+    (D-099), porque varios termos sao substrings de APIs do navegador.
+    """
+    from maskgw.admin.http.v2 import schemas as v2
+    from maskgw.admin.http.v2.errors import DatasourceErrorCategory
+    from maskgw.admin.http.v2.routes import V2_READ_PATHS, V2_WRITE_ROUTES
+    from maskgw.audit.datasource import DatasourceOperationName
+    from maskgw.datasource.models import DATASOURCE_ID_PATTERN
+
+    wire_v2 = {}
+    tokens = set()
+
+    def vocabulary(node):
+        if isinstance(node, dict):
+            tokens.update(node.get("properties", {}))
+            tokens.update(v for v in node.get("enum", []) if isinstance(v, str))
+            if isinstance(node.get("const"), str):
+                tokens.add(node["const"])
+            for value in node.values():
+                vocabulary(value)
+        elif isinstance(node, list):
+            for value in node:
+                vocabulary(value)
+
+    for name, model in sorted(vars(v2).items()):
+        if not (
+            inspect.isclass(model)
+            and issubclass(model, BaseModel)
+            and model.__module__ == v2.__name__
+        ):
+            continue
+        data = model.model_json_schema()
+        for key, value in data.pop("$defs", {}).items():
+            if wire_v2.setdefault(key, value) != value:
+                raise ValueError("Conflicting v2 definition")
+        if wire_v2.setdefault(name, data) != data:
+            raise ValueError("Conflicting v2 definition")
+        tokens.add(name)
+    vocabulary(wire_v2)
+    tokens.update(V2_READ_PATHS)
+    tokens.update(path for path, _ in V2_WRITE_ROUTES)
+    tokens.update(item.value for item in DatasourceErrorCategory)
+    tokens.update(item.value for item in DatasourceOperationName)
+    tokens.update(("dso_", DATASOURCE_ID_PATTERN))
+    tokens.difference_update(SHARED_V2)
+    write("wire-schemas-v2.json", wire_v2)
+    write("vocabulary-tokens.json", sorted(tokens))
+
+
 if __name__ == "__main__":
     main()
+    v2_outputs()

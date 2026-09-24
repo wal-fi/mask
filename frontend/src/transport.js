@@ -8,9 +8,13 @@ function object(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-/** @param {string} path @param {boolean} first */
-function destination(path, first) {
-  if (first ? path !== "/admin/ui/presentation.json" : !path.startsWith("/admin/v1/")) throw new Error("Request refused.");
+/** The second administrative prefix only admits reads (Phase 9, Stage 5).
+ * @param {string} path @param {boolean} first @param {string} method
+ */
+function destination(path, first, method="GET") {
+  const second=path.startsWith("/admin/v2/");
+  if (first ? path !== "/admin/ui/presentation.json" : !(path.startsWith("/admin/v1/") || second)) throw new Error("Request refused.");
+  if (second && method !== "GET") throw new Error("Request refused.");
   if (/[?#%\\{}]|\/\//.test(path) || path.split("/").some(v => v === "." || v === "..")) throw new Error("Request refused.");
   const url = new URL(path, window.location.origin);
   if (url.origin !== window.location.origin || url.pathname !== path) throw new Error("Request refused.");
@@ -28,7 +32,7 @@ export async function open(token, signal=undefined, expired=()=>{}) {
   let ended = false;
   let writing = false;
   /** @type {Set<() => void>} */ const listeners=new Set();
-  /** @type {Map<string, {path:string, method:"GET" | "POST", operation:string, output:string}>} */ const calls = new Map();
+  /** @type {Map<string, {path:string, method:"GET" | "POST", operation:string, output:string, identity:string | null}>} */ const calls = new Map();
   /** @type {ReturnType<typeof reader> | undefined} */ let lens;
   /** @type {ReturnType<typeof commands> | undefined} */ let actions;
   /** @type {ReturnType<typeof author> | undefined} */ let forms;
@@ -39,7 +43,7 @@ export async function open(token, signal=undefined, expired=()=>{}) {
   async function send(path, method, body, first, extra=undefined,errors=false) {
     if(ended) throw new AccessError("authentication");
     if(extra?.aborted) throw new AccessError("unknown");
-    const url = destination(path, first);
+    const url = destination(path, first, method);
     if (body !== undefined && (body.includes(JSON.stringify(token).slice(1,-1)) || new TextEncoder().encode(body).length > 1048576)) throw new Error("Request refused.");
     const headers = new Headers();
     headers.set("Authorization", "Bearer " + token);
@@ -68,11 +72,16 @@ export async function open(token, signal=undefined, expired=()=>{}) {
     for (const item of entries) {
       if (object(item) && typeof item.id === "string" && typeof item.path === "string" && typeof item.output === "string" && item.identity === null
         && ((item.method === "GET" && item.operation === "read") || (item.method === "POST" && item.operation === "check"))) {
-        calls.set(item.id, {path:item.path, method:item.method, operation:item.operation, output:item.output});
+        calls.set(item.id, {path:item.path, method:item.method, operation:item.operation, output:item.output, identity:null});
+      }
+      // Item reads exist only under the read-only second prefix.
+      if (object(item) && typeof item.id === "string" && typeof item.path === "string" && typeof item.output === "string"
+        && typeof item.identity === "string" && item.method === "GET" && item.operation === "read" && item.path.startsWith("/admin/v2/")) {
+        calls.set(item.id, {path:item.path, method:"GET", operation:"read", output:item.output, identity:item.identity});
       }
     }
-    /** @param {string} id @param {"GET" | "POST"} method @param {unknown} body @param {AbortSignal | undefined} extra */
-    async function run(id, method, body, extra=undefined) {
+    /** @param {string} id @param {"GET" | "POST"} method @param {unknown} body @param {AbortSignal | undefined} extra @param {string | undefined} identity */
+    async function run(id, method, body, extra=undefined, identity=undefined) {
       try {
         const call = calls.get(id);
         if (!call || call.method !== method) throw new Error("Request refused.");
@@ -80,7 +89,21 @@ export async function open(token, signal=undefined, expired=()=>{}) {
           if(!actions || !lens) throw new AccessError("authentication");
           lens.inspectData(actions.lookup(id).input,capture(body));
         }
-        const response = await send(call.path, method, method === "GET" ? undefined : JSON.stringify(body), false, extra);
+        let path=call.path;
+        if (call.identity === null) { if (identity !== undefined) throw new Error("Request refused."); }
+        else {
+          if(!lens || typeof identity !== "string" || !/^[A-Za-z0-9_-]{1,128}$/.test(identity)) throw new Error("Request refused.");
+          lens.inspectData(lens.identityModel(),identity);
+          const marker="{"+call.identity+"}", parts=path.split("/");
+          if(parts.filter(p=>p === marker).length !== 1) throw new Error("Request refused.");
+          path=parts.map(p=>p === marker ? identity : p).join("/");
+        }
+        const second=path.startsWith("/admin/v2/");
+        const response = await send(path, method, method === "GET" ? undefined : JSON.stringify(body), false, extra, second);
+        // Only HTTP status is interpreted here; closed categories stay private.
+        if(second && response.status === 404) throw new AccessError("absent");
+        if(second && response.status === 503) throw new AccessError("unavailable");
+        if(!response.ok) throw new AccessError("unknown");
         /** @type {unknown} */ const value = await response.json();
         if(ended || extra?.aborted || !lens) throw new AccessError("authentication");
         if(JSON.stringify(value).includes(JSON.stringify(token).slice(1,-1))) throw new AccessError("incompatible");
@@ -135,7 +158,7 @@ export async function open(token, signal=undefined, expired=()=>{}) {
           return {kind:"unknown",version:undefined,message:"Resultado desconhecido. Releia o estado antes de decidir."};
         } finally {writing=false;}
       },
-      /** @param {string} id @param {AbortSignal | undefined} extra */ read: (id, extra=undefined) => run(id, "GET", undefined,extra),
+      /** @param {string} id @param {AbortSignal | undefined} extra @param {string | undefined} identity */ read: (id, extra=undefined, identity=undefined) => run(id, "GET", undefined,extra,identity),
       /** @param {string} id @param {unknown} body */ check: (id, body) => run(id, "POST", body),
     });
   } catch (error) { close(); if(error instanceof AccessError) throw error; throw new AccessError("unknown"); }
@@ -143,6 +166,6 @@ export async function open(token, signal=undefined, expired=()=>{}) {
 
 
 export class AccessError extends Error {
-  /** @param {"authentication" | "incompatible" | "unknown"} kind */
-  constructor(kind) { super("Request failed."); this.kind=kind; }
+  /** @param {"authentication" | "incompatible" | "unknown" | "absent" | "unavailable"} kind */
+  constructor(kind) { super("Request unsuccessful."); this.kind=kind; }
 }

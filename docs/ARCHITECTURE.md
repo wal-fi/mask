@@ -728,3 +728,12 @@ Cada escrita é uma chamada ao `DatasourceRuntimeService`, que ganhou revision
 por datasource, mutação e confirmação dentro da seção crítica e um probe de
 revisions para a auditoria. `admin/` continua sem importar `logging`, `mcp/` e
 `gateway/`; o MCP não muda.
+
+### Fase 9, Etapa 5 — Admin UX v2 somente leitura
+
+A apresentação privada passou ao formato 2 (D-097): mesmas seções da v1 e a
+seção `console`, interpretada por `screen.js` num shell com barra lateral única
+(Painel, Datasources, Novo datasource e o grupo Política v1). A UI consome só as
+quatro leituras `GET` da v2; o protótipo não tem campos nem chamadas. Sem
+catálogo, a sessão cai na Visão geral da v1. Nenhum framework foi adotado e a
+divisão público/privado de D-062 continua.

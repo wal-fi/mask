@@ -1,4 +1,12 @@
-"""Protocolo declarativo fechado, sem HTTP, runtime ou efeitos de startup."""
+"""Protocolo declarativo fechado, sem HTTP, runtime ou efeitos de startup.
+
+Formato 2 (Fase 9, Etapa 5, D-097): acrescenta a secao `console`, que descreve
+as telas somente leitura da Admin API v2 — resumo, colecao com busca, detalhe
+com abas e um prototipo estatico de passos — sem codigo, HTML, URL livre ou
+template. As secoes da v1 (views, editores, ligacoes e mensagens) seguem a
+gramatica do formato 1. Toda chamada sob `/admin/v2/` e obrigatoriamente
+`GET` de leitura: a superficie v2 da UI e somente leitura por construcao.
+"""
 
 from __future__ import annotations
 
@@ -10,7 +18,7 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 MAX_DEPTH = 16
-MAX_MODELS = 128
+MAX_MODELS = 192
 MAX_CONTROLS = 512
 MAX_PRESENTATION_BYTES = 262144
 SAFE_INTEGER = 9007199254740991
@@ -164,14 +172,103 @@ class Message(Closed):
     ]
 
 
+class Wording(Closed):
+    """Texto fixo exibido no lugar de um valor enumerado conhecido."""
+
+    value: str = Field(min_length=1, max_length=60)
+    text: str = Field(min_length=1, max_length=120)
+
+
+class Figure(Closed):
+    """Um valor exibido: contagem, sim/nao ou texto. Caminho, nunca expressao."""
+
+    id: str
+    label: str = Field(min_length=1, max_length=120)
+    path: list[Segment]
+    kind: Literal["count", "flag", "text", "list", "tree"]
+    wording: list[Wording] = Field(default_factory=list, max_length=8)
+
+
+class Summary(Closed):
+    id: str
+    label: str = Field(min_length=1, max_length=60)
+    call: str
+    figures: list[Figure] = Field(min_length=1, max_length=16)
+    notes: list[Annotated[str, Field(min_length=1, max_length=400)]] = Field(max_length=4)
+    absent: str = Field(min_length=1, max_length=400)
+
+
+class Collection(Closed):
+    id: str
+    label: str = Field(min_length=1, max_length=60)
+    call: str
+    items: list[Segment]
+    key: list[Segment]
+    title: list[Segment]
+    columns: list[Figure] = Field(min_length=1, max_length=12)
+    search: str = Field(min_length=1, max_length=120)
+    searchable: list[list[Segment]] = Field(min_length=1, max_length=4)
+    empty: str = Field(min_length=1, max_length=400)
+    nothing: str = Field(min_length=1, max_length=400)
+    open: str = Field(min_length=1, max_length=60)
+
+
+class Tab(Closed):
+    id: str
+    label: str = Field(min_length=1, max_length=60)
+    source: Literal["main", "extra"]
+    entries: list[Figure] = Field(min_length=1, max_length=16)
+
+
+class Detail(Closed):
+    id: str
+    call: str
+    extra: str
+    back: str = Field(min_length=1, max_length=60)
+    tabs: list[Tab] = Field(min_length=1, max_length=6)
+    gone: str = Field(min_length=1, max_length=400)
+
+
+class Step(Closed):
+    id: str
+    label: str = Field(min_length=1, max_length=60)
+    text: str = Field(min_length=1, max_length=600)
+
+
+class Guide(Closed):
+    """Prototipo de navegacao: sem campo, envio, teste ou gravacao."""
+
+    id: str
+    label: str = Field(min_length=1, max_length=60)
+    banner: str = Field(min_length=1, max_length=400)
+    steps: list[Step] = Field(min_length=2, max_length=10)
+
+
+class Console(Closed):
+    brand: str = Field(min_length=1, max_length=60)
+    tagline: str = Field(min_length=1, max_length=120)
+    main: str = Field(min_length=1, max_length=60)
+    legacy: str = Field(min_length=1, max_length=60)
+    yes: str = Field(min_length=1, max_length=20)
+    no: str = Field(min_length=1, max_length=20)
+    blank: str = Field(min_length=1, max_length=60)
+    failure: str = Field(min_length=1, max_length=400)
+    unavailable: str = Field(min_length=1, max_length=400)
+    summary: Summary
+    collection: Collection
+    detail: Detail
+    guide: Guide
+
+
 class Presentation(Closed):
-    format: Literal[1]
+    format: Literal[2]
     models: list[Definition] = Field(min_length=1, max_length=MAX_MODELS)
-    calls: list[Call] = Field(min_length=19, max_length=19)
+    calls: list[Call] = Field(min_length=23, max_length=23)
     views: list[View] = Field(min_length=6, max_length=6)
     editors: list[Editor] = Field(min_length=8, max_length=8)
     bindings: list[Binding]
     messages: list[Message]
+    console: Console
 
 
 def _pairs(pairs: list[tuple[str, object]]) -> dict[str, object]:
@@ -310,8 +407,15 @@ def _path(model: str, path: list[Segment], models: dict[str, Definition]) -> Sha
     return models[model].shape
 
 
+V1_PREFIX = "/admin/v1/"
+V2_PREFIX = "/admin/v2/"
+
+
 def _destination(call: Call) -> None:
-    _need(call.path.startswith("/admin/v1/"))
+    _need(call.path.startswith((V1_PREFIX, V2_PREFIX)))
+    if call.path.startswith(V2_PREFIX):
+        # A superficie v2 da UI e somente leitura por construcao (Etapa 5).
+        _need(call.method == "GET" and call.operation == "read")
     _need(not any(char in call.path for char in ("?", "#", "%", "\\", "//")))
     segments = call.path.split("/")[3:]
     _need(all(part and part not in {".", ".."} for part in segments))
@@ -361,6 +465,7 @@ def validate_presentation(data: bytes) -> Presentation:
     )
     for collection in collections:
         identities.extend(item.id for item in collection)
+    identities.extend(_console_ids(result.console))
     controls = [c for view in result.views for c in view.controls]
     controls.extend(c for editor in result.editors for c in editor.controls)
     identities.extend(control.id for control in controls)
@@ -394,4 +499,50 @@ def validate_presentation(data: bytes) -> Presentation:
         _need(editor.model in models)
     for binding in result.bindings:
         _path(binding.model, binding.path, models)
+    _console(result.console, calls, models)
     return result
+
+
+def _console_ids(console: Console) -> list[str]:
+    ids = [console.summary.id, console.collection.id, console.detail.id, console.guide.id]
+    ids.extend(item.id for item in console.summary.figures)
+    ids.extend(item.id for item in console.collection.columns)
+    for tab in console.detail.tabs:
+        ids.append(tab.id)
+        ids.extend(item.id for item in tab.entries)
+    ids.extend(item.id for item in console.guide.steps)
+    return ids
+
+
+def _read(key: str, calls: dict[str, Call], *, identity: bool) -> Call:
+    """Chamada v2 de leitura, com ou sem identidade conforme o uso."""
+    _need(key in calls)
+    call = calls[key]
+    _need(call.path.startswith(V2_PREFIX) and call.method == "GET" and call.operation == "read")
+    _need((call.identity is not None) == identity)
+    return call
+
+
+def _console(console: Console, calls: dict[str, Call], models: dict[str, Definition]) -> None:
+    summary = _read(console.summary.call, calls, identity=False)
+    for figure in console.summary.figures:
+        _path(summary.output, figure.path, models)
+    listing = _read(console.collection.call, calls, identity=False)
+    rows = _path(listing.output, console.collection.items, models)
+    _need(isinstance(rows, Sequence) and rows.type == "list")
+    if isinstance(rows, Sequence):
+        row = rows.item
+        key = _path(row, console.collection.key, models)
+        _need(isinstance(key, Text))
+        _path(row, console.collection.title, models)
+        for column in console.collection.columns:
+            _path(row, column.path, models)
+        for path in console.collection.searchable:
+            _need(isinstance(_path(row, path, models), Text))
+    main = _read(console.detail.call, calls, identity=True)
+    extra = _read(console.detail.extra, calls, identity=True)
+    _need(main.identity == extra.identity)
+    for tab in console.detail.tabs:
+        owner = main.output if tab.source == "main" else extra.output
+        for entry in tab.entries:
+            _path(owner, entry.path, models)

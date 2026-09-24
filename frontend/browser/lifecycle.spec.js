@@ -15,6 +15,8 @@ test("component lifecycle on history return and native Chromium BFCache",async({
     // production no-store policy. All executable bytes are the built component.
     const server=createServer((request,response)=>{
       const path=request.url;
+      // Same answer as the real server without a catalog (Phase 9, Stage 5).
+      if(path?.startsWith("/admin/v2/")) {response.writeHead(404,{"Content-Type":"application/json"});response.end(JSON.stringify({error:"NOT_FOUND",detail:"x"}));return;}
       if(path === "/away") {response.setHeader("Content-Type","text/html");response.end("<!doctype html><title>Away</title><p>Away</p>");return;}
       const file=path === "/admin/ui" ? "index.html" : path === "/admin/ui/assets/ui.js" ? "ui.js" : path === "/admin/ui/assets/ui.css" ? "ui.css" : path === "/admin/ui/presentation.json" ? "presentation.json" : undefined;
       if(path === "/admin/ui/presentation.json" || path === "/admin/v1/status") {

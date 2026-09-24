@@ -394,7 +394,7 @@ o MCP permanece `stdio`.
 ## Estado atual
 
 Fase 8 concluída e publicada. Fase 9 — Etapa 1 documental concluída e aprovada;
-Etapa 2 concluída; Etapas 3 e 4 implementadas localmente. A medição final da Fase 8 está em
+Etapa 2 concluída; Etapas 3 e 4 publicadas; Etapa 5 (UX v2 somente leitura) implementada localmente. A medição final da Fase 8 está em
 `docs/PHASE-8-STAGE-9-VALIDATION.md`; os números abaixo
 registram o fechamento anterior da Fase 7.
 

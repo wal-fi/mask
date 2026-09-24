@@ -174,6 +174,135 @@
       "title": "Choice",
       "type": "object"
     },
+    "Collection": {
+      "additionalProperties": false,
+      "properties": {
+        "call": {
+          "title": "Call",
+          "type": "string"
+        },
+        "columns": {
+          "items": {
+            "$ref": "#/$defs/Figure"
+          },
+          "maxItems": 12,
+          "minItems": 1,
+          "title": "Columns",
+          "type": "array"
+        },
+        "empty": {
+          "maxLength": 400,
+          "minLength": 1,
+          "title": "Empty",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "items": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ]
+          },
+          "title": "Items",
+          "type": "array"
+        },
+        "key": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ]
+          },
+          "title": "Key",
+          "type": "array"
+        },
+        "label": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "nothing": {
+          "maxLength": 400,
+          "minLength": 1,
+          "title": "Nothing",
+          "type": "string"
+        },
+        "open": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Open",
+          "type": "string"
+        },
+        "search": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Search",
+          "type": "string"
+        },
+        "searchable": {
+          "items": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array"
+          },
+          "maxItems": 4,
+          "minItems": 1,
+          "title": "Searchable",
+          "type": "array"
+        },
+        "title": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ]
+          },
+          "title": "Title",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "call",
+        "items",
+        "key",
+        "title",
+        "columns",
+        "search",
+        "searchable",
+        "empty",
+        "nothing",
+        "open"
+      ],
+      "title": "Collection",
+      "type": "object"
+    },
     "Condition": {
       "additionalProperties": false,
       "properties": {
@@ -225,6 +354,94 @@
         "path"
       ],
       "title": "Condition",
+      "type": "object"
+    },
+    "Console": {
+      "additionalProperties": false,
+      "properties": {
+        "blank": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Blank",
+          "type": "string"
+        },
+        "brand": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Brand",
+          "type": "string"
+        },
+        "collection": {
+          "$ref": "#/$defs/Collection"
+        },
+        "detail": {
+          "$ref": "#/$defs/Detail"
+        },
+        "failure": {
+          "maxLength": 400,
+          "minLength": 1,
+          "title": "Failure",
+          "type": "string"
+        },
+        "guide": {
+          "$ref": "#/$defs/Guide"
+        },
+        "legacy": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Legacy",
+          "type": "string"
+        },
+        "main": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Main",
+          "type": "string"
+        },
+        "no": {
+          "maxLength": 20,
+          "minLength": 1,
+          "title": "No",
+          "type": "string"
+        },
+        "summary": {
+          "$ref": "#/$defs/Summary"
+        },
+        "tagline": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Tagline",
+          "type": "string"
+        },
+        "unavailable": {
+          "maxLength": 400,
+          "minLength": 1,
+          "title": "Unavailable",
+          "type": "string"
+        },
+        "yes": {
+          "maxLength": 20,
+          "minLength": 1,
+          "title": "Yes",
+          "type": "string"
+        }
+      },
+      "required": [
+        "brand",
+        "tagline",
+        "main",
+        "legacy",
+        "yes",
+        "no",
+        "blank",
+        "failure",
+        "unavailable",
+        "summary",
+        "collection",
+        "detail",
+        "guide"
+      ],
+      "title": "Console",
       "type": "object"
     },
     "Control": {
@@ -372,6 +589,54 @@
       "title": "Definition",
       "type": "object"
     },
+    "Detail": {
+      "additionalProperties": false,
+      "properties": {
+        "back": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Back",
+          "type": "string"
+        },
+        "call": {
+          "title": "Call",
+          "type": "string"
+        },
+        "extra": {
+          "title": "Extra",
+          "type": "string"
+        },
+        "gone": {
+          "maxLength": 400,
+          "minLength": 1,
+          "title": "Gone",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "tabs": {
+          "items": {
+            "$ref": "#/$defs/Tab"
+          },
+          "maxItems": 6,
+          "minItems": 1,
+          "title": "Tabs",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "call",
+        "extra",
+        "back",
+        "tabs",
+        "gone"
+      ],
+      "title": "Detail",
+      "type": "object"
+    },
     "Editor": {
       "additionalProperties": false,
       "properties": {
@@ -449,6 +714,102 @@
         "required"
       ],
       "title": "FieldLink",
+      "type": "object"
+    },
+    "Figure": {
+      "additionalProperties": false,
+      "description": "Um valor exibido: contagem, sim/nao ou texto. Caminho, nunca expressao.",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "count",
+            "flag",
+            "text",
+            "list",
+            "tree"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "path": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ]
+          },
+          "title": "Path",
+          "type": "array"
+        },
+        "wording": {
+          "items": {
+            "$ref": "#/$defs/Wording"
+          },
+          "maxItems": 8,
+          "title": "Wording",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "path",
+        "kind"
+      ],
+      "title": "Figure",
+      "type": "object"
+    },
+    "Guide": {
+      "additionalProperties": false,
+      "description": "Prototipo de navegacao: sem campo, envio, teste ou gravacao.",
+      "properties": {
+        "banner": {
+          "maxLength": 400,
+          "minLength": 1,
+          "title": "Banner",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "steps": {
+          "items": {
+            "$ref": "#/$defs/Step"
+          },
+          "maxItems": 10,
+          "minItems": 2,
+          "title": "Steps",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "banner",
+        "steps"
+      ],
+      "title": "Guide",
       "type": "object"
     },
     "Integer": {
@@ -634,6 +995,128 @@
       "title": "Sequence",
       "type": "object"
     },
+    "Step": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "text": {
+          "maxLength": 600,
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "text"
+      ],
+      "title": "Step",
+      "type": "object"
+    },
+    "Summary": {
+      "additionalProperties": false,
+      "properties": {
+        "absent": {
+          "maxLength": 400,
+          "minLength": 1,
+          "title": "Absent",
+          "type": "string"
+        },
+        "call": {
+          "title": "Call",
+          "type": "string"
+        },
+        "figures": {
+          "items": {
+            "$ref": "#/$defs/Figure"
+          },
+          "maxItems": 16,
+          "minItems": 1,
+          "title": "Figures",
+          "type": "array"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "notes": {
+          "items": {
+            "maxLength": 400,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 4,
+          "title": "Notes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "call",
+        "figures",
+        "notes",
+        "absent"
+      ],
+      "title": "Summary",
+      "type": "object"
+    },
+    "Tab": {
+      "additionalProperties": false,
+      "properties": {
+        "entries": {
+          "items": {
+            "$ref": "#/$defs/Figure"
+          },
+          "maxItems": 16,
+          "minItems": 1,
+          "title": "Entries",
+          "type": "array"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "source": {
+          "enum": [
+            "main",
+            "extra"
+          ],
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "source",
+        "entries"
+      ],
+      "title": "Tab",
+      "type": "object"
+    },
     "Text": {
       "additionalProperties": false,
       "properties": {
@@ -770,6 +1253,30 @@
       ],
       "title": "View",
       "type": "object"
+    },
+    "Wording": {
+      "additionalProperties": false,
+      "description": "Texto fixo exibido no lugar de um valor enumerado conhecido.",
+      "properties": {
+        "text": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        },
+        "value": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "value",
+        "text"
+      ],
+      "title": "Wording",
+      "type": "object"
     }
   },
   "additionalProperties": false,
@@ -785,10 +1292,13 @@
       "items": {
         "$ref": "#/$defs/Call"
       },
-      "maxItems": 19,
-      "minItems": 19,
+      "maxItems": 23,
+      "minItems": 23,
       "title": "Calls",
       "type": "array"
+    },
+    "console": {
+      "$ref": "#/$defs/Console"
     },
     "editors": {
       "items": {
@@ -800,7 +1310,7 @@
       "type": "array"
     },
     "format": {
-      "const": 1,
+      "const": 2,
       "title": "Format",
       "type": "integer"
     },
@@ -815,7 +1325,7 @@
       "items": {
         "$ref": "#/$defs/Definition"
       },
-      "maxItems": 128,
+      "maxItems": 192,
       "minItems": 1,
       "title": "Models",
       "type": "array"
@@ -837,7 +1347,8 @@
     "views",
     "editors",
     "bindings",
-    "messages"
+    "messages",
+    "console"
   ],
   "title": "Presentation",
   "type": "object"

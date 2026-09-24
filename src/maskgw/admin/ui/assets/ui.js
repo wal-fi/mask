@@ -64,7 +64,15 @@ function inspect(value, descriptor) {
   if (!accepts(value,descriptor,descriptor.$defs,0) || !record(value)) return false;
   if (!records(value.models) || !records(value.calls) || !records(value.views)
     || !records(value.editors) || !records(value.bindings) || !records(value.messages)) return false;
-  const all = [...value.models,...value.calls,...value.views,...value.editors,...value.bindings,...value.messages];
+  if (!record(value.console)) return false;
+  const surface = value.console;
+  if (!record(surface.summary) || !record(surface.collection) || !record(surface.detail) || !record(surface.guide)) return false;
+  const summary = surface.summary, collection = surface.collection, detail = surface.detail, guide = surface.guide;
+  if (!records(summary.figures) || !records(collection.columns) || !records(detail.tabs) || !records(guide.steps)) return false;
+  /** @type {Record<string,unknown>[]} */ const tabItems=[];
+  for (const tab of detail.tabs) { if (!records(tab.entries)) return false; tabItems.push(...tab.entries); }
+  const all = [...value.models,...value.calls,...value.views,...value.editors,...value.bindings,...value.messages,
+    summary,collection,detail,guide,...summary.figures,...collection.columns,...detail.tabs,...tabItems,...guide.steps];
   /** @type {Record<string,unknown>[]} */ const controls=[];
   for (const owner of [...value.views,...value.editors]) {
     if (!records(owner.controls)) return false;
@@ -162,7 +170,9 @@ function inspect(value, descriptor) {
   for(const control of controls) if(!fits(control.default,leaf(control.model,control.path))) return false;
   const calls=new Map(value.calls.map(c=>[c.id,c]));
   for (const call of value.calls) {
-    if (typeof call.path !== "string" || !call.path.startsWith("/admin/v1/") || /[?#%\\]|\/\//.test(call.path)) return false;
+    if (typeof call.path !== "string" || !(call.path.startsWith("/admin/v1/") || call.path.startsWith("/admin/v2/")) || /[?#%\\]|\/\//.test(call.path)) return false;
+    // The second prefix only carries authenticated reads (Phase 9, Stage 5).
+    if (call.path.startsWith("/admin/v2/") && (call.method !== "GET" || call.operation !== "read")) return false;
     const parts=call.path.split("/").slice(3);
     if (parts.some(p=>!p || p === "." || p === "..")) return false;
     const slots=parts.filter(p=>p.includes("{") || p.includes("}"));
@@ -188,6 +198,26 @@ function inspect(value, descriptor) {
   for (const item of [...controls,...value.bindings]) {
     if (!linked(item.model,item.path)) return false;
     if (item.condition !== null && item.condition !== undefined && (!record(item.condition) || !linked(item.model,item.condition.path))) return false;
+  }
+  /** @param {unknown} id @param {boolean} identity @returns {Record<string,unknown> | undefined} */
+  function surfaceCall(id,identity) {
+    const call=typeof id === "string" ? calls.get(id) : undefined;
+    if (!call || typeof call.path !== "string" || !call.path.startsWith("/admin/v2/") || call.method !== "GET" || call.operation !== "read") return undefined;
+    return (typeof call.identity === "string") === identity ? call : undefined;
+  }
+  const head=surfaceCall(summary.call,false), listing=surfaceCall(collection.call,false);
+  const main=surfaceCall(detail.call,true), aside=surfaceCall(detail.extra,true);
+  if (!head || !listing || !main || !aside || main.identity !== aside.identity) return false;
+  if (!summary.figures.every(f=>linked(head.output,f.path))) return false;
+  const rows=leaf(listing.output,collection.items);
+  if (rows?.type !== "list" || typeof rows.item !== "string") return false;
+  const row=rows.item;
+  if (leaf(row,collection.key)?.type !== "string" || !linked(row,collection.title)) return false;
+  if (!collection.columns.every(c=>linked(row,c.path))) return false;
+  if (!sequence(collection.searchable) || !collection.searchable.every(p=>leaf(row,p)?.type === "string")) return false;
+  for (const tab of detail.tabs) {
+    const owner=tab.source === "main" ? main.output : aside.output;
+    if (!records(tab.entries) || !tab.entries.every(e=>linked(owner,e.path))) return false;
   }
   return true;
 }
@@ -370,6 +400,135 @@ const layout={
       "title": "Choice",
       "type": "object"
     },
+    "Collection": {
+      "additionalProperties": false,
+      "properties": {
+        "call": {
+          "title": "Call",
+          "type": "string"
+        },
+        "columns": {
+          "items": {
+            "$ref": "#/$defs/Figure"
+          },
+          "maxItems": 12,
+          "minItems": 1,
+          "title": "Columns",
+          "type": "array"
+        },
+        "empty": {
+          "maxLength": 400,
+          "minLength": 1,
+          "title": "Empty",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "items": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ]
+          },
+          "title": "Items",
+          "type": "array"
+        },
+        "key": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ]
+          },
+          "title": "Key",
+          "type": "array"
+        },
+        "label": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "nothing": {
+          "maxLength": 400,
+          "minLength": 1,
+          "title": "Nothing",
+          "type": "string"
+        },
+        "open": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Open",
+          "type": "string"
+        },
+        "search": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Search",
+          "type": "string"
+        },
+        "searchable": {
+          "items": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array"
+          },
+          "maxItems": 4,
+          "minItems": 1,
+          "title": "Searchable",
+          "type": "array"
+        },
+        "title": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ]
+          },
+          "title": "Title",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "call",
+        "items",
+        "key",
+        "title",
+        "columns",
+        "search",
+        "searchable",
+        "empty",
+        "nothing",
+        "open"
+      ],
+      "title": "Collection",
+      "type": "object"
+    },
     "Condition": {
       "additionalProperties": false,
       "properties": {
@@ -421,6 +580,94 @@ const layout={
         "path"
       ],
       "title": "Condition",
+      "type": "object"
+    },
+    "Console": {
+      "additionalProperties": false,
+      "properties": {
+        "blank": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Blank",
+          "type": "string"
+        },
+        "brand": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Brand",
+          "type": "string"
+        },
+        "collection": {
+          "$ref": "#/$defs/Collection"
+        },
+        "detail": {
+          "$ref": "#/$defs/Detail"
+        },
+        "failure": {
+          "maxLength": 400,
+          "minLength": 1,
+          "title": "Failure",
+          "type": "string"
+        },
+        "guide": {
+          "$ref": "#/$defs/Guide"
+        },
+        "legacy": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Legacy",
+          "type": "string"
+        },
+        "main": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Main",
+          "type": "string"
+        },
+        "no": {
+          "maxLength": 20,
+          "minLength": 1,
+          "title": "No",
+          "type": "string"
+        },
+        "summary": {
+          "$ref": "#/$defs/Summary"
+        },
+        "tagline": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Tagline",
+          "type": "string"
+        },
+        "unavailable": {
+          "maxLength": 400,
+          "minLength": 1,
+          "title": "Unavailable",
+          "type": "string"
+        },
+        "yes": {
+          "maxLength": 20,
+          "minLength": 1,
+          "title": "Yes",
+          "type": "string"
+        }
+      },
+      "required": [
+        "brand",
+        "tagline",
+        "main",
+        "legacy",
+        "yes",
+        "no",
+        "blank",
+        "failure",
+        "unavailable",
+        "summary",
+        "collection",
+        "detail",
+        "guide"
+      ],
+      "title": "Console",
       "type": "object"
     },
     "Control": {
@@ -568,6 +815,54 @@ const layout={
       "title": "Definition",
       "type": "object"
     },
+    "Detail": {
+      "additionalProperties": false,
+      "properties": {
+        "back": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Back",
+          "type": "string"
+        },
+        "call": {
+          "title": "Call",
+          "type": "string"
+        },
+        "extra": {
+          "title": "Extra",
+          "type": "string"
+        },
+        "gone": {
+          "maxLength": 400,
+          "minLength": 1,
+          "title": "Gone",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "tabs": {
+          "items": {
+            "$ref": "#/$defs/Tab"
+          },
+          "maxItems": 6,
+          "minItems": 1,
+          "title": "Tabs",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "call",
+        "extra",
+        "back",
+        "tabs",
+        "gone"
+      ],
+      "title": "Detail",
+      "type": "object"
+    },
     "Editor": {
       "additionalProperties": false,
       "properties": {
@@ -645,6 +940,102 @@ const layout={
         "required"
       ],
       "title": "FieldLink",
+      "type": "object"
+    },
+    "Figure": {
+      "additionalProperties": false,
+      "description": "Um valor exibido: contagem, sim/nao ou texto. Caminho, nunca expressao.",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "count",
+            "flag",
+            "text",
+            "list",
+            "tree"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "path": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ]
+          },
+          "title": "Path",
+          "type": "array"
+        },
+        "wording": {
+          "items": {
+            "$ref": "#/$defs/Wording"
+          },
+          "maxItems": 8,
+          "title": "Wording",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "path",
+        "kind"
+      ],
+      "title": "Figure",
+      "type": "object"
+    },
+    "Guide": {
+      "additionalProperties": false,
+      "description": "Prototipo de navegacao: sem campo, envio, teste ou gravacao.",
+      "properties": {
+        "banner": {
+          "maxLength": 400,
+          "minLength": 1,
+          "title": "Banner",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "steps": {
+          "items": {
+            "$ref": "#/$defs/Step"
+          },
+          "maxItems": 10,
+          "minItems": 2,
+          "title": "Steps",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "banner",
+        "steps"
+      ],
+      "title": "Guide",
       "type": "object"
     },
     "Integer": {
@@ -830,6 +1221,128 @@ const layout={
       "title": "Sequence",
       "type": "object"
     },
+    "Step": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "text": {
+          "maxLength": 600,
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "text"
+      ],
+      "title": "Step",
+      "type": "object"
+    },
+    "Summary": {
+      "additionalProperties": false,
+      "properties": {
+        "absent": {
+          "maxLength": 400,
+          "minLength": 1,
+          "title": "Absent",
+          "type": "string"
+        },
+        "call": {
+          "title": "Call",
+          "type": "string"
+        },
+        "figures": {
+          "items": {
+            "$ref": "#/$defs/Figure"
+          },
+          "maxItems": 16,
+          "minItems": 1,
+          "title": "Figures",
+          "type": "array"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "notes": {
+          "items": {
+            "maxLength": 400,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 4,
+          "title": "Notes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "call",
+        "figures",
+        "notes",
+        "absent"
+      ],
+      "title": "Summary",
+      "type": "object"
+    },
+    "Tab": {
+      "additionalProperties": false,
+      "properties": {
+        "entries": {
+          "items": {
+            "$ref": "#/$defs/Figure"
+          },
+          "maxItems": 16,
+          "minItems": 1,
+          "title": "Entries",
+          "type": "array"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "source": {
+          "enum": [
+            "main",
+            "extra"
+          ],
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "source",
+        "entries"
+      ],
+      "title": "Tab",
+      "type": "object"
+    },
     "Text": {
       "additionalProperties": false,
       "properties": {
@@ -966,6 +1479,30 @@ const layout={
       ],
       "title": "View",
       "type": "object"
+    },
+    "Wording": {
+      "additionalProperties": false,
+      "description": "Texto fixo exibido no lugar de um valor enumerado conhecido.",
+      "properties": {
+        "text": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        },
+        "value": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "value",
+        "text"
+      ],
+      "title": "Wording",
+      "type": "object"
     }
   },
   "additionalProperties": false,
@@ -981,10 +1518,13 @@ const layout={
       "items": {
         "$ref": "#/$defs/Call"
       },
-      "maxItems": 19,
-      "minItems": 19,
+      "maxItems": 23,
+      "minItems": 23,
       "title": "Calls",
       "type": "array"
+    },
+    "console": {
+      "$ref": "#/$defs/Console"
     },
     "editors": {
       "items": {
@@ -996,7 +1536,7 @@ const layout={
       "type": "array"
     },
     "format": {
-      "const": 1,
+      "const": 2,
       "title": "Format",
       "type": "integer"
     },
@@ -1011,7 +1551,7 @@ const layout={
       "items": {
         "$ref": "#/$defs/Definition"
       },
-      "maxItems": 128,
+      "maxItems": 192,
       "minItems": 1,
       "title": "Models",
       "type": "array"
@@ -1033,12 +1573,13 @@ const layout={
     "views",
     "editors",
     "bindings",
-    "messages"
+    "messages",
+    "console"
   ],
   "title": "Presentation",
   "type": "object"
 };
-export const digest="0ee31f73edd994ac98694ecfac36197e7bac3690879e28c7e459ce11accc9a43";
+export const digest="7072241a7d87c6072819b33ba2764db3bd5183cc41f3468f25d04547899311e9";
 /** @param {unknown} value */
 export function check(value) { return inspect(value,layout); }
 /** @param {unknown} item @returns {item is Record<string, unknown>} */
@@ -1063,7 +1604,7 @@ export function at(item, parts) {
  * @param {unknown} book
  */
 export function reader(book) {
-  if (!entry(book) || !entries(book.models) || !entries(book.bindings) || !entries(book.views) || !entries(book.calls)) throw new Error("Request failed.");
+  if (!entry(book) || !entries(book.models) || !entries(book.bindings) || !entries(book.views) || !entries(book.calls)) throw new Error("Request unsuccessful.");
   const models = new Map(book.models.map(n=>[n.id,n.shape]));
   const links = book.bindings;
   /** @param {unknown} key @param {unknown} value @param {number} depth @param {Set<object>} seen @param {number[]} versions @param {boolean[]} consents @returns {boolean} */
@@ -1128,31 +1669,67 @@ export function reader(book) {
   function inspectData(key,value) {
     /** @type {number[]} */ const versions=[];
     /** @type {boolean[]} */ const consents=[];
-    if(!acceptsData(key,value,0,new Set(),versions,consents) || new Set(versions).size > 1 || new Set(consents).size > 1) throw new Error("Request failed.");
+    if(!acceptsData(key,value,0,new Set(),versions,consents) || new Set(versions).size > 1 || new Set(consents).size > 1) throw new Error("Request unsuccessful.");
     const version=versions[0];
-    if(version !== undefined && consents.some(c=>c !== (version > 0))) throw new Error("Request failed.");
+    if(version !== undefined && consents.some(c=>c !== (version > 0))) throw new Error("Request unsuccessful.");
     return version;
   }
   const calls=book.calls;
   const views=book.views.map(view=>{
     const call=calls.find(c=>c.id === view.call);
     if(typeof view.id !== "string" || typeof view.label !== "string" || !entries(view.controls)
-      || !call || typeof call.id !== "string" || call.method !== "GET" || call.identity !== null) throw new Error("Request failed.");
+      || !call || typeof call.id !== "string" || call.method !== "GET" || call.identity !== null) throw new Error("Request unsuccessful.");
     return {id:view.id,label:view.label,call:call.id,controls:view.controls};
   });
   /** @param {string} id @param {unknown} value */
   function inspectDataFor(id,value) {
     const call=calls.find(c=>c.id === id && c.method === "GET");
-    if(!call) throw new Error("Request failed.");
+    if(!call) throw new Error("Request unsuccessful.");
     const version=inspectData(call.output,value);
-    if(version === undefined) throw new Error("Request failed.");
+    if(version === undefined) throw new Error("Request unsuccessful.");
     return version;
   }
   /** @param {unknown} key @param {unknown} value @param {string} role */
   function bound(key,value,role) {
     return links.filter(l=>l.model === key && l.role === role).map(l=>at(value,l.path)).filter(v=>v !== undefined);
   }
-  return {views,inspectData,inspectDataFor,bound};
+  /** Model identifier reached by a declared path; never a wire name.
+   * @param {unknown} key @param {unknown} parts @returns {string}
+   */
+  function modelAt(key,parts) {
+    if (typeof key !== "string" || !Array.isArray(parts)) throw new Error("Request unsuccessful.");
+    let current=key;
+    for (const part of parts) {
+      let node=models.get(current);
+      while (entry(node) && node.type === "nullable" && typeof node.item === "string") { current=node.item; node=models.get(current); }
+      if (!entry(node)) throw new Error("Request unsuccessful.");
+      if (typeof part === "string" && node.type === "object" && entries(node.fields)) {
+        const field=node.fields.find(f=>f.name === part);
+        if (!field || typeof field.ref !== "string") throw new Error("Request unsuccessful.");
+        current=field.ref;
+      } else if (typeof part === "number" && node.type === "list" && typeof node.item === "string") current=node.item;
+      else throw new Error("Request unsuccessful.");
+    }
+    return current;
+  }
+  const surface=entry(book.console) ? book.console : undefined;
+  /** Declared read-only console; checked by the protocol before this point. */
+  function board() {
+    if (!surface) throw new Error("Request unsuccessful.");
+    return surface;
+  }
+  /** Model of a row key: the only accepted identity of an item read. */
+  function identityModel() {
+    const spec=board().collection;
+    if (!entry(spec)) throw new Error("Request unsuccessful.");
+    const listing=calls.find(c=>c.id === spec.call);
+    if (!listing) throw new Error("Request unsuccessful.");
+    const rows=modelAt(listing.output,spec.items);
+    const shape=models.get(rows);
+    if (!entry(shape) || shape.type !== "list" || typeof shape.item !== "string") throw new Error("Request unsuccessful.");
+    return modelAt(shape.item,spec.key);
+  }
+  return {views,inspectData,inspectDataFor,bound,board,identityModel};
 }
 
 
@@ -1334,30 +1911,31 @@ export function author(source) {
     const p=profile(id);if(value !== undefined) return content(id,value);
     return capture(Object.fromEntries(p.controls.filter(c=>c.default !== null).map(c=>[word(trail(c.path)[0]),c.default])));
   }
-  /** @param {string} id @param {unknown} value @param {unknown} registry */
-  function checkedContent(id,value,registry) {
+  /** @param {string} id @param {unknown} value @param {unknown} editorList */
+  function checkedContent(id,value,editorList) {
     const p=profile(id), clean=capture(value);lens.inspectData(p.model,clean);
     if(p.choice && p.nested) {
       const name=at(clean,[p.choice]), editor=editors.find(e=>e.name === name);
-      if(!editor || !available(registry).includes(word(name))) throw new Error("Request refused.");
+      if(!editor || !available(editorList).includes(word(name))) throw new Error("Request refused.");
       const detail=at(clean,[p.nested]);lens.inspectData(editor.model,detail);
       for(const control of rows(editor.controls)) {
         const present=at(detail,control.path) !== undefined;
         if(entry(control.condition)) {
-          const enabled=at(detail,control.condition.path) === control.condition.value;
-          if(enabled !== present) throw new Error("Request refused.");
+          const holds=at(detail,control.condition.path) === control.condition.value;
+          if(holds !== present) throw new Error("Request refused.");
         }
       }
     }
     return clean;
   }
-  // The sole unassociated, non-template read with a list of editor names is the registry.
-  const registryCall=authorRecord(calls.find(c=>c.method === "GET" && c.identity === null && !views.some(v=>v.call === c.id)));
-  /** @param {unknown} registry */
-  function available(registry) {
-    lens.inspectData(registryCall.output,registry);
-    const list=fields(registryCall.output).find(f=>shape(f.ref).type === "list");if(!list) throw new Error("Request refused.");
-    const values=at(registry,[word(list.name)]);if(!Array.isArray(values)) throw new Error("Request refused.");
+  // The sole unassociated, non-template read with a list of editor names is the editorList.
+  // Only the first prefix: the read-only second prefix never feeds authoring.
+  const editorCatalogCall=authorRecord(calls.find(c=>c.method === "GET" && c.identity === null && typeof c.path === "string" && c.path.startsWith("/admin/v1/") && !views.some(v=>v.call === c.id)));
+  /** @param {unknown} editorList */
+  function available(editorList) {
+    lens.inspectData(editorCatalogCall.output,editorList);
+    const list=fields(editorCatalogCall.output).find(f=>shape(f.ref).type === "list");if(!list) throw new Error("Request refused.");
+    const values=at(editorList,[word(list.name)]);if(!Array.isArray(values)) throw new Error("Request refused.");
     return editors.filter(e=>values.some(v=>{
       if(!entry(v) || v.name !== e.name) return false;
       const names=Object.values(v).flatMap(x=>Array.isArray(x) ? x : []);
@@ -1456,7 +2034,7 @@ export function author(source) {
     batches,batch,initial,checkedBatch,batchCandidate,profiles,profile,items,content,defaults,checkedContent,available,candidate,consented,shape,fields,editors,
     /** @param {string} id @param {unknown} value */ listed:(id,value)=>{const p=profile(id);lens.inspectData(p.output,value);return rows(at(value,[p.listing]));},
     /** @param {string} id @param {unknown} value */ changeable:(id,value)=>{const p=profile(id);lens.inspectData(p.output,value);return lens.bound(p.output,value,"consent")[0] === true;},
-    home:word(home.id),read:word(home.call),registry:word(registryCall.id),check:word(checkCall.id),
+    home:word(home.id),read:word(home.call),editorCatalog:word(editorCatalogCall.id),check:word(checkCall.id),
     consent:{call:word(consentCall.id),field:word(trail(consent.path)[0]),text:word(consent.label),label:word(rows(home.controls).find(c=>c.type === "confirm" && Array.isArray(c.path) && c.path.length === 0)?.label)},
     /** @param {unknown} value */ inspectCheck:value=>{lens.inspectData(checkCall.output,value);},
     /** @param {unknown} value */ inspectError:value=>{lens.inspectData(checkCall.error,value);return messages;},
@@ -1487,9 +2065,13 @@ function object(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-/** @param {string} path @param {boolean} first */
-function destination(path, first) {
-  if (first ? path !== "/admin/ui/presentation.json" : !path.startsWith("/admin/v1/")) throw new Error("Request refused.");
+/** The second administrative prefix only admits reads (Phase 9, Stage 5).
+ * @param {string} path @param {boolean} first @param {string} method
+ */
+function destination(path, first, method="GET") {
+  const second=path.startsWith("/admin/v2/");
+  if (first ? path !== "/admin/ui/presentation.json" : !(path.startsWith("/admin/v1/") || second)) throw new Error("Request refused.");
+  if (second && method !== "GET") throw new Error("Request refused.");
   if (/[?#%\\{}]|\/\//.test(path) || path.split("/").some(v => v === "." || v === "..")) throw new Error("Request refused.");
   const url = new URL(path, window.location.origin);
   if (url.origin !== window.location.origin || url.pathname !== path) throw new Error("Request refused.");
@@ -1507,7 +2089,7 @@ export async function open(token, signal=undefined, expired=()=>{}) {
   let ended = false;
   let writing = false;
   /** @type {Set<() => void>} */ const listeners=new Set();
-  /** @type {Map<string, {path:string, method:"GET" | "POST", operation:string, output:string}>} */ const calls = new Map();
+  /** @type {Map<string, {path:string, method:"GET" | "POST", operation:string, output:string, identity:string | null}>} */ const calls = new Map();
   /** @type {ReturnType<typeof reader> | undefined} */ let lens;
   /** @type {ReturnType<typeof commands> | undefined} */ let actions;
   /** @type {ReturnType<typeof author> | undefined} */ let forms;
@@ -1518,7 +2100,7 @@ export async function open(token, signal=undefined, expired=()=>{}) {
   async function send(path, method, body, first, extra=undefined,errors=false) {
     if(ended) throw new AccessError("authentication");
     if(extra?.aborted) throw new AccessError("unknown");
-    const url = destination(path, first);
+    const url = destination(path, first, method);
     if (body !== undefined && (body.includes(JSON.stringify(token).slice(1,-1)) || new TextEncoder().encode(body).length > 1048576)) throw new Error("Request refused.");
     const headers = new Headers();
     headers.set("Authorization", "Bearer " + token);
@@ -1547,11 +2129,16 @@ export async function open(token, signal=undefined, expired=()=>{}) {
     for (const item of entries) {
       if (object(item) && typeof item.id === "string" && typeof item.path === "string" && typeof item.output === "string" && item.identity === null
         && ((item.method === "GET" && item.operation === "read") || (item.method === "POST" && item.operation === "check"))) {
-        calls.set(item.id, {path:item.path, method:item.method, operation:item.operation, output:item.output});
+        calls.set(item.id, {path:item.path, method:item.method, operation:item.operation, output:item.output, identity:null});
+      }
+      // Item reads exist only under the read-only second prefix.
+      if (object(item) && typeof item.id === "string" && typeof item.path === "string" && typeof item.output === "string"
+        && typeof item.identity === "string" && item.method === "GET" && item.operation === "read" && item.path.startsWith("/admin/v2/")) {
+        calls.set(item.id, {path:item.path, method:"GET", operation:"read", output:item.output, identity:item.identity});
       }
     }
-    /** @param {string} id @param {"GET" | "POST"} method @param {unknown} body @param {AbortSignal | undefined} extra */
-    async function run(id, method, body, extra=undefined) {
+    /** @param {string} id @param {"GET" | "POST"} method @param {unknown} body @param {AbortSignal | undefined} extra @param {string | undefined} identity */
+    async function run(id, method, body, extra=undefined, identity=undefined) {
       try {
         const call = calls.get(id);
         if (!call || call.method !== method) throw new Error("Request refused.");
@@ -1559,7 +2146,21 @@ export async function open(token, signal=undefined, expired=()=>{}) {
           if(!actions || !lens) throw new AccessError("authentication");
           lens.inspectData(actions.lookup(id).input,capture(body));
         }
-        const response = await send(call.path, method, method === "GET" ? undefined : JSON.stringify(body), false, extra);
+        let path=call.path;
+        if (call.identity === null) { if (identity !== undefined) throw new Error("Request refused."); }
+        else {
+          if(!lens || typeof identity !== "string" || !/^[A-Za-z0-9_-]{1,128}$/.test(identity)) throw new Error("Request refused.");
+          lens.inspectData(lens.identityModel(),identity);
+          const marker="{"+call.identity+"}", parts=path.split("/");
+          if(parts.filter(p=>p === marker).length !== 1) throw new Error("Request refused.");
+          path=parts.map(p=>p === marker ? identity : p).join("/");
+        }
+        const second=path.startsWith("/admin/v2/");
+        const response = await send(path, method, method === "GET" ? undefined : JSON.stringify(body), false, extra, second);
+        // Only HTTP status is interpreted here; closed categories stay private.
+        if(second && response.status === 404) throw new AccessError("absent");
+        if(second && response.status === 503) throw new AccessError("unavailable");
+        if(!response.ok) throw new AccessError("unknown");
         /** @type {unknown} */ const value = await response.json();
         if(ended || extra?.aborted || !lens) throw new AccessError("authentication");
         if(JSON.stringify(value).includes(JSON.stringify(token).slice(1,-1))) throw new AccessError("incompatible");
@@ -1614,7 +2215,7 @@ export async function open(token, signal=undefined, expired=()=>{}) {
           return {kind:"unknown",version:undefined,message:"Resultado desconhecido. Releia o estado antes de decidir."};
         } finally {writing=false;}
       },
-      /** @param {string} id @param {AbortSignal | undefined} extra */ read: (id, extra=undefined) => run(id, "GET", undefined,extra),
+      /** @param {string} id @param {AbortSignal | undefined} extra @param {string | undefined} identity */ read: (id, extra=undefined, identity=undefined) => run(id, "GET", undefined,extra,identity),
       /** @param {string} id @param {unknown} body */ check: (id, body) => run(id, "POST", body),
     });
   } catch (error) { close(); if(error instanceof AccessError) throw error; throw new AccessError("unknown"); }
@@ -1622,8 +2223,8 @@ export async function open(token, signal=undefined, expired=()=>{}) {
 
 
 export class AccessError extends Error {
-  /** @param {"authentication" | "incompatible" | "unknown"} kind */
-  constructor(kind) { super("Request failed."); this.kind=kind; }
+  /** @param {"authentication" | "incompatible" | "unknown" | "absent" | "unavailable"} kind */
+  constructor(kind) { super("Request unsuccessful."); this.kind=kind; }
 }
 
 
@@ -1638,13 +2239,13 @@ export class AccessError extends Error {
  */
 export function coordinate(client,readId) {
   /** @type {Flow} */ let state={tag:"loading"};
-  let generation=0, sequence=0, closed=false, occupied=false, minimum=0;
+  let epoch=0, sequence=0, closed=false, occupied=false, minimum=0;
   /** @type {AbortController | undefined} */ let active;
   /** @type {Snapshot | undefined} */ let observed;
   /** @type {() => void} */ let detach=()=>{};
   function clear() {
     if(closed) return;
-    closed=true;generation++;sequence++;active?.abort();active=undefined;observed=undefined;state={tag:"authentication"};occupied=false;minimum=0;detach();
+    closed=true;epoch++;sequence++;active?.abort();active=undefined;observed=undefined;state={tag:"authentication"};occupied=false;minimum=0;detach();
     if(typeof window !== "undefined" && typeof window.removeEventListener === "function") {window.removeEventListener("pagehide",close);window.removeEventListener("pageshow",close);}
   }
   function close() {clear();client.close();}
@@ -1656,9 +2257,9 @@ export function coordinate(client,readId) {
   function expires(error) {if(error instanceof AccessError && error.kind === "authentication") {close();return true;}return false;}
   async function load() {
     if(closed || occupied || (state.tag !== "loading" && state.tag !== "reading" && !(state.tag === "incompatible" && !state.edit))) return false;
-    const mine=generation,ticket=++sequence;active?.abort();active=new AbortController();state={tag:"loading"};
-    try {const value=await client.read(readId,active.signal);if(closed || mine !== generation || ticket !== sequence) return false;state={tag:"reading",snapshot:snapshot(value)};return true;}
-    catch(error) {if(!closed && mine === generation && ticket === sequence && !expires(error)) state={tag:"incompatible",edit:undefined,newBase:undefined,message:"Leitura indisponível. Tente novamente."};return false;}
+    const mine=epoch,ticket=++sequence;active?.abort();active=new AbortController();state={tag:"loading"};
+    try {const value=await client.read(readId,active.signal);if(closed || mine !== epoch || ticket !== sequence) return false;state={tag:"reading",snapshot:snapshot(value)};return true;}
+    catch(error) {if(!closed && mine === epoch && ticket === sequence && !expires(error)) state={tag:"incompatible",edit:undefined,newBase:undefined,message:"Leitura indisponível. Tente novamente."};return false;}
   }
   /** Begin/replace an abstract draft only after an explicit, checked read.
    * @param {string} id @param {unknown} draft @param {string | undefined} identity
@@ -1694,26 +2295,26 @@ export function coordinate(client,readId) {
     const prior=state;
     if(prior.tag !== "success" && prior.tag !== "conflict" && prior.tag !== "unknown" && prior.tag !== "uncertain") return false;
     state={...prior,newBase:undefined,message:prior.tag === "success" ? "Salva; visualização ainda não atualizada." : prior.message};
-    occupied=true;const mine=generation,ticket=++sequence;active=new AbortController();
+    occupied=true;const mine=epoch,ticket=++sequence;active=new AbortController();
     try {
       const value=await client.read(readId,active.signal);
-      if(closed || mine !== generation || ticket !== sequence) return false;
+      if(closed || mine !== epoch || ticket !== sequence) return false;
       const fresh=snapshot(value), floor=prior.tag === "success" ? prior.version : prior.edit?.base.version;
       if(fresh.version < minimum || (floor !== undefined && fresh.version < floor)) throw new Error("Request refused.");
       state={...prior,newBase:fresh,message:prior.tag === "success" ? "Salva; visualização atualizada." : prior.message};return true;
-    } catch(error) {if(!closed && mine === generation && ticket === sequence) expires(error);return false;}
-    finally {if(mine === generation && ticket === sequence) {occupied=false;active=undefined;}}
+    } catch(error) {if(!closed && mine === epoch && ticket === sequence) expires(error);return false;}
+    finally {if(mine === epoch && ticket === sequence) {occupied=false;active=undefined;}}
   }
   /** Confirmed content and its base travel as one frozen command. */
   async function confirm() {
     if(closed || occupied || (state.tag !== "draft" && state.tag !== "busy")) return false;
     const edit=state.edit;if(!edit) return false;
     client.prepare(edit.command);
-    occupied=true;sequence++;active?.abort();active=new AbortController();const mine=generation,ticket=sequence;
+    occupied=true;sequence++;active?.abort();active=new AbortController();const mine=epoch,ticket=sequence;
     state={tag:"pending",edit};
     try {
       const result=await client.mutate(edit.command,active.signal);
-      if(closed || mine !== generation || ticket !== sequence) return false;
+      if(closed || mine !== epoch || ticket !== sequence) return false;
       if(result.version !== undefined) safeVersion(result.version);
       minimum=result.version ?? edit.base.version;
       if(result.kind === "authentication") {close();return false;}
@@ -1722,9 +2323,9 @@ export function coordinate(client,readId) {
         state={tag:"success",edit,version:result.version,newBase:undefined,message:result.message};
       } else state={tag:result.kind,edit,newBase:undefined,message:result.message};
     } catch(error) {
-      if(closed || mine !== generation || ticket !== sequence || expires(error)) return false;
+      if(closed || mine !== epoch || ticket !== sequence || expires(error)) return false;
       state={tag:"unknown",edit,newBase:undefined,message:"Resultado desconhecido. Releia o estado antes de decidir."};
-    } finally {if(mine === generation && ticket === sequence) {occupied=false;active=undefined;}}
+    } finally {if(mine === epoch && ticket === sequence) {occupied=false;active=undefined;}}
     if(!closed) await reconcile();
     return !closed;
   }
@@ -1780,14 +2381,14 @@ export function workbench(client,root,refreshed) {
   /** @type {string | undefined} */ let batchPage;
   /** @type {unknown} */ let base;
   /** @type {unknown} */ let raw;
-  /** @type {unknown} */ let registry;
+  /** @type {unknown} */ let editorList;
   /** @type {AbortController | undefined} */ let active;
   let ended=false, engaged=false, dirty=false, waiting=false, serial=0, checked=false, locked=false, examining=false;
   /** @type {HTMLParagraphElement | undefined} */ let note;
   /** @type {HTMLElement | undefined} */ let proof;
   /** @type {() => void} */ let detach=()=>{};
   function dismiss() {if(dialog) {dialog.close();erase(dialog);dialog.remove();dialog=undefined;}if(restore?.isConnected) restore.focus();}
-  function reset() {serial++;active?.abort();active=undefined;flow?.release();flow=undefined;intent=undefined;batchPage=undefined;base=undefined;raw=undefined;registry=undefined;dirty=false;engaged=false;waiting=false;examining=false;checked=false;proof=undefined;note=undefined;dismiss();}
+  function reset() {serial++;active?.abort();active=undefined;flow?.release();flow=undefined;intent=undefined;batchPage=undefined;base=undefined;raw=undefined;editorList=undefined;dirty=false;engaged=false;waiting=false;examining=false;checked=false;proof=undefined;note=undefined;dismiss();}
   function close() {ended=true;reset();detach();restore=undefined;}
   detach=client.onClose(close);
   /** @param {string} text @param {() => void} action */
@@ -1845,11 +2446,11 @@ export function workbench(client,root,refreshed) {
       if(operation !== "create" && selected === undefined) {announce("Item indisponível. Atualize a leitura.");return;}
       intent={page,operation,identity};
       if(operation === "delete") {raw={};renderDelete();return;}
-      const ticket=serial;waiting=true;registry=await client.read(plan.registry,active?.signal);
+      const ticket=serial;waiting=true;editorList=await client.read(plan.editorCatalog,active?.signal);
       if(ended || ticket !== serial) return;waiting=false;
-      if(client.describe().inspectDataFor(plan.registry,registry) !== client.describe().inspectDataFor(plan.read,base)) throw new Error("Request refused.");
+      if(client.describe().inspectDataFor(plan.editorCatalog,editorList) !== client.describe().inspectDataFor(plan.read,base)) throw new Error("Request refused.");
       raw=plan.defaults(page,selected);
-      if(selected !== undefined) plan.checkedContent(page,raw,registry);
+      if(selected !== undefined) plan.checkedContent(page,raw,editorList);
       renderForm();
     } catch {if(!ended) {waiting=false;announce("Conteúdo incompatível. A leitura foi preservada; edição bloqueada.");}}
   }
@@ -1883,7 +2484,7 @@ export function workbench(client,root,refreshed) {
             const next=index+Number(delta), buttonId="move-"+index+"-"+delta;
             const move=button(String(text),()=>{
               if(waiting || ended || next<0 || next>=order.length) return;
-              [order[index],order[next]]=[order[next],order[index]];values[key]=order;sync();changedDraft();draw();
+              [order[index],order[next]]=[order[next],order[index]];values[key]=order;sync();draftTouched();draw();
               const target=document.getElementById("move-"+next+"-"+delta);if(target instanceof HTMLButtonElement && !target.disabled) target.focus();else {const fallback=list.querySelector("button:not(:disabled)");if(fallback instanceof HTMLElement) fallback.focus();}
             });move.id=buttonId;move.disabled=next<0 || next>=order.length;row.append(move);
           }
@@ -1897,7 +2498,7 @@ export function workbench(client,root,refreshed) {
       form.append(element("h3","Base somente leitura"),plain(base),element("p","Somente inclusões. A releitura do servidor confirma nomes e duplicatas."));
       const label=element("label","Novos nomes, um por linha"), input=element("textarea");input.id="new-names";input.autocomplete="off";input.spellcheck=false;label.htmlFor=input.id;
       input.value=Array.isArray(values[key]) ? values[key].join("\n") : "";
-      input.addEventListener("input",()=>{if(waiting && !examining) return;values[key]=input.value.split("\n");sync();changedDraft();});form.append(label,input);
+      input.addEventListener("input",()=>{if(waiting && !examining) return;values[key]=input.value.split("\n");sync();draftTouched();});form.append(label,input);
     } else for(const c of p.controls) controlNode(c,values,form,sync);
     const save=button("Revisar alterações",()=>{
       if(waiting) return;
@@ -1911,16 +2512,16 @@ export function workbench(client,root,refreshed) {
     const box=modal("Confirmar operação",renderBatch);
     box.append(element("p","Revise a proposta completa. Nada foi salvo."),plain(plan.batchCandidate(batchPage,base,raw)),button("Voltar ao rascunho",renderBatch),button("Cancelar",()=>leave(()=>{})),button("Confirmar",()=>{void commit();}));
   }
-  function changedDraft() {checked=false;if(proof) erase(proof);dialog?.querySelectorAll("[aria-describedby]").forEach(n=>n.removeAttribute("aria-describedby"));serial++;active?.abort();active=new AbortController();if(examining) {waiting=false;examining=false;}dirty=true;announce("Rascunho não salvo. Resultado anterior descartado.");}
-  /** @param {Record<string,unknown>} control @param {Record<string,unknown>} values @param {HTMLElement} parent @param {() => void} changed */
-  function controlNode(control,values,parent,changed) {
+  function draftTouched() {checked=false;if(proof) erase(proof);dialog?.querySelectorAll("[aria-describedby]").forEach(n=>n.removeAttribute("aria-describedby"));serial++;active?.abort();active=new AbortController();if(examining) {waiting=false;examining=false;}dirty=true;announce("Rascunho não salvo. Resultado anterior descartado.");}
+  /** @param {Record<string,unknown>} control @param {Record<string,unknown>} values @param {HTMLElement} parent @param {() => void} onEdit */
+  function controlNode(control,values,parent,onEdit) {
     if(!Array.isArray(control.path) || typeof control.path[0] !== "string" || typeof control.label !== "string") throw new Error("Request refused.");
     const key=control.path[0], field=plan.fields(control.model).find(f=>f.name === key);if(!field) throw new Error("Request refused.");
     const shape=plan.shape(field.ref), label=element("label",control.label), id="field-"+String(control.id);
     const node=control.type === "select" ? element("select") : element("input");node.id=id;label.htmlFor=id;
     if(node instanceof HTMLSelectElement) {
       const empty=element("option","Escolha explicitamente");empty.value="";node.append(empty);
-      const choices=Array.isArray(shape.choices) ? shape.choices : plan.available(registry);
+      const choices=Array.isArray(shape.choices) ? shape.choices : plan.available(editorList);
       for(const choice of choices) {const option=element("option",String(choice));option.value=String(choice);node.append(option);}
       node.value=typeof values[key] === "string" ? values[key] : "";
     } else {
@@ -1936,7 +2537,7 @@ export function workbench(client,root,refreshed) {
       if(node instanceof HTMLInputElement && node.type === "checkbox") value=node.checked;
       else if(control.type === "integer") value=/^(0|[1-9][0-9]*)$/.test(node.value) && Number.isSafeInteger(Number(node.value)) ? Number(node.value) : node.value;
       else value=node.value;
-      values[key]=value;changedDraft();changed();
+      values[key]=value;draftTouched();onEdit();
     };
     node.addEventListener(node instanceof HTMLSelectElement || control.type === "checkbox" ? "change" : "input",update);parent.append(label,node);return node;
   }
@@ -1968,7 +2569,7 @@ export function workbench(client,root,refreshed) {
     const examine=button("Validar proposta",()=>{void examineDraft();});
     const save=element("button","Salvar");save.type="submit";
     form.append(examine,save,button("Cancelar",()=>leave(()=>{})));box.append(form);
-    form.addEventListener("submit",event=>{event.preventDefault();if(waiting) return;try {if(!intent) return;plan.checkedContent(intent.page,raw,registry);if(p.warning) confirmNotice(p.warning,()=>{void commit();});else void commit();} catch {announce("Confira os campos conhecidos antes de salvar.");}});
+    form.addEventListener("submit",event=>{event.preventDefault();if(waiting) return;try {if(!intent) return;plan.checkedContent(intent.page,raw,editorList);if(p.warning) confirmNotice(p.warning,()=>{void commit();});else void commit();} catch {announce("Confira os campos conhecidos antes de salvar.");}});
   }
   /** @param {string} text @param {() => void} action */
   function confirmNotice(text,action) {
@@ -1981,7 +2582,7 @@ export function workbench(client,root,refreshed) {
     if(ended || waiting || !base) return;
     let ticket=serial;
     try {
-      const edit=intent ? {...intent,value:plan.checkedContent(intent.page,raw,registry)} : undefined;
+      const edit=intent ? {...intent,value:plan.checkedContent(intent.page,raw,editorList)} : undefined;
       const candidate=batchPage ? plan.batchCandidate(batchPage,base,raw) : plan.candidate(base,edit);ticket=++serial;waiting=true;examining=true;active=new AbortController();announce("Validando conteúdo…");
       const known=batchPage ? plan.batchKnown(batchPage,base,raw) : intent ? plan.known(intent.page,base,raw,intent.identity) : [];
       const result=await client.assess(candidate,known,active.signal);
@@ -2004,7 +2605,7 @@ export function workbench(client,root,refreshed) {
         if(flow.getState().tag === "reading") flow.begin(p.call,body);
         else if(flow.getState().tag === "draft") flow.change(body);
       } else if(intent) {
-        const p=plan.profile(intent.page), body=intent.operation === "delete" ? {} : {[p.member]:plan.checkedContent(intent.page,raw,registry)};
+        const p=plan.profile(intent.page), body=intent.operation === "delete" ? {} : {[p.member]:plan.checkedContent(intent.page,raw,editorList)};
         const call=intent.operation === "create" ? p.create : intent.operation === "replace" ? p.replace : p.remove;
         if(flow.getState().tag === "reading") flow.begin(call,body,intent.identity);
         else if(flow.getState().tag === "draft") flow.change(body);
@@ -2027,7 +2628,7 @@ export function workbench(client,root,refreshed) {
     if(state.tag === "busy") box.append(button("Tentar novamente",()=>{void commit();}));
     if(state.tag === "conflict" && state.newBase && intent && intent.operation !== "delete") box.append(button("Revisar rascunho com nova base",()=>{
       if(!flow || !intent) return;const p=plan.profile(intent.page);
-      try {if(flow.review({[p.member]:plan.checkedContent(p.id,raw,registry)})) {base=state.newBase?.value;checked=false;renderForm();}} catch {announce("Revisão incompatível. Rascunho preservado.");}
+      try {if(flow.review({[p.member]:plan.checkedContent(p.id,raw,editorList)})) {base=state.newBase?.value;checked=false;renderForm();}} catch {announce("Revisão incompatível. Rascunho preservado.");}
     }));
     if(state.tag === "conflict" && state.newBase && batchPage) box.append(button("Revisar rascunho com nova base",()=>{
       if(!flow || !batchPage) return;
@@ -2099,8 +2700,21 @@ export function erase(node) {
 }
 /** @typedef {Awaited<ReturnType<typeof open>>} Client */
 /** @typedef {ReturnType<Client["describe"]>["views"][number]} PageItem */
-/** @typedef {{tag:"authentication"} | {tag:"pending",stop:AbortController} | {tag:"ready",client:Client,stop:AbortController,views:PageItem[]}} Access */
+/** @typedef {{tag:"authentication"} | {tag:"pending",stop:AbortController} | {tag:"ready",client:Client,stop:AbortController,views:PageItem[],board:Board}} Access */
 /** @typedef {{tag:"loading"} | {tag:"success",value:unknown,version:number,time:number} | {tag:"unknown",prior:Sheet | undefined,stale:boolean}} Sheet */
+/** @typedef {{tag:"loading"} | {tag:"ready",value:unknown,time:number} | {tag:"absent"} | {tag:"unavailable"} | {tag:"broken"}} Pane */
+/** @typedef {(string|number)[]} Trail */
+/** @typedef {{id:string,label:string,path:Trail,kind:"count"|"flag"|"text"|"list"|"tree",wording:{value:string,text:string}[]}} Figure */
+/** @typedef {{id:string,label:string,source:"main"|"extra",entries:Figure[]}} Tab */
+/** @typedef {{brand:string,tagline:string,main:string,legacy:string,yes:string,no:string,blank:string,failure:string,unavailable:string,
+ * summary:{id:string,label:string,call:string,figures:Figure[],notes:string[],absent:string},
+ * collection:{id:string,label:string,call:string,items:Trail,key:Trail,title:Trail,columns:Figure[],search:string,searchable:Trail[],empty:string,nothing:string,open:string},
+ * detail:{id:string,call:string,extra:string,back:string,tabs:Tab[],gone:string},
+ * guide:{id:string,label:string,banner:string,steps:{id:string,label:string,text:string}[]}}} Board */
+/** @typedef {{kind:"view",index:number} | {kind:"summary"} | {kind:"collection"} | {kind:"detail",key:string,title:string,tab:number} | {kind:"guide",step:number}} Place */
+
+const THEMES=/** @type {const} */ (["auto","dark","light"]);
+const THEME_TEXT={auto:"Tema: automático",dark:"Tema: escuro",light:"Tema: claro"};
 
 /** Installs only a local entry form; all private labels arrive after entry.
  * @param {HTMLElement} root
@@ -2108,8 +2722,13 @@ export function erase(node) {
 export function mount(root) {
   /** @type {Access} */ let access={tag:"authentication"};
   /** @type {Sheet | undefined} */ let sheet;
+  /** @type {Pane | undefined} */ let pane;
+  /** @type {Pane | undefined} */ let side;
   /** @type {AbortController | undefined} */ let flight;
-  let generation=0, turn=0, selected=0, busy=false, paused=true;
+  /** @type {AbortController | undefined} */ let lateral;
+  /** @type {Place} */ let place={kind:"view",index:0};
+  let epoch=0, turn=0, busy=false, paused=true, filter="";
+  /** @type {"auto"|"dark"|"light"} */ let theme="auto";
   /** @type {ReturnType<typeof setTimeout> | undefined} */ let timer;
   /** @type {HTMLElement | undefined} */ let panel;
   /** @type {HTMLElement | undefined} */ let notice;
@@ -2117,7 +2736,8 @@ export function mount(root) {
   /** @type {ReturnType<typeof workbench> | undefined} */ let editor;
   function stopClock() { if(timer !== undefined) clearTimeout(timer); timer=undefined; }
   function clear() {
-    generation++; turn++; flight?.abort(); flight=undefined; stopClock(); paused=true; busy=false; sheet=undefined;
+    epoch++; turn++; flight?.abort(); flight=undefined; lateral?.abort(); lateral=undefined; stopClock(); paused=true; busy=false;
+    sheet=undefined; pane=undefined; side=undefined; filter=""; place={kind:"view",index:0};
     editor?.close();editor=undefined;
     if(access.tag === "ready") access.client.close();
     if(access.tag !== "authentication") access.stop.abort();
@@ -2142,43 +2762,103 @@ export function mount(root) {
       let key=input.value; input.value="";
       if(!key) { info.textContent="Autenticação necessária."; input.focus(); return; }
       const stop=new AbortController();access={tag:"pending",stop};
-      const mine=++generation;
+      const mine=++epoch;
       enter.disabled=true; info.textContent="Carregando…";
-      const attempt=open(key,stop.signal,()=>{if(mine === generation) login("Autenticação necessária.");}); key="";
+      const attempt=open(key,stop.signal,()=>{if(mine === epoch) login("Autenticação necessária.");}); key="";
       void attempt.then(client=>{
-        if(mine !== generation) {client.close();return;}
-        access={tag:"ready",client,stop,views:client.describe().views}; selected=0;
+        if(mine !== epoch) {client.close();return;}
+        const book=client.describe();
+        access={tag:"ready",client,stop,views:book.views,board:/** @type {Board} */ (book.board())};
         editor=workbench(client,root,()=>{sheet=undefined;shell();void load(true);});
-        shell(); void load(true);
-      }).catch(()=>{ if(mine === generation) login("Não foi possível entrar. Tente novamente."); });
+        void land(mine);
+      }).catch(()=>{ if(mine === epoch) login("Não foi possível entrar. Tente novamente."); });
     });
     if(focus) input.focus();
   }
+  /** The overview of the second prefix is the landing page; without it, the first view.
+   * @param {number} mine
+   */
+  async function land(mine) {
+    if(access.tag !== "ready") return;
+    place={kind:"summary"};shell();
+    await read(true);
+    if(mine !== epoch || access.tag !== "ready") return;
+    if(pane?.tag === "absent") {place={kind:"view",index:0};pane=undefined;shell();void load(true);}
+  }
+  /** @param {Place} next */
+  function go(next) {
+    const navigate=()=>{
+      place=next; sheet=undefined; pane=undefined; side=undefined; lateral?.abort(); lateral=undefined;
+      if(next.kind !== "collection" && next.kind !== "detail") filter="";
+      shell();
+      if(next.kind === "view") void load(true); else if(next.kind === "guide") {show(true);} else void read(true);
+    };
+    if(editor?.active()) editor.leave(navigate);else navigate();
+  }
+  /** @param {string} text @param {boolean} current @param {() => void} action */
+  function link(text,current,action) {
+    const button=element("button",text);button.type="button";
+    if(current) button.setAttribute("aria-current","page");
+    button.addEventListener("click",()=>{if(access.tag === "ready") action();});
+    return button;
+  }
   function shell() {
     if(access.tag !== "ready") return;
+    const board=access.board;
     erase(root);
-    const top=element("header");top.append(element("h1","Administração local"));
-    const leave=element("button","Sair"); leave.type="button"; leave.addEventListener("click",()=>login());top.append(leave);
-    const nav=element("nav"); nav.setAttribute("aria-label","Navegação");
-    for(const [index,view] of access.views.entries()) {
-      const button=element("button",view.label);button.type="button";
-      if(index === selected) button.setAttribute("aria-current","page");
-      button.addEventListener("click",()=>{
-        if(access.tag !== "ready") return;
-        const navigate=()=>{selected=index; sheet=undefined; shell(); void load(true);};
-        if(editor?.active()) editor.leave(navigate);else navigate();
-      });
-      nav.append(button);
-    }
+    const top=element("header");top.className="bar";
+    const brand=element("div");brand.className="brand";
+    const title=element("h1","Administração local");const tag=element("p",board.brand);tag.className="tag";
+    brand.append(tag,title);
+    const tools=element("div");tools.className="tools";
+    // Narrow screens: the single navigation landmark collapses behind an
+    // explicit disclosure control; wide screens always show it (CSS only).
+    const here=place.kind === "summary" ? board.summary.label : place.kind === "collection" || place.kind === "detail" ? board.collection.label
+      : place.kind === "guide" ? board.guide.label : access.views[place.index]?.label ?? "";
+    const menu=element("button","Menu: "+here);menu.type="button";menu.className="menu";
+    menu.setAttribute("aria-expanded","false");menu.setAttribute("aria-controls","side-nav");
+    const shade=element("button",THEME_TEXT[theme]);shade.type="button";
+    shade.addEventListener("click",()=>{theme=THEMES[(THEMES.indexOf(theme)+1)%THEMES.length] ?? "auto";paint();shade.textContent=THEME_TEXT[theme];});
+    const leave=element("button","Sair"); leave.type="button"; leave.addEventListener("click",()=>login());
+    tools.append(menu,shade,leave);top.append(brand,tools);
+    const frame=element("div");frame.className="frame";
+    const nav=element("nav"); nav.setAttribute("aria-label","Navegação");nav.id="side-nav";
+    /** @param {boolean} open */
+    const unfold=open=>{nav.dataset.open=String(open);menu.setAttribute("aria-expanded",String(open));};
+    menu.addEventListener("click",()=>{
+      const open=nav.dataset.open !== "true";unfold(open);
+      if(open) nav.querySelector("button")?.focus();
+    });
+    nav.addEventListener("keydown",event=>{if(event.key === "Escape" && nav.dataset.open === "true") {unfold(false);menu.focus();}});
+    const first=element("p",board.main);first.className="group";
+    const second=element("p",board.legacy);second.className="group";
+    nav.append(first,
+      link(board.summary.label,place.kind === "summary",()=>go({kind:"summary"})),
+      link(board.collection.label,place.kind === "collection" || place.kind === "detail",()=>go({kind:"collection"})),
+      link(board.guide.label,place.kind === "guide",()=>go({kind:"guide",step:0})),
+      second);
+    for(const [index,view] of access.views.entries()) nav.append(link(view.label,place.kind === "view" && place.index === index,()=>go({kind:"view",index})));
+    const stage=element("div");stage.className="stage";
     notice=element("p");notice.setAttribute("role","status");notice.setAttribute("aria-live","polite");
-    retry=element("button","Atualizar");retry.type="button";retry.addEventListener("click",()=>{if(editor?.active()) editor.leave(()=>{void load(true);});else void load(true);});
+    retry=element("button","Atualizar");retry.type="button";retry.addEventListener("click",()=>{
+      const again=()=>{if(place.kind === "view") void load(true); else if(place.kind !== "guide") void read(true);};
+      if(editor?.active()) editor.leave(again);else again();
+    });
     panel=element("section"); panel.setAttribute("aria-label","Leitura");
-    root.append(top,nav,notice,retry,panel);
+    // Same DOM order as before (status, refresh, reading); only grouped visually.
+    const toolbar=element("div");toolbar.className="toolbar";toolbar.append(notice,retry);
+    stage.append(toolbar,panel);frame.append(nav,stage);
+    root.append(top,frame);
+    retry.hidden=place.kind === "guide";
+  }
+  function paint() {
+    if(theme === "auto") delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme=theme;
   }
   /** @param {boolean} focus */
   function show(focus) {
     if(access.tag !== "ready" || !panel || !notice) return;
-    const view=access.views[selected]; if(!view) return;
+    if(place.kind !== "view") { surface(focus); return; }
+    const view=access.views[place.index]; if(!view) return;
     const restore=focus || document.activeElement === panel.firstElementChild;
     erase(panel);
     const title=element("h2",view.label); title.tabIndex=-1; panel.append(title);
@@ -2200,48 +2880,289 @@ export function mount(root) {
     if(retry) retry.disabled=busy;
     if(restore) title.focus();
   }
+  /** @param {unknown} value @param {Figure} figure @returns {HTMLElement} */
+  function figure(value,figure) {
+    if(access.tag !== "ready") return element("span");
+    const board=access.board;
+    if(value === undefined || value === null) { const node=element("span",board.blank);node.className="muted";return node; }
+    if(figure.kind === "flag" && typeof value === "boolean") {
+      const said=figure.wording.find(w=>w.value === String(value));
+      // Declared convention: the first wording of a signal is its healthy state.
+      const good=said ? said === figure.wording[0] : value;
+      const node=element("span",(good ? "✓ " : "✕ ")+(said ? said.text : value ? board.yes : board.no));
+      node.className=good ? "flag on" : "flag off";return node;
+    }
+    if(figure.kind === "count" && typeof value === "number") return element("span",value.toLocaleString("pt-BR"));
+    if(figure.kind === "text" && typeof value === "string") {
+      const known=figure.wording.find(w=>w.value === value);
+      return element("span",known ? known.text : value);
+    }
+    if(figure.kind === "list" && Array.isArray(value)) {
+      if(!value.length) return element("span","Lista vazia.");
+      const list=element("ul");list.className="chips";
+      for(const item of value) list.append(element("li",String(item)));
+      return list;
+    }
+    return plain(value);
+  }
+  /** @param {Figure[]} figures @param {unknown} value */
+  function facts(figures,value) {
+    const list=element("dl");list.className="facts";
+    for(const item of figures) {
+      const row=element("div");const body=element("dd");body.append(figure(at(value,item.path),item));
+      row.append(element("dt",item.label),body);list.append(row);
+    }
+    return list;
+  }
+  /** @param {Pane | undefined} state @param {string} absentText */
+  function report(state,absentText) {
+    if(access.tag !== "ready" || !notice) return;
+    const board=access.board;
+    if(state?.tag === "ready") notice.textContent="Respondendo · Última leitura: "+new Date(state.time).toLocaleTimeString();
+    else if(state?.tag === "absent") notice.textContent=absentText;
+    else if(state?.tag === "unavailable") notice.textContent=board.unavailable;
+    else if(state?.tag === "broken") notice.textContent=board.failure;
+    else notice.textContent="Carregando…";
+  }
+  /** Visible explanation in the reading region; the status line keeps the same text.
+   * @param {HTMLElement} target @param {string} text @param {"plain"|"info"|"warn"} tone
+   */
+  function hint(target,text,tone="plain") { const node=element("p",text);node.className=tone === "plain" ? "hint" : "hint callout "+tone;target.append(node); }
+  /** @param {boolean} focus */
+  function surface(focus) {
+    if(access.tag !== "ready" || !panel || !notice) return;
+    const board=access.board;
+    const restore=focus || document.activeElement === panel.firstElementChild;
+    erase(panel);panel.setAttribute("aria-busy",pane?.tag === "loading" ? "true" : "false");
+    if(retry) retry.disabled=busy;
+    if(place.kind === "summary") {
+      const title=element("h2",board.summary.label);title.tabIndex=-1;panel.append(title);
+      report(pane,board.summary.absent);
+      if(pane?.tag === "absent") hint(panel,board.summary.absent,"info");
+      else if(pane?.tag === "loading" || pane === undefined) hint(panel,"Carregando…");
+      else if(pane?.tag === "ready") {
+        // Declared order is priority: the first three counts lead; the rest are details.
+        const counts=board.summary.figures.filter(f=>f.kind === "count");
+        const signals=board.summary.figures.filter(f=>f.kind === "flag");
+        const health=element("ul");health.className="signals";health.setAttribute("aria-label","Saúde do catálogo");
+        for(const item of signals) { const row=element("li");row.append(figure(at(pane.value,item.path),item));health.append(row); }
+        const cards=facts(counts.slice(0,3),pane.value);cards.className="cards";
+        const more=counts.slice(3);
+        panel.append(health,cards);
+        if(more.length) { const list=facts(more,pane.value);list.className="facts details";panel.append(list); }
+        const notes=element("div");notes.className="notes";
+        for(const text of board.summary.notes) { const node=element("p",text);node.className="note";notes.append(node); }
+        panel.append(notes);
+      } else hint(panel,pane.tag === "unavailable" ? board.unavailable : board.failure,"warn");
+      if(restore) title.focus();
+    } else if(place.kind === "collection") {
+      const title=element("h2",board.collection.label);title.tabIndex=-1;panel.append(title);
+      report(pane,board.summary.absent);
+      if(pane?.tag === "ready") listing(pane.value);
+      else if(pane?.tag === "absent") hint(panel,board.summary.absent,"info");
+      else if(pane?.tag === "loading" || pane === undefined) hint(panel,"Carregando…");
+      else hint(panel,pane.tag === "unavailable" ? board.unavailable : board.failure,"warn");
+      if(restore) title.focus();
+    } else if(place.kind === "detail") {
+      const here=place;
+      const back=element("button",board.detail.back);back.type="button";back.className="back";
+      back.addEventListener("click",()=>go({kind:"collection"}));
+      const title=element("h2",here.title);title.tabIndex=-1;panel.append(back,title);
+      report(pane,board.detail.gone);
+      if(pane?.tag === "ready") tabs(here,pane.value);
+      else if(pane?.tag === "absent") hint(panel,board.detail.gone,"info");
+      else if(pane?.tag === "loading" || pane === undefined) hint(panel,"Carregando…");
+      else hint(panel,pane.tag === "unavailable" ? board.unavailable : board.failure,"warn");
+      if(restore) title.focus();
+    } else if(place.kind === "guide") {
+      guide(place.step,restore);
+    }
+  }
+  /** @param {unknown} value */
+  function listing(value) {
+    if(access.tag !== "ready" || !panel) return;
+    const spec=access.board.collection;
+    const rows=at(value,spec.items);
+    if(!Array.isArray(rows)) { hint(panel,access.board.failure); return; }
+    const search=element("div");search.className="search";
+    const label=element("label",spec.search);const input=element("input");input.id="find-items";input.type="search";input.autocomplete="off";input.spellcheck=false;input.value=filter;
+    label.htmlFor=input.id;search.append(label,input);panel.append(search);
+    const count=element("p");count.className="count";panel.append(count);
+    const holder=element("div");holder.className="grid";panel.append(holder);
+    const draw=()=>{
+      erase(holder);
+      const needle=filter.trim().toLocaleLowerCase("pt-BR");
+      const shown=rows.filter(row=>!needle || spec.searchable.some(p=>{const found=at(row,p);return typeof found === "string" && found.toLocaleLowerCase("pt-BR").includes(needle);}));
+      count.textContent=rows.length ? shown.length+" de "+rows.length : "";
+      if(!rows.length) { hint(holder,spec.empty,"info"); return; }
+      if(!shown.length) { hint(holder,spec.nothing,"info"); return; }
+      const table=element("table");const caption=element("caption",spec.label);table.append(caption);
+      const head=element("thead");const top=element("tr");
+      for(const column of spec.columns) { const cell=element("th",column.label);cell.scope="col";top.append(cell); }
+      const empty=element("th");empty.scope="col";const hidden=element("span",spec.open);hidden.className="hidden";empty.append(hidden);top.append(empty);
+      head.append(top);table.append(head);
+      const body=element("tbody");
+      for(const row of shown) {
+        const line=element("tr");
+        for(const column of spec.columns) { const cell=element("td");cell.dataset.label=column.label;cell.append(figure(at(row,column.path),column));line.append(cell); }
+        const key=at(row,spec.key), name=at(row,spec.title);
+        const cell=element("td");
+        if(typeof key === "string") {
+          const button=element("button",spec.open);button.type="button";
+          button.setAttribute("aria-label",spec.open+": "+(typeof name === "string" ? name : key));
+          button.addEventListener("click",()=>go({kind:"detail",key,title:typeof name === "string" ? name : key,tab:0}));
+          cell.append(button);
+        }
+        line.append(cell);body.append(line);
+      }
+      table.append(body);holder.append(table);
+    };
+    input.addEventListener("input",()=>{filter=input.value;draw();});
+    draw();
+  }
+  /** @param {{kind:"detail",key:string,title:string,tab:number}} here @param {unknown} value */
+  function tabs(here,value) {
+    if(access.tag !== "ready" || !panel) return;
+    const list=access.board.detail.tabs;
+    const bar=element("div");bar.setAttribute("role","tablist");bar.setAttribute("aria-label",here.title);bar.className="tabs";
+    /** @type {HTMLButtonElement[]} */ const buttons=[];
+    const body=element("div");body.setAttribute("role","tabpanel");body.id="tab-body";body.tabIndex=0;
+    for(const [index,tab] of list.entries()) {
+      const button=element("button",tab.label);button.type="button";button.setAttribute("role","tab");button.id="tab-"+index;
+      button.setAttribute("aria-selected",String(index === here.tab));button.setAttribute("aria-controls",body.id);button.tabIndex=index === here.tab ? 0 : -1;
+      button.addEventListener("click",()=>pick(index,false));
+      button.addEventListener("keydown",event=>{
+        const last=list.length-1;
+        const next=event.key === "ArrowRight" ? (index === last ? 0 : index+1) : event.key === "ArrowLeft" ? (index === 0 ? last : index-1) : event.key === "Home" ? 0 : event.key === "End" ? last : -1;
+        if(next >= 0) {event.preventDefault();pick(next,true);}
+      });
+      buttons.push(button);bar.append(button);
+    }
+    /** @param {number} index @param {boolean} focus */
+    const pick=(index,focus)=>{
+      if(place.kind !== "detail") return;
+      place={...place,tab:index};
+      for(const [i,button] of buttons.entries()) {button.setAttribute("aria-selected",String(i === index));button.tabIndex=i === index ? 0 : -1;}
+      if(focus) buttons[index]?.focus();
+      fill(value);
+    };
+    const fill=(/** @type {unknown} */ main)=>{
+      if(place.kind !== "detail") return;
+      erase(body);
+      const tab=list[place.tab];if(!tab) return;
+      body.setAttribute("aria-labelledby","tab-"+place.tab);
+      if(tab.source === "main") { body.append(facts(tab.entries,main)); return; }
+      if(side?.tag === "ready") { body.append(facts(tab.entries,side.value)); return; }
+      if(side?.tag === "absent") { hint(body,access.tag === "ready" ? access.board.detail.gone : ""); return; }
+      if(side?.tag === "unavailable" || side?.tag === "broken") { hint(body,access.tag === "ready" ? (side.tag === "unavailable" ? access.board.unavailable : access.board.failure) : ""); return; }
+      hint(body,"Carregando…");
+      if(side === undefined) void aside(here.key,()=>fill(main));
+    };
+    panel.append(bar,body);fill(value);
+  }
+  /** @param {string} key @param {() => void} done */
+  async function aside(key,done) {
+    if(access.tag !== "ready") return;
+    const client=access.client, call=access.board.detail.extra, mine=epoch;
+    lateral?.abort();lateral=new AbortController();side={tag:"loading"};
+    try {
+      const value=await client.read(call,lateral.signal,key);
+      if(mine !== epoch) return;
+      side={tag:"ready",value,time:Date.now()};
+    } catch(error) {
+      if(mine !== epoch) return;
+      if(error instanceof AccessError && error.kind === "authentication") { login("Autenticação necessária.");return; }
+      side={tag:error instanceof AccessError && error.kind === "absent" ? "absent" : error instanceof AccessError && error.kind === "unavailable" ? "unavailable" : "broken"};
+    }
+    if(place.kind === "detail" && place.key === key) done();
+  }
+  /** @param {number} step @param {boolean} restore */
+  function guide(step,restore) {
+    if(access.tag !== "ready" || !panel || !notice) return;
+    const spec=access.board.guide;
+    notice.textContent=spec.banner;
+    const title=element("h2",spec.label);title.tabIndex=-1;
+    const banner=element("p",spec.banner);banner.className="banner";banner.setAttribute("role","note");
+    const trail=element("ol");trail.className="steps";trail.setAttribute("aria-label",spec.label);
+    for(const [index,item] of spec.steps.entries()) {
+      const node=element("li",(index+1)+". "+item.label);if(index === step) node.setAttribute("aria-current","step");
+      node.className=index === step ? "now" : "other";trail.append(node);
+    }
+    const current=spec.steps[step];
+    const card=element("section");card.className="card";card.setAttribute("aria-label",current?.label ?? spec.label);
+    if(current) card.append(element("h3",(step+1)+". "+current.label),element("p",current.text));
+    const moves=element("div");moves.className="moves";
+    const back=element("button","Anterior");back.type="button";back.disabled=step === 0;
+    const next=element("button","Próximo");next.type="button";next.disabled=step >= spec.steps.length-1;
+    back.addEventListener("click",()=>{place={kind:"guide",step:step-1};guide(step-1,false);});
+    next.addEventListener("click",()=>{place={kind:"guide",step:step+1};guide(step+1,false);});
+    moves.append(back,next);
+    erase(panel);panel.append(title,banner,trail,card,moves);
+    if(restore) title.focus();
+  }
   function schedule() {
     stopClock();
-    if(access.tag === "ready" && !paused && !busy && document.visibilityState === "visible") timer=setTimeout(()=>{void poll();},15000);
+    if(access.tag === "ready" && !paused && !busy && document.visibilityState === "visible" && (place.kind === "view" || place.kind === "summary")) timer=setTimeout(()=>{void (place.kind === "summary" ? read(false) : poll());},15000);
+  }
+  /** Reads the declared second-prefix call of the current place.
+   * @param {boolean} focus
+   */
+  async function read(focus) {
+    if(access.tag !== "ready") return;
+    const client=access.client, board=access.board, here=place;
+    const call=here.kind === "summary" ? board.summary.call : here.kind === "collection" ? board.collection.call : here.kind === "detail" ? board.detail.call : undefined;
+    if(!call) return;
+    flight?.abort(); flight=new AbortController();
+    const mine=epoch, ticket=++turn;busy=true;paused=true;stopClock();
+    if(!(here.kind === "summary" && pane?.tag === "ready" && !focus)) {pane={tag:"loading"};show(focus);}
+    try {
+      const value=await client.read(call,flight.signal,here.kind === "detail" ? here.key : undefined);
+      if(mine !== epoch || ticket !== turn) return;
+      pane={tag:"ready",value,time:Date.now()};paused=false;
+    } catch(error) {
+      if(mine !== epoch || ticket !== turn) return;
+      if(error instanceof AccessError && error.kind === "authentication") { login("Autenticação necessária.");return; }
+      pane={tag:error instanceof AccessError && error.kind === "absent" ? "absent" : error instanceof AccessError && error.kind === "unavailable" ? "unavailable" : "broken"};paused=true;
+    } finally { if(mine === epoch && ticket === turn) { busy=false;show(focus);schedule(); } }
   }
   /** @param {boolean} focus */
   async function load(focus) {
-    if(access.tag !== "ready") return;
-    const client=access.client, view=access.views[selected]; if(!view) return;
+    if(access.tag !== "ready" || place.kind !== "view") return;
+    const client=access.client, view=access.views[place.index]; if(!view) return;
     flight?.abort(); flight=new AbortController();
-    const mine=generation, ticket=++turn; busy=true;paused=true;stopClock();
+    const mine=epoch, ticket=++turn; busy=true;paused=true;stopClock();
     const prior=sheet?.tag === "success" ? sheet : sheet?.tag === "unknown" ? sheet.prior : undefined;
     sheet={tag:"loading"};show(focus);
     try {
       const value=await client.read(view.call,flight.signal);
-      if(mine !== generation || ticket !== turn) return;
+      if(mine !== epoch || ticket !== turn) return;
       // The transport has already checked this envelope before it reaches state.
       const book=client.describe();
       const version=book.inspectDataFor(view.call,value);
       sheet={tag:"success",value,version,time:Date.now()};paused=false;
     } catch(error) {
-      if(mine !== generation || ticket !== turn) return;
+      if(mine !== epoch || ticket !== turn) return;
       if(error instanceof AccessError && error.kind === "authentication") { login("Autenticação necessária.");return; }
       sheet={tag:"unknown",prior,stale:prior !== undefined};paused=true;
-    } finally { if(mine === generation && ticket === turn) { busy=false;show(false);schedule(); } }
+    } finally { if(mine === epoch && ticket === turn) { busy=false;show(false);schedule(); } }
   }
   async function poll() {
-    if(access.tag !== "ready" || busy || paused || editor?.active() || document.visibilityState !== "visible") {schedule();return;}
+    if(access.tag !== "ready" || busy || paused || editor?.active() || document.visibilityState !== "visible" || place.kind !== "view") {schedule();return;}
     const client=access.client, first=access.views[0];if(!first) return;
     flight=new AbortController();
-    const mine=generation, ticket=++turn;busy=true;show(false);
+    const mine=epoch, ticket=++turn;busy=true;show(false);
     try {
       const value=await client.read(first.call,flight.signal);
-      if(mine !== generation || ticket !== turn) return;
+      if(mine !== epoch || ticket !== turn) return;
       const version=client.describe().inspectDataFor(first.call,value);
       if(sheet?.tag === "success" && version !== sheet.version) {
         sheet={tag:"unknown",prior:undefined,stale:true};paused=true;
-      } else if(selected === 0) sheet={tag:"success",value,version,time:Date.now()};
+      } else if(place.kind === "view" && place.index === 0) sheet={tag:"success",value,version,time:Date.now()};
     } catch(error) {
-      if(mine !== generation || ticket !== turn) return;
+      if(mine !== epoch || ticket !== turn) return;
       if(error instanceof AccessError && error.kind === "authentication") { login("Autenticação necessária.");return; }
       sheet={tag:"unknown",prior:sheet?.tag === "success" ? sheet : undefined,stale:sheet?.tag === "success"};paused=true;
-    } finally {if(mine === generation && ticket === turn) {busy=false;show(false);schedule();}}
+    } finally {if(mine === epoch && ticket === turn) {busy=false;show(false);schedule();}}
   }
   const hide=()=>login("",false);
   const appear=()=>login("",true);

@@ -35,7 +35,7 @@ test("explicit token precedes metadata and all fetch options are normative",asyn
   assert.equal(new Headers(calls[2]?.init.headers).get("Content-Type"),"application/json");
 });
 test("no capability or business request after wrong hash",async()=>{
-  broken=true;await assert.rejects(()=>open(token),/^Error: Request failed\.$/);
+  broken=true;await assert.rejects(()=>open(token),/^Error: Request unsuccessful\.$/);
   assert.equal(calls.length,1);
 });
 test("stage four refuses all writes and templates before fetch",async()=>{
@@ -86,7 +86,7 @@ for(const action of ["close","abort","401"]) test("late successful response cann
       globalThis.fetch=async()=>new Response(token,{status:401});
       await assert.rejects(()=>client.read("c0"));assert.equal(expired,1);
     }
-    release();await assert.rejects(()=>read,/Request failed/);assert.throws(()=>client.describe());
+    release();await assert.rejects(()=>read,/Request unsuccessful/);assert.throws(()=>client.describe());
   } finally {globalThis.fetch=previous;client.close();}
 });
 
@@ -95,6 +95,6 @@ for(const suffix of ["", '"\\end']) test("reflected credential including escapes
   const data={revision:0,adopted:false,exceptions:[{id:null,match:secret,mode:"contains",case_sensitive:false,position:0}]};
   assert.equal(reader(book).inspectDataFor("c4",data),0);
   globalThis.fetch=async()=>new Response(JSON.stringify(data),{headers:{"Content-Type":"application/json"}});
-  try {await assert.rejects(()=>client.read("c4"),/^Error: Request failed\.$/);}
+  try {await assert.rejects(()=>client.read("c4"),/^Error: Request unsuccessful\.$/);}
   finally {globalThis.fetch=previous;client.close();}
 });

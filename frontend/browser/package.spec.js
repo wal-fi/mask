@@ -10,6 +10,8 @@ test("installed HTTP bytes equal approved full inventories and public vocabulary
     /** @type {unknown} */ const raw=JSON.parse(readFileSync(new URL("../private/vocabulary.json",import.meta.url),"utf8"));
     if(!Array.isArray(raw)||!raw.every(v=>typeof v==="string")) throw new Error("Vocabulary refused.");
     requireTrue(raw.length===193);
+    /** @type {unknown} */ const second=JSON.parse(readFileSync(new URL("../private/vocabulary-tokens.json",import.meta.url),"utf8"));
+    if(!Array.isArray(second)||!second.every(v=>typeof v==="string")) throw new Error("Vocabulary refused.");
     const paths=["/admin/ui","/admin/ui/assets/ui.js","/admin/ui/assets/ui.css","/admin/ui/presentation.json"];
     const files=["index.html","ui.js","ui.css","presentation.json"];
     const types=["text/html; charset=utf-8","text/javascript; charset=utf-8","text/css; charset=utf-8","application/json"];
@@ -20,8 +22,8 @@ test("installed HTTP bytes equal approved full inventories and public vocabulary
       const bytes=await response.body(), approved=readFileSync(new URL("../../src/maskgw/admin/ui/assets/"+file,import.meta.url));
       requireTrue(response.status()===200 && bytes.equals(approved) && response.headers()["content-type"]===types[i]);
       requireTrue(response.headers()["cache-control"]==="no-store" && !bytes.includes(token));
-      if(i<3) inspectPublic(bytes.toString("utf8"),raw,i===1);
-      else requireTrue(createHash("sha256").update(bytes).digest("hex")==="0ee31f73edd994ac98694ecfac36197e7bac3690879e28c7e459ce11accc9a43");
+      if(i<3) inspectPublic(bytes.toString("utf8"),raw,i===1,second);
+      else requireTrue(createHash("sha256").update(bytes).digest("hex")==="7072241a7d87c6072819b33ba2764db3bd5183cc41f3468f25d04547899311e9");
     }
   });
 });

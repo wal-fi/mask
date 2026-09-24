@@ -3,7 +3,8 @@
 **Documento de entrada. Comece por aqui.**
 
 Estado: **Fase 8 concluída e publicada; Fase 9 — Etapas 3 e 4 implementadas localmente;
-Etapa 4 (Admin API v2 de datasources) autorizada e implementada em 2026-09-24, sem push**.
+Etapas 3 e 4 publicadas em `c37be36`; Etapa 5 (UX v2 somente leitura) implementada
+localmente em 2026-09-24, sem push; capturas aguardam aprovação antes da Etapa 6**.
 MVP e Fase 7 concluídos. A Etapa 8 foi revisada e publicada sem emenda em
 `20db6f021533230d791cd910b037554c3fe03191`; o fetch confirmou master, HEAD igual
 a origin/master, árvore limpa e 0/0, com autoria e trailer preservados.
@@ -43,7 +44,7 @@ Ordem de leitura sugerida:
 | `docs/ARCHITECTURE.md` | modulos e responsabilidades |
 | `docs/SECURITY.md` | invariantes de seguranca e o que exigir antes de expor |
 | `docs/SECURITY-REVIEW.md` | 11 findings do red team, seis fechados |
-| `docs/DECISIONS.md` | D-001 a D-096, com o motivo de cada uma |
+| `docs/DECISIONS.md` | D-001 a D-100, com o motivo de cada uma |
 | `docs/MASKING-SPEC.md` | semantica exata do pipeline |
 | `docs/TEST-PLAN.md` | o que cada camada de teste cobre |
 | `docs/THREAT-MODEL.md` | cenarios de ataque e o resultado medido |
@@ -1056,6 +1057,22 @@ recolhido ao fim do prazo. O default do MCP foi adiado para a Etapa 11 (D-096).
 Depois de uma falha de persistência o catálogo exige reinício: escritas e
 leituras v2 respondem `503 CATALOG_BLOCKED`; `/admin/v2/status` segue em modo
 degradado. Evidência em `docs/PHASE-9-STAGE-4-VALIDATION.md`.
+
+A Etapa 5 (2026-09-24, local, sem push; D-097–D-100) trouxe a Admin UX v2
+somente leitura: apresentação no formato 2 com as seções da v1 inalteradas
+(selos da Etapa 8 preservados), barra lateral única com Painel, Datasources,
+detalhe com abas, protótipo "Novo datasource" sem campos e o grupo Política v1
+intacto. A UI só faz `GET` sob `/admin/v2/`; 404 e 503 viram estados
+explicados; sem catálogo, a sessão cai na Visão geral da v1 como antes. Tema
+claro/escuro sem storage. O vocabulário privado da v2 é verificado por token.
+Um refinamento visual, emendado no mesmo commit, trouxe três mudanças. Em
+telas estreitas a navegação fica atrás de um botão `Menu:` acessível. O
+Painel foi hierarquizado. Os avisos ficaram curtos.
+Capturas de referência (fixture sintética) em `docs/ux-v2/`, com o conjunto
+anterior em `docs/ux-v2/antes/`, a aprovar antes da Etapa 6. Toolchain fixada: Node 24.20.0/npm 11.19.0 locais; o `.venv`
+contém uma instalação antiga e não editável de `maskgw`, por isso o harness de
+navegador define `PYTHONPATH=src` no modo checkout. Evidência em
+`docs/PHASE-9-STAGE-5-VALIDATION.md`.
 
 ### Fora do escopo, inalterado
 

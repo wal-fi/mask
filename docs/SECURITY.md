@@ -661,3 +661,18 @@ sem CORS, `OPTIONS` ou `/docs`. Invariantes com teste:
 O token administrativo continua o único principal (D-068); não há bind externo
 nem variável de ambiente nova. Risco aceito: com o mesmo destino, um conjunto
 DNS legitimamente alterado não pode ser refixado pela v2 (recusa fechada).
+
+### Fase 9, Etapa 5 — invariantes da UI v2 somente leitura
+
+- a UI só envia `GET` para `/admin/v2/`, verificado no Python, no verificador
+  público e no transporte; não existe campo de senha, envio ou teste de
+  conexão na UI v2;
+- a identidade de item é validada contra o modelo da chave e ocupa um único
+  segmento; 404/503 são interpretados só por status HTTP;
+- token continua só em memória; o tema não usa storage;
+- o vocabulário privado da v2 é verificado por token nos assets públicos
+  (D-099), além da verificação por substring da v1;
+- capturas de referência só de fixture sintética (D-098).
+
+O limite pós-conexão da D-090 continua aberto e bloqueia a ativação da v2 pelo
+operador na Etapa 7.

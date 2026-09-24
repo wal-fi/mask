@@ -1,0 +1,1267 @@
+{
+  "CatalogCounts": {
+    "additionalProperties": false,
+    "properties": {
+      "enabled": {
+        "title": "Enabled",
+        "type": "integer"
+      },
+      "published": {
+        "title": "Published",
+        "type": "integer"
+      },
+      "total": {
+        "title": "Total",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "total",
+      "enabled",
+      "published"
+    ],
+    "title": "CatalogCounts",
+    "type": "object"
+  },
+  "ConnectionBody": {
+    "additionalProperties": false,
+    "description": "Destino em campos distintos. Nao existe forma de enviar um DSN.",
+    "properties": {
+      "database": {
+        "maxLength": 63,
+        "minLength": 1,
+        "title": "Database",
+        "type": "string"
+      },
+      "host": {
+        "maxLength": 253,
+        "minLength": 1,
+        "title": "Host",
+        "type": "string"
+      },
+      "port": {
+        "maximum": 65535,
+        "minimum": 1,
+        "title": "Port",
+        "type": "integer"
+      },
+      "tls": {
+        "$ref": "#/$defs/TlsBody"
+      },
+      "username": {
+        "maxLength": 63,
+        "minLength": 1,
+        "title": "Username",
+        "type": "string"
+      }
+    },
+    "required": [
+      "host",
+      "port",
+      "database",
+      "username",
+      "tls"
+    ],
+    "title": "ConnectionBody",
+    "type": "object"
+  },
+  "ConnectionView": {
+    "additionalProperties": false,
+    "description": "Destino para o administrador. Nunca a senha nem os enderecos fixados.",
+    "properties": {
+      "database": {
+        "title": "Database",
+        "type": "string"
+      },
+      "host": {
+        "title": "Host",
+        "type": "string"
+      },
+      "port": {
+        "title": "Port",
+        "type": "integer"
+      },
+      "tls": {
+        "$ref": "#/$defs/TlsView"
+      },
+      "username": {
+        "title": "Username",
+        "type": "string"
+      }
+    },
+    "required": [
+      "host",
+      "port",
+      "database",
+      "username",
+      "tls"
+    ],
+    "title": "ConnectionView",
+    "type": "object"
+  },
+  "CredentialBody": {
+    "additionalProperties": false,
+    "description": "Senha upstream, write-only. Nunca volta em resposta alguma.",
+    "properties": {
+      "password": {
+        "maxLength": 1024,
+        "minLength": 1,
+        "title": "Password",
+        "type": "string"
+      }
+    },
+    "required": [
+      "password"
+    ],
+    "title": "CredentialBody",
+    "type": "object"
+  },
+  "CredentialView": {
+    "additionalProperties": false,
+    "description": "So o estado. O tipo nao admite valor, tamanho, hash, nonce ou data.",
+    "properties": {
+      "configured": {
+        "const": true,
+        "title": "Configured",
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "configured"
+    ],
+    "title": "CredentialView",
+    "type": "object"
+  },
+  "DatasourceCreateRequest": {
+    "additionalProperties": false,
+    "description": "`POST /admin/v2/datasources`. Tudo explicito, inclusive `enabled`.",
+    "properties": {
+      "alias": {
+        "pattern": "^[a-z][a-z0-9_-]{0,62}$",
+        "title": "Alias",
+        "type": "string"
+      },
+      "connection": {
+        "$ref": "#/$defs/ConnectionBody"
+      },
+      "credential": {
+        "$ref": "#/$defs/CredentialBody"
+      },
+      "destination_policy": {
+        "$ref": "#/$defs/DestinationPolicyBody"
+      },
+      "display_name": {
+        "maxLength": 128,
+        "minLength": 1,
+        "title": "Display Name",
+        "type": "string"
+      },
+      "enabled": {
+        "title": "Enabled",
+        "type": "boolean"
+      },
+      "expected_catalog_revision": {
+        "minimum": 0,
+        "title": "Expected Catalog Revision",
+        "type": "integer"
+      },
+      "limits": {
+        "$ref": "#/$defs/LimitsBody"
+      },
+      "policy": {
+        "$ref": "#/$defs/PolicyBody"
+      }
+    },
+    "required": [
+      "expected_catalog_revision",
+      "alias",
+      "display_name",
+      "enabled",
+      "connection",
+      "credential",
+      "limits",
+      "destination_policy",
+      "policy"
+    ],
+    "title": "DatasourceCreateRequest",
+    "type": "object"
+  },
+  "DatasourceDeleteRequest": {
+    "additionalProperties": false,
+    "description": "Remocao com confirmacao destrutiva pelo alias (spec §9.1).",
+    "properties": {
+      "confirm_alias": {
+        "maxLength": 63,
+        "minLength": 1,
+        "title": "Confirm Alias",
+        "type": "string"
+      },
+      "expected_revision": {
+        "minimum": 1,
+        "title": "Expected Revision",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "expected_revision",
+      "confirm_alias"
+    ],
+    "title": "DatasourceDeleteRequest",
+    "type": "object"
+  },
+  "DatasourceDeleteResponse": {
+    "additionalProperties": false,
+    "properties": {
+      "catalog_revision": {
+        "title": "Catalog Revision",
+        "type": "integer"
+      },
+      "removed": {
+        "const": true,
+        "default": true,
+        "title": "Removed",
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "catalog_revision"
+    ],
+    "title": "DatasourceDeleteResponse",
+    "type": "object"
+  },
+  "DatasourceListResponse": {
+    "additionalProperties": false,
+    "properties": {
+      "catalog_revision": {
+        "title": "Catalog Revision",
+        "type": "integer"
+      },
+      "datasources": {
+        "items": {
+          "$ref": "#/$defs/DatasourceSummary"
+        },
+        "title": "Datasources",
+        "type": "array"
+      }
+    },
+    "required": [
+      "catalog_revision",
+      "datasources"
+    ],
+    "title": "DatasourceListResponse",
+    "type": "object"
+  },
+  "DatasourcePolicyRequest": {
+    "additionalProperties": false,
+    "properties": {
+      "expected_revision": {
+        "minimum": 1,
+        "title": "Expected Revision",
+        "type": "integer"
+      },
+      "policy": {
+        "$ref": "#/$defs/PolicyBody"
+      }
+    },
+    "required": [
+      "expected_revision",
+      "policy"
+    ],
+    "title": "DatasourcePolicyRequest",
+    "type": "object"
+  },
+  "DatasourcePolicyResponse": {
+    "additionalProperties": false,
+    "properties": {
+      "catalog_revision": {
+        "title": "Catalog Revision",
+        "type": "integer"
+      },
+      "datasource_id": {
+        "title": "Datasource Id",
+        "type": "string"
+      },
+      "policy": {
+        "$ref": "#/$defs/PolicyView"
+      },
+      "revision": {
+        "title": "Revision",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "catalog_revision",
+      "datasource_id",
+      "revision",
+      "policy"
+    ],
+    "title": "DatasourcePolicyResponse",
+    "type": "object"
+  },
+  "DatasourceResponse": {
+    "additionalProperties": false,
+    "properties": {
+      "catalog_revision": {
+        "title": "Catalog Revision",
+        "type": "integer"
+      },
+      "datasource": {
+        "$ref": "#/$defs/DatasourceView"
+      }
+    },
+    "required": [
+      "catalog_revision",
+      "datasource"
+    ],
+    "title": "DatasourceResponse",
+    "type": "object"
+  },
+  "DatasourceRevisionRequest": {
+    "additionalProperties": false,
+    "description": "Habilitar/desabilitar: so a revision do datasource.",
+    "properties": {
+      "expected_revision": {
+        "minimum": 1,
+        "title": "Expected Revision",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "expected_revision"
+    ],
+    "title": "DatasourceRevisionRequest",
+    "type": "object"
+  },
+  "DatasourceRotateRequest": {
+    "additionalProperties": false,
+    "properties": {
+      "credential": {
+        "$ref": "#/$defs/CredentialBody"
+      },
+      "expected_revision": {
+        "minimum": 1,
+        "title": "Expected Revision",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "expected_revision",
+      "credential"
+    ],
+    "title": "DatasourceRotateRequest",
+    "type": "object"
+  },
+  "DatasourceSummary": {
+    "additionalProperties": false,
+    "properties": {
+      "alias": {
+        "title": "Alias",
+        "type": "string"
+      },
+      "display_name": {
+        "title": "Display Name",
+        "type": "string"
+      },
+      "enabled": {
+        "title": "Enabled",
+        "type": "boolean"
+      },
+      "id": {
+        "pattern": "^dso_[0-9a-f]{32}$",
+        "title": "Id",
+        "type": "string"
+      },
+      "last_test": {
+        "$ref": "#/$defs/LastTestView"
+      },
+      "revision": {
+        "title": "Revision",
+        "type": "integer"
+      },
+      "runtime": {
+        "$ref": "#/$defs/RuntimeView"
+      }
+    },
+    "required": [
+      "id",
+      "alias",
+      "display_name",
+      "enabled",
+      "revision",
+      "last_test",
+      "runtime"
+    ],
+    "title": "DatasourceSummary",
+    "type": "object"
+  },
+  "DatasourceTestDraftRequest": {
+    "additionalProperties": false,
+    "description": "`POST /admin/v2/datasources:test`: rascunho completo, sem efeito.",
+    "properties": {
+      "alias": {
+        "pattern": "^[a-z][a-z0-9_-]{0,62}$",
+        "title": "Alias",
+        "type": "string"
+      },
+      "connection": {
+        "$ref": "#/$defs/ConnectionBody"
+      },
+      "credential": {
+        "$ref": "#/$defs/CredentialBody"
+      },
+      "destination_policy": {
+        "$ref": "#/$defs/DestinationPolicyBody"
+      },
+      "display_name": {
+        "maxLength": 128,
+        "minLength": 1,
+        "title": "Display Name",
+        "type": "string"
+      },
+      "limits": {
+        "$ref": "#/$defs/LimitsBody"
+      },
+      "policy": {
+        "$ref": "#/$defs/PolicyBody"
+      }
+    },
+    "required": [
+      "alias",
+      "display_name",
+      "connection",
+      "credential",
+      "limits",
+      "destination_policy",
+      "policy"
+    ],
+    "title": "DatasourceTestDraftRequest",
+    "type": "object"
+  },
+  "DatasourceTestRequest": {
+    "additionalProperties": false,
+    "description": "`POST /admin/v2/datasources/{id}:test`: corpo `{}` e nada mais.",
+    "properties": {},
+    "title": "DatasourceTestRequest",
+    "type": "object"
+  },
+  "DatasourceTestResponse": {
+    "additionalProperties": false,
+    "description": "Um teste passa ou falha com categoria; nunca persiste nem publica.",
+    "properties": {
+      "passed": {
+        "const": true,
+        "default": true,
+        "title": "Passed",
+        "type": "boolean"
+      },
+      "persisted": {
+        "const": false,
+        "default": false,
+        "title": "Persisted",
+        "type": "boolean"
+      },
+      "published": {
+        "const": false,
+        "default": false,
+        "title": "Published",
+        "type": "boolean"
+      }
+    },
+    "title": "DatasourceTestResponse",
+    "type": "object"
+  },
+  "DatasourceUpdateRequest": {
+    "additionalProperties": false,
+    "description": "`PUT /admin/v2/datasources/{id}`: campos nao secretos, fora a politica.\n\n`enabled`, `policy` e `credential` tem rotas proprias e caem no\n`extra=\"forbid\"`. `alias` e declarado so para ser recusado.",
+    "properties": {
+      "alias": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/JsonValue"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "connection": {
+        "$ref": "#/$defs/ConnectionBody"
+      },
+      "destination_policy": {
+        "$ref": "#/$defs/DestinationPolicyBody"
+      },
+      "display_name": {
+        "maxLength": 128,
+        "minLength": 1,
+        "title": "Display Name",
+        "type": "string"
+      },
+      "expected_revision": {
+        "minimum": 1,
+        "title": "Expected Revision",
+        "type": "integer"
+      },
+      "limits": {
+        "$ref": "#/$defs/LimitsBody"
+      }
+    },
+    "required": [
+      "expected_revision",
+      "display_name",
+      "connection",
+      "limits",
+      "destination_policy"
+    ],
+    "title": "DatasourceUpdateRequest",
+    "type": "object"
+  },
+  "DatasourceView": {
+    "additionalProperties": false,
+    "properties": {
+      "alias": {
+        "title": "Alias",
+        "type": "string"
+      },
+      "connection": {
+        "$ref": "#/$defs/ConnectionView"
+      },
+      "credential": {
+        "$ref": "#/$defs/CredentialView"
+      },
+      "destination_policy": {
+        "$ref": "#/$defs/DestinationPolicyView"
+      },
+      "display_name": {
+        "title": "Display Name",
+        "type": "string"
+      },
+      "effective_limits": {
+        "$ref": "#/$defs/EffectiveLimitsView"
+      },
+      "enabled": {
+        "title": "Enabled",
+        "type": "boolean"
+      },
+      "id": {
+        "pattern": "^dso_[0-9a-f]{32}$",
+        "title": "Id",
+        "type": "string"
+      },
+      "last_test": {
+        "$ref": "#/$defs/LastTestView"
+      },
+      "limits": {
+        "$ref": "#/$defs/LimitsView"
+      },
+      "revision": {
+        "title": "Revision",
+        "type": "integer"
+      },
+      "runtime": {
+        "$ref": "#/$defs/RuntimeView"
+      }
+    },
+    "required": [
+      "id",
+      "alias",
+      "display_name",
+      "enabled",
+      "revision",
+      "last_test",
+      "runtime",
+      "connection",
+      "credential",
+      "limits",
+      "effective_limits",
+      "destination_policy"
+    ],
+    "title": "DatasourceView",
+    "type": "object"
+  },
+  "DatasourceWriteResponse": {
+    "additionalProperties": false,
+    "description": "Sucesso de uma escrita. `changed=false` so no habilitar/desabilitar ocioso.",
+    "properties": {
+      "catalog_revision": {
+        "title": "Catalog Revision",
+        "type": "integer"
+      },
+      "changed": {
+        "title": "Changed",
+        "type": "boolean"
+      },
+      "datasource_id": {
+        "title": "Datasource Id",
+        "type": "string"
+      },
+      "datasource_revision": {
+        "title": "Datasource Revision",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "catalog_revision",
+      "datasource_id",
+      "datasource_revision",
+      "changed"
+    ],
+    "title": "DatasourceWriteResponse",
+    "type": "object"
+  },
+  "DestinationPolicyBody": {
+    "additionalProperties": false,
+    "properties": {
+      "allow_loopback": {
+        "title": "Allow Loopback",
+        "type": "boolean"
+      },
+      "allow_public": {
+        "title": "Allow Public",
+        "type": "boolean"
+      },
+      "allowed_hosts": {
+        "items": {
+          "type": "string"
+        },
+        "maxItems": 64,
+        "title": "Allowed Hosts",
+        "type": "array"
+      }
+    },
+    "required": [
+      "allow_public",
+      "allow_loopback",
+      "allowed_hosts"
+    ],
+    "title": "DestinationPolicyBody",
+    "type": "object"
+  },
+  "DestinationPolicyView": {
+    "additionalProperties": false,
+    "properties": {
+      "allow_loopback": {
+        "title": "Allow Loopback",
+        "type": "boolean"
+      },
+      "allow_public": {
+        "title": "Allow Public",
+        "type": "boolean"
+      },
+      "allowed_hosts": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Allowed Hosts",
+        "type": "array"
+      }
+    },
+    "required": [
+      "allow_public",
+      "allow_loopback",
+      "allowed_hosts"
+    ],
+    "title": "DestinationPolicyView",
+    "type": "object"
+  },
+  "EffectiveLimitsView": {
+    "additionalProperties": false,
+    "description": "O mais restritivo entre `policy.database` e `limits` (D-088).",
+    "properties": {
+      "max_rows": {
+        "title": "Max Rows",
+        "type": "integer"
+      },
+      "statement_timeout_ms": {
+        "title": "Statement Timeout Ms",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "statement_timeout_ms",
+      "max_rows"
+    ],
+    "title": "EffectiveLimitsView",
+    "type": "object"
+  },
+  "JsonValue": {},
+  "LastTestView": {
+    "additionalProperties": false,
+    "properties": {
+      "checked_at": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Checked At"
+      },
+      "status": {
+        "enum": [
+          "never",
+          "passed",
+          "failed"
+        ],
+        "title": "Status",
+        "type": "string"
+      }
+    },
+    "required": [
+      "status",
+      "checked_at"
+    ],
+    "title": "LastTestView",
+    "type": "object"
+  },
+  "LimitsBody": {
+    "additionalProperties": false,
+    "properties": {
+      "max_rows": {
+        "maximum": 1000000,
+        "minimum": 1,
+        "title": "Max Rows",
+        "type": "integer"
+      },
+      "max_sessions": {
+        "maximum": 1000,
+        "minimum": 1,
+        "title": "Max Sessions",
+        "type": "integer"
+      },
+      "statement_timeout_ms": {
+        "maximum": 600000,
+        "minimum": 100,
+        "title": "Statement Timeout Ms",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "statement_timeout_ms",
+      "max_rows",
+      "max_sessions"
+    ],
+    "title": "LimitsBody",
+    "type": "object"
+  },
+  "LimitsView": {
+    "additionalProperties": false,
+    "properties": {
+      "max_rows": {
+        "title": "Max Rows",
+        "type": "integer"
+      },
+      "max_sessions": {
+        "title": "Max Sessions",
+        "type": "integer"
+      },
+      "statement_timeout_ms": {
+        "title": "Statement Timeout Ms",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "statement_timeout_ms",
+      "max_rows",
+      "max_sessions"
+    ],
+    "title": "LimitsView",
+    "type": "object"
+  },
+  "MatchMode": {
+    "description": "Modo de comparacao de um nome de coluna contra o padrao da regra.",
+    "enum": [
+      "contains",
+      "exact"
+    ],
+    "title": "MatchMode",
+    "type": "string"
+  },
+  "PolicyBody": {
+    "additionalProperties": false,
+    "description": "Politica integral do datasource. As quatro secoes sao obrigatorias.",
+    "properties": {
+      "database": {
+        "$ref": "#/$defs/PolicyDatabaseBody"
+      },
+      "exceptions": {
+        "items": {
+          "$ref": "#/$defs/PolicyExceptionBody"
+        },
+        "title": "Exceptions",
+        "type": "array"
+      },
+      "masking": {
+        "items": {
+          "$ref": "#/$defs/PolicyRuleBody"
+        },
+        "title": "Masking",
+        "type": "array"
+      },
+      "sql": {
+        "$ref": "#/$defs/PolicySqlBody"
+      }
+    },
+    "required": [
+      "masking",
+      "exceptions",
+      "database",
+      "sql"
+    ],
+    "title": "PolicyBody",
+    "type": "object"
+  },
+  "PolicyDatabaseBody": {
+    "additionalProperties": false,
+    "properties": {
+      "max_rows": {
+        "maximum": 1000000,
+        "minimum": 1,
+        "title": "Max Rows",
+        "type": "integer"
+      },
+      "statement_timeout_ms": {
+        "maximum": 600000,
+        "minimum": 100,
+        "title": "Statement Timeout Ms",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "statement_timeout_ms",
+      "max_rows"
+    ],
+    "title": "PolicyDatabaseBody",
+    "type": "object"
+  },
+  "PolicyDatabaseView": {
+    "additionalProperties": false,
+    "properties": {
+      "max_rows": {
+        "title": "Max Rows",
+        "type": "integer"
+      },
+      "statement_timeout_ms": {
+        "title": "Statement Timeout Ms",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "statement_timeout_ms",
+      "max_rows"
+    ],
+    "title": "PolicyDatabaseView",
+    "type": "object"
+  },
+  "PolicyExceptionBody": {
+    "additionalProperties": false,
+    "properties": {
+      "case_sensitive": {
+        "default": false,
+        "title": "Case Sensitive",
+        "type": "boolean"
+      },
+      "match": {
+        "minLength": 1,
+        "title": "Match",
+        "type": "string"
+      },
+      "mode": {
+        "$ref": "#/$defs/MatchMode",
+        "default": "exact"
+      }
+    },
+    "required": [
+      "match"
+    ],
+    "title": "PolicyExceptionBody",
+    "type": "object"
+  },
+  "PolicyExceptionView": {
+    "additionalProperties": false,
+    "properties": {
+      "case_sensitive": {
+        "title": "Case Sensitive",
+        "type": "boolean"
+      },
+      "match": {
+        "title": "Match",
+        "type": "string"
+      },
+      "mode": {
+        "$ref": "#/$defs/MatchMode"
+      }
+    },
+    "required": [
+      "match",
+      "mode",
+      "case_sensitive"
+    ],
+    "title": "PolicyExceptionView",
+    "type": "object"
+  },
+  "PolicyRuleBody": {
+    "additionalProperties": false,
+    "properties": {
+      "case_sensitive": {
+        "default": false,
+        "title": "Case Sensitive",
+        "type": "boolean"
+      },
+      "config": {
+        "additionalProperties": true,
+        "title": "Config",
+        "type": "object"
+      },
+      "match": {
+        "minLength": 1,
+        "title": "Match",
+        "type": "string"
+      },
+      "mode": {
+        "$ref": "#/$defs/MatchMode",
+        "default": "contains"
+      },
+      "transformer": {
+        "minLength": 1,
+        "title": "Transformer",
+        "type": "string"
+      }
+    },
+    "required": [
+      "match",
+      "transformer"
+    ],
+    "title": "PolicyRuleBody",
+    "type": "object"
+  },
+  "PolicyRuleView": {
+    "additionalProperties": false,
+    "properties": {
+      "case_sensitive": {
+        "title": "Case Sensitive",
+        "type": "boolean"
+      },
+      "config": {
+        "additionalProperties": true,
+        "title": "Config",
+        "type": "object"
+      },
+      "match": {
+        "title": "Match",
+        "type": "string"
+      },
+      "mode": {
+        "$ref": "#/$defs/MatchMode"
+      },
+      "transformer": {
+        "title": "Transformer",
+        "type": "string"
+      }
+    },
+    "required": [
+      "match",
+      "mode",
+      "case_sensitive",
+      "transformer",
+      "config"
+    ],
+    "title": "PolicyRuleView",
+    "type": "object"
+  },
+  "PolicySqlBody": {
+    "additionalProperties": false,
+    "description": "`denied_functions` obrigatorio: `sql: {}` nao apaga negacoes em silencio.\n\n`allowed_pg_functions` e declarado so para que sua PRESENCA — inclusive\n`null` ou `[]` — vire `IMMUTABLE_FIELD`; ausente, o valor corrente e\npreservado (D-050).",
+    "properties": {
+      "allowed_pg_functions": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/JsonValue"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "denied_functions": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Denied Functions",
+        "type": "array"
+      }
+    },
+    "required": [
+      "denied_functions"
+    ],
+    "title": "PolicySqlBody",
+    "type": "object"
+  },
+  "PolicySqlView": {
+    "additionalProperties": false,
+    "description": "`allowed_pg_functions` e leitura, nunca escrita (D-050).",
+    "properties": {
+      "allowed_pg_functions": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Allowed Pg Functions",
+        "type": "array"
+      },
+      "denied_functions": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Denied Functions",
+        "type": "array"
+      }
+    },
+    "required": [
+      "allowed_pg_functions",
+      "denied_functions"
+    ],
+    "title": "PolicySqlView",
+    "type": "object"
+  },
+  "PolicyView": {
+    "additionalProperties": false,
+    "properties": {
+      "database": {
+        "$ref": "#/$defs/PolicyDatabaseView"
+      },
+      "exceptions": {
+        "items": {
+          "$ref": "#/$defs/PolicyExceptionView"
+        },
+        "title": "Exceptions",
+        "type": "array"
+      },
+      "masking": {
+        "items": {
+          "$ref": "#/$defs/PolicyRuleView"
+        },
+        "title": "Masking",
+        "type": "array"
+      },
+      "sql": {
+        "$ref": "#/$defs/PolicySqlView"
+      }
+    },
+    "required": [
+      "masking",
+      "exceptions",
+      "database",
+      "sql"
+    ],
+    "title": "PolicyView",
+    "type": "object"
+  },
+  "RegistryLimitsView": {
+    "additionalProperties": false,
+    "properties": {
+      "max_candidates": {
+        "title": "Max Candidates",
+        "type": "integer"
+      },
+      "max_retired": {
+        "title": "Max Retired",
+        "type": "integer"
+      },
+      "max_sessions": {
+        "title": "Max Sessions",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "max_sessions",
+      "max_retired",
+      "max_candidates"
+    ],
+    "title": "RegistryLimitsView",
+    "type": "object"
+  },
+  "RegistryView": {
+    "additionalProperties": false,
+    "properties": {
+      "candidates": {
+        "title": "Candidates",
+        "type": "integer"
+      },
+      "closing": {
+        "title": "Closing",
+        "type": "boolean"
+      },
+      "published": {
+        "title": "Published",
+        "type": "integer"
+      },
+      "retired_open": {
+        "title": "Retired Open",
+        "type": "integer"
+      },
+      "sessions": {
+        "title": "Sessions",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "published",
+      "sessions",
+      "retired_open",
+      "candidates",
+      "closing"
+    ],
+    "title": "RegistryView",
+    "type": "object"
+  },
+  "RuntimeView": {
+    "additionalProperties": false,
+    "description": "Estado instantaneo da geracao publicada, sem destino nem sessao.",
+    "properties": {
+      "generation": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Generation"
+      },
+      "published": {
+        "title": "Published",
+        "type": "boolean"
+      },
+      "sessions": {
+        "title": "Sessions",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "published",
+      "generation",
+      "sessions"
+    ],
+    "title": "RuntimeView",
+    "type": "object"
+  },
+  "TlsBody": {
+    "additionalProperties": false,
+    "properties": {
+      "mode": {
+        "enum": [
+          "disable",
+          "require",
+          "verify-full"
+        ],
+        "title": "Mode",
+        "type": "string"
+      },
+      "server_name": {
+        "anyOf": [
+          {
+            "maxLength": 253,
+            "minLength": 1,
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Server Name"
+      }
+    },
+    "required": [
+      "mode"
+    ],
+    "title": "TlsBody",
+    "type": "object"
+  },
+  "TlsView": {
+    "additionalProperties": false,
+    "properties": {
+      "mode": {
+        "title": "Mode",
+        "type": "string"
+      },
+      "server_name": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Server Name"
+      }
+    },
+    "required": [
+      "mode",
+      "server_name"
+    ],
+    "title": "TlsView",
+    "type": "object"
+  },
+  "V2StatusResponse": {
+    "additionalProperties": false,
+    "description": "`GET /admin/v2/status`: agregado, sem alias, destino ou segredo.\n\nDepois de uma falha de persistencia o catalogo exige reabertura (D-081) e\nrecusa inclusive leituras: o status continua respondendo, com\n`catalog_available=false`, sem revision nem contagens do catalogo — o que\nesta em memoria pode divergir do disco —, e com o registry, que continua\nservindo as geracoes ja publicadas.",
+    "properties": {
+      "catalog_available": {
+        "title": "Catalog Available",
+        "type": "boolean"
+      },
+      "catalog_revision": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Catalog Revision"
+      },
+      "datasources": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/CatalogCounts"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "dns_timeout_ms": {
+        "title": "Dns Timeout Ms",
+        "type": "integer"
+      },
+      "limits": {
+        "$ref": "#/$defs/RegistryLimitsView"
+      },
+      "registry": {
+        "$ref": "#/$defs/RegistryView"
+      },
+      "writes_blocked": {
+        "title": "Writes Blocked",
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "catalog_available",
+      "catalog_revision",
+      "datasources",
+      "registry",
+      "limits",
+      "writes_blocked",
+      "dns_timeout_ms"
+    ],
+    "title": "V2StatusResponse",
+    "type": "object"
+  }
+}

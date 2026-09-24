@@ -281,7 +281,7 @@ def test_incompatibility_with_valid_hashes_still_precedes_effects(
     assets = package_copy(tmp_path, monkeypatch)
     data = json.loads((assets / "presentation.json").read_bytes())
     if damage == "format":
-        data["format"] = 2
+        data["format"] = 1
     elif damage == "catalog":
         data["calls"][0]["path"] = "/admin/v1/unapproved"
     elif damage == "model":

@@ -48,8 +48,15 @@ somente pelo parâmetro interno `datasource_catalog` do composition root
 Etapa 4: Admin API v2 de datasources sob `/admin/v2`, com decisões de contrato,
 concorrência e limite de DNS apresentadas antes do código e aprovadas
 (D-092–D-096); ela foi implementada com evidência em
-`docs/PHASE-9-STAGE-4-VALIDATION.md`. As Etapas 5–12 ainda exigem revisão e
-autorização próprias. Não iniciar UI v2, PGWire, variável de
+`docs/PHASE-9-STAGE-4-VALIDATION.md`. Em 2026-09-24, depois da publicação das Etapas 3 e 4 em `c37be36`, foi
+autorizada localmente, sem push, somente a Etapa 5: protótipo e Admin UX v2
+somente leitura, com estrutura visual, fluxos e decisões apresentados antes do
+código. A Etapa 6 e posteriores continuam sem autorização. A Etapa 5 é estritamente
+somente leitura: sem POST/PUT/DELETE novo, coleta de senha ou CRUD de
+datasources; o limite pós-conexão da D-090 continua aberto e bloqueia a
+ativação da v2 pelo operador (Etapa 7). Ela foi implementada (D-097–D-100) com
+evidência em `docs/PHASE-9-STAGE-5-VALIDATION.md`; as capturas em `docs/ux-v2/`
+precisam de aprovação antes de qualquer Etapa 6. Não iniciar UI v2, PGWire, variável de
 ambiente nova, bind externo, extensão da tool MCP ou qualquer etapa posterior.
 Evidência: `docs/PHASE-8-STAGE-9-VALIDATION.md`.
 

@@ -12,13 +12,13 @@ import { AccessError } from "./transport.js";
  */
 export function coordinate(client,readId) {
   /** @type {Flow} */ let state={tag:"loading"};
-  let generation=0, sequence=0, closed=false, occupied=false, minimum=0;
+  let epoch=0, sequence=0, closed=false, occupied=false, minimum=0;
   /** @type {AbortController | undefined} */ let active;
   /** @type {Snapshot | undefined} */ let observed;
   /** @type {() => void} */ let detach=()=>{};
   function clear() {
     if(closed) return;
-    closed=true;generation++;sequence++;active?.abort();active=undefined;observed=undefined;state={tag:"authentication"};occupied=false;minimum=0;detach();
+    closed=true;epoch++;sequence++;active?.abort();active=undefined;observed=undefined;state={tag:"authentication"};occupied=false;minimum=0;detach();
     if(typeof window !== "undefined" && typeof window.removeEventListener === "function") {window.removeEventListener("pagehide",close);window.removeEventListener("pageshow",close);}
   }
   function close() {clear();client.close();}
@@ -30,9 +30,9 @@ export function coordinate(client,readId) {
   function expires(error) {if(error instanceof AccessError && error.kind === "authentication") {close();return true;}return false;}
   async function load() {
     if(closed || occupied || (state.tag !== "loading" && state.tag !== "reading" && !(state.tag === "incompatible" && !state.edit))) return false;
-    const mine=generation,ticket=++sequence;active?.abort();active=new AbortController();state={tag:"loading"};
-    try {const value=await client.read(readId,active.signal);if(closed || mine !== generation || ticket !== sequence) return false;state={tag:"reading",snapshot:snapshot(value)};return true;}
-    catch(error) {if(!closed && mine === generation && ticket === sequence && !expires(error)) state={tag:"incompatible",edit:undefined,newBase:undefined,message:"Leitura indisponível. Tente novamente."};return false;}
+    const mine=epoch,ticket=++sequence;active?.abort();active=new AbortController();state={tag:"loading"};
+    try {const value=await client.read(readId,active.signal);if(closed || mine !== epoch || ticket !== sequence) return false;state={tag:"reading",snapshot:snapshot(value)};return true;}
+    catch(error) {if(!closed && mine === epoch && ticket === sequence && !expires(error)) state={tag:"incompatible",edit:undefined,newBase:undefined,message:"Leitura indisponível. Tente novamente."};return false;}
   }
   /** Begin/replace an abstract draft only after an explicit, checked read.
    * @param {string} id @param {unknown} draft @param {string | undefined} identity
@@ -68,26 +68,26 @@ export function coordinate(client,readId) {
     const prior=state;
     if(prior.tag !== "success" && prior.tag !== "conflict" && prior.tag !== "unknown" && prior.tag !== "uncertain") return false;
     state={...prior,newBase:undefined,message:prior.tag === "success" ? "Salva; visualização ainda não atualizada." : prior.message};
-    occupied=true;const mine=generation,ticket=++sequence;active=new AbortController();
+    occupied=true;const mine=epoch,ticket=++sequence;active=new AbortController();
     try {
       const value=await client.read(readId,active.signal);
-      if(closed || mine !== generation || ticket !== sequence) return false;
+      if(closed || mine !== epoch || ticket !== sequence) return false;
       const fresh=snapshot(value), floor=prior.tag === "success" ? prior.version : prior.edit?.base.version;
       if(fresh.version < minimum || (floor !== undefined && fresh.version < floor)) throw new Error("Request refused.");
       state={...prior,newBase:fresh,message:prior.tag === "success" ? "Salva; visualização atualizada." : prior.message};return true;
-    } catch(error) {if(!closed && mine === generation && ticket === sequence) expires(error);return false;}
-    finally {if(mine === generation && ticket === sequence) {occupied=false;active=undefined;}}
+    } catch(error) {if(!closed && mine === epoch && ticket === sequence) expires(error);return false;}
+    finally {if(mine === epoch && ticket === sequence) {occupied=false;active=undefined;}}
   }
   /** Confirmed content and its base travel as one frozen command. */
   async function confirm() {
     if(closed || occupied || (state.tag !== "draft" && state.tag !== "busy")) return false;
     const edit=state.edit;if(!edit) return false;
     client.prepare(edit.command);
-    occupied=true;sequence++;active?.abort();active=new AbortController();const mine=generation,ticket=sequence;
+    occupied=true;sequence++;active?.abort();active=new AbortController();const mine=epoch,ticket=sequence;
     state={tag:"pending",edit};
     try {
       const result=await client.mutate(edit.command,active.signal);
-      if(closed || mine !== generation || ticket !== sequence) return false;
+      if(closed || mine !== epoch || ticket !== sequence) return false;
       if(result.version !== undefined) safeVersion(result.version);
       minimum=result.version ?? edit.base.version;
       if(result.kind === "authentication") {close();return false;}
@@ -96,9 +96,9 @@ export function coordinate(client,readId) {
         state={tag:"success",edit,version:result.version,newBase:undefined,message:result.message};
       } else state={tag:result.kind,edit,newBase:undefined,message:result.message};
     } catch(error) {
-      if(closed || mine !== generation || ticket !== sequence || expires(error)) return false;
+      if(closed || mine !== epoch || ticket !== sequence || expires(error)) return false;
       state={tag:"unknown",edit,newBase:undefined,message:"Resultado desconhecido. Releia o estado antes de decidir."};
-    } finally {if(mine === generation && ticket === sequence) {occupied=false;active=undefined;}}
+    } finally {if(mine === epoch && ticket === sequence) {occupied=false;active=undefined;}}
     if(!closed) await reconcile();
     return !closed;
   }

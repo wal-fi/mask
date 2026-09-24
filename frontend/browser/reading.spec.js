@@ -37,12 +37,15 @@ test("read-only entry, six views, keyboard and logout without effects",async({},
     await page.getByLabel("Token",{exact:true}).fill(token);
     await page.keyboard.press("Tab");await page.keyboard.press("Enter");await ready(page);await clean(page,token);
     const views=["Visão geral","Configuração","Regras","Exceções","Banco","Política SQL"];
-    requireTrue(await page.getByRole("navigation").getByRole("button").count()===6);
-    for(const label of ["Atualizar",...views.slice().reverse(),"Sair"]) {
+    // Phase 9, Stage 5 shell: the three read-only second-prefix entries precede
+    // the six first-prefix views in the same single navigation landmark.
+    const second=["Painel","Datasources","Novo datasource"];
+    requireTrue(await page.getByRole("navigation").getByRole("button").count()===second.length+views.length);
+    for(const label of ["Atualizar",...views.slice().reverse(),...second.slice().reverse(),"Sair"]) {
       await page.keyboard.press("Shift+Tab");
       requireTrue(await page.getByRole("button",{name:label,exact:true}).evaluate(e=>e===document.activeElement));
     }
-    for(const label of views) {
+    for(const label of [...second,...views]) {
       await page.keyboard.press("Tab");
       requireTrue(await page.getByRole("button",{name:label,exact:true}).evaluate(e=>e===document.activeElement));
     }
@@ -141,6 +144,8 @@ test("responsive reading at 320px, 200 percent and reduced motion",async({},info
     await page.setViewportSize({width:320,height:800});await page.emulateMedia({reducedMotion:"reduce"});
     await page.goto(origin+"/admin/ui");await enter(page,token);
     for(const label of ["Configuração","Regras","Exceções","Banco","Política SQL"]) {
+      // Phase 9, Stage 5: at 320 px the navigation opens from its menu control.
+      await page.getByRole("button",{name:/^Menu: /}).click();
       await page.getByRole("button",{name:label,exact:true}).click();await ready(page);
       requireTrue(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
     }

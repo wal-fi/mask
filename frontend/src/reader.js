@@ -20,7 +20,7 @@ export function at(item, parts) {
  * @param {unknown} book
  */
 export function reader(book) {
-  if (!entry(book) || !entries(book.models) || !entries(book.bindings) || !entries(book.views) || !entries(book.calls)) throw new Error("Request failed.");
+  if (!entry(book) || !entries(book.models) || !entries(book.bindings) || !entries(book.views) || !entries(book.calls)) throw new Error("Request unsuccessful.");
   const models = new Map(book.models.map(n=>[n.id,n.shape]));
   const links = book.bindings;
   /** @param {unknown} key @param {unknown} value @param {number} depth @param {Set<object>} seen @param {number[]} versions @param {boolean[]} consents @returns {boolean} */
@@ -85,29 +85,65 @@ export function reader(book) {
   function inspectData(key,value) {
     /** @type {number[]} */ const versions=[];
     /** @type {boolean[]} */ const consents=[];
-    if(!acceptsData(key,value,0,new Set(),versions,consents) || new Set(versions).size > 1 || new Set(consents).size > 1) throw new Error("Request failed.");
+    if(!acceptsData(key,value,0,new Set(),versions,consents) || new Set(versions).size > 1 || new Set(consents).size > 1) throw new Error("Request unsuccessful.");
     const version=versions[0];
-    if(version !== undefined && consents.some(c=>c !== (version > 0))) throw new Error("Request failed.");
+    if(version !== undefined && consents.some(c=>c !== (version > 0))) throw new Error("Request unsuccessful.");
     return version;
   }
   const calls=book.calls;
   const views=book.views.map(view=>{
     const call=calls.find(c=>c.id === view.call);
     if(typeof view.id !== "string" || typeof view.label !== "string" || !entries(view.controls)
-      || !call || typeof call.id !== "string" || call.method !== "GET" || call.identity !== null) throw new Error("Request failed.");
+      || !call || typeof call.id !== "string" || call.method !== "GET" || call.identity !== null) throw new Error("Request unsuccessful.");
     return {id:view.id,label:view.label,call:call.id,controls:view.controls};
   });
   /** @param {string} id @param {unknown} value */
   function inspectDataFor(id,value) {
     const call=calls.find(c=>c.id === id && c.method === "GET");
-    if(!call) throw new Error("Request failed.");
+    if(!call) throw new Error("Request unsuccessful.");
     const version=inspectData(call.output,value);
-    if(version === undefined) throw new Error("Request failed.");
+    if(version === undefined) throw new Error("Request unsuccessful.");
     return version;
   }
   /** @param {unknown} key @param {unknown} value @param {string} role */
   function bound(key,value,role) {
     return links.filter(l=>l.model === key && l.role === role).map(l=>at(value,l.path)).filter(v=>v !== undefined);
   }
-  return {views,inspectData,inspectDataFor,bound};
+  /** Model identifier reached by a declared path; never a wire name.
+   * @param {unknown} key @param {unknown} parts @returns {string}
+   */
+  function modelAt(key,parts) {
+    if (typeof key !== "string" || !Array.isArray(parts)) throw new Error("Request unsuccessful.");
+    let current=key;
+    for (const part of parts) {
+      let node=models.get(current);
+      while (entry(node) && node.type === "nullable" && typeof node.item === "string") { current=node.item; node=models.get(current); }
+      if (!entry(node)) throw new Error("Request unsuccessful.");
+      if (typeof part === "string" && node.type === "object" && entries(node.fields)) {
+        const field=node.fields.find(f=>f.name === part);
+        if (!field || typeof field.ref !== "string") throw new Error("Request unsuccessful.");
+        current=field.ref;
+      } else if (typeof part === "number" && node.type === "list" && typeof node.item === "string") current=node.item;
+      else throw new Error("Request unsuccessful.");
+    }
+    return current;
+  }
+  const surface=entry(book.console) ? book.console : undefined;
+  /** Declared read-only console; checked by the protocol before this point. */
+  function board() {
+    if (!surface) throw new Error("Request unsuccessful.");
+    return surface;
+  }
+  /** Model of a row key: the only accepted identity of an item read. */
+  function identityModel() {
+    const spec=board().collection;
+    if (!entry(spec)) throw new Error("Request unsuccessful.");
+    const listing=calls.find(c=>c.id === spec.call);
+    if (!listing) throw new Error("Request unsuccessful.");
+    const rows=modelAt(listing.output,spec.items);
+    const shape=models.get(rows);
+    if (!entry(shape) || shape.type !== "list" || typeof shape.item !== "string") throw new Error("Request unsuccessful.");
+    return modelAt(shape.item,spec.key);
+  }
+  return {views,inspectData,inspectDataFor,bound,board,identityModel};
 }

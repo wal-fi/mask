@@ -42,11 +42,11 @@ fechada com os artefatos e números medidos no seu próprio registro de validaç
 | F9-024 | Admin API v2 não quebra v1 | 8, 11 | 4 | inventário v1 imutável, v2 fechado e regressão byte a byte | implementada na Etapa 4: inventários literais, comparação sonda a sonda com e sem v2, v1 sem importar a v2 |
 | F9-025 | Concorrência otimista por datasource | 6.1, 8 | 4, 6 | revision, conflito, busy, durability e uma publicação por vencedor | Etapa 4: revision por datasource sob o lock, um vencedor por revision, busy, falha certa/incerta; UI pendente (6) |
 | F9-026 | Teste de conexão não publica runtime | 2, 7–8 | 4, 6 | identidade, digest, revision, arquivo e registry inalterados | Etapa 4: rascunho e persistido sem efeito em bytes, revisions, `last_test`, registry e candidatos; UI pendente (6) |
-| F9-027 | UI não executa SQL nem mostra resultados | 3.1, 8–9 | 5–6, 12 | inventário, AST, rede e chamadas fechadas; contraprovas positivas | planejada |
-| F9-028 | UX v2 possui dashboard, lista, wizard e detalhe | 9 | 5–6 | screenshots aprovados, E2E e estados de erro/concorrência | planejada |
-| F9-029 | Token, segredos e drafts continuam voláteis | 4.1, 9.1–9.3 | 5–6 | lifecycle, BFCache, storage, URL, DOM, logs e leakage | planejada |
-| F9-030 | Acessibilidade em 320 px, 200% e reduced motion | 9.2, 14 | 5–6 | três browsers, teclado/foco e revisão manual registrada | planejada |
-| F9-031 | Nenhuma dependência ou recurso externo na UI | 9.2–9.3, 14 | 5–6, 12 | CSP, rede, pacote instalado e inventário de dependências | planejada |
+| F9-027 | UI não executa SQL nem mostra resultados | 3.1, 8–9 | 5–6, 12 | inventário, AST, rede e chamadas fechadas; contraprovas positivas | Etapa 5: v2 da UI só lê (4 GETs sob `/admin/v2/`, verificados no Python, no verificador público e no transporte); sem editor SQL, resultado, POST/PUT/DELETE novo ou campo de senha; CRUD pendente (6) |
+| F9-028 | UX v2 possui dashboard, lista, wizard e detalhe | 9 | 5–6 | screenshots aprovados, E2E e estados de erro/concorrência | Etapa 5: painel, lista com busca, detalhe com abas e protótipo de passos implementados e capturados (`docs/ux-v2/`); fluxos de escrita pendentes (6) |
+| F9-029 | Token, segredos e drafts continuam voláteis | 4.1, 9.1–9.3 | 5–6 | lifecycle, BFCache, storage, URL, DOM, logs e leakage | Etapa 5: token só em memória, tema sem storage, BFCache/pagehide/logout provados nos três engines; rascunhos de datasource inexistentes nesta etapa |
+| F9-030 | Acessibilidade em 320 px, 200% e reduced motion | 9.2, 14 | 5–6 | três browsers, teclado/foco e revisão manual registrada | Etapa 5: 320 CSS px, 640 px (200%), movimento reduzido, temas claro/escuro, contraste AA medido e teclado/foco nos três engines |
+| F9-031 | Nenhuma dependência ou recurso externo na UI | 9.2–9.3, 14 | 5–6, 12 | CSP, rede, pacote instalado e inventário de dependências | Etapa 5: sem recurso externo; CSP/mesma origem mantidas; vocabulário privado da v2 por token (D-099); pacote instalado sem Node verificado |
 | F9-032 | MCP aceita alias opcional sem quebrar `sql` | 10 | 11 | clientes antigos, novo cliente e default explícito | planejada |
 | F9-033 | MCP não enumera aliases nem altera catálogo | 10 | 11 | schema/tool único, erros fixos e AST de separação de planos | planejada |
 | F9-034 | SSRF e DNS rebinding no destino são bloqueados | 6.1, 12 | 2, 4, 12 | loopback, link-local, multicast, metadata cloud e resolução mutável | Etapa 4: destinos proibidos e DNS trocado recusados pelas rotas, sem ecoar o destino; resolução com prazo (D-092); revisão final pendente (12) |
@@ -64,7 +64,7 @@ fechada com os artefatos e números medidos no seu próprio registro de validaç
 | 2 | modelo, store autenticado/cifrado e migração | F9-016–019, F9-022–023, F9-034–035 | testes AEAD/metadata, âncora de replay, atomicidade, SSRF, leakage e subprocesso fail-closed | concluída; F9-022–023 integrados na Etapa 3 |
 | 3 | registry multi-datasource e lifecycle | F9-002–003, F9-020–023, F9-036 | concorrência, generations, refcount, drain, fechamento único e isolamento | implementada localmente; evidência em `PHASE-9-STAGE-3-VALIDATION.md` |
 | 4 | Admin API v2 de datasources | F9-004–006, F9-022, F9-024–026, F9-034, F9-036 | auth/CSRF, revisões, teste sem publicação, v1 intacta, destino validado e resolução DNS com limite efetivo | implementada localmente em 2026-09-24, sem push; evidência em `PHASE-9-STAGE-4-VALIDATION.md` |
-| 5 | UX v2 somente leitura | F9-027–031 | screenshots, a11y, token/draft lifecycle, CSP e três browsers fixados | não iniciada |
+| 5 | UX v2 somente leitura | F9-027–031 | screenshots, a11y, token/draft lifecycle, CSP e três browsers fixados | implementada localmente em 2026-09-24, sem push; capturas aguardam aprovação antes da Etapa 6; evidência em `PHASE-9-STAGE-5-VALIDATION.md` |
 | 6 | CRUD visual de datasources e policies | F9-016–019, F9-025–031, F9-035 | segredo write-only, rotação, concorrência, confirmação destrutiva e sem SQL/resultados | não iniciada |
 | 7 | PGWire startup, TLS e autenticação | F9-001, F9-005–008, F9-011, F9-013, F9-021, F9-036 | harness binário, SCRAM, TLS externo, limites, erro sanitizado e lifecycle; limite efetivo da verificação pós-conexão de candidatos antes de ativar a Admin v2 pelo operador, sem abandonar thread, processo ou conexão | não iniciada |
 | 8 | simple query e masking | F9-002–003, F9-009, F9-014–015, F9-036–037 | psql/psycopg, PostgreSQL 16 real, SELECT-only, masking, truncamento e limite efetivo do processamento local | não iniciada |
@@ -124,6 +124,15 @@ fechada com os artefatos e números medidos no seu próprio registro de validaç
 | D-094 | `DatasourceRuntimeService`: revision por datasource, mutação/confirmação sob lock, probe, teste de desabilitado, política compilada | `test_datasource_service_v2.py`, `test_admin_v2_concurrency.py`, `test_admin_v2_http.py` |
 | D-095 | `admin/http/v2/errors.py`, `audit/datasource.py`, `AuditLog.record_datasource_admin` | `test_admin_v2_audit.py` e auditoria nos testes HTTP |
 | D-096 | ausência da rota de default do MCP | inventário literal em `test_admin_v2_http.py` |
+
+## Rastreabilidade das decisões da Etapa 5 D-097–D-100
+
+| Decisão | Implementação verificável | Evidência |
+|---|---|---|
+| D-097 | `protocol.py`/`protocol.js` formato 2, `console`, `transport.js` (v2 só GET, identidade, 404/503), `screen.js` | `surface.test.js`, `test_phase8_final_inventory.py` (selos v1 e da Etapa 5), `console.spec.js` |
+| D-098 | `frontend/tools/screenshots.js`, `docs/ux-v2/` | 57 capturas de fixture sintética (após o refinamento visual) e conjunto "antes" em `docs/ux-v2/antes/`; reporter sem screenshot |
+| D-099 | `generate.py` (`vocabulary-tokens.json`), `inspect.js` por token | `surface.test.js`, `package.spec.js`, build com inspetor limpo |
+| D-100 | shell único, tema em memória, toolchain fixada | `reading.spec.js`, `console.spec.js` nos três engines |
 
 ## Gates comuns e limites desta matriz
 
