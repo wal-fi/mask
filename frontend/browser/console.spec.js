@@ -94,15 +94,16 @@ test("console: landing, list, search, detail tabs by keyboard, prototype and log
     await page.getByRole("button",{name:"Voltar para a lista",exact:true}).click();await ready(page);
     requireTrue(await page.locator("tbody tr").count() === 3,"back");
 
+    // Phase 9, Stage 6: the wizard is real; it reads the list once and writes nothing by itself.
     const beforeGuide=seen.second;
     await navigate(page,"Novo datasource");
-    requireTrue((await page.getByRole("note").textContent())?.includes("Nada é salvo") === true,"banner");
-    const panel=page.getByRole("region",{name:"Leitura",exact:true});
-    requireTrue(await panel.locator("input,select,textarea,form").count() === 0,"no fields");
-    for(let step=0;step<6;step++) await page.getByRole("button",{name:"Próximo",exact:true}).click();
-    requireTrue(await page.getByRole("button",{name:"Próximo",exact:true}).isDisabled(),"last step");
-    requireTrue((await panel.textContent())?.includes("nada foi salvo ou testado") === true,"honest review");
-    requireTrue(seen.second === beforeGuide,"prototype reads nothing");
+    await expect(page.getByRole("region",{name:"Identificação",exact:true})).toBeVisible();
+    requireTrue((await page.getByRole("note").textContent())?.includes("nunca é exibida de novo") === true,"banner");
+    requireTrue(await page.getByLabel("Alias",{exact:true}).isVisible(),"real fields");
+    await page.getByRole("button",{name:"Próximo",exact:true}).click();
+    requireTrue(await page.getByText("Obrigatório.",{exact:true}).first().isVisible(),"required stays");
+    requireTrue(await page.getByRole("region",{name:"Identificação",exact:true}).isVisible(),"no step without required fields");
+    requireTrue(seen.second === beforeGuide+1 && seen.writes === 0,"one list read, no write");
 
     await page.getByRole("button",{name:"Tema: automático",exact:true}).click();
     requireTrue(await page.evaluate(()=>document.documentElement.dataset.theme) === "dark","dark");
@@ -294,7 +295,9 @@ test("console: keyboard reaches every navigation entry and returns focus to titl
     }
     for(const label of ["Datasources","Novo datasource","Painel"]) {
       const button=page.getByRole("navigation").getByRole("button",{name:label,exact:true});await button.focus();await page.keyboard.press("Enter");
+      // Stage 6: the wizard reads the list (catalog stamp) like the other entries.
       if(label !== "Novo datasource") await ready(page);
+      else await expect(page.getByRole("region",{name:"Identificação",exact:true})).toBeVisible();
       requireTrue(await page.getByRole("heading",{level:2}).first().evaluate(e=>e===document.activeElement),"title focus "+label);
       requireTrue(await button.getAttribute("aria-current") === "page","current "+label);
     }

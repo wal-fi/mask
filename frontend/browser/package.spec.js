@@ -23,7 +23,7 @@ test("installed HTTP bytes equal approved full inventories and public vocabulary
       requireTrue(response.status()===200 && bytes.equals(approved) && response.headers()["content-type"]===types[i]);
       requireTrue(response.headers()["cache-control"]==="no-store" && !bytes.includes(token));
       if(i<3) inspectPublic(bytes.toString("utf8"),raw,i===1,second);
-      else requireTrue(createHash("sha256").update(bytes).digest("hex")==="078d3335fb7be604152deae22f2f385e7898c94f8139319fade66eaf6ef22b10");
+      else requireTrue(createHash("sha256").update(bytes).digest("hex")==="0964dc7cc7599a0ef9fd1335191a33e3451cfd8cd8ae86a93eb3aca406669a3b");
     }
   });
 });

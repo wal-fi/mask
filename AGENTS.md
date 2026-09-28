@@ -51,14 +51,21 @@ concorrência e limite de DNS apresentadas antes do código e aprovadas
 `docs/PHASE-9-STAGE-4-VALIDATION.md`. Em 2026-09-24, depois da publicação das Etapas 3 e 4 em `c37be36`, foi
 autorizada localmente, sem push, somente a Etapa 5: protótipo e Admin UX v2
 somente leitura, com estrutura visual, fluxos e decisões apresentados antes do
-código. A Etapa 6 e posteriores continuam sem autorização. A Etapa 5 é estritamente
+código. A Etapa 5 é estritamente
 somente leitura: sem POST/PUT/DELETE novo, coleta de senha ou CRUD de
 datasources; o limite pós-conexão da D-090 continua aberto e bloqueia a
 ativação da v2 pelo operador (Etapa 7). Ela foi implementada (D-097–D-100) com
 evidência em `docs/PHASE-9-STAGE-5-VALIDATION.md`; o refinamento visual (D-101,
-D-102) e as capturas em `docs/ux-v2/` foram aprovados pelo usuário em 2026-09-28, sem
-push. Isso não autoriza a Etapa 6. Não iniciar UI v2, PGWire, variável de
-ambiente nova, bind externo, extensão da tool MCP ou qualquer etapa posterior.
+D-102) e as capturas em `docs/ux-v2/` foram aprovados pelo usuário em 2026-09-28, e a
+Etapa 5 foi publicada em `4d5b78f`. Na mesma data foi autorizada somente a Etapa 6:
+CRUD visual de datasources e policies pelas nove escritas v2 já aprovadas, com
+senha write-only, concorrência otimista, uma escrita pendente, rascunho volátil e
+confirmação explícita; sem PGWire, bind externo, variável de ativação, MCP
+multi-datasource ou definição do datasource default. O limite pós-conexão da D-090
+continua aberto e impede ativar a v2 para operação real. A Etapa 6 está implementada
+localmente (D-103–D-106, `docs/PHASE-9-STAGE-6-VALIDATION.md`), aguardando revisão.
+Não iniciar PGWire, variável de ambiente nova, bind externo, extensão da tool MCP
+ou qualquer etapa posterior à 6.
 Evidência: `docs/PHASE-8-STAGE-9-VALIDATION.md`.
 
 Interfaces genéricas, editor SQL administrativo, resultados do banco na UI,

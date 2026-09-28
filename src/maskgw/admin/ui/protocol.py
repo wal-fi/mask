@@ -18,8 +18,29 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 MAX_DEPTH = 16
-MAX_MODELS = 192
+MAX_MODELS = 320
 MAX_CONTROLS = 512
+
+#: Operacoes de escrita da v2 (Fase 9, Etapa 6, D-103). Nomes proprios, para que
+#: o editor da v1 (que procura chamadas por operacao) nunca as encontre.
+V2_WRITE_OPERATIONS = ("register", "probe", "renew", "resume", "pause", "revise", "retire", "amend")
+
+#: Inventario EXATO das escritas v2 que a UI pode declarar (D-093). Espelha
+#: `admin/http/v2/routes.py::V2_WRITE_ROUTES` por teste, sem importar o roteador:
+#: `maskgw.admin.ui` continua importavel sem FastAPI.
+V2_WRITES = frozenset(
+    {
+        ("POST", "/admin/v2/datasources", "register"),
+        ("POST", "/admin/v2/datasources:test", "probe"),
+        ("POST", "/admin/v2/datasources/{datasource_id}:test", "probe"),
+        ("POST", "/admin/v2/datasources/{datasource_id}:rotate-credential", "renew"),
+        ("POST", "/admin/v2/datasources/{datasource_id}:enable", "resume"),
+        ("POST", "/admin/v2/datasources/{datasource_id}:disable", "pause"),
+        ("PUT", "/admin/v2/datasources/{datasource_id}", "revise"),
+        ("DELETE", "/admin/v2/datasources/{datasource_id}", "retire"),
+        ("PUT", "/admin/v2/datasources/{datasource_id}/policy", "amend"),
+    }
+)
 MAX_PRESENTATION_BYTES = 262144
 SAFE_INTEGER = 9007199254740991
 FORBIDDEN = frozenset({"__proto__", "constructor", "prototype"})
@@ -103,7 +124,24 @@ class Call(Closed):
     input: str | None
     output: str
     error: str
-    operation: Literal["read", "create", "replace", "delete", "move", "check", "confirm", "append"]
+    operation: Literal[
+        "read",
+        "create",
+        "replace",
+        "delete",
+        "move",
+        "check",
+        "confirm",
+        "append",
+        "register",
+        "probe",
+        "renew",
+        "resume",
+        "pause",
+        "revise",
+        "retire",
+        "amend",
+    ]
     identity: str | None
 
 
@@ -251,6 +289,8 @@ class Step(Closed):
     id: str
     label: str = Field(min_length=1, max_length=60)
     text: str = Field(min_length=1, max_length=600)
+    #: Campos de primeiro nivel da acao do assistente exibidos neste passo.
+    fields: list[str] = Field(default_factory=list, max_length=16)
 
 
 class Guide(Closed):
@@ -260,6 +300,71 @@ class Guide(Closed):
     label: str = Field(min_length=1, max_length=60)
     banner: str = Field(min_length=1, max_length=400)
     steps: list[Step] = Field(min_length=2, max_length=10)
+    #: Acao de cadastro que o assistente preenche (Etapa 6); sem ela, prototipo.
+    action: str | None = None
+
+
+class Visible(Closed):
+    """Condicao de exibicao: valor em caminho declarado, nunca expressao."""
+
+    path: list[Segment]
+    value: str | int | bool
+
+
+class FormField(Closed):
+    """Campo de formulario: so caminho, rotulo e tipo; nenhum codigo."""
+
+    id: str
+    label: str = Field(min_length=1, max_length=120)
+    help: str | None = Field(default=None, min_length=1, max_length=300)
+    kind: Literal["text", "secret", "integer", "flag", "choice", "lines", "records"]
+    #: Destino no corpo (em `records`, relativo ao item).
+    path: list[Segment]
+    #: Origem na leitura base para preencher (em `records`, relativo ao item).
+    source: list[Segment] | None = None
+    default: Scalar = None
+    #: Omitido do corpo quando vazio (texto) em vez de enviar string vazia.
+    optional: bool = False
+    choices: list[Wording] = Field(default_factory=list, max_length=32)
+    item: str | None = Field(default=None, min_length=1, max_length=60)
+    items: list[FormField] = Field(default_factory=list, max_length=24)
+    #: Dentro de `records`: exibido e enviado so quando o irmao casa.
+    when: Visible | None = None
+
+
+class Action(Closed):
+    """Escrita v2 declarada (Etapa 6, D-103/D-104): corpo por caminhos."""
+
+    id: str
+    label: str = Field(min_length=1, max_length=60)
+    title: str = Field(min_length=1, max_length=120)
+    call: str
+    place: Literal["collection", "detail", "aside"]
+    #: Destino da revision no corpo (`stamp`) e sua origem na leitura base.
+    stamp: list[Segment] | None = None
+    origin: list[Segment] | None = None
+    #: Depois do sucesso: reler o item, voltar a lista ou abrir o item criado,
+    #: cuja identidade esta em `lands` na resposta.
+    after: Literal["reread", "list", "open"] = "reread"
+    lands: list[Segment] | None = None
+    fields: list[FormField] = Field(default_factory=list, max_length=32)
+    visible: Visible | None = None
+    confirm: str = Field(min_length=1, max_length=400)
+    #: Confirmacao destrutiva digitada: tem de igualar a origem na leitura base.
+    typed: FormField | None = None
+    #: Teste do mesmo rascunho, sem efeito, e caminhos retirados do corpo nele.
+    probe: str | None = None
+    drop: list[list[Segment]] = Field(default_factory=list, max_length=4)
+    done: str = Field(min_length=1, max_length=300)
+    tone: Literal["plain", "danger"] = "plain"
+
+
+class Outcome(Closed):
+    """Categoria fechada da v2 -> estado abstrato e texto fixo."""
+
+    value: str = Field(min_length=1, max_length=60)
+    kind: Literal["conflict", "refused", "busy", "blocked", "uncertain"]
+    text: str = Field(min_length=1, max_length=400)
 
 
 class Section(Closed):
@@ -294,12 +399,23 @@ class Console(Closed):
     guide: Guide
     #: Politica v1 apresentada em grupos; vazio mantem a leitura original.
     pages: list[Page] = Field(default_factory=list, max_length=6)
+    #: Escritas v2 (Etapa 6): acoes, resultados por categoria e motivos de campo.
+    actions: list[Action] = Field(default_factory=list, max_length=12)
+    outcomes: list[Outcome] = Field(default_factory=list, max_length=40)
+    reasons: list[Wording] = Field(default_factory=list, max_length=8)
+    #: Caminho da revision observada no envelope de erro de escrita.
+    latest: list[Segment] | None = None
+    unknown: str = Field(
+        default="Resultado desconhecido. Releia o estado antes de decidir.",
+        min_length=1,
+        max_length=300,
+    )
 
 
 class Presentation(Closed):
     format: Literal[2]
     models: list[Definition] = Field(min_length=1, max_length=MAX_MODELS)
-    calls: list[Call] = Field(min_length=23, max_length=23)
+    calls: list[Call] = Field(min_length=32, max_length=32)
     views: list[View] = Field(min_length=6, max_length=6)
     editors: list[Editor] = Field(min_length=8, max_length=8)
     bindings: list[Binding]
@@ -450,8 +566,13 @@ V2_PREFIX = "/admin/v2/"
 def _destination(call: Call) -> None:
     _need(call.path.startswith((V1_PREFIX, V2_PREFIX)))
     if call.path.startswith(V2_PREFIX):
-        # A superficie v2 da UI e somente leitura por construcao (Etapa 5).
-        _need(call.method == "GET" and call.operation == "read")
+        # Leitura v2 e sempre GET; escrita v2 so pelo inventario exato (D-103).
+        if call.method == "GET":
+            _need(call.operation == "read")
+        else:
+            _need((call.method, call.path, call.operation) in V2_WRITES and call.input is not None)
+    else:
+        _need(call.operation not in V2_WRITE_OPERATIONS)
     _need(not any(char in call.path for char in ("?", "#", "%", "\\", "//")))
     segments = call.path.split("/")[3:]
     _need(all(part and part not in {".", ".."} for part in segments))
@@ -459,7 +580,10 @@ def _destination(call: Call) -> None:
     _need(len(slots) <= 1)
     if slots:
         _need(call.identity not in FORBIDDEN)
-        _need(call.identity is not None and slots == ["{" + str(call.identity) + "}"])
+        # O segmento e `{id}` ou `{id}:<acao>` (acoes v2, D-103), nada mais.
+        head, _, tail = slots[0].partition(":")
+        _need(call.identity is not None and head == "{" + str(call.identity) + "}")
+        _need(tail == "" or bool(re.fullmatch(r"[a-z]+(?:-[a-z]+)*", tail)))
         _need(bool(re.fullmatch(r"[a-z_]+", str(call.identity))))
     else:
         _need(call.identity is None)
@@ -537,6 +661,9 @@ def validate_presentation(data: bytes) -> Presentation:
         _path(binding.model, binding.path, models)
     _console(result.console, calls, models)
     _pages(result.console, result.views, calls, models)
+    _actions(result.console, calls, models)
+    for view in result.views:
+        _need(all(calls[key].operation not in V2_WRITE_OPERATIONS for key in view.actions))
     return result
 
 
@@ -551,7 +678,113 @@ def _console_ids(console: Console) -> list[str]:
     for page in console.pages:
         for section in page.sections:
             ids.extend(item.id for item in section.entries)
+    for action in console.actions:
+        ids.append(action.id)
+        ids.extend(_field_ids([*action.fields, *([action.typed] if action.typed else [])]))
     return ids
+
+
+def _field_ids(fields: list[FormField]) -> list[str]:
+    found: list[str] = []
+    for field in fields:
+        found.append(field.id)
+        found.extend(_field_ids(field.items))
+    return found
+
+
+def _item_model(model: str, path: list[Segment], models: dict[str, Definition]) -> str:
+    """Modelo do item da lista no fim do caminho (para `records`)."""
+    shape = _path(model, path, models)
+    if not isinstance(shape, Sequence) or shape.type != "list":
+        raise InvalidPresentationError("Invalid presentation.")
+    return shape.item
+
+
+def _fields(
+    fields: list[FormField], target: str, base: str | None, models: dict[str, Definition]
+) -> None:
+    for field in fields:
+        _path(target, field.path, models)
+        if field.source is not None:
+            _need(base is not None)
+            if base is not None:
+                _path(base, field.source, models)
+        _need((field.kind == "records") == bool(field.items))
+        _need((field.kind == "choice") == bool(field.choices))
+        if field.kind == "records":
+            item_target = _item_model(target, field.path, models)
+            item_base = (
+                _item_model(base, field.source, models)
+                if base is not None and field.source is not None
+                else None
+            )
+            _fields(field.items, item_target, item_base, models)
+            siblings = {tuple(child.path) for child in field.items}
+            for child in field.items:
+                if child.when is not None:
+                    _need(tuple(child.when.path) in siblings)
+        _need(field.kind != "secret" or field.source is None)
+
+
+def _actions(console: Console, calls: dict[str, Call], models: dict[str, Definition]) -> None:
+    """Acoes so sobre escritas v2 do inventario, com caminhos ligados aos modelos."""
+    main = calls[console.detail.call]
+    extra = calls[console.detail.extra]
+    listing = calls[console.collection.call]
+    bases = {"collection": listing, "detail": main, "aside": extra}
+    known = {action.id: action for action in console.actions}
+    _need(len(known) == len(console.actions))
+    for action in console.actions:
+        # `when` so existe dentro de `records`: um campo de topo e sempre enviado.
+        _need(all(field.when is None for field in action.fields))
+        _need(action.call in calls)
+        call = calls[action.call]
+        _need(call.operation in V2_WRITE_OPERATIONS and call.input is not None)
+        base = bases[action.place]
+        # Item: a mesma identidade da leitura base; colecao: sem identidade.
+        if action.place == "collection":
+            _need(call.identity is None)
+        else:
+            _need(call.identity is not None and call.identity == base.identity)
+        if call.input is None:
+            raise InvalidPresentationError("Invalid presentation.")
+        _fields(action.fields, call.input, base.output, models)
+        _need((action.stamp is None) == (action.origin is None))
+        _need((action.after == "open") == (action.lands is not None))
+        if action.lands is not None:
+            _need(isinstance(_path(call.output, action.lands, models), Text))
+        if action.stamp is not None and action.origin is not None:
+            _need(isinstance(_path(call.input, action.stamp, models), Integer))
+            _need(isinstance(_path(base.output, action.origin, models), Integer))
+        if action.typed is not None:
+            _need(action.typed.kind == "text" and action.typed.source is not None)
+            _fields([action.typed], call.input, base.output, models)
+        if action.visible is not None:
+            _path(base.output, action.visible.path, models)
+        if action.probe is not None:
+            _need(action.probe in calls)
+            probe = calls[action.probe]
+            _need(probe.operation == "probe" and probe.input is not None)
+            _need((probe.identity is None) == (call.identity is None))
+        else:
+            _need(not action.drop)
+        for path in action.drop:
+            _path(call.input, path, models)
+    values = [outcome.value for outcome in console.outcomes]
+    _need(len(values) == len(set(values)))
+    _wizard(console.guide, calls, known)
+
+
+def _wizard(guide: Guide, calls: dict[str, Call], known: dict[str, Action]) -> None:
+    """O assistente preenche a acao de cadastro: cada campo em um e so um passo."""
+    if guide.action is None:
+        _need(all(not step.fields for step in guide.steps))
+        return
+    _need(guide.action in known)
+    wizard = known[guide.action]
+    _need(wizard.place == "collection" and calls[wizard.call].operation == "register")
+    placed = [key for step in guide.steps for key in step.fields]
+    _need(sorted(placed) == sorted(field.id for field in wizard.fields))
 
 
 def _ref(model: str, path: list[str], models: dict[str, Definition]) -> str:
@@ -646,3 +879,6 @@ def _console(console: Console, calls: dict[str, Call], models: dict[str, Definit
         if tab.groups:
             members = [member for group in tab.groups for member in group.members]
             _need(sorted(members) == sorted(entry.id for entry in tab.entries))
+
+
+FormField.model_rebuild()

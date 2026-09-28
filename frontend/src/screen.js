@@ -1,6 +1,7 @@
 import { open, AccessError } from "./transport.js";
 import { at, entry } from "./reader.js";
 import { workbench } from "./workbench.js";
+import { desk } from "./desk.js";
 
 /** @template {keyof HTMLElementTagNameMap} K @param {K} tag @param {string} text */
 export function element(tag,text="") { const node=document.createElement(tag); node.textContent=text; return node; }
@@ -41,7 +42,8 @@ export function erase(node) {
  * summary:{id:string,label:string,call:string,figures:Figure[],notes:string[],absent:string},
  * collection:{id:string,label:string,call:string,items:Trail,key:Trail,title:Trail,columns:Figure[],search:string,searchable:Trail[],empty:string,nothing:string,open:string},
  * detail:{id:string,call:string,extra:string,back:string,title?:Trail|null,tabs:Tab[],gone:string},
- * guide:{id:string,label:string,banner:string,steps:{id:string,label:string,text:string}[]},
+ * guide:{id:string,label:string,banner:string,steps:{id:string,label:string,text:string,fields?:string[]}[],action?:string|null},
+ * actions?:import("./desk.js").Deed[],outcomes?:import("./desk.js").Result[],reasons?:{value:string,text:string}[],unknown?:string,
  * pages?:{view:string,sections:{label:string,note?:string|null,entries:Figure[]}[]}[]}} Board */
 /** @typedef {{kind:"view",index:number} | {kind:"summary"} | {kind:"collection"} | {kind:"detail",key:string,title:string,tab:number} | {kind:"guide",step:number}} Place */
 
@@ -66,6 +68,8 @@ export function mount(root) {
   /** @type {HTMLElement | undefined} */ let notice;
   /** @type {HTMLButtonElement | undefined} */ let retry;
   /** @type {ReturnType<typeof workbench> | undefined} */ let editor;
+  /** Second-prefix writes (Stage 6): volatile drafts, one write, explicit review.
+   * @type {ReturnType<typeof desk> | undefined} */ let office;
   /** Cards of the current v1 reading by displayed identity; `null` marks an
    * identity shown twice, which never receives actions.
    * @type {Map<string,{node:HTMLElement,name:string}|null>} */ let cards=new Map();
@@ -73,7 +77,7 @@ export function mount(root) {
   function clear() {
     epoch++; turn++; flight?.abort(); flight=undefined; lateral?.abort(); lateral=undefined; stopClock(); paused=true; busy=false;
     sheet=undefined; pane=undefined; side=undefined; filter=""; place={kind:"view",index:0};
-    editor?.close();editor=undefined;
+    editor?.close();editor=undefined;office?.close();office=undefined;
     if(access.tag === "ready") access.client.close();
     if(access.tag !== "authentication") access.stop.abort();
     access={tag:"authentication"}; panel=undefined; notice=undefined; retry=undefined;
@@ -105,6 +109,16 @@ export function mount(root) {
         const book=client.describe();
         access={tag:"ready",client,stop,views:book.views,board:/** @type {Board} */ (book.board())};
         editor=workbench(client,root,()=>{sheet=undefined;shell();void load(true);});
+        office=desk(client,root,access.board,{
+          // After a write: removal returns to the list; anything else reads the item again.
+          reread:(deed,value)=>{
+            void value;
+            if(deed.after === "list") {go({kind:"collection"});return;}
+            if(deed.place === "aside") side=undefined;
+            void read(true);
+          },
+          refresh:()=>{side=undefined;void read(true);},
+        });
         void land(mine);
       }).catch(()=>{ if(mine === epoch) login("Não foi possível entrar. Tente novamente."); });
     });
@@ -126,9 +140,13 @@ export function mount(root) {
       place=next; sheet=undefined; pane=undefined; side=undefined; lateral?.abort(); lateral=undefined;
       if(next.kind !== "collection" && next.kind !== "detail") filter="";
       shell();
-      if(next.kind === "view") void load(true); else if(next.kind === "guide") {show(true);} else void read(true);
+      if(next.kind === "view") void load(true);
+      else if(next.kind === "guide" && !(access.tag === "ready" && access.board.guide.action)) {show(true);}
+      else void read(true);
     };
-    if(editor?.active()) editor.leave(navigate);else navigate();
+    if(editor?.active()) editor.leave(navigate);
+    else if(office?.engaged()) office.leave(navigate);
+    else navigate();
   }
   /** @param {string} text @param {boolean} current @param {() => void} action */
   function link(text,current,action) {
@@ -394,6 +412,7 @@ export function mount(root) {
       const back=element("button",board.detail.back);back.type="button";back.className="back";
       back.addEventListener("click",()=>go({kind:"collection"}));
       const title=element("h2",here.title);title.tabIndex=-1;panel.append(back,title);
+      if(pane?.tag === "ready") offer(panel,"detail",pane.value,here.key);
       report(pane,board.detail.gone);
       if(pane?.tag === "ready") {
         // The heading follows the detail read, so a renamed item is not shown stale.
@@ -415,6 +434,11 @@ export function mount(root) {
     const spec=access.board.collection;
     const rows=at(value,spec.items);
     if(!Array.isArray(rows)) { hint(panel,access.board.failure); return; }
+    if(access.board.guide.action) {
+      const add=element("button",access.board.guide.label);add.type="button";add.className="primary";
+      add.addEventListener("click",()=>go({kind:"guide",step:0}));
+      const bar=element("div");bar.className="actions";bar.append(add);panel.append(bar);
+    }
     const search=element("div");search.className="search";
     const label=element("label",spec.search);const input=element("input");input.id="find-items";input.type="search";input.autocomplete="off";input.spellcheck=false;input.value=filter;
     label.htmlFor=input.id;search.append(label,input);panel.append(search);
@@ -483,7 +507,7 @@ export function mount(root) {
       const tab=list[place.tab];if(!tab) return;
       body.setAttribute("aria-labelledby","tab-"+place.tab);
       if(tab.source === "main") { body.append(grouped(tab,main)); return; }
-      if(side?.tag === "ready") { body.append(grouped(tab,side.value)); return; }
+      if(side?.tag === "ready") { offer(body,"aside",side.value,here.key); body.append(grouped(tab,side.value)); return; }
       if(side?.tag === "absent") { hint(body,access.tag === "ready" ? access.board.detail.gone : ""); return; }
       if(side?.tag === "unavailable" || side?.tag === "broken") { hint(body,access.tag === "ready" ? (side.tag === "unavailable" ? access.board.unavailable : access.board.failure) : ""); return; }
       hint(body,"Carregando…");
@@ -507,10 +531,56 @@ export function mount(root) {
     }
     if(place.kind === "detail" && place.key === key) done();
   }
+  /** Declared writes offered over one reading. Locked writes stay visible, disabled.
+   * @param {HTMLElement} target @param {"detail"|"aside"} where @param {unknown} base @param {string} key
+   */
+  function offer(target,where,base,key) {
+    if(!office) return;
+    const own=office.offered(where,base);if(!own.length) return;
+    const bar=element("div");bar.className="actions";bar.setAttribute("role","group");
+    bar.setAttribute("aria-label","Ações");
+    for(const deed of own) {
+      const button=element("button",deed.label);button.type="button";
+      if(deed.tone === "danger") button.className="danger";
+      button.disabled=office.locked();
+      button.addEventListener("click",()=>office?.start(deed,base,key));
+      bar.append(button);
+    }
+    target.append(bar);
+    if(office.locked()) { const why=element("p",office.why());why.className="hint callout warn";target.append(why); }
+  }
   /** @param {number} step @param {boolean} restore */
   function guide(step,restore) {
     if(access.tag !== "ready" || !panel || !notice) return;
     const spec=access.board.guide;
+    if(spec.action && office) {
+      // The registration wizard needs the catalog version stamp of the list reading.
+      const title=element("h2",spec.label);title.tabIndex=-1;
+      const banner=element("p",spec.banner);banner.className="banner";banner.setAttribute("role","note");
+      const trail=element("ol");trail.className="steps";trail.setAttribute("aria-label",spec.label);
+      for(const [index,item] of spec.steps.entries()) {
+        const node=element("li",(index+1)+". "+item.label);if(index === step) node.setAttribute("aria-current","step");
+        node.className=index === step ? "now" : "other";trail.append(node);
+      }
+      erase(panel);panel.append(title,banner,trail);
+      if(pane?.tag !== "ready") {
+        report(pane,access.board.summary.absent);
+        if(pane?.tag === "loading" || pane === undefined) hint(panel,"Carregando…");
+        else hint(panel,pane.tag === "absent" ? access.board.summary.absent : pane.tag === "unavailable" ? access.board.unavailable : access.board.failure,pane.tag === "absent" ? "info" : "warn");
+      } else if(office.locked()) {
+        notice.textContent=office.why();hint(panel,office.why(),"warn");
+      } else {
+        notice.textContent=spec.banner;
+        const base=pane.value;
+        office.wizard(panel,step,base,next=>{place={kind:"guide",step:next};guide(next,true);},(value,deed)=>{
+          const key=deed.lands ? at(value,deed.lands) : undefined;
+          if(typeof key === "string") go({kind:"detail",key,title:key,tab:0});
+          else go({kind:"collection"});
+        });
+      }
+      if(restore) title.focus();
+      return;
+    }
     notice.textContent=spec.banner;
     const title=element("h2",spec.label);title.tabIndex=-1;
     const banner=element("p",spec.banner);banner.className="banner";banner.setAttribute("role","note");
@@ -533,7 +603,7 @@ export function mount(root) {
   }
   function schedule() {
     stopClock();
-    if(access.tag === "ready" && !paused && !busy && document.visibilityState === "visible" && (place.kind === "view" || place.kind === "summary")) timer=setTimeout(()=>{void (place.kind === "summary" ? read(false) : poll());},15000);
+    if(access.tag === "ready" && !paused && !busy && !office?.engaged() && document.visibilityState === "visible" && (place.kind === "view" || place.kind === "summary")) timer=setTimeout(()=>{void (place.kind === "summary" ? read(false) : poll());},15000);
   }
   /** Reads the declared second-prefix call of the current place.
    * @param {boolean} focus
@@ -541,7 +611,7 @@ export function mount(root) {
   async function read(focus) {
     if(access.tag !== "ready") return;
     const client=access.client, board=access.board, here=place;
-    const call=here.kind === "summary" ? board.summary.call : here.kind === "collection" ? board.collection.call : here.kind === "detail" ? board.detail.call : undefined;
+    const call=here.kind === "summary" ? board.summary.call : here.kind === "collection" || here.kind === "guide" ? board.collection.call : here.kind === "detail" ? board.detail.call : undefined;
     if(!call) return;
     flight?.abort(); flight=new AbortController();
     const mine=epoch, ticket=++turn;busy=true;paused=true;stopClock();
@@ -550,11 +620,18 @@ export function mount(root) {
       const value=await client.read(call,flight.signal,here.kind === "detail" ? here.key : undefined);
       if(mine !== epoch || ticket !== turn) return;
       pane={tag:"ready",value,time:Date.now()};paused=false;
+      // A fresh successful read is the confirmation a doubtful write waits for.
+      office?.settle();
     } catch(error) {
       if(mine !== epoch || ticket !== turn) return;
       if(error instanceof AccessError && error.kind === "authentication") { login("Autenticação necessária.");return; }
       pane={tag:error instanceof AccessError && error.kind === "absent" ? "absent" : error instanceof AccessError && error.kind === "unavailable" ? "unavailable" : "broken"};paused=true;
-    } finally { if(mine === epoch && ticket === turn) { busy=false;show(focus);schedule(); } }
+    } finally {
+      if(mine === epoch && ticket === turn) {
+        busy=false;show(focus);schedule();
+        const said=office?.take();if(said && notice) notice.textContent=said+" "+notice.textContent;
+      }
+    }
   }
   /** @param {boolean} focus */
   async function load(focus) {

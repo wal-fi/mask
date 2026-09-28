@@ -2683,3 +2683,74 @@ Semântica exibida, conferida no código:
 validador, e `Figure.show` ganhou `ordered`. Formulários, validação,
 confirmações, escrita, modelos, chamadas, bindings e mensagens não mudaram; só
 o selo `console` muda.
+
+# Fase 9 — decisões da Etapa 6 (CRUD visual de datasources e policies)
+
+A Etapa 6 foi autorizada pelo usuário em 2026-09-28, localmente e sem push.
+D-103 a D-106 são escolhas de implementação dentro do contrato aprovado (§§8–9,
+D-061–D-064, D-073, D-093–D-095) e **aguardam a revisão da etapa**; não estão
+aprovadas. Nenhuma autoriza PGWire, bind externo, variável de ativação, MCP
+multi-datasource, datasource default ou fecha o limite pós-conexão da D-090.
+
+## D-103 — Escritas v2 na apresentação: inventário exato e operações próprias
+
+A v2 deixa de ser só `GET` na UI, mas só para as nove escritas da D-093. O
+inventário exato (método, caminho, operação) está em `protocol.py`
+(`V2_WRITES`), espelhado de `V2_WRITE_ROUTES` por teste sem importar o roteador,
+e é conferido três vezes: no validador Python, no verificador público
+(operação ↔ método) e no transporte, onde uma escrita v2 só sai por `submit`
+(`destination(..., mutating=true)`); `read` e `check` continuam sem alcançá-la.
+As operações têm nomes próprios (`register`, `probe`, `renew`, `resume`,
+`pause`, `revise`, `retire`, `amend`), porque o editor da v1 procura chamadas
+por operação e não pode encontrar uma escrita v2. A identidade aceita
+`{id}` ou `{id}:<ação>` no mesmo segmento, substituída uma única vez. As seções
+da Etapa 8 e as leituras v2 da Etapa 5 continuam idênticas (selos inalterados);
+as chamadas e modelos novos ganham selo próprio.
+
+## D-104 — Formulários declarados na apresentação privada
+
+`console.actions` declara cada escrita por caminhos: campos (`text`, `secret`,
+`integer`, `flag`, `choice`, `lines`, `records` com `when` só dentro de
+`records`), origem na leitura base, carimbo da revision (`stamp`/`origin`),
+confirmação digitada (`typed`), teste do mesmo rascunho (`probe`/`drop`) e o
+que fazer depois (`after`/`lands`). `outcomes` mapeia cada categoria fechada
+para um estado abstrato e um texto; `reasons`, cada motivo de campo; `latest`,
+o caminho da revision observada no erro. O JS público monta o corpo só por
+caminho e não conhece nome de campo, categoria ou rótulo. `alias` num `PUT` e
+`allowed_pg_functions` não existem nos modelos de entrada da UI: o corpo nem
+consegue expressá-los (D-050, D-093). Segredo nunca tem origem de leitura. O
+gerador passou a tratar como ID opaco só padrões de ID (`rul_`, `dso_`,
+`exc_`); outro padrão, como o do alias, fica texto e o servidor o valida — antes
+da correção o alias virava, por engano, um ID de exceção (saída da v1
+inalterada).
+
+## D-105 — Semântica das escritas na UI
+
+Uma escrita por vez, compartilhada com a v1 (`writing` do transporte).
+Rascunho e senha só em memória; a senha nunca é preenchida, relida ou repetida
+no resumo ("Informada (não exibida)") e é apagada ao concluir, descartar, sair,
+fechar e no logout. Toda escrita passa por revisão e confirmação explícita; a
+remoção exige digitar o alias. Os estados são distintos e nenhum decide por
+conta própria: `refused` (nada mudou; corrigir e reenviar por gesto), `busy`
+(nada mudou; tentar depois por gesto), `conflict` (outra sessão alterou; o
+rascunho é preservado e não é aplicado sobre a versão nova), `blocked`
+(escritas indisponíveis até reiniciar) e `uncertain`/resposta perdida (a
+alteração pode ter sido gravada: novas escritas ficam desligadas até uma leitura
+nova bem-sucedida). Categoria desconhecida é tratada como incerta. Um teste
+(`probe`) nunca bloqueia escritas, porque não tem efeito. Não há retry, rebase,
+fila nem rollback automático. O prazo de 30 s do navegador não limita o
+servidor: um candidato que demore mais vira resultado desconhecido na UI, e o
+limite pós-conexão da D-090 continua aberto.
+
+## D-106 — Acessibilidade dos formulários
+
+Cada campo tem rótulo ligado, ajuda e erro por `aria-describedby`; o erro também
+é anunciado na região de status do diálogo e o foco vai ao primeiro campo
+inválido. `aria-invalid` não é usado: o termo contém `valid`, palavra do
+vocabulário privado da v1 verificado por substring (D-062), e ampliar a exceção
+por conveniência enfraqueceria a inspeção. Os diálogos prendem o foco, voltam o
+foco ao gatilho e pedem confirmação antes de descartar rascunho (Esc incluído).
+A reordenação de regras é por botões nomeados ("Mover para cima: Regra N"); o
+foco acompanha o item movido e, no limite, passa ao outro sentido. O assistente
+fica na página, com os passos da §9.1 e um campo em um e só um passo. A UI mostra
+que um único acesso administrativo controla todos os datasources (D-068).

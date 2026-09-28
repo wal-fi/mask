@@ -3,9 +3,10 @@
 **Documento de entrada. Comece por aqui.**
 
 Estado: **Fase 8 concluída e publicada; Fase 9 — Etapas 3 e 4 implementadas localmente;
-Etapas 3 e 4 publicadas em `c37be36`; Etapa 5 (UX v2 somente leitura) implementada
-localmente em 2026-09-24, sem push; refinamento visual (D-101, D-102) e capturas
-aprovados pelo usuário em 2026-09-28, em commit local sem push; Etapa 6 sem autorização**.
+Etapas 3 e 4 publicadas em `c37be36`; Etapa 5 (UX v2 somente leitura, com o refinamento
+visual D-101/D-102 aprovado) publicada em `4d5b78f`; Etapa 6 (CRUD visual de
+datasources e policies) autorizada em 2026-09-28 e implementada localmente, em
+commit sem push, aguardando revisão; Etapa 7 e posteriores sem autorização**.
 MVP e Fase 7 concluídos. A Etapa 8 foi revisada e publicada sem emenda em
 `20db6f021533230d791cd910b037554c3fe03191`; o fetch confirmou master, HEAD igual
 a origin/master, árvore limpa e 0/0, com autoria e trailer preservados.
@@ -45,7 +46,7 @@ Ordem de leitura sugerida:
 | `docs/ARCHITECTURE.md` | modulos e responsabilidades |
 | `docs/SECURITY.md` | invariantes de seguranca e o que exigir antes de expor |
 | `docs/SECURITY-REVIEW.md` | 11 findings do red team, seis fechados |
-| `docs/DECISIONS.md` | D-001 a D-102, com o motivo de cada uma |
+| `docs/DECISIONS.md` | D-001 a D-106, com o motivo de cada uma |
 | `docs/MASKING-SPEC.md` | semantica exata do pipeline |
 | `docs/TEST-PLAN.md` | o que cada camada de teste cobre |
 | `docs/THREAT-MODEL.md` | cenarios de ataque e o resultado medido |
@@ -1070,8 +1071,21 @@ Um refinamento visual, emendado no mesmo commit, trouxe três mudanças. Em
 telas estreitas a navegação fica atrás de um botão `Menu:` acessível. O
 Painel foi hierarquizado. Os avisos ficaram curtos.
 Capturas de referência (fixture sintética) em `docs/ux-v2/`, com o conjunto
-anterior em `docs/ux-v2/antes/`, aprovados pelo usuário em 2026-09-28 (Etapa 6 continua sem
-autorização). Toolchain fixada: Node 24.20.0/npm 11.19.0 locais; o `.venv`
+anterior em `docs/ux-v2/antes/`, aprovados pelo usuário em 2026-09-28.
+
+A Etapa 6 (autorizada em 2026-09-28, local, sem push; D-103–D-106) trouxe o CRUD
+visual pelas nove escritas v2 da D-093: assistente de cadastro com teste do
+rascunho, edição de conexão e limites, troca de senha, teste, habilitar/desabilitar,
+remoção confirmada pelo alias e editor de política com ordem visível e reordenação
+por teclado. A apresentação declara as ações em `console.actions`; o JS público
+monta o corpo por caminho (`frontend/src/desk.js`) e envia só por
+`client.submit`, com inventário exato conferido no Python, no verificador público
+e no transporte. Uma escrita por vez, rascunho só em memória, revisão e
+confirmação explícitas; conflito preserva o rascunho sem rebase; resposta perdida
+ou resultado incerto bloqueiam novas escritas até uma leitura nova. O harness
+`tests.browser_console_server` ganhou o modo de escrita (`MASKGW_BROWSER_WRITE=1`)
+com falhas injetadas. Evidência em `docs/PHASE-9-STAGE-6-VALIDATION.md`. O limite
+pós-conexão da D-090 continua aberto: a v2 segue ativável só pelo composition root. Toolchain fixada: Node 24.20.0/npm 11.19.0 locais; o `.venv`
 contém uma instalação antiga e não editável de `maskgw`, por isso o harness de
 navegador define `PYTHONPATH=src` no modo checkout. Evidência em
 `docs/PHASE-9-STAGE-5-VALIDATION.md`.

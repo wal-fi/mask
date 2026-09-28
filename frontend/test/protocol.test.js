@@ -99,8 +99,9 @@ test("512 controls inclusive",()=>{
 });
 test("reference depth 16 inclusive",()=>{
   const p=fixture(),models=arr(p.models);
-  for(let i=0;i<16;i++) models.push({id:"m"+(200+i),shape:i===15?{type:"boolean"}:{type:"nullable",item:"m"+(201+i)}});
-  assert.equal(validate(p),true);models.push({id:"m199",shape:{type:"nullable",item:"m200"}});assert.equal(validate(p),false);
+  // Free ids above the real catalog (Phase 9, Stage 6 has 211 models).
+  for(let i=0;i<16;i++) models.push({id:"m"+(900+i),shape:i===15?{type:"boolean"}:{type:"nullable",item:"m"+(901+i)}});
+  assert.equal(validate(p),true);models.push({id:"m899",shape:{type:"nullable",item:"m900"}});assert.equal(validate(p),false);
 });
 for(const [name,text,js] of [
   ["literal","revision",false], ["HTML entity","rev&#105;sion",false],
@@ -134,9 +135,16 @@ for(const [index,source] of negative.entries()) test("typing counterexample "+in
 
 test("ten allowed write types and the separate eleventh contract",()=>{
   const p=fixture();
-  const writes=arr(p.calls).map(obj).filter(c=>c.method !== "GET" && c.operation !== "check");
+  const writes=arr(p.calls).map(obj).filter(c=>c.method !== "GET" && c.operation !== "check" && String(c.path).startsWith("/admin/v1/"));
   assert.deepEqual(new Set(allowed.map(c=>c.method+" "+c.path)),new Set(writes.map(c=>String(c.method)+" "+String(c.path))));
   assert.equal(allowed.length,10);assert.equal(full.path,"/admin/v1/config");
+  // Phase 9, Stage 6: the second prefix carries exactly the nine approved writes.
+  const second=arr(p.calls).map(obj).filter(c=>c.method !== "GET" && String(c.path).startsWith("/admin/v2/"));
+  assert.deepEqual(new Set(second.map(c=>String(c.method)+" "+String(c.path)+" "+String(c.operation))),new Set([
+    "POST /admin/v2/datasources register","POST /admin/v2/datasources:test probe","POST /admin/v2/datasources/{datasource_id}:test probe",
+    "POST /admin/v2/datasources/{datasource_id}:rotate-credential renew","POST /admin/v2/datasources/{datasource_id}:enable resume",
+    "POST /admin/v2/datasources/{datasource_id}:disable pause","PUT /admin/v2/datasources/{datasource_id} revise",
+    "DELETE /admin/v2/datasources/{datasource_id} retire","PUT /admin/v2/datasources/{datasource_id}/policy amend"]));
 });
 test("closed discriminator union rejects changed tag",()=>{
   const p=fixture();const item=arr(p.models).map(obj).find(m=>obj(m.shape).type === "union");

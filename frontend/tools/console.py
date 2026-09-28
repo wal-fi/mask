@@ -32,6 +32,103 @@ V2_READ_ERRORS = (
     DatasourceErrorCategory.DATASOURCE_SERVICE_UNAVAILABLE.value,
 )
 
+#: Escritas v2 declaradas na UI (Etapa 6, D-103): caminho, metodo, operacao
+#: e modelo de entrada, na ordem do inventario de `V2_WRITE_ROUTES`.
+V2_WRITES = (
+    ("/admin/v2/datasources", "POST", "register", "DatasourceCreateRequest",
+     "DatasourceWriteResponse"),
+    ("/admin/v2/datasources:test", "POST", "probe", "DatasourceTestDraftRequest",
+     "DatasourceTestResponse"),
+    ("/admin/v2/datasources/{datasource_id}:test", "POST", "probe", "DatasourceTestRequest",
+     "DatasourceTestResponse"),
+    ("/admin/v2/datasources/{datasource_id}:rotate-credential", "POST", "renew",
+     "DatasourceRotateRequest", "DatasourceWriteResponse"),
+    ("/admin/v2/datasources/{datasource_id}:enable", "POST", "resume",
+     "DatasourceRevisionRequest", "DatasourceWriteResponse"),
+    ("/admin/v2/datasources/{datasource_id}:disable", "POST", "pause",
+     "DatasourceRevisionRequest", "DatasourceWriteResponse"),
+    ("/admin/v2/datasources/{datasource_id}", "PUT", "revise", "DatasourceUpdateRequest",
+     "DatasourceWriteResponse"),
+    ("/admin/v2/datasources/{datasource_id}", "DELETE", "retire", "DatasourceDeleteRequest",
+     "DatasourceDeleteResponse"),
+    ("/admin/v2/datasources/{datasource_id}/policy", "PUT", "amend", "DatasourcePolicyRequest",
+     "DatasourceWriteResponse"),
+)
+
+#: Categoria -> estado abstrato -> texto. `refused`: nada mudou, corrigir e
+#: reenviar; `busy`: nada mudou, tentar depois por gesto; `conflict`: outra
+#: sessao alterou, rascunho preservado sem rebase; `blocked`: escritas
+#: indisponiveis ate reiniciar; `uncertain`: reler antes de qualquer escrita.
+BOUNDARY = "A requisição foi recusada pela fronteira administrativa; nada foi alterado."
+V2_OUTCOMES = [
+    ("REVISION_CONFLICT", "conflict",
+     "Outra sessão alterou este item. Seu rascunho foi preservado, mas não será aplicado "
+     "sobre a versão nova: releia o estado atual e refaça a alteração."),
+    ("ALIAS_CONFLICT", "refused", "Já existe um datasource com esse alias. Nada foi gravado."),
+    ("CONFIRMATION_MISMATCH", "refused",
+     "O alias digitado não confere com o do datasource. Nada foi removido."),
+    ("DATASOURCE_BUSY", "busy",
+     "Capacidade de verificação ou de drenagem esgotada agora. Nada foi alterado; "
+     "tente de novo mais tarde."),
+    ("DATASOURCE_DISABLED", "refused",
+     "O datasource está desabilitado: testes de conexão não são permitidos."),
+    ("DATASOURCE_DESTINATION_REJECTED", "refused",
+     "O destino foi recusado pela política de destinos ou não resolveu a tempo. "
+     "Nada foi gravado."),
+    ("DATASOURCE_POLICY_INVALID", "refused", "A política não é válida. Nada foi gravado."),
+    ("DATASOURCE_CONNECTION_FAILED", "refused",
+     "A conexão com o PostgreSQL falhou. Nada foi gravado nem publicado."),
+    ("DATASOURCE_CAPABILITY_MISSING", "refused",
+     "O PostgreSQL não oferece as garantias exigidas (somente leitura, timeout aplicado "
+     "pelo servidor e metadados de origem). Nada foi gravado."),
+    ("CATALOG_WRITE_ERROR", "blocked",
+     "O catálogo não pôde ser gravado; o estado anterior foi mantido. Novas alterações "
+     "exigem reiniciar o Gateway."),
+    ("CATALOG_OUTCOME_UNCERTAIN", "uncertain",
+     "Não é possível saber se a alteração foi gravada. Reinicie o Gateway e releia o "
+     "estado antes de decidir."),
+    ("CATALOG_BLOCKED", "blocked",
+     "Alterações de datasource indisponíveis até o Gateway reiniciar."),
+    ("DATASOURCE_SERVICE_UNAVAILABLE", "blocked", "Operações de datasource indisponíveis."),
+    ("NOT_FOUND", "refused", "Este datasource não existe mais. Volte para a lista e releia."),
+    ("IMMUTABLE_FIELD", "refused", "Um campo que não pode ser alterado foi enviado. Nada mudou."),
+    ("SCHEMA_INVALID", "refused", "Há campos inválidos. Corrija os campos indicados."),
+    ("INTERNAL_ERROR", "uncertain",
+     "Erro interno com resultado desconhecido. Releia o estado antes de decidir."),
+    ("HOST_NOT_ALLOWED", "refused", BOUNDARY),
+    ("CROSS_ORIGIN_REJECTED", "refused", BOUNDARY),
+    ("METHOD_NOT_ALLOWED", "refused", BOUNDARY),
+    ("PAYLOAD_TOO_LARGE", "refused", BOUNDARY),
+    ("UNSUPPORTED_MEDIA_TYPE", "refused", BOUNDARY),
+]
+FIELD_REASONS = [
+    {"value": "unknown_field", "text": "Campo não aceito."},
+    {"value": "missing", "text": "Obrigatório."},
+    {"value": "out_of_range", "text": "Fora do intervalo permitido."},
+    {"value": "wrong_type", "text": "Valor inválido."},
+    {"value": "too_short", "text": "Muito curto."},
+    {"value": "immutable", "text": "Não pode ser alterado."},
+]
+TRANSFORMER_CHOICES = [
+    {"value": "hmac_sha256", "text": "HMAC-SHA-256 (chave do ambiente)"},
+    {"value": "sha256", "text": "SHA-256"},
+    {"value": "sha512", "text": "SHA-512"},
+    {"value": "md5", "text": "MD5"},
+    {"value": "fixed", "text": "Valor fixo"},
+    {"value": "regex", "text": "Expressão regular"},
+    {"value": "random", "text": "Valor aleatório"},
+    {"value": "truncate", "text": "Truncar"},
+]
+MODE_CHOICES = [
+    {"value": "contains", "text": "O nome da coluna contém o padrão"},
+    {"value": "exact", "text": "O nome da coluna é igual ao padrão"},
+]
+TLS_CHOICES = [
+    {"value": "verify-full", "text": "TLS com verificação completa do certificado"},
+    {"value": "require", "text": "TLS obrigatório, sem verificar o certificado"},
+    {"value": "disable", "text": "Sem TLS (só para rede local controlada)"},
+]
+
 TEST_WORDS = [
     {"value": "never", "text": "Nunca verificado", "tone": "neutral"},
     {"value": "passed", "text": "Aprovado", "tone": "good"},
@@ -503,6 +600,234 @@ def _v1_pages(views, item):
     ]
 
 
+def _forms(writes, counter):
+    """Acoes da Etapa 6. Rotulos, caminhos e textos ficam so na apresentacao."""
+
+    def field(name, label, kind, path, source=None, **extra):
+        body = {"id": "y" + str(next(counter)), "name": name, "label": label, "kind": kind,
+                "path": path}
+        if source is not None:
+            body["source"] = source
+        body.update(extra)
+        return body
+
+    def rule_items(source):
+        def item_field(name, label, kind, path, **extra):
+            spec = field(name, label, kind, path, path if source else None, **extra)
+            spec.pop("name")
+            return spec
+
+        def param(label, kind, key, transformer, **extra):
+            return item_field(
+                key, label, kind, ["config", key],
+                when={"path": ["transformer"], "value": transformer}, **extra
+            )
+
+        return [
+            item_field("match", "Padrão da coluna", "text", ["match"],
+                       help="Comparado com o nome de saída e com a coluna de origem."),
+            item_field("mode", "Correspondência", "choice", ["mode"], choices=MODE_CHOICES,
+                       default="contains"),
+            item_field("case_sensitive", "Diferenciar maiúsculas/minúsculas", "flag",
+                       ["case_sensitive"], default=False),
+            item_field("transformer", "Transformação", "choice", ["transformer"],
+                       choices=TRANSFORMER_CHOICES, default="hmac_sha256"),
+            param("Valor substituto", "text", "value", "fixed"),
+            param("Padrão da expressão", "text", "pattern", "regex"),
+            param("Texto substituto", "text", "replacement", "regex"),
+            param("Estratégia", "choice", "strategy", "random",
+                  choices=[{"value": "digits", "text": "Dígitos"},
+                           {"value": "alphanumeric", "text": "Letras e dígitos"}],
+                  default="digits"),
+            param("Preservar comprimento", "flag", "preserve_length", "random", default=False),
+            param("Comprimento (opcional)", "integer", "length", "random", optional=True),
+            param("Comprimento", "integer", "length", "truncate"),
+        ]
+
+    def exception_items(source):
+        items = [
+            field("match", "Padrão da coluna", "text", ["match"],
+                  ["match"] if source else None,
+                  help="Comparado só com o nome autoritativo (a origem, quando existe)."),
+            field("mode", "Correspondência", "choice", ["mode"], ["mode"] if source else None,
+                  choices=MODE_CHOICES, default="exact"),
+            field("case_sensitive", "Diferenciar maiúsculas/minúsculas", "flag",
+                  ["case_sensitive"], ["case_sensitive"] if source else None, default=False),
+        ]
+        for spec in items:
+            spec.pop("name")
+        return items
+
+    def policy_fields(prefix, source):
+        src = (lambda *path: [*source, *path]) if source is not None else (lambda *path: None)
+        return [
+            field("masking", "Regras de masking, na ordem de avaliação", "records",
+                  [*prefix, "masking"], src("masking"), item="Regra",
+                  items=rule_items(source is not None),
+                  help="Exceções têm prioridade; depois vale a primeira regra que casar."),
+            field("exceptions", "Exceções", "records", [*prefix, "exceptions"],
+                  src("exceptions"), item="Exceção", items=exception_items(source is not None),
+                  help="Uma coluna coberta por exceção mantém o valor original."),
+            field("policy_timeout", "Timeout da política (ms)", "integer",
+                  [*prefix, "database", "statement_timeout_ms"],
+                  src("database", "statement_timeout_ms"), default=30_000,
+                  help="Combinado com o limite do datasource: vale o menor."),
+            field("policy_rows", "Máximo de linhas da política", "integer",
+                  [*prefix, "database", "max_rows"], src("database", "max_rows"), default=1_000),
+            field("denied_functions", "Funções negadas adicionalmente", "lines",
+                  [*prefix, "sql", "denied_functions"], src("sql", "denied_functions"),
+                  help="Uma por linha. As funções PostgreSQL liberadas não mudam por aqui."),
+        ]
+
+    def destination(source):
+        src = (lambda *path: [*source, *path]) if source is not None else (lambda *path: None)
+        return [
+            field("host", "Host", "text", ["connection", "host"], src("connection", "host")),
+            field("port", "Porta", "integer", ["connection", "port"], src("connection", "port"),
+                  default=5432),
+            field("database", "Banco", "text", ["connection", "database"],
+                  src("connection", "database")),
+            field("username", "Usuário técnico", "text", ["connection", "username"],
+                  src("connection", "username")),
+            field("tls_mode", "Modo TLS", "choice", ["connection", "tls", "mode"],
+                  src("connection", "tls", "mode"), choices=TLS_CHOICES,
+                  default="verify-full"),
+            field("server_name", "Nome esperado no certificado (opcional)", "text",
+                  ["connection", "tls", "server_name"], src("connection", "tls", "server_name"),
+                  optional=True, help="Em branco, vale o host."),
+            field("statement_timeout_ms", "Timeout do datasource (ms)", "integer",
+                  ["limits", "statement_timeout_ms"], src("limits", "statement_timeout_ms"),
+                  default=30_000),
+            field("max_rows", "Máximo de linhas do datasource", "integer",
+                  ["limits", "max_rows"], src("limits", "max_rows"), default=1_000),
+            field("max_sessions", "Máximo de sessões simultâneas", "integer",
+                  ["limits", "max_sessions"], src("limits", "max_sessions"), default=8),
+            field("allow_public", "Aceitar endereço público", "flag",
+                  ["destination_policy", "allow_public"],
+                  src("destination_policy", "allow_public"), default=False,
+                  help="Um endereço público também exige o host na lista abaixo."),
+            field("allow_loopback", "Aceitar loopback", "flag",
+                  ["destination_policy", "allow_loopback"],
+                  src("destination_policy", "allow_loopback"), default=False),
+            field("allowed_hosts", "Hosts públicos autorizados", "lines",
+                  ["destination_policy", "allowed_hosts"],
+                  src("destination_policy", "allowed_hosts"),
+                  help="Um por linha, em minúsculas."),
+        ]
+
+    password = field("password", "Senha técnica", "secret", ["credential", "password"],
+                     help="Enviada uma única vez; nunca é exibida nem lida de volta.")
+    item_path = "/admin/v2/datasources/{datasource_id}"
+    head = ["datasource"]
+    actions = {}
+
+    def action(key, **body):
+        actions[key] = {"id": "x" + str(next(counter)), "fields": [], **body}
+
+    action(
+        "register", label="Novo datasource", title="Cadastrar datasource",
+        call=writes[("/admin/v2/datasources", "POST")], place="collection",
+        stamp=["expected_catalog_revision"], origin=["catalog_revision"],
+        after="open", lands=["datasource_id"],
+        fields=[
+            field("alias", "Alias", "text", ["alias"],
+                  help="Começa com letra minúscula; depois letras minúsculas, dígitos, _ ou -. "
+                  "Até 63 caracteres. Não muda depois."),
+            field("display_name", "Nome de apresentação", "text", ["display_name"]),
+            field("enabled", "Habilitar ao cadastrar", "flag", ["enabled"], default=True,
+                  help="Habilitado, o Gateway publica o datasource depois do teste de conexão."),
+            *destination(None)[:4], *destination(None)[9:],
+            password, *destination(None)[4:9],
+            *policy_fields(["policy"], None),
+        ],
+        confirm=(
+            "Cadastrar este datasource. O Gateway testa a conexão antes de gravar; se "
+            "habilitado, publica-o em seguida."
+        ),
+        probe=writes[("/admin/v2/datasources:test", "POST")],
+        drop=[["expected_catalog_revision"], ["enabled"]],
+        done="Datasource cadastrado.",
+    )
+    action(
+        "revise", label="Editar conexão e limites", title="Editar datasource",
+        call=writes[(item_path, "PUT")], place="detail",
+        stamp=["expected_revision"], origin=[*head, "revision"],
+        fields=[
+            field("display_name", "Nome de apresentação", "text", ["display_name"],
+                  [*head, "display_name"]),
+            *destination(head),
+        ],
+        confirm=(
+            "Gravar a nova configuração. Um destino novo é resolvido e testado antes de "
+            "publicar; sessões já abertas terminam na versão anterior."
+        ),
+        done="Datasource atualizado.",
+    )
+    action(
+        "renew", label="Trocar senha", title="Trocar senha técnica",
+        call=writes[(item_path + ":rotate-credential", "POST")], place="detail",
+        stamp=["expected_revision"], origin=[*head, "revision"],
+        fields=[password | {"id": "y" + str(next(counter))}],
+        confirm=(
+            "Trocar a senha técnica. A nova senha é testada antes de gravar; a anterior deixa "
+            "de ser usada por novas sessões."
+        ),
+        done="Senha trocada. Ela não pode ser exibida.",
+    )
+    action(
+        "probe", label="Testar conexão", title="Testar conexão",
+        call=writes[(item_path + ":test", "POST")], place="detail",
+        visible={"path": [*head, "enabled"], "value": True},
+        confirm="Testar a conexão com a configuração gravada. Nada é gravado nem publicado.",
+        done="Conexão verificada. Nada foi gravado nem publicado.",
+    )
+    action(
+        "resume", label="Habilitar", title="Habilitar datasource",
+        call=writes[(item_path + ":enable", "POST")], place="detail",
+        stamp=["expected_revision"], origin=[*head, "revision"],
+        visible={"path": [*head, "enabled"], "value": False},
+        confirm="Habilitar exige um teste de conexão que passe; só então o datasource é publicado.",
+        done="Datasource habilitado.",
+    )
+    action(
+        "pause", label="Desabilitar", title="Desabilitar datasource",
+        call=writes[(item_path + ":disable", "POST")], place="detail",
+        stamp=["expected_revision"], origin=[*head, "revision"],
+        visible={"path": [*head, "enabled"], "value": True},
+        confirm=(
+            "Desabilitar impede novas sessões e testes. Sessões em andamento terminam dentro "
+            "dos próprios limites."
+        ),
+        done="Datasource desabilitado.",
+    )
+    action(
+        "retire", label="Remover", title="Remover datasource",
+        call=writes[(item_path, "DELETE")], place="detail",
+        stamp=["expected_revision"], origin=[*head, "revision"],
+        typed={"id": "y" + str(next(counter)), "label": "Digite o alias para confirmar",
+               "kind": "text", "path": ["confirm_alias"], "source": [*head, "alias"]},
+        confirm=(
+            "Remover apaga o datasource do catálogo. Sessões em andamento terminam dentro dos "
+            "próprios limites; depois o alias deixa de existir. Não há como desfazer."
+        ),
+        done="Datasource removido.",
+        tone="danger",
+        after="list",
+    )
+    action(
+        "amend", label="Editar política", title="Editar política do datasource",
+        call=writes[(item_path + "/policy", "PUT")], place="aside",
+        stamp=["expected_revision"], origin=["revision"],
+        fields=policy_fields(["policy"], ["policy"]),
+        confirm=(
+            "Gravar a política. Ela é compilada e testada antes de publicar; sessões já "
+            "abertas terminam na política anterior."
+        ),
+        done="Política gravada.",
+    )
+    return actions
+
+
 def extend(wire, model, put, calls, views=()):
     """Acrescenta modelos, quatro leituras v2 e devolve a secao `console`."""
     extra = json.loads((PRIVATE / "wire-schemas-v2.json").read_text(encoding="utf-8"))
@@ -556,6 +881,55 @@ def extend(wire, model, put, calls, views=()):
             }
         )
         ids[output] = key
+    # A UI nunca envia `alias` num PUT nem `allowed_pg_functions`: sem o campo
+    # no modelo de entrada, o corpo nem consegue expressa-los (D-050, D-093).
+    wire["DatasourceUpdateRequest"]["properties"].pop("alias")
+    wire["PolicySqlBody"]["properties"].pop("allowed_pg_functions")
+    written = []
+    for category, _kind, _text in V2_OUTCOMES:
+        props = {
+            "error": {"const": category},
+            "detail": {"type": "string"},
+            "current_revision": {"type": "integer", "minimum": 0},
+            "fields": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "path": {"type": "string"},
+                        "reason": {"enum": [w["value"] for w in FIELD_REASONS]},
+                    },
+                    "required": ["path", "reason"],
+                },
+            },
+        }
+        written.append(
+            {
+                "value": category,
+                "ref": model(
+                    "WriteError" + category,
+                    {"type": "object", "properties": props, "required": ["error", "detail"]},
+                ),
+            }
+        )
+    fault = put("WriteErrorEnvelope", {"type": "union", "tag": "error", "variants": written})
+    writes = {}
+    for path, method, operation, source, target in V2_WRITES:
+        key = "c" + str(len(calls))
+        identity = path.split("{")[1].split("}")[0] if "{" in path else None
+        calls.append(
+            {
+                "id": key,
+                "method": method,
+                "path": path,
+                "input": model(source),
+                "output": model(target),
+                "operation": operation,
+                "identity": identity,
+                "error": fault,
+            }
+        )
+        writes[(path, method)] = key
     counter = iter(range(10_000))
 
     def item(prefix, label, path, kind="text", wording=None, show="fact", blank=None):
@@ -621,7 +995,9 @@ def extend(wire, model, put, calls, views=()):
             ),
         ],
         "notes": [
-            "Somente leitura: cadastro, edição e testes de conexão dependem de uma etapa futura.",
+            "Cadastro, edição, teste de conexão, troca de senha e remoção ficam em Datasources.",
+            "Um único acesso administrativo controla todos os datasources; não há permissões "
+            "por datasource.",
             "Consultas por IDE (PGWire) e a ativação pelo operador ainda não existem.",
         ],
         "absent": (
@@ -648,8 +1024,7 @@ def extend(wire, model, put, calls, views=()):
         "search": "Buscar por nome ou alias",
         "searchable": [["display_name"], ["alias"]],
         "empty": (
-            "Nenhum datasource cadastrado. O cadastro chega em uma próxima etapa; o "
-            "protótipo de navegação está em Novo datasource."
+            "Nenhum datasource cadastrado. Use Novo datasource para cadastrar o primeiro."
         ),
         "nothing": "Nenhum datasource corresponde à busca.",
         "open": "Ver detalhes",
@@ -971,37 +1346,51 @@ def extend(wire, model, put, calls, views=()):
         ],
         "gone": "Este datasource não existe mais. Volte para a lista e releia.",
     }
+    forms = _forms(writes, counter)
     steps = [
-        ("Identificação", "Nome de apresentação e alias usado como dbname pelas IDEs."),
-        ("Destino", "Host, porta e banco do PostgreSQL real, validados contra SSRF."),
-        (
-            "Credencial",
-            "A senha técnica será pedida somente no envio real, nunca exibida depois. "
-            "Neste protótipo nenhuma senha é solicitada.",
-        ),
-        ("TLS", "Modo TLS e nome esperado no certificado."),
-        ("Política", "Regras de masking, exceções e limites deste datasource."),
-        (
-            "Teste",
-            "O teste de conexão existe na API, mas não é executado neste protótipo. "
-            "Nenhuma conexão é aberta.",
-        ),
-        (
-            "Revisão",
-            "Resumo antes de gravar. Nesta versão não há gravação: nada foi salvo ou testado.",
-        ),
+        ("Identificação",
+         "Alias e nome de apresentação. O alias identifica o datasource e não muda depois.",
+         ["alias", "display_name", "enabled"]),
+        ("Destino",
+         "Host, porta, banco e usuário técnico do PostgreSQL, e quais destinos são aceitos.",
+         ["host", "port", "database", "username", "allow_public", "allow_loopback",
+          "allowed_hosts"]),
+        ("Credencial",
+         "A senha técnica é enviada só no teste e no cadastro e nunca é exibida de novo.",
+         ["password"]),
+        ("TLS", "Modo TLS e nome esperado no certificado.", ["tls_mode", "server_name"]),
+        ("Política",
+         "Limites, regras de masking, exceções e funções negadas deste datasource.",
+         ["statement_timeout_ms", "max_rows", "max_sessions", "masking", "exceptions",
+          "policy_timeout", "policy_rows", "denied_functions"]),
+        ("Teste",
+         "Testa a conexão com este rascunho. Um teste nunca grava nem publica nada.", []),
+        ("Revisão",
+         "Confira o resumo. O cadastro só acontece depois da sua confirmação explícita.", []),
     ]
+    wizard = forms["register"]
+    by_name = {field.pop("name"): field["id"] for field in wizard["fields"]}
     guide = {
         "id": "g" + str(next(counter)),
         "label": "Novo datasource",
         "banner": (
-            "Protótipo de navegação. Nada é salvo, nenhuma conexão é testada e nenhuma "
-            "senha é solicitada nesta versão."
+            "Cadastro real: o Gateway testa a conexão antes de gravar. A senha fica só na "
+            "memória desta página até o envio e nunca é exibida de novo."
         ),
         "steps": [
-            {"id": "p" + str(next(counter)), "label": label, "text": text} for label, text in steps
+            {
+                "id": "p" + str(next(counter)),
+                "label": label,
+                "text": text,
+                "fields": [by_name[name] for name in names],
+            }
+            for label, text, names in steps
         ],
+        "action": wizard["id"],
     }
+    for action in forms.values():
+        for field in action["fields"]:
+            field.pop("name", None)
     return {
         "brand": "Mask Gateway",
         "tagline": "Administração local",
@@ -1020,4 +1409,14 @@ def extend(wire, model, put, calls, views=()):
         "detail": detail,
         "guide": guide,
         "pages": _v1_pages(views, item) if views else [],
+        "actions": list(forms.values()),
+        "outcomes": [
+            {"value": value, "kind": kind, "text": text} for value, kind, text in V2_OUTCOMES
+        ],
+        "reasons": FIELD_REASONS,
+        "latest": ["current_revision"],
+        "unknown": (
+            "Resultado desconhecido: a resposta não chegou. A alteração pode ter sido gravada "
+            "ou não. Releia o estado antes de qualquer nova escrita."
+        ),
     }

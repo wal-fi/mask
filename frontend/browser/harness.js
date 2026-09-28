@@ -66,7 +66,7 @@ export async function scenario(name, action, extra={}) {
     mark("caught");
     failed = true;
     if(error instanceof Error) {
-      for(const found of (error.stack ?? "").matchAll(/[\\/](?:reading|lifecycle|editing|batches|package)\.spec\.js:(\d+):\d+/g)) {
+      for(const found of (error.stack ?? "").matchAll(/[\\/](?:reading|lifecycle|editing|batches|package|console|datasources)\.spec\.js:(\d+):\d+/g)) {
         if(found[1]) test.info().annotations.push({type:"check",description:"source-line-"+found[1]});
       }
     }

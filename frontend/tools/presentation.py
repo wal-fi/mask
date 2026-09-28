@@ -67,7 +67,9 @@ def model(name, node=None):
             "min": node.get("minLength", 0),
             "max": node.get("maxLength", 9007199254740991),
         }
-        if "pattern" in node:
+        # Somente padroes de ID opaco viram prefixo+hex; outro padrao (como o do
+        # alias v2) fica texto com os limites declarados e o servidor o valida.
+        if "pattern" in node and any(p in node["pattern"] for p in ("rul_", "dso_", "exc_")):
             shape.update(
                 prefix="rul_"
                 if "rul_" in node["pattern"]

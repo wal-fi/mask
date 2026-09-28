@@ -15,8 +15,10 @@ iniciadas. Em 2026-09-24, depois da publicação das Etapas 3 e 4 em `c37be36`, 
 autorizada localmente, sem push, somente a Etapa 5: protótipo e Admin UX v2
 somente leitura, com estrutura visual, fluxos e decisões apresentados antes do
 código (D-097–D-100), implementada localmente com evidência em
-`docs/PHASE-9-STAGE-5-VALIDATION.md`. A Etapa 6 e posteriores continuam sem
-autorização.
+`docs/PHASE-9-STAGE-5-VALIDATION.md`, e publicada em `4d5b78f`. Em 2026-09-28 foi
+autorizada a Etapa 6 (CRUD visual de datasources e policies), implementada
+localmente com evidência em `docs/PHASE-9-STAGE-6-VALIDATION.md`; a Etapa 7 e
+posteriores continuam sem autorização.
 
 Esta aprovação normativa não autoriza as Etapas 5–12, que continuam
 condicionadas à revisão e autorização próprias, na ordem desta especificação.
@@ -462,9 +464,17 @@ as seções da v1 inalteradas e a seção `console` somente leitura: Painel, lis
 de datasources com busca, detalhe com abas e protótipo de passos sem campo,
 envio ou teste. Toda chamada sob `/admin/v2/` na UI é `GET`. O vocabulário
 privado da v2 é verificado por token. Capturas de referência de fixture
-sintética estão em `docs/ux-v2/` e precisam de aprovação antes da Etapa 6. O
-limite pós-conexão da D-090 continua aberto e bloqueia a ativação da v2 pelo
-operador (Etapa 7).
+sintética estão em `docs/ux-v2/`; foram aprovadas em 2026-09-28. O limite
+pós-conexão da D-090 continua aberto e bloqueia a ativação da v2 pelo operador
+(Etapa 7).
+
+**Etapa 6 (2026-09-28, D-103–D-106).** A UI passa a escrever pelas nove rotas da
+§8, e só por elas: o inventário exato (método, caminho, operação) é conferido no
+Python, no verificador público e no transporte, e a v1 não mudou. Os formulários
+são declarados na apresentação privada; senha write-only; uma escrita pendente,
+rascunho volátil, revisão e confirmação explícitas; conflito, recusa, capacidade
+esgotada, catálogo bloqueado e resultado incerto são estados distintos, sem retry,
+rebase, fila ou rollback automático.
 
 ## 10. MCP multi-datasource
 

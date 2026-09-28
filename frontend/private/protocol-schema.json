@@ -1,5 +1,208 @@
 {
   "$defs": {
+    "Action": {
+      "additionalProperties": false,
+      "description": "Escrita v2 declarada (Etapa 6, D-103/D-104): corpo por caminhos.",
+      "properties": {
+        "after": {
+          "default": "reread",
+          "enum": [
+            "reread",
+            "list",
+            "open"
+          ],
+          "title": "After",
+          "type": "string"
+        },
+        "call": {
+          "title": "Call",
+          "type": "string"
+        },
+        "confirm": {
+          "maxLength": 400,
+          "minLength": 1,
+          "title": "Confirm",
+          "type": "string"
+        },
+        "done": {
+          "maxLength": 300,
+          "minLength": 1,
+          "title": "Done",
+          "type": "string"
+        },
+        "drop": {
+          "items": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array"
+          },
+          "maxItems": 4,
+          "title": "Drop",
+          "type": "array"
+        },
+        "fields": {
+          "items": {
+            "$ref": "#/$defs/FormField"
+          },
+          "maxItems": 32,
+          "title": "Fields",
+          "type": "array"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "lands": {
+          "anyOf": [
+            {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lands"
+        },
+        "origin": {
+          "anyOf": [
+            {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Origin"
+        },
+        "place": {
+          "enum": [
+            "collection",
+            "detail",
+            "aside"
+          ],
+          "title": "Place",
+          "type": "string"
+        },
+        "probe": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Probe"
+        },
+        "stamp": {
+          "anyOf": [
+            {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Stamp"
+        },
+        "title": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "tone": {
+          "default": "plain",
+          "enum": [
+            "plain",
+            "danger"
+          ],
+          "title": "Tone",
+          "type": "string"
+        },
+        "typed": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FormField"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "visible": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Visible"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "title",
+        "call",
+        "place",
+        "confirm",
+        "done"
+      ],
+      "title": "Action",
+      "type": "object"
+    },
     "Binding": {
       "additionalProperties": false,
       "properties": {
@@ -113,7 +316,15 @@
             "move",
             "check",
             "confirm",
-            "append"
+            "append",
+            "register",
+            "probe",
+            "renew",
+            "resume",
+            "pause",
+            "revise",
+            "retire",
+            "amend"
           ],
           "title": "Operation",
           "type": "string"
@@ -359,6 +570,14 @@
     "Console": {
       "additionalProperties": false,
       "properties": {
+        "actions": {
+          "items": {
+            "$ref": "#/$defs/Action"
+          },
+          "maxItems": 12,
+          "title": "Actions",
+          "type": "array"
+        },
         "blank": {
           "maxLength": 60,
           "minLength": 1,
@@ -386,6 +605,28 @@
         "guide": {
           "$ref": "#/$defs/Guide"
         },
+        "latest": {
+          "anyOf": [
+            {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Latest"
+        },
         "legacy": {
           "maxLength": 60,
           "minLength": 1,
@@ -404,12 +645,28 @@
           "title": "No",
           "type": "string"
         },
+        "outcomes": {
+          "items": {
+            "$ref": "#/$defs/Outcome"
+          },
+          "maxItems": 40,
+          "title": "Outcomes",
+          "type": "array"
+        },
         "pages": {
           "items": {
             "$ref": "#/$defs/Page"
           },
           "maxItems": 6,
           "title": "Pages",
+          "type": "array"
+        },
+        "reasons": {
+          "items": {
+            "$ref": "#/$defs/Wording"
+          },
+          "maxItems": 8,
+          "title": "Reasons",
           "type": "array"
         },
         "summary": {
@@ -425,6 +682,13 @@
           "maxLength": 400,
           "minLength": 1,
           "title": "Unavailable",
+          "type": "string"
+        },
+        "unknown": {
+          "default": "Resultado desconhecido. Releia o estado antes de decidir.",
+          "maxLength": 300,
+          "minLength": 1,
+          "title": "Unknown",
           "type": "string"
         },
         "yes": {
@@ -828,6 +1092,157 @@
       "title": "Figure",
       "type": "object"
     },
+    "FormField": {
+      "additionalProperties": false,
+      "description": "Campo de formulario: so caminho, rotulo e tipo; nenhum codigo.",
+      "properties": {
+        "choices": {
+          "items": {
+            "$ref": "#/$defs/Wording"
+          },
+          "maxItems": 32,
+          "title": "Choices",
+          "type": "array"
+        },
+        "default": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Default"
+        },
+        "help": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Help"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "item": {
+          "anyOf": [
+            {
+              "maxLength": 60,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Item"
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/FormField"
+          },
+          "maxItems": 24,
+          "title": "Items",
+          "type": "array"
+        },
+        "kind": {
+          "enum": [
+            "text",
+            "secret",
+            "integer",
+            "flag",
+            "choice",
+            "lines",
+            "records"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "optional": {
+          "default": false,
+          "title": "Optional",
+          "type": "boolean"
+        },
+        "path": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ]
+          },
+          "title": "Path",
+          "type": "array"
+        },
+        "source": {
+          "anyOf": [
+            {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source"
+        },
+        "when": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Visible"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "kind",
+        "path"
+      ],
+      "title": "FormField",
+      "type": "object"
+    },
     "Group": {
       "additionalProperties": false,
       "description": "Agrupamento visual de itens de uma aba, com titulo e explicacao.",
@@ -873,6 +1288,18 @@
       "additionalProperties": false,
       "description": "Prototipo de navegacao: sem campo, envio, teste ou gravacao.",
       "properties": {
+        "action": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Action"
+        },
         "banner": {
           "maxLength": 400,
           "minLength": 1,
@@ -999,6 +1426,42 @@
         "fields"
       ],
       "title": "Object",
+      "type": "object"
+    },
+    "Outcome": {
+      "additionalProperties": false,
+      "description": "Categoria fechada da v2 -> estado abstrato e texto fixo.",
+      "properties": {
+        "kind": {
+          "enum": [
+            "conflict",
+            "refused",
+            "busy",
+            "blocked",
+            "uncertain"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "text": {
+          "maxLength": 400,
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        },
+        "value": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "value",
+        "kind",
+        "text"
+      ],
+      "title": "Outcome",
       "type": "object"
     },
     "Page": {
@@ -1160,6 +1623,14 @@
     "Step": {
       "additionalProperties": false,
       "properties": {
+        "fields": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 16,
+          "title": "Fields",
+          "type": "array"
+        },
         "id": {
           "title": "Id",
           "type": "string"
@@ -1424,6 +1895,46 @@
       "title": "View",
       "type": "object"
     },
+    "Visible": {
+      "additionalProperties": false,
+      "description": "Condicao de exibicao: valor em caminho declarado, nunca expressao.",
+      "properties": {
+        "path": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ]
+          },
+          "title": "Path",
+          "type": "array"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "boolean"
+            }
+          ],
+          "title": "Value"
+        }
+      },
+      "required": [
+        "path",
+        "value"
+      ],
+      "title": "Visible",
+      "type": "object"
+    },
     "Wording": {
       "additionalProperties": false,
       "description": "Texto fixo exibido no lugar de um valor enumerado conhecido.",
@@ -1479,8 +1990,8 @@
       "items": {
         "$ref": "#/$defs/Call"
       },
-      "maxItems": 23,
-      "minItems": 23,
+      "maxItems": 32,
+      "minItems": 32,
       "title": "Calls",
       "type": "array"
     },
@@ -1512,7 +2023,7 @@
       "items": {
         "$ref": "#/$defs/Definition"
       },
-      "maxItems": 192,
+      "maxItems": 320,
       "minItems": 1,
       "title": "Models",
       "type": "array"

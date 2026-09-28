@@ -13,6 +13,8 @@ from pathlib import Path
 
 import pytest
 
+from maskgw.admin.http.v2.routes import V2_WRITE_ROUTES
+from maskgw.admin.ui.protocol import V2_WRITES
 from maskgw.admin.ui.resources import load_resources
 
 APPROVED = {
@@ -35,9 +37,19 @@ STAGE8_CALLS = 19
 #: and the Stage 8 sections above stay equal to `APPROVED`.
 STAGE5 = {
     "format": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
-    "console": "44a1a8ba53eabed00537b7bfd6a2c1056dbb0862ca50391b2477032d2f3f0488",
     "models": "61e93e5c9089ede0149ae805e1d6eac5fde64974143b72d07d9bd82ada38623a",
     "calls": "edb0149496b9bf504c656d63667c84f70c1d719ca01f347902727330035b4d07",
+}
+STAGE5_MODELS = 147
+STAGE5_CALLS = 23
+
+#: Phase 9, Stage 6 (D-103-D-106): the nine approved second-prefix writes, their
+#: models and the declared forms. Appended after the Stage 5 slices, which keep
+#: their seals; `console` now also carries actions, outcomes and reasons.
+STAGE6 = {
+    "console": "b7f3d675d4c81f13909eed28fdd097ad9f1183c32d0ed37e67e9ca93e97e0206",
+    "models": "59646aa05382fafa151bf7d941872ef85a245116c4c53b189600ea77f998dfbd",
+    "calls": "20d0adaa1774880d73f9ed30368ff82bb84530088555c5e365c07f6302698c03",
 }
 
 
@@ -78,17 +90,17 @@ def test_all_inventory_sections_equal_approved_stage8():
     assert sealed(stage8_view(document)) == APPROVED
     assert {k: len(v) for k, v in document.items() if isinstance(v, list)} == {
         "bindings": 56,
-        "calls": 23,
+        "calls": 32,
         "editors": 8,
         "messages": 25,
-        "models": 147,
+        "models": 211,
         "views": 6,
     }
     controls = [c for group in document["views"] + document["editors"] for c in group["controls"]]
     assert len(controls) == len({c["id"] for c in controls}) == 48
     writes = {
         (c["method"], c["path"])
-        for c in document["calls"]
+        for c in document["calls"][:STAGE8_CALLS]
         if c["operation"] not in {"read", "check"}
     }
     assert writes == {
@@ -109,11 +121,10 @@ def test_stage5_additions_are_sealed_and_read_only():
     document = json.loads(load_resources()["presentation.json"])
     assert {
         "format": digest(document["format"]),
-        "console": digest(document["console"]),
-        "models": digest(document["models"][STAGE8_MODELS:]),
-        "calls": digest(document["calls"][STAGE8_CALLS:]),
+        "models": digest(document["models"][STAGE8_MODELS:STAGE5_MODELS]),
+        "calls": digest(document["calls"][STAGE8_CALLS:STAGE5_CALLS]),
     } == STAGE5
-    added = document["calls"][STAGE8_CALLS:]
+    added = document["calls"][STAGE8_CALLS:STAGE5_CALLS]
     assert {(c["method"], c["path"], c["operation"], c["input"]) for c in added} == {
         ("GET", "/admin/v2/status", "read", None),
         ("GET", "/admin/v2/datasources", "read", None),
@@ -140,3 +151,36 @@ def test_inventory_seal_detects_every_section_counterexample(section, change):
         assert isinstance(items, list)
         items[0]["unexpected"] = True
     assert sealed(document) != APPROVED
+
+
+def test_stage6_writes_are_exactly_the_approved_inventory():
+    document = json.loads(load_resources()["presentation.json"])
+    assert {
+        "console": digest(document["console"]),
+        "models": digest(document["models"][STAGE5_MODELS:]),
+        "calls": digest(document["calls"][STAGE5_CALLS:]),
+    } == STAGE6
+    added = document["calls"][STAGE5_CALLS:]
+    assert {(c["method"], c["path"], c["operation"]) for c in added} == {
+        ("POST", "/admin/v2/datasources", "register"),
+        ("POST", "/admin/v2/datasources:test", "probe"),
+        ("POST", "/admin/v2/datasources/{datasource_id}:test", "probe"),
+        ("POST", "/admin/v2/datasources/{datasource_id}:rotate-credential", "renew"),
+        ("POST", "/admin/v2/datasources/{datasource_id}:enable", "resume"),
+        ("POST", "/admin/v2/datasources/{datasource_id}:disable", "pause"),
+        ("PUT", "/admin/v2/datasources/{datasource_id}", "revise"),
+        ("DELETE", "/admin/v2/datasources/{datasource_id}", "retire"),
+        ("PUT", "/admin/v2/datasources/{datasource_id}/policy", "amend"),
+    }
+    assert all(c["input"] is not None for c in added)
+    # The v1 views never offer a second-prefix write; no role binding points there.
+    written = {c["id"] for c in added}
+    assert not any(key in written for view in document["views"] for key in view["actions"])
+    added_models = {m["id"] for m in document["models"][STAGE5_MODELS:]}
+    assert not any(b["model"] in added_models for b in document["bindings"])
+
+
+def test_stage6_inventory_mirrors_the_router():
+    assert {(method, path) for method, path, _ in V2_WRITES} == {
+        (method, path) for path, method in V2_WRITE_ROUTES
+    }

@@ -1,3 +1,7 @@
+/** Second-prefix writes (Phase 9, Stage 6): operation and its only method. */
+const writing=Object.freeze({register:"POST",probe:"POST",renew:"POST",resume:"POST",pause:"POST",revise:"PUT",retire:"DELETE",amend:"PUT"});
+/** @param {unknown} operation @returns {operation is keyof typeof writing} */
+function written(operation) { return typeof operation === "string" && Object.hasOwn(writing,operation); }
 /** @param {unknown} value @returns {value is Record<string, unknown>} */
 function record(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value)
@@ -72,6 +76,22 @@ function inspect(value, descriptor) {
   /** @type {Record<string,unknown>[]} */ const tabItems=[];
   for (const tab of detail.tabs) { if (!records(tab.entries)) return false; tabItems.push(...tab.entries); }
   /** @type {Record<string,unknown>[]} */ const pageItems=[];
+  /** Every action, typed confirmation and nested form field carries an opaque id.
+   * @param {unknown} list @param {number} depth @returns {Record<string,unknown>[] | undefined} */
+  const nested=(list,depth)=>{
+    if(!records(list) || depth > 2) return undefined;
+    /** @type {Record<string,unknown>[]} */ const found=[];
+    for(const field of list) { found.push(field); if(field.items !== undefined) { const inner=nested(field.items,depth+1); if(!inner) return undefined; found.push(...inner); } }
+    return found;
+  };
+  if (surface.actions !== undefined) {
+    if (!records(surface.actions)) return false;
+    for (const action of surface.actions) {
+      const inner=nested([...(action.fields === undefined ? [] : sequence(action.fields) ? action.fields : [null]),...(action.typed === undefined || action.typed === null ? [] : [action.typed])],0);
+      if(!inner) return false;
+      pageItems.push(action,...inner);
+    }
+  }
   if (surface.pages !== undefined) {
     if (!records(surface.pages)) return false;
     for (const page of surface.pages) {
@@ -180,18 +200,20 @@ function inspect(value, descriptor) {
   for (const call of value.calls) {
     if (typeof call.path !== "string" || !(call.path.startsWith("/admin/v1/") || call.path.startsWith("/admin/v2/")) || /[?#%\\]|\/\//.test(call.path)) return false;
     // The second prefix only carries authenticated reads (Phase 9, Stage 5).
-    if (call.path.startsWith("/admin/v2/") && (call.method !== "GET" || call.operation !== "read")) return false;
+    // Second prefix: reads are GET; writes only with their own operation and method.
+    if (call.path.startsWith("/admin/v2/") && !(call.method === "GET" ? call.operation === "read" : written(call.operation) && writing[call.operation] === call.method && typeof call.input === "string")) return false;
+    if (call.path.startsWith("/admin/v1/") && written(call.operation)) return false;
     const parts=call.path.split("/").slice(3);
     if (parts.some(p=>!p || p === "." || p === "..")) return false;
     const slots=parts.filter(p=>p.includes("{") || p.includes("}"));
     if (slots.length > 1 || (slots.length === 0 && call.identity !== null)) return false;
-    if (slots.length === 1 && (typeof call.identity !== "string" || denied.has(call.identity) || !/^[a-z_]+$/.test(call.identity) || slots[0] !== "{"+call.identity+"}")) return false;
+    if (slots.length === 1 && (typeof call.identity !== "string" || denied.has(call.identity) || !/^[a-z_]+$/.test(call.identity) || !(slots[0] === "{"+call.identity+"}" || (slots[0]?.startsWith("{"+call.identity+"}:") && /^[a-z]+(?:-[a-z]+)*$/.test(slots[0].slice(call.identity.length+3)))))) return false;
     if (typeof call.error !== "string" || !models.has(call.error) || typeof call.output !== "string" || !models.has(call.output)) return false;
     if ((call.method === "GET") !== (call.input === null)) return false;
     if (call.input !== null && (typeof call.input !== "string" || !models.has(call.input))) return false;
   }
   for (const view of value.views) {
-    if (calls.get(view.call)?.method !== "GET" || !sequence(view.actions) || !view.actions.every(a=>calls.has(a))) return false;
+    if (calls.get(view.call)?.method !== "GET" || !sequence(view.actions) || !view.actions.every(a=>calls.has(a) && !written(calls.get(a)?.operation))) return false;
   }
   for (const editor of value.editors) if (typeof editor.model !== "string" || !models.has(editor.model)) return false;
   for (const control of controls) {
@@ -235,6 +257,58 @@ function inspect(value, descriptor) {
     }
   }
   if (detail.title !== undefined && detail.title !== null && (!sequence(detail.title) || leaf(main.output,detail.title)?.type !== "string")) return false;
+  /** Form fields: target paths in the write input, sources in the base read.
+   * @param {unknown} list @param {string} target @param {string | undefined} base @param {number} depth @returns {boolean}
+   */
+  function formed(list,target,base,depth) {
+    if(!records(list) || depth > 2) return false;
+    for(const field of list) {
+      if(!sequence(field.path) || !linked(target,field.path)) return false;
+      const sourced=field.source !== undefined && field.source !== null;
+      if(sourced && (base === undefined || !linked(base,field.source))) return false;
+      if(field.kind === "secret" && sourced) return false;
+      const many=field.kind === "records", items=records(field.items) ? field.items : [];
+      if(many !== (items.length > 0)) return false;
+      if((field.kind === "choice") !== (records(field.choices) && field.choices.length > 0)) return false;
+      if(many) {
+        const into=leaf(target,field.path), from=base !== undefined && sourced ? leaf(base,field.source) : undefined;
+        if(into?.type !== "list" || typeof into.item !== "string") return false;
+        if(!formed(items,into.item,from?.type === "list" && typeof from.item === "string" ? from.item : undefined,depth+1)) return false;
+      }
+    }
+    return true;
+  }
+  if (surface.actions !== undefined && records(surface.actions)) {
+    /** @type {Record<string,string>} */ const bases={collection:String(listing.output),detail:String(main.output),aside:String(aside.output)};
+    for (const action of surface.actions) {
+      const call=typeof action.call === "string" ? calls.get(action.call) : undefined;
+      if(!call || !written(call.operation) || typeof call.input !== "string" || typeof action.place !== "string" || !Object.hasOwn(bases,action.place)) return false;
+      const base=bases[action.place] ?? "";
+      if((action.place === "collection") !== (call.identity === null)) return false;
+      if(action.place !== "collection" && call.identity !== main.identity) return false;
+      if(!formed(action.fields === undefined ? [] : action.fields,call.input,base,0)) return false;
+      const bare=(/** @type {unknown} */ v)=>v === undefined || v === null;
+      if(bare(action.stamp) !== bare(action.origin)) return false;
+      if(!bare(action.stamp) && (leaf(call.input,action.stamp)?.type !== "integer" || leaf(base,action.origin)?.type !== "integer")) return false;
+      if((action.after === "open") !== !bare(action.lands)) return false;
+      if(!bare(action.lands) && leaf(call.output,action.lands)?.type !== "string") return false;
+      if(!bare(action.typed) && (!record(action.typed) || action.typed.kind !== "text" || !sequence(action.typed.source) || !formed([action.typed],call.input,base,0))) return false;
+      if(!bare(action.visible) && (!record(action.visible) || !linked(base,action.visible.path))) return false;
+      if(!bare(action.probe)) {
+        const probe=typeof action.probe === "string" ? calls.get(action.probe) : undefined;
+        if(!probe || probe.operation !== "probe" || typeof probe.input !== "string" || (probe.identity === null) !== (call.identity === null)) return false;
+      }
+      if(action.drop !== undefined && (!sequence(action.drop) || !action.drop.every(p=>linked(call.input,p)))) return false;
+    }
+    if(guide.action !== undefined && guide.action !== null) {
+      const wizard=surface.actions.find(a=>a.id === guide.action);
+      const call=wizard && typeof wizard.call === "string" ? calls.get(wizard.call) : undefined;
+      if(!wizard || wizard.place !== "collection" || call?.operation !== "register" || !records(wizard.fields)) return false;
+      const placed=guide.steps.flatMap(s=>strings(s.fields) ? s.fields : [""]);
+      const own=wizard.fields.map(f=>f.id);
+      if(placed.length !== own.length || !own.every(id=>typeof id === "string" && placed.includes(id))) return false;
+    }
+  }
   /** Terminal paths under an object; lists, text and choices end a path.
    * @param {Record<string,unknown> | undefined} node @param {string[]} path @param {number} depth @returns {string[][]}
    */
@@ -274,6 +348,209 @@ export {};
 /** @type {unknown} */
 const layout={
   "$defs": {
+    "Action": {
+      "additionalProperties": false,
+      "description": "Escrita v2 declarada (Etapa 6, D-103/D-104): corpo por caminhos.",
+      "properties": {
+        "after": {
+          "default": "reread",
+          "enum": [
+            "reread",
+            "list",
+            "open"
+          ],
+          "title": "After",
+          "type": "string"
+        },
+        "call": {
+          "title": "Call",
+          "type": "string"
+        },
+        "confirm": {
+          "maxLength": 400,
+          "minLength": 1,
+          "title": "Confirm",
+          "type": "string"
+        },
+        "done": {
+          "maxLength": 300,
+          "minLength": 1,
+          "title": "Done",
+          "type": "string"
+        },
+        "drop": {
+          "items": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array"
+          },
+          "maxItems": 4,
+          "title": "Drop",
+          "type": "array"
+        },
+        "fields": {
+          "items": {
+            "$ref": "#/$defs/FormField"
+          },
+          "maxItems": 32,
+          "title": "Fields",
+          "type": "array"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "lands": {
+          "anyOf": [
+            {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lands"
+        },
+        "origin": {
+          "anyOf": [
+            {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Origin"
+        },
+        "place": {
+          "enum": [
+            "collection",
+            "detail",
+            "aside"
+          ],
+          "title": "Place",
+          "type": "string"
+        },
+        "probe": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Probe"
+        },
+        "stamp": {
+          "anyOf": [
+            {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Stamp"
+        },
+        "title": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "tone": {
+          "default": "plain",
+          "enum": [
+            "plain",
+            "danger"
+          ],
+          "title": "Tone",
+          "type": "string"
+        },
+        "typed": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FormField"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "visible": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Visible"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "title",
+        "call",
+        "place",
+        "confirm",
+        "done"
+      ],
+      "title": "Action",
+      "type": "object"
+    },
     "Binding": {
       "additionalProperties": false,
       "properties": {
@@ -387,7 +664,15 @@ const layout={
             "move",
             "check",
             "confirm",
-            "append"
+            "append",
+            "register",
+            "probe",
+            "renew",
+            "resume",
+            "pause",
+            "revise",
+            "retire",
+            "amend"
           ],
           "title": "Operation",
           "type": "string"
@@ -633,6 +918,14 @@ const layout={
     "Console": {
       "additionalProperties": false,
       "properties": {
+        "actions": {
+          "items": {
+            "$ref": "#/$defs/Action"
+          },
+          "maxItems": 12,
+          "title": "Actions",
+          "type": "array"
+        },
         "blank": {
           "maxLength": 60,
           "minLength": 1,
@@ -660,6 +953,28 @@ const layout={
         "guide": {
           "$ref": "#/$defs/Guide"
         },
+        "latest": {
+          "anyOf": [
+            {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Latest"
+        },
         "legacy": {
           "maxLength": 60,
           "minLength": 1,
@@ -678,12 +993,28 @@ const layout={
           "title": "No",
           "type": "string"
         },
+        "outcomes": {
+          "items": {
+            "$ref": "#/$defs/Outcome"
+          },
+          "maxItems": 40,
+          "title": "Outcomes",
+          "type": "array"
+        },
         "pages": {
           "items": {
             "$ref": "#/$defs/Page"
           },
           "maxItems": 6,
           "title": "Pages",
+          "type": "array"
+        },
+        "reasons": {
+          "items": {
+            "$ref": "#/$defs/Wording"
+          },
+          "maxItems": 8,
+          "title": "Reasons",
           "type": "array"
         },
         "summary": {
@@ -699,6 +1030,13 @@ const layout={
           "maxLength": 400,
           "minLength": 1,
           "title": "Unavailable",
+          "type": "string"
+        },
+        "unknown": {
+          "default": "Resultado desconhecido. Releia o estado antes de decidir.",
+          "maxLength": 300,
+          "minLength": 1,
+          "title": "Unknown",
           "type": "string"
         },
         "yes": {
@@ -1102,6 +1440,157 @@ const layout={
       "title": "Figure",
       "type": "object"
     },
+    "FormField": {
+      "additionalProperties": false,
+      "description": "Campo de formulario: so caminho, rotulo e tipo; nenhum codigo.",
+      "properties": {
+        "choices": {
+          "items": {
+            "$ref": "#/$defs/Wording"
+          },
+          "maxItems": 32,
+          "title": "Choices",
+          "type": "array"
+        },
+        "default": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Default"
+        },
+        "help": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Help"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "item": {
+          "anyOf": [
+            {
+              "maxLength": 60,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Item"
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/FormField"
+          },
+          "maxItems": 24,
+          "title": "Items",
+          "type": "array"
+        },
+        "kind": {
+          "enum": [
+            "text",
+            "secret",
+            "integer",
+            "flag",
+            "choice",
+            "lines",
+            "records"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "optional": {
+          "default": false,
+          "title": "Optional",
+          "type": "boolean"
+        },
+        "path": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ]
+          },
+          "title": "Path",
+          "type": "array"
+        },
+        "source": {
+          "anyOf": [
+            {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source"
+        },
+        "when": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Visible"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "kind",
+        "path"
+      ],
+      "title": "FormField",
+      "type": "object"
+    },
     "Group": {
       "additionalProperties": false,
       "description": "Agrupamento visual de itens de uma aba, com titulo e explicacao.",
@@ -1147,6 +1636,18 @@ const layout={
       "additionalProperties": false,
       "description": "Prototipo de navegacao: sem campo, envio, teste ou gravacao.",
       "properties": {
+        "action": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Action"
+        },
         "banner": {
           "maxLength": 400,
           "minLength": 1,
@@ -1273,6 +1774,42 @@ const layout={
         "fields"
       ],
       "title": "Object",
+      "type": "object"
+    },
+    "Outcome": {
+      "additionalProperties": false,
+      "description": "Categoria fechada da v2 -> estado abstrato e texto fixo.",
+      "properties": {
+        "kind": {
+          "enum": [
+            "conflict",
+            "refused",
+            "busy",
+            "blocked",
+            "uncertain"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "text": {
+          "maxLength": 400,
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        },
+        "value": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "value",
+        "kind",
+        "text"
+      ],
+      "title": "Outcome",
       "type": "object"
     },
     "Page": {
@@ -1434,6 +1971,14 @@ const layout={
     "Step": {
       "additionalProperties": false,
       "properties": {
+        "fields": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 16,
+          "title": "Fields",
+          "type": "array"
+        },
         "id": {
           "title": "Id",
           "type": "string"
@@ -1698,6 +2243,46 @@ const layout={
       "title": "View",
       "type": "object"
     },
+    "Visible": {
+      "additionalProperties": false,
+      "description": "Condicao de exibicao: valor em caminho declarado, nunca expressao.",
+      "properties": {
+        "path": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ]
+          },
+          "title": "Path",
+          "type": "array"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "boolean"
+            }
+          ],
+          "title": "Value"
+        }
+      },
+      "required": [
+        "path",
+        "value"
+      ],
+      "title": "Visible",
+      "type": "object"
+    },
     "Wording": {
       "additionalProperties": false,
       "description": "Texto fixo exibido no lugar de um valor enumerado conhecido.",
@@ -1753,8 +2338,8 @@ const layout={
       "items": {
         "$ref": "#/$defs/Call"
       },
-      "maxItems": 23,
-      "minItems": 23,
+      "maxItems": 32,
+      "minItems": 32,
       "title": "Calls",
       "type": "array"
     },
@@ -1786,7 +2371,7 @@ const layout={
       "items": {
         "$ref": "#/$defs/Definition"
       },
-      "maxItems": 192,
+      "maxItems": 320,
       "minItems": 1,
       "title": "Models",
       "type": "array"
@@ -1814,7 +2399,7 @@ const layout={
   "title": "Presentation",
   "type": "object"
 };
-export const digest="078d3335fb7be604152deae22f2f385e7898c94f8139319fade66eaf6ef22b10";
+export const digest="0964dc7cc7599a0ef9fd1335191a33e3451cfd8cd8ae86a93eb3aca406669a3b";
 /** @param {unknown} value */
 export function check(value) { return inspect(value,layout); }
 /** @param {unknown} item @returns {item is Record<string, unknown>} */
@@ -2300,17 +2885,30 @@ function object(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-/** The second administrative prefix only admits reads (Phase 9, Stage 5).
- * @param {string} path @param {boolean} first @param {string} method
+/** Second-prefix writes: operation and its only method (Phase 9, Stage 6). */
+const writes=Object.freeze({register:"POST",probe:"POST",renew:"POST",resume:"POST",pause:"POST",revise:"PUT",retire:"DELETE",amend:"PUT"});
+/** The second administrative prefix admits reads, and writes only through `submit`.
+ * @param {string} path @param {boolean} first @param {string} method @param {boolean} mutating
  */
-function destination(path, first, method="GET") {
+function destination(path, first, method="GET", mutating=false) {
   const second=path.startsWith("/admin/v2/");
   if (first ? path !== "/admin/ui/presentation.json" : !(path.startsWith("/admin/v1/") || second)) throw new Error("Request refused.");
-  if (second && method !== "GET") throw new Error("Request refused.");
+  if (second && method !== "GET" && !mutating) throw new Error("Request refused.");
+  if (mutating && !second) throw new Error("Request refused.");
   if (/[?#%\\{}]|\/\//.test(path) || path.split("/").some(v => v === "." || v === "..")) throw new Error("Request refused.");
   const url = new URL(path, window.location.origin);
   if (url.origin !== window.location.origin || url.pathname !== path) throw new Error("Request refused.");
   return url;
+}
+
+/** Substitutes the single identity slot, `{name}` or `{name}:action`.
+ * @param {string} path @param {string} name @param {string} identity
+ */
+function place(path,name,identity) {
+  const marker="{"+name+"}", parts=path.split("/");
+  const slot=parts.filter(p=>p === marker || (p.startsWith(marker+":") && /^[a-z]+(?:-[a-z]+)*$/.test(p.slice(marker.length+1))));
+  if(slot.length !== 1 || parts.filter(p=>p.includes("{") || p.includes("}")).length !== 1) throw new Error("Request refused.");
+  return parts.map(p=>p === slot[0] ? identity+p.slice(marker.length) : p).join("/");
 }
 
 /** Entry is explicit; no DOM, persistent state, automatic request or write.
@@ -2325,17 +2923,18 @@ export async function open(token, signal=undefined, expired=()=>{}) {
   let writing = false;
   /** @type {Set<() => void>} */ const listeners=new Set();
   /** @type {Map<string, {path:string, method:"GET" | "POST", operation:string, output:string, identity:string | null}>} */ const calls = new Map();
+  /** @type {Map<string, {path:string, method:"POST" | "PUT" | "DELETE", operation:string, input:string, output:string, error:string, identity:string | null}>} */ const changes = new Map();
   /** @type {ReturnType<typeof reader> | undefined} */ let lens;
   /** @type {ReturnType<typeof commands> | undefined} */ let actions;
   /** @type {ReturnType<typeof author> | undefined} */ let forms;
-  function close() { ended=true; token=""; calls.clear(); lens=undefined; actions=undefined; forms=undefined; stop.abort(); signal?.removeEventListener("abort",close); for(const listener of listeners) listener(); listeners.clear(); }
+  function close() { ended=true; token=""; calls.clear(); changes.clear(); lens=undefined; actions=undefined; forms=undefined; stop.abort(); signal?.removeEventListener("abort",close); for(const listener of listeners) listener(); listeners.clear(); }
   signal?.addEventListener("abort",close,{once:true});
   if(signal?.aborted) close();
-  /** @param {string} path @param {string} method @param {string | undefined} body @param {boolean} first @param {AbortSignal | undefined} extra @param {boolean} errors */
-  async function send(path, method, body, first, extra=undefined,errors=false) {
+  /** @param {string} path @param {string} method @param {string | undefined} body @param {boolean} first @param {AbortSignal | undefined} extra @param {boolean} errors @param {boolean} mutating */
+  async function send(path, method, body, first, extra=undefined,errors=false,mutating=false) {
     if(ended) throw new AccessError("authentication");
     if(extra?.aborted) throw new AccessError("unknown");
-    const url = destination(path, first, method);
+    const url = destination(path, first, method, mutating);
     if (body !== undefined && (body.includes(JSON.stringify(token).slice(1,-1)) || new TextEncoder().encode(body).length > 1048576)) throw new Error("Request refused.");
     const headers = new Headers();
     headers.set("Authorization", "Bearer " + token);
@@ -2371,6 +2970,12 @@ export async function open(token, signal=undefined, expired=()=>{}) {
         && typeof item.identity === "string" && item.method === "GET" && item.operation === "read" && item.path.startsWith("/admin/v2/")) {
         calls.set(item.id, {path:item.path, method:"GET", operation:"read", output:item.output, identity:item.identity});
       }
+      // Second-prefix writes are kept apart from reads and from the first prefix.
+      if (object(item) && typeof item.id === "string" && typeof item.path === "string" && item.path.startsWith("/admin/v2/")
+        && typeof item.operation === "string" && Object.hasOwn(writes,item.operation) && writes[/** @type {keyof typeof writes} */ (item.operation)] === item.method
+        && typeof item.input === "string" && typeof item.output === "string" && typeof item.error === "string" && (item.identity === null || typeof item.identity === "string")) {
+        changes.set(item.id, {path:item.path, method:writes[/** @type {keyof typeof writes} */ (item.operation)], operation:item.operation, input:item.input, output:item.output, error:item.error, identity:item.identity});
+      }
     }
     /** @param {string} id @param {"GET" | "POST"} method @param {unknown} body @param {AbortSignal | undefined} extra @param {string | undefined} identity */
     async function run(id, method, body, extra=undefined, identity=undefined) {
@@ -2386,9 +2991,7 @@ export async function open(token, signal=undefined, expired=()=>{}) {
         else {
           if(!lens || typeof identity !== "string" || !/^[A-Za-z0-9_-]{1,128}$/.test(identity)) throw new Error("Request refused.");
           lens.inspectData(lens.identityModel(),identity);
-          const marker="{"+call.identity+"}", parts=path.split("/");
-          if(parts.filter(p=>p === marker).length !== 1) throw new Error("Request refused.");
-          path=parts.map(p=>p === marker ? identity : p).join("/");
+          path=place(path,call.identity,identity);
         }
         const second=path.startsWith("/admin/v2/");
         const response = await send(path, method, method === "GET" ? undefined : JSON.stringify(body), false, extra, second);
@@ -2450,12 +3053,56 @@ export async function open(token, signal=undefined, expired=()=>{}) {
           return {kind:"unknown",version:undefined,message:"Resultado desconhecido. Releia o estado antes de decidir."};
         } finally {writing=false;}
       },
+      /** One second-prefix write. The body is checked against its input model before any
+       * request; a failure after the flight began is `unknown`, never "nothing happened".
+       * @param {string} id @param {unknown} body @param {string | undefined} identity @param {AbortSignal | undefined} extra
+       * @returns {Promise<Written>}
+       */
+      submit: async(id,body,identity=undefined,extra=undefined)=>{
+        if(ended || !lens) throw new AccessError("authentication");
+        if(writing) throw new AccessError("incompatible");
+        const call=changes.get(id);
+        if(!call) throw new Error("Request refused.");
+        const clean=capture(body);
+        lens.inspectData(call.input,clean);
+        let path=call.path;
+        if(call.identity === null) { if(identity !== undefined) throw new Error("Request refused."); }
+        else {
+          if(typeof identity !== "string" || !/^[A-Za-z0-9_-]{1,128}$/.test(identity)) throw new Error("Request refused.");
+          lens.inspectData(lens.identityModel(),identity);
+          path=place(path,call.identity,identity);
+        }
+        const text=JSON.stringify(clean);
+        if(extra?.aborted || text.includes(JSON.stringify(token).slice(1,-1)) || new TextEncoder().encode(text).length > 1048576) throw new AccessError("incompatible");
+        destination(path,false,call.method,true);
+        writing=true;
+        try {
+          const response=await send(path,call.method,text,false,extra,true,true);
+          /** @type {unknown} */ const value=await response.json();
+          if(ended || !lens) throw new AccessError("authentication");
+          if(extra?.aborted || JSON.stringify(value).includes(JSON.stringify(token).slice(1,-1))) return {kind:"unknown"};
+          if(response.ok) { lens.inspectData(call.output,value); return {kind:"done",value:capture(value)}; }
+          // Closed error envelope: category, optional version stamp and field reasons only.
+          lens.inspectData(call.error,value);
+          if(!object(value) || typeof value.error !== "string") return {kind:"unknown"};
+          /** @type {{path:string,reason:string}[]} */ const fields=[];
+          if(Array.isArray(value.fields)) for(const item of value.fields) if(object(item) && typeof item.path === "string" && typeof item.reason === "string") fields.push({path:item.path,reason:item.reason});
+          return {kind:"refused",status:response.status,category:value.error,value:capture(value),fields};
+        } catch(error) {
+          if(ended) throw new AccessError("authentication");
+          return {kind:"unknown"};
+        } finally {writing=false;}
+      },
+      busy: ()=>writing,
+      /** @param {string} id */ quiet: id=>changes.get(id)?.operation === "probe",
       /** @param {string} id @param {AbortSignal | undefined} extra @param {string | undefined} identity */ read: (id, extra=undefined, identity=undefined) => run(id, "GET", undefined,extra,identity),
       /** @param {string} id @param {unknown} body */ check: (id, body) => run(id, "POST", body),
     });
   } catch (error) { close(); if(error instanceof AccessError) throw error; throw new AccessError("unknown"); }
 }
 
+
+/** @typedef {{kind:"done",value:unknown} | {kind:"refused",status:number,category:string,value:unknown,fields:{path:string,reason:string}[]} | {kind:"unknown"}} Written */
 
 export class AccessError extends Error {
   /** @param {"authentication" | "incompatible" | "unknown" | "absent" | "unavailable"} kind */
@@ -2919,6 +3566,471 @@ export function workbench(client,root,refreshed) {
 function rowsForControls(value) {if(!Array.isArray(value) || !value.every(entry)) throw new Error("Request refused.");return value;}
 
 
+/** @typedef {Awaited<ReturnType<typeof open>>} DeskClient */
+/** @typedef {(string|number)[]} Way */
+/** @typedef {{value:string,text:string}} Choice */
+/** @typedef {{id:string,label:string,help?:string|null,kind:"text"|"secret"|"integer"|"flag"|"choice"|"lines"|"records",path:Way,source?:Way|null,default?:string|number|boolean|null,optional?:boolean,choices?:Choice[],item?:string|null,items?:Field[],when?:{path:Way,value:string|number|boolean}|null}} Field */
+/** @typedef {{id:string,label:string,title:string,call:string,place:"collection"|"detail"|"aside",stamp?:Way|null,origin?:Way|null,after?:"reread"|"list"|"open",lands?:Way|null,fields?:Field[],visible?:{path:Way,value:string|number|boolean}|null,confirm:string,typed?:Field|null,probe?:string|null,drop?:Way[],done:string,tone?:"plain"|"danger"}} Deed */
+/** @typedef {{value:string,kind:"conflict"|"refused"|"busy"|"blocked"|"uncertain",text:string}} Result */
+/** @typedef {{actions?:Deed[],outcomes?:Result[],reasons?:Choice[],latest?:Way|null,unknown?:string,guide:{label:string,banner:string,steps:{id:string,label:string,text:string,fields?:string[]}[],action?:string|null}}} Plan */
+/** @typedef {{key:number,values:Map<string,unknown>}} Row */
+/** @typedef {Written | {kind:"busy-local"} | {kind:"gone"} | {kind:"local"}} Sent */
+
+/** Second-prefix writes (Phase 9, Stage 6). Drafts live only here, in memory;
+ * one write at a time; every write needs an explicit gesture and a review;
+ * a lost or uncertain answer blocks new writes until the state is read again.
+ * @param {DeskClient} client @param {HTMLElement} root @param {Plan} plan
+ * @param {{reread:(deed:Deed,value:unknown)=>void, refresh:()=>void}} hooks
+ */
+export function desk(client,root,plan,hooks) {
+  const deeds=plan.actions ?? [], results=plan.outcomes ?? [], reasons=plan.reasons ?? [];
+  /** @type {HTMLDialogElement | undefined} */ let dialog;
+  /** @type {HTMLElement | undefined} */ let restore;
+  /** @type {HTMLElement | undefined} */ let note;
+  /** @type {Map<string,unknown>} */ let values=new Map();
+  /** @type {Map<string,{node:HTMLElement,say:HTMLElement}>} */ let controls=new Map();
+  let serial=0, rows=0, dirty=false, waiting=false, engaged=false, ended=false;
+  /** Writes stay off after `blocked` (until restart) or `doubt` (until a fresh read). */
+  let blocked=false, doubt=false;
+  /** @type {(() => void) | undefined} */ let render;
+
+  /** @param {string} text @param {() => void} action */
+  function button(text,action) {const b=element("button",text);b.type="button";b.addEventListener("click",action);return b;}
+  /** @param {string} text */
+  function announce(text) {if(note) note.textContent=text;}
+  function dismiss() {if(dialog) {dialog.close();erase(dialog);dialog.remove();dialog=undefined;} if(restore?.isConnected) restore.focus();}
+  /** Forget every draft value, the secret included. */
+  function forget() {values=new Map();controls=new Map();dirty=false;engaged=false;waiting=false;render=undefined;serial++;}
+  function reset() {forget();dismiss();}
+  /** Erase the draft (secret included) but keep the dialog able to show its end state. */
+  function scrub() {values=new Map();dirty=false;}
+  /** @param {HTMLDialogElement} box */
+  function trap(box) {
+    box.addEventListener("keydown",event=>{
+      if(event.key !== "Tab") return;
+      const focusable=Array.from(box.querySelectorAll("button,input,select,textarea,[tabindex]"))
+        .filter(n=>n instanceof HTMLElement && n.tabIndex >= 0 && !n.hasAttribute("disabled") && n.getClientRects().length > 0);
+      const index=focusable.indexOf(document.activeElement ?? box), target=event.shiftKey ? focusable.at(-1) : focusable[0];
+      if(index < 0 || (event.shiftKey ? index === 0 : index === focusable.length-1)) {event.preventDefault();if(target instanceof HTMLElement) target.focus();else box.focus();}
+    });
+  }
+  /** @param {string} title @param {string} tone */
+  function modal(title,tone) {
+    dismiss();dialog=element("dialog");dialog.className="desk "+tone;
+    const heading=element("h2",title);heading.id="desk-title";heading.tabIndex=-1;
+    dialog.setAttribute("aria-labelledby",heading.id);
+    note=element("p");note.setAttribute("role","status");note.setAttribute("aria-live","polite");note.className="desk-note";
+    dialog.append(heading,note);dialog.addEventListener("cancel",event=>{event.preventDefault();leave(()=>{});});
+    trap(dialog);root.append(dialog);dialog.showModal();heading.focus();return dialog;
+  }
+  /** Leaving with a draft asks first; a pending write cannot be left.
+   * @param {() => void} action
+   */
+  function leave(action) {
+    if(waiting) {announce("Operação pendente. Aguarde o desfecho.");return;}
+    if(!engaged || !dirty) {reset();action();return;}
+    const prior=dialog;
+    const confirm=element("dialog"), title=element("h2","Descartar rascunho?");title.id="desk-discard";
+    confirm.setAttribute("aria-labelledby",title.id);confirm.append(title,element("p","As alterações não enviadas serão descartadas, inclusive a senha digitada."));
+    const keep=()=>{confirm.close();erase(confirm);confirm.remove();(prior ?? restore)?.focus();};
+    confirm.append(button("Continuar editando",keep),button("Descartar",()=>{keep();reset();action();}));
+    confirm.addEventListener("cancel",event=>{event.preventDefault();keep();});trap(confirm);root.append(confirm);confirm.showModal();
+  }
+
+  // ---- values ---------------------------------------------------------------
+  /** @param {Field} field @param {unknown} base */
+  function initial(field,base) {
+    if(field.kind === "secret") return "";
+    const found=field.source && base !== undefined ? at(base,field.source) : undefined;
+    if(field.kind === "records") {
+      const list=Array.isArray(found) ? found : [];
+      return list.map(item=>row(field.items ?? [],item));
+    }
+    if(found !== undefined && found !== null) return field.kind === "lines" && Array.isArray(found) ? found.map(String).join("\n") : field.kind === "integer" ? String(found) : found;
+    if(field.kind === "flag") return field.default === true;
+    if(field.kind === "lines") return "";
+    if(field.kind === "choice") return typeof field.default === "string" ? field.default : field.choices?.[0]?.value ?? "";
+    return field.default === undefined || field.default === null ? "" : String(field.default);
+  }
+  /** @param {Field[]} fields @param {unknown} item @returns {Row} */
+  function row(fields,item) {
+    /** @type {Map<string,unknown>} */ const map=new Map();
+    for(const field of fields) map.set(field.id,initial(field,item));
+    return {key:++rows,values:map};
+  }
+  /** @param {Row[] | undefined} list */
+  function listOf(list) {return Array.isArray(list) ? list : [];}
+  /** @param {Record<string,unknown>} body @param {Way} path @param {unknown} value */
+  function put(body,path,value) {
+    /** @type {Record<string,unknown>} */ let node=body;
+    for(const [index,part] of path.entries()) {
+      const name=String(part);
+      if(index === path.length-1) {node[name]=value;break;}
+      const next=node[name];
+      if(!entry(next)) node[name]={};
+      node=/** @type {Record<string,unknown>} */ (node[name]);
+    }
+  }
+  /** @param {Field} field @param {Map<string,unknown>} map @param {Field[]} siblings */
+  function shown(field,map,siblings) {
+    if(!field.when) return true;
+    const other=siblings.find(s=>JSON.stringify(s.path) === JSON.stringify(field.when?.path));
+    return !!other && map.get(other.id) === field.when.value;
+  }
+  /** Builds a body by declared paths; returns local errors keyed by field id.
+   * @param {Field[]} fields @param {Map<string,unknown>} map @param {string} prefix @param {Map<string,string>} errors
+   */
+  function build(fields,map,prefix,errors) {
+    /** @type {Record<string,unknown>} */ const body={};
+    for(const field of fields) {
+      if(!shown(field,map,fields)) continue;
+      const key=prefix+field.id, raw=map.get(field.id);
+      if(field.kind === "records") {
+        put(body,field.path,listOf(/** @type {Row[] | undefined} */ (raw)).map(r=>build(field.items ?? [],r.values,prefix+field.id+"."+r.key+".",errors)));
+      } else if(field.kind === "flag") put(body,field.path,raw === true);
+      else if(field.kind === "lines") put(body,field.path,String(raw ?? "").split("\n").map(v=>v.trim()).filter(v=>v.length > 0));
+      else if(field.kind === "integer") {
+        const text=String(raw ?? "").trim();
+        if(!text) { if(!field.optional) errors.set(key,"Obrigatório."); continue; }
+        if(!/^[0-9]{1,15}$/.test(text)) { errors.set(key,"Informe um número inteiro."); continue; }
+        put(body,field.path,Number(text));
+      } else {
+        const text=field.kind === "secret" ? String(raw ?? "") : String(raw ?? "").trim();
+        if(!text) { if(field.optional) continue; errors.set(key,"Obrigatório."); continue; }
+        put(body,field.path,text);
+      }
+    }
+    return body;
+  }
+  /** @param {Record<string,unknown>} body @param {Way} path */
+  function drop(body,path) {
+    const parent=path.length > 1 ? at(body,path.slice(0,-1)) : body, last=path.at(-1);
+    if(entry(parent) && typeof last === "string") delete parent[last];
+  }
+
+  // ---- controls ---------------------------------------------------------------
+  /** @param {HTMLElement} holder @param {Field[]} fields @param {Map<string,unknown>} map @param {string} prefix @param {() => void} redraw */
+  function draw(holder,fields,map,prefix,redraw) {
+    for(const field of fields) {
+      if(!shown(field,map,fields)) continue;
+      const key=prefix+field.id, id="f-"+key.replaceAll(".","-");
+      const say=element("p");say.className="desk-error";say.id=id+"-error";say.hidden=true;
+      const help=field.help ? element("p",field.help) : undefined;if(help) {help.className="desk-help";help.id=id+"-help";}
+      const described=[help?.id,say.id].filter(v=>v).join(" ");
+      if(field.kind === "records") {
+        const set=element("fieldset");set.className="desk-records";const legend=element("legend",field.label);set.append(legend);
+        if(help) set.append(help);
+        const list=listOf(/** @type {Row[] | undefined} */ (map.get(field.id)));
+        const name=field.item ?? "Item";
+        if(!list.length) set.append(element("p","Nenhum item. Use o botão abaixo para adicionar."));
+        for(const [index,item] of list.entries()) {
+          const box=element("fieldset");box.className="desk-item";box.append(element("legend",name+" "+(index+1)));
+          draw(box,field.items ?? [],item.values,prefix+field.id+"."+item.key+".",redraw);
+          const moves=element("div");moves.className="desk-moves";
+          const mover=(/** @type {number} */ step,/** @type {string} */ text)=>{
+            const b=button(text,()=>{const next=[...list];const [taken]=next.splice(index,1);if(!taken) return;next.splice(index+step,0,taken);map.set(field.id,next);dirty=true;redraw();
+              // Focus stays on the moved item: the same direction if still possible, else the other.
+              const same=document.getElementById("m-"+taken.key+"-"+step), other=document.getElementById("m-"+taken.key+"-"+(-step));
+              (same instanceof HTMLButtonElement && !same.disabled ? same : other)?.focus();});
+            b.id="m-"+item.key+"-"+step;b.setAttribute("aria-label",text+": "+name+" "+(index+1));return b;
+          };
+          const up=mover(-1,"Mover para cima"), down=mover(1,"Mover para baixo");up.disabled=index === 0;down.disabled=index === list.length-1;
+          const cut=button("Remover",()=>{map.set(field.id,list.filter(r=>r.key !== item.key));dirty=true;redraw();document.getElementById("a-"+key)?.focus();});
+          cut.setAttribute("aria-label","Remover: "+name+" "+(index+1));
+          moves.append(up,down,cut);box.append(moves);set.append(box);
+        }
+        const add=button("Adicionar "+name.toLocaleLowerCase("pt-BR"),()=>{const next=[...list,row(field.items ?? [],undefined)];map.set(field.id,next);dirty=true;redraw();
+          const created=next.at(-1), first=created ? document.getElementById("f-"+(prefix+field.id+"."+created.key+".").replaceAll(".","-")+(field.items?.[0]?.id ?? "")) : null;first?.focus();});
+        add.id="a-"+key;set.append(add,say);holder.append(set);controls.set(key,{node:add,say});continue;
+      }
+      const wrap=element("div");wrap.className="desk-field kind-"+field.kind;
+      const label=element("label",field.label);label.htmlFor=id;
+      /** @type {HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement} */ let input;
+      if(field.kind === "choice") {
+        const select=element("select");
+        for(const option of field.choices ?? []) {const o=element("option",option.text);o.value=option.value;select.append(o);}
+        select.value=String(map.get(field.id) ?? "");
+        select.addEventListener("change",()=>{map.set(field.id,select.value);dirty=true;if(fields.some(f=>f.when && JSON.stringify(f.when.path) === JSON.stringify(field.path))) {redraw();document.getElementById(id)?.focus();}});
+        input=select;
+      } else if(field.kind === "lines") {
+        const area=element("textarea");area.rows=3;area.value=String(map.get(field.id) ?? "");area.spellcheck=false;
+        area.addEventListener("input",()=>{map.set(field.id,area.value);dirty=true;});input=area;
+      } else {
+        const box=element("input");
+        if(field.kind === "flag") {box.type="checkbox";box.checked=map.get(field.id) === true;box.addEventListener("change",()=>{map.set(field.id,box.checked);dirty=true;});}
+        else {
+          box.type=field.kind === "secret" ? "password" : "text";box.value=String(map.get(field.id) ?? "");box.spellcheck=false;
+          box.autocomplete=field.kind === "secret" ? "new-password" : "off";
+          if(field.kind === "integer") box.inputMode="numeric";
+          box.addEventListener("input",()=>{map.set(field.id,box.value);dirty=true;});
+        }
+        input=box;
+      }
+      input.id=id;if(described) input.setAttribute("aria-describedby",described);
+      if(field.kind === "flag") {wrap.append(input,label);} else wrap.append(label,input);
+      if(help) wrap.append(help);
+      wrap.append(say);holder.append(wrap);controls.set(key,{node:input,say});
+    }
+  }
+  /** @param {Map<string,string>} errors */
+  function mark(errors) {
+    let first=true;
+    for(const [key,control] of controls) {
+      const text=errors.get(key);control.say.hidden=!text;control.say.textContent=text ?? "";
+      // Linked by aria-describedby; announced by the status line; focus goes to the first.
+      if(text && first) {control.node.focus();first=false;}
+    }
+    return !first;
+  }
+  /** Server field reasons (`body.a.0.b`) map back to the declared controls.
+   * @param {Field[]} fields @param {Map<string,unknown>} map @param {{path:string,reason:string}[]} found
+   */
+  function locate(fields,map,found) {
+    /** @type {Map<string,string>} */ const errors=new Map();
+    /** @param {Field[]} list @param {Map<string,unknown>} own @param {string[]} trail @param {string} prefix */
+    const walk=(list,own,trail,prefix)=>{
+      for(const field of list) {
+        const at=[...trail,...field.path.map(String)];
+        if(field.kind === "records") listOf(/** @type {Row[] | undefined} */ (own.get(field.id))).forEach((r,i)=>walk(field.items ?? [],r.values,[...at,String(i)],prefix+field.id+"."+r.key+"."));
+        for(const item of found) if(item.path === ["body",...at].join(".") && !errors.has(prefix+field.id)) errors.set(prefix+field.id,reasons.find(r=>r.value === item.reason)?.text ?? "Valor inválido.");
+      }
+    };
+    walk(fields,map,[],"");
+    return errors;
+  }
+
+  // ---- summary ----------------------------------------------------------------
+  /** Review text of the draft; the secret is never repeated.
+   * @param {Field[]} fields @param {Map<string,unknown>} map
+   */
+  function summary(fields,map) {
+    const list=element("dl");list.className="desk-summary";
+    for(const field of fields) {
+      if(!shown(field,map,fields)) continue;
+      const raw=map.get(field.id), row=element("div");const body=element("dd");
+      if(field.kind === "secret") body.textContent=String(raw ?? "") ? "Informada (não exibida)" : "Não informada";
+      else if(field.kind === "flag") body.textContent=raw === true ? "Sim" : "Não";
+      else if(field.kind === "choice") body.textContent=field.choices?.find(c=>c.value === raw)?.text ?? String(raw ?? "");
+      else if(field.kind === "records") {
+        const items=listOf(/** @type {Row[] | undefined} */ (raw));
+        if(!items.length) body.textContent="Nenhum.";
+        for(const [index,item] of items.entries()) {const sub=element("div");sub.className="desk-sub";sub.append(element("p",(field.item ?? "Item")+" "+(index+1)),summary(field.items ?? [],item.values));body.append(sub);}
+      } else body.textContent=String(raw ?? "").trim() || "—";
+      row.append(element("dt",field.label),body);list.append(row);
+    }
+    return list;
+  }
+
+  // ---- writes -----------------------------------------------------------------
+  /** @param {string} category */
+  function outcome(category) {return results.find(r=>r.value === category);}
+  /** The version stamp observed by the server, when the closed envelope carries one.
+   * @param {unknown} value */
+  function latest(value) {const found=plan.latest ? at(value,plan.latest) : undefined;return typeof found === "number" ? found : undefined;}
+  /** A test has no effect: its unknown result never blocks writes.
+   * @param {Deed} deed
+   */
+  function isProbe(deed) {return client.quiet(deed.call);}
+  /** @param {Deed} deed @param {unknown} base @param {string} typed */
+  function body(deed,base,typed) {
+    /** @type {Map<string,string>} */ const errors=new Map();
+    const made=build(deed.fields ?? [],values,"",errors);
+    if(deed.stamp && deed.origin) put(made,deed.stamp,at(base,deed.origin));
+    if(deed.typed) {
+      if(!typed.trim()) errors.set("typed","Obrigatório.");
+      put(made,deed.typed.path,typed.trim());
+    }
+    return {made,errors};
+  }
+  /** Sends one write and interprets it. Never retries, rebases or queues.
+   * @param {Deed} deed @param {string} call @param {Record<string,unknown>} made @param {string | undefined} identity
+   * @returns {Promise<Sent>}
+   */
+  async function send(deed,call,made,identity) {
+    void deed;
+    if(waiting || client.busy()) return {kind:"busy-local"};
+    waiting=true;const ticket=serial;
+    try {
+      const written=await client.submit(call,made,identity);
+      if(ticket !== serial) return {kind:"gone"};
+      return written;
+    } catch(error) {
+      if(error instanceof AccessError && error.kind === "authentication") return {kind:"gone"};
+      // Refused before any flight: the local model check did not accept the body.
+      return {kind:"local"};
+    } finally {if(ticket === serial) waiting=false;}
+  }
+
+  /** Opens the form of one declared write over its base reading.
+   * @param {Deed} deed @param {unknown} base @param {string | undefined} identity
+   */
+  function start(deed,base,identity) {
+    if(ended || engaged || waiting) return;
+    if(blocked || doubt) return;
+    engaged=true;dirty=false;restore=document.activeElement instanceof HTMLElement ? document.activeElement : undefined;
+    for(const field of deed.fields ?? []) values.set(field.id,initial(field,base));
+    let typed="";
+    /** @type {"draft" | "review" | "pending" | "conflict" | "ending"} */ let stage=(deed.fields ?? []).length ? "draft" : "review";
+    const box=modal(deed.title,deed.tone ?? "plain");
+    const content=element("div");content.className="desk-content";box.append(content);
+    render=()=>{
+      erase(content);controls=new Map();
+      if(stage === "draft") {
+        const form=element("form");form.noValidate=true;form.addEventListener("submit",event=>event.preventDefault());
+        draw(form,deed.fields ?? [],values,"",()=>render?.());
+        const moves=element("div");moves.className="moves";
+        moves.append(button("Revisar e confirmar",()=>{
+          const {errors}=body(deed,base,typed);
+          if(mark(errors)) {announce("Corrija os campos indicados.");return;}
+          stage="review";render?.();announce("");
+        }),button("Cancelar",()=>leave(()=>{})));
+        form.append(moves);content.append(form);
+      } else if(stage === "review" || stage === "pending") {
+        if((deed.fields ?? []).length) content.append(element("h3","Resumo"),summary(deed.fields ?? [],values));
+        const warn=element("p",deed.confirm);warn.className="desk-confirm "+(deed.tone ?? "plain");content.append(warn);
+        if(deed.typed) {
+          const field=deed.typed, wrap=element("div");wrap.className="desk-field kind-text";
+          const label=element("label",field.label), input=element("input");input.id="f-typed";label.htmlFor=input.id;input.type="text";input.autocomplete="off";input.spellcheck=false;input.value=typed;
+          const say=element("p");say.className="desk-error";say.id="f-typed-error";say.hidden=true;input.setAttribute("aria-describedby",say.id);
+          input.addEventListener("input",()=>{typed=input.value;dirty=true;});
+          wrap.append(label,input,say);content.append(wrap);controls.set("typed",{node:input,say});
+        }
+        const moves=element("div");moves.className="moves";
+        const go=button(isProbe(deed) ? deed.label : "Confirmar",()=>{void confirm();});
+        if(deed.tone === "danger") go.className="danger";
+        const back=(deed.fields ?? []).length ? button("Voltar ao rascunho",()=>{stage="draft";render?.();}) : undefined;
+        const cancel=button("Cancelar",()=>leave(()=>{}));
+        if(stage === "pending") {go.disabled=true;cancel.disabled=true;if(back) back.disabled=true;}
+        moves.append(go,...(back ? [back] : []),cancel);content.append(moves);
+      } else if(stage === "conflict") {
+        const moves=element("div");moves.className="moves";
+        moves.append(button("Voltar ao rascunho",()=>{stage="draft";render?.();}),button("Descartar e reler",()=>{reset();hooks.refresh();}));
+        content.append(moves);
+      } else {
+        content.append(button("Fechar",()=>{reset();hooks.refresh();}));
+      }
+    };
+    const confirm=async()=>{
+      const {made,errors}=body(deed,base,typed);
+      if(mark(errors)) {announce("Corrija os campos indicados.");return;}
+      stage="pending";render?.();announce(isProbe(deed) ? "Testando…" : "Enviando… aguarde.");
+      const result=await send(deed,deed.call,made,identity);
+      if(result.kind === "gone") return;
+      if(result.kind === "busy-local") {stage="review";render?.();announce("Operação pendente. Aguarde o desfecho.");return;}
+      if(result.kind === "local") {stage=(deed.fields ?? []).length ? "draft" : "review";render?.();announce("Algum valor está fora do formato aceito. Revise os campos.");return;}
+      if(result.kind === "done") {
+        for(const field of deed.fields ?? []) if(field.kind === "secret") values.set(field.id,"");
+        if(isProbe(deed)) {stage="ending";render?.();announce(deed.done);return;}
+        const value=result.value;const done=deed.done;reset();hooks.reread(deed,value);announceLater(done);return;
+      }
+      if(result.kind === "unknown") {
+        if(isProbe(deed)) {stage="ending";render?.();announce("Resultado do teste desconhecido. Um teste nunca grava nem publica nada.");return;}
+        doubt=true;scrub();stage="ending";render?.();announce(plan.unknown ?? "Resultado desconhecido.");return;
+      }
+      if(result.kind !== "refused") return;
+      const known=outcome(result.category), kind=known?.kind ?? "uncertain", text=known?.text ?? (plan.unknown ?? "Resultado desconhecido.");
+      if(kind === "uncertain") {
+        if(isProbe(deed)) {stage="ending";render?.();announce(text);return;}
+        doubt=true;scrub();stage="ending";render?.();announce(text);return;
+      }
+      if(kind === "blocked") {blocked=true;scrub();stage="ending";render?.();announce(text);return;}
+      if(kind === "conflict") {stage="conflict";render?.();const now=latest(result.value);announce(text+(now !== undefined ? " Versão atual: "+now+"." : ""));return;}
+      // Refused or busy: nothing was altered; the draft stays for an explicit new gesture.
+      stage=(deed.fields ?? []).length ? "draft" : "review";render?.();
+      const located=locate(deed.fields ?? [],values,result.fields);mark(located);announce(text);
+    };
+    render();
+  }
+  /** @type {string | undefined} */ let pendingNote;
+  /** @param {string} text */
+  function announceLater(text) {pendingNote=text;}
+
+  return {
+    /** Declared writes for one place, over the base reading that shows them.
+     * @param {"collection"|"detail"|"aside"} place @param {unknown} base
+     */
+    offered:(place,base)=>deeds.filter(d=>d.place === place && (plan.guide.action !== d.id) && (!d.visible || at(base,d.visible.path) === d.visible.value)),
+    start,
+    active:()=>engaged && dirty,
+    engaged:()=>engaged,
+    leave,
+    /** Writes are off while blocked (restart) or in doubt (until a fresh read). */
+    locked:()=>blocked || doubt,
+    why:()=>blocked ? "Alterações indisponíveis até o Gateway reiniciar." : doubt ? "Há uma escrita com resultado desconhecido. Releia o estado antes de novas alterações." : "",
+    /** A successful read after a doubt restores writes; a block stays until restart. */
+    settle:()=>{if(!engaged) doubt=false;},
+    /** @returns {string | undefined} */
+    take:()=>{const text=pendingNote;pendingNote=undefined;return text;},
+    close:()=>{ended=true;reset();},
+    /** The declared registration wizard, drawn in the page instead of a modal.
+     * @param {HTMLElement} holder @param {number} step @param {unknown} base @param {(step:number)=>void} move @param {(value:unknown, deed:Deed)=>void} arrived
+     */
+    wizard:(holder,step,base,move,arrived)=>{
+      const deed=deeds.find(d=>d.id === plan.guide.action);if(!deed) return false;
+      if(!engaged) {engaged=true;dirty=false;values=new Map();for(const field of deed.fields ?? []) values.set(field.id,initial(field,undefined));}
+      const steps=plan.guide.steps, current=steps[step];if(!current) return false;
+      const own=(deed.fields ?? []).filter(f=>(current.fields ?? []).includes(f.id));
+      note=element("p");note.setAttribute("role","status");note.setAttribute("aria-live","polite");note.className="desk-note";
+      const card=element("section");card.className="card";card.setAttribute("aria-label",current.label);
+      card.append(element("h3",(step+1)+". "+current.label),element("p",current.text),note);
+      controls=new Map();
+      const redraw=()=>{move(step);};
+      if(own.length) {const form=element("form");form.noValidate=true;form.addEventListener("submit",event=>event.preventDefault());draw(form,own,values,"",redraw);card.append(form);}
+      const last=step === steps.length-1, testing=!own.length && !last && !!deed.probe;
+      const moves=element("div");moves.className="moves";
+      const back=button("Anterior",()=>move(step-1));back.disabled=step === 0 || waiting;
+      const next=button("Próximo",()=>{
+        /** @type {Map<string,string>} */ const errors=new Map();build(own,values,"",errors);
+        if(mark(errors)) {announce("Corrija os campos indicados.");return;}
+        move(step+1);
+      });next.disabled=last || waiting;
+      if(testing) {
+        const test=button("Testar conexão",()=>{void (async()=>{
+          const {made,errors}=body(deed,base,"");
+          if(errors.size) {announce("Há campos obrigatórios sem valor nos passos anteriores.");return;}
+          for(const path of deed.drop ?? []) drop(made,path);
+          if(!deed.probe) return;
+          announce("Testando…");test.disabled=true;
+          const result=await send(deed,deed.probe,made,undefined);test.disabled=false;
+          if(result.kind === "gone") return;
+          if(result.kind === "done") announce("Conexão verificada com este rascunho. Nada foi gravado nem publicado.");
+          else if(result.kind === "refused") announce(outcome(result.category)?.text ?? "Teste recusado.");
+          else if(result.kind === "local") announce("Algum valor está fora do formato aceito. Revise os passos anteriores.");
+          else announce("Resultado do teste desconhecido. Um teste nunca grava nem publica nada.");
+        })();});
+        card.append(test);
+      }
+      if(last) {
+        card.append(summary(deed.fields ?? [],values));
+        const warn=element("p",deed.confirm);warn.className="desk-confirm plain";card.append(warn);
+        const send1=button(deed.title,()=>{void (async()=>{
+          if(blocked || doubt) {announce(blocked ? "Alterações indisponíveis até o Gateway reiniciar." : "Releia o estado antes de novas alterações.");return;}
+          const {made,errors}=body(deed,base,"");
+          if(errors.size) {announce("Há campos obrigatórios sem valor nos passos anteriores.");return;}
+          announce("Enviando… aguarde.");send1.disabled=true;back.disabled=true;
+          const result=await send(deed,deed.call,made,undefined);
+          if(result.kind === "gone") return;
+          send1.disabled=false;back.disabled=false;
+          if(result.kind === "done") {const value=result.value;forget();arrived(value,deed);return;}
+          if(result.kind === "local") {announce("Algum valor está fora do formato aceito. Revise os passos anteriores.");return;}
+          if(result.kind === "unknown") {doubt=true;forget();announce(plan.unknown ?? "Resultado desconhecido.");send1.disabled=true;return;}
+          if(result.kind !== "refused") return;
+          const known=outcome(result.category), kind=known?.kind ?? "uncertain", text=known?.text ?? (plan.unknown ?? "Resultado desconhecido.");
+          if(kind === "uncertain") {doubt=true;forget();send1.disabled=true;}
+          if(kind === "blocked") {blocked=true;forget();send1.disabled=true;}
+          const now=latest(result.value);announce(text+(kind === "conflict" && now !== undefined ? " Versão atual do catálogo: "+now+"." : ""));
+        })();});
+        send1.className="primary";card.append(send1);
+      }
+      moves.append(back,next);card.append(moves);
+      holder.append(card);return true;
+    },
+    /** @returns {boolean} */
+    draftOpen:()=>engaged,
+  };
+}
+
+
 /** @template {keyof HTMLElementTagNameMap} K @param {K} tag @param {string} text */
 export function element(tag,text="") { const node=document.createElement(tag); node.textContent=text; return node; }
 /** @param {unknown} value @returns {HTMLElement} */
@@ -2958,7 +4070,8 @@ export function erase(node) {
  * summary:{id:string,label:string,call:string,figures:Figure[],notes:string[],absent:string},
  * collection:{id:string,label:string,call:string,items:Trail,key:Trail,title:Trail,columns:Figure[],search:string,searchable:Trail[],empty:string,nothing:string,open:string},
  * detail:{id:string,call:string,extra:string,back:string,title?:Trail|null,tabs:Tab[],gone:string},
- * guide:{id:string,label:string,banner:string,steps:{id:string,label:string,text:string}[]},
+ * guide:{id:string,label:string,banner:string,steps:{id:string,label:string,text:string,fields?:string[]}[],action?:string|null},
+ * actions?:Deed[],outcomes?:Result[],reasons?:{value:string,text:string}[],unknown?:string,
  * pages?:{view:string,sections:{label:string,note?:string|null,entries:Figure[]}[]}[]}} Board */
 /** @typedef {{kind:"view",index:number} | {kind:"summary"} | {kind:"collection"} | {kind:"detail",key:string,title:string,tab:number} | {kind:"guide",step:number}} Place */
 
@@ -2983,6 +4096,8 @@ export function mount(root) {
   /** @type {HTMLElement | undefined} */ let notice;
   /** @type {HTMLButtonElement | undefined} */ let retry;
   /** @type {ReturnType<typeof workbench> | undefined} */ let editor;
+  /** Second-prefix writes (Stage 6): volatile drafts, one write, explicit review.
+   * @type {ReturnType<typeof desk> | undefined} */ let office;
   /** Cards of the current v1 reading by displayed identity; `null` marks an
    * identity shown twice, which never receives actions.
    * @type {Map<string,{node:HTMLElement,name:string}|null>} */ let cards=new Map();
@@ -2990,7 +4105,7 @@ export function mount(root) {
   function clear() {
     epoch++; turn++; flight?.abort(); flight=undefined; lateral?.abort(); lateral=undefined; stopClock(); paused=true; busy=false;
     sheet=undefined; pane=undefined; side=undefined; filter=""; place={kind:"view",index:0};
-    editor?.close();editor=undefined;
+    editor?.close();editor=undefined;office?.close();office=undefined;
     if(access.tag === "ready") access.client.close();
     if(access.tag !== "authentication") access.stop.abort();
     access={tag:"authentication"}; panel=undefined; notice=undefined; retry=undefined;
@@ -3022,6 +4137,16 @@ export function mount(root) {
         const book=client.describe();
         access={tag:"ready",client,stop,views:book.views,board:/** @type {Board} */ (book.board())};
         editor=workbench(client,root,()=>{sheet=undefined;shell();void load(true);});
+        office=desk(client,root,access.board,{
+          // After a write: removal returns to the list; anything else reads the item again.
+          reread:(deed,value)=>{
+            void value;
+            if(deed.after === "list") {go({kind:"collection"});return;}
+            if(deed.place === "aside") side=undefined;
+            void read(true);
+          },
+          refresh:()=>{side=undefined;void read(true);},
+        });
         void land(mine);
       }).catch(()=>{ if(mine === epoch) login("Não foi possível entrar. Tente novamente."); });
     });
@@ -3043,9 +4168,13 @@ export function mount(root) {
       place=next; sheet=undefined; pane=undefined; side=undefined; lateral?.abort(); lateral=undefined;
       if(next.kind !== "collection" && next.kind !== "detail") filter="";
       shell();
-      if(next.kind === "view") void load(true); else if(next.kind === "guide") {show(true);} else void read(true);
+      if(next.kind === "view") void load(true);
+      else if(next.kind === "guide" && !(access.tag === "ready" && access.board.guide.action)) {show(true);}
+      else void read(true);
     };
-    if(editor?.active()) editor.leave(navigate);else navigate();
+    if(editor?.active()) editor.leave(navigate);
+    else if(office?.engaged()) office.leave(navigate);
+    else navigate();
   }
   /** @param {string} text @param {boolean} current @param {() => void} action */
   function link(text,current,action) {
@@ -3311,6 +4440,7 @@ export function mount(root) {
       const back=element("button",board.detail.back);back.type="button";back.className="back";
       back.addEventListener("click",()=>go({kind:"collection"}));
       const title=element("h2",here.title);title.tabIndex=-1;panel.append(back,title);
+      if(pane?.tag === "ready") offer(panel,"detail",pane.value,here.key);
       report(pane,board.detail.gone);
       if(pane?.tag === "ready") {
         // The heading follows the detail read, so a renamed item is not shown stale.
@@ -3332,6 +4462,11 @@ export function mount(root) {
     const spec=access.board.collection;
     const rows=at(value,spec.items);
     if(!Array.isArray(rows)) { hint(panel,access.board.failure); return; }
+    if(access.board.guide.action) {
+      const add=element("button",access.board.guide.label);add.type="button";add.className="primary";
+      add.addEventListener("click",()=>go({kind:"guide",step:0}));
+      const bar=element("div");bar.className="actions";bar.append(add);panel.append(bar);
+    }
     const search=element("div");search.className="search";
     const label=element("label",spec.search);const input=element("input");input.id="find-items";input.type="search";input.autocomplete="off";input.spellcheck=false;input.value=filter;
     label.htmlFor=input.id;search.append(label,input);panel.append(search);
@@ -3400,7 +4535,7 @@ export function mount(root) {
       const tab=list[place.tab];if(!tab) return;
       body.setAttribute("aria-labelledby","tab-"+place.tab);
       if(tab.source === "main") { body.append(grouped(tab,main)); return; }
-      if(side?.tag === "ready") { body.append(grouped(tab,side.value)); return; }
+      if(side?.tag === "ready") { offer(body,"aside",side.value,here.key); body.append(grouped(tab,side.value)); return; }
       if(side?.tag === "absent") { hint(body,access.tag === "ready" ? access.board.detail.gone : ""); return; }
       if(side?.tag === "unavailable" || side?.tag === "broken") { hint(body,access.tag === "ready" ? (side.tag === "unavailable" ? access.board.unavailable : access.board.failure) : ""); return; }
       hint(body,"Carregando…");
@@ -3424,10 +4559,56 @@ export function mount(root) {
     }
     if(place.kind === "detail" && place.key === key) done();
   }
+  /** Declared writes offered over one reading. Locked writes stay visible, disabled.
+   * @param {HTMLElement} target @param {"detail"|"aside"} where @param {unknown} base @param {string} key
+   */
+  function offer(target,where,base,key) {
+    if(!office) return;
+    const own=office.offered(where,base);if(!own.length) return;
+    const bar=element("div");bar.className="actions";bar.setAttribute("role","group");
+    bar.setAttribute("aria-label","Ações");
+    for(const deed of own) {
+      const button=element("button",deed.label);button.type="button";
+      if(deed.tone === "danger") button.className="danger";
+      button.disabled=office.locked();
+      button.addEventListener("click",()=>office?.start(deed,base,key));
+      bar.append(button);
+    }
+    target.append(bar);
+    if(office.locked()) { const why=element("p",office.why());why.className="hint callout warn";target.append(why); }
+  }
   /** @param {number} step @param {boolean} restore */
   function guide(step,restore) {
     if(access.tag !== "ready" || !panel || !notice) return;
     const spec=access.board.guide;
+    if(spec.action && office) {
+      // The registration wizard needs the catalog version stamp of the list reading.
+      const title=element("h2",spec.label);title.tabIndex=-1;
+      const banner=element("p",spec.banner);banner.className="banner";banner.setAttribute("role","note");
+      const trail=element("ol");trail.className="steps";trail.setAttribute("aria-label",spec.label);
+      for(const [index,item] of spec.steps.entries()) {
+        const node=element("li",(index+1)+". "+item.label);if(index === step) node.setAttribute("aria-current","step");
+        node.className=index === step ? "now" : "other";trail.append(node);
+      }
+      erase(panel);panel.append(title,banner,trail);
+      if(pane?.tag !== "ready") {
+        report(pane,access.board.summary.absent);
+        if(pane?.tag === "loading" || pane === undefined) hint(panel,"Carregando…");
+        else hint(panel,pane.tag === "absent" ? access.board.summary.absent : pane.tag === "unavailable" ? access.board.unavailable : access.board.failure,pane.tag === "absent" ? "info" : "warn");
+      } else if(office.locked()) {
+        notice.textContent=office.why();hint(panel,office.why(),"warn");
+      } else {
+        notice.textContent=spec.banner;
+        const base=pane.value;
+        office.wizard(panel,step,base,next=>{place={kind:"guide",step:next};guide(next,true);},(value,deed)=>{
+          const key=deed.lands ? at(value,deed.lands) : undefined;
+          if(typeof key === "string") go({kind:"detail",key,title:key,tab:0});
+          else go({kind:"collection"});
+        });
+      }
+      if(restore) title.focus();
+      return;
+    }
     notice.textContent=spec.banner;
     const title=element("h2",spec.label);title.tabIndex=-1;
     const banner=element("p",spec.banner);banner.className="banner";banner.setAttribute("role","note");
@@ -3450,7 +4631,7 @@ export function mount(root) {
   }
   function schedule() {
     stopClock();
-    if(access.tag === "ready" && !paused && !busy && document.visibilityState === "visible" && (place.kind === "view" || place.kind === "summary")) timer=setTimeout(()=>{void (place.kind === "summary" ? read(false) : poll());},15000);
+    if(access.tag === "ready" && !paused && !busy && !office?.engaged() && document.visibilityState === "visible" && (place.kind === "view" || place.kind === "summary")) timer=setTimeout(()=>{void (place.kind === "summary" ? read(false) : poll());},15000);
   }
   /** Reads the declared second-prefix call of the current place.
    * @param {boolean} focus
@@ -3458,7 +4639,7 @@ export function mount(root) {
   async function read(focus) {
     if(access.tag !== "ready") return;
     const client=access.client, board=access.board, here=place;
-    const call=here.kind === "summary" ? board.summary.call : here.kind === "collection" ? board.collection.call : here.kind === "detail" ? board.detail.call : undefined;
+    const call=here.kind === "summary" ? board.summary.call : here.kind === "collection" || here.kind === "guide" ? board.collection.call : here.kind === "detail" ? board.detail.call : undefined;
     if(!call) return;
     flight?.abort(); flight=new AbortController();
     const mine=epoch, ticket=++turn;busy=true;paused=true;stopClock();
@@ -3467,11 +4648,18 @@ export function mount(root) {
       const value=await client.read(call,flight.signal,here.kind === "detail" ? here.key : undefined);
       if(mine !== epoch || ticket !== turn) return;
       pane={tag:"ready",value,time:Date.now()};paused=false;
+      // A fresh successful read is the confirmation a doubtful write waits for.
+      office?.settle();
     } catch(error) {
       if(mine !== epoch || ticket !== turn) return;
       if(error instanceof AccessError && error.kind === "authentication") { login("Autenticação necessária.");return; }
       pane={tag:error instanceof AccessError && error.kind === "absent" ? "absent" : error instanceof AccessError && error.kind === "unavailable" ? "unavailable" : "broken"};paused=true;
-    } finally { if(mine === epoch && ticket === turn) { busy=false;show(focus);schedule(); } }
+    } finally {
+      if(mine === epoch && ticket === turn) {
+        busy=false;show(focus);schedule();
+        const said=office?.take();if(said && notice) notice.textContent=said+" "+notice.textContent;
+      }
+    }
   }
   /** @param {boolean} focus */
   async function load(focus) {

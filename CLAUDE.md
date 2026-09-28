@@ -31,9 +31,7 @@ em processo filho e default do MCP adiado para a Etapa 11. Listener PGWire, UX
 v2, ativação por ambiente e as Etapas 5–12 continuam sem implementação
 funcional. Em 2026-09-24 as Etapas 3 e 4 foram publicadas em `c37be36`, e a
 Etapa 5 (protótipo e Admin UX v2 somente leitura) foi autorizada e implementada
-localmente, sem push (D-097–D-100, `docs/PHASE-9-STAGE-5-VALIDATION.md`); a
-Etapa 6 não. O refinamento visual (D-101, D-102) e as capturas de `docs/ux-v2/`
-foram aprovados pelo usuário em 2026-09-28, em commit local sem push. Evidência da Fase 8:
+(D-097–D-100, `docs/PHASE-9-STAGE-5-VALIDATION.md`). Em 2026-09-28 a Etapa 5, com o refinamento visual (D-101, D-102) aprovado pelo usuário, foi publicada em `4d5b78f`, e foi autorizada a Etapa 6 (CRUD visual de datasources e policies pelas rotas v2 aprovadas). Ela está implementada localmente, em commit sem push, aguardando revisão (D-103–D-106, `docs/PHASE-9-STAGE-6-VALIDATION.md`); a Etapa 7 e posteriores continuam sem autorização, e o limite pós-conexão da D-090 continua aberto. Evidência da Fase 8:
 `docs/PHASE-8-STAGE-9-VALIDATION.md`; das Etapas 3 e 4:
 `docs/PHASE-9-STAGE-3-VALIDATION.md` e `docs/PHASE-9-STAGE-4-VALIDATION.md`.
 
@@ -60,7 +58,7 @@ Nesta ordem:
 2. `docs/ARCHITECTURE.md` — módulos e responsabilidades
 3. `docs/SECURITY.md` — invariantes de segurança
 4. `docs/SECURITY-REVIEW.md` — o que foi atacado, o que resistiu, o que não
-5. `docs/DECISIONS.md` — 102 decisões (D-001 a D-102) e o porquê de cada uma
+5. `docs/DECISIONS.md` — 106 decisões (D-001 a D-106) e o porquê de cada uma
 6. `docs/MASKING-SPEC.md` — semântica exata do pipeline de masking
 7. `docs/PHASE-9-SPEC.md` — especificação aprovada; Etapas 1 a 4 delimitadas
 8. `docs/TEST-PLAN.md`, `docs/THREAT-MODEL.md`, `docs/FUTURE-HARDENING.md`

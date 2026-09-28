@@ -29,11 +29,21 @@ const statusCall=second.find(c=>c.path === "/admin/v2/status");
 const writeIndex=calls.findIndex(c=>c.method === "PUT");
 if (!listCall || !itemCall || !statusCall || first < 0 || writeIndex < 0) throw new Error("Fixture calls required.");
 
-test("the second prefix only carries four authenticated reads",()=>{
+test("the second prefix carries four reads and only the nine approved writes",()=>{
   assert.equal(validate(fixture()),true);
-  assert.equal(second.length,4);
-  assert.ok(second.every(c=>c.method === "GET" && c.operation === "read" && c.input === null));
+  const reads=second.filter(c=>c.method === "GET"), writes=second.filter(c=>c.method !== "GET");
+  assert.equal(reads.length,4);
+  assert.ok(reads.every(c=>c.operation === "read" && c.input === null));
+  assert.equal(writes.length,9);
+  assert.ok(writes.every(c=>typeof c.input === "string" && ["register","probe","renew","resume","pause","revise","retire","amend"].includes(String(c.operation))));
 });
+const actions=arr(obj(document.console).actions).map(obj);
+const at6=(/** @type {string} */ label)=>actions.findIndex(a=>a.label === label);
+const register=at6("Novo datasource"), revise=at6("Editar conexão e limites"), retire=at6("Remover"), amend=at6("Editar política");
+function findSecret() {return arr(obj(actions[register]).fields).map(obj).findIndex(f=>f.kind === "secret");}
+const probeCall=calls.findIndex(c=>c.operation === "probe"), readCall=calls.findIndex(c=>c.path === "/admin/v2/datasources/{datasource_id}" && c.method === "GET");
+const v1Write=calls.findIndex(c=>c.path === "/admin/v1/database");
+if([register,revise,retire,amend,probeCall,readCall,v1Write].some(i=>i < 0)) throw new Error("Fixture actions required.");
 
 /** @type {Array<[string,Array<string|number>,unknown]>} */
 const hostile=[
@@ -69,6 +79,22 @@ const hostile=[
   ["unknown display",["console","detail","tabs",0,"entries",0,"show"],"html"],
   ["title on a number",["console","detail","title"],["datasource","revision"]],
   ["title outside model",["console","detail","title"],["datasource","nowhere"]],
+  // Phase 9, Stage 6: writes only through the approved operation, method and fields.
+  ["write operation with another method",["calls",writeIndex,"method"],"GET"],
+  ["second-prefix write with the wrong method",["calls",calls.findIndex(c=>c.operation === "retire"),"method"],"POST"],
+  ["second-prefix operation on the first prefix",["calls",v1Write,"operation"],"revise"],
+  ["action on a read",["console","actions",revise,"call"],String(calls[readCall]?.id)],
+  ["action field outside the input",["console","actions",revise,"fields",0,"path"],["nowhere"]],
+  ["action source outside the base",["console","actions",revise,"fields",0,"source"],["datasource","nowhere"]],
+  ["secret read back into a form",["console","actions",register,"fields",findSecret(),"source"],["catalog_revision"]],
+  ["records without items",["console","actions",amend,"fields",0,"items"],[]],
+  ["typed confirmation that is not text",["console","actions",retire,"typed","kind"],"secret"],
+  ["version stamp without origin",["console","actions",revise,"origin"],null],
+  ["version stamp on text",["console","actions",revise,"stamp"],["display_name"]],
+  ["opening without identity path",["console","actions",register,"lands"],null],
+  ["probe that writes",["console","actions",register,"probe"],String(calls.find(c=>c.operation === "register")?.id)],
+  ["wizard step with a foreign field",["console","guide","steps",0,"fields",0],"y999999"],
+  ["unknown place",["console","actions",revise,"place"],"root"],
   // Política v1 pages only arrange approved readings: nothing omitted, nothing added.
   ["page for unknown view",["console","pages",0,"view"],"v99"],
   ["page omits a read field",["console","pages",0,"sections",0,"entries"],arr(obj(arr(obj(arr(obj(document.console).pages)[0]).sections)[0]).entries).slice(0,1)],
@@ -96,6 +122,9 @@ globalThis.fetch=async(input,init)=>{
   seen.push({url:input,init});
   if(input.pathname.endsWith("presentation.json")) return new Response(bytes,{headers:{"Content-Type":"application/json"}});
   const reply=replies[input.pathname] ?? {status:404,body:{error:"NOT_FOUND",detail:"x"}};
+  // Test-only markers: a lost answer and a slow answer.
+  if(reply.body === "LOST") throw new TypeError("Failed to fetch");
+  if(reply.body === "SLOW") { await new Promise(resolve=>setTimeout(resolve,80)); return new Response(JSON.stringify({catalog_revision:4,datasource_id:key,datasource_revision:3,changed:true}),{status:200,headers:{"Content-Type":"application/json"}}); }
   return new Response(JSON.stringify(reply.body),{status:reply.status,headers:{"Content-Type":"application/json"}});
 };
 test.beforeEach(()=>{seen=[];replies={};});
@@ -144,9 +173,101 @@ test("an item read substitutes exactly the validated key",async()=>{
   client.close();
 });
 
-test("no public surface can send to the second prefix with a body",()=>{
+test("only the declared write function can send to the second prefix with a body",()=>{
   const code=readFileSync(new URL("../../src/maskgw/admin/ui/assets/ui.js",import.meta.url),"utf8");
-  assert.match(code,/second && method !== "GET"/);
+  assert.match(code,/second && method !== "GET" && !mutating/);
+  assert.equal(code.split("destination(path,false,call.method,true)").length-1,1);
+  assert.equal(code.split("false,extra,true,true)").length-1,1);
+});
+
+// ---- second-prefix writes (Phase 9, Stage 6) ---------------------------------
+/** @param {string} operation */
+const writeOf=operation=>String(calls.find(c=>c.operation === operation)?.id);
+const draftBody={
+  expected_catalog_revision:3,alias:"novo-demo",display_name:"Novo",enabled:true,
+  connection:{host:"db-novo.example.internal",port:5432,database:"app",username:"gw",tls:{mode:"verify-full"}},
+  credential:{password:"senha-local-de-teste"},limits:{statement_timeout_ms:30000,max_rows:1000,max_sessions:8},
+  destination_policy:{allow_public:false,allow_loopback:false,allowed_hosts:[]},
+  policy:{masking:[{match:"cpf",mode:"contains",case_sensitive:false,transformer:"fixed",config:{value:"x"}}],exceptions:[],database:{statement_timeout_ms:30000,max_rows:1000},sql:{denied_functions:[]}},
+};
+const written={catalog_revision:4,datasource_id:key,datasource_revision:1,changed:true};
+
+test("a write is one checked request with the declared method, path and body",async()=>{
+  const client=await open(token);seen=[];
+  replies={"/admin/v2/datasources":{status:200,body:written}};
+  const result=await client.submit(writeOf("register"),draftBody);
+  assert.deepEqual(result,{kind:"done",value:written});
+  assert.equal(seen.length,1);
+  assert.equal(seen[0]?.init.method,"POST");assert.equal(seen[0]?.url.pathname,"/admin/v2/datasources");
+  assert.deepEqual(JSON.parse(String(seen[0]?.init.body)),draftBody);
+  assert.equal(new Headers(seen[0]?.init.headers).get("Content-Type"),"application/json");
+  client.close();
+});
+
+test("a malformed body or one carrying the token never leaves the page",async()=>{
+  const client=await open(token);seen=[];
+  const {alias,...missing}=draftBody;void alias;
+  await assert.rejects(()=>client.submit(writeOf("register"),missing));
+  await assert.rejects(()=>client.submit(writeOf("register"),{...draftBody,dsn:"postgresql://x"}));
+  await assert.rejects(()=>client.submit(writeOf("register"),{...draftBody,connection:{...draftBody.connection,port:"5432"}}));
+  await assert.rejects(()=>client.submit(writeOf("register"),{...draftBody,credential:{password:token}}));
+  await assert.rejects(()=>client.submit(writeOf("revise"),{expected_revision:2,alias:"outro"},key));
+  assert.equal(seen.length,0);
+  client.close();
+});
+
+test("an item write substitutes exactly the validated key, action suffix included",async()=>{
+  const client=await open(token);seen=[];
+  replies={["/admin/v2/datasources/"+key+":rotate-credential"]:{status:200,body:{...written,datasource_revision:3}}};
+  const result=await client.submit(writeOf("renew"),{expected_revision:2,credential:{password:"nova-senha-local"}},key);
+  assert.equal(result.kind,"done");
+  assert.equal(seen.at(-1)?.url.pathname,"/admin/v2/datasources/"+key+":rotate-credential");
+  for(const hostileKey of ["../status","dso_x",key+"/policy","%2e%2e","",key+":enable"]) {
+    await assert.rejects(()=>client.submit(writeOf("renew"),{expected_revision:2,credential:{password:"x"}},hostileKey));
+  }
+  await assert.rejects(()=>client.submit(writeOf("register"),draftBody,key));
+  assert.equal(seen.length,1);
+  client.close();
+});
+
+test("closed error envelopes give category and stamp; anything else is unknown",async()=>{
+  const client=await open(token);
+  replies={["/admin/v2/datasources/"+key]:{status:409,body:{error:"REVISION_CONFLICT",detail:"x",current_revision:7}}};
+  const conflict=await client.submit(writeOf("retire"),{expected_revision:2,confirm_alias:"crm"},key);
+  assert.equal(conflict.kind,"refused");
+  if(conflict.kind === "refused") {assert.equal(conflict.category,"REVISION_CONFLICT");assert.equal(obj(conflict.value).current_revision,7);assert.equal(conflict.status,409);}
+  replies={"/admin/v2/datasources":{status:422,body:{error:"SCHEMA_INVALID",detail:"x",fields:[{path:"body.connection.port",reason:"out_of_range"}]}}};
+  const schema=await client.submit(writeOf("register"),draftBody);
+  assert.equal(schema.kind,"refused");
+  if(schema.kind === "refused") assert.deepEqual(schema.fields,[{path:"body.connection.port",reason:"out_of_range"}]);
+  replies={"/admin/v2/datasources":{status:409,body:{error:"MADE_UP",detail:"x"}}};
+  assert.deepEqual(await client.submit(writeOf("register"),draftBody),{kind:"unknown"});
+  replies={"/admin/v2/datasources":{status:500,body:{error:"CATALOG_OUTCOME_UNCERTAIN",detail:"x",extra:1}}};
+  assert.deepEqual(await client.submit(writeOf("register"),draftBody),{kind:"unknown"});
+  replies={"/admin/v2/datasources":{status:200,body:{...written,changed:"yes"}}};
+  assert.deepEqual(await client.submit(writeOf("register"),draftBody),{kind:"unknown"});
+  replies={"/admin/v2/datasources":{status:200,body:"LOST"}};
+  assert.deepEqual(await client.submit(writeOf("register"),draftBody),{kind:"unknown"});
+  client.close();
+});
+
+test("one write at a time, shared with the first prefix",async()=>{
+  const client=await open(token);
+  replies={["/admin/v2/datasources/"+key+":disable"]:{status:200,body:"SLOW"}};
+  const first=client.submit(writeOf("pause"),{expected_revision:2},key);
+  assert.equal(client.busy(),true);
+  await assert.rejects(()=>client.submit(writeOf("pause"),{expected_revision:2},key),e=>e instanceof Error && "kind" in e && e.kind === "incompatible");
+  assert.equal((await first).kind,"done");assert.equal(client.busy(),false);
+  client.close();
+});
+
+test("reads and checks never reach a write, and a test is the only quiet write",async()=>{
+  const client=await open(token);seen=[];
+  await assert.rejects(()=>client.read(writeOf("retire"),undefined,key));
+  await assert.rejects(()=>client.check(writeOf("probe"),{}));
+  assert.equal(seen.length,0);
+  assert.deepEqual(["register","probe","renew","resume","pause","revise","retire","amend"].filter(op=>client.quiet(writeOf(op))),["probe"]);
+  client.close();
 });
 
 test("second-prefix vocabulary is checked on token boundaries",()=>{

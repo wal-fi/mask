@@ -4,7 +4,8 @@ Phase 9, Stage 5: the installed package serves the read-only console v2 without
 the checkout or Node. The composition root is built with a real encrypted
 catalog of fictitious datasources and stub upstream adapters; every request is
 a GET, and the private presentation is format 2 with only reads under the
-second prefix.
+second prefix. Phase 9, Stage 6: besides the four reads, exactly the nine
+approved writes (D-093/D-103), checked against the installed router.
 """
 
 from __future__ import annotations
@@ -16,6 +17,8 @@ import tempfile
 from pathlib import Path
 
 from maskgw.admin.http.settings import build
+from maskgw.admin.http.v2.routes import V2_READ_PATHS, V2_WRITE_ROUTES
+from maskgw.admin.ui.protocol import V2_WRITES
 from maskgw.admin.ui.resources import load_resources
 from maskgw.bootstrap.application import build_application
 from maskgw.datasource import CatalogStore
@@ -39,7 +42,13 @@ def main() -> None:
     presentation = json.loads(data["presentation.json"])
     assert presentation["format"] == 2
     second = [c for c in presentation["calls"] if c["path"].startswith("/admin/v2/")]
-    assert len(second) == 4 and all(c["method"] == "GET" for c in second)
+    reads = [c for c in second if c["method"] == "GET"]
+    writes = [c for c in second if c["method"] != "GET"]
+    assert {c["path"] for c in reads} == set(V2_READ_PATHS) and len(reads) == 4
+    assert all(c["operation"] == "read" and c["input"] is None for c in reads)
+    assert {(c["method"], c["path"], c["operation"]) for c in writes} == set(V2_WRITES)
+    assert {(c["method"], c["path"]) for c in writes} == {(m, p) for p, m in V2_WRITE_ROUTES}
+    assert len(writes) == 9
     token = secrets.token_hex(32)
     with tempfile.TemporaryDirectory(prefix="maskgw-installed-console-") as name:
         root = Path(name)
@@ -100,7 +109,7 @@ def main() -> None:
         finally:
             app.close()
     verify_environment()
-    print("Installed console v2: format 2, four GET reads, no secret: passed.")
+    print("Installed console v2: format 2, four reads, nine approved writes, no secret: passed.")
 
 
 if __name__ == "__main__":

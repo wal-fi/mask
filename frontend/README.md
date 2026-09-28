@@ -181,3 +181,16 @@ e devolve o foco. Setas e marcadores são desenhados só com CSS, com
 adapters duble). No modo checkout, o harness define `PYTHONPATH=src`: o `.venv`
 pode conter uma instalação antiga de `maskgw` que, de outra forma, seria
 importada no lugar do checkout.
+
+Etapa 6 (D-103–D-106): `src/desk.js` desenha os formulários das escritas v2
+declaradas em `console.actions` (diálogos para o detalhe e a política, assistente
+na página para o cadastro) e envia só por `client.submit` do transporte, que
+confere o corpo contra o modelo de entrada antes de qualquer requisição e
+compartilha com a v1 a regra de uma escrita por vez. O JS não conhece nomes de
+campo, categorias ou rótulos: tudo vem da apresentação privada. O build
+concatena `desk.js` entre `workbench.js` e `screen.js`. `browser/datasources.spec.js`
+usa o modo de escrita do harness (`MASKGW_BROWSER_WRITE=1`): falhas de candidato,
+de persistência antes e depois do replace, conferência do estado real do catálogo
+e da senha usada pelo candidato, e a sonda que procura as senhas digitadas em logs
+e auditoria. `tools/screenshots.js` responde às escritas com resultados sintéticos
+(`done`, `conflict`, `unknown`, `blocked`) só para as capturas.

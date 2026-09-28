@@ -14,9 +14,14 @@ import pytest
 
 from maskgw.admin.http.app import READ_PATHS, VALIDATE_PATH, WRITE_ROUTES
 from maskgw.admin.http.schemas import AdoptRequest, DatabaseWriteRequest, RuleCreateRequest
-from maskgw.admin.http.v2.routes import V2_READ_PATHS
+from maskgw.admin.http.v2.routes import V2_READ_PATHS, V2_WRITE_ROUTES
 from maskgw.admin.ui import resources
-from maskgw.admin.ui.protocol import InvalidPresentationError, parse_json, validate_presentation
+from maskgw.admin.ui.protocol import (
+    V2_WRITES,
+    InvalidPresentationError,
+    parse_json,
+    validate_presentation,
+)
 from maskgw.admin.ui.resources import load_resources, validate_catalog
 from maskgw.masking.transformers.registry import build_default_registry
 
@@ -41,15 +46,18 @@ def test_package_catalog_is_exact_and_independent():
     actual = {(c.path, c.method) for c in result.calls}
     expected = {(p, "GET") for p in READ_PATHS} | {(VALIDATE_PATH, "POST")}
     expected |= set(WRITE_ROUTES) - {("/admin/v1/config", "PUT")}
-    # Phase 9, Stage 5: the four read-only second-prefix reads, nothing else.
+    # Phase 9, Stage 5: the four second-prefix reads; Stage 6: the nine
+    # approved second-prefix writes (D-093), nothing else.
     expected |= {(p, "GET") for p in V2_READ_PATHS}
+    expected |= set(V2_WRITE_ROUTES)
     assert actual == expected
-    assert len(result.calls) == 23
-    assert all(
-        c.method == "GET" and c.operation == "read"
-        for c in result.calls
-        if c.path.startswith("/admin/v2/")
-    )
+    assert len(result.calls) == 32
+    for call in result.calls:
+        if call.path.startswith("/admin/v2/"):
+            if call.method == "GET":
+                assert call.operation == "read" and call.input is None
+            else:
+                assert (call.method, call.path, call.operation) in V2_WRITES
     assert {e.name for e in result.editors} == set(build_default_registry().available())
     assert getattr(data, "__setitem__", None) is None
 
@@ -170,10 +178,11 @@ def test_definition_limit_is_inclusive():
 def test_depth_limit_is_inclusive_and_dag_is_bounded():
     raw = document()
     for i in range(16):
-        shape = {"type": "boolean"} if i == 15 else {"type": "nullable", "item": f"m{201 + i}"}
-        raw["models"].append({"id": f"m{200 + i}", "shape": shape})
+        # Free ids above the real catalog (Phase 9, Stage 6 has 211 models).
+        shape = {"type": "boolean"} if i == 15 else {"type": "nullable", "item": f"m{901 + i}"}
+        raw["models"].append({"id": f"m{900 + i}", "shape": shape})
     validate_presentation(encoded(raw))
-    raw["models"].append({"id": "m199", "shape": {"type": "nullable", "item": "m200"}})
+    raw["models"].append({"id": "m899", "shape": {"type": "nullable", "item": "m900"}})
     with pytest.raises(InvalidPresentationError):
         validate_presentation(encoded(raw))
 

@@ -1,3 +1,7 @@
+/** Second-prefix writes (Phase 9, Stage 6): operation and its only method. */
+const writing=Object.freeze({register:"POST",probe:"POST",renew:"POST",resume:"POST",pause:"POST",revise:"PUT",retire:"DELETE",amend:"PUT"});
+/** @param {unknown} operation @returns {operation is keyof typeof writing} */
+function written(operation) { return typeof operation === "string" && Object.hasOwn(writing,operation); }
 /** @param {unknown} value @returns {value is Record<string, unknown>} */
 function record(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value)
@@ -72,6 +76,22 @@ function inspect(value, descriptor) {
   /** @type {Record<string,unknown>[]} */ const tabItems=[];
   for (const tab of detail.tabs) { if (!records(tab.entries)) return false; tabItems.push(...tab.entries); }
   /** @type {Record<string,unknown>[]} */ const pageItems=[];
+  /** Every action, typed confirmation and nested form field carries an opaque id.
+   * @param {unknown} list @param {number} depth @returns {Record<string,unknown>[] | undefined} */
+  const nested=(list,depth)=>{
+    if(!records(list) || depth > 2) return undefined;
+    /** @type {Record<string,unknown>[]} */ const found=[];
+    for(const field of list) { found.push(field); if(field.items !== undefined) { const inner=nested(field.items,depth+1); if(!inner) return undefined; found.push(...inner); } }
+    return found;
+  };
+  if (surface.actions !== undefined) {
+    if (!records(surface.actions)) return false;
+    for (const action of surface.actions) {
+      const inner=nested([...(action.fields === undefined ? [] : sequence(action.fields) ? action.fields : [null]),...(action.typed === undefined || action.typed === null ? [] : [action.typed])],0);
+      if(!inner) return false;
+      pageItems.push(action,...inner);
+    }
+  }
   if (surface.pages !== undefined) {
     if (!records(surface.pages)) return false;
     for (const page of surface.pages) {
@@ -180,18 +200,20 @@ function inspect(value, descriptor) {
   for (const call of value.calls) {
     if (typeof call.path !== "string" || !(call.path.startsWith("/admin/v1/") || call.path.startsWith("/admin/v2/")) || /[?#%\\]|\/\//.test(call.path)) return false;
     // The second prefix only carries authenticated reads (Phase 9, Stage 5).
-    if (call.path.startsWith("/admin/v2/") && (call.method !== "GET" || call.operation !== "read")) return false;
+    // Second prefix: reads are GET; writes only with their own operation and method.
+    if (call.path.startsWith("/admin/v2/") && !(call.method === "GET" ? call.operation === "read" : written(call.operation) && writing[call.operation] === call.method && typeof call.input === "string")) return false;
+    if (call.path.startsWith("/admin/v1/") && written(call.operation)) return false;
     const parts=call.path.split("/").slice(3);
     if (parts.some(p=>!p || p === "." || p === "..")) return false;
     const slots=parts.filter(p=>p.includes("{") || p.includes("}"));
     if (slots.length > 1 || (slots.length === 0 && call.identity !== null)) return false;
-    if (slots.length === 1 && (typeof call.identity !== "string" || denied.has(call.identity) || !/^[a-z_]+$/.test(call.identity) || slots[0] !== "{"+call.identity+"}")) return false;
+    if (slots.length === 1 && (typeof call.identity !== "string" || denied.has(call.identity) || !/^[a-z_]+$/.test(call.identity) || !(slots[0] === "{"+call.identity+"}" || (slots[0]?.startsWith("{"+call.identity+"}:") && /^[a-z]+(?:-[a-z]+)*$/.test(slots[0].slice(call.identity.length+3)))))) return false;
     if (typeof call.error !== "string" || !models.has(call.error) || typeof call.output !== "string" || !models.has(call.output)) return false;
     if ((call.method === "GET") !== (call.input === null)) return false;
     if (call.input !== null && (typeof call.input !== "string" || !models.has(call.input))) return false;
   }
   for (const view of value.views) {
-    if (calls.get(view.call)?.method !== "GET" || !sequence(view.actions) || !view.actions.every(a=>calls.has(a))) return false;
+    if (calls.get(view.call)?.method !== "GET" || !sequence(view.actions) || !view.actions.every(a=>calls.has(a) && !written(calls.get(a)?.operation))) return false;
   }
   for (const editor of value.editors) if (typeof editor.model !== "string" || !models.has(editor.model)) return false;
   for (const control of controls) {
@@ -235,6 +257,58 @@ function inspect(value, descriptor) {
     }
   }
   if (detail.title !== undefined && detail.title !== null && (!sequence(detail.title) || leaf(main.output,detail.title)?.type !== "string")) return false;
+  /** Form fields: target paths in the write input, sources in the base read.
+   * @param {unknown} list @param {string} target @param {string | undefined} base @param {number} depth @returns {boolean}
+   */
+  function formed(list,target,base,depth) {
+    if(!records(list) || depth > 2) return false;
+    for(const field of list) {
+      if(!sequence(field.path) || !linked(target,field.path)) return false;
+      const sourced=field.source !== undefined && field.source !== null;
+      if(sourced && (base === undefined || !linked(base,field.source))) return false;
+      if(field.kind === "secret" && sourced) return false;
+      const many=field.kind === "records", items=records(field.items) ? field.items : [];
+      if(many !== (items.length > 0)) return false;
+      if((field.kind === "choice") !== (records(field.choices) && field.choices.length > 0)) return false;
+      if(many) {
+        const into=leaf(target,field.path), from=base !== undefined && sourced ? leaf(base,field.source) : undefined;
+        if(into?.type !== "list" || typeof into.item !== "string") return false;
+        if(!formed(items,into.item,from?.type === "list" && typeof from.item === "string" ? from.item : undefined,depth+1)) return false;
+      }
+    }
+    return true;
+  }
+  if (surface.actions !== undefined && records(surface.actions)) {
+    /** @type {Record<string,string>} */ const bases={collection:String(listing.output),detail:String(main.output),aside:String(aside.output)};
+    for (const action of surface.actions) {
+      const call=typeof action.call === "string" ? calls.get(action.call) : undefined;
+      if(!call || !written(call.operation) || typeof call.input !== "string" || typeof action.place !== "string" || !Object.hasOwn(bases,action.place)) return false;
+      const base=bases[action.place] ?? "";
+      if((action.place === "collection") !== (call.identity === null)) return false;
+      if(action.place !== "collection" && call.identity !== main.identity) return false;
+      if(!formed(action.fields === undefined ? [] : action.fields,call.input,base,0)) return false;
+      const bare=(/** @type {unknown} */ v)=>v === undefined || v === null;
+      if(bare(action.stamp) !== bare(action.origin)) return false;
+      if(!bare(action.stamp) && (leaf(call.input,action.stamp)?.type !== "integer" || leaf(base,action.origin)?.type !== "integer")) return false;
+      if((action.after === "open") !== !bare(action.lands)) return false;
+      if(!bare(action.lands) && leaf(call.output,action.lands)?.type !== "string") return false;
+      if(!bare(action.typed) && (!record(action.typed) || action.typed.kind !== "text" || !sequence(action.typed.source) || !formed([action.typed],call.input,base,0))) return false;
+      if(!bare(action.visible) && (!record(action.visible) || !linked(base,action.visible.path))) return false;
+      if(!bare(action.probe)) {
+        const probe=typeof action.probe === "string" ? calls.get(action.probe) : undefined;
+        if(!probe || probe.operation !== "probe" || typeof probe.input !== "string" || (probe.identity === null) !== (call.identity === null)) return false;
+      }
+      if(action.drop !== undefined && (!sequence(action.drop) || !action.drop.every(p=>linked(call.input,p)))) return false;
+    }
+    if(guide.action !== undefined && guide.action !== null) {
+      const wizard=surface.actions.find(a=>a.id === guide.action);
+      const call=wizard && typeof wizard.call === "string" ? calls.get(wizard.call) : undefined;
+      if(!wizard || wizard.place !== "collection" || call?.operation !== "register" || !records(wizard.fields)) return false;
+      const placed=guide.steps.flatMap(s=>strings(s.fields) ? s.fields : [""]);
+      const own=wizard.fields.map(f=>f.id);
+      if(placed.length !== own.length || !own.every(id=>typeof id === "string" && placed.includes(id))) return false;
+    }
+  }
   /** Terminal paths under an object; lists, text and choices end a path.
    * @param {Record<string,unknown> | undefined} node @param {string[]} path @param {number} depth @returns {string[][]}
    */

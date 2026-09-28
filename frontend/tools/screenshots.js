@@ -85,6 +85,8 @@ function answers(mode) {
 const files={"/admin/ui":["index.html","text/html; charset=utf-8"],"/admin/ui/assets/ui.js":["ui.js","text/javascript; charset=utf-8"],
   "/admin/ui/assets/ui.css":["ui.css","text/css; charset=utf-8"],"/admin/ui/presentation.json":["presentation.json","application/json"]};
 
+/** Synthetic answer of the next second-prefix write (Stage 6 captures only). */
+const next={state:/** @type {"done"|"conflict"|"unknown"|"blocked"} */ ("done")};
 /** @param {import("@playwright/test").Page} page @param {"rich"|"empty"|"off"|"blocked"|"unadopted"} mode */
 async function serve(page,mode) {
   const reply=answers(mode);
@@ -92,7 +94,18 @@ async function serve(page,mode) {
     const path=new URL(route.request().url()).pathname;
     const file=/** @type {Record<string,string[]>} */ (files)[path];
     if (file) { await route.fulfill({status:200,headers:{"content-type":String(file[1]),"cache-control":"no-store"},body:bytes(String(file[0]))}); return; }
-    if (route.request().method() !== "GET") throw new Error("Fixture refused a write.");
+    if (route.request().method() !== "GET") {
+      // Only fictitious answers; nothing is stored and no backend exists.
+      if (!path.startsWith("/admin/v2/")) throw new Error("Fixture refused a write.");
+      const json=(/** @type {number} */ status,/** @type {unknown} */ body)=>route.fulfill({status,headers:{"content-type":"application/json","cache-control":"no-store"},body:JSON.stringify(body)});
+      if (path.endsWith(":test")) { await json(200,{passed:true,persisted:false,published:false}); return; }
+      if (next.state === "unknown") { await route.abort("failed"); return; }
+      if (next.state === "conflict") { await json(409,{error:"REVISION_CONFLICT",detail:"x",current_revision:5}); return; }
+      if (next.state === "blocked") { await json(503,{error:"CATALOG_BLOCKED",detail:"x"}); return; }
+      if (route.request().method() === "DELETE") { await json(200,{catalog_revision:13,removed:true}); return; }
+      await json(200,{catalog_revision:13,datasource_id:hex("a"),datasource_revision:5,changed:true});
+      return;
+    }
     const answer=reply(path);
     await route.fulfill({status:answer.status,headers:{"content-type":"application/json","cache-control":"no-store"},body:JSON.stringify(answer.body)});
   });
@@ -102,6 +115,14 @@ async function enter(page) {
   await page.getByLabel("Token",{exact:true}).fill("fixture-"+randomBytes(8).toString("hex"));
   await page.getByRole("button",{name:"Entrar",exact:true}).click();
   await page.waitForFunction(()=>{const s=document.querySelector("[role=status]");return !!s && s.textContent !== "Carregando…" && s.textContent !== "";});
+}
+/** Navigation that may be interrupted by a discard question (no waiting).
+ * @param {import("@playwright/test").Page} page @param {string} name
+ */
+async function go2(page,name) {
+  const menu=page.getByRole("button",{name:/^Menu: /});
+  if(await menu.isVisible()) await menu.click();
+  await page.getByRole("navigation").getByRole("button",{name,exact:true}).click();
 }
 /** @param {import("@playwright/test").Page} page @param {string} name */
 async function go(page,name) {
@@ -148,6 +169,9 @@ for (const [engine,launcher] of Object.entries(engines)) {
       await page.getByRole("button",{name:"Ver detalhes: CRM de demonstração",exact:true}).click();
       await page.waitForFunction(()=>document.querySelector("[role=status]")?.textContent !== "Carregando…");
       await overview(page);await shot(page,tag+"-05-detalhe-visao");made.push(tag+"-05-detalhe-visao");
+      await page.getByRole("button",{name:"Editar conexão e limites",exact:true}).click();await page.getByRole("dialog").waitFor();
+      await shot(page,tag+"-17-editar-rascunho");made.push(tag+"-17-editar-rascunho");
+      await page.getByRole("dialog").getByRole("button",{name:"Cancelar",exact:true}).click();
     }
     if (engine === "chromium") {
       await page.getByLabel("Buscar por nome ou alias",{exact:true}).fill("zzz");await shot(page,tag+"-04-busca-vazia");made.push(tag+"-04-busca-vazia");
@@ -166,9 +190,58 @@ for (const [engine,launcher] of Object.entries(engines)) {
       await page.getByRole("tab",{name:"SQL",exact:true}).click();
       assert.match(String(await page.getByRole("tabpanel").textContent()),/a política padrão continua valendo/);
       await shot(page,tag+"-08b-detalhe-sql");made.push(tag+"-08b-detalhe-sql");
-      await go(page,"Novo datasource");await shot(page,tag+"-09-prototipo-inicio");made.push(tag+"-09-prototipo-inicio");
-      for (let i=0;i<6;i++) await page.getByRole("button",{name:"Próximo",exact:true}).click();
-      await shot(page,tag+"-10-prototipo-revisao");made.push(tag+"-10-prototipo-revisao");
+      // Stage 6: the registration wizard over a fictitious draft; the secret is a throwaway masked value.
+      await go(page,"Novo datasource");
+      const onward=()=>page.getByRole("button",{name:"Próximo",exact:true}).click();
+      await page.getByLabel("Alias",{exact:true}).fill("vendas-demo");
+      await page.getByLabel("Nome de apresentação",{exact:true}).fill("Vendas de demonstração");
+      await shot(page,tag+"-09-cadastro-inicio");made.push(tag+"-09-cadastro-inicio");
+      await onward();
+      await page.getByLabel("Host",{exact:true}).fill("db-vendas.example.internal");
+      await page.getByLabel("Banco",{exact:true}).fill("app_demo");
+      await page.getByLabel("Usuário técnico",{exact:true}).fill("gateway_demo");
+      await onward();await page.getByLabel("Senha técnica",{exact:true}).fill("fixture-"+randomBytes(6).toString("hex"));
+      await onward();await onward();
+      await page.getByRole("button",{name:"Adicionar regra",exact:true}).click();
+      await page.getByLabel("Padrão da coluna",{exact:true}).first().fill("cpf");
+      await shot(page,tag+"-09b-cadastro-politica");made.push(tag+"-09b-cadastro-politica");
+      await onward();await page.getByRole("button",{name:"Testar conexão",exact:true}).click();
+      await page.getByText("Conexão verificada com este rascunho",{exact:false}).waitFor();
+      await shot(page,tag+"-09c-cadastro-teste");made.push(tag+"-09c-cadastro-teste");
+      await onward();
+      assert.match(String(await page.getByRole("region",{name:"Revisão",exact:true}).textContent()),/Informada \(não exibida\)/);
+      await shot(page,tag+"-10-cadastro-revisao");made.push(tag+"-10-cadastro-revisao");
+      // Leaving the wizard with a draft asks first.
+      await go2(page,"Datasources");await page.getByRole("button",{name:"Descartar",exact:true}).click();
+      await page.waitForFunction(()=>document.querySelector("[role=status]")?.textContent !== "Carregando…");
+      await page.getByRole("button",{name:"Ver detalhes: CRM de demonstração",exact:true}).click();
+      await page.waitForFunction(()=>document.querySelector("[role=status]")?.textContent !== "Carregando…");
+      const box=page.getByRole("dialog");
+      await page.getByRole("button",{name:"Editar conexão e limites",exact:true}).click();await box.waitFor();
+      await box.getByLabel("Nome de apresentação",{exact:true}).fill("CRM de demonstração (editado)");
+      await shot(page,tag+"-17-editar-rascunho");made.push(tag+"-17-editar-rascunho");
+      await box.getByRole("button",{name:"Revisar e confirmar",exact:true}).click();
+      await shot(page,tag+"-18-editar-revisao");made.push(tag+"-18-editar-revisao");
+      next.state="conflict";await box.getByRole("button",{name:"Confirmar",exact:true}).click();
+      await box.getByText("Outra sessão alterou este item",{exact:false}).waitFor();
+      await shot(page,tag+"-19-conflito");made.push(tag+"-19-conflito");
+      next.state="done";await box.getByRole("button",{name:"Descartar e reler",exact:true}).click();
+      await page.waitForFunction(()=>document.querySelector("[role=status]")?.textContent !== "Carregando…");
+      await page.getByRole("tab",{name:"Masking",exact:true}).click();
+      await page.getByRole("button",{name:"Editar política",exact:true}).click();await box.waitFor();
+      await shot(page,tag+"-20-politica-editor");made.push(tag+"-20-politica-editor");
+      await box.getByRole("button",{name:"Cancelar",exact:true}).click();
+      await page.getByRole("button",{name:"Remover",exact:true}).click();await box.waitFor();
+      await box.getByLabel("Digite o alias para confirmar",{exact:true}).fill("crm-demo");
+      await shot(page,tag+"-21-remover");made.push(tag+"-21-remover");
+      await box.getByRole("button",{name:"Cancelar",exact:true}).click();await page.getByRole("button",{name:"Descartar",exact:true}).click();
+      next.state="unknown";
+      await page.getByRole("button",{name:"Desabilitar",exact:true}).click();await box.waitFor();
+      await box.getByRole("button",{name:"Confirmar",exact:true}).click();
+      await box.getByText("Resultado desconhecido",{exact:false}).waitFor();
+      await shot(page,tag+"-22-resultado-desconhecido");made.push(tag+"-22-resultado-desconhecido");
+      next.state="done";await box.getByRole("button",{name:"Fechar",exact:true}).click();
+      await page.waitForFunction(()=>document.querySelector("[role=status]")?.textContent !== "Carregando…");
       await go(page,"Datasources");
       await page.getByRole("button",{name:"Ver detalhes: Legado desabilitado",exact:true}).click();
       await page.waitForFunction(()=>document.querySelector("[role=status]")?.textContent !== "Carregando…");
