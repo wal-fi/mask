@@ -120,7 +120,8 @@ por setas/Home/End.
 - Estados: vazio, catálogo desligado e catálogo bloqueado a 1280 px; desligado
   e bloqueado também a 320 px.
 - Conjunto "antes" em `docs/ux-v2/antes/`. Dados fictícios de fixture; nenhum token ou dado
-real. **Precisam de aprovação antes de qualquer Etapa 6.**
+real. **Precisavam de aprovação antes de qualquer Etapa 6; foram aprovadas
+pelo usuário em 2026-09-28 (seção 13).**
 
 ## 7. Limitações e riscos
 
@@ -201,10 +202,310 @@ os números desta emenda.
 
 ### Limitações
 
-- Não há aprovação estética automática. As 57 capturas aguardam aprovação
-  explícita do usuário antes da Etapa 6.
+- Não há aprovação estética automática. As capturas aguardavam aprovação
+  explícita do usuário; ela foi dada em 2026-09-28 (seção 13).
 - Com erro, o texto de status continua acima do painel, e a caixa de tom dentro
   do painel repete a mensagem. Unificar os dois exigiria mudar o contrato de
   status, o que ficou fora deste refinamento.
 - Sem JavaScript não há menu. Isso não é regressão: a UI inteira já depende de
   JavaScript.
+
+## 9. Legibilidade de Datasource/Masking (2026-09-25)
+
+Refinamento solicitado depois da Etapa 5: o detalhe de Masking deixou de
+mostrar objetos de configuração crus. Regras e exceções agora aparecem em
+cartões numerados, na ordem recebida, com o padrão em destaque, rótulos em
+português para correspondência, sensibilidade a maiúsculas/minúsculas,
+transformação e parâmetros, além de texto explícito sobre a prioridade das
+exceções. A estrutura continua somente leitura; valores desconhecidos são
+exibidos como texto, sem descarte silencioso. A aba SQL distingue listas
+adicionais da política padrão e explica a lista vazia. A conexão também
+explica quando não há hosts adicionais autorizados. A aba Limites já
+distinguia valores efetivos dos configurados e não foi alterada.
+
+O vocabulário permanece na apresentação privada. Só o selo `console` da Etapa
+5 foi atualizado em `test_phase8_final_inventory.py`; os selos da v1, modelos
+e chamadas v2 permaneceram idênticos. Não entraram rotas, escritas,
+dependências, PGWire nem funcionalidades de etapas seguintes.
+
+Validação desta alteração: 271/271 testes Node; testes Python direcionados de
+UI e inventário aprovados; Ruff, format e mypy strict em `src tests` aprovados
+(174 arquivos); build repetido com hashes idênticos para quatro recursos;
+capturas sintéticas em Chromium, Firefox e WebKit (61 imagens), com asserções
+em desktop e 320 px para prioridade, três cartões, nomes legíveis e vazio de
+SQL. As capturas de Masking e Conexão foram atualizadas e as de SQL foram
+adicionadas; as demais, que só variaram por horário de leitura, foram
+restauradas. Não houve execução da matriz de navegador com PostgreSQL real
+nesta alteração: `MASKGW_TEST_DSN` não está definido neste host. A validação
+visual não substitui essa matriz antes de publicação.
+
+## 10. Detalhe v2 agrupado e estados legíveis (2026-09-25, sem commit)
+
+Pedido: a Visão geral do datasource era uma lista longa de rótulos e valores,
+difícil de interpretar, principalmente a 320 px. As outras superfícies v2 foram
+revisadas, e só as que repetiam esse padrão foram ajustadas. Trabalho feito
+sobre o refinamento de Masking/SQL/Conexão da seção 9, que ainda não tinha
+commit e foi preservado. Decisão em D-101.
+
+### Antes → depois
+
+| superfície | antes | depois |
+|---|---|---|
+| Visão geral | nove linhas iguais; o nome repetia o título; "Nunca verificado" em texto simples | quatro grupos com título e nota curta: Identidade, Estado no Gateway, Atividade do runtime e Última verificação de conexão. O título segue o nome lido e o nome não se repete. Estados aparecem como pílulas com glifo e texto; "Nunca verificado" é neutro (○), nem falha nem sucesso; sem geração aparece "Nenhuma" |
+| Conexão | dez linhas; "✕ Não" para permissões recusadas, que são o estado seguro | quatro grupos: Destino, TLS, Credencial e Destinos aceitos. Identificadores em fonte mono. Permissões aparecem como "Permitido"/"Recusado" neutros, com nota que explica a regra real de destino (rede privada aceita, loopback com permissão, endereço público com permissão e host na lista) |
+| Limites | efetivos e configurados misturados | "Aplicado às consultas" em métricas, com a regra do valor efetivo (o menor entre o datasource e a política, como em `_effective`/D-088), e "Configurado no datasource" |
+| SQL | funções e limites da política misturados | grupos Funções e Limites da política, com nota que liga os limites aos efetivos |
+| lista | "✓ Sim"/"✕ Não"; a 320 px, seis blocos empilhados por item; alias quebrado no desktop | "Não" neutro; "Nunca verificado" neutro sem quebra; alias em fonte mono sem quebra no desktop. A 320 px o nome vira o título do cartão, com alias/revisão e habilitado/publicado em pares |
+| Painel | cor dos sinais inferida da ordem das frases; "Não informado" quebrava no meio ("informad/o") a 320 px | tom explícito (achado I1 da revisão anterior); texto vazio em tamanho legível; números das métricas sem quebra ("20/0" em Limites corrigido) |
+| protótipo | — | inalterado: já deixava claro que nada é salvo nem testado |
+
+Mantidos de propósito:
+- Masking: os cartões da seção 9 já resolviam o problema;
+- o protótipo;
+- as unidades em ms nos rótulos;
+- a quebra das abas em duas linhas a 320 px;
+- o comportamento, as chamadas e o foco.
+
+Nenhum campo foi escondido: a validação exige que cada item da aba esteja em um
+e só um grupo, e o renderizador exibe qualquer item fora de grupo.
+
+### Capturas
+
+- 69 PNGs em `docs/ux-v2/`, dos quais 8 são novos:
+  - `05b-detalhe-desabilitado` (datasource desabilitado e não publicado, estados neutros) em claro e escuro, a 1280 e a 320 px;
+  - `firefox-` e `webkit-light-1280-05-detalhe-visao`;
+  - `chromium-estado-painel-bloqueado`, a 1280 e a 320 px.
+- 30 mudaram de verdade. As que diferiam só pelo horário de leitura (busca vazia, Masking, Política v1 e estado vazio) foram devolvidas à versão anterior.
+- Critério: comparação pixel a pixel no Chromium fixado; imagens cuja diferença ficava só na linha de status foram restauradas.
+- A ferramenta de captura verifica os grupos, a ausência de "Nome" repetido, "Nunca verificado" neutro, os estados neutros do desabilitado e os dois sinais de alerta do Painel bloqueado.
+
+### Gates
+
+| gate | resultado |
+|---|---|
+| build determinístico e inspeção pública | aprovados. `ui.js` 158.180, `ui.css` 13.301 e `presentation.json` 62.660 bytes; `index.html` e CSP inalterados |
+| typecheck (inclui `--strict` no bundle) | aprovado |
+| testes Node | **279/279** (271 + 8 contraexemplos: grupo que esconde ou duplica item, membro ou chave desconhecidos, tom ou exibição desconhecidos, título numérico ou fora do modelo) |
+| Python direcionado | **108/108**: inventário, recursos e o novo `test_admin_ui_console_groups.py` (os mesmos contraexemplos no validador Python) |
+| selos | só `console` mudou. `format`, os modelos v2 (`models[110:]`) e as chamadas v2 (`calls[19:]`) mantêm os seus hashes, e as seções v1 continuam iguais às aprovadas na Etapa 8 |
+| navegador, três engines, PostgreSQL 16.15 descartável | **216 testes**. Na matriz integral, 215 aprovados e 1 falha intermitente no WebKit ('wide shows nav'). O teste lia a visibilidade logo após redimensionar a viewport, antes de o WebKit aplicar a media query; passou a esperar o estado com `expect.poll`, sem mudar o que é verificado. Depois disso: 20/20 repetições isoladas, projeto WebKit inteiro 72/72 e `console.spec.js` 14/14 no Chromium e no Firefox |
+| suíte Python integral com PostgreSQL 16.15 descartável | **4.167 testes: 0 falhas, 0 erros, 8 skips** (os condicionais de POSIX já registrados); 615 s |
+| Ruff / format / mypy strict | aprovados; 175 arquivos |
+| `git diff --check` e arquivo novo | aprovados |
+
+O contraste AA passou a ser medido também nas cinco abas do detalhe, nos dois
+temas, incluindo `h3`, `code`, abas e pílulas. A falta de rolagem horizontal é
+verificada em todas as abas, a 320, 640 e 1280 px.
+
+Não executado: o gate de pacote isolado (wheel/sdist instalados e navegador
+contra o pacote). A mudança não toca empacotamento, mas os bytes dos recursos
+mudaram, então esse gate deve ser repetido antes de qualquer commit. O
+PostgreSQL usado foi um contêiner descartável `postgres:16-alpine` só em
+`127.0.0.1`, removido ao final; nenhum banco existente foi usado.
+
+## 11. Política v1 legível (2026-09-28, sem commit)
+
+Pedido: a Visão geral da Política v1 exibia uma árvore crua com nomes internos
+em inglês, e as demais leituras v1 tinham o mesmo problema. O pedido autorizou
+mudar **só a apresentação** da v1. Contratos, modelos, chamadas, permissões,
+regras de masking e fluxos de escrita continuam congelados. Decisão em D-102.
+
+### O que mudou e o que não mudou
+
+- **Não mudou (prova por igualdade com o HEAD `5077ce1`)**:
+  - `views`, `editors`, `bindings`, `messages` e `format`;
+  - **todos** os modelos (147) e **todas** as chamadas (23).
+
+  O teste de selos da Etapa 8 (`APPROVED`, 7 seções) passa sem alteração.
+  Formulários, rótulos de formulário, confirmações, validação e escrita são os
+  mesmos, e os botões do editor v1 (Validar documento, Adoção explícita, Criar,
+  Item N · Editar/Excluir) continuam no mesmo lugar.
+- **Mudou**:
+  - `console.pages`, a apresentação das seis leituras v1 em grupos, com rótulos
+    e notas em português;
+  - o selo `console` da Etapa 5 e o hash de `presentation.json`;
+  - no renderizador, a leitura v1 usa a página quando ela existe; sem página, o
+    comportamento anterior é mantido;
+  - listas passaram a aceitar texto declarado por item e o estilo "ordered";
+    dentro dos cartões, os campos seguem a ordem declarada;
+  - CSS: lista numerada; grupos que não esticam até a altura do vizinho, o que
+    também afeta as abas v2 (caixa Credencial menor); grupos com cartões de regra
+    ocupam a largura toda.
+- **Garantia de que nada foi omitido nem acrescentado**:
+  - o validador Python e o checker público exigem que toda folha sob os
+    controles `read` de cada vista seja exibida;
+  - e que nenhum campo fora desses controles apareça.
+  Contraexemplos em `tests/test_admin_ui_console_groups.py` e em
+  `frontend/test/surface.test.js`.
+
+### Antes → depois
+
+| vista | antes (`docs/ux-v2/antes/v1/`) | depois |
+|---|---|---|
+| Visão geral | `adopted`, `counters`, `revision`, `runtime` e `secrets` com chaves internas | Configuração em uso (adoção, com a explicação real de "não adotada"), Atividade desde o início do processo (métricas, com a regra de contagem), Runtime (versão anterior em drenagem) e Segredos (só a situação; HMAC ausente é neutro) |
+| Configuração | documento inteiro como árvore | Estado, Regras de masking e Exceções em cartões, Limites do banco e SQL |
+| Regras / Exceções | lista de chaves cruas, com ID como primeira linha | cartões "Regra N"/"Exceção N" com padrão em destaque, correspondência, maiúsculas/minúsculas, transformação, parâmetros, posição e identificador ("Ainda sem ID: a adoção atribui" quando não adotada) |
+| Banco | `Revision` e `Limites declarados` em árvore | métricas com a nota de aplicação pelo PostgreSQL |
+| Política SQL | onze blocos "Proteção efetiva: …" | Como cada coluna é tratada (ordem do pipeline em português), Validação do SQL (as quatro regras traduzidas), Funções e relações, Sessão no PostgreSQL e Edição |
+
+Capturas: 24 novas, em Chromium claro e escuro a 1280 e a 320 px:
+`12-v1-configuracao`, `13-v1-regras`, `14-v1-excecoes`, `15-v1-banco`,
+`16-v1-politica-sql` e `chromium-estado-v1-nao-adotada-{visao,regras}`
+(1280 e 320). Mais 16 alteradas (`11-politica-v1` e as abas v2 afetadas pelo
+alinhamento). O conjunto "antes" dessas vistas está em `docs/ux-v2/antes/v1/`
+(28 imagens). As imagens que diferiam só pelo horário, e as do Firefox que mudaram
+por ruído de renderização em telas que o CSS novo não alcança, voltaram à
+versão anterior. A fixture sintética da v1 fica em `screenshots.js`: coerente
+(uma revisão em todas as leituras) e fictícia, nas variantes adotada e não
+adotada.
+
+### Achados durante a revisão
+
+- Na vista Exceções, o título `h2` e o grupo `h3` tinham o mesmo nome. Isso é um
+  defeito de acessibilidade (dois cabeçalhos iguais para leitor de tela) e fazia
+  a busca exata pelo título falhar. O grupo virou "Exceções cadastradas", e há
+  teste que exige título único e nenhum grupo com o nome da própria vista.
+- No WebKit, o teste novo esperava 60 s depois de redimensionar a viewport. É a
+  mesma corrida de media query da seção 10: o teste agora espera o layout
+  correspondente e passou a levar 12,5 s.
+- `reading.spec.js › loading, empty…` esperava o texto genérico "Lista vazia.".
+  A leitura de regras vazia agora diz "Nenhuma regra de mascaramento
+  cadastrada.". O teste continua exigindo o texto exato e exatamente uma
+  ocorrência, depois do mesmo fluxo de erro e nova tentativa.
+
+### Gates (seção 11)
+
+| gate | resultado |
+|---|---|
+| build determinístico | dois builds com hashes idênticos: 4 recursos, âncora, `presentation.json` e `protocol-schema.json` privados |
+| inspeção pública | limpa (os nomes novos passam pelo vocabulário v1 por substring e v2 por token) |
+| typecheck | aprovado |
+| testes Node | **285/285** (+6 contraexemplos de `console.pages`) |
+| Python direcionado | **116/116** (inventário com `APPROVED` intacto, recursos e grupos/páginas) |
+| suíte Python integral, PostgreSQL 16.15 descartável | **4.175 testes: 0 falhas, 0 erros, 8 skips POSIX**; 639 s |
+| navegador, três engines, checkout | matriz integral: 215/219. As 4 falhas eram os dois pontos acima (texto esperado em `reading.spec.js` nos três engines; corrida no WebKit no teste novo). Depois das correções, `console.spec.js` + `reading.spec.js` deram **75/75** nos três engines; os demais arquivos não mudaram depois da matriz |
+| wheel / sdist | 99 e 124 entradas; wheel SHA-256 `657b5f17d4293c024628b800788dbb9f465e1c6b34bd25062d282efd91ee48c5`; sdist SHA-256 `496dbfeacbcea89f2b8f8ce404f820bbfc6b753f9c01972d581f6fab50711313`; sem `frontend/`, `tests/`, `docs/`, capturas, `.codex` ou links |
+| sondagens instaladas | Fase 8 e console v2 aprovadas nos dois pacotes (`-I`, PATH só System32) |
+| contraprovas de isolamento | sem `-I`, Node no PATH e site errado: recusados nos dois pacotes |
+| navegador contra o pacote instalado | wheel **27/27** e sdist **27/27** (console e pacote nos três engines) |
+| Ruff, format e mypy strict | aprovados; 175 arquivos |
+| `git diff --check` e arquivo novo | aprovados |
+
+O teste novo de navegador cobre as seis vistas v1 nos dois temas, a 320 e a
+1280 px, e verifica:
+- grupos na ordem declarada;
+- título único, com foco depois da navegação;
+- ausência de nomes internos crus;
+- ausência dos segredos reais do harness (chave HMAC e senha/DSN do
+  PostgreSQL descartável);
+- segredos só como "Configurado"/"Ausente";
+- contraste AA ≥ 4,5 e ausência de rolagem horizontal;
+- somente GET.
+
+Limitações:
+- a fixture sintética das capturas não substitui a revisão humana;
+- o Firefox teve ruído de renderização entre execuções nas telas de entrada,
+  Painel e lista, que não foram afetadas por esta mudança; essas capturas
+  voltaram à versão anterior;
+- ~~o editor v1 continua anexando "Item N · Editar/Excluir" abaixo dos cartões,
+  sem ligação visual com o cartão correspondente~~. **Resolvida na seção 12**:
+  cada conjunto de ações fica dentro do cartão do item com o mesmo ID, sem mudar
+  handlers, IDs, ordem, confirmações, validações nem escrita.
+
+O PostgreSQL foi um contêiner descartável `postgres:16-alpine`, só em
+`127.0.0.1`, removido ao final. O Docker Desktop estava parado: foi iniciado
+para os testes e parado de novo.
+
+## 12. Ações de cada item dentro do próprio cartão (2026-09-28, sem commit)
+
+Pedido: na vista Regras, e também em Exceções, os botões Editar e Excluir
+apareciam em linhas "Item N" separadas dos cartões "Regra N"/"Exceção N". O
+ajuste associa visualmente cada conjunto ao item certo. Handlers, IDs, ordem,
+confirmações, validações e escrita não mudaram.
+
+### Como a associação é feita
+
+- `workbench.attach` recebe uma função opcional, `slot`. Ela recebe a
+  identidade que os botões **já** usavam (capturada no fechamento do handler,
+  como antes) e devolve o cartão que exibe essa **mesma** identidade. Os botões
+  são os mesmos objetos, com os mesmos handlers, na mesma ordem. Com cartão, vão
+  para um grupo `role="group"` com nome "Ações: Regra N"; sem cartão, ficam na
+  linha "Item N" de antes.
+- O mapa identidade → cartão é refeito a cada leitura, a partir do mesmo valor
+  exibido. A associação é **só por igualdade de ID**, nunca por posição. Uma
+  identidade repetida entre cartões marca a ambiguidade e não recebe ação.
+- Na prática, uma identidade repetida nem chega à tela: o leitor da Fase 8 já
+  recusa a lista (binding `identity`), e a leitura fica "indisponível", sem
+  cartões e sem botões. A proteção em `screen.js` é uma segunda camada.
+- Apresentação: a chave de identidade é declarada em `console.pages` pelo texto
+  `@identity: id` nas palavras de regras e exceções da v1. Só o selo `console`
+  muda; as sete seções da Etapa 8 continuam iguais ao HEAD `5077ce1`.
+
+### Teste adversarial
+
+`batches.spec.js › item actions stay with their own card across reorder, edit
+and removal` roda nos três navegadores e usa a fixture com duas regras de
+**mesmo padrão**, diferentes só no ID e no valor substituto:
+
+1. cada cartão tem exatamente um grupo "Ações: Regra N" e um Editar e um
+   Excluir; não sobra linha "Item N" nem ação avulsa;
+2. o Editar de cada cartão abre o formulário com o valor daquele cartão;
+3. depois de reordenar, as identidades acompanham os cartões, e o Editar
+   continua abrindo o item certo;
+4. editar o primeiro cartão gera **um** `PUT` cujo caminho é exatamente
+   `/admin/v1/rules/<ID exibido nesse cartão>`, e só esse cartão muda;
+5. excluir o segundo cartão gera **um** `DELETE` com o ID exibido nesse cartão;
+   o outro cartão fica intacto e continua editável;
+6. em Exceções, a ação do cartão abre a exceção "keep";
+7. uma resposta com ID repetido é recusada: nenhum cartão, nenhum botão,
+   nenhuma escrita.
+
+### Capturas
+
+Mudaram só as 8 imagens de Regras e Exceções (`13-v1-regras` e
+`14-v1-excecoes`, claro e escuro, 1280 e 320 px). As demais diferiam só pelo
+horário, ou por ruído de renderização do Firefox em telas que esta mudança não
+alcança, e voltaram à versão anterior.
+
+`CLAUDE.md` e `docs/HANDOFF.md` citam 102 decisões (D-001 a D-102), porque
+D-101 e D-102 estão registradas em `docs/DECISIONS.md`. O `HANDOFF.md` foi
+corrigido no fechamento editorial seguinte.
+
+### Gates (seção 12, sobre o resultado final)
+
+| gate | resultado |
+|---|---|
+| build determinístico e inspeção pública | 8 arquivos com hashes idênticos em dois builds; artefatos públicos limpos |
+| typecheck | aprovado |
+| testes Node | **285/285** |
+| Python direcionado | **116/116** (`APPROVED` da Etapa 8 intacto; só o selo `console` mudou) |
+| suíte Python integral, PostgreSQL 16.15 descartável | **4.175 testes: 0 falhas, 0 erros, 8 skips POSIX**; 568 s |
+| **matriz completa, três engines, checkout** | **222/222** (74 por engine), 0 falhas, timeouts ou retries; 2.163 s |
+| wheel / sdist | 99 e 124 entradas; wheel SHA-256 `7a7b388c4491727892dbf3ac911669ed8488cd89315fa3fc4157f40558874913`; sdist SHA-256 `4f43052366a0bc401e17dcabdc9c2a263963fb759a259fcfc3cca706766a0a4a`; nada proibido, sem links |
+| sondagens instaladas | Fase 8 e console v2 aprovadas nos dois pacotes |
+| contraprovas de isolamento | sem `-I`, Node no PATH e site errado: recusados nos dois pacotes |
+| navegador contra o pacote instalado | wheel e sdist: **27/27** (console e pacote) e **3/3** no teste adversarial das ações, nos três engines |
+| Ruff, format e mypy strict | aprovados; 175 arquivos |
+| `git diff --check` | aprovado |
+
+O PostgreSQL foi um contêiner descartável `postgres:16-alpine`, só em
+`127.0.0.1`, removido ao final. O Docker Desktop foi iniciado para os testes e
+parado de novo.
+
+## 13. Aprovação e fechamento (2026-09-28)
+
+O usuário aprovou explicitamente, em 2026-09-28, o refinamento visual das
+seções 8 a 12, as capturas de `docs/ux-v2/` e as decisões D-101 e D-102. A
+Etapa 6 e as posteriores continuam sem autorização. Nada foi publicado: não
+houve push.
+
+Atribuição dos resultados:
+- os gates da seção 12 (matriz completa 222/222, wheel/sdist instalados, suíte
+  Python integral 4.175, Node 285/285, build determinístico) foram medidos sobre
+  o resultado funcional final;
+- depois deles mudaram só documentos (`HANDOFF.md`, `DECISIONS.md`, esta
+  validação e o estado de aprovação em `CLAUDE.md`, `AGENTS.md` e na matriz
+  de rastreabilidade), sem alteração de código, testes, recursos ou capturas;
+  por isso as suítes não foram repetidas;
+- o refinamento completo foi registrado num novo commit local, depois de
+  `5077ce1`, sem emenda nem push.

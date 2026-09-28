@@ -4,7 +4,8 @@
 
 Estado: **Fase 8 concluída e publicada; Fase 9 — Etapas 3 e 4 implementadas localmente;
 Etapas 3 e 4 publicadas em `c37be36`; Etapa 5 (UX v2 somente leitura) implementada
-localmente em 2026-09-24, sem push; capturas aguardam aprovação antes da Etapa 6**.
+localmente em 2026-09-24, sem push; refinamento visual (D-101, D-102) e capturas
+aprovados pelo usuário em 2026-09-28, em commit local sem push; Etapa 6 sem autorização**.
 MVP e Fase 7 concluídos. A Etapa 8 foi revisada e publicada sem emenda em
 `20db6f021533230d791cd910b037554c3fe03191`; o fetch confirmou master, HEAD igual
 a origin/master, árvore limpa e 0/0, com autoria e trailer preservados.
@@ -44,7 +45,7 @@ Ordem de leitura sugerida:
 | `docs/ARCHITECTURE.md` | modulos e responsabilidades |
 | `docs/SECURITY.md` | invariantes de seguranca e o que exigir antes de expor |
 | `docs/SECURITY-REVIEW.md` | 11 findings do red team, seis fechados |
-| `docs/DECISIONS.md` | D-001 a D-100, com o motivo de cada uma |
+| `docs/DECISIONS.md` | D-001 a D-102, com o motivo de cada uma |
 | `docs/MASKING-SPEC.md` | semantica exata do pipeline |
 | `docs/TEST-PLAN.md` | o que cada camada de teste cobre |
 | `docs/THREAT-MODEL.md` | cenarios de ataque e o resultado medido |
@@ -1069,7 +1070,8 @@ Um refinamento visual, emendado no mesmo commit, trouxe três mudanças. Em
 telas estreitas a navegação fica atrás de um botão `Menu:` acessível. O
 Painel foi hierarquizado. Os avisos ficaram curtos.
 Capturas de referência (fixture sintética) em `docs/ux-v2/`, com o conjunto
-anterior em `docs/ux-v2/antes/`, a aprovar antes da Etapa 6. Toolchain fixada: Node 24.20.0/npm 11.19.0 locais; o `.venv`
+anterior em `docs/ux-v2/antes/`, aprovados pelo usuário em 2026-09-28 (Etapa 6 continua sem
+autorização). Toolchain fixada: Node 24.20.0/npm 11.19.0 locais; o `.venv`
 contém uma instalação antiga e não editável de `maskgw`, por isso o harness de
 navegador define `PYTHONPATH=src` no modo checkout. Evidência em
 `docs/PHASE-9-STAGE-5-VALIDATION.md`.

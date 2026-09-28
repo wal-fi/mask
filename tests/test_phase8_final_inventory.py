@@ -27,10 +27,15 @@ APPROVED = {
 STAGE8_MODELS = 110
 STAGE8_CALLS = 19
 
-#: Phase 9, Stage 5 additions, sealed separately.
+#: Phase 9, Stage 5 additions, sealed separately. Console seal includes the
+#: requested read-only presentation refinements (Masking and SQL; then grouped
+#: detail tabs, declared tones and the detail title path; then `pages`, the
+#: Portuguese grouped presentation of the six Política v1 readings). Only
+#: `console` changed: format, second-prefix models and calls keep their seals,
+#: and the Stage 8 sections above stay equal to `APPROVED`.
 STAGE5 = {
     "format": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
-    "console": "884b5047f0afcab8f3708b70e166f9eb66e599f808ff2bf40b2ad14c649d32f7",
+    "console": "44a1a8ba53eabed00537b7bfd6a2c1056dbb0862ca50391b2477032d2f3f0488",
     "models": "61e93e5c9089ede0149ae805e1d6eac5fde64974143b72d07d9bd82ada38623a",
     "calls": "edb0149496b9bf504c656d63667c84f70c1d719ca01f347902727330035b4d07",
 }

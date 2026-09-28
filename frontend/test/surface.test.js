@@ -60,6 +60,22 @@ const hostile=[
   ["non opaque console id",["console","guide","id"],"guide"],
   ["guide with one step",["console","guide","steps"],[obj(arr(obj(obj(document.console).guide).steps)[0])]],
   ["guide control smuggled",["console","guide","steps",0,"control"],"password"],
+  // Presentation-only groups, tones and title never hide, duplicate or invent a value.
+  ["group hides an entry",["console","detail","tabs",0,"groups",0,"members"],arr(obj(arr(obj(arr(obj(obj(document.console).detail).tabs)[0]).groups)[0]).members).slice(0,1)],
+  ["entry in two groups",["console","detail","tabs",0,"groups",1,"members",0],String(arr(obj(arr(obj(arr(obj(obj(document.console).detail).tabs)[0]).groups)[0]).members)[0])],
+  ["unknown group member",["console","detail","tabs",0,"groups",0,"members",0],"r999999"],
+  ["unknown group key",["console","detail","tabs",0,"groups",0,"script"],"x"],
+  ["unknown tone",["console","summary","figures",7,"wording",0,"tone"],"danger"],
+  ["unknown display",["console","detail","tabs",0,"entries",0,"show"],"html"],
+  ["title on a number",["console","detail","title"],["datasource","revision"]],
+  ["title outside model",["console","detail","title"],["datasource","nowhere"]],
+  // Política v1 pages only arrange approved readings: nothing omitted, nothing added.
+  ["page for unknown view",["console","pages",0,"view"],"v99"],
+  ["page omits a read field",["console","pages",0,"sections",0,"entries"],arr(obj(arr(obj(arr(obj(document.console).pages)[0]).sections)[0]).entries).slice(0,1)],
+  ["page shows a field outside the view",["console","pages",4,"sections",1,"entries"],(()=>{const kept=arr(obj(arr(obj(arr(obj(document.console).pages)[4]).sections)[1]).entries);return [...kept,{...obj(kept[0]),id:"w99999",path:["config","masking"],kind:"tree"}];})()],
+  ["two pages for one view",["console","pages",1,"view"],String(obj(arr(obj(document.console).pages)[0]).view)],
+  ["page path through a list index",["console","pages",2,"sections",1,"entries",0,"path"],["rules",0,"match"]],
+  ["page path outside model",["console","pages",0,"sections",0,"entries",0,"path"],["nowhere"]],
 ];
 for (const [name,path,value] of hostile) test("console refused: "+name,()=>{
   const p=fixture();

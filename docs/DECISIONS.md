@@ -2619,3 +2619,67 @@ status). O tema segue `prefers-color-scheme`; a alternância manual (automático
 escuro, claro) vive só em memória, sem storage. Toolchain: Node 24.20.0 e npm
 11.19.0 oficiais verificados por SHA-256 (lista SHASUMS256 obtida por HTTPS,
 sem verificação GPG) numa pasta local, sem alterar o PATH do sistema.
+
+## D-101 — Abas do detalhe v2 agrupadas, com tom declarado (aprovada)
+
+Estado: aprovada explicitamente pelo usuário em 2026-09-28. Evidência na seção
+10 de `docs/PHASE-9-STAGE-5-VALIDATION.md`; registrada em commit local, sem
+push.
+
+Pedido de UX somente leitura, depois da Etapa 5 e sem commit: a Visão geral do
+datasource era uma lista longa de rótulos e valores. A apresentação privada
+ganhou campos **só de exibição**, validados em Python (`protocol.py`) e no
+checker público (`protocol.js`):
+
+- `Tab.groups`: grupos com título e nota curta; cada item da aba pertence a um
+  e só um grupo, e item fora de grupo continua sendo exibido;
+- `Wording.tone` (`good`, `neutral`, `attention`): pílula com glifo e texto
+  próprio, sem depender só de cor. "Nunca verificado" é `neutral`; os sinais do
+  Painel passam a ter tom explícito em vez da convenção de ordem;
+- `Figure.show` (`fact`, `metric`, `code`) e `Figure.blank` (texto para nulo);
+- `Detail.title`: o título do detalhe segue o nome da leitura principal, e a
+  Visão geral deixa de repetir o nome.
+
+Nenhum modelo, chamada, método, permissão ou seção v1 mudou. Só o selo
+`console` da Etapa 5 muda; `format`, os modelos e as chamadas da v2 mantêm os
+seus selos. Os nomes novos passam pela inspeção de vocabulário público.
+
+## D-102 — Política v1 apresentada por `console.pages`, sem tocar nas seções seladas (aprovada)
+
+Estado: aprovada explicitamente pelo usuário em 2026-09-28, junto com a
+apresentação da Política v1. Evidência nas seções 11 e 12 de
+`docs/PHASE-9-STAGE-5-VALIDATION.md`; registrada em commit local, sem push.
+A seção 12 estendeu a decisão: a chave
+declarada `@identity` coloca as ações Editar/Excluir de cada regra ou exceção
+dentro do cartão com o mesmo ID. A associação é só por igualdade de ID, e
+handlers, ordem e escrita não mudaram.
+
+Pedido explícito do usuário (2026-09-28), limitado à apresentação da Política
+v1: a Visão geral e as demais leituras v1 mostravam árvores cruas com nomes
+internos em inglês (`adopted`, `counters`, `secrets`…).
+
+Em vez de reescrever os controles `read` das vistas (seção `views`, selada na
+Etapa 8), a apresentação nova vive em `console.pages`: uma página por vista v1,
+com grupos, rótulos em português e notas. As sete seções da Etapa 8 continuam
+byte a byte iguais, e o teste `APPROVED` segue valendo sem alteração. O
+validador Python e o checker público exigem, para cada página:
+
+- vista v1 existente, no máximo uma página por vista;
+- caminhos só de nomes de campo, dentro da resposta da chamada da própria vista;
+- **toda folha** sob os controles `read` da vista coberta por algum campo
+  exibido (nada omitido);
+- nenhum campo fora desses controles (nada acrescentado).
+
+Semântica exibida, conferida no código:
+
+- "não adotada" é `revision == 0`: o Gateway aplica o arquivo normalmente, e
+  só as escritas administrativas exigem a adoção (`CONFIG_NOT_ADOPTED`);
+- contadores são em memória desde o start e incluem recusas;
+- a versão anterior do runtime fica aberta no máximo até drenar;
+- segredos aparecem só como situação (`configured`/`missing`), e a chave HMAC
+  ausente é neutra, porque só as regras HMAC-SHA-256 a exigem.
+
+`Wording` aceita valores de até 120 caracteres, para traduzir as regras fixas do
+validador, e `Figure.show` ganhou `ordered`. Formulários, validação,
+confirmações, escrita, modelos, chamadas, bindings e mensagens não mudaram; só
+o selo `console` muda.

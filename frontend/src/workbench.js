@@ -285,8 +285,13 @@ export function workbench(client,root,refreshed) {
     });submit.disabled=true;input.addEventListener("change",()=>{submit.disabled=!input.checked;});
     box.append(element("p",plan.consent.text),label,input,button("Cancelar",()=>leave(()=>{})),submit);
   }
-  /** @param {HTMLElement} panel @param {string} page @param {unknown} value */
-  function attach(panel,page,value) {
+  /** `slot` only places an item's buttons: it receives the identity those
+   * buttons already target and returns the card that displays that same
+   * identity, or nothing. Handlers, identity and order never depend on it.
+   * @param {HTMLElement} panel @param {string} page @param {unknown} value
+   * @param {((identity:string)=>{node:HTMLElement,name:string}|undefined)|undefined} slot
+   */
+  function attach(panel,page,value,slot=undefined) {
     if(ended || engaged) return;
     if(page === plan.home) {
       panel.append(button("Validar documento",()=>{void (async()=>{if(await start("Validar documento")) await examineDraft();})();}));
@@ -300,8 +305,14 @@ export function workbench(client,root,refreshed) {
     if(!plan.changeable(page,value)) panel.append(element("p","Adoção explícita necessária antes de editar."));
     for(const [index,item] of plan.listed(page,value).entries()) {
       const identity=at(item,[p.identity]);if(typeof identity !== "string") continue;
-      const row=element("section");row.append(element("h3","Item "+(index+1)));
-      const change=button("Editar",()=>{void edit(page,"replace",identity);}), remove=button("Excluir",()=>{void edit(page,"delete",identity);});change.disabled=!permitted;remove.disabled=!permitted;row.append(change,remove);panel.append(row);
+      const change=button("Editar",()=>{void edit(page,"replace",identity);}), remove=button("Excluir",()=>{void edit(page,"delete",identity);});change.disabled=!permitted;remove.disabled=!permitted;
+      const home=slot?.(identity);
+      if(home) {
+        const row=element("div");row.className="item-actions";row.setAttribute("role","group");row.setAttribute("aria-label","Ações: "+home.name);
+        row.append(change,remove);home.node.append(row);
+      } else {
+        const row=element("section");row.append(element("h3","Item "+(index+1)));row.append(change,remove);panel.append(row);
+      }
     }
   }
   return {attach,leave,close,active:()=>engaged,pending:()=>waiting,examined:()=>checked};

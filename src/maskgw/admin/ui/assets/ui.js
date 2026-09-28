@@ -71,8 +71,16 @@ function inspect(value, descriptor) {
   if (!records(summary.figures) || !records(collection.columns) || !records(detail.tabs) || !records(guide.steps)) return false;
   /** @type {Record<string,unknown>[]} */ const tabItems=[];
   for (const tab of detail.tabs) { if (!records(tab.entries)) return false; tabItems.push(...tab.entries); }
+  /** @type {Record<string,unknown>[]} */ const pageItems=[];
+  if (surface.pages !== undefined) {
+    if (!records(surface.pages)) return false;
+    for (const page of surface.pages) {
+      if (!records(page.sections)) return false;
+      for (const section of page.sections) { if (!records(section.entries)) return false; pageItems.push(...section.entries); }
+    }
+  }
   const all = [...value.models,...value.calls,...value.views,...value.editors,...value.bindings,...value.messages,
-    summary,collection,detail,guide,...summary.figures,...collection.columns,...detail.tabs,...tabItems,...guide.steps];
+    summary,collection,detail,guide,...summary.figures,...collection.columns,...detail.tabs,...tabItems,...guide.steps,...pageItems];
   /** @type {Record<string,unknown>[]} */ const controls=[];
   for (const owner of [...value.views,...value.editors]) {
     if (!records(owner.controls)) return false;
@@ -218,6 +226,46 @@ function inspect(value, descriptor) {
   for (const tab of detail.tabs) {
     const owner=tab.source === "main" ? main.output : aside.output;
     if (!records(tab.entries) || !tab.entries.every(e=>linked(owner,e.path))) return false;
+    // Declared groups only arrange entries: every entry belongs to one and only one group.
+    if (tab.groups !== undefined) {
+      if (!records(tab.groups)) return false;
+      const members=tab.groups.flatMap(g=>strings(g.members) ? g.members : [""]);
+      const ids=tab.entries.map(e=>e.id);
+      if (tab.groups.length && (members.length !== ids.length || new Set(members).size !== ids.length || !ids.every(id=>typeof id === "string" && members.includes(id)))) return false;
+    }
+  }
+  if (detail.title !== undefined && detail.title !== null && (!sequence(detail.title) || leaf(main.output,detail.title)?.type !== "string")) return false;
+  /** Terminal paths under an object; lists, text and choices end a path.
+   * @param {Record<string,unknown> | undefined} node @param {string[]} path @param {number} depth @returns {string[][]}
+   */
+  function ends(node,path,depth) {
+    while (node?.type === "nullable" && typeof node.item === "string") node=models.get(node.item);
+    if (depth > 16) return [["\u0000"]];
+    if (node?.type !== "object" || !records(node.fields)) return [path];
+    return node.fields.flatMap(f=>typeof f.ref === "string" && typeof f.name === "string" ? ends(models.get(f.ref),[...path,f.name],depth+1) : [["\u0000"]]);
+  }
+  /** @param {string[]} whole @param {string[]} start */
+  const starts=(whole,start)=>start.length <= whole.length && start.every((p,i)=>whole[i] === p);
+  // Política v1 pages only arrange approved readings: one page per view, paths
+  // inside that view's response, nothing read left out and nothing else shown.
+  if (surface.pages !== undefined && records(surface.pages)) {
+    /** @type {Set<unknown>} */ const pagesSeen=new Set();
+    for (const page of surface.pages) {
+      const view=value.views.find(v=>v.id === page.view);
+      if (!view || pagesSeen.has(page.view) || !records(view.controls) || !records(page.sections)) return false;
+      pagesSeen.add(page.view);
+      const output=calls.get(view.call)?.output;
+      const reads=view.controls.filter(c=>c.type === "read");
+      if (typeof output !== "string" || !reads.length || !reads.every(c=>c.model === output && strings(c.path))) return false;
+      const roots=reads.map(c=>strings(c.path) ? c.path : []);
+      /** @type {string[][]} */ const shown=[];
+      for (const section of page.sections) {
+        if (!records(section.entries)) return false;
+        for (const entry of section.entries) { if (!strings(entry.path) || !linked(output,entry.path)) return false; shown.push(entry.path); }
+      }
+      if (!shown.every(p=>roots.some(r=>starts(p,r)))) return false;
+      for (const root of roots) for (const end of ends(leaf(output,root),root,0)) if (!shown.some(p=>starts(end,p))) return false;
+    }
   }
   return true;
 }
@@ -630,6 +678,14 @@ const layout={
           "title": "No",
           "type": "string"
         },
+        "pages": {
+          "items": {
+            "$ref": "#/$defs/Page"
+          },
+          "maxItems": 6,
+          "title": "Pages",
+          "type": "array"
+        },
         "summary": {
           "$ref": "#/$defs/Summary"
         },
@@ -850,6 +906,28 @@ const layout={
           "minItems": 1,
           "title": "Tabs",
           "type": "array"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Title"
         }
       },
       "required": [
@@ -946,6 +1024,20 @@ const layout={
       "additionalProperties": false,
       "description": "Um valor exibido: contagem, sim/nao ou texto. Caminho, nunca expressao.",
       "properties": {
+        "blank": {
+          "anyOf": [
+            {
+              "maxLength": 120,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Blank"
+        },
         "id": {
           "title": "Id",
           "type": "string"
@@ -981,11 +1073,22 @@ const layout={
           "title": "Path",
           "type": "array"
         },
+        "show": {
+          "default": "fact",
+          "enum": [
+            "fact",
+            "metric",
+            "code",
+            "ordered"
+          ],
+          "title": "Show",
+          "type": "string"
+        },
         "wording": {
           "items": {
             "$ref": "#/$defs/Wording"
           },
-          "maxItems": 8,
+          "maxItems": 32,
           "title": "Wording",
           "type": "array"
         }
@@ -997,6 +1100,47 @@ const layout={
         "kind"
       ],
       "title": "Figure",
+      "type": "object"
+    },
+    "Group": {
+      "additionalProperties": false,
+      "description": "Agrupamento visual de itens de uma aba, com titulo e explicacao.",
+      "properties": {
+        "label": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "members": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 16,
+          "minItems": 1,
+          "title": "Members",
+          "type": "array"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Note"
+        }
+      },
+      "required": [
+        "label",
+        "members"
+      ],
+      "title": "Group",
       "type": "object"
     },
     "Guide": {
@@ -1131,6 +1275,31 @@ const layout={
       "title": "Object",
       "type": "object"
     },
+    "Page": {
+      "additionalProperties": false,
+      "description": "Apresentacao de uma vista v1 ja aprovada. So arruma e nomeia o que a\nvista le; nao cria leitura, chamada, controle nem caminho novo.",
+      "properties": {
+        "sections": {
+          "items": {
+            "$ref": "#/$defs/Section"
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "title": "Sections",
+          "type": "array"
+        },
+        "view": {
+          "title": "View",
+          "type": "string"
+        }
+      },
+      "required": [
+        "view",
+        "sections"
+      ],
+      "title": "Page",
+      "type": "object"
+    },
     "Projection": {
       "additionalProperties": false,
       "properties": {
@@ -1196,6 +1365,47 @@ const layout={
         "target"
       ],
       "title": "Projection",
+      "type": "object"
+    },
+    "Section": {
+      "additionalProperties": false,
+      "description": "Grupo de uma leitura da Politica v1: titulo, explicacao e valores.",
+      "properties": {
+        "entries": {
+          "items": {
+            "$ref": "#/$defs/Figure"
+          },
+          "maxItems": 12,
+          "minItems": 1,
+          "title": "Entries",
+          "type": "array"
+        },
+        "label": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "maxLength": 400,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Note"
+        }
+      },
+      "required": [
+        "label",
+        "entries"
+      ],
+      "title": "Section",
       "type": "object"
     },
     "Sequence": {
@@ -1313,6 +1523,14 @@ const layout={
           "maxItems": 16,
           "minItems": 1,
           "title": "Entries",
+          "type": "array"
+        },
+        "groups": {
+          "items": {
+            "$ref": "#/$defs/Group"
+          },
+          "maxItems": 6,
+          "title": "Groups",
           "type": "array"
         },
         "id": {
@@ -1485,13 +1703,30 @@ const layout={
       "description": "Texto fixo exibido no lugar de um valor enumerado conhecido.",
       "properties": {
         "text": {
-          "maxLength": 120,
+          "maxLength": 160,
           "minLength": 1,
           "title": "Text",
           "type": "string"
         },
+        "tone": {
+          "anyOf": [
+            {
+              "enum": [
+                "good",
+                "neutral",
+                "attention"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tone"
+        },
         "value": {
-          "maxLength": 60,
+          "maxLength": 120,
           "minLength": 1,
           "title": "Value",
           "type": "string"
@@ -1579,7 +1814,7 @@ const layout={
   "title": "Presentation",
   "type": "object"
 };
-export const digest="7072241a7d87c6072819b33ba2764db3bd5183cc41f3468f25d04547899311e9";
+export const digest="078d3335fb7be604152deae22f2f385e7898c94f8139319fade66eaf6ef22b10";
 /** @param {unknown} value */
 export function check(value) { return inspect(value,layout); }
 /** @param {unknown} item @returns {item is Record<string, unknown>} */
@@ -2648,8 +2883,13 @@ export function workbench(client,root,refreshed) {
     });submit.disabled=true;input.addEventListener("change",()=>{submit.disabled=!input.checked;});
     box.append(element("p",plan.consent.text),label,input,button("Cancelar",()=>leave(()=>{})),submit);
   }
-  /** @param {HTMLElement} panel @param {string} page @param {unknown} value */
-  function attach(panel,page,value) {
+  /** `slot` only places an item's buttons: it receives the identity those
+   * buttons already target and returns the card that displays that same
+   * identity, or nothing. Handlers, identity and order never depend on it.
+   * @param {HTMLElement} panel @param {string} page @param {unknown} value
+   * @param {((identity:string)=>{node:HTMLElement,name:string}|undefined)|undefined} slot
+   */
+  function attach(panel,page,value,slot=undefined) {
     if(ended || engaged) return;
     if(page === plan.home) {
       panel.append(button("Validar documento",()=>{void (async()=>{if(await start("Validar documento")) await examineDraft();})();}));
@@ -2663,8 +2903,14 @@ export function workbench(client,root,refreshed) {
     if(!plan.changeable(page,value)) panel.append(element("p","Adoção explícita necessária antes de editar."));
     for(const [index,item] of plan.listed(page,value).entries()) {
       const identity=at(item,[p.identity]);if(typeof identity !== "string") continue;
-      const row=element("section");row.append(element("h3","Item "+(index+1)));
-      const change=button("Editar",()=>{void edit(page,"replace",identity);}), remove=button("Excluir",()=>{void edit(page,"delete",identity);});change.disabled=!permitted;remove.disabled=!permitted;row.append(change,remove);panel.append(row);
+      const change=button("Editar",()=>{void edit(page,"replace",identity);}), remove=button("Excluir",()=>{void edit(page,"delete",identity);});change.disabled=!permitted;remove.disabled=!permitted;
+      const home=slot?.(identity);
+      if(home) {
+        const row=element("div");row.className="item-actions";row.setAttribute("role","group");row.setAttribute("aria-label","Ações: "+home.name);
+        row.append(change,remove);home.node.append(row);
+      } else {
+        const row=element("section");row.append(element("h3","Item "+(index+1)));row.append(change,remove);panel.append(row);
+      }
     }
   }
   return {attach,leave,close,active:()=>engaged,pending:()=>waiting,examined:()=>checked};
@@ -2704,13 +2950,16 @@ export function erase(node) {
 /** @typedef {{tag:"loading"} | {tag:"success",value:unknown,version:number,time:number} | {tag:"unknown",prior:Sheet | undefined,stale:boolean}} Sheet */
 /** @typedef {{tag:"loading"} | {tag:"ready",value:unknown,time:number} | {tag:"absent"} | {tag:"unavailable"} | {tag:"broken"}} Pane */
 /** @typedef {(string|number)[]} Trail */
-/** @typedef {{id:string,label:string,path:Trail,kind:"count"|"flag"|"text"|"list"|"tree",wording:{value:string,text:string}[]}} Figure */
-/** @typedef {{id:string,label:string,source:"main"|"extra",entries:Figure[]}} Tab */
+/** @typedef {"good"|"neutral"|"attention"} Tone */
+/** @typedef {{id:string,label:string,path:Trail,kind:"count"|"flag"|"text"|"list"|"tree",wording:{value:string,text:string,tone?:Tone|null}[],show?:"fact"|"metric"|"code"|"ordered",blank?:string|null}} Figure */
+/** @typedef {{label:string,note?:string|null,members:string[]}} Group */
+/** @typedef {{id:string,label:string,source:"main"|"extra",entries:Figure[],groups?:Group[]}} Tab */
 /** @typedef {{brand:string,tagline:string,main:string,legacy:string,yes:string,no:string,blank:string,failure:string,unavailable:string,
  * summary:{id:string,label:string,call:string,figures:Figure[],notes:string[],absent:string},
  * collection:{id:string,label:string,call:string,items:Trail,key:Trail,title:Trail,columns:Figure[],search:string,searchable:Trail[],empty:string,nothing:string,open:string},
- * detail:{id:string,call:string,extra:string,back:string,tabs:Tab[],gone:string},
- * guide:{id:string,label:string,banner:string,steps:{id:string,label:string,text:string}[]}}} Board */
+ * detail:{id:string,call:string,extra:string,back:string,title?:Trail|null,tabs:Tab[],gone:string},
+ * guide:{id:string,label:string,banner:string,steps:{id:string,label:string,text:string}[]},
+ * pages?:{view:string,sections:{label:string,note?:string|null,entries:Figure[]}[]}[]}} Board */
 /** @typedef {{kind:"view",index:number} | {kind:"summary"} | {kind:"collection"} | {kind:"detail",key:string,title:string,tab:number} | {kind:"guide",step:number}} Place */
 
 const THEMES=/** @type {const} */ (["auto","dark","light"]);
@@ -2734,6 +2983,9 @@ export function mount(root) {
   /** @type {HTMLElement | undefined} */ let notice;
   /** @type {HTMLButtonElement | undefined} */ let retry;
   /** @type {ReturnType<typeof workbench> | undefined} */ let editor;
+  /** Cards of the current v1 reading by displayed identity; `null` marks an
+   * identity shown twice, which never receives actions.
+   * @type {Map<string,{node:HTMLElement,name:string}|null>} */ let cards=new Map();
   function stopClock() { if(timer !== undefined) clearTimeout(timer); timer=undefined; }
   function clear() {
     epoch++; turn++; flight?.abort(); flight=undefined; lateral?.abort(); lateral=undefined; stopClock(); paused=true; busy=false;
@@ -2863,56 +3115,147 @@ export function mount(root) {
     erase(panel);
     const title=element("h2",view.label); title.tabIndex=-1; panel.append(title);
     if(sheet?.tag === "success") {
-      for(const control of view.controls) {
-        if(control.type !== "read" || typeof control.label !== "string") continue;
-        const section=element("section");section.append(element("h3",control.label),plain(at(access.client.design().displayed(view.call,sheet.value),control.path)));panel.append(section);
-      }
+      reading(panel,view,sheet.value);
       notice.textContent="Respondendo · Última leitura: "+new Date(sheet.time).toLocaleTimeString();
-      editor?.attach(panel,view.id,sheet.value);
+      editor?.attach(panel,view.id,sheet.value,identity=>cards.get(identity) ?? undefined);
     } else if(sheet?.tag === "unknown") {
       notice.textContent=sheet.stale ? "Leitura desatualizada. Tente novamente." : "Leitura indisponível. Tente novamente.";
-      if(sheet.prior?.tag === "success") {
-        for(const control of view.controls) if(control.type === "read" && typeof control.label === "string") {
-          const section=element("section");section.append(element("h3",control.label),plain(at(access.client.design().displayed(view.call,sheet.prior.value),control.path)));panel.append(section);
-        }
-      }
+      if(sheet.prior?.tag === "success") reading(panel,view,sheet.prior.value);
     } else notice.textContent="Carregando…";
     if(retry) retry.disabled=busy;
     if(restore) title.focus();
+  }
+  /** A Política v1 reading: the declared page groups the same displayed value;
+   * without a page the approved read controls are shown as before.
+   * @param {HTMLElement} target @param {PageItem} view @param {unknown} value
+   */
+  function reading(target,view,value) {
+    if(access.tag !== "ready") return;
+    cards=new Map();
+    const shown=access.client.design().displayed(view.call,value);
+    const page=access.board.pages?.find(p=>p.view === view.id);
+    if(page) {
+      target.append(grouped({entries:page.sections.flatMap(s=>s.entries),groups:page.sections.map(s=>({label:s.label,note:s.note ?? null,members:s.entries.map(e=>e.id)}))},shown));
+      return;
+    }
+    for(const control of view.controls) {
+      if(control.type !== "read" || typeof control.label !== "string") continue;
+      const section=element("section");section.append(element("h3",control.label),plain(at(shown,control.path)));target.append(section);
+    }
   }
   /** @param {unknown} value @param {Figure} figure @returns {HTMLElement} */
   function figure(value,figure) {
     if(access.tag !== "ready") return element("span");
     const board=access.board;
-    if(value === undefined || value === null) { const node=element("span",board.blank);node.className="muted";return node; }
+    if(value === undefined || value === null) { const node=element("span",figure.blank ?? board.blank);node.className="muted";return node; }
     if(figure.kind === "flag" && typeof value === "boolean") {
       const said=figure.wording.find(w=>w.value === String(value));
-      // Declared convention: the first wording of a signal is its healthy state.
-      const good=said ? said === figure.wording[0] : value;
-      const node=element("span",(good ? "✓ " : "✕ ")+(said ? said.text : value ? board.yes : board.no));
-      node.className=good ? "flag on" : "flag off";return node;
+      // A declared tone wins; without it, the first wording of a signal is its healthy state.
+      const tone=said?.tone ?? ((said ? said === figure.wording[0] : value) ? "good" : "attention");
+      return badge(said ? said.text : value ? board.yes : board.no,tone);
     }
     if(figure.kind === "count" && typeof value === "number") return element("span",value.toLocaleString("pt-BR"));
     if(figure.kind === "text" && typeof value === "string") {
       const known=figure.wording.find(w=>w.value === value);
+      if(known?.tone) return badge(known.text,known.tone);
+      if(!known && figure.show === "code") return element("code",value);
       return element("span",known ? known.text : value);
     }
+    if(figure.show === "code" && typeof value === "number") return element("code",String(value));
     if(figure.kind === "list" && Array.isArray(value)) {
-      if(!value.length) return element("span","Lista vazia.");
-      const list=element("ul");list.className="chips";
-      for(const item of value) list.append(element("li",String(item)));
+      if(!value.length) return element("span",figure.wording.find(w=>w.value === "@empty")?.text ?? "Lista vazia.");
+      const ordered=figure.show === "ordered";
+      const list=element(ordered ? "ol" : "ul");list.className=ordered ? "ordered" : "chips";
+      // Known items read as declared text; anything else stays as received.
+      for(const item of value) { const known=String(item).startsWith("@") ? undefined : figure.wording.find(w=>w.value === String(item));list.append(element("li",known ? known.text : String(item))); }
       return list;
     }
+    if(figure.kind === "tree" && Array.isArray(value)) return sequence(value,figure);
     return plain(value);
+  }
+  /** Pill with a glyph and its own text, so the state never depends on colour alone.
+   * @param {string} text @param {Tone} tone @returns {HTMLElement}
+   */
+  function badge(text,tone) {
+    const node=element("span",(tone === "good" ? "✓ " : tone === "attention" ? "✕ " : "○ ")+text);
+    node.className="flag "+(tone === "good" ? "on" : tone === "attention" ? "off" : "neutral");return node;
+  }
+  /** @param {Record<string,unknown>} source @param {Map<string,string>} words @param {string | undefined} omit @returns {HTMLElement} */
+  function properties(source,words,omit=undefined) {
+    const list=element("dl");list.className="sequence-fields";
+    // Declared label order first; keys without a label keep their received order.
+    const order=[...words.keys()];
+    const rank=(/** @type {string} */ key)=>{const found=order.indexOf("key:"+key);return found < 0 ? order.length : found;};
+    for(const [key,value] of Object.entries(source).sort((a,b)=>rank(a[0])-rank(b[0]))) {
+      if(key === omit) continue;
+      const row=element("div");const label=element("dt",words.get("key:"+key) ?? key);
+      const body=element("dd");
+      if(entry(value)) body.append(Object.keys(value).length ? properties(value,words) : element("span",words.get("@empty-object") ?? "Sem valores."));
+      else { const known=words.get("value:"+key+":"+String(value));body.append(known === undefined ? plain(value) : element("span",known)); }
+      row.append(label,body);list.append(row);
+    }
+    return list;
+  }
+  /** @param {unknown[]} values @param {Figure} figure @returns {HTMLElement} */
+  function sequence(values,figure) {
+    const words=new Map(figure.wording.map(w=>[w.value,w.text]));
+    const wrap=element("div");wrap.className="sequence-wrap";
+    const hintText=words.get("@hint");
+    if(hintText) { const hint=element("p",hintText);hint.className="sequence-hint";wrap.append(hint); }
+    if(!values.length) { const empty=element("p",words.get("@empty") ?? "Nenhum item cadastrado.");empty.className="sequence-empty";wrap.append(empty);return wrap; }
+    const list=element("ol");list.className="sequence-cards";
+    for(const [index,value] of values.entries()) {
+      if(!entry(value)) { const row=element("li");row.append(plain(value));list.append(row);continue; }
+      const row=element("li");row.className="sequence-card";
+      const name=(words.get("@item") ?? "Item")+" "+(index+1);
+      row.append(element("h3",name));
+      // Declared identity key: the card can receive that item's own actions.
+      const key=words.get("@identity"), identity=key ? value[key] : undefined;
+      if(typeof identity === "string") cards.set(identity,cards.has(identity) ? null : {node:row,name});
+      const headline=words.get("@headline");
+      const visibleHeadline=headline && typeof value[headline] === "string" ? headline : undefined;
+      if(visibleHeadline) {
+        const caption=element("p");caption.className="sequence-headline";
+        caption.append(element("span",words.get("@headline-label") ?? "Valor"),element("code",String(value[visibleHeadline])));
+        row.append(caption);
+      }
+      row.append(properties(value,words,visibleHeadline));list.append(row);
+    }
+    wrap.append(list);return wrap;
   }
   /** @param {Figure[]} figures @param {unknown} value */
   function facts(figures,value) {
     const list=element("dl");list.className="facts";
     for(const item of figures) {
       const row=element("div");const body=element("dd");body.append(figure(at(value,item.path),item));
+      if(item.kind === "tree") row.className="sequence-row";
       row.append(element("dt",item.label),body);list.append(row);
     }
     return list;
+  }
+  /** Declared groups of a tab: heading, short explanation, then its values.
+   * @param {{entries:Figure[],groups?:Group[]}} tab @param {unknown} value @returns {HTMLElement}
+   */
+  function grouped(tab,value) {
+    const groups=tab.groups ?? [];
+    if(!groups.length) return facts(tab.entries,value);
+    const wrap=element("div");wrap.className="facets";
+    /** @type {Set<string>} */ const placed=new Set();
+    for(const group of groups) {
+      /** @type {Figure[]} */ const members=[];
+      for(const id of group.members) { const found=tab.entries.find(e=>e.id === id);if(found && !placed.has(id)) {members.push(found);placed.add(id);} }
+      const block=element("section");block.className="facet";
+      block.append(element("h3",group.label));
+      if(group.note) { const note=element("p",group.note);note.className="facet-note";block.append(note); }
+      const metrics=members.filter(m=>m.show === "metric"), rest=members.filter(m=>m.show !== "metric");
+      if(metrics.length) { const cards=facts(metrics,value);cards.className="cards";block.append(cards); }
+      if(rest.length) block.append(facts(rest,value));
+      wrap.append(block);
+    }
+    // Never hide a declared value: anything outside the groups still appears.
+    const left=tab.entries.filter(e=>!placed.has(e.id));
+    if(left.length) wrap.append(facts(left,value));
+    return wrap;
   }
   /** @param {Pane | undefined} state @param {string} absentText */
   function report(state,absentText) {
@@ -2969,7 +3312,12 @@ export function mount(root) {
       back.addEventListener("click",()=>go({kind:"collection"}));
       const title=element("h2",here.title);title.tabIndex=-1;panel.append(back,title);
       report(pane,board.detail.gone);
-      if(pane?.tag === "ready") tabs(here,pane.value);
+      if(pane?.tag === "ready") {
+        // The heading follows the detail read, so a renamed item is not shown stale.
+        const named=board.detail.title ? at(pane.value,board.detail.title) : undefined;
+        if(typeof named === "string" && named) title.textContent=named;
+        tabs(here,pane.value);
+      }
       else if(pane?.tag === "absent") hint(panel,board.detail.gone,"info");
       else if(pane?.tag === "loading" || pane === undefined) hint(panel,"Carregando…");
       else hint(panel,pane.tag === "unavailable" ? board.unavailable : board.failure,"warn");
@@ -3051,8 +3399,8 @@ export function mount(root) {
       erase(body);
       const tab=list[place.tab];if(!tab) return;
       body.setAttribute("aria-labelledby","tab-"+place.tab);
-      if(tab.source === "main") { body.append(facts(tab.entries,main)); return; }
-      if(side?.tag === "ready") { body.append(facts(tab.entries,side.value)); return; }
+      if(tab.source === "main") { body.append(grouped(tab,main)); return; }
+      if(side?.tag === "ready") { body.append(grouped(tab,side.value)); return; }
       if(side?.tag === "absent") { hint(body,access.tag === "ready" ? access.board.detail.gone : ""); return; }
       if(side?.tag === "unavailable" || side?.tag === "broken") { hint(body,access.tag === "ready" ? (side.tag === "unavailable" ? access.board.unavailable : access.board.failure) : ""); return; }
       hint(body,"Carregando…");

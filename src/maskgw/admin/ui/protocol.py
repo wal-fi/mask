@@ -175,8 +175,10 @@ class Message(Closed):
 class Wording(Closed):
     """Texto fixo exibido no lugar de um valor enumerado conhecido."""
 
-    value: str = Field(min_length=1, max_length=60)
-    text: str = Field(min_length=1, max_length=120)
+    value: str = Field(min_length=1, max_length=120)
+    text: str = Field(min_length=1, max_length=160)
+    #: Tom visual declarado; ausente, o valor aparece como texto simples.
+    tone: Literal["good", "neutral", "attention"] | None = None
 
 
 class Figure(Closed):
@@ -186,7 +188,11 @@ class Figure(Closed):
     label: str = Field(min_length=1, max_length=120)
     path: list[Segment]
     kind: Literal["count", "flag", "text", "list", "tree"]
-    wording: list[Wording] = Field(default_factory=list, max_length=8)
+    wording: list[Wording] = Field(default_factory=list, max_length=32)
+    #: Forma de exibicao; so apresentacao, nunca muda o valor lido.
+    show: Literal["fact", "metric", "code", "ordered"] = "fact"
+    #: Texto para valor nulo ou ausente; sem ele vale o texto geral.
+    blank: str | None = Field(default=None, min_length=1, max_length=120)
 
 
 class Summary(Closed):
@@ -213,11 +219,21 @@ class Collection(Closed):
     open: str = Field(min_length=1, max_length=60)
 
 
+class Group(Closed):
+    """Agrupamento visual de itens de uma aba, com titulo e explicacao."""
+
+    label: str = Field(min_length=1, max_length=60)
+    note: str | None = Field(default=None, min_length=1, max_length=300)
+    members: list[str] = Field(min_length=1, max_length=16)
+
+
 class Tab(Closed):
     id: str
     label: str = Field(min_length=1, max_length=60)
     source: Literal["main", "extra"]
     entries: list[Figure] = Field(min_length=1, max_length=16)
+    #: Vazio: lista simples. Preenchido: cada item em exatamente um grupo.
+    groups: list[Group] = Field(default_factory=list, max_length=6)
 
 
 class Detail(Closed):
@@ -225,6 +241,8 @@ class Detail(Closed):
     call: str
     extra: str
     back: str = Field(min_length=1, max_length=60)
+    #: Caminho do nome na leitura principal; atualiza o titulo do detalhe.
+    title: list[Segment] | None = None
     tabs: list[Tab] = Field(min_length=1, max_length=6)
     gone: str = Field(min_length=1, max_length=400)
 
@@ -244,6 +262,22 @@ class Guide(Closed):
     steps: list[Step] = Field(min_length=2, max_length=10)
 
 
+class Section(Closed):
+    """Grupo de uma leitura da Politica v1: titulo, explicacao e valores."""
+
+    label: str = Field(min_length=1, max_length=60)
+    note: str | None = Field(default=None, min_length=1, max_length=400)
+    entries: list[Figure] = Field(min_length=1, max_length=12)
+
+
+class Page(Closed):
+    """Apresentacao de uma vista v1 ja aprovada. So arruma e nomeia o que a
+    vista le; nao cria leitura, chamada, controle nem caminho novo."""
+
+    view: str
+    sections: list[Section] = Field(min_length=1, max_length=8)
+
+
 class Console(Closed):
     brand: str = Field(min_length=1, max_length=60)
     tagline: str = Field(min_length=1, max_length=120)
@@ -258,6 +292,8 @@ class Console(Closed):
     collection: Collection
     detail: Detail
     guide: Guide
+    #: Politica v1 apresentada em grupos; vazio mantem a leitura original.
+    pages: list[Page] = Field(default_factory=list, max_length=6)
 
 
 class Presentation(Closed):
@@ -500,6 +536,7 @@ def validate_presentation(data: bytes) -> Presentation:
     for binding in result.bindings:
         _path(binding.model, binding.path, models)
     _console(result.console, calls, models)
+    _pages(result.console, result.views, calls, models)
     return result
 
 
@@ -511,7 +548,65 @@ def _console_ids(console: Console) -> list[str]:
         ids.append(tab.id)
         ids.extend(item.id for item in tab.entries)
     ids.extend(item.id for item in console.guide.steps)
+    for page in console.pages:
+        for section in page.sections:
+            ids.extend(item.id for item in section.entries)
     return ids
+
+
+def _ref(model: str, path: list[str], models: dict[str, Definition]) -> str:
+    """Modelo no fim de um caminho de campos de objeto (sem indice de lista)."""
+    for part in path:
+        shape = models[model].shape
+        while isinstance(shape, Sequence) and shape.type == "nullable":
+            model = shape.item
+            shape = models[model].shape
+        _need(isinstance(shape, Object) and isinstance(part, str))
+        if isinstance(shape, Object):
+            fields = [f for f in shape.fields if f.name == part]
+            _need(len(fields) == 1)
+            model = fields[0].ref
+    return model
+
+
+def _leaves(model: str, path: list[str], models: dict[str, Definition]) -> list[list[str]]:
+    """Todo caminho terminal sob um objeto; lista, texto e escolha sao folhas."""
+    shape = models[model].shape
+    while isinstance(shape, Sequence) and shape.type == "nullable":
+        shape = models[shape.item].shape
+    if not isinstance(shape, Object):
+        return [path]
+    found: list[list[str]] = []
+    for field in shape.fields:
+        found.extend(_leaves(field.ref, [*path, field.name], models))
+    return found
+
+
+def _pages(
+    console: Console, views: list[View], calls: dict[str, Call], models: dict[str, Definition]
+) -> None:
+    """Cada vista v1 no maximo uma vez; nenhum campo lido fica de fora e nenhum
+    campo fora das leituras aprovadas aparece."""
+    known = {view.id: view for view in views}
+    _need(len({page.view for page in console.pages}) == len(console.pages))
+    for page in console.pages:
+        _need(page.view in known)
+        view = known[page.view]
+        output = calls[view.call].output
+        reads = [control for control in view.controls if control.type == "read"]
+        _need(bool(reads) and all(control.model == output for control in reads))
+        roots = [[str(part) for part in control.path] for control in reads]
+        shown = []
+        for section in page.sections:
+            for entry in section.entries:
+                _path(output, entry.path, models)
+                _need(all(isinstance(part, str) for part in entry.path))
+                shown.append([str(part) for part in entry.path])
+        for path in shown:
+            _need(any(path[: len(root)] == root for root in roots))
+        for root in roots:
+            for leaf in _leaves(_ref(output, root, models), root, models):
+                _need(any(leaf[: len(path)] == path for path in shown))
 
 
 def _read(key: str, calls: dict[str, Call], *, identity: bool) -> Call:
@@ -542,7 +637,12 @@ def _console(console: Console, calls: dict[str, Call], models: dict[str, Definit
     main = _read(console.detail.call, calls, identity=True)
     extra = _read(console.detail.extra, calls, identity=True)
     _need(main.identity == extra.identity)
+    if console.detail.title is not None:
+        _need(isinstance(_path(main.output, console.detail.title, models), Text))
     for tab in console.detail.tabs:
         owner = main.output if tab.source == "main" else extra.output
         for entry in tab.entries:
             _path(owner, entry.path, models)
+        if tab.groups:
+            members = [member for group in tab.groups for member in group.members]
+            _need(sorted(members) == sorted(entry.id for entry in tab.entries))

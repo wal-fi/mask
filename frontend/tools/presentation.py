@@ -458,7 +458,7 @@ for name in sorted({*(item.value for item in AdminErrorCategory), *CLOSED_REASON
     state, text = message_overrides.get(name, (state, text))
     messages.append({"id": "t" + str(len(messages)), "name": name, "text": text, "state": state})
 # Fase 9, Etapa 5: somente depois de toda a autoria da v1 (IDs estaveis).
-console = extend(wire, model, put, calls)
+console = extend(wire, model, put, calls, views)
 data = {
     "format": 2,
     "models": models,

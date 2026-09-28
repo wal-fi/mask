@@ -55,8 +55,9 @@ código. A Etapa 6 e posteriores continuam sem autorização. A Etapa 5 é estri
 somente leitura: sem POST/PUT/DELETE novo, coleta de senha ou CRUD de
 datasources; o limite pós-conexão da D-090 continua aberto e bloqueia a
 ativação da v2 pelo operador (Etapa 7). Ela foi implementada (D-097–D-100) com
-evidência em `docs/PHASE-9-STAGE-5-VALIDATION.md`; as capturas em `docs/ux-v2/`
-precisam de aprovação antes de qualquer Etapa 6. Não iniciar UI v2, PGWire, variável de
+evidência em `docs/PHASE-9-STAGE-5-VALIDATION.md`; o refinamento visual (D-101,
+D-102) e as capturas em `docs/ux-v2/` foram aprovados pelo usuário em 2026-09-28, sem
+push. Isso não autoriza a Etapa 6. Não iniciar UI v2, PGWire, variável de
 ambiente nova, bind externo, extensão da tool MCP ou qualquer etapa posterior.
 Evidência: `docs/PHASE-8-STAGE-9-VALIDATION.md`.
 

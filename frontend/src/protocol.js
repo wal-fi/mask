@@ -71,8 +71,16 @@ function inspect(value, descriptor) {
   if (!records(summary.figures) || !records(collection.columns) || !records(detail.tabs) || !records(guide.steps)) return false;
   /** @type {Record<string,unknown>[]} */ const tabItems=[];
   for (const tab of detail.tabs) { if (!records(tab.entries)) return false; tabItems.push(...tab.entries); }
+  /** @type {Record<string,unknown>[]} */ const pageItems=[];
+  if (surface.pages !== undefined) {
+    if (!records(surface.pages)) return false;
+    for (const page of surface.pages) {
+      if (!records(page.sections)) return false;
+      for (const section of page.sections) { if (!records(section.entries)) return false; pageItems.push(...section.entries); }
+    }
+  }
   const all = [...value.models,...value.calls,...value.views,...value.editors,...value.bindings,...value.messages,
-    summary,collection,detail,guide,...summary.figures,...collection.columns,...detail.tabs,...tabItems,...guide.steps];
+    summary,collection,detail,guide,...summary.figures,...collection.columns,...detail.tabs,...tabItems,...guide.steps,...pageItems];
   /** @type {Record<string,unknown>[]} */ const controls=[];
   for (const owner of [...value.views,...value.editors]) {
     if (!records(owner.controls)) return false;
@@ -218,6 +226,46 @@ function inspect(value, descriptor) {
   for (const tab of detail.tabs) {
     const owner=tab.source === "main" ? main.output : aside.output;
     if (!records(tab.entries) || !tab.entries.every(e=>linked(owner,e.path))) return false;
+    // Declared groups only arrange entries: every entry belongs to one and only one group.
+    if (tab.groups !== undefined) {
+      if (!records(tab.groups)) return false;
+      const members=tab.groups.flatMap(g=>strings(g.members) ? g.members : [""]);
+      const ids=tab.entries.map(e=>e.id);
+      if (tab.groups.length && (members.length !== ids.length || new Set(members).size !== ids.length || !ids.every(id=>typeof id === "string" && members.includes(id)))) return false;
+    }
+  }
+  if (detail.title !== undefined && detail.title !== null && (!sequence(detail.title) || leaf(main.output,detail.title)?.type !== "string")) return false;
+  /** Terminal paths under an object; lists, text and choices end a path.
+   * @param {Record<string,unknown> | undefined} node @param {string[]} path @param {number} depth @returns {string[][]}
+   */
+  function ends(node,path,depth) {
+    while (node?.type === "nullable" && typeof node.item === "string") node=models.get(node.item);
+    if (depth > 16) return [["\u0000"]];
+    if (node?.type !== "object" || !records(node.fields)) return [path];
+    return node.fields.flatMap(f=>typeof f.ref === "string" && typeof f.name === "string" ? ends(models.get(f.ref),[...path,f.name],depth+1) : [["\u0000"]]);
+  }
+  /** @param {string[]} whole @param {string[]} start */
+  const starts=(whole,start)=>start.length <= whole.length && start.every((p,i)=>whole[i] === p);
+  // Política v1 pages only arrange approved readings: one page per view, paths
+  // inside that view's response, nothing read left out and nothing else shown.
+  if (surface.pages !== undefined && records(surface.pages)) {
+    /** @type {Set<unknown>} */ const pagesSeen=new Set();
+    for (const page of surface.pages) {
+      const view=value.views.find(v=>v.id === page.view);
+      if (!view || pagesSeen.has(page.view) || !records(view.controls) || !records(page.sections)) return false;
+      pagesSeen.add(page.view);
+      const output=calls.get(view.call)?.output;
+      const reads=view.controls.filter(c=>c.type === "read");
+      if (typeof output !== "string" || !reads.length || !reads.every(c=>c.model === output && strings(c.path))) return false;
+      const roots=reads.map(c=>strings(c.path) ? c.path : []);
+      /** @type {string[][]} */ const shown=[];
+      for (const section of page.sections) {
+        if (!records(section.entries)) return false;
+        for (const entry of section.entries) { if (!strings(entry.path) || !linked(output,entry.path)) return false; shown.push(entry.path); }
+      }
+      if (!shown.every(p=>roots.some(r=>starts(p,r)))) return false;
+      for (const root of roots) for (const end of ends(leaf(output,root),root,0)) if (!shown.some(p=>starts(end,p))) return false;
+    }
   }
   return true;
 }

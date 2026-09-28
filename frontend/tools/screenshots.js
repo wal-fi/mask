@@ -6,6 +6,7 @@
 // run explicitly and writes PNG files for human review.
 import { readFileSync, readdirSync, mkdirSync, rmSync } from "node:fs";
 import { randomBytes } from "node:crypto";
+import { strict as assert } from "node:assert";
 import { chromium, firefox, webkit } from "@playwright/test";
 import { responseFor } from "../test/samples.js";
 
@@ -32,19 +33,49 @@ const detail={catalog_revision:12,datasource:{...rows[0],
   connection:{host:"db-crm.example.internal",port:5432,database:"app_demo",username:"gateway_demo",tls:{mode:"verify-full",server_name:"db-crm.example.internal"}},
   credential:{configured:true},limits:{statement_timeout_ms:30000,max_rows:1000,max_sessions:8},effective_limits:{statement_timeout_ms:5000,max_rows:200},
   destination_policy:{allow_public:false,allow_loopback:false,allowed_hosts:[]}}};
+// Disabled and unpublished: neutral states, no generation, never checked.
+const idle={catalog_revision:12,datasource:{...rows[2],
+  connection:{host:"10.20.0.15",port:5432,database:"legado",username:"gateway_legado",tls:{mode:"disable",server_name:null}},
+  credential:{configured:true},limits:{statement_timeout_ms:10000,max_rows:500,max_sessions:2},effective_limits:{statement_timeout_ms:5000,max_rows:200},
+  destination_policy:{allow_public:false,allow_loopback:false,allowed_hosts:[]}}};
 const policy={catalog_revision:12,datasource_id:hex("a"),revision:4,policy:{
   masking:[{match:"cpf",mode:"contains",case_sensitive:false,transformer:"hmac_sha256",config:{}},{match:"email",mode:"contains",case_sensitive:false,transformer:"fixed",config:{value:"[EMAIL]"}}],
   exceptions:[{match:"tipo_cpf",mode:"exact",case_sensitive:false}],database:{statement_timeout_ms:5000,max_rows:200},
   sql:{allowed_pg_functions:[],denied_functions:["dblink_exec"]}}};
 
-/** @param {"rich"|"empty"|"off"|"blocked"} mode @returns {(path:string)=>{status:number,body:unknown}} */
+// Política v1: fictitious, coherent readings (one revision everywhere). The
+// "unadopted" variant is the file served as is: revision 0 and no IDs yet.
+/** @param {boolean} adopted */
+function legacy(adopted) {
+  const revision=adopted ? 3 : 0, rid=(/** @type {string} */ c)=>adopted ? "rul_"+c.repeat(32) : null, eid=(/** @type {string} */ c)=>adopted ? "exc_"+c.repeat(32) : null;
+  const masking=[{id:rid("1"),match:"cpf",mode:"contains",case_sensitive:false,transformer:"hmac_sha256",config:{}},
+    {id:rid("2"),match:"email",mode:"contains",case_sensitive:false,transformer:"fixed",config:{value:"[EMAIL]"}}];
+  const exceptions=[{id:eid("3"),match:"tipo_cpf",mode:"exact",case_sensitive:false}];
+  const document={revision,database:{statement_timeout_ms:5000,max_rows:200},masking,exceptions,sql:{allowed_pg_functions:[],denied_functions:["dblink_exec"]}};
+  return {
+    "/admin/v1/status":{adopted,revision,counters:{admin_operations_total:adopted ? 4 : 0,queries_total:128},runtime:{retired_runtimes_open:0,revision},
+      secrets:{admin_token:"configured",database_dsn:"configured",hmac_sha256_key:"configured"}},
+    "/admin/v1/config":{adopted,revision,config:document},
+    "/admin/v1/rules":{adopted,revision,rules:masking.map((r,position)=>({...r,position}))},
+    "/admin/v1/exceptions":{adopted,revision,exceptions:exceptions.map((r,position)=>({...r,position}))},
+    "/admin/v1/protected":{revision,allowed_pg_functions:[],denied_function_prefixes:["dblink","lo_","pg_ls_","pg_read_"],
+      denied_functions:["dblink_exec","lo_export","lo_import","pg_read_file","set_config"],denied_relations:["pg_statistic","pg_stats","pg_stats_ext"],
+      editable:false,pg_namespace_default:"deny",pipeline:["DERIVED","EXCEPTION","MASKING","ORIGINAL"],
+      session:{provenance_capability_required:true,read_only:true,statement_timeout_enforced_by:"postgresql"},unmatched_policy:"allow",
+      validator_rules:["exactly one executable statement","the root node must be a SELECT statement","no other statement node anywhere in the tree, including nested CTEs","INTO and locking clauses are rejected at any depth"]},
+  };
+}
+/** @param {"rich"|"empty"|"off"|"blocked"|"unadopted"} mode @returns {(path:string)=>{status:number,body:unknown}} */
 function answers(mode) {
+  const first=/** @type {Record<string,unknown>} */ (legacy(mode !== "unadopted"));
   return path=>{
+    if (Object.hasOwn(first,path)) return {status:200,body:first[path]};
     if (mode === "off" && path.startsWith("/admin/v2/")) return {status:404,body:{error:"NOT_FOUND",detail:"x"}};
     if (mode === "blocked" && path !== "/admin/v2/status" && path.startsWith("/admin/v2/")) return {status:503,body:{error:"CATALOG_BLOCKED",detail:"x"}};
     if (path === "/admin/v2/status") return {status:200,body:mode === "blocked" ? blocked : mode === "empty" ? {...summary,catalog_revision:1,datasources:{total:0,enabled:0,published:0},registry:{...summary.registry,published:0,sessions:0}} : summary};
     if (path === "/admin/v2/datasources") return {status:200,body:{catalog_revision:12,datasources:mode === "empty" ? [] : rows}};
     if (path === "/admin/v2/datasources/"+hex("a")) return {status:200,body:detail};
+    if (path === "/admin/v2/datasources/"+hex("c")) return {status:200,body:idle};
     if (path === "/admin/v2/datasources/"+hex("a")+"/policy") return {status:200,body:policy};
     const id=firstPrefix[path];
     if (id) return {status:200,body:responseFor(id)};
@@ -54,7 +85,7 @@ function answers(mode) {
 const files={"/admin/ui":["index.html","text/html; charset=utf-8"],"/admin/ui/assets/ui.js":["ui.js","text/javascript; charset=utf-8"],
   "/admin/ui/assets/ui.css":["ui.css","text/css; charset=utf-8"],"/admin/ui/presentation.json":["presentation.json","application/json"]};
 
-/** @param {import("@playwright/test").Page} page @param {"rich"|"empty"|"off"|"blocked"} mode */
+/** @param {import("@playwright/test").Page} page @param {"rich"|"empty"|"off"|"blocked"|"unadopted"} mode */
 async function serve(page,mode) {
   const reply=answers(mode);
   await page.route(origin+"/**",async route=>{
@@ -79,12 +110,20 @@ async function go(page,name) {
   await page.getByRole("navigation").getByRole("button",{name,exact:true}).click();
   await page.waitForFunction(()=>document.querySelector("[role=status]")?.textContent !== "Carregando…");
 }
+/** @param {import("@playwright/test").Page} page */
+async function overview(page) {
+  const body=page.getByRole("tabpanel");
+  assert.deepEqual(await body.locator("h3").allTextContents(),["Identidade","Estado no Gateway","Atividade do runtime","Última verificação de conexão"]);
+  assert.equal(await body.getByText("Nome",{exact:true}).count(),0);
+  assert.equal(await body.locator(".flag.neutral",{hasText:"Nunca verificado"}).count(),1);
+}
 /** @param {import("@playwright/test").Page} page @param {string} file */
 async function shot(page,file) { await page.screenshot({path:new URL(file+".png",out).pathname.replace(/^\/([A-Za-z]:)/,"$1"),fullPage:true,animations:"disabled"}); }
 
 // Only the current captures are replaced; the "antes" comparison set is kept.
 mkdirSync(out,{recursive:true});
 for (const name of readdirSync(out)) if (name.endsWith(".png")) rmSync(new URL(name,out));
+/** @type {[string,string][]} */ const V1_PAGES=[["Configuração","12-v1-configuracao"],["Regras","13-v1-regras"],["Exceções","14-v1-excecoes"],["Banco","15-v1-banco"],["Política SQL","16-v1-politica-sql"]];
 const engines={chromium,firefox,webkit};
 /** @type {string[]} */ const made=[];
 for (const [engine,launcher] of Object.entries(engines)) {
@@ -105,20 +144,39 @@ for (const [engine,launcher] of Object.entries(engines)) {
       await page.keyboard.press("Escape");
     }
     await go(page,"Datasources");await shot(page,tag+"-03-lista");made.push(tag+"-03-lista");
+    if (engine !== "chromium") {
+      await page.getByRole("button",{name:"Ver detalhes: CRM de demonstração",exact:true}).click();
+      await page.waitForFunction(()=>document.querySelector("[role=status]")?.textContent !== "Carregando…");
+      await overview(page);await shot(page,tag+"-05-detalhe-visao");made.push(tag+"-05-detalhe-visao");
+    }
     if (engine === "chromium") {
       await page.getByLabel("Buscar por nome ou alias",{exact:true}).fill("zzz");await shot(page,tag+"-04-busca-vazia");made.push(tag+"-04-busca-vazia");
       await page.getByLabel("Buscar por nome ou alias",{exact:true}).fill("");
       await page.getByRole("button",{name:"Ver detalhes: CRM de demonstração",exact:true}).click();
       await page.waitForFunction(()=>document.querySelector("[role=status]")?.textContent !== "Carregando…");
+      await overview(page);
       await shot(page,tag+"-05-detalhe-visao");made.push(tag+"-05-detalhe-visao");
       await page.getByRole("tab",{name:"Conexão",exact:true}).click();await shot(page,tag+"-06-detalhe-conexao");made.push(tag+"-06-detalhe-conexao");
       await page.getByRole("tab",{name:"Masking",exact:true}).click();await page.waitForFunction(()=>document.querySelector("[role=tabpanel]")?.textContent?.includes("cpf"));
+      assert.equal(await page.locator("[role=tabpanel] .sequence-card").count(),3);
+      assert.match(String(await page.getByRole("tabpanel").textContent()),/Exceções têm prioridade/);
+      assert.doesNotMatch(String(await page.getByRole("tabpanel").textContent()),/case_sensitive|hmac_sha256/);
       await shot(page,tag+"-07-detalhe-masking");made.push(tag+"-07-detalhe-masking");
       await page.getByRole("tab",{name:"Limites",exact:true}).click();await shot(page,tag+"-08-detalhe-limites");made.push(tag+"-08-detalhe-limites");
+      await page.getByRole("tab",{name:"SQL",exact:true}).click();
+      assert.match(String(await page.getByRole("tabpanel").textContent()),/a política padrão continua valendo/);
+      await shot(page,tag+"-08b-detalhe-sql");made.push(tag+"-08b-detalhe-sql");
       await go(page,"Novo datasource");await shot(page,tag+"-09-prototipo-inicio");made.push(tag+"-09-prototipo-inicio");
       for (let i=0;i<6;i++) await page.getByRole("button",{name:"Próximo",exact:true}).click();
       await shot(page,tag+"-10-prototipo-revisao");made.push(tag+"-10-prototipo-revisao");
+      await go(page,"Datasources");
+      await page.getByRole("button",{name:"Ver detalhes: Legado desabilitado",exact:true}).click();
+      await page.waitForFunction(()=>document.querySelector("[role=status]")?.textContent !== "Carregando…");
+      assert.match(String(await page.getByRole("tabpanel").textContent()),/Desabilitado.*Não publicado.*Nenhuma/s);
+      await shot(page,tag+"-05b-detalhe-desabilitado");made.push(tag+"-05b-detalhe-desabilitado");
       await go(page,"Visão geral");await shot(page,tag+"-11-politica-v1");made.push(tag+"-11-politica-v1");
+      // The other Política v1 readings (Configuração, Regras, Exceções, Banco, Política SQL).
+      for (const [label,slug] of V1_PAGES) { await go(page,label);await shot(page,tag+"-"+slug);made.push(tag+"-"+slug); }
     }
     await context.close();
   }
@@ -127,9 +185,26 @@ for (const [engine,launcher] of Object.entries(engines)) {
       const context=await browser.newContext({viewport:{width,height:width === 320 ? 900 : 860},colorScheme:"light",reducedMotion:"reduce",locale:"pt-BR"});
       const page=await context.newPage();await serve(page,mode);
       await page.goto(origin+"/admin/ui");await enter(page);
+      if (mode === "blocked") {
+        await go(page,"Painel");
+        assert.equal(await page.locator(".signals .flag.off").count(),2);
+        const board="chromium-estado-painel-bloqueado"+(width === 320 ? "-320" : "");
+        await shot(page,board);made.push(board);
+      }
       if (mode !== "off") await go(page,"Datasources"); else await go(page,"Painel");
       const name="chromium-estado-"+(mode === "empty" ? "vazio" : mode === "off" ? "catalogo-desligado" : "catalogo-bloqueado")+(width === 320 ? "-320" : "");
       await shot(page,name);made.push(name);
+      await context.close();
+    }
+  }
+  if (engine === "chromium") {
+    for (const [theme,width] of /** @type {const} */ ([["light",1280],["light",320]])) {
+      const context=await browser.newContext({viewport:{width,height:width === 320 ? 900 : 860},colorScheme:theme,reducedMotion:"reduce",locale:"pt-BR"});
+      const page=await context.newPage();await serve(page,"unadopted");
+      await page.goto(origin+"/admin/ui");await enter(page);
+      for (const [label,slug] of /** @type {[string,string][]} */ ([["Visão geral","v1-nao-adotada-visao"],["Regras","v1-nao-adotada-regras"]])) {
+        await go(page,label);const name="chromium-estado-"+slug+(width === 320 ? "-320" : "");await shot(page,name);made.push(name);
+      }
       await context.close();
     }
   }

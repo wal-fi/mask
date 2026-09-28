@@ -138,3 +138,87 @@ test("stored hostile text remains inert in filtered reorder at narrow width",asy
     await page.getByRole("button",{name:"Mover para cima",exact:true}).press("Enter");await save(page);await finish(page);await command("verify:3");requireTrue(!external);
   },mutable);
 });
+
+// Política v1 (D-102): each card holds only its own Editar/Excluir. The write a
+// button sends must name exactly the identity shown in that card, before and
+// after reordering, editing and removal; a duplicated identity gets no actions.
+test("item actions stay with their own card across reorder, edit and removal",async({},info)=>{
+  test.setTimeout(120000);
+  await scenario(engine(info.project.name),async(page,origin,token)=>{
+    /** @type {{method:string,path:string}[]} */ const writes=[];
+    page.on("request",r=>{const path=new URL(r.url()).pathname;if(r.method()!=="GET" && !path.endsWith(":validate"))writes.push({method:r.method(),path});});
+    await enter(page,origin,token);await adopt(page);
+    /** @param {string} name @param {string} item @param {RegExp} pattern @param {string} field */
+    const cards=async(name,item,pattern,field)=>{
+      await navigate(page,name);
+      const list=page.locator("li.sequence-card");/** @type {{id:string,value:string}[]} */ const found=[];
+      for(let i=0;i<await list.count();i++) {
+        const card=list.nth(i),text=(await card.textContent()) ?? "",id=text.match(pattern)?.[0] ?? "";
+        const value=(await card.locator("dt:text-is('"+field+"') + dd").first().textContent())?.trim() ?? "";
+        requireTrue(id !== "" && value !== "","card identity");
+        requireTrue(await card.getByRole("group",{name:"Ações: "+item+" "+(i+1),exact:true}).count() === 1,"card group");
+        requireTrue(await card.getByRole("button",{name:"Editar",exact:true}).count() === 1 && await card.getByRole("button",{name:"Excluir",exact:true}).count() === 1,"card buttons");
+        found.push({id,value});
+      }
+      requireTrue(await page.getByRole("heading",{name:/^Item [0-9]+$/}).count() === 0,"no detached rows");
+      requireTrue(await page.getByRole("button",{name:"Editar",exact:true}).count() === found.length,"no extra actions");
+      requireTrue(new Set(found.map(f=>f.id)).size === found.length,"distinct identities");
+      return found;
+    };
+    /** Opens the card's own Editar and returns the value its form was loaded with. @param {number} index @param {string} label */
+    const opened=async(index,label)=>{
+      await page.locator("li.sequence-card").nth(index).getByRole("button",{name:"Editar",exact:true}).click();
+      const loaded=await page.getByRole("dialog").getByLabel(label,{exact:true}).inputValue();
+      await page.getByRole("dialog").getByRole("button",{name:"Cancelar",exact:true}).click();
+      const discard=page.getByRole("button",{name:"Descartar",exact:true});if(await discard.isVisible()) await discard.click();
+      return loaded;
+    };
+    const rule=/rul_[0-9a-f]{32}/;
+    const before=await cards("Regras","Regra",rule,"Valor substituto");
+    requireTrue(JSON.stringify(before.map(c=>c.value)) === JSON.stringify(["first","second"]),"initial order");
+    for(const [index,card] of before.entries()) requireTrue(await opened(index,"value") === card.value,"edit loads own card");
+
+    // Reorder: identities travel with their cards, never with the positions.
+    await page.getByRole("button",{name:"Reordenar regras",exact:true}).click();await page.getByRole("button",{name:"Mover para baixo",exact:true}).first().click();
+    await page.getByRole("button",{name:"Validar proposta",exact:true}).click();await outcome(page,"Conteúdo e compilação válidos");await save(page);await finish(page);
+    const after=await cards("Regras","Regra",rule,"Valor substituto");
+    requireTrue(JSON.stringify(after.map(c=>c.id)) === JSON.stringify([before[1]?.id,before[0]?.id]),"identities follow cards");
+    for(const [index,card] of after.entries()) requireTrue(await opened(index,"value") === card.value,"edit after reorder");
+
+    // Edit the first card: the replacement names that card's identity only.
+    let count=writes.length;
+    await page.locator("li.sequence-card").nth(0).getByRole("button",{name:"Editar",exact:true}).click();
+    await page.getByRole("dialog").getByLabel("value",{exact:true}).fill("segundo");
+    await page.getByRole("button",{name:"Salvar",exact:true}).click();await finish(page);
+    requireTrue(writes.length === count+1 && writes[count]?.method === "PUT" && writes[count]?.path === "/admin/v1/rules/"+after[0]?.id,"edit targets own identity");
+    const edited=await cards("Regras","Regra",rule,"Valor substituto");
+    requireTrue(JSON.stringify(edited) === JSON.stringify([{id:after[0]?.id,value:"segundo"},{id:after[1]?.id,value:"first"}]),"edit changed own card only");
+
+    // Remove the second card: the deletion names that card's identity only.
+    count=writes.length;
+    await page.locator("li.sequence-card").nth(1).getByRole("button",{name:"Excluir",exact:true}).click();
+    await page.getByRole("dialog").getByRole("button",{name:"Excluir",exact:true}).click();await finish(page);
+    requireTrue(writes.length === count+1 && writes[count]?.method === "DELETE" && writes[count]?.path === "/admin/v1/rules/"+after[1]?.id,"delete targets own identity");
+    const left=await cards("Regras","Regra",rule,"Valor substituto");
+    requireTrue(JSON.stringify(left) === JSON.stringify([{id:after[0]?.id,value:"segundo"}]),"removed card is gone, the other intact");
+    requireTrue(await opened(0,"value") === "segundo","remaining edit loads remaining card");
+
+    // Exceptions use the same association.
+    const kept=await cards("Exceções","Exceção",/exc_[0-9a-f]{32}/,"Correspondência");
+    requireTrue(kept.length === 1 && await opened(0,"match") === "keep","exception actions stay with their card");
+
+    // A repeated identity is refused by the reader before any card or action exists
+    // (identity binding); the screen's own ambiguity guard is a second layer.
+    await page.route("**/admin/v1/rules",async route=>{
+      const response=await route.fetch();/** @type {{rules:Record<string,unknown>[]}} */ const data=await response.json();
+      const first=data.rules[0];if(!first) throw new Error("Fixture failed.");
+      data.rules=[first,{...first,position:1,config:{value:"clone"}}];await route.fulfill({response,json:data});
+    });
+    count=writes.length;
+    await page.getByRole("navigation").getByRole("button",{name:"Regras",exact:true}).click();
+    await expect.poll(async()=> (await page.getByRole("status").first().textContent())?.includes("indisponível")).toBe(true);
+    requireTrue(await page.locator("li.sequence-card").count() === 0,"repeated identity renders no card");
+    requireTrue(await page.getByRole("button",{name:"Editar",exact:true}).count() === 0 && await page.getByRole("button",{name:"Excluir",exact:true}).count() === 0,"repeated identity offers no action");
+    await page.unrouteAll();requireTrue(writes.length === count,"no write from a refused reading");
+  },mutable);
+});

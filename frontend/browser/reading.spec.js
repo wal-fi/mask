@@ -102,7 +102,8 @@ test("loading, empty, sanitized error and explicit retry",async({},info)=>{
     await page.getByRole("button",{name:"Regras",exact:true}).click();
     await expect.poll(async()=> (await page.getByRole("status").textContent())?.includes("indisponível")).toBe(true);
     await clean(page,token);await page.unrouteAll();await page.getByRole("button",{name:"Atualizar",exact:true}).click();await ready(page);
-    requireTrue(await page.getByText("Lista vazia.",{exact:true}).count()===1);
+    // Política v1 presentation (D-102): the empty rule list names what is missing, still exactly once.
+    requireTrue(await page.getByText("Nenhuma regra de mascaramento cadastrada.",{exact:true}).count()===1);
   },readonly);
 });
 

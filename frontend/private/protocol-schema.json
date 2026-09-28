@@ -404,6 +404,14 @@
           "title": "No",
           "type": "string"
         },
+        "pages": {
+          "items": {
+            "$ref": "#/$defs/Page"
+          },
+          "maxItems": 6,
+          "title": "Pages",
+          "type": "array"
+        },
         "summary": {
           "$ref": "#/$defs/Summary"
         },
@@ -624,6 +632,28 @@
           "minItems": 1,
           "title": "Tabs",
           "type": "array"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Title"
         }
       },
       "required": [
@@ -720,6 +750,20 @@
       "additionalProperties": false,
       "description": "Um valor exibido: contagem, sim/nao ou texto. Caminho, nunca expressao.",
       "properties": {
+        "blank": {
+          "anyOf": [
+            {
+              "maxLength": 120,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Blank"
+        },
         "id": {
           "title": "Id",
           "type": "string"
@@ -755,11 +799,22 @@
           "title": "Path",
           "type": "array"
         },
+        "show": {
+          "default": "fact",
+          "enum": [
+            "fact",
+            "metric",
+            "code",
+            "ordered"
+          ],
+          "title": "Show",
+          "type": "string"
+        },
         "wording": {
           "items": {
             "$ref": "#/$defs/Wording"
           },
-          "maxItems": 8,
+          "maxItems": 32,
           "title": "Wording",
           "type": "array"
         }
@@ -771,6 +826,47 @@
         "kind"
       ],
       "title": "Figure",
+      "type": "object"
+    },
+    "Group": {
+      "additionalProperties": false,
+      "description": "Agrupamento visual de itens de uma aba, com titulo e explicacao.",
+      "properties": {
+        "label": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "members": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 16,
+          "minItems": 1,
+          "title": "Members",
+          "type": "array"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Note"
+        }
+      },
+      "required": [
+        "label",
+        "members"
+      ],
+      "title": "Group",
       "type": "object"
     },
     "Guide": {
@@ -905,6 +1001,31 @@
       "title": "Object",
       "type": "object"
     },
+    "Page": {
+      "additionalProperties": false,
+      "description": "Apresentacao de uma vista v1 ja aprovada. So arruma e nomeia o que a\nvista le; nao cria leitura, chamada, controle nem caminho novo.",
+      "properties": {
+        "sections": {
+          "items": {
+            "$ref": "#/$defs/Section"
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "title": "Sections",
+          "type": "array"
+        },
+        "view": {
+          "title": "View",
+          "type": "string"
+        }
+      },
+      "required": [
+        "view",
+        "sections"
+      ],
+      "title": "Page",
+      "type": "object"
+    },
     "Projection": {
       "additionalProperties": false,
       "properties": {
@@ -970,6 +1091,47 @@
         "target"
       ],
       "title": "Projection",
+      "type": "object"
+    },
+    "Section": {
+      "additionalProperties": false,
+      "description": "Grupo de uma leitura da Politica v1: titulo, explicacao e valores.",
+      "properties": {
+        "entries": {
+          "items": {
+            "$ref": "#/$defs/Figure"
+          },
+          "maxItems": 12,
+          "minItems": 1,
+          "title": "Entries",
+          "type": "array"
+        },
+        "label": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "maxLength": 400,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Note"
+        }
+      },
+      "required": [
+        "label",
+        "entries"
+      ],
+      "title": "Section",
       "type": "object"
     },
     "Sequence": {
@@ -1087,6 +1249,14 @@
           "maxItems": 16,
           "minItems": 1,
           "title": "Entries",
+          "type": "array"
+        },
+        "groups": {
+          "items": {
+            "$ref": "#/$defs/Group"
+          },
+          "maxItems": 6,
+          "title": "Groups",
           "type": "array"
         },
         "id": {
@@ -1259,13 +1429,30 @@
       "description": "Texto fixo exibido no lugar de um valor enumerado conhecido.",
       "properties": {
         "text": {
-          "maxLength": 120,
+          "maxLength": 160,
           "minLength": 1,
           "title": "Text",
           "type": "string"
         },
+        "tone": {
+          "anyOf": [
+            {
+              "enum": [
+                "good",
+                "neutral",
+                "attention"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tone"
+        },
         "value": {
-          "maxLength": 60,
+          "maxLength": 120,
           "minLength": 1,
           "title": "Value",
           "type": "string"
