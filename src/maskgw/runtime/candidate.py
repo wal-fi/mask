@@ -113,6 +113,22 @@ class AdapterFactory(Protocol):
     ) -> PostgresAdapter: ...
 
 
+class Verifier(Protocol):
+    """Verifica a conexao/sessao/capabilities de um candidato ja construido.
+
+    Injetavel: em producao (Fase 9, Etapa 7) e o gate em processo filho com
+    prazo efetivo (`maskgw.datasource.verify`), que limita UMA verificacao ao
+    prazo dela mais o orcamento de cleanup. Sem executor dedicado, a chamada
+    continua bloqueando o event loop administrativo durante esse tempo, e o
+    shutdown inteiro nao herda teto algum deste gate; nos testes de
+    concorrencia e o padrao em processo
+    (`verify_prepared`), que usa o adapter da factory injetavel. Levanta somente
+    `DatasourceCandidateError(CONNECTION`/`CAPABILITY)`.
+    """
+
+    def __call__(self, prepared: PreparedRuntime) -> None: ...
+
+
 def default_adapter_factory(
     conninfo: str,
     *,
@@ -244,6 +260,15 @@ class PreparedRuntime:
         """Adapter novo e NAO conectado para uma sessao ou verificacao."""
         return self._adapter_factory(self._conninfo, config=self._config, engine=self._engine)
 
+    def verify_target(self) -> tuple[str, int]:
+        """Alvo e limite para o gate de verificacao (conninfo com segredo).
+
+        So o verifier em processo filho o consome; nunca vai para log, repr ou
+        resposta. Devolve o MESMO `conninfo` e `statement_timeout` que uma sessao
+        real usaria, para que o filho prove exatamente o alvo publicado.
+        """
+        return self._conninfo, self._config.database.statement_timeout_ms
+
     def __repr__(self) -> str:
         return f"PreparedRuntime(max_sessions={self._max_sessions}, target=<redacted>)"
 
@@ -288,11 +313,15 @@ def build_candidate(
     secrets: SecretProvider | None = None,
     resolver: AddressResolver | None = None,
     adapter_factory: AdapterFactory | None = None,
+    verifier: Verifier | None = None,
 ) -> PreparedRuntime:
     """Constroi e VERIFICA um candidato. Nunca publica nem persiste.
 
-    Levanta somente `DatasourceCandidateError`, sem cadeia de excecao.
+    Levanta somente `DatasourceCandidateError`, sem cadeia de excecao. `verifier`
+    e o gate pos-conexao: `None` usa `verify_prepared` (em processo); a producao
+    injeta o gate em processo filho com prazo (Fase 9, Etapa 7).
     """
+    verify = verifier if verifier is not None else verify_prepared
     factory = adapter_factory if adapter_factory is not None else default_adapter_factory
     failure: CandidateFailure | None = None
 
@@ -327,7 +356,7 @@ def build_candidate(
     if failure is not None or prepared is None:
         _raise_candidate(failure or CandidateFailure.POLICY)
 
-    verify_prepared(prepared)
+    verify(prepared)
     return prepared
 
 
@@ -366,14 +395,17 @@ def verify_policy(
         _raise_candidate(failure)
 
 
-def verify_prepared(prepared: PreparedRuntime) -> None:
-    """Abre uma conexao de verificacao e a fecha, sempre.
+def verify_adapter(adapter: PostgresAdapter) -> None:
+    """Conecta, confere os limites e fecha, mapeando a falha para a categoria.
 
-    O `connect()` do adapter confere read-only, `statement_timeout` e a
-    capability de proveniencia; qualquer falha fecha a conexao antes de sair.
+    Primitiva compartilhada e UNICA da verificacao pos-conexao: `verify_prepared`
+    (pai, com o adapter da factory injetavel) e o caminho em processo filho
+    (`maskgw.datasource.verify`, com um adapter real do `conninfo`) chamam esta
+    funcao. As consultas de sessao e capability vivem em
+    `PostgresAdapter.connect()`; nao ha copia divergente. Levanta somente
+    `DatasourceCandidateError(CONNECTION` ou `CAPABILITY)`, sem cadeia (D-017).
     """
     failure: CandidateFailure | None = None
-    adapter = prepared.new_adapter()
     try:
         adapter.connect()
     except CapabilityError:
@@ -384,6 +416,16 @@ def verify_prepared(prepared: PreparedRuntime) -> None:
         adapter.close()
     if failure is not None:
         _raise_candidate(failure)
+
+
+def verify_prepared(prepared: PreparedRuntime) -> None:
+    """Abre uma conexao de verificacao e a fecha, sempre.
+
+    O adapter vem da factory injetavel do `PreparedRuntime` (fakes nos testes de
+    concorrencia); a verificacao em si e a mesma `verify_adapter` que o processo
+    filho usa, sem copia das consultas de capability.
+    """
+    verify_adapter(prepared.new_adapter())
 
 
 def _raise_candidate(category: CandidateFailure) -> NoReturn:
@@ -400,10 +442,12 @@ __all__ = [
     "DatasourceCandidateError",
     "DatasourceRuntimeError",
     "PreparedRuntime",
+    "Verifier",
     "build_candidate",
     "build_conninfo",
     "default_adapter_factory",
     "effective_database_settings",
+    "verify_adapter",
     "verify_policy",
     "verify_prepared",
 ]

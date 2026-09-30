@@ -64,6 +64,7 @@ testavel — sem abrir porta nenhuma, e porque `admin_http` implica
 
 from __future__ import annotations
 
+import contextlib
 import threading
 from collections.abc import Mapping
 from pathlib import Path
@@ -614,19 +615,63 @@ def _close_partial(
     finally:
         try:
             if datasources is not None:
-                datasources.close()
+                _close_datasources_after_failure(datasources)
         finally:
             if store is not None:
                 store.close()
 
 
+def _close_datasources_after_failure(datasources: DatasourceRuntime) -> None:
+    """Fecha o catalogo numa falha de startup sem trocar o erro original.
+
+    Um recolhimento de verificacao nao confirmado nao substitui a falha que
+    derrubou o startup: o resto do fechamento ja aconteceu, o supervisor nao se
+    declara fechado e o registro do filho segue com dono no ledger do processo.
+    """
+    from maskgw.datasource.verify import VerificationShutdownIncompleteError  # noqa: PLC0415
+
+    with contextlib.suppress(VerificationShutdownIncompleteError):
+        datasources.close()
+
+
 def _open_datasources(
     settings: DatasourceCatalogSettings, *, secrets: SecretProvider | None
 ) -> DatasourceRuntime:
-    """Passos 3-7 da §11. Importa o catalogo SO quando a capacidade e pedida."""
+    """Passos 3-7 da §11. Importa o catalogo SO quando a capacidade e pedida.
+
+    Em producao — sem `adapter_factory` nem `verifier` injetados — a verificacao
+    pos-conexao usa o gate em processo filho com prazo (Fase 9, Etapa 7, D-090):
+    um `VerificationSupervisor` proprio desta composicao, dono do lifecycle dos
+    filhos, que passa a pertencer ao `DatasourceRuntime`. Um teste que injeta
+    `adapter_factory` (adapters duble) ou `verifier` mantem a injecao e nao
+    compoe supervisor algum.
+
+    Falha ANTES de o `DatasourceRuntime` existir fecha o supervisor aqui. Um
+    recolhimento nao confirmado nao substitui o erro original: o supervisor nao
+    se declara fechado e o registro segue com dono no ledger do processo, que o
+    retenta na proxima verificacao ou shutdown.
+    """
+    from dataclasses import replace  # noqa: PLC0415
+
     from maskgw.runtime.datasource_service import open_datasource_runtime  # noqa: PLC0415
 
-    return open_datasource_runtime(settings, secrets=secrets)
+    if settings.verifier is not None or settings.adapter_factory is not None:
+        return open_datasource_runtime(settings, secrets=secrets)
+
+    from maskgw.datasource.verify import (  # noqa: PLC0415
+        VerificationShutdownIncompleteError,
+        VerificationSupervisor,
+    )
+
+    supervisor = VerificationSupervisor()
+    try:
+        return open_datasource_runtime(
+            replace(settings, verifier=supervisor), secrets=secrets, verification=supervisor
+        )
+    except BaseException:
+        with contextlib.suppress(VerificationShutdownIncompleteError):
+            supervisor.close()
+        raise
 
 
 def _build_datasource_gateway(datasources: DatasourceRuntime, audit: AuditLog) -> DatasourceGateway:

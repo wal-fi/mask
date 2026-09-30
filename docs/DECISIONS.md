@@ -2757,3 +2757,44 @@ A reordenação de regras é por botões nomeados ("Mover para cima: Regra N"); 
 foco acompanha o item movido e, no limite, passa ao outro sentido. O assistente
 fica na página, com os passos da §9.1 e um campo em um e só um passo. A UI mostra
 que um único acesso administrativo controla todos os datasources (D-068).
+
+# Fase 9 — infraestrutura de segurança da Etapa 7 (em andamento)
+
+## D-107 — Ownership supervisionado e retenção estrita de recursos incertos
+
+**Estado:** as políticas estritas para início de thread e criação de processo
+incertos foram aprovadas explicitamente pelo usuário em 2026-10-07. Isso não
+aprova o fechamento da Etapa 7, commit, push, listener PGWire ou ativação da v2.
+Evidência: `docs/PHASE-9-STAGE-7-VALIDATION.md`, §§1.3, 4.0 e 5.
+
+O ledger do processo conserva o registro de verificação e a vaga consumida
+até comprovar o término do filho e das threads de I/O e o fechamento dos dois
+pipes solicitados. A liberação ocorre exatamente uma vez. Recolhimento
+incompleto recusa a verificação e não declara o supervisor fechado; recursos
+pendentes continuam com dono e são retentados antes de admitir verificações
+e no shutdown. Uma coleta usa token próprio por registro e `try/finally`.
+
+As threads são adotadas antes de `start()`, e a tentativa é registrada antes
+da chamada. Cancelar seu alvo evita I/O tardio, mas não prova término físico.
+`ident is None` ou `is_alive()` falso durante o bootstrap não autorizam liberar
+uma tentativa incerta. O objeto `Popen` também é adotado antes de executar o
+construtor, por uma subclasse que usa a API pública. Uma exceção após expor o
+processo não o tira do alcance do supervisor. Tenta-se encerrar o processo
+alcançável e fechar cada pipe conhecido mesmo quando outro pipe permanece
+incerto; falhas desses métodos não provam término nem fechamento. Isso não
+autoriza liberar a vaga sem confirmar todos os recursos.
+
+Sem prova suficiente de término, o registro e a vaga permanecem retidos.
+Uma tentativa que nunca chega a expor seu estado pode consumir capacidade até
+o reinício, inclusive um erro comum de criação dentro do construtor. O usuário
+aceitou esse custo conservador: quatro retenções podem esgotar a capacidade
+de verificação. Não há retry de escrita, reinício automático ou mecanismo de
+controle de processos novo no SO.
+
+Não há garantia absoluta contra órfãos: a API pública não permite alcançar um
+filho cuja criação nativa tenha sido interrompida antes de expor PID/handle.
+A janela assíncrona de admissão em `_admit` também permanece documentada,
+podendo perder capacidade. Tampouco há teto absoluto quando uma chamada do
+SO bloqueia. A D-090 continua aberta para seu gate 2, e a v2 permanece
+proibida em operação real; executor e etapas posteriores não são autorizados
+por esta decisão.

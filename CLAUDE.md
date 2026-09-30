@@ -59,7 +59,7 @@ Nesta ordem:
 2. `docs/ARCHITECTURE.md` — módulos e responsabilidades
 3. `docs/SECURITY.md` — invariantes de segurança
 4. `docs/SECURITY-REVIEW.md` — o que foi atacado, o que resistiu, o que não
-5. `docs/DECISIONS.md` — 106 decisões (D-001 a D-106) e o porquê de cada uma
+5. `docs/DECISIONS.md` — 107 decisões (D-001 a D-107) e o porquê de cada uma
 6. `docs/MASKING-SPEC.md` — semântica exata do pipeline de masking
 7. `docs/PHASE-9-SPEC.md` — especificação aprovada; Etapas 1 a 4 delimitadas
 8. `docs/TEST-PLAN.md`, `docs/THREAT-MODEL.md`, `docs/FUTURE-HARDENING.md`

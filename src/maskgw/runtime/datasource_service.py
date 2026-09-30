@@ -69,7 +69,7 @@ import threading
 from collections.abc import Callable
 from dataclasses import dataclass, field, replace
 from pathlib import Path
-from typing import TypeVar
+from typing import Protocol, TypeVar
 
 from maskgw.datasource.destination import AddressResolver
 from maskgw.datasource.models import DatasourceDraft, DatasourceRecord
@@ -84,6 +84,7 @@ from maskgw.runtime.candidate import (
     CandidateSpec,
     DatasourceRuntimeError,
     PreparedRuntime,
+    Verifier,
     build_candidate,
     verify_policy,
 )
@@ -181,6 +182,7 @@ class DatasourceCatalogSettings:
     limits: RegistryLimits = field(default_factory=RegistryLimits)
     resolver: AddressResolver | None = None
     adapter_factory: AdapterFactory | None = None
+    verifier: Verifier | None = None
 
 
 def draft_from_record(record: DatasourceRecord, *, enabled: bool | None = None) -> DatasourceDraft:
@@ -214,9 +216,10 @@ class DatasourceRuntimeService:
         "_secrets",
         "_state_lock",
         "_store",
+        "_verifier",
     )
 
-    def __init__(
+    def __init__(  # noqa: PLR0913 - colaboradores injetaveis, todos keyword-only
         self,
         *,
         store: CatalogStore,
@@ -224,12 +227,14 @@ class DatasourceRuntimeService:
         secrets: SecretProvider | None = None,
         resolver: AddressResolver | None = None,
         adapter_factory: AdapterFactory | None = None,
+        verifier: Verifier | None = None,
     ) -> None:
         self._store = store
         self._registry = registry
         self._secrets = secrets
         self._resolver = resolver
         self._adapter_factory = adapter_factory
+        self._verifier = verifier
         # Secao critica de escrita: revision, candidato, persistencia e
         # publicacao na mesma operacao (D-052).
         self._lock = threading.Lock()
@@ -507,6 +512,7 @@ class DatasourceRuntimeService:
             secrets=self._secrets,
             resolver=self._resolver,
             adapter_factory=self._adapter_factory,
+            verifier=self._verifier,
         )
 
     def _check_revision(self, expected_revision: int) -> None:
@@ -613,10 +619,22 @@ class DatasourceRuntimeService:
             return f"DatasourceRuntimeService(closed={self._closed}, blocked={self._blocked})"
 
 
+class VerificationLifecycle(Protocol):
+    """Lifecycle do gate de verificacao em filho (Fase 9, Etapa 7).
+
+    Estrutural para que este modulo nao importe o gate: o composition root o
+    compoe so no caminho de producao, e com dubles injetados ele nao existe.
+    """
+
+    def begin_shutdown(self) -> None: ...
+
+    def close(self) -> None: ...
+
+
 class DatasourceRuntime:
     """Store, registry e coordenador de uma execucao, com shutdown unico."""
 
-    __slots__ = ("_registry", "_service", "_store")
+    __slots__ = ("_registry", "_service", "_store", "_verification")
 
     def __init__(
         self,
@@ -624,10 +642,12 @@ class DatasourceRuntime:
         store: CatalogStore,
         registry: DatasourceRegistry,
         service: DatasourceRuntimeService,
+        verification: VerificationLifecycle | None = None,
     ) -> None:
         self._store = store
         self._registry = registry
         self._service = service
+        self._verification = verification
 
     @property
     def store(self) -> CatalogStore:
@@ -641,22 +661,37 @@ class DatasourceRuntime:
     def service(self) -> DatasourceRuntimeService:
         return self._service
 
+    @property
+    def verification(self) -> VerificationLifecycle | None:
+        """Supervisor das verificacoes em filho, ou None com dubles injetados."""
+        return self._verification
+
     def begin_shutdown(self) -> None:
-        """Interrompe a admissao de sessoes. Nao espera nada."""
+        """Interrompe a admissao de sessoes e de verificacoes. Nao espera nada."""
         self._registry.begin_shutdown()
+        if self._verification is not None:
+            self._verification.begin_shutdown()
 
     def close(self) -> None:
-        """Coordenador, sessoes/geracoes e store, nesta ordem. Idempotente.
+        """Coordenador, sessoes/geracoes, verificacoes e store. Idempotente.
 
         O coordenador fecha primeiro e espera a escrita em voo; o registry
-        drena e descarta as geracoes; o store — e seus locks — sai por ultimo,
-        para que nenhum segundo processo abra o catalogo com este ainda vivo.
+        drena e descarta as geracoes; o supervisor de verificacao retenta os
+        filhos pendentes; o store — e seus locks — sai por ultimo, para que
+        nenhum segundo processo abra o catalogo com este ainda vivo. Um
+        recolhimento nao confirmado levanta (o supervisor nao se declara
+        fechado), mas nao impede soltar o store: o filho nao toca o catalogo, e
+        o registro dele segue com dono no ledger do processo.
         """
         try:
             self._service.close()
             self._registry.close()
         finally:
-            self._store.close()
+            try:
+                if self._verification is not None:
+                    self._verification.close()
+            finally:
+                self._store.close()
 
     def __repr__(self) -> str:
         return f"DatasourceRuntime({self._registry!r})"
@@ -666,8 +701,14 @@ def open_datasource_runtime(
     settings: DatasourceCatalogSettings,
     *,
     secrets: SecretProvider | None = None,
+    verification: VerificationLifecycle | None = None,
 ) -> DatasourceRuntime:
-    """Passos 3-7 da §11, integralmente fail-closed (D-076)."""
+    """Passos 3-7 da §11, integralmente fail-closed (D-076).
+
+    `verification` e o lifecycle do `settings.verifier` de producao; passa a
+    pertencer ao `DatasourceRuntime` devolvido. Numa falha aqui ele continua de
+    quem o criou, que o fecha.
+    """
     store = CatalogStore.open(
         settings.store_path,
         anchor_path=settings.anchor_path,
@@ -686,6 +727,7 @@ def open_datasource_runtime(
                     secrets=secrets,
                     resolver=settings.resolver,
                     adapter_factory=settings.adapter_factory,
+                    verifier=settings.verifier,
                 )
                 reservation.publish(
                     datasource_id=record.id,
@@ -699,8 +741,11 @@ def open_datasource_runtime(
             secrets=secrets,
             resolver=settings.resolver,
             adapter_factory=settings.adapter_factory,
+            verifier=settings.verifier,
         )
-        return DatasourceRuntime(store=store, registry=registry, service=service)
+        return DatasourceRuntime(
+            store=store, registry=registry, service=service, verification=verification
+        )
     except BaseException:
         try:
             if registry is not None:
@@ -732,6 +777,7 @@ __all__ = [
     "DatasourceServiceClosedError",
     "DatasourceWriteProbe",
     "DraftSource",
+    "VerificationLifecycle",
     "draft_from_record",
     "open_datasource_runtime",
 ]

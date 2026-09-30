@@ -52,6 +52,9 @@ where = ["src"]
 line-length = 100
 target-version = "py311"
 src = ["src", "tests"]
+# PoCs em `docs/poc/` nao sao produto (fora do wheel/sdist, nao importadas por
+# `maskgw`): o truque de `sys.path` e os imports apos codigo sao deliberados.
+extend-exclude = ["docs/poc"]
 
 [tool.ruff.lint]
 select = [
@@ -130,6 +133,14 @@ select = [
 # O subprocesso mede o que `maskgw.admin` carrega; interpretador e programa sao
 # constantes do proprio teste, como em `test_purity.py`.
 "tests/test_plan_separation.py" = ["S603"]
+# Fase 9, Etapa 7 — gate pos-conexao em processo filho.
+#
+# S105/S106/S107 senhas de teste (marcadores que os canarios de vazamento
+#                procuram); nenhuma e credencial real.
+# PLC0415        imports locais de `conninfo_to_dict`, usados so num teste.
+# S603           subprocesso com interpretador e codigo fixos do proprio teste,
+#                sem shell — o filho de importacao isolada.
+"tests/test_datasource_verify_gate.py" = ["PLC0415", "S105", "S106", "S107", "S603"]
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "parents"
