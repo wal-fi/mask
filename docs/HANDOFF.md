@@ -2,11 +2,13 @@
 
 **Documento de entrada. Comece por aqui.**
 
-Estado: **Fase 8 concluída e publicada; Fase 9 — Etapas 3 e 4 implementadas localmente;
+Estado: **Fase 8 concluída e publicada; Fase 9 —
 Etapas 3 e 4 publicadas em `c37be36`; Etapa 5 (UX v2 somente leitura, com o refinamento
 visual D-101/D-102 aprovado) publicada em `4d5b78f`; Etapa 6 (CRUD visual de
-datasources e policies) autorizada em 2026-09-28 e implementada localmente, em
-commit sem push, aguardando revisão; Etapa 7 e posteriores sem autorização**.
+datasources e policies) autorizada em 2026-09-28, implementada localmente e
+aprovada pelo usuário em 2026-09-30 (D-103–D-106, capturas e fechamento), com a
+correção por Esc; fechamento em commit local ainda sem push; Etapa 7 e
+posteriores sem autorização**.
 MVP e Fase 7 concluídos. A Etapa 8 foi revisada e publicada sem emenda em
 `20db6f021533230d791cd910b037554c3fe03191`; o fetch confirmou master, HEAD igual
 a origin/master, árvore limpa e 0/0, com autoria e trailer preservados.

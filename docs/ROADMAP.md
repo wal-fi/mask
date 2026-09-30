@@ -379,8 +379,9 @@ redesign integral da interface administrativa.
 
 A especificação aprovada está em `docs/PHASE-9-SPEC.md`; o threat model, as
 decisões D-065–D-096 e a matriz completa estão em seus documentos próprios.
-Listener PGWire, TLS, bind externo e UI nova continuam sem implementação.
-A Etapa 2 adicionou o pacote interno de modelos, destino, store cifrado e
+A UI v2 tem as leituras (Etapa 5, publicada) e o CRUD visual (Etapa 6, aprovado e
+commitado localmente); Listener PGWire, TLS e bind externo continuam sem
+implementação. A Etapa 2 adicionou o pacote interno de modelos, destino, store cifrado e
 migração explícita; a Etapa 3, o registry multi-datasource, o coordenador
 interno e o lifecycle fail-closed, ativados somente pelo composition root; a
 Etapa 4, `/admin/v2` de datasources e o limite efetivo de DNS (D-092–D-096),
@@ -394,7 +395,11 @@ o MCP permanece `stdio`.
 ## Estado atual
 
 Fase 8 concluída e publicada. Fase 9 — Etapa 1 documental concluída e aprovada;
-Etapa 2 concluída; Etapas 3 e 4 publicadas; Etapa 5 (UX v2 somente leitura) implementada localmente. A medição final da Fase 8 está em
+Etapa 2 concluída; Etapas 3 e 4 publicadas; Etapa 5 (UX v2 somente leitura)
+publicada; Etapa 6 (CRUD visual de datasources e policies) aprovada pelo usuário
+e commitada localmente em 2026-09-30 (D-103–D-106); Etapa 7 em diante não
+iniciada. A D-090 continua aberta e a v2 segue proibida em operação real. A
+medição final da Fase 8 está em
 `docs/PHASE-8-STAGE-9-VALIDATION.md`; os números abaixo
 registram o fechamento anterior da Fase 7.
 

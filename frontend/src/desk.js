@@ -51,13 +51,14 @@ export function desk(client,root,plan,hooks) {
       if(index < 0 || (event.shiftKey ? index === 0 : index === focusable.length-1)) {event.preventDefault();if(target instanceof HTMLElement) target.focus();else box.focus();}
     });
   }
-  /** @param {string} title @param {string} tone */
-  function modal(title,tone) {
+  /** @param {string} title @param {string} tone @param {() => void} [escaped] */
+  function modal(title,tone,escaped) {
     dismiss();dialog=element("dialog");dialog.className="desk "+tone;
     const heading=element("h2",title);heading.id="desk-title";heading.tabIndex=-1;
     dialog.setAttribute("aria-labelledby",heading.id);
     note=element("p");note.setAttribute("role","status");note.setAttribute("aria-live","polite");note.className="desk-note";
-    dialog.append(heading,note);dialog.addEventListener("cancel",event=>{event.preventDefault();leave(()=>{});});
+    // Esc runs the caller's per-stage exit (default: leave with no reread) so it mirrors the visible button.
+    dialog.append(heading,note);dialog.addEventListener("cancel",event=>{event.preventDefault();(escaped ?? (()=>leave(()=>{})))();});
     trap(dialog);root.append(dialog);dialog.showModal();heading.focus();return dialog;
   }
   /** Leaving with a draft asks first; a pending write cannot be left.
@@ -308,7 +309,9 @@ export function desk(client,root,plan,hooks) {
     for(const field of deed.fields ?? []) values.set(field.id,initial(field,base));
     let typed="";
     /** @type {"draft" | "review" | "pending" | "conflict" | "ending"} */ let stage=(deed.fields ?? []).length ? "draft" : "review";
-    const box=modal(deed.title,deed.tone ?? "plain");
+    // Esc mirrors the visible button: conflict and ending stages reread like "Descartar e reler"/"Fechar";
+    // the conflict draft still asks before discarding. Other stages keep the plain leave.
+    const box=modal(deed.title,deed.tone ?? "plain",()=>leave(stage === "conflict" || stage === "ending" ? hooks.refresh : ()=>{}));
     const content=element("div");content.className="desk-content";box.append(content);
     render=()=>{
       erase(content);controls=new Map();

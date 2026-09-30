@@ -1,12 +1,14 @@
 # Fase 9 — validação da Etapa 6 (CRUD visual de datasources e policies)
 
 Autorizada pelo usuário em 2026-09-28, localmente e sem push, depois da
-publicação da Etapa 5 em `4d5b78f`. Decisões D-103–D-106, propostas desta etapa
-e sujeitas à revisão. Não inicia a Etapa 7, PGWire, bind externo, variável de
-ativação, MCP multi-datasource nem a definição do datasource default (adiada
-para a Etapa 11, D-096). **O limite pós-conexão da D-090 continua aberto**: a
-v2 segue ativável só pelo parâmetro interno do composition root, e esta etapa
-não autoriza ativá-la para operação real.
+publicação da Etapa 5 em `4d5b78f`. Decisões D-103–D-106, propostas desta etapa.
+**O usuário aprovou explicitamente D-103–D-106, as capturas da Etapa 6 e o
+fechamento da etapa em 2026-09-30** (selects truncados a 320 px e banner
+duplicado aceitos como observações não bloqueantes). Não inicia a Etapa 7,
+PGWire, bind externo, variável de ativação, MCP multi-datasource nem a definição
+do datasource default (adiada para a Etapa 11, D-096). **O limite pós-conexão da
+D-090 continua aberto**: a v2 segue ativável só pelo parâmetro interno do
+composition root, e esta etapa não autoriza ativá-la para operação real.
 
 ## 1. Escopo entregue
 
@@ -114,6 +116,34 @@ fechados, nota da D-068).
 - O botão final do assistente repetia "Novo datasource"; passou a
   "Cadastrar datasource".
 
+## 5.1 Correção da revisão (2026-09-29)
+
+A revisão apontou dois defeitos de UX na saída por Esc, ambos sem escrita
+insegura, e foram corrigidos localmente (sem emenda, sem push):
+
+- **Esc num resultado desconhecido/incerto/bloqueado** fechava o diálogo sem
+  reler; a tela ficava desatualizada, com botões de ação aparentemente
+  habilitados que não faziam nada. Agora Esc segue o mesmo fluxo do botão
+  "Fechar": relê o estado (e, ao reler, a dúvida é liberada).
+- **Esc sobre um rascunho em conflito** descartava sem reler. Agora segue o
+  mesmo fluxo de "Descartar e reler": a pergunta de descarte é preservada e,
+  depois do descarte, relê.
+
+A correção vive só em `frontend/src/desk.js`: `modal` passou a receber uma ação
+de Esc por estágio e `start` a fornece — nos estágios `conflict` e `ending` ela
+chama `leave(hooks.refresh)`, nos demais `leave(()=>{})` como antes. A limpeza
+da senha, a confirmação de descarte, o bloqueio de escritas durante a dúvida e a
+ausência de retry/rebase/rollback continuam intactos. Não muda apresentação,
+CSS, categorias nem inventário: só `ui.js` e seus portadores de hash
+(`_anchor.py`, `manifest.json`) foram regerados; `presentation.json` e o selo
+mantêm o hash. Nenhuma captura mudou (nenhuma depende de Esc).
+
+Regressão em `frontend/browser/datasources.spec.js`: dois testes por Esc
+(desconhecido → fecha e relê, escritas retornam, uma só escrita sem retry;
+conflito → confirma descarte, relê, um só PUT sem rebase), cada um provando foco
+fora do diálogo fechado e nenhuma escrita extra antes da releitura. Ambos
+**falham contra o código anterior** à correção e passam depois, nos três engines.
+
 ## 6. Capturas
 
 Fixture sintética (D-098), sem backend; a senha é um valor descartável num
@@ -121,8 +151,9 @@ campo mascarado. Novas: `09-cadastro-inicio`, `09b-cadastro-politica`,
 `09c-cadastro-teste`, `10-cadastro-revisao` (substituem as do protótipo),
 `17-editar-rascunho`, `18-editar-revisao`, `19-conflito`, `20-politica-editor`,
 `21-remover` e `22-resultado-desconhecido`, em Chromium claro e escuro a 1280 e
-320 px; `17-editar-rascunho` também em Firefox e WebKit. **Aguardam aprovação
-explícita do usuário.**
+320 px; `17-editar-rascunho` também em Firefox e WebKit. **Aprovadas
+explicitamente pelo usuário em 2026-09-30**, com os selects truncados a 320 px e
+o banner de cadastro duplicado aceitos como observações não bloqueantes.
 
 ## 7. Ambiente
 
@@ -144,6 +175,7 @@ existente foi usado.
 | **suíte Python integral**, PostgreSQL 16.15 | **4.197 testes: 0 falhas, 0 erros, 8 skips** (os condicionais de POSIX já registrados; nenhum por DSN); 613 s |
 | **matriz completa, três engines, checkout** | 246 testes (82 por engine): 245 aprovados e 1 falha no WebKit, em `console.spec.js › keyboard reaches every navigation entry`. O teste da Etapa 5 conferia o foco do título de "Novo datasource" sem esperar a leitura da lista, que o assistente real faz; falhava em 3 de 5 repetições. Passou a esperar o assistente pronto, como as outras entradas, com a mesma asserção: 10/10 no WebKit |
 | arquivos alterados depois da matriz, três engines | `console.spec.js` e `datasources.spec.js` completos (incluindo o teste novo de `pagehide`): **51/51** (17 por engine) |
+| **matriz completa na revisão** (2026-09-29, árvore do commit `1cc6000`, PostgreSQL 16 descartável, `retries: 0`, sem deselect nem skip) | **249/249** (83 por engine: os 82 anteriores mais o teste de `pagehide`), 0 falhas, 0 skips, 0 flaky; 2.853 s |
 | wheel / sdist | 99 e 124 entradas; wheel 317.495 bytes, SHA-256 `8c57de33111080efd30270a71cb654f88d640e48f7f813c26db16f3829ca2b27`; sdist 274.260 bytes, SHA-256 `2773bee73a78ccfd1e5a9b7ed3169c9fc4eeb0f0b6719fe8bb7e6a1efa51143b`; sem `frontend/`, `tests/`, `docs/`, capturas, `.codex` ou links |
 | sondagens instaladas | Fase 8 aprovada nos dois pacotes; console v2 aprovada nos dois (quatro leituras e exatamente as nove escritas, conferidas contra o roteador instalado) |
 | contraprovas de isolamento | sem `-I`, Node no PATH e site errado: recusados nos dois pacotes |
@@ -151,9 +183,42 @@ existente foi usado.
 | Ruff, format e mypy strict | aprovados; 176 arquivos |
 | `git diff --check` | aprovado |
 
-A sondagem do console instalado afirmava o contrato da Etapa 5 ("quatro
-leituras, todas GET"). Passou a afirmar, com o mesmo rigor, as quatro leituras
-e exatamente as nove escritas aprovadas.
+Todas as medições acima foram feitas sobre a **árvore do commit `1cc6000`**. A
+sondagem do console instalado afirmava o contrato da Etapa 5 ("quatro leituras,
+todas GET"); passou a afirmar, com o mesmo rigor, as quatro leituras e exatamente
+as nove escritas aprovadas.
+
+## 8.1 Resultados da correção da revisão
+
+As medições abaixo foram tiradas da árvore com a correção dos dois caminhos por
+Esc em `frontend/src/desk.js` e os dois testes de regressão em
+`frontend/browser/datasources.spec.js`, **ainda não commitada quando os gates
+foram medidos** (2026-09-29), sobre o HEAD `1cc6000`. Só `desk.js`,
+`datasources.spec.js`, `ui.js`, `_anchor.py`, `manifest.json` e este documento
+foram tocados; `presentation.json` e o selo não mudaram. Essa mesma correção
+**agora integra o commit de fechamento da etapa** (2026-09-30), sem alteração de
+comportamento nem dos números aqui registrados. Cada rodada de navegador foi
+registrada separadamente.
+
+| gate | resultado |
+|---|---|
+| typecheck + inspeção pública + build determinístico | aprovados; dois builds idênticos, `ui.js` SHA-256 `dbb51c17c677b4c339d69bdff2e8a4e6ba5b9175eedd377bb30857004fce265c`; `presentation.json` inalterado |
+| testes Node | **306/306** |
+| regressão dos dois testes por Esc contra o código anterior | ambos **falham** sem a correção (chromium), confirmando que capturam os defeitos |
+| **matriz integral, três engines, checkout — rodada 1** (`retries: 0`, sem skip nem deselect, PostgreSQL 16 descartável) | **255/255** (85 por engine), 0 falhas, 0 skips, 0 flaky; 1.340 s |
+| **suíte integral do wheel instalado, três engines — rodada A** | **253/255**: 85 chromium, 85 webkit, **83 firefox**; **2 timeouts (60 s) na Firefox**, em `batches.spec.js › obsolete permutation cannot be reviewed after another tab deletes an ID` e `editing.spec.js › already adopted is reconciled without another adoption` (ambos testes v1, sem relação com `desk.js`); gate **reprovado** nesta rodada |
+| investigação dos 2 timeouts | os dois testes alcançaram `harness-page` (~3 s) mas nunca `harness-acted`, sem erro nem stderr; reexecutados isolados na Firefox instalada **3/3 aprovados** em ~7 s cada; nas rodadas 1 e B os mesmos testes passam. Os dois testes são da v1 e não exercitam `desk.js`, então não têm relação com a correção por Esc. **Causa dos timeouts: indeterminada** — não foi reproduzida nem isolada uma raiz; não se afirma contention da Firefox nem se descarta defeito de teste sem prova |
+| **suíte integral do wheel instalado, três engines — rodada B (reexecução idêntica)** | **255/255** (85 por engine), 0 falhas, 0 skips, 0 flaky; 1.339 s |
+| wheel regerado | 99 entradas, 317.714 bytes; SHA-256 do zip não é reprodutível byte a byte (o zip do wheel carrega metadados voláteis): rodada anterior `5d1b2d5a…6893`, esta `d434aebe0164865a286f07a97d5cecf676f18af92184e21dd3a343187a947e4d` |
+| conteúdo gerado e instalado do `ui.js` | o `ui.js` gerado pelo build (`src/maskgw/admin/ui/assets/ui.js`, 221.011 bytes, SHA-256 `dbb51c17…265c`) é o mesmo arquivo que o wheel instala em `…/site-packages/maskgw/admin/ui/assets/ui.js`, conferido byte a byte |
+| sondagem do console instalado (wheel) | aprovada: quatro leituras, exatamente as nove escritas, sem segredo |
+
+A rodada A (253/255) fica registrada como **reprovada**, com os dois timeouts e
+sua investigação anexados; não foi convertida em aprovação. A rodada B (255/255)
+é a **repetição integral limpa**. A causa dos dois timeouts permanece
+**indeterminada**: não há raiz reproduzida. O **usuário aprovou o fechamento da
+Etapa 6 em 2026-09-30 apesar desse desvio documentado**, ciente de que a rodada A
+consta como reprovada e de que a rodada B é a repetição limpa.
 
 ## 9. Limitações
 

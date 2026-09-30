@@ -4,7 +4,9 @@
 concluída; Etapa 3 (registry multi-datasource e lifecycle) implementada
 localmente em 2026-09-23, ativada somente pelo composition root (D-087). A
 Etapa 4 (Admin API v2 de datasources) foi autorizada e implementada localmente
-em 2026-09-24, sem push (D-092–D-096); UI v2, PGWire e as Etapas 5–12
+em 2026-09-24, sem push (D-092–D-096). A Etapa 5 (UX v2 somente leitura) foi
+publicada em `4d5b78f`; a Etapa 6 (CRUD visual) foi aprovada pelo usuário e
+commitada localmente em 2026-09-30 (D-103–D-106). PGWire e as Etapas 7–12
 continuam não iniciados.
 
 **Fonte normativa:** [PHASE-9-SPEC.md](PHASE-9-SPEC.md). A matriz cobre todas
@@ -64,8 +66,8 @@ fechada com os artefatos e números medidos no seu próprio registro de validaç
 | 2 | modelo, store autenticado/cifrado e migração | F9-016–019, F9-022–023, F9-034–035 | testes AEAD/metadata, âncora de replay, atomicidade, SSRF, leakage e subprocesso fail-closed | concluída; F9-022–023 integrados na Etapa 3 |
 | 3 | registry multi-datasource e lifecycle | F9-002–003, F9-020–023, F9-036 | concorrência, generations, refcount, drain, fechamento único e isolamento | implementada localmente; evidência em `PHASE-9-STAGE-3-VALIDATION.md` |
 | 4 | Admin API v2 de datasources | F9-004–006, F9-022, F9-024–026, F9-034, F9-036 | auth/CSRF, revisões, teste sem publicação, v1 intacta, destino validado e resolução DNS com limite efetivo | implementada localmente em 2026-09-24, sem push; evidência em `PHASE-9-STAGE-4-VALIDATION.md` |
-| 5 | UX v2 somente leitura | F9-027–031 | screenshots, a11y, token/draft lifecycle, CSP e três browsers fixados | implementada localmente em 2026-09-24, sem push; refinamento visual (D-101, D-102) e capturas aprovados pelo usuário em 2026-09-28; Etapa 6 sem autorização; evidência em `PHASE-9-STAGE-5-VALIDATION.md` |
-| 6 | CRUD visual de datasources e policies | F9-016–019, F9-025–031, F9-035 | segredo write-only, rotação, concorrência, confirmação destrutiva e sem SQL/resultados | autorizada em 2026-09-28; implementada localmente, sem push, aguardando revisão; evidência em `PHASE-9-STAGE-6-VALIDATION.md` |
+| 5 | UX v2 somente leitura | F9-027–031 | screenshots, a11y, token/draft lifecycle, CSP e três browsers fixados | publicada em `4d5b78f`; refinamento visual (D-101, D-102) e capturas aprovados pelo usuário em 2026-09-28; evidência em `PHASE-9-STAGE-5-VALIDATION.md` |
+| 6 | CRUD visual de datasources e policies | F9-016–019, F9-025–031, F9-035 | segredo write-only, rotação, concorrência, confirmação destrutiva e sem SQL/resultados | autorizada em 2026-09-28; implementada e aprovada pelo usuário em 2026-09-30 (D-103–D-106, capturas, correção por Esc); fechamento em commit local sem push; evidência em `PHASE-9-STAGE-6-VALIDATION.md` |
 | 7 | PGWire startup, TLS e autenticação | F9-001, F9-005–008, F9-011, F9-013, F9-021, F9-036 | harness binário, SCRAM, TLS externo, limites, erro sanitizado e lifecycle; limite efetivo da verificação pós-conexão de candidatos antes de ativar a Admin v2 pelo operador, sem abandonar thread, processo ou conexão | não iniciada |
 | 8 | simple query e masking | F9-002–003, F9-009, F9-014–015, F9-036–037 | psql/psycopg, PostgreSQL 16 real, SELECT-only, masking, truncamento e limite efetivo do processamento local | não iniciada |
 | 9 | extended query, parâmetros e cancelamento | F9-010–011, F9-013–015, F9-021, F9-036–037 | JDBC/prepared statements, Sync, formatos, CancelRequest e isolamento | não iniciada |

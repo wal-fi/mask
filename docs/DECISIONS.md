@@ -2688,9 +2688,12 @@ o selo `console` muda.
 
 A Etapa 6 foi autorizada pelo usuário em 2026-09-28, localmente e sem push.
 D-103 a D-106 são escolhas de implementação dentro do contrato aprovado (§§8–9,
-D-061–D-064, D-073, D-093–D-095) e **aguardam a revisão da etapa**; não estão
-aprovadas. Nenhuma autoriza PGWire, bind externo, variável de ativação, MCP
-multi-datasource, datasource default ou fecha o limite pós-conexão da D-090.
+D-061–D-064, D-073, D-093–D-095). O usuário **aprovou explicitamente D-103–D-106,
+as capturas da Etapa 6 e o fechamento da etapa em 2026-09-30**; os selects
+truncados a 320 px e o banner duplicado foram aceitos como observações não
+bloqueantes. Nenhuma dessas decisões autoriza PGWire, bind externo, variável de
+ativação, MCP multi-datasource, datasource default ou fecha o limite pós-conexão
+da D-090, que **continua aberto**; a v2 segue proibida em operação real.
 
 ## D-103 — Escritas v2 na apresentação: inventário exato e operações próprias
 

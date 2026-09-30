@@ -62,8 +62,10 @@ CRUD visual de datasources e policies pelas nove escritas v2 já aprovadas, com
 senha write-only, concorrência otimista, uma escrita pendente, rascunho volátil e
 confirmação explícita; sem PGWire, bind externo, variável de ativação, MCP
 multi-datasource ou definição do datasource default. O limite pós-conexão da D-090
-continua aberto e impede ativar a v2 para operação real. A Etapa 6 está implementada
-localmente (D-103–D-106, `docs/PHASE-9-STAGE-6-VALIDATION.md`), aguardando revisão.
+continua aberto e impede ativar a v2 para operação real. A Etapa 6 foi implementada
+localmente e **aprovada pelo usuário em 2026-09-30** (D-103–D-106, capturas e
+fechamento; `docs/PHASE-9-STAGE-6-VALIDATION.md`), com a correção por Esc e os
+testes de regressão; o fechamento está num commit local ainda sem push.
 Não iniciar PGWire, variável de ambiente nova, bind externo, extensão da tool MCP
 ou qualquer etapa posterior à 6.
 Evidência: `docs/PHASE-8-STAGE-9-VALIDATION.md`.

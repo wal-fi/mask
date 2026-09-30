@@ -270,6 +270,71 @@ test("refused candidates keep the draft; a lost answer blocks writes until a fre
   },writing);
 });
 
+test("Escape on an unknown result rereads like Fechar: writes return, one gesture only",async({},info)=>{
+  test.setTimeout(120000);
+  await scenario(engine(info.project.name),async(page,origin,token,command)=>{
+    const seen=watch(page,token);
+    await enter(page,origin,token);
+    await openItem(page,"CRM de demonstração");
+    // The server applies the change, but the answer never reaches the page: an unknown result.
+    await page.route("**/admin/v2/datasources/*:disable",async route=>{await route.fetch();await route.abort("failed");});
+    await act(page,"Desabilitar").click();
+    await dialog(page).getByRole("button",{name:"Confirmar",exact:true}).click();
+    await says(page,"Resultado desconhecido");
+    await command("expect-disabled:crm-demo");
+    // The ending stage offers "Fechar"; Escape must do the same reread, not just close.
+    requireTrue(await dialog(page).getByRole("button",{name:"Fechar",exact:true}).isVisible(),"ending stage reached");
+    await page.unrouteAll();
+    const before=seen.writes.length;
+    await page.keyboard.press("Escape");
+    await ready(page);
+    requireTrue(await dialog(page).count() === 0,"dialog closed by Escape");
+    requireTrue(seen.writes.length === before,"Escape sends no extra write before the reread");
+    // The reread cleared the doubt, so writes are available again (only true if Escape reread like Fechar).
+    await expect.poll(async()=>await act(page,"Habilitar").isEnabled()).toBe(true);
+    requireTrue(await page.evaluate(()=>document.activeElement !== null && document.activeElement.isConnected && document.activeElement.closest("dialog") === null),"focus left the closed dialog and stays in the page");
+    // A fresh write now works, proving the flow fully recovered.
+    await act(page,"Habilitar").click();
+    await dialog(page).getByRole("button",{name:"Confirmar",exact:true}).click();await landed(page,"Datasource habilitado.");
+    requireTrue(seen.writes.filter(w=>w.path.endsWith(":disable")).length === 1,"exactly one disable, no retry");
+    requireTrue(!seen.leak,"no leak");await clean(page,token);
+  },writing);
+});
+
+test("Escape discards a post-conflict draft like Descartar e reler: confirm, reread, no rebase",async({},info)=>{
+  test.setTimeout(120000);
+  await scenario(engine(info.project.name),async(page,origin,token)=>{
+    const seen=watch(page,token);
+    await enter(page,origin,token);
+    const other=await page.context().newPage();await enter(other,origin,token);
+    await openItem(page,"CRM de demonstração");await openItem(other,"CRM de demonstração");
+    await act(page,"Editar conexão e limites").click();
+    await dialog(page).getByLabel("Nome de apresentação",{exact:true}).fill("Nome da sessão A");
+    await dialog(page).getByRole("button",{name:"Revisar e confirmar",exact:true}).click();
+    await act(other,"Editar conexão e limites").click();
+    await dialog(other).getByLabel("Nome de apresentação",{exact:true}).fill("Nome da sessão B");
+    await dialog(other).getByRole("button",{name:"Revisar e confirmar",exact:true}).click();
+    await dialog(other).getByRole("button",{name:"Confirmar",exact:true}).click();await landed(other,"Datasource atualizado.");
+    await dialog(page).getByRole("button",{name:"Confirmar",exact:true}).click();
+    await says(page,"Outra sessão alterou este item");
+    requireTrue(seen.writes.filter(w=>w.method === "PUT").length === 1,"no automatic retry on conflict");
+    const before=seen.writes.length;
+    // Escape over the conflicting draft: the discard question is preserved, then it rereads.
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("button",{name:"Descartar",exact:true})).toBeVisible();
+    requireTrue(seen.writes.length === before,"the discard question sends nothing");
+    await page.getByRole("button",{name:"Descartar",exact:true}).click();
+    await ready(page);
+    requireTrue(await dialog(page).count() === 0,"draft discarded");
+    // The reread shows the other session's value; the local draft was never rebased or resent.
+    await expect(page.getByRole("heading",{name:"Nome da sessão B",exact:true})).toBeVisible();
+    requireTrue(seen.writes.filter(w=>w.method === "PUT").length === 1,"still exactly one PUT after Escape");
+    requireTrue(await page.evaluate(()=>document.activeElement !== null && document.activeElement.isConnected && document.activeElement.closest("dialog") === null),"focus left the closed dialog and stays in the page");
+    requireTrue(!seen.leak,"no leak");await clean(page,token);
+    await other.close();
+  },writing);
+});
+
 test("a failed persistence blocks writes until restart; an uncertain one needs a new read",async({},info)=>{
   test.setTimeout(120000);
   await scenario(engine(info.project.name),async(page,origin,token,command)=>{
