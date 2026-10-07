@@ -135,7 +135,8 @@ def test_disabled_capability_loads_no_catalog_module_and_keeps_repr(tmp_path: Pa
         loaded = sorted(
             name for name in sys.modules
             if name.startswith(("maskgw.datasource", "maskgw.runtime.datasource",
-                                 "maskgw.runtime.candidate", "maskgw.gateway.datasources"))
+                                 "maskgw.runtime.candidate", "maskgw.gateway.datasources",
+                                 "maskgw.runtime.admin_work"))
         )
         print(repr(app))
         print(loaded)

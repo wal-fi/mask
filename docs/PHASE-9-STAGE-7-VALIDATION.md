@@ -222,9 +222,188 @@ incompleto:
 O modo legado e o catálogo desligado não importam nem compõem nada disso (teste
 existente em subprocesso).
 
+### 1.4 Fila administrativa dedicada, barreira e leitura selada (D-108)
+
+**Estado:** em 2026-10-07 o usuário aprovou o fechamento deste incremento e
+autorizou o commit e a publicação; o estado de publicação é o que o Git
+confirmar. A Etapa 7 continua **incompleta**: a D-090 segue aberta no gate 2,
+e a v2 ainda não é ativável em operação real.
+
+Escolhas aprovadas pelo usuário: **A1** (o shutdown conclui todas as operações
+aceitas, na fila e em execução), **B** (2 workers + 2 posições de espera,
+excesso ou barreira fechada → `503 DATASOURCE_SERVICE_UNAVAILABLE` existente) e
+**C** (com drenagem ou início/término incertos, catálogo, registry, supervisor
+e store ficam retidos, e o fechamento fica incompleto e repetível). Ver D-108.
+
+- **`AdminWorkQueue`** (`src/maskgw/runtime/admin_work.py`), composta pelo
+  composition root só com catálogo + Admin HTTP:
+  - workers fixos adotados antes do `start()`, com os estados da D-107;
+  - sem `ThreadPoolExecutor`;
+  - admissão (aceitar, registrar, enfileirar) sob o mesmo lock da barreira,
+    com a capacidade contada no ato de aceitar;
+  - uma exceção em qualquer passo protegido da admissão (registrar,
+    enfileirar antes ou depois de mutar a fila, acordar o worker) é desfeita
+    sob o lock antes de qualquer worker ver o ticket: o job e os callbacks são
+    soltos primeiro, depois o registro e a posição na fila. O job recusado
+    nunca executa, e o `503` é sem efeito. Uma interrupção assíncrona dentro
+    do próprio desfazer não é coberta.
+- **Rotas v2:**
+  - escritas e testes de conexão rodam num worker, que executa operação e
+    auditoria inteiras com ou sem request;
+  - o handler espera sob `asyncio.shield` uma notificação leve no loop;
+  - cancelar ou desconectar o request não cancela a operação aceita, e a
+    resposta perdida é incerta;
+  - um loop já fechado não tira o ticket de dono;
+  - o erro é sempre fechado e sem cadeia.
+- **Leitura selada:**
+  - status, list, get e policy leem um selo imutável (`CatalogView`) trocado só
+    depois da transição inteira; não tocam o lock do store, o DNS, o
+    filesystem nem a verificação;
+  - durante persistência e publicação/retirada vale o selo anterior;
+  - falha depois de um efeito possível, ou falha ao montar o selo, retira o
+    selo e bloqueia o serviço numa só transição permanente (`CATALOG_BLOCKED`
+    nas leituras; status degradado);
+  - uma escrita com efeito cujo selo não pôde ser trocado responde
+    `CATALOG_OUTCOME_UNCERTAIN`, nunca sucesso;
+  - a retirada é monotônica: nenhuma troca posterior volta a disponibilizar a
+    leitura.
+- **Sessões e contadores:** as sessões por datasource vêm da geração **exata**
+  do selo, publicada ou aposentada; os contadores globais do registry são
+  amostrais e não fazem parte do selo; `registry.published` vem do selo.
+- **Estado desconhecido num worker:** fila `broken` e coordenador bloqueado
+  antes de despachar qualquer outro ticket. Se essa contenção não for
+  confirmada, a fila congela: os aceitos restantes concluem como falha **sem
+  executar**, acompanhados, notificados e auditados no máximo uma vez.
+- **Shutdown:**
+  1. barreira da fila e seção crítica v1;
+  2. drenagem integral, com registry e verificador ainda abertos;
+  3. `begin_shutdown` do catálogo;
+  4. `stop()` HTTP;
+  5. runtimes e locks.
+
+  `close()` a partir de um worker ou da thread HTTP é recusado antes de
+  qualquer efeito. O startup parcial com fila retém o dono antes de qualquer
+  limpeza que possa falhar e nunca substitui o erro original. O dono só é
+  solto com a drenagem, o `stop()` HTTP **e** o fechamento de
+  catálogo/registry/store comprovados: a drenagem prova os workers, não o
+  fechamento. Se a limpeza falhar, os donos dos recursos restantes (registry,
+  adapter, store) também ficam retidos. Sem fila, o desmonte é o anterior.
+
+*Rodada histórica, anterior à validação integral registrada mais abaixo
+nesta seção.* Resultados direcionados (Windows nativo, sem PG; naquela rodada
+a suíte integral, o PG16 e os pacotes ainda não tinham sido executados):
+
+| regressão | antes da correção | depois |
+|---|---|---|
+| `/status` durante uma verificação presa | **timeout** (event loop bloqueado) | responde em < 1,5 s |
+| leitura entre persistir e publicar / persistir e retirar | **mista** (revisão nova sem geração; desabilitado ainda publicado) | selo anterior inteiro |
+| leitura após `publish` que falha | **200 misto** | `503 CATALOG_BLOCKED`, status degradado |
+| leituras com o lock do store preso (direto, DNS real, filesystem real) | **12 falhas** (todas esperavam) | concluem em < 0,5 s no selo anterior |
+| `block_unknown` durante a selagem | **sucesso** e selo de volta | `CATALOG_OUTCOME_UNCERTAIN`, selo retirado |
+
+- Arquivos novos: `test_admin_work_queue.py` (13), `test_admin_v2_executor.py`
+  (27) e `test_admin_work_bootstrap.py` (6). Os quatro arquivos de
+  concorrência foram repetidos 3×, sem intermitência.
+- **Revisão seguinte (F3–F5), regressões escritas antes da correção:**
+  - **F3:** com o `notify` falhando, a admissão "recusada" deixava
+    `accepted == 1` e o job executava atrás do `503`. A falha reproduziu na
+    fila e na ponte v2. Agora a admissão é desfeita nos três pontos (antes de
+    mutar, depois de enfileirar, no `notify`), o job nunca executa, a v2
+    responde `503` sem cadeia, sem efeito, com 1 auditoria e 0 tickets.
+  - **F4:** com drenagem `True` e `stop()` HTTP real, uma falha em
+    `_close_partial`, `registry.close_all`, `datasources.close` ou
+    `store.close` soltava o dono (4 falhas). Agora o dono fica retido, junto
+    com registry e store; o erro original é preservado; nada é retido quando
+    a limpeza é comprovada.
+  - **F5:** os testes novos soltam barreiras, drenam filas e fecham
+    harness/aplicação no `finally`, e só então cancelam o watchdog. A fixture
+    da fila drena toda fila iniciada no teardown.
+  - Contagem atual dos arquivos novos: 15, 28 e 11. Os quatro arquivos de
+    concorrência foram repetidos 3× (59/59). As suítes direcionadas e
+    vizinhas tiveram **551 aprovados, 5 skips** (os que exigem DSN). Ruff,
+    format e mypy strict: aprovados (183 fontes).
+- **F6 — registro global de ownership sem mutex.**
+  - Antes: `release_retained` achava o índice por identidade e apagava por
+    índice sem lock. Com uma remoção concorrente entre os dois passos, ficava
+    `[B]` e saía `C`, um dono de outro startup que não comprovou fechamento
+    (regressão determinística, lista instrumentada só no teste).
+  - Agora: um lock compartilhado serializa o registro e a busca+remoção por
+    identidade. Ele cobre só a lista, sem limpeza nem chamada do SO. Saem só os
+    donos pedidos, a remoção concorrente espera, e 8 threads retendo e soltando
+    em paralelo terminam com exatamente os donos não soltos.
+  - Medido: os casos de ownership foram repetidos 3× (13/13). Os quatro
+    arquivos de fila e concorrência: 61/61. Ruff, format e mypy strict:
+    aprovados (183 fontes). Vizinhos, PG e pacotes não foram repetidos nesta
+    correção.
+  - Limite: como no resto da fila, uma interrupção assíncrona entre
+    instruções sob o lock não é coberta.
+- Suítes direcionadas e vizinhas (v2, fila, composition root, datasource,
+  bootstrap, HTTP admin, separação de planos, pureza e gates de verificação):
+  **543 aprovados, 5 skips** (os que exigem DSN; sem banco nesta rodada).
+- Ruff, format e mypy strict em `src` e `tests`: aprovados (183 fontes).
+
+#### Validação integral do incremento D-108 (2026-10-07, Windows nativo)
+
+Código e testes congelados antes dos gates: 16 arquivos `src`/`tests` com
+SHA-256 registrados e reconferidos iguais ao fim. Ambiente: Python 3.11.3 da
+`.venv`; PostgreSQL **16.15** em contêiner e volume nomeados novos
+(`postgres:16-alpine`, só `127.0.0.1`, porta efêmera), senha aleatória só em
+arquivo temporário do perfil e no ambiente dos testes, nunca impressa. O Docker
+Desktop estava parado: foi iniciado só para esta medição e encerrado ao final.
+Não havia contêiner preexistente; os 17 volumes anônimos preexistentes foram
+preservados (lista igual antes e depois). Contêiner, volume, segredos e
+diretório de build próprios foram removidos.
+
+| gate | resultado medido |
+|---|---|
+| suíte Python integral (pilha 64 MiB, JUnit), rodada A | **4.351 testes: 4.338 aprovados, 0 falhas, 0 erros, 13 skips**, 600,066 s, exit 0. Skips: 5 `fsync` de diretório POSIX + 3 bits de modo POSIX + 5 symlink indisponível (WinError 1314). **Nenhum skip por DSN.** Inclui `test_admin_work_queue.py` (17), `test_admin_v2_executor.py` (28) e `test_admin_work_bootstrap.py` (11) |
+| seleção `-m integration`, rodada A | **575 testes: 2 falhas**, 0 erros, 3 skips POSIX, 218,391 s. As falhas foram `test_subprocess_startup_is_fail_closed_with_real_postgresql[False/True]`: o Python filho saiu com 3221225794 (`0xC0000142`), stdout e stderr vazios. **Causa não atribuída** (não medida). A rodada foi preservada como reprovada |
+| diagnóstico da rodada A | os dois casos isolados: 2/2 aprovados; o bootstrap simples de um Python filho com `PYTHONPATH=src`, repetido 20×: 20/20 com saída 0 e saída correta. Não reproduziu |
+| seleção `-m integration`, rodada B | **575 testes: 0 falhas, 0 erros, 3 skips POSIX**, 215,641 s, exit 0; nenhum skip por DSN |
+| 61 testes do incremento (fila, executor, composition root, concorrência) com PG16 | 61/61, exit 0 |
+| Ruff, format, mypy strict (`src`, `tests`), `git diff --check`, UTF-8 sem U+FFFD | aprovados (183 fontes; 18 arquivos do incremento sem problema) |
+| wheel `b52789b6…851c0e` e sdist `2a5bcccf…851f27` (cópia temporária com hashes iguais aos congelados, venvs novas, `python -I`, sem `PYTHONPATH`, cwd fora do checkout, Node/npm fora do `PATH`) | `admin_work.py` embarcado com hash igual; 5 assets da UI iguais aos do checkout; `docs/`, `tests/` e `node_modules` ausentes |
+| sonda do pacote pelo composition root interno (sem ativação de operador), PG16 real | wheel e sdist: **46/46 verificações obrigatórias**, exit 0 |
+| contraprova da própria sonda (`PROBE_TAMPER=1`) | reprova só a expectativa adulterada (46/47), exit 1 |
+
+O que a sonda verifica nos dois pacotes:
+
+- a fila e o supervisor são compostos, com 2 workers vivos;
+- a criação v2 é enfileirada e verificada pelo filho `-I` do pacote contra o
+  PG16 real (200; ~1,2–1,3 s), com catálogo na revisão 2 e geração 1;
+- com uma atualização presa entre persistir (disco já na revisão 3) e publicar,
+  status, list, get e policy respondem 200 em ≤ 16 ms. Os DTOs reais são
+  **iguais** aos do snapshot anterior, exceto os contadores amostrais do
+  registry;
+- depois, o novo selo mostra revisão 3, o nome novo e a geração 2;
+- um cliente que desiste (`TimeoutError`) com a atualização presa não abandona
+  a operação: ela aplica (revisão 4, geração 3), com tickets 0;
+- auditoria: 1 criação `success` e 2 atualizações `success`;
+- no fechamento:
+  - aplicação `closed`;
+  - nenhuma thread HTTP, de worker ou do verificador viva;
+  - threads auxiliares da sonda encerradas;
+  - tickets 0;
+  - supervisor fechado e ledger vazio;
+  - catálogo reabrível e porta admin livre;
+  - backends do PG de volta à linha de base;
+  - diretório próprio da sonda removido.
+
+A sonda é um harness temporário fora do repositório. Na primeira execução ela
+reprovou por um corpo de política incompleto no próprio harness
+(`422 SCHEMA_INVALID`); corrigido o harness, ela passou. Artefatos (JUnit,
+logs, JSON sanitizado e sonda) ficam em diretório temporário fora do
+repositório, para conferência. Navegadores e Node não foram reexecutados; o
+frontend não mudou. A Etapa 7 **não** está concluída; a D-090 continua aberta
+no gate 2, e a v2 segue proibida em operação real.
+
 ## 2. NÃO entregue nesta rodada (segue não iniciado)
 
-- **Executor dedicado, barreira atômica de submissão×shutdown e bloqueio de
+- *(Histórico: o item abaixo descreve o estado antes do incremento da §1.4
+  (D-108). Estado atual: validado conforme a §1.4, com fechamento aprovado e
+  publicação autorizada em 2026-10-07; estado de publicação confirmado pelo
+  Git.)*
+  **Executor dedicado, barreira atômica de submissão×shutdown e bloqueio de
   composição de leitura** (Contratos 1 e 3 do desenho): desenhados e aprovados,
   mas são um segundo corpo de trabalho, com sua própria matriz de concorrência;
   ficam para um incremento próprio, validado à parte. Os handlers v2 continuam
@@ -463,6 +642,19 @@ independente em cada caso de risco de travamento):
   "PID exposto ⇒ métodos públicos utilizáveis" reflete a ordem do CPython 3.11,
   fixada por teste, não pela documentação da linguagem. Nenhuma das garantias
   cobre toda interrupção assíncrona entre instruções.
+- **Fila dedicada (D-108):**
+  - não há teto absoluto de shutdown: a drenagem integral espera o trabalho
+    aceito, e uma chamada do SO bloqueada não tem limite;
+  - concluir o worker antes do `stop()` HTTP não garante a entrega da
+    resposta, e a resposta perdida é incerta;
+  - interrupções assíncronas entre instruções do próprio ciclo da fila (entre
+    registrar e desfazer na admissão, entre concluir e notificar, entre a
+    marca de auditoria e a emissão) não são cobertas. A direção é
+    conservadora: capacidade retida ou evento perdido, nunca duplicado nem
+    executado sem dono;
+  - se a própria contenção falhar, uma leitura ainda pode ver o selo anterior
+    até o reinício; nenhuma escrita executa;
+  - um ticket aceito numa fila congelada conclui como falha sem executar.
 - **Janela de admissão (`_admit`), não corrigida:** uma interrupção assíncrona
   entre adquirir a vaga e anexar o registro, ou entre anexar o registro e
   devolvê-lo ao dono, pode reter a vaga sem coletor. A direção é conservadora:

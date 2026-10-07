@@ -226,6 +226,11 @@ class AdminHttpServer:
                 orphan.close()
             raise
 
+    def owns_current_thread(self) -> bool:
+        """A thread corrente e a do servidor? (recusa de self-join, D-108)."""
+        thread = self._thread
+        return thread is not None and thread is threading.current_thread()
+
     def stop(self) -> None:
         """Sinaliza o uvicorn e AGUARDA a thread ate o fim. Idempotente.
 

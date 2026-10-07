@@ -102,6 +102,7 @@ if TYPE_CHECKING:
     # capacidade nova e pedida: com ela desligada, nenhum modulo de
     # `maskgw.datasource` e carregado (D-087).
     from maskgw.gateway.datasources import DatasourceGateway
+    from maskgw.runtime.admin_work import AdminWorkQueue
     from maskgw.runtime.datasource_service import DatasourceCatalogSettings, DatasourceRuntime
 
 #: Variavel de ambiente com o DSN do PostgreSQL. Nunca no `masking.yaml`.
@@ -131,6 +132,7 @@ class Application:
         "_admin",
         "_admin_http",
         "_admin_ui_resources",
+        "_admin_work",
         "_close_lock",
         "_closed",
         "_closing",
@@ -158,8 +160,10 @@ class Application:
         admin_ui_resources: Mapping[str, bytes] | None = None,
         datasources: DatasourceRuntime | None = None,
         datasource_gateway: DatasourceGateway | None = None,
+        admin_work: AdminWorkQueue | None = None,
     ) -> None:
         self._gateway = gateway
+        self._admin_work = admin_work
         self._config = config
         self._registry = registry
         self._mcp_server = mcp_server
@@ -230,6 +234,14 @@ class Application:
         return self._datasources
 
     @property
+    def admin_work(self) -> AdminWorkQueue | None:
+        """Fila administrativa dedicada da v2 (D-108), ou None.
+
+        Existe somente com catalogo E Admin HTTP; os workers ja estao iniciados.
+        """
+        return self._admin_work
+
+    @property
     def datasource_gateway(self) -> DatasourceGateway | None:
         """Sessoes de consulta por alias sobre o registry, ou None."""
         return self._datasource_gateway
@@ -297,6 +309,15 @@ class Application:
         passo do HTTP bloqueia ate a thread terminar, entao a ordem nao avanca
         com nada de pe.
         """
+        # Fase 9, Etapa 7 (D-108): de dentro de um worker da fila ou da thread
+        # HTTP, a drenagem/`join` esperaria a propria thread. Recusa fixa ANTES
+        # de qualquer efeito, inclusive de marcar `_closing`.
+        if (self._admin_work is not None and self._admin_work.owns_current_thread()) or (
+            self._admin_http is not None and self._admin_http.owns_current_thread()
+        ):
+            msg = "encerramento recusado a partir de uma thread administrativa"
+            raise RuntimeError(msg)
+
         with self._lifecycle_lock:
             if self._closed or self._running:
                 return
@@ -310,16 +331,7 @@ class Application:
             if self._is_closed():
                 return
 
-            # Fase 9, §11: a admissao de sessoes de datasource para primeiro,
-            # antes de qualquer espera — nao ha o que drenar do que nao entrou.
-            if self._datasources is not None:
-                self._datasources.begin_shutdown()
-            if self._admin is not None:
-                self._admin.close()
-            if self._admin_http is not None:
-                # Bloqueia ate a thread HTTP acabar. So depois disso os
-                # runtimes podem fechar e o lock pode sair (secao 9.2).
-                self._admin_http.stop()
+            work_settled = self._quiesce()
             # Cada fechamento abaixo roda mesmo que o anterior falhe: um erro
             # no runtime legado nao pode deixar sessoes upstream nem os locks
             # do catalogo e do `masking.yaml` presos.
@@ -327,17 +339,56 @@ class Application:
                 self._registry.close_all()
             finally:
                 try:
-                    if self._datasources is not None:
+                    if self._datasources is not None and work_settled:
                         # Espera a escrita em voo, drena/cancela as sessoes,
                         # descarta as geracoes e so entao solta os locks do
-                        # catalogo.
+                        # catalogo. Com um worker vivo ou de inicio/termino
+                        # incerto, NADA disso e solto: ele pode estar usando.
                         self._datasources.close()
                 finally:
                     if self._config_store is not None:
                         self._config_store.close()
 
+            if not work_settled:
+                # A aplicacao fica `closing`, nao `closed`; um `close()`
+                # posterior retenta a drenagem e o resto, idempotente. Import
+                # tardio: so existe fila com catalogo + Admin HTTP.
+                from maskgw.runtime.admin_work import (  # noqa: PLC0415
+                    AdminWorkShutdownIncompleteError,
+                )
+
+                raise AdminWorkShutdownIncompleteError
+
             with self._lifecycle_lock:
                 self._closed = True
+
+    def _quiesce(self) -> bool:
+        """Para as entradas e conclui o trabalho aceito; `True` se comprovado.
+
+        D-108: primeiro so a barreira da fila v2 e a secao critica v1. As
+        operacoes v2 JA aceitas — na fila e em execucao — concluem com o
+        registry e o verificador ainda capazes de reservar, verificar e
+        publicar; so depois a admissao de sessoes/verificacoes para, e entao a
+        thread HTTP recebe `join`.
+        """
+        if self._admin_work is not None:
+            self._admin_work.close_admission()
+        if self._admin is not None:
+            self._admin.close()
+        work_settled = True
+        if self._admin_work is not None:
+            # Sem teto absoluto: espera o trabalho aceito (cada verificacao tem
+            # prazo; uma chamada do SO bloqueada, nao).
+            work_settled = self._admin_work.drain()
+        # Fase 9, §11: a admissao de sessoes de datasource para antes de
+        # esperar a thread HTTP — nao ha o que drenar do que nao entrou.
+        if self._datasources is not None:
+            self._datasources.begin_shutdown()
+        if self._admin_http is not None:
+            # Bloqueia ate a thread HTTP acabar. So depois disso os runtimes
+            # podem fechar e o lock pode sair (secao 9.2).
+            self._admin_http.stop()
+        return work_settled
 
     def _is_closed(self) -> bool:
         with self._lifecycle_lock:
@@ -482,6 +533,7 @@ def build_application(  # noqa: PLR0913 - parametros de composicao, keyword-only
     http_server: AdminHttpServer | None = None
     datasources: DatasourceRuntime | None = None
     datasource_gateway: DatasourceGateway | None = None
+    admin_work: AdminWorkQueue | None = None
 
     try:
         # Fase 9, §11 passos 3-7: store, lock, chave, catalogo autenticado,
@@ -552,6 +604,13 @@ def build_application(  # noqa: PLR0913 - parametros de composicao, keyword-only
         # pularia o `stop()` e fecharia registry e store. A propriedade de um
         # recurso nao pode depender de a construcao dele ter dado certo.
         if admin_http is not None and admin is not None:
+            # D-108: com catalogo, a fila dedicada da v2 existe ANTES do
+            # servidor — referencia adotada antes de `start()`, pelo mesmo
+            # motivo do servidor abaixo — e seus workers ja estao de pe quando
+            # a primeira requisicao chega.
+            if datasources is not None:
+                admin_work = _build_admin_work(datasources)
+                admin_work.start()
             http_server = _build_admin_http(
                 admin,
                 admin_http,
@@ -559,6 +618,7 @@ def build_application(  # noqa: PLR0913 - parametros de composicao, keyword-only
                 audit=audit_log,
                 ui_resources=ui_resources,
                 datasources=datasources,
+                admin_work=admin_work,
             )
             http_server.start()
 
@@ -576,6 +636,7 @@ def build_application(  # noqa: PLR0913 - parametros de composicao, keyword-only
             admin_ui_resources=ui_resources,
             datasources=datasources,
             datasource_gateway=datasource_gateway,
+            admin_work=admin_work,
         )
     except BaseException:
         # Falha parcial: desmontar na mesma ordem do shutdown. A thread HTTP
@@ -587,12 +648,80 @@ def build_application(  # noqa: PLR0913 - parametros de composicao, keyword-only
         # falhou — e por isso que a adocao vem antes dele. `stop()` bloqueia ate
         # a thread terminar, entao nenhum runtime e fechado com ela viva, e
         # `stop()` sobre um servidor que nunca iniciou nao faz nada.
+        _unwind_partial(
+            admin_work=admin_work,
+            http_server=http_server,
+            registry=registry,
+            adapter=adapter,
+            datasources=datasources,
+            store=store,
+        )
+        raise
+
+
+def _unwind_partial(  # noqa: PLR0913 - recursos da construcao parcial, keyword-only
+    *,
+    admin_work: AdminWorkQueue | None,
+    http_server: AdminHttpServer | None,
+    registry: RuntimeRegistry | None,
+    adapter: PostgresAdapter | None,
+    datasources: DatasourceRuntime | None,
+    store: ConfigFileStore | None,
+) -> None:
+    """Desmonta um startup parcial na ordem do shutdown, sem trocar o erro.
+
+    D-108: com fila, o dono da fila e do catalogo e RETIDO antes de qualquer
+    passo falivel — a `Application` nunca existira — e so e solto com a
+    drenagem, o `stop()` HTTP E o fechamento comprovados. Cada passo independente roda
+    protegido: uma falha de limpeza nao substitui o erro original que quem
+    chama relevanta. Nada que um worker vivo/incerto ou a thread HTTP possam
+    usar e fechado sem essa prova. Sem fila (legado, v1 ou catalogo sem HTTP),
+    o desmonte e exatamente o anterior.
+    """
+    if admin_work is None:
         if datasources is not None:
             datasources.begin_shutdown()
         if http_server is not None:
             http_server.stop()
         _close_partial(registry=registry, adapter=adapter, datasources=datasources, store=store)
-        raise
+        return
+    _retain(admin_work, datasources)
+    work_settled = False
+    with contextlib.suppress(Exception):
+        admin_work.close_admission()
+        work_settled = admin_work.drain()
+    if datasources is not None:
+        with contextlib.suppress(Exception):
+            datasources.begin_shutdown()
+    http_stopped = http_server is None
+    if http_server is not None:
+        with contextlib.suppress(Exception):
+            http_server.stop()
+            http_stopped = True
+    if not http_stopped:
+        # A thread HTTP pode seguir viva sobre o runtime legado, o lock do
+        # `masking.yaml` e o catalogo: nada disso e fechado.
+        _retain(http_server, registry, adapter, store, datasources)
+        return
+    cleaned = False
+    try:
+        _close_partial(
+            registry=registry,
+            adapter=adapter,
+            datasources=datasources if work_settled else None,
+            store=store,
+        )
+        cleaned = True
+    except Exception:
+        # O erro de limpeza nao substitui o original; o dono fica retido.
+        cleaned = False
+    if not cleaned:
+        # A drenagem comprova os workers, NAO o fechamento: sem ele, os donos
+        # dos recursos restantes tambem ficam retidos.
+        _retain(registry, adapter, store)
+        return
+    if work_settled:
+        _release_retained(admin_work, datasources)
 
 
 def _close_partial(
@@ -674,6 +803,31 @@ def _open_datasources(
         raise
 
 
+def _build_admin_work(datasources: DatasourceRuntime) -> AdminWorkQueue:
+    """Fila dedicada da v2 (D-108), SEM iniciar. So com catalogo + Admin HTTP.
+
+    Estado desconhecido num worker bloqueia o coordenador e retira o selo de
+    leitura (`block_unknown`).
+    """
+    from maskgw.runtime.admin_work import AdminWorkQueue as _Queue  # noqa: PLC0415
+
+    return _Queue(on_unknown=datasources.service.block_unknown)
+
+
+def _retain(*resources: object) -> None:
+    """Startup parcial: dono retido de recursos ainda nao comprovadamente livres."""
+    from maskgw.runtime.admin_work import retain  # noqa: PLC0415
+
+    retain(*(resource for resource in resources if resource is not None))
+
+
+def _release_retained(*resources: object) -> None:
+    """Solta a retencao de recursos cujo encerramento foi comprovado."""
+    from maskgw.runtime.admin_work import release_retained  # noqa: PLC0415
+
+    release_retained(*(resource for resource in resources if resource is not None))
+
+
 def _build_datasource_gateway(datasources: DatasourceRuntime, audit: AuditLog) -> DatasourceGateway:
     """Sessoes por alias com o MESMO `AuditLog` e o MESMO pipeline do MCP."""
     from maskgw.gateway.datasources import DatasourceGateway as _Gateway  # noqa: PLC0415
@@ -689,6 +843,7 @@ def _build_admin_http(  # noqa: PLR0913 - colaboradores da fronteira, keyword-on
     audit: AuditLog,
     ui_resources: Mapping[str, bytes] | None = None,
     datasources: DatasourceRuntime | None = None,
+    admin_work: AdminWorkQueue | None = None,
 ) -> AdminHttpServer:
     """Monta a fronteira HTTP **sem** inicia-la.
 
@@ -723,6 +878,7 @@ def _build_admin_http(  # noqa: PLR0913 - colaboradores da fronteira, keyword-on
             audit=audit,
             ui_resources=ui_resources,
             datasources=datasources,
+            admin_work=admin_work,
         )
 
     # Sem `start()`: quem chama adota a referencia e so entao inicia.

@@ -89,6 +89,7 @@ from maskgw.datasource.store import (
 )
 from maskgw.runtime.candidate import CandidateFailure, DatasourceCandidateError
 from maskgw.runtime.datasource_service import (
+    CatalogView,
     DatasourceAliasConflictError,
     DatasourceDisabledError,
     DatasourceNotFoundError,
@@ -382,37 +383,74 @@ class DatasourceAdmin:
         raise DatasourceAdminError(category, current_revision=current) from None
 
     def _blocked(self) -> bool:
-        return self._runtime.service.blocked or self._runtime.store.requires_reopen
+        """Escritas bloqueadas, SEM tocar o store (D-108).
 
-    def _published(self) -> dict[str, GenerationStatus]:
-        return {item.datasource_id: item for item in self._runtime.registry.status().published}
+        `store.requires_reopen` adquire o lock interno do store, que uma escrita
+        segura durante DNS e filesystem: consulta-lo aqui faria toda leitura
+        esperar. O coordenador e o unico escritor, e toda persistencia que
+        envenena o store passa por `_persist`, que bloqueia o servico (e retira
+        o selo) na mesma excecao.
+        """
+        return self._runtime.service.blocked
+
+    def _sealed(self) -> CatalogView:
+        """O selo corrente (D-108); indisponivel vira `CATALOG_BLOCKED`."""
+        view = self._runtime.service.view()
+        if view is None:
+            raise DatasourceServiceBlockedError()
+        return view
+
+    def _published(self, view: CatalogView) -> dict[str, GenerationStatus]:
+        """Identidade do SELO; sessoes ao vivo da geracao EXATA que ele aponta.
+
+        Nunca a geracao corrente pelo ID: um selo anterior a uma troca continua
+        mostrando a geracao dele, com os contadores DELA.
+        """
+        registry = self._runtime.registry
+        return {
+            item.datasource_id: GenerationStatus(
+                alias=item.alias,
+                datasource_id=item.datasource_id,
+                generation=item.generation,
+                record_revision=item.record_revision,
+                sessions=registry.generation_sessions(item.datasource_id, item.generation),
+            )
+            for item in view.published
+        }
 
     # -- leituras ---------------------------------------------------------
 
     def status(self) -> V2StatusResponse:
+        """Catalogo e identidade publicada de UM selo; contadores amostrais.
+
+        `sessions`, `retired_open`, `candidates` e `closing` sao amostras ao
+        vivo do registry, nao parte do selo. `registry.published` vem do selo;
+        sem selo (modo degradado) e tambem amostra.
+        """
+
         def read() -> V2StatusResponse:
             registry = self._runtime.registry.status()
             limits = self._runtime.registry.limits
-            catalog_available = not self._runtime.store.requires_reopen
+            view = self._runtime.service.view()
+            catalog_available = view is not None
             revision: int | None = None
             counts: CatalogCounts | None = None
-            if catalog_available:
-                snapshot = self._runtime.store.snapshot()
-                published_ids = {item.datasource_id for item in registry.published}
-                revision = snapshot.catalog_revision
+            published_count = len(registry.published)
+            if view is not None:
+                published_ids = {item.datasource_id for item in view.published}
+                revision = view.catalog_revision
+                published_count = len(view.published)
                 counts = CatalogCounts(
-                    total=len(snapshot.datasources),
-                    enabled=sum(1 for record in snapshot.datasources if record.enabled),
-                    published=sum(
-                        1 for record in snapshot.datasources if record.id in published_ids
-                    ),
+                    total=len(view.datasources),
+                    enabled=sum(1 for record in view.datasources if record.enabled),
+                    published=sum(1 for record in view.datasources if record.id in published_ids),
                 )
             return V2StatusResponse(
                 catalog_available=catalog_available,
                 catalog_revision=revision,
                 datasources=counts,
                 registry=RegistryView(
-                    published=len(registry.published),
+                    published=published_count,
                     sessions=registry.sessions,
                     retired_open=registry.retired_open,
                     candidates=registry.candidates,
@@ -431,29 +469,31 @@ class DatasourceAdmin:
 
     def list(self) -> DatasourceListResponse:
         def read() -> DatasourceListResponse:
-            snapshot = self._runtime.store.snapshot()
-            published = self._published()
+            view = self._sealed()
+            published = self._published(view)
             return DatasourceListResponse(
-                catalog_revision=snapshot.catalog_revision,
-                datasources=[_summary(record, published) for record in snapshot.datasources],
+                catalog_revision=view.catalog_revision,
+                datasources=[_summary(record, published) for record in view.datasources],
             )
 
         return self._run(read)
 
-    def _record(self, datasource_id: str) -> tuple[int, DatasourceRecord]:
-        snapshot = self._runtime.store.snapshot()
-        for record in snapshot.datasources:
+    @staticmethod
+    def _record(view: CatalogView, datasource_id: str) -> DatasourceRecord:
+        for record in view.datasources:
             if record.id == datasource_id:
-                return snapshot.catalog_revision, record
+                return record
         raise DatasourceNotFoundError
 
     def get(self, datasource_id: str) -> DatasourceResponse:
         canonical = _require_id(datasource_id)
 
         def read() -> DatasourceResponse:
-            catalog_revision, record = self._record(canonical)
+            view = self._sealed()
+            record = self._record(view, canonical)
             return DatasourceResponse(
-                catalog_revision=catalog_revision, datasource=_view(record, self._published())
+                catalog_revision=view.catalog_revision,
+                datasource=_view(record, self._published(view)),
             )
 
         return self._run(read)
@@ -462,7 +502,9 @@ class DatasourceAdmin:
         canonical = _require_id(datasource_id)
 
         def read() -> DatasourcePolicyResponse:
-            catalog_revision, record = self._record(canonical)
+            view = self._sealed()
+            catalog_revision = view.catalog_revision
+            record = self._record(view, canonical)
             return DatasourcePolicyResponse(
                 catalog_revision=catalog_revision,
                 datasource_id=record.id,

@@ -497,6 +497,20 @@ class DatasourceRegistry:
                 closing=self._closing,
             )
 
+    def generation_sessions(self, datasource_id: str, generation: int) -> int:
+        """Sessoes da geracao EXATA — publicada ou aposentada —, nunca da atual.
+
+        Uma leitura selada (D-108) aponta uma geracao especifica; procurar pela
+        geracao corrente do ID casaria contadores de uma geracao nova com um
+        selo antigo. Geracao ja descartada tem 0 sessoes por construcao: o
+        descarte exige drenagem.
+        """
+        with self._lock:
+            for candidate in (*self._published.values(), *self._retired):
+                if candidate.datasource_id == datasource_id and candidate.generation == generation:
+                    return candidate._sessions
+            return 0
+
     def current(self, alias: str) -> DatasourceGeneration:
         """Geracao publicada, SEM admitir sessao. Metadata administrativa."""
         with self._lock:

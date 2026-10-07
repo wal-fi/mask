@@ -16,6 +16,7 @@ from __future__ import annotations
 import time
 import uuid
 from collections.abc import Callable
+from dataclasses import dataclass, field
 from typing import TypeVar
 
 from maskgw.admin.http.v2.errors import DatasourceAdminError
@@ -38,6 +39,15 @@ _TESTS = frozenset({DatasourceOperationName.TEST, DatasourceOperationName.TEST_D
 _AUDIT_CATEGORIES = {item.value: item for item in DatasourceAuditErrorCategory}
 
 
+@dataclass(slots=True)
+class AuditMark:
+    """Identidade de UMA operacao auditada e a marca de evento ja emitido."""
+
+    request_id: str = field(default_factory=lambda: uuid.uuid4().hex)
+    started: int = field(default_factory=time.monotonic_ns)
+    emitted: bool = False
+
+
 class DatasourceAuditor:
     """Emite exatamente um `DatasourceAdminAudit` por operacao v2."""
 
@@ -51,21 +61,29 @@ class DatasourceAuditor:
         operation: DatasourceOperationName,
         target_id: str | None,
         call: Callable[[DatasourceWriteProbe], _T],
+        *,
+        mark: AuditMark | None = None,
     ) -> _T:
         """Executa `call` com um probe novo e audita o desfecho.
 
         `DatasourceAdminError` e relevantado sem alteracao depois do log, entao
         status e corpo sao os da operacao. Outra excecao nao chega aqui: a
         traducao em `operations.py` fecha toda falha numa categoria.
+
+        `mark` (D-108) carrega `request_id`/inicio da operacao enfileirada e
+        registra que o evento ja foi emitido, para que um job que escape da
+        traducao nao gere um segundo evento (`unknown`).
         """
-        request_id = uuid.uuid4().hex
-        started = time.monotonic_ns()
+        mark = mark if mark is not None else AuditMark()
+        request_id = mark.request_id
+        started = mark.started
         probe = DatasourceWriteProbe()
         try:
             result = call(probe)
         except DatasourceAdminError as exc:
             category = _AUDIT_CATEGORIES.get(exc.category.value)
             if category is not None:
+                mark.emitted = True
                 self._emit(
                     request_id,
                     operation,
@@ -76,6 +94,7 @@ class DatasourceAuditor:
                     category=category,
                 )
             raise
+        mark.emitted = True
         self._emit(
             request_id,
             operation,
@@ -86,6 +105,40 @@ class DatasourceAuditor:
             category=None,
         )
         return result
+
+    def unknown(
+        self, operation: DatasourceOperationName, target_id: str | None, mark: AuditMark
+    ) -> None:
+        """`INTERNAL_ERROR` de um job que escapou da traducao — so se nada saiu.
+
+        A marca e ligada ANTES de emitir: uma interrupcao entre as duas pode
+        perder o evento, nunca duplica-lo (melhor esforco, D-108).
+        """
+        if mark.emitted:
+            return
+        mark.emitted = True
+        self._emit(
+            mark.request_id,
+            operation,
+            target_id,
+            mark.started,
+            before=None,
+            after=None,
+            category=DatasourceAuditErrorCategory.INTERNAL_ERROR,
+        )
+
+    def refused(self, operation: DatasourceOperationName, target_id: str | None) -> None:
+        """Operacao recusada na admissao da fila (D-108): nada foi executado."""
+        mark = AuditMark()
+        self._emit(
+            mark.request_id,
+            operation,
+            target_id,
+            mark.started,
+            before=None,
+            after=None,
+            category=DatasourceAuditErrorCategory.DATASOURCE_SERVICE_UNAVAILABLE,
+        )
 
     def _emit(  # noqa: PLR0913 - campos de um registro fechado
         self,
@@ -122,4 +175,4 @@ class DatasourceAuditor:
         self._audit.record_datasource_admin(entry)
 
 
-__all__ = ["DatasourceAuditor"]
+__all__ = ["AuditMark", "DatasourceAuditor"]

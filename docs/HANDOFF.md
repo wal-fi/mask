@@ -7,8 +7,11 @@ Etapas 3 e 4 publicadas em `c37be36`; Etapa 5 (UX v2 somente leitura, com o refi
 visual D-101/D-102 aprovado) publicada em `4d5b78f`; Etapa 6 (CRUD visual de
 datasources e policies) autorizada em 2026-09-28, implementada localmente e
 aprovada pelo usuário em 2026-09-30 (D-103–D-106, capturas e fechamento), com a
-correção por Esc; fechamento em commit local ainda sem push; Etapa 7 e
-posteriores sem autorização**.
+correção por Esc, e publicada em `5115a75`; Etapa 7 parcial — infraestrutura do
+verificador (D-107) commitada em `e9eb01a`, e executor/barreira/leitura selada
+(D-108) validado, com fechamento aprovado e publicação autorizada em 2026-10-07
+(estado de publicação confirmado pelo Git); listener PGWire, TLS e
+autenticação, e as Etapas 8–12, sem autorização**.
 MVP e Fase 7 concluídos. A Etapa 8 foi revisada e publicada sem emenda em
 `20db6f021533230d791cd910b037554c3fe03191`; o fetch confirmou master, HEAD igual
 a origin/master, árvore limpa e 0/0, com autoria e trailer preservados.
@@ -22,8 +25,15 @@ implementou o registry multi-datasource, o coordenador interno e o lifecycle
 fail-closed, ativados somente pelo composition root (D-087–D-091). Em 2026-09-24
 a Etapa 4 implementou `/admin/v2` de datasources e o limite efetivo de DNS
 (D-092–D-096), registrados somente com catálogo e Admin HTTP no composition
-root. A especificação aprovada está em `docs/PHASE-9-SPEC.md`; as Etapas 5–12
-continuam sem autorização de implementação. Evidência da Fase 8:
+root. A especificação aprovada está em `docs/PHASE-9-SPEC.md`. As Etapas 5 e 6
+foram concluídas e publicadas. A Etapa 7 está parcial, com duas exceções
+estreitas: a D-107 (commitada em `e9eb01a`) e a D-108 (autorizada pelas
+escolhas A1, B e C; validada; fechamento aprovado e publicação autorizada em
+2026-10-07, com o estado de publicação confirmado pelo Git;
+`docs/PHASE-9-STAGE-7-VALIDATION.md`, §1.4). Listener PGWire, autenticação SCRAM/TLS de produção, dependência ou
+variável nova, bind externo, MCP multi-datasource e as Etapas 8–12 continuam
+sem autorização. A D-090 segue aberta no gate 2, e a v2 proibida em operação
+real. Evidência da Fase 8:
 `docs/PHASE-8-STAGE-9-VALIDATION.md`; das Etapas 3 e 4:
 `docs/PHASE-9-STAGE-3-VALIDATION.md` e `docs/PHASE-9-STAGE-4-VALIDATION.md`.
 
@@ -48,7 +58,7 @@ Ordem de leitura sugerida:
 | `docs/ARCHITECTURE.md` | modulos e responsabilidades |
 | `docs/SECURITY.md` | invariantes de seguranca e o que exigir antes de expor |
 | `docs/SECURITY-REVIEW.md` | 11 findings do red team, seis fechados |
-| `docs/DECISIONS.md` | D-001 a D-107, com o motivo de cada uma |
+| `docs/DECISIONS.md` | D-001 a D-108, com o motivo de cada uma |
 | `docs/MASKING-SPEC.md` | semantica exata do pipeline |
 | `docs/TEST-PLAN.md` | o que cada camada de teste cobre |
 | `docs/THREAT-MODEL.md` | cenarios de ataque e o resultado medido |
@@ -1110,7 +1120,9 @@ automatico, banco de configuracao, Redis, background workers.
   aprovada, a Etapa 2 foi concluída (`docs/PHASE-9-STAGE-2-VALIDATION.md`) e as
   Etapas 3 e 4 locais foram implementadas com evidência em
   `docs/PHASE-9-STAGE-3-VALIDATION.md` e `docs/PHASE-9-STAGE-4-VALIDATION.md`.
-  Nenhuma implementação funcional das Etapas 5–12 está autorizada sem revisão e
+  As Etapas 5 e 6 foram publicadas, e a Etapa 7 está parcial (só as exceções
+  D-107 e D-108; ver o topo deste documento). Nenhuma outra implementação
+  funcional da Etapa 7 nem das Etapas 8–12 está autorizada sem revisão e
   aprovação próprias.
 - neste host Windows, rode o pytest com pilha de thread ampliada (64 MiB), ou o
   teste de payload gigante derruba o processo. Nunca o transforme em `skip`

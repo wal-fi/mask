@@ -34,6 +34,7 @@ from maskgw.audit import AuditLog
 from maskgw.datasource import CrashPoint
 from maskgw.datasource.models import DatasourceDraft, DatasourcePolicy
 from maskgw.errors import DatabaseError
+from maskgw.runtime.admin_work import AdminWorkQueue
 from maskgw.runtime.datasource_service import DatasourceWriteProbe
 from maskgw.runtime.datasources import RegistryLimits
 from tests.admin_http_support import (
@@ -107,6 +108,8 @@ def _router(v2: V2Harness, *, with_v2: bool) -> Any:
         database_dsn_env="MASKGW_DATABASE_DSN",
         audit=AuditLog(),
         datasources=v2.runtime if with_v2 else None,
+        # Fila nunca iniciada: o inventario so registra rotas (D-108).
+        admin_work=AdminWorkQueue() if with_v2 else None,
     )
 
 

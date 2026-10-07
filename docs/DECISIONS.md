@@ -2798,3 +2798,59 @@ podendo perder capacidade. Tampouco há teto absoluto quando uma chamada do
 SO bloqueia. A D-090 continua aberta para seu gate 2, e a v2 permanece
 proibida em operação real; executor e etapas posteriores não são autorizados
 por esta decisão.
+
+## D-108 — Fila administrativa dedicada da v2, barreira e leitura selada
+
+**Estado:** as três escolhas operacionais abaixo foram aprovadas explicitamente
+pelo usuário, nesta conversa, para o incremento de executor, barreira e
+leitura coerente da Etapa 7. O incremento foi validado integralmente conforme
+a §1.4 da evidência (suíte integral, integração com PostgreSQL 16 real e
+pacotes wheel/sdist instalados). Em 2026-10-07 o usuário aprovou o fechamento
+deste incremento e autorizou o commit e a publicação; o estado de publicação é
+o que o Git confirmar. Isso não aprova a Etapa 7 inteira, listener PGWire,
+TLS, autenticação de produção nem ativação da v2. Evidência:
+`docs/PHASE-9-STAGE-7-VALIDATION.md`, §1.4.
+
+**Escolhas aprovadas:**
+
+- **A1 — drenagem integral.** O shutdown conclui todas as operações aceitas,
+  na fila e em execução, com o registry e o verificador ainda capazes de
+  reservar, verificar e publicar. Nenhum ticket na fila é cancelado
+  automaticamente. Cancelar ou desconectar o request não cancela o ticket, e a
+  resposta perdida permanece incerta.
+- **B — capacidade.** Dois workers dedicados e duas posições de espera: no
+  máximo quatro operações aceitas e não concluídas, contadas no ato de
+  aceitar. Acima disso, ou com a barreira fechada, a resposta é
+  `503 DATASOURCE_SERVICE_UNAVAILABLE`, categoria e texto existentes, auditada
+  e sem efeito. As escritas continuam serializadas pelo coordenador.
+- **C — incerteza retém.** Se um worker continua vivo ou tem início/término
+  incertos, fecha-se só o que comprovadamente não depende dele: catálogo,
+  registry, supervisor e store ficam com dono. A `Application` fica `closing`,
+  e o fechamento fica incompleto e repetível. Em startup parcial, o dono é
+  retido antes de qualquer limpeza que possa falhar e só é solto com o
+  fechamento comprovado (a drenagem prova os workers, não o fechamento); o
+  erro original é preservado. A D-107 é preservada.
+
+**Consequências de contrato** (decorrem das escolhas e dos contratos já
+vigentes; não são escolhas novas):
+
+- **Fila:** workers fixos adotados antes do `start()`, com os estados da D-107,
+  sem `ThreadPoolExecutor.submit`, que cria e registra a thread só depois de
+  enfileirar.
+- **Leitura selada:** um selo imutável de catálogo e identidade publicada,
+  trocado só depois da transição inteira. As leituras não tocam o lock do
+  store, o DNS, o filesystem nem a verificação.
+- **Indisponibilidade:** falha depois de um efeito possível, ou falha ao montar
+  o selo, retira o selo e bloqueia o serviço numa transição permanente
+  (`CATALOG_BLOCKED`). Uma escrita cujo selo não pôde ser trocado responde
+  `CATALOG_OUTCOME_UNCERTAIN`.
+- **Sessões e contadores:** as sessões vêm da geração exata do selo; os
+  contadores globais são amostrais.
+- **Estado desconhecido num worker:** fila quebrada e coordenador bloqueado
+  antes de despachar mais. Se a contenção não for confirmada, a fila congela, e
+  os aceitos restantes concluem como falha sem executar, auditados no máximo
+  uma vez.
+- **Sem garantias absolutas:** não há teto absoluto de shutdown nem garantia de
+  entrega da resposta. Interrupções assíncronas entre instruções do próprio
+  ciclo da fila não são cobertas. A D-090 continua aberta no gate 2, e a v2
+  permanece proibida em operação real.

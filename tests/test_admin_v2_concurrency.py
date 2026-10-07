@@ -95,16 +95,27 @@ def test_one_winner_per_datasource_revision(v2: V2Harness) -> None:
             for index in range(8)
         ]
     )
-    assert Counter(reply.status for reply in replies) == {200: 1, 409: 7}
+    # D-108: a fila aceita no maximo 4 operacoes nao concluidas; o excedente e
+    # `503` sem efeito. Entre as aceitas, um so vencedor por revision.
+    statuses = Counter(reply.status for reply in replies)
+    assert set(statuses) <= {200, 409, 503}
+    assert statuses[200] == 1
+    assert statuses[409] + statuses[503] == 7
     for reply in replies:
+        body = reply.json() if reply.status != 200 else {}
         if reply.status == 409:
-            body = reply.json()
             assert body["error"] == "REVISION_CONFLICT"
             assert body["current_revision"] == 2
+        elif reply.status == 503:
+            assert body["error"] == "DATASOURCE_SERVICE_UNAVAILABLE"
     # Uma unica troca de geracao: so o vencedor publicou.
     assert v2.published()[ALIAS] == generation + 1
     events = [e for e in v2.audit.datasource_events() if e["operation"] == "datasource_update"]
-    assert Counter(e["outcome"] for e in events) == {"success": 1, "rejected": 7}
+    assert Counter(e["outcome"] for e in events) == {
+        "success": 1,
+        **({"rejected": statuses[409]} if statuses[409] else {}),
+        **({"error": statuses[503]} if statuses[503] else {}),
+    }
     _coherent(v2)
 
 
@@ -129,9 +140,11 @@ def test_racing_creates_of_one_alias_have_one_winner(v2: V2Harness) -> None:
             for _ in range(6)
         ]
     )
+    # D-108: excedente da fila e `503` sem efeito; um so vencedor por alias.
     statuses = Counter(reply.status for reply in replies)
+    assert set(statuses) <= {200, 409, 503}
     assert statuses[200] == 1
-    assert statuses[409] == 5
+    assert statuses[409] + statuses[503] == 5
     assert len(v2.store.snapshot().datasources) == 1
     _coherent(v2)
 
@@ -159,8 +172,22 @@ def test_mixed_tests_reads_and_writes_keep_state_coherent(v2: V2Harness) -> None
         ]
     replies: list[Reply] = _race(calls)
     for reply in replies:
-        # Um teste pode perder a corrida para a desabilitacao (409), nunca falhar.
-        assert reply.status in {200, 409}, reply.text()
+        # Um teste pode perder a corrida para a desabilitacao (409), nunca
+        # falhar. D-108: acima de 4 operacoes aceitas nao concluidas, a fila
+        # recusa com 503 sem efeito.
+        assert reply.status in {200, 409, 503}, reply.text()
+        if reply.status == 503:
+            assert reply.json()["error"] == "DATASOURCE_SERVICE_UNAVAILABLE"
+    # Reenvio EXPLICITO, pelo teste (o produto nao refaz nada), das
+    # desabilitacoes que a fila recusou.
+    for ds_id in ids:
+        if v2.store.get(ds_id).enabled:
+            reply = v2.call(
+                "POST",
+                f"/admin/v2/datasources/{ds_id}:disable",
+                {"expected_revision": v2.store.get(ds_id).revision},
+            )
+            assert reply.status == 200, reply.text()
     assert all(not v2.store.get(ds_id).enabled for ds_id in ids)
     assert v2.published() == {}
     assert len(v2.store.snapshot().datasources) == 3

@@ -65,9 +65,26 @@ multi-datasource ou definição do datasource default. O limite pós-conexão da
 continua aberto e impede ativar a v2 para operação real. A Etapa 6 foi implementada
 localmente e **aprovada pelo usuário em 2026-09-30** (D-103–D-106, capturas e
 fechamento; `docs/PHASE-9-STAGE-6-VALIDATION.md`), com a correção por Esc e os
-testes de regressão; o fechamento está num commit local ainda sem push.
-Não iniciar PGWire, variável de ambiente nova, bind externo, extensão da tool MCP
-ou qualquer etapa posterior à 6.
+testes de regressão; ela foi publicada em `5115a75`.
+
+A Etapa 7 está **parcial**. Há duas exceções estreitas, e só elas:
+
+- a infraestrutura do verificador em processo filho (D-107), commitada em
+  `e9eb01a`;
+- o incremento de executor, barreira e leitura selada (D-108), autorizado
+  pelas escolhas A1, B e C e validado conforme
+  `docs/PHASE-9-STAGE-7-VALIDATION.md`, §1.4. O usuário aprovou o fechamento e
+  autorizou a publicação em 2026-10-07.
+
+O estado de publicação desses commits é o que o Git confirmar (`git fetch` e
+`git rev-list --left-right --count origin/master...HEAD`). O restante da
+Etapa 7 (listener PGWire, startup, TLS e autenticação) não foi iniciado.
+
+A D-090 continua aberta no gate 2, e a v2 segue proibida em operação real.
+Fora dessas duas exceções, não iniciar listener PGWire, autenticação
+SCRAM/TLS de produção, dependência ou variável de ambiente nova, bind externo,
+extensão da tool MCP (MCP multi-datasource) nem qualquer etapa posterior
+(Etapas 8–12).
 Evidência: `docs/PHASE-8-STAGE-9-VALIDATION.md`.
 
 Interfaces genéricas, editor SQL administrativo, resultados do banco na UI,

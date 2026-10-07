@@ -17,8 +17,14 @@ somente leitura, com estrutura visual, fluxos e decisões apresentados antes do
 código (D-097–D-100), implementada localmente com evidência em
 `docs/PHASE-9-STAGE-5-VALIDATION.md`, e publicada em `4d5b78f`. Em 2026-09-28 foi
 autorizada a Etapa 6 (CRUD visual de datasources e policies), implementada
-localmente com evidência em `docs/PHASE-9-STAGE-6-VALIDATION.md`; a Etapa 7 e
-posteriores continuam sem autorização.
+localmente com evidência em `docs/PHASE-9-STAGE-6-VALIDATION.md`.
+**Atualização de estado (2026-10-07):** as Etapas 1–6 estão concluídas e
+publicadas (Etapa 6 em `5115a75`). A Etapa 7 está **parcial**: só a
+infraestrutura do verificador em processo filho (D-107, `e9eb01a`) e a fila
+administrativa, barreira e leitura selada (D-108, fechamento aprovado e
+publicação autorizada em 2026-10-07; estado confirmado pelo Git). Listener
+PGWire, startup, TLS e autenticação da Etapa 7 e as Etapas 8–12 continuam sem
+autorização; a D-090 segue aberta no gate 2.
 
 Esta aprovação normativa não autoriza as Etapas 5–12, que continuam
 condicionadas à revisão e autorização próprias, na ordem desta especificação.

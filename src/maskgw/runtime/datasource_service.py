@@ -66,7 +66,8 @@ nao compila seria gravada e so falharia na reabilitacao.
 from __future__ import annotations
 
 import threading
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Protocol, TypeVar
@@ -95,6 +96,11 @@ _T = TypeVar("_T")
 
 #: Prefixo da chave de candidato de um datasource que ainda nao tem ID.
 _NEW_KEY_PREFIX = "alias:"
+
+#: Etapas de uma transicao de escrita, para decidir o selo de leitura (D-108).
+_STAGE_NONE = "none"
+_STAGE_PERSISTING = "persisting"
+_STAGE_PERSISTED = "persisted"
 
 
 class DatasourceServiceClosedError(DatasourceRuntimeError):
@@ -148,6 +154,54 @@ class DatasourceDisabledError(DatasourceRuntimeError):
 
     def __init__(self) -> None:
         super().__init__("datasource desabilitado")
+
+
+class DatasourceViewSealError(CatalogOutcomeUncertainError):
+    """A escrita teve efeito, mas a leitura selada nao pode ser refeita (D-108).
+
+    O servico se bloqueia e as leituras ficam indisponiveis: devolver sucesso
+    aqui afirmaria um estado que nenhuma leitura consegue mostrar. Subclasse do
+    resultado incerto do store para cair na MESMA categoria publica. Mensagem
+    fixa, sem dado.
+    """
+
+    def __init__(self) -> None:
+        super().__init__("leitura selada do catalogo indisponivel")
+
+
+@dataclass(frozen=True, slots=True)
+class PublishedIdentity:
+    """Identidade de uma geracao publicada, capturada NUM selo (D-108).
+
+    Sem contadores: sessoes mudam sem commit e sao lidas ao vivo pela geracao
+    EXATA (`DatasourceRegistry.generation_sessions`).
+    """
+
+    alias: str
+    datasource_id: str
+    generation: int
+    record_revision: int
+
+
+@dataclass(frozen=True, slots=True, repr=False)
+class CatalogView:
+    """Selo imutavel de leitura: catalogo e geracoes publicadas do MESMO estado.
+
+    Montado pelo escritor, sob a secao critica, so DEPOIS da transicao inteira
+    (persistencia + publicacao/retirada). Leitores nunca tocam o lock do store,
+    DNS nem filesystem: leem a referencia corrente.
+    """
+
+    catalog_revision: int
+    datasources: tuple[DatasourceRecord, ...]
+    digest: str
+    published: tuple[PublishedIdentity, ...]
+
+    def __repr__(self) -> str:
+        return (
+            f"CatalogView(catalog_revision={self.catalog_revision}, "
+            f"datasources={len(self.datasources)}, published={len(self.published)})"
+        )
 
 
 @dataclass(slots=True)
@@ -214,9 +268,13 @@ class DatasourceRuntimeService:
         "_registry",
         "_resolver",
         "_secrets",
+        "_stage",
         "_state_lock",
         "_store",
         "_verifier",
+        "_view",
+        "_view_lock",
+        "_withdrawn",
     )
 
     def __init__(  # noqa: PLR0913 - colaboradores injetaveis, todos keyword-only
@@ -242,6 +300,100 @@ class DatasourceRuntimeService:
         self._state_lock = threading.Lock()
         self._closed = False
         self._blocked = False
+        # Etapa da transicao de escrita corrente (so sob `_lock`): `_STAGE_NONE`,
+        # `_STAGE_PERSISTING` (o store esta gravando) ou `_STAGE_PERSISTED`.
+        self._stage = _STAGE_NONE
+        # Selo de leitura (D-108). `None` = indisponivel: nenhuma leitura
+        # normal ate o reinicio. Curto: so a troca/leitura da referencia.
+        # `_withdrawn` e permanente: uma retirada nunca e desfeita.
+        self._view_lock = threading.Lock()
+        self._withdrawn = False
+        self._view: CatalogView | None = self._seal()
+
+    # -- leitura selada (D-108) ------------------------------------------
+
+    def view(self) -> CatalogView | None:
+        """Selo corrente, ou `None` quando a leitura esta indisponivel."""
+        with self._view_lock:
+            return self._view
+
+    def block_unknown(self) -> None:
+        """Estado desconhecido (interrupcao fora do controle do coordenador).
+
+        Bloqueia as escritas e retira o selo: sem prova do estado, nenhuma
+        leitura normal. Permanente ate o reinicio.
+        """
+        self._block()
+
+    def _seal(self) -> CatalogView:
+        snapshot = self._store.snapshot()
+        status = self._registry.status()
+        return CatalogView(
+            catalog_revision=snapshot.catalog_revision,
+            datasources=snapshot.datasources,
+            digest=snapshot.digest,
+            published=tuple(
+                PublishedIdentity(
+                    alias=item.alias,
+                    datasource_id=item.datasource_id,
+                    generation=item.generation,
+                    record_revision=item.record_revision,
+                )
+                for item in status.published
+            ),
+        )
+
+    @contextmanager
+    def _transition(self) -> Iterator[None]:
+        """Envolve UMA escrita, sob `_lock`, e decide o selo no fim.
+
+        - nada comecou a gravar: o selo anterior continua verdadeiro;
+        - falha DURANTE a gravacao sem envenenar o store: o store garante o
+          estado anterior intacto, e o selo anterior continua;
+        - qualquer outra falha depois de um efeito possivel (store envenenado,
+          publicacao/retirada que levanta, interrupcao): selo retirado e
+          servico bloqueado; o erro original sai inalterado;
+        - sucesso com efeito: selo novo. Se ele nao puder ser montado, o selo
+          e retirado, o servico bloqueado e a escrita responde como resultado
+          incerto — nunca um sucesso que nenhuma leitura consegue mostrar.
+        """
+        self._stage = _STAGE_NONE
+        try:
+            yield
+        except BaseException:
+            stage = self._stage
+            self._stage = _STAGE_NONE
+            if stage == _STAGE_PERSISTED or (
+                stage == _STAGE_PERSISTING and self._store.requires_reopen
+            ):
+                self._block()
+            raise
+        stage = self._stage
+        self._stage = _STAGE_NONE
+        if stage == _STAGE_NONE:
+            return
+        view: CatalogView | None = None
+        try:
+            view = self._seal()
+        except Exception:
+            view = None
+        except BaseException:
+            # Interrupcao durante a selagem: selo retirado, e ela propaga.
+            self._block()
+            raise
+        if view is None:
+            self._block()
+            # Fora do `except`: sem `__cause__` nem `__context__` (D-017).
+            raise DatasourceViewSealError
+        # Troca MONOTONA: se o selo foi retirado enquanto este era montado
+        # (`block_unknown` de outro worker, por exemplo), ele nao volta, e a
+        # escrita nao responde sucesso sobre um estado declarado desconhecido.
+        with self._view_lock:
+            withdrawn = self._withdrawn
+            if not withdrawn:
+                self._view = view
+        if withdrawn:
+            raise DatasourceViewSealError
 
     # -- testes de candidato, sem efeito ---------------------------------
 
@@ -275,7 +427,7 @@ class DatasourceRuntimeService:
         expected_revision: int,
         probe: DatasourceWriteProbe | None = None,
     ) -> DatasourceRecord:
-        with self._lock:
+        with self._lock, self._transition():
             self._ensure_open()
             self._check_revision(expected_revision)
             _observe_before(probe, expected_revision)
@@ -328,7 +480,7 @@ class DatasourceRuntimeService:
         conferencia de revision: o rascunho nunca nasce de estado anterior a
         secao critica.
         """
-        with self._lock:
+        with self._lock, self._transition():
             self._ensure_open()
             catalog_revision = self._guard(
                 datasource_id,
@@ -357,7 +509,7 @@ class DatasourceRuntimeService:
         Pedir o estado que ja vale nao grava nada: devolve o registro corrente,
         e o probe registra a mesma revision antes e depois.
         """
-        with self._lock:
+        with self._lock, self._transition():
             self._ensure_open()
             catalog_revision = self._guard(
                 datasource_id,
@@ -386,7 +538,7 @@ class DatasourceRuntimeService:
         expected_datasource_revision: int | None = None,
         probe: DatasourceWriteProbe | None = None,
     ) -> DatasourceRecord:
-        with self._lock:
+        with self._lock, self._transition():
             self._ensure_open()
             catalog_revision = self._guard(
                 datasource_id,
@@ -435,7 +587,7 @@ class DatasourceRuntimeService:
         `confirm` recebe o registro lido sob o lock, depois da revision, e pode
         recusar a remocao levantando — a confirmacao destrutiva da Admin v2.
         """
-        with self._lock:
+        with self._lock, self._transition():
             self._ensure_open()
             catalog_revision = self._guard(
                 datasource_id,
@@ -568,12 +720,15 @@ class DatasourceRuntimeService:
         filesystem que nao e `CatalogWriteError`. Recusas anteriores ao commit
         (revision, alias, destino) nao o envenenam e nao bloqueiam.
         """
+        self._stage = _STAGE_PERSISTING
         try:
-            return write()
+            result = write()
         except BaseException:
             if self._store.requires_reopen:
                 self._block()
             raise
+        self._stage = _STAGE_PERSISTED
+        return result
 
     def _persist_withdrawal(self, datasource_id: str, write: Callable[[], _T]) -> _T:
         """Persistencia de desabilitar/remover, com a retirada no fim.
@@ -591,8 +746,16 @@ class DatasourceRuntimeService:
         return result
 
     def _block(self) -> None:
-        with self._state_lock:
+        """Bloqueio PERMANENTE: escritas recusadas e selo retirado, juntos.
+
+        Uma transicao so, sob os dois locks (sempre nesta ordem): nenhum leitor
+        ve "bloqueado" com selo disponivel, e nenhuma troca de selo posterior
+        volta a disponibiliza-lo (`_withdrawn` nunca volta atras).
+        """
+        with self._state_lock, self._view_lock:
             self._blocked = True
+            self._withdrawn = True
+            self._view = None
 
     def _ensure_open(self, *, allow_blocked: bool = False) -> None:
         with self._state_lock:
@@ -765,6 +928,7 @@ def _observe_before(probe: DatasourceWriteProbe | None, catalog_revision: int) -
 
 
 __all__ = [
+    "CatalogView",
     "DatasourceAliasConflictError",
     "DatasourceCatalogSettings",
     "DatasourceDisabledError",
@@ -775,8 +939,10 @@ __all__ = [
     "DatasourceRuntimeService",
     "DatasourceServiceBlockedError",
     "DatasourceServiceClosedError",
+    "DatasourceViewSealError",
     "DatasourceWriteProbe",
     "DraftSource",
+    "PublishedIdentity",
     "VerificationLifecycle",
     "draft_from_record",
     "open_datasource_runtime",

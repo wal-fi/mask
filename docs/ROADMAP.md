@@ -397,8 +397,11 @@ o MCP permanece `stdio`.
 Fase 8 concluída e publicada. Fase 9 — Etapa 1 documental concluída e aprovada;
 Etapa 2 concluída; Etapas 3 e 4 publicadas; Etapa 5 (UX v2 somente leitura)
 publicada; Etapa 6 (CRUD visual de datasources e policies) aprovada pelo usuário
-e commitada localmente em 2026-09-30 (D-103–D-106); Etapa 7 em diante não
-iniciada. A D-090 continua aberta e a v2 segue proibida em operação real. A
+(D-103–D-106) e publicada em `5115a75`; Etapa 7 parcial — verificador em processo
+filho (D-107, `e9eb01a`) e fila/barreira/leitura selada (D-108, fechamento
+aprovado e publicação autorizada em 2026-10-07; estado confirmado pelo Git);
+listener PGWire, TLS e autenticação e as Etapas 8–12 não iniciados. A D-090
+continua aberta e a v2 segue proibida em operação real. A
 medição final da Fase 8 está em
 `docs/PHASE-8-STAGE-9-VALIDATION.md`; os números abaixo
 registram o fechamento anterior da Fase 7.

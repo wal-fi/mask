@@ -24,6 +24,7 @@ from maskgw.admin.http import AdminHttpServer, build_admin_app
 from maskgw.audit import AuditLog
 from maskgw.datasource import CatalogHooks, CatalogStore, CatalogWriteError, CrashPoint
 from maskgw.datasource.destination import AddressResolver
+from maskgw.runtime.admin_work import AdminWorkQueue
 from maskgw.runtime.datasource_service import DatasourceRuntime, DatasourceRuntimeService
 from maskgw.runtime.datasources import DatasourceRegistry, RegistryLimits
 from maskgw.secretsource import MappingSecretProvider
@@ -164,6 +165,8 @@ class V2Harness:
     audit_log: AuditLog
     secrets: MappingSecretProvider
     server: AdminHttpServer | None = None
+    #: Fila dedicada da v2 (D-108), criada e iniciada como no composition root.
+    work: AdminWorkQueue | None = None
     _logger: logging.Logger | None = field(default=None, repr=False)
 
     @property
@@ -172,6 +175,10 @@ class V2Harness:
         return self.server.port
 
     def start(self, *, with_v2: bool = True) -> AdminHttpServer:
+        if with_v2 and self.work is None:
+            self.work = AdminWorkQueue(on_unknown=self.service.block_unknown)
+            self.work.start()
+
         def factory(bound_port: int) -> Any:
             return build_admin_app(
                 self.v1.service,
@@ -181,6 +188,7 @@ class V2Harness:
                 database_dsn_env="MASKGW_DATABASE_DSN",
                 audit=self.audit_log,
                 datasources=self.runtime if with_v2 else None,
+                admin_work=self.work if with_v2 else None,
             )
 
         self.server = AdminHttpServer(app_factory=factory, host="127.0.0.1", port=0)
@@ -229,6 +237,11 @@ class V2Harness:
         )
 
     def close(self) -> None:
+        # Mesma ordem do composition root (D-108): barreira, drenagem dos
+        # aceitos, depois HTTP e runtime.
+        if self.work is not None:
+            self.work.close_admission()
+            assert self.work.drain(), "fila de teste nao drenou"
         if self.server is not None:
             self.server.stop()
             self.server = None
