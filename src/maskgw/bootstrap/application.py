@@ -102,6 +102,8 @@ if TYPE_CHECKING:
     # capacidade nova e pedida: com ela desligada, nenhum modulo de
     # `maskgw.datasource` e carregado (D-087).
     from maskgw.gateway.datasources import DatasourceGateway
+    from maskgw.pgwire.composition import PgwireComposition, PreparedPgwire
+    from maskgw.pgwire.listener import PgwireListener
     from maskgw.runtime.admin_work import AdminWorkQueue
     from maskgw.runtime.datasource_service import DatasourceCatalogSettings, DatasourceRuntime
 
@@ -141,8 +143,10 @@ class Application:
         "_datasource_gateway",
         "_datasources",
         "_gateway",
+        "_ledger_retained",
         "_lifecycle_lock",
         "_mcp_server",
+        "_pgwire",
         "_registry",
         "_running",
     )
@@ -161,9 +165,13 @@ class Application:
         datasources: DatasourceRuntime | None = None,
         datasource_gateway: DatasourceGateway | None = None,
         admin_work: AdminWorkQueue | None = None,
+        pgwire_listener: PgwireListener | None = None,
     ) -> None:
         self._gateway = gateway
         self._admin_work = admin_work
+        self._pgwire = pgwire_listener
+        # A propria `Application` esta no ledger D-108 (so sob `_close_lock`).
+        self._ledger_retained = False
         self._config = config
         self._registry = registry
         self._mcp_server = mcp_server
@@ -242,6 +250,15 @@ class Application:
         return self._admin_work
 
     @property
+    def pgwire_listener(self) -> PgwireListener | None:
+        """Listener PGWire composto internamente (D-110), ou None.
+
+        Existe so quando `build_application` recebeu `pgwire`; ja escuta
+        (bind confirmado antes do MCP). Nao ha caminho operacional que o ligue.
+        """
+        return self._pgwire
+
+    @property
     def datasource_gateway(self) -> DatasourceGateway | None:
         """Sessoes de consulta por alias sobre o registry, ou None."""
         return self._datasource_gateway
@@ -317,6 +334,11 @@ class Application:
         ):
             msg = "encerramento recusado a partir de uma thread administrativa"
             raise RuntimeError(msg)
+        # D-110: idem para acceptor e workers do listener PGWire (o `stop`
+        # esperaria a propria thread).
+        if self._pgwire is not None and self._pgwire.owns_current_thread():
+            msg = "encerramento recusado a partir de uma thread do listener PGWire"
+            raise RuntimeError(msg)
 
         with self._lifecycle_lock:
             if self._closed or self._running:
@@ -331,19 +353,35 @@ class Application:
             if self._is_closed():
                 return
 
-            work_settled = self._quiesce()
+            # D-110: com PGWire, a propria `Application` — dona do listener e
+            # do catalogo que ele le — entra no ledger D-108 ANTES de qualquer
+            # passo falivel. Um encerramento sem prova (ou uma excecao no
+            # cleanup) nao pode deixar o dono depender de o chamador manter a
+            # referencia: descartar a `Application` nao faz o GC soltar nada.
+            # So o fechamento completo, ao fim, solta a retencao.
+            if self._pgwire is not None and not self._ledger_retained:
+                _retain(self)
+                self._ledger_retained = True
+
+            work_settled, pgwire_settled = self._quiesce()
             # Cada fechamento abaixo roda mesmo que o anterior falhe: um erro
             # no runtime legado nao pode deixar sessoes upstream nem os locks
             # do catalogo e do `masking.yaml` presos.
+            #
+            # Dependencias do listener PGWire (D-110): SO `datasources.service`
+            # (o selo lido pelo callback de alias), alem de principal e TLS em
+            # memoria. Ele nao usa o runtime legado nem o `masking.yaml`; por
+            # isso estes fecham com o HTTP comprovadamente parado, e o catalogo
+            # so fecha com a fila E o listener comprovadamente parados.
             try:
                 self._registry.close_all()
             finally:
                 try:
-                    if self._datasources is not None and work_settled:
+                    if self._datasources is not None and work_settled and pgwire_settled:
                         # Espera a escrita em voo, drena/cancela as sessoes,
                         # descarta as geracoes e so entao solta os locks do
-                        # catalogo. Com um worker vivo ou de inicio/termino
-                        # incerto, NADA disso e solto: ele pode estar usando.
+                        # catalogo. Com um worker ou thread PGWire vivo ou de
+                        # inicio/termino incerto, NADA disso e solto.
                         self._datasources.close()
                 finally:
                     if self._config_store is not None:
@@ -358,21 +396,37 @@ class Application:
                 )
 
                 raise AdminWorkShutdownIncompleteError
+            if not pgwire_settled:
+                # Idem: `closing`; o `close()` seguinte retenta o recolhimento.
+                from maskgw.pgwire.listener import (  # noqa: PLC0415
+                    PgwireListenerIncompleteError,
+                )
+
+                raise PgwireListenerIncompleteError
 
             with self._lifecycle_lock:
                 self._closed = True
+            if self._ledger_retained:
+                # Fechamento completo e provado: so agora a retencao sai.
+                _release_retained(self)
+                self._ledger_retained = False
 
-    def _quiesce(self) -> bool:
-        """Para as entradas e conclui o trabalho aceito; `True` se comprovado.
+    def _quiesce(self) -> tuple[bool, bool]:
+        """Para as entradas e conclui o trabalho aceito.
 
-        D-108: primeiro so a barreira da fila v2 e a secao critica v1. As
-        operacoes v2 JA aceitas — na fila e em execucao — concluem com o
-        registry e o verificador ainda capazes de reservar, verificar e
-        publicar; so depois a admissao de sessoes/verificacoes para, e entao a
-        thread HTTP recebe `join`.
+        Devolve `(fila comprovada, listener PGWire comprovado)`.
+
+        D-108: primeiro so barreiras — fila v2, admissao PGWire (D-110,
+        `request_stop`, sem `join`) e secao critica v1. TODAS as admissoes
+        fecham antes de qualquer drenagem ou `join`. As operacoes v2 JA
+        aceitas concluem com registry e verificador ainda aptos; so depois a
+        admissao de sessoes de datasource para, o listener e recolhido com
+        prova e a thread HTTP recebe `join`.
         """
         if self._admin_work is not None:
             self._admin_work.close_admission()
+        if self._pgwire is not None:
+            self._pgwire.request_stop()
         if self._admin is not None:
             self._admin.close()
         work_settled = True
@@ -384,11 +438,24 @@ class Application:
         # esperar a thread HTTP — nao ha o que drenar do que nao entrou.
         if self._datasources is not None:
             self._datasources.begin_shutdown()
+        pgwire_settled = self._stop_pgwire()
         if self._admin_http is not None:
             # Bloqueia ate a thread HTTP acabar. So depois disso os runtimes
             # podem fechar e o lock pode sair (secao 9.2).
             self._admin_http.stop()
-        return work_settled
+        return work_settled, pgwire_settled
+
+    def _stop_pgwire(self) -> bool:
+        """Recolhe o listener com prova fisica; `False` se incompleto."""
+        if self._pgwire is None:
+            return True
+        from maskgw.pgwire.listener import PgwireListenerError  # noqa: PLC0415
+
+        try:
+            self._pgwire.stop()
+        except PgwireListenerError:
+            return False
+        return True
 
     def _is_closed(self) -> bool:
         with self._lifecycle_lock:
@@ -492,6 +559,7 @@ def build_application(  # noqa: PLR0913 - parametros de composicao, keyword-only
     admin_http: AdminHttpSettings | None = None,
     admin_ui_enabled: bool = False,
     datasource_catalog: DatasourceCatalogSettings | None = None,
+    pgwire: PgwireComposition | None = None,
 ) -> Application:
     """Constroi os planos inteiros ou levanta sem deixar recurso de pe.
 
@@ -527,6 +595,14 @@ def build_application(  # noqa: PLR0913 - parametros de composicao, keyword-only
     # A fronteira HTTP so existe sobre a secao critica.
     admin_enabled = admin_enabled or admin_http is not None
 
+    # Fase 9, Etapa 7 (D-110): composicao INTERNA do listener PGWire. So o
+    # composition root a recebe; o `main` recusa a ativacao. Exige catalogo, e
+    # settings, TLS e principal sao preparados AQUI — e, so para bind por
+    # hostname sem colaborador, a resolucao limitada vem depois deles —, antes
+    # de store, config, banco ou listener. Com `pgwire=None`, nada de
+    # `maskgw.pgwire` e importado.
+    prepared_pgwire, datasource_catalog = _prepare_pgwire(pgwire, datasource_catalog)
+
     store: ConfigFileStore | None = None
     adapter: PostgresAdapter | None = None
     registry: RuntimeRegistry | None = None
@@ -534,6 +610,8 @@ def build_application(  # noqa: PLR0913 - parametros de composicao, keyword-only
     datasources: DatasourceRuntime | None = None
     datasource_gateway: DatasourceGateway | None = None
     admin_work: AdminWorkQueue | None = None
+    pgwire_listener: PgwireListener | None = None
+    admin: AdminConfigService | None = None
 
     try:
         # Fase 9, §11 passos 3-7: store, lock, chave, catalogo autenticado,
@@ -622,6 +700,14 @@ def build_application(  # noqa: PLR0913 - parametros de composicao, keyword-only
             )
             http_server.start()
 
+        # §11 passo 9 (D-110): o listener PGWire e ADOTADO antes do `start()` —
+        # pelo mesmo motivo do servidor HTTP — e o bind e confirmado (o
+        # `start()` e sincrono) ANTES de o MCP existir. Ele le so o selo do
+        # catalogo; nao usa o runtime legado, o `masking.yaml` nem upstream.
+        if prepared_pgwire is not None and datasources is not None:
+            pgwire_listener = _build_pgwire_listener(prepared_pgwire, datasources)
+            pgwire_listener.start()
+
         # Passo 7: o MCP e construido por ultimo e ainda nao esta disponivel.
         # Somente `Application.run()` abre o stdio.
         mcp_server = build_mcp_server(gateway)
@@ -637,6 +723,7 @@ def build_application(  # noqa: PLR0913 - parametros de composicao, keyword-only
             datasources=datasources,
             datasource_gateway=datasource_gateway,
             admin_work=admin_work,
+            pgwire_listener=pgwire_listener,
         )
     except BaseException:
         # Falha parcial: desmontar na mesma ordem do shutdown. A thread HTTP
@@ -651,6 +738,8 @@ def build_application(  # noqa: PLR0913 - parametros de composicao, keyword-only
         _unwind_partial(
             admin_work=admin_work,
             http_server=http_server,
+            pgwire_listener=pgwire_listener,
+            admin=admin,
             registry=registry,
             adapter=adapter,
             datasources=datasources,
@@ -659,10 +748,46 @@ def build_application(  # noqa: PLR0913 - parametros de composicao, keyword-only
         raise
 
 
+def _prepare_pgwire(
+    pgwire: PgwireComposition | None,
+    catalog: DatasourceCatalogSettings | None,
+) -> tuple[PreparedPgwire | None, DatasourceCatalogSettings | None]:
+    """D-110: valida e prepara o PGWire ANTES de qualquer efeito.
+
+    Sem `pgwire`, nada e importado e o catalogo segue inalterado. Com ele,
+    exige catalogo; revalida settings e colaboradores; prepara TLS e principal;
+    resolve UMA vez o bind por hostname sem colaborador (limitado); e faz do
+    `max_sessions` do PGWire a fonte UNICA de S tambem no registry.
+    """
+    if pgwire is None:
+        return None, catalog
+    if catalog is None:
+        msg = "pgwire: o listener exige o catalogo de datasources"
+        raise ConfigError(msg)
+    from maskgw.pgwire.composition import prepare_pgwire, session_limits  # noqa: PLC0415
+
+    prepared = prepare_pgwire(pgwire)
+    return prepared, session_limits(catalog, prepared.settings)
+
+
+def _build_pgwire_listener(
+    prepared: PreparedPgwire, datasources: DatasourceRuntime
+) -> PgwireListener:
+    """Listener montado SEM iniciar (quem chama adota antes do `start()`).
+
+    O callback de alias le so o selo `datasources.service.view()`.
+    """
+    from maskgw.pgwire.composition import build_listener, sealed_alias_check  # noqa: PLC0415
+
+    return build_listener(prepared, alias_accepted=sealed_alias_check(datasources.service))
+
+
 def _unwind_partial(  # noqa: PLR0913 - recursos da construcao parcial, keyword-only
     *,
     admin_work: AdminWorkQueue | None,
     http_server: AdminHttpServer | None,
+    pgwire_listener: PgwireListener | None = None,
+    admin: AdminConfigService | None = None,
     registry: RuntimeRegistry | None,
     adapter: PostgresAdapter | None,
     datasources: DatasourceRuntime | None,
@@ -678,21 +803,18 @@ def _unwind_partial(  # noqa: PLR0913 - recursos da construcao parcial, keyword-
     usar e fechado sem essa prova. Sem fila (legado, v1 ou catalogo sem HTTP),
     o desmonte e exatamente o anterior.
     """
-    if admin_work is None:
+    if admin_work is None and pgwire_listener is None:
         if datasources is not None:
             datasources.begin_shutdown()
         if http_server is not None:
             http_server.stop()
         _close_partial(registry=registry, adapter=adapter, datasources=datasources, store=store)
         return
-    _retain(admin_work, datasources)
-    work_settled = False
-    with contextlib.suppress(Exception):
-        admin_work.close_admission()
-        work_settled = admin_work.drain()
-    if datasources is not None:
-        with contextlib.suppress(Exception):
-            datasources.begin_shutdown()
+    # D-108/D-110: retencao forte ANTES de qualquer passo falivel — a
+    # `Application` nunca existira. Fila, listener e catalogo so sao soltos
+    # com drenagem, recolhimento do listener e fechamento comprovados.
+    _retain(admin_work, pgwire_listener, datasources)
+    dependencies_settled = _quiesce_partial(admin_work, pgwire_listener, datasources, admin)
     http_stopped = http_server is None
     if http_server is not None:
         with contextlib.suppress(Exception):
@@ -708,7 +830,9 @@ def _unwind_partial(  # noqa: PLR0913 - recursos da construcao parcial, keyword-
         _close_partial(
             registry=registry,
             adapter=adapter,
-            datasources=datasources if work_settled else None,
+            # O catalogo so fecha com fila E listener comprovados: um worker ou
+            # uma thread PGWire viva/incerta ainda pode le-lo.
+            datasources=datasources if dependencies_settled else None,
             store=store,
         )
         cleaned = True
@@ -720,8 +844,48 @@ def _unwind_partial(  # noqa: PLR0913 - recursos da construcao parcial, keyword-
         # dos recursos restantes tambem ficam retidos.
         _retain(registry, adapter, store)
         return
-    if work_settled:
-        _release_retained(admin_work, datasources)
+    if dependencies_settled:
+        _release_retained(admin_work, pgwire_listener, datasources)
+
+
+def _quiesce_partial(
+    admin_work: AdminWorkQueue | None,
+    pgwire_listener: PgwireListener | None,
+    datasources: DatasourceRuntime | None,
+    admin: AdminConfigService | None,
+) -> bool:
+    """Startup parcial: fecha TODAS as admissoes, drena e recolhe com prova.
+
+    Mesma ordem do `Application._quiesce`: barreira da fila v2, admissao
+    PGWire e secao critica v1 fecham ANTES da drenagem — um build que falhou
+    nao tem `Application.close` para selar a v1 por ele. `True` so com a fila
+    drenada E o listener comprovadamente parado. Cada passo e protegido: uma
+    falha de limpeza nao substitui o erro original.
+    """
+    if admin_work is not None:
+        with contextlib.suppress(Exception):
+            admin_work.close_admission()
+    if pgwire_listener is not None:
+        with contextlib.suppress(Exception):
+            pgwire_listener.request_stop()
+    if admin is not None:
+        with contextlib.suppress(Exception):
+            admin.close()
+    work_settled = admin_work is None
+    if admin_work is not None:
+        with contextlib.suppress(Exception):
+            work_settled = admin_work.drain()
+    if datasources is not None:
+        with contextlib.suppress(Exception):
+            datasources.begin_shutdown()
+    pgwire_stopped = pgwire_listener is None
+    if pgwire_listener is not None:
+        # `stop()` sobre um listener que nunca iniciou nao faz nada; sem prova
+        # fisica levanta, e o catalogo que ele le continua retido.
+        with contextlib.suppress(Exception):
+            pgwire_listener.stop()
+            pgwire_stopped = True
+    return work_settled and pgwire_stopped
 
 
 def _close_partial(

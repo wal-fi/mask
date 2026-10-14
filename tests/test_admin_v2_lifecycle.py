@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import socket
 import subprocess
+import sys
 import threading
 import time
 from pathlib import Path
@@ -62,15 +63,32 @@ def test_shutdown_with_slow_dns_in_flight_is_bounded_and_leaves_nothing(
 ) -> None:
     processes: list[subprocess.Popen[bytes]] = []
     original = subprocess.Popen
+    slow_dns = "import time\ntime.sleep(60)\n"
+    dns_args = [sys.executable, "-I", "-S", "-c", slow_dns]
 
     def spy(args: list[str], **kwargs: Any) -> subprocess.Popen[bytes]:
         process: subprocess.Popen[bytes] = original(args, **kwargs)
-        processes.append(process)
+        # `platform.win32_ver()` pode criar um `cmd` no startup do HTTP.
+        # Esse processo NAO prova que o trabalho DNS entrou na fila.
+        if args == dns_args:
+            processes.append(process)
         return process
 
     monkeypatch.setattr(subprocess, "Popen", spy)
-    monkeypatch.setattr(resolver_module, "_CHILD_CODE", "import time\ntime.sleep(60)\n")
+    monkeypatch.setattr(resolver_module, "_CHILD_CODE", slow_dns)
     monkeypatch.setattr(resolver_module, "DNS_TIMEOUT_SECONDS", 1.5)
+
+    # Contraprova deterministica, mesmo se os metadados do Windows estao quentes.
+    with subprocess.Popen(
+        [sys.executable, "-I", "-S", "-B", "-c", "pass"],
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        env=resolver_module._child_environment(),
+        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+    ) as unrelated:
+        assert unrelated.wait(timeout=10) == 0
+    assert processes == [], "processo alheio foi confundido com DNS em voo"
 
     baseline = thread_snapshot()
     harness = build_v2(tmp_path, resolver=None)

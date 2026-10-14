@@ -26,12 +26,36 @@ fail-closed, ativados somente pelo composition root (D-087–D-091). Em 2026-09-
 a Etapa 4 implementou `/admin/v2` de datasources e o limite efetivo de DNS
 (D-092–D-096), registrados somente com catálogo e Admin HTTP no composition
 root. A especificação aprovada está em `docs/PHASE-9-SPEC.md`. As Etapas 5 e 6
-foram concluídas e publicadas. A Etapa 7 está parcial, com duas exceções
-estreitas: a D-107 (commitada em `e9eb01a`) e a D-108 (autorizada pelas
+foram concluídas e publicadas. A Etapa 7 está parcial, com quatro exceções
+estreitas: a D-107 (commitada em `e9eb01a`), a D-108 (autorizada pelas
 escolhas A1, B e C; validada; fechamento aprovado e publicação autorizada em
 2026-10-07, com o estado de publicação confirmado pelo Git;
-`docs/PHASE-9-STAGE-7-VALIDATION.md`, §1.4). Listener PGWire, autenticação SCRAM/TLS de produção, dependência ou
-variável nova, bind externo, MCP multi-datasource e as Etapas 8–12 continuam
+`docs/PHASE-9-STAGE-7-VALIDATION.md`, §1.4) e a D-109. Nesta, com aval do
+usuário em 2026-10-08 a SCRAM-SHA-256, -PLUS sobre TLS, SASLprep e
+`scramp==1.4.17`, e sob delegação das escolhas restantes, as peças puras do
+startup PGWire (framing, credencial, SCRAM, channel binding) e a fixação de
+`scramp`/`asn1crypto` foram implementadas localmente, sem commit e em revisão
+independente. A validação integral foi medida em 2026-10-08: suíte com PG16
+real verde, wheel e sdist com a sonda 54/54 (§1.5). A quarta é a D-110,
+autorizada explicitamente em 2026-10-09: listener, TLS e autenticação sem SQL,
+configuração externa, admissão e shutdown seguros, testes só em loopback, sem
+deploy nem liberação de produção, runtime moderno como gate separado. Ela é
+executada em lotes revisados: o lote 1 (`pgwire/settings.py` e
+`pgwire/tls.py`), o lote 2 (`pgwire/transport.py` e `pgwire/driver.py`) e o
+lote 3 (`pgwire/listener.py`) e o lote 4 (composição interna em
+`build_application(pgwire=...)`) foram implementados localmente e revisados,
+sem commit (§1.6). Os gates finais do lote 4 (2026-10-12: suíte integral e
+`integration` com PG16 real, e wheel/sdist com sonda) passaram. O `main`
+recusa `MASKGW_PGWIRE_ENABLED=1`. O gate de runtime moderno foi medido em
+2026-10-13 só no Windows com CPython 3.14.8 temporário (lotes A–C, §1.6):
+suíte integral verde depois da correção só de teste dos casos NUL, e os 4
+`union-attr` do mypy com o alvo 3.14 abertos. O lote C foi revisado. A
+resolução limitada do hostname do bind foi implementada localmente em
+2026-10-14, com medições finais no Windows nos runtimes legado e moderno
+temporário (§1.6). Na mesma data o usuário aprovou fechar esse trabalho
+validado num commit local, sem push; as menções a "sem commit" acima
+descrevem o estado anterior. A ativação operacional, outra dependência, o bind
+externo real, MCP multi-datasource e as Etapas 8–12 continuam sem execução ou
 sem autorização. A D-090 segue aberta no gate 2, e a v2 proibida em operação
 real. Evidência da Fase 8:
 `docs/PHASE-8-STAGE-9-VALIDATION.md`; das Etapas 3 e 4:
@@ -58,7 +82,7 @@ Ordem de leitura sugerida:
 | `docs/ARCHITECTURE.md` | modulos e responsabilidades |
 | `docs/SECURITY.md` | invariantes de seguranca e o que exigir antes de expor |
 | `docs/SECURITY-REVIEW.md` | 11 findings do red team, seis fechados |
-| `docs/DECISIONS.md` | D-001 a D-108, com o motivo de cada uma |
+| `docs/DECISIONS.md` | D-001 a D-110, com o motivo de cada uma |
 | `docs/MASKING-SPEC.md` | semantica exata do pipeline |
 | `docs/TEST-PLAN.md` | o que cada camada de teste cobre |
 | `docs/THREAT-MODEL.md` | cenarios de ataque e o resultado medido |
@@ -1121,7 +1145,8 @@ automatico, banco de configuracao, Redis, background workers.
   Etapas 3 e 4 locais foram implementadas com evidência em
   `docs/PHASE-9-STAGE-3-VALIDATION.md` e `docs/PHASE-9-STAGE-4-VALIDATION.md`.
   As Etapas 5 e 6 foram publicadas, e a Etapa 7 está parcial (só as exceções
-  D-107 e D-108; ver o topo deste documento). Nenhuma outra implementação
+  D-107, D-108 e D-109, esta só com peças puras e sem commit; ver o topo deste
+  documento). Nenhuma outra implementação
   funcional da Etapa 7 nem das Etapas 8–12 está autorizada sem revisão e
   aprovação próprias.
 - neste host Windows, rode o pytest com pilha de thread ampliada (64 MiB), ou o

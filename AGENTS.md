@@ -67,21 +67,62 @@ localmente e **aprovada pelo usuário em 2026-09-30** (D-103–D-106, capturas e
 fechamento; `docs/PHASE-9-STAGE-6-VALIDATION.md`), com a correção por Esc e os
 testes de regressão; ela foi publicada em `5115a75`.
 
-A Etapa 7 está **parcial**. Há duas exceções estreitas, e só elas:
+A Etapa 7 está **parcial**. Há quatro exceções estreitas, e só elas:
 
 - a infraestrutura do verificador em processo filho (D-107), commitada em
   `e9eb01a`;
 - o incremento de executor, barreira e leitura selada (D-108), autorizado
   pelas escolhas A1, B e C e validado conforme
   `docs/PHASE-9-STAGE-7-VALIDATION.md`, §1.4. O usuário aprovou o fechamento e
-  autorizou a publicação em 2026-10-07.
+  autorizou a publicação em 2026-10-07;
+- as peças puras do startup PGWire (D-109): framing, credencial, troca
+  SCRAM-SHA-256/-PLUS e channel binding, em `src/maskgw/pgwire/`, com
+  `scramp==1.4.17` e `asn1crypto==1.5.1` fixados. O usuário deu aval a
+  SCRAM-SHA-256, -PLUS sobre TLS e SASLprep em 2026-10-08 e delegou as
+  escolhas restantes. Implementadas localmente, sem commit, em revisão
+  independente (§1.5 da mesma evidência). O pacote não é importado pelo
+  composition root;
+- a integração do listener PGWire (D-110), **autorizada explicitamente pelo
+  usuário em 2026-10-09**: listener, TLS e autenticação **sem SQL**;
+  configuração externa `MASKGW_PGWIRE_*`; admissão e shutdown seguros; testes
+  só em loopback e em ambientes descartáveis; revisão antes de qualquer
+  commit/push. **Sem** deploy, liberação de produção nem ativação operacional:
+  no `main`, `MASKGW_PGWIRE_ENABLED=1` será recusado com erro fixo enquanto a
+  ativação não for entregue. O runtime moderno é um gate separado: não
+  recriar a `.venv` nem instalar Python no sistema. Em 2026-10-13 o usuário
+  autorizou, de forma estreita, CPython 3.14.8 **temporário e isolado** (pacote
+  oficial do nuget.org extraído fora do checkout, sem PATH, registro, launcher
+  ou associações), só para validar o runtime. Os lotes A, B e C foram medidos
+  (§1.6). O lote B deu 2 falhas, ambas nos casos NUL de um teste. O lote C
+  corrigiu só esse teste, com autorização do usuário e revisão independente,
+  e a nova suíte integral com PG16 ficou verde no Windows com CPython 3.14.8.
+  Os 4 `union-attr` do mypy com o alvo 3.14 seguem abertos, e o lote C foi
+  revisado. A execução é em lotes revisados: o
+  lote 1 (`pgwire/settings.py` e `pgwire/tls.py`) e o lote 2
+  (`pgwire/transport.py` e `pgwire/driver.py`) e o lote 3
+  (`pgwire/listener.py`) e o lote 4 (composição INTERNA em
+  `build_application(pgwire=...)`, `pgwire/composition.py`), revisados,
+  estão implementados localmente, sem commit (§1.6). Os gates finais do lote
+  4 foram medidos em 2026-10-12: suíte integral e `integration` com PG16 real,
+  e wheel/sdist com a sonda, todos verdes. O `main`
+  recusa `MASKGW_PGWIRE_ENABLED=1` (STARTUP_FAILURE) e não lê nenhum outro
+  setting PGWire; não há caminho operacional que ligue o listener. Em
+  2026-10-14 o usuário aprovou fechar esse trabalho validado (D-109/D-110 e
+  a resolução limitada do bind) num **commit local**, sem push. As menções a
+  "sem commit" acima descrevem o estado anterior a esse fechamento.
 
 O estado de publicação desses commits é o que o Git confirmar (`git fetch` e
 `git rev-list --left-right --count origin/master...HEAD`). O restante da
-Etapa 7 (listener PGWire, startup, TLS e autenticação) não foi iniciado.
+Etapa 7 — ativação operacional — não foi feito. Em 2026-10-14 o usuário
+autorizou implementar a
+resolução limitada do hostname do bind (opção B da D-110), em lotes revisados;
+ela está implementada localmente, com medições finais no Windows (suíte com
+PG16 e pacotes) no runtime legado e no runtime moderno temporário 3.14.8. A
+ativação operacional segue bloqueada no `main`. O gate de runtime moderno foi medido só no
+Windows com CPython 3.14.8 (lotes A–C) e não libera operação real.
 
 A D-090 continua aberta no gate 2, e a v2 segue proibida em operação real.
-Fora dessas duas exceções, não iniciar listener PGWire, autenticação
+Fora dessas quatro exceções, não iniciar listener PGWire, autenticação
 SCRAM/TLS de produção, dependência ou variável de ambiente nova, bind externo,
 extensão da tool MCP (MCP multi-datasource) nem qualquer etapa posterior
 (Etapas 8–12).
@@ -89,10 +130,11 @@ Evidência: `docs/PHASE-8-STAGE-9-VALIDATION.md`.
 
 Interfaces genéricas, editor SQL administrativo, resultados do banco na UI,
 funções de DBA, auditoria consultável e front-end para MCP continuam fora do
-escopo. Bind PostgreSQL, TLS, façade PGWire, rotas v2, ativação do catálogo por
-ambiente e redesign administrativo são contratos exclusivos das etapas
-posteriores da Fase 9; continuam sem implementação. Rotas v2 existem somente
-na Etapa 4 autorizada, delimitadas pela §8 da especificação.
+escopo. Listener/bind PGWire, TLS de produção, ativação do catálogo por
+ambiente e integração multi-datasource do MCP continuam pendentes. As rotas v2
+da Etapa 4 e a Admin UX v2 das Etapas 5–6 já existem, somente na composição
+interna autorizada e sem liberação para operação real. As rotas permanecem
+delimitadas pela §8 da especificação.
 
 ## Matching
 Por padrão: case-insensitive + substring/contains.

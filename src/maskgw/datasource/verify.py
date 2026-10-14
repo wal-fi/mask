@@ -61,6 +61,32 @@ copia divergente das consultas de capability. O filho:
 O pai compila a politica, constroi o `PreparedRuntime` e publica exatamente o
 alvo verificado. O filho so prova conectabilidade sobre o mesmo destino, nome
 TLS, credencial e limites efetivos.
+
+## Job fixo de DNS do bind PGWire (D-110, opcao B)
+
+`resolve_bind_host_in_child` reutiliza a MESMA supervisao (`_spawn`/
+`_TrackedPopen`, `_Pump`/`_guarded`, `_pump_stdin`, `reap`, `_Ledger`) para um
+segundo job, fixo e interno: resolver o hostname do bind PGWire. Nao e
+framework nem API generica: o codigo do filho, o interpretador (`-I -S -B`), o
+ambiente (so `SYSTEMROOT` no Windows, vazio no POSIX) e os tetos sao
+constantes deste modulo, e o host so viaja por `stdin`. O caminho da
+verificacao (`_ChildRecord.run`) nao muda: continua lendo `_CHILD_CODE`,
+`_child_environment` e `MAX_OUTPUT_BYTES` no momento da execucao.
+
+- Capacidade propria: `_BIND_LEDGER`, com 4 vagas, separado das vagas da
+  verificacao e do semaforo do `resolver.py`; sem vaga, recusa sem esperar. E
+  um limite interno de concorrencia do DNS, nao de sessoes.
+- Prazo ABSOLUTO de trabalho (5 s), criado ANTES da admissao, do spawn e dos
+  pumps, nunca renovado: a coleta de pendentes na admissao respeita o mesmo
+  prazo, e o retorno tardio do spawn ou de `start()` e conferido logo em
+  seguida. O cleanup e UMA passada separada, com o orcamento da verificacao
+  (6 s). Chamadas bloqueantes do SO nao tem teto absoluto.
+- O filho devolve a resposta BRUTA do `getaddrinfo` como triplas JSON ASCII
+  `[family, ip, scope_id]`, sem escolher, deduplicar nem filtrar; a politica
+  de enderecos e de quem chama.
+- Recolhimento nao confirmado: o registro fica no `_BIND_LEDGER`, com dono
+  forte do modulo, e retem a vaga (incompleto, nao "sem recurso vivo"); a
+  proxima admissao retenta, dentro do proprio prazo.
 """
 
 from __future__ import annotations
@@ -73,6 +99,7 @@ import sys
 import threading
 import time
 from collections.abc import Callable
+from enum import Enum
 from typing import IO, Any, Final
 
 from maskgw.config.gateway import DatabaseSettings
@@ -459,7 +486,7 @@ class _ChildRecord:
 
     __slots__ = ("claimer", "in_flight", "owner", "process", "pumps", "sink", "spawn")
 
-    def __init__(self, owner: VerificationSupervisor, claimer: object) -> None:
+    def __init__(self, owner: VerificationSupervisor | _BindDnsOwner, claimer: object) -> None:
         self.owner = owner
         self.in_flight = True
         self.claimer: object | None = claimer
@@ -548,6 +575,96 @@ class _ChildRecord:
             # Falha de transporte ou de inicializacao de thread: o recolhimento
             # do dono cuida de tudo.
             return False
+
+    def run_bind_dns(self, payload: bytes, *, deadline: float) -> bool:
+        """Job FIXO de DNS do bind PGWire, sob um prazo ABSOLUTO; NAO recolhe.
+
+        O mesmo ownership de `run` (objeto adotado pelo construtor rastreado,
+        pumps adotados antes de qualquer `start()`), com tres diferencas fixas:
+        o interpretador `-I -S -B` com `_BIND_DNS_CHILD_CODE` e o ambiente de
+        `_bind_dns_environment`; o leitor com o teto do DNS; e o prazo, que vem
+        pronto do chamador (criado antes da admissao) e e conferido de novo
+        logo depois de cada operacao que pode retornar tarde — o spawn e cada
+        `start()` —, sem nunca ser renovado. `True` so com o filho terminado
+        dentro do prazo.
+        """
+        # Prazo ja vencido: nenhum filho e criado.
+        process = None if time.monotonic() >= deadline else self._spawn_bind_dns()
+        if process is None:
+            return False
+        try:
+            stdin = process.stdin
+            stdout = process.stdout
+            if stdin is None or stdout is None:  # pragma: no cover - PIPE sempre existe
+                return False
+            self.pumps.append(
+                _Pump(_pump_stdin, (stdin, payload, self.sink), "maskgw-bind-dns-stdin")
+            )
+            self.pumps.append(
+                _Pump(_pump_bind_dns_stdout, (stdout, self.sink), "maskgw-bind-dns-stdout")
+            )
+            for pump in self.pumps:
+                # Spawn ou `start()` anterior que voltou tarde: o prazo NAO
+                # recomeca; vencido, nenhum outro pump e iniciado.
+                if time.monotonic() >= deadline:
+                    return False
+                with pump.lock:
+                    pump.state = _PUMP_STARTING
+                pump.thread.start()
+                with pump.lock:
+                    pump.state = _PUMP_STARTED
+            while True:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0 or self.sink.get("too_big"):
+                    return False
+                try:
+                    process.wait(timeout=min(remaining, 0.05))
+                except subprocess.TimeoutExpired:
+                    continue
+                # `wait()` que voltou DEPOIS do prazo nao aprova; e a resposta
+                # tambem precisa ter sido LIDA ate o fim dentro dele: bytes que
+                # so chegam no cleanup nao concluem nada.
+                return self._bind_dns_read_in_time(self.pumps[1], deadline)
+        except (OSError, RuntimeError):
+            return False
+
+    @staticmethod
+    def _bind_dns_read_in_time(reader: _Pump, deadline: float) -> bool:
+        """`True` so se o leitor chegou ao fim ANTES do prazo absoluto.
+
+        Espera em fatias curtas, reconferindo o prazo a cada uma; nunca o
+        renova. O recolhimento do leitor continua com o dono (`reap`).
+        """
+        while not reader.done.wait(max(0.0, min(deadline - time.monotonic(), 0.05))):
+            if time.monotonic() >= deadline:
+                return False
+        return time.monotonic() < deadline
+
+    def _spawn_bind_dns(self) -> subprocess.Popen[bytes] | None:
+        """Cria o filho DNS adotado por este registro; `None` se nao criou.
+
+        O estado do spawn decide o recolhimento: construtor nunca entrado
+        libera; tentativa sem filho exposto fica retida (ver `reap`).
+        """
+        executable = sys.executable
+        if not executable:
+            return None
+        try:
+            process = _spawn(
+                self,
+                [executable, "-I", "-S", "-B", "-c", _BIND_DNS_CHILD_CODE],
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+                env=_bind_dns_environment(),
+                close_fds=True,
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+            )
+        except (OSError, ValueError):
+            return None
+        self.process = process
+        self.spawn = _SPAWN_CREATED
+        return process
 
     def reap(self, deadline: float) -> bool:
         """Recolhe ate `deadline`; `True` SOMENTE com tudo efetivamente recolhido.
@@ -737,6 +854,48 @@ class _Ledger:
             finally:
                 if record is not None:
                     self._settle(record, token, reaped=reaped)
+        return self.pending == 0
+
+    def collect_until(self, deadline: float) -> bool:
+        """Como `collect`, mas sem passar do prazo: a coleta da admissao do DNS.
+
+        Dois limites que `collect` (o da verificacao, inalterado) nao tem: so
+        visita os registros presentes no INICIO da passada — os que chegam
+        durante a coleta ficam para a proxima admissao, entao ela nao vira uma
+        fila sem prazo — e confere o prazo antes de reivindicar cada um. Mesma
+        reivindicacao por token e o mesmo `_settle`.
+        """
+        token = object()
+        with self.lock:
+            # Referencias fortes: nenhum `id` da passada e reaproveitado.
+            initial = list(self.records)
+        initial_ids = {id(record) for record in initial}
+        visited: set[int] = set()
+        while time.monotonic() < deadline:
+            record: _ChildRecord | None = None
+            reaped = False
+            try:
+                with self.lock:
+                    record = next(
+                        (
+                            r
+                            for r in self.records
+                            if id(r) in initial_ids
+                            and id(r) not in visited
+                            and not r.in_flight
+                            and r.claimer is None
+                        ),
+                        None,
+                    )
+                    if record is None:
+                        break
+                    record.claimer = token
+                visited.add(id(record))
+                reaped = record.reap(deadline)
+            finally:
+                if record is not None:
+                    self._settle(record, token, reaped=reaped)
+        del initial
         return self.pending == 0
 
 
@@ -959,6 +1118,213 @@ def child_verifier(prepared: PreparedRuntime) -> None:
     ligado ao catalogo; esta funcao segue para quem verifica fora dele.
     """
     _DEFAULT_SUPERVISOR(prepared)
+
+
+# ---- Job fixo de DNS do bind PGWire (D-110, opcao B) -------------------------
+#
+# Constantes privadas e internas. NAO sao settings nem limites de sessao, e
+# nao tem variavel de ambiente.
+
+#: Prazo de trabalho de UMA resolucao (mesmo valor da D-092), absoluto,
+#: criado antes da admissao. O cleanup e separado (`_cleanup_budget`).
+_BIND_DNS_TIMEOUT_SECONDS: Final = 5.0
+
+#: Resolucoes simultaneas no processo. Vagas PROPRIAS: nao concorrem com as da
+#: verificacao (`_SLOTS`) nem com as do `resolver.py`.
+_BIND_DNS_MAX_CONCURRENT: Final = 4
+
+#: Teto do `stdin` do filho (o host em JSON), conferido ANTES do spawn.
+_BIND_DNS_MAX_INPUT_BYTES: Final = 1024
+
+#: Teto do `stdout`, cortado DURANTE a leitura e tambem imposto pelo filho.
+_BIND_DNS_MAX_OUTPUT_BYTES: Final = 16 * 1024
+
+#: Entradas brutas do `getaddrinfo` aceitas pelo filho, antes de qualquer
+#: deduplicacao (que e da politica, no pai).
+_BIND_DNS_MAX_ENTRIES: Final = 64
+
+#: Codigo fixo do filho DNS, so stdlib. O host chega por `stdin` como JSON; a
+#: saida e a lista BRUTA de `[family, ip, scope_id]` na ordem do
+#: `getaddrinfo`, sem escolher, deduplicar nem filtrar: um item que nao se
+#: deixa descrever vira `ip` nulo, e a politica do pai recusa a resposta
+#: inteira. `scope_id` do IPv6 e preservado para a recusa. Qualquer falha sai
+#: com codigo != 0 e sem saida.
+_BIND_DNS_CHILD_CODE: Final = (
+    "import json, socket, sys\n"
+    "try:\n"
+    f"    raw = sys.stdin.buffer.read({_BIND_DNS_MAX_INPUT_BYTES + 1})\n"
+    f"    if len(raw) > {_BIND_DNS_MAX_INPUT_BYTES}:\n"
+    "        raise ValueError\n"
+    "    host = json.loads(raw.decode('ascii'))\n"
+    "    if type(host) is not str or not host:\n"
+    "        raise ValueError\n"
+    "    found = socket.getaddrinfo(host, None, socket.AF_UNSPEC, socket.SOCK_STREAM)\n"
+    f"    if not found or len(found) > {_BIND_DNS_MAX_ENTRIES}:\n"
+    "        raise ValueError\n"
+    "    answers = []\n"
+    "    for item in found:\n"
+    "        address = item[4]\n"
+    "        shaped = isinstance(address, tuple) and len(address) in (2, 4)\n"
+    "        text = address[0] if shaped and type(address[0]) is str else None\n"
+    "        scope = address[3] if shaped and len(address) == 4 else 0\n"
+    "        answers.append([int(item[0]), text, scope])\n"
+    "    body = json.dumps(answers, ensure_ascii=True, separators=(',', ':'))\n"
+    f"    if len(body) > {_BIND_DNS_MAX_OUTPUT_BYTES}:\n"
+    "        raise ValueError\n"
+    "except Exception:\n"
+    "    sys.exit(3)\n"
+    "sys.stdout.write(body)\n"
+)
+
+
+def _bind_dns_environment() -> dict[str, str]:
+    """Somente o que o resolver do sistema precisa (D-092); nenhum segredo."""
+    if sys.platform != "win32":
+        return {}
+    root = os.environ.get("SYSTEMROOT")
+    return {} if root is None else {"SYSTEMROOT": root}
+
+
+def _pump_bind_dns_stdout(stream: IO[bytes], sink: dict[str, bytes | bool]) -> None:
+    """Leitor do DNS: corta em `_BIND_DNS_MAX_OUTPUT_BYTES` DURANTE a leitura.
+
+    Mesma forma de `_pump_stdout`, com o teto proprio do DNS; o leitor da
+    verificacao e o teto dele ficam intactos.
+    """
+    chunks: list[bytes] = []
+    total = 0
+    try:
+        while True:
+            chunk = stream.read(4096)
+            if not chunk:
+                break
+            total += len(chunk)
+            if total > _BIND_DNS_MAX_OUTPUT_BYTES:
+                sink["too_big"] = True
+                break
+            chunks.append(chunk)
+    except OSError:
+        sink["io_error"] = True
+    finally:
+        with contextlib.suppress(OSError):
+            stream.close()
+    sink["data"] = b"".join(chunks)
+
+
+class _BindDnsOwner:
+    """Dono forte, de modulo, dos registros DNS do bind (sem `Application`)."""
+
+    __slots__ = ()
+
+    def __repr__(self) -> str:
+        return "BindDnsOwner()"
+
+
+_BIND_OWNER: Final = _BindDnsOwner()
+
+#: Vagas e ledger do DNS do bind. Nao sao `Final`: os testes os isolam. Um
+#: registro nao recolhido fica aqui, com a vaga retida, ate uma admissao
+#: futura confirmar o recolhimento.
+_BIND_SLOTS: threading.BoundedSemaphore = threading.BoundedSemaphore(_BIND_DNS_MAX_CONCURRENT)
+_BIND_LEDGER: _Ledger = _Ledger(_BIND_SLOTS)
+
+
+class BindDnsFailure(Enum):
+    """Categoria FECHADA de falha da resolucao do bind."""
+
+    #: Nada foi criado: entrada invalida, prazo ja vencido ou sem vaga.
+    REFUSED = "refused"
+    #: Sem resposta valida (prazo, saida grande, erro de I/O, codigo != 0 ou
+    #: falha do spawn), com tudo recolhido e a vaga devolvida.
+    FAILED = "failed"
+    #: Recolhimento NAO confirmado: registro e vaga retidos no `_BIND_LEDGER`.
+    INCOMPLETE = "incomplete"
+
+
+class BindDnsError(Exception):
+    """Falha da resolucao do bind. Mensagem fixa: sem host, endereco ou causa."""
+
+    def __init__(self, failure: BindDnsFailure) -> None:
+        super().__init__("resolucao do bind nao concluida")
+        self.failure = failure
+
+
+def _bind_dns_payload(host: object) -> bytes | None:
+    """O host como JSON ASCII para o `stdin`; `None` se invalido ou acima do teto."""
+    if not isinstance(host, str) or not host:
+        return None
+    payload = json.dumps(host).encode("ascii")
+    return payload if len(payload) <= _BIND_DNS_MAX_INPUT_BYTES else None
+
+
+def _bind_dns_admit(ledger: _Ledger, token: object, deadline: float) -> _ChildRecord | None:
+    """Coleta os pendentes DENTRO do mesmo prazo e adota vaga e registro.
+
+    A coleta so visita os pendentes ja existentes e para no prazo
+    (`collect_until`). Sem vaga, `None` imediato: nao ha fila nem espera.
+    """
+    ledger.collect_until(min(deadline, time.monotonic() + _ADMISSION_COLLECT_SECONDS))
+    with ledger.lock:
+        if not ledger.slots.acquire(blocking=False):
+            return None
+        record = _ChildRecord(_BIND_OWNER, token)
+        ledger.records.append(record)
+    return record
+
+
+def _bind_dns_output(record: _ChildRecord, *, completed: bool) -> bytes | BindDnsFailure:
+    """Saida de um filho recolhido que terminou no prazo com codigo 0."""
+    sink = record.sink
+    process = record.process
+    ok = completed and not sink.get("too_big") and not sink.get("io_error")
+    output = sink.get("data")
+    if not ok or process is None or process.returncode != 0 or not isinstance(output, bytes):
+        return BindDnsFailure.FAILED
+    return output
+
+
+def _bind_dns_run(host: object, deadline: float) -> bytes | BindDnsFailure:
+    """Admite, executa e recolhe UMA resolucao; nunca levanta por falha propria.
+
+    Uma `BaseException` durante a execucao ainda recolhe (best-effort) e
+    propaga a original.
+    """
+    payload = _bind_dns_payload(host)
+    if payload is None or time.monotonic() >= deadline:
+        return BindDnsFailure.REFUSED
+    ledger = _BIND_LEDGER
+    token = object()
+    record = _bind_dns_admit(ledger, token, deadline)
+    if record is None:
+        return BindDnsFailure.REFUSED
+    completed = False
+    reaped = False
+    try:
+        completed = record.run_bind_dns(payload, deadline=deadline)
+    finally:
+        reaped = ledger.finish(record, token, time.monotonic() + _cleanup_budget())
+    if not reaped:
+        return BindDnsFailure.INCOMPLETE
+    if record.spawn == _SPAWN_IDLE:
+        # O prazo venceu antes do spawn (por exemplo, na coleta): nada criado.
+        return BindDnsFailure.REFUSED
+    return _bind_dns_output(record, completed=completed)
+
+
+def resolve_bind_host_in_child(host: str, *, deadline: float | None = None) -> bytes:
+    """Resposta BRUTA do `getaddrinfo` do bind PGWire, por filho supervisionado.
+
+    Interno (D-110): o unico consumidor previsto e a politica do bind PGWire,
+    que valida e decide. `deadline` e um instante ABSOLUTO de
+    `time.monotonic()`; sem ele, o prazo de 5 s comeca AQUI, antes da
+    admissao. Levanta somente `BindDnsError`, fora de `except`, sem cadeia e
+    sem citar o host.
+    """
+    limit = time.monotonic() + _BIND_DNS_TIMEOUT_SECONDS if deadline is None else deadline
+    result = _bind_dns_run(host, limit)
+    if isinstance(result, BindDnsFailure):
+        raise BindDnsError(result)
+    return result
 
 
 __all__ = [

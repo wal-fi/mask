@@ -9,8 +9,22 @@ publicada em `4d5b78f`; a Etapa 6 (CRUD visual) foi aprovada pelo usuário
 (D-103–D-106) e publicada em `5115a75`. A Etapa 7 está parcial: verificador em
 processo filho (D-107, `e9eb01a`) e fila administrativa, barreira e leitura
 selada (D-108, fechamento aprovado e publicação autorizada em 2026-10-07;
-estado confirmado pelo Git). Listener PGWire, TLS e autenticação e as Etapas
-8–12 continuam não iniciados.
+estado confirmado pelo Git). Em 2026-10-08 entrou a terceira exceção
+estreita, a D-109: só peças puras do startup (framing, credencial, SCRAM-SHA-256
+e -PLUS, channel binding), locais, sem commit e em revisão. Em 2026-10-09 o
+usuário autorizou explicitamente a integração do listener (D-110), sem SQL,
+deploy nem liberação de produção, em lotes revisados; existem o lote 1
+(settings e preparo do `SSLContext`), o lote 2 (transporte e driver de
+startup/autenticação), o lote 3 (listener) e o lote 4 (composição interna no
+composition root; o `main` recusa a ativação), locais e sem commit, com os
+gates finais do lote 4 medidos em 2026-10-12 e o gate de runtime moderno
+medido em 2026-10-13, só no Windows com CPython 3.14.8 (lotes A–C). A
+resolução limitada do hostname do bind foi implementada localmente em
+2026-10-14 e medida no Windows, e o usuário aprovou fechar esse trabalho
+validado num commit local, sem push (o "sem commit" acima é o estado
+anterior). Ativação operacional e
+as Etapas 8–12 continuam não iniciados; nada disso está liberado para
+operação real.
 
 **Fonte normativa:** [PHASE-9-SPEC.md](PHASE-9-SPEC.md). A matriz cobre todas
 as Etapas 2–12 e distingue requisito, etapa responsável, prova obrigatória e
@@ -25,10 +39,10 @@ fechada com os artefatos e números medidos no seu próprio registro de validaç
 | F9-002 | MCP permanece e compartilha o pipeline seguro | 2, 10–11 | 3, 8, 11 | paridade de masking, read-only, timeout e erros entre MCP e PGWire | Etapa 3: sessões de datasource usam o mesmo `execute_validated` e `run_audited` do MCP, provado contra PostgreSQL 16; paridade com PGWire pendente (8, 11) |
 | F9-003 | Somente SELECT, com defesa também no PostgreSQL | 2, 5.4, 12 | 3, 8–10 | validator, sessão read-only, tentativas de escrita e funções perigosas | Etapa 3: cada sessão verifica read-only/timeout/proveniência; escrita recusada pelo validator e pelo PostgreSQL; PGWire pendente (8–10) |
 | F9-004 | Alias fechado resolve datasource, nunca destino informado pelo cliente | 4.1, 6.1 | 2–4, 7 | aliases inválidos, desconhecidos, desabilitados e enumeração bloqueados | Etapa 4: alias validado no schema, imutável (`IMMUTABLE_FIELD`), conflito sem ecoar o alias, destino só por campos administrativos; PGWire pendente (7) |
-| F9-005 | Autenticação Gateway separada da upstream | 4.2–4.3, 5.3 | 2, 7 | SCRAM-SHA-256, proof não reutilizável, credencial upstream nunca retornada | planejada |
-| F9-006 | Um principal operacional; sem RBAC implícito | 4.2, 8–9 | 4, 6, 7 | inventário fechado de identidades e ausência de autorização por alias | Etapa 4: a v2 usa o mesmo token administrativo, sem identidade nova nem autorização por alias; UI e PGWire pendentes (6, 7) |
-| F9-007 | TLS obrigatório fora de loopback | 5.1–5.2 | 7 | bind externo, SSLRequest, downgrade, certificado/chave inválidos | planejada |
-| F9-008 | Settings PGWire estritos e opt-in | 5.1, 11 | 7 | matriz de valores brutos; falhas antes de bind, store e MCP | planejada |
+| F9-005 | Autenticação Gateway separada da upstream | 4.2–4.3, 5.3 | 2, 7 | SCRAM-SHA-256, proof não reutilizável, credencial upstream nunca retornada | Etapa 7 (D-109), parcial: troca SCRAM-SHA-256/-PLUS pura, vetor RFC 7677 e interop libpq num harness de teste (`PHASE-9-STAGE-7-VALIDATION.md`, §1.5); listener e upstream pendentes |
+| F9-006 | Um principal operacional; sem RBAC implícito | 4.2, 8–9 | 4, 6, 7 | inventário fechado de identidades e ausência de autorização por alias | Etapa 4: a v2 usa o mesmo token administrativo, sem identidade nova nem autorização por alias; UI da Etapa 6 implementada; PGWire de produção pendente (7) |
+| F9-007 | TLS obrigatório fora de loopback | 5.1–5.2 | 7 | bind externo, SSLRequest, downgrade, certificado/chave inválidos | Etapa 7 (D-110, lote 1), parcial: settings exigem cert e chave fora de `127.0.0.1`/`::1` e o preparo do `SSLContext` recusa certificado/chave inválidos (`PHASE-9-STAGE-7-VALIDATION.md`, §1.6); bind externo, SSLRequest e downgrade sobre socket pendentes |
+| F9-008 | Settings PGWire estritos e opt-in | 5.1, 11 | 7 | matriz de valores brutos; falhas antes de bind, store e MCP | Etapa 7 (D-110, lote 1), parcial: matriz de valores brutos e opt-in `1` bruto medidos sem efeito (§1.6); falha antes de bind, store e MCP depende da integração, pendente |
 | F9-009 | Simple query no subconjunto seguro | 5.3–5.5 | 8 | psql/psycopg, framing adversarial, masking e CommandComplete | planejada |
 | F9-010 | Extended query e parâmetros por sessão | 5.3–5.4 | 9 | Parse/Bind/Describe/Execute/Close/Sync, JDBC e prepared statements | planejada |
 | F9-011 | Cancelamento isolado por sessão | 5.3, 7, 12 | 9 | CancelRequest válido, inválido e cruzado, sem enumeração | planejada |
@@ -56,7 +70,7 @@ fechada com os artefatos e números medidos no seu próprio registro de validaç
 | F9-033 | MCP não enumera aliases nem altera catálogo | 10 | 11 | schema/tool único, erros fixos e AST de separação de planos | planejada |
 | F9-034 | SSRF e DNS rebinding no destino são bloqueados | 6.1, 12 | 2, 4, 12 | loopback, link-local, multicast, metadata cloud e resolução mutável | Etapa 4: destinos proibidos e DNS trocado recusados pelas rotas, sem ecoar o destino; resolução com prazo (D-092); revisão final pendente (12) |
 | F9-035 | Nenhuma informação sensível em observabilidade | 2, 6.2, 13 | 2–12 | canários de senhas, chave, SQL, destino, ciphertext, nonce e célula | redaction da Etapa 2 implementada; Etapa 6: senhas digitadas e segredo upstream ausentes de logs e auditoria `datasource_*` no harness de escrita; cobertura das etapas seguintes pendente |
-| F9-036 | Lifecycle ordenado das três fronteiras | 11 | 3–12 | falha em cada passo, bind confirmado, drain e shutdown sem órfãos; limite DNS antes da Admin v2; limite da verificação pós-conexão de candidatos antes da ativação da v2 pelo operador (7); limite de validação/masking locais antes de novo ingresso SQL (8, 11); nada abandonado | Etapas 3–4: passos 3–7 da §11, drain, shutdown e limite efetivo de DNS (D-092, shutdown com resolução em voo provado). **Em aberto:** verificação pós-conexão de candidatos sem teto do lado do cliente (gate da Etapa 7) e validação/masking locais (gates das Etapas 8 e 11) |
+| F9-036 | Lifecycle ordenado das três fronteiras | 11 | 3–12 | falha em cada passo, bind confirmado, drain e shutdown sem órfãos; limite DNS antes da Admin v2; limite da verificação pós-conexão de candidatos antes da ativação da v2 pelo operador (7); limite de validação/masking locais antes de novo ingresso SQL (8, 11); nada abandonado | Etapas 3–4: passos 3–7 da §11, drain, shutdown e limite efetivo de DNS (D-092, shutdown com resolução em voo provado). Etapa 7 parcial: gate pós-conexão entregue na D-107, com limites de recolhimento documentados; fila/barreira na D-108. **Em aberto:** validação/masking locais (gate 2, Etapas 8 e 11), listener e lifecycle PGWire; operação real não liberada |
 | F9-037 | Riscos F-01 a F-11 não regridem | 2, 5, 12 | 8–12 | suíte de segurança completa por datasource e função/catálogo | planejada |
 | F9-038 | Pacote instalado funciona sem checkout/Node | 14 | 12 | wheel e sdist isolados, sem fallback ao checkout ou Node | planejada |
 | F9-039 | Rollback volta ao modo legado sem fallback silencioso | 6.3, 10–11, 17 | 11–12 | restart com PGWire/store desligados e MCP legado funcionando | planejada |
@@ -71,7 +85,7 @@ fechada com os artefatos e números medidos no seu próprio registro de validaç
 | 4 | Admin API v2 de datasources | F9-004–006, F9-022, F9-024–026, F9-034, F9-036 | auth/CSRF, revisões, teste sem publicação, v1 intacta, destino validado e resolução DNS com limite efetivo | implementada em 2026-09-24 e publicada em `c37be36`; evidência em `PHASE-9-STAGE-4-VALIDATION.md` |
 | 5 | UX v2 somente leitura | F9-027–031 | screenshots, a11y, token/draft lifecycle, CSP e três browsers fixados | publicada em `4d5b78f`; refinamento visual (D-101, D-102) e capturas aprovados pelo usuário em 2026-09-28; evidência em `PHASE-9-STAGE-5-VALIDATION.md` |
 | 6 | CRUD visual de datasources e policies | F9-016–019, F9-025–031, F9-035 | segredo write-only, rotação, concorrência, confirmação destrutiva e sem SQL/resultados | autorizada em 2026-09-28; implementada e aprovada pelo usuário em 2026-09-30 (D-103–D-106, capturas, correção por Esc); publicada em `5115a75`; evidência em `PHASE-9-STAGE-6-VALIDATION.md` |
-| 7 | PGWire startup, TLS e autenticação | F9-001, F9-005–008, F9-011, F9-013, F9-021, F9-036 | harness binário, SCRAM, TLS externo, limites, erro sanitizado e lifecycle; limite efetivo da verificação pós-conexão de candidatos antes de ativar a Admin v2 pelo operador, sem abandonar thread, processo ou conexão | parcial: verificador em processo filho (D-107) e fila/barreira/leitura selada (D-108) validados; listener, startup, TLS e autenticação não iniciados; evidência em `PHASE-9-STAGE-7-VALIDATION.md` |
+| 7 | PGWire startup, TLS e autenticação | F9-001, F9-005–008, F9-011, F9-013, F9-021, F9-036 | harness binário, SCRAM, TLS externo, limites, erro sanitizado e lifecycle; limite efetivo da verificação pós-conexão de candidatos antes de ativar a Admin v2 pelo operador, sem abandonar thread, processo ou conexão | parcial: verificador em processo filho (D-107) e fila/barreira/leitura selada (D-108) validados; peças puras de framing/SCRAM/binding da D-109 locais e em revisão; D-110 autorizada em 2026-10-09, com o lote 1 (settings e preparo TLS) local e sem commit; listener, driver, integração e autenticação de produção pendentes; evidência em `PHASE-9-STAGE-7-VALIDATION.md` |
 | 8 | simple query e masking | F9-002–003, F9-009, F9-014–015, F9-036–037 | psql/psycopg, PostgreSQL 16 real, SELECT-only, masking, truncamento e limite efetivo do processamento local | não iniciada |
 | 9 | extended query, parâmetros e cancelamento | F9-010–011, F9-013–015, F9-021, F9-036–037 | JDBC/prepared statements, Sync, formatos, CancelRequest e isolamento | não iniciada |
 | 10 | catálogo seguro e quatro IDEs | F9-001, F9-012–015, F9-040 | navegação real, snapshots fechados, tipos e matriz certificada | não iniciada |

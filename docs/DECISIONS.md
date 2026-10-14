@@ -2854,3 +2854,508 @@ vigentes; não são escolhas novas):
   entrega da resposta. Interrupções assíncronas entre instruções do próprio
   ciclo da fila não são cobertas. A D-090 continua aberta no gate 2, e a v2
   permanece proibida em operação real.
+
+## D-109 — SCRAM do servidor: verifier pela `scramp`, troca de mensagens própria
+
+**Estado:** escolha feita **sob delegação**, não por aprovação textual. Em
+2026-10-08 o usuário aprovou `scramp==1.4.17` fixada, normalização Unicode da
+senha (SASLprep), SCRAM-SHA-256 e SCRAM-SHA-256-PLUS sobre TLS. Diante do
+bloqueio medido abaixo, respondeu "faça", delegando a escolha simples e
+rápida. As escolhas a seguir são da implementação, tomadas contra provas
+medidas; o usuário **não** viu nem aprovou explicitamente os valores de
+limite. Elas valem só para o incremento 1, de módulos puros, e ficam abertas
+a revisão. Em 2026-10-08 o incremento, local e sem commit, passou pela
+validação integral, depois de três rodadas de findings da revisão
+independente, todos reproduzidos e corrigidos. Resultados: suíte com
+PostgreSQL 16 real, 0 falhas e 0 skips por DSN; wheel e sdist instalados com a
+sonda de autenticação 54/54. Evidência: `docs/PHASE-9-STAGE-7-VALIDATION.md`,
+§1.5. O fechamento continua dependendo da revisão; nada foi commitado.
+
+**Fatos medidos que motivaram a escolha** (venv temporário fora do checkout;
+libpq 18.0.3 via psycopg 3.3.4):
+
+- o libpq sempre envia o client-first com `n=` vazio; o PostgreSQL ignora esse
+  nome e autentica pelo `user` do StartupMessage;
+- o servidor da `scramp` 1.4.17 rejeita `n=` vazio: nenhum handshake com libpq
+  completou. O `n=` não pode ser reescrito, porque entra na assinatura do
+  cliente;
+- a `scramp` também promove SHA-256 para `-PLUS` sozinha, converte
+  `BaseException` em "unknown-user", ecoa a entrada do cliente nas mensagens de
+  erro e distingue as causas no `e=` (oráculo);
+- com o verifier derivado por `make_auth_info` e uma troca de mensagens
+  própria, a interoperabilidade com o libpq passou: SHA-256 e `-PLUS` com RSA e
+  ECDSA. O `-PLUS` com Ed25519 o libpq abortou.
+
+**Escolhas (incremento 1):**
+
+1. **Uso da `scramp`:** só `ScramMechanism("SCRAM-SHA-256").make_auth_info`
+   (SASLprep e PBKDF2), pela API pública. A máquina de estados do servidor é
+   própria e estrita e aceita `n=` vazio. `asn1crypto==1.5.1`, a dependência
+   transitiva, fica fixada junto. Nenhuma API privada é chamada ou copiada.
+   `make_auth_info` é chamada duas vezes, ambas ao preparar a credencial no
+   startup: para a senha configurada e para o controle da senha vazia sob o
+   mesmo salt. Nenhum PBKDF2 ocorre por tentativa de autenticação.
+2. **Senha que o SASLprep rejeita:** recusada ao preparar a credencial
+   (`ConfigError` fixo), sem o fallback cru do PostgreSQL.
+3. **Certificado incompatível com `-PLUS`** (Ed25519, Ed448, chave fora de
+   RSA/EC, assinatura fora de SHA-256/384/512): recusado, sem cair para
+   SHA-256 sozinho. Certificados assinados com MD5 ou SHA-1, que a RFC 5929
+   mapearia para SHA-256, também são recusados: é mais estrito, e o
+   `cryptography` fixado nem gera esses certificados para provar o
+   mapeamento.
+4. **Perfil mínimo:** protocolo 3.0 exato; SSLRequest de exatamente 8 bytes;
+   GSSENCRequest, CancelRequest, versão menor diferente de 0 e opções `_pq_.`
+   recusados, sem negociação. No StartupMessage, só `user`, `database`,
+   `application_name` e `client_encoding` (este só UTF-8); nenhum abre efeito.
+   Limites: pacote inicial de 8 a 10.000 bytes, até 32 pares, chave até 63
+   bytes, valor até 256 bytes, mensagens SASL até 2.048 bytes.
+5. **Identidade e falha uniforme:** a identidade é o `user` do StartupMessage.
+   Usuário desconhecido usa um verifier simulado com o salt público e as
+   iterações **idênticos** aos do principal; só as chaves privadas diferem
+   (HMAC de uma chave aleatória do processo) e nunca autenticam. As duas
+   derivações simuladas são calculadas antes da seleção, nos dois caminhos,
+   para o mesmo trabalho local de HMAC; isso não é promessa de tempo
+   constante na rede. Usuário,
+   senha e alias inválido ou ausente dão o mesmo `28P01`, decidido só depois
+   da prova. Falha da fonte de aleatoriedade do nonce é `XX000` fixo e
+   terminal.
+
+**Fora deste incremento** (pendentes, **não** aprovados por esta decisão):
+settings `MASKGW_PGWIRE_*`, criação de `SSLContext` no produto, driver sobre
+socket, listener, bind, bootstrap, ativação por ambiente, prazo, admissão,
+rate limit e supervisor. `SSLContext` e sockets existem só no harness de
+testes, para provar a interoperabilidade; o harness não executa SQL nem
+conecta a upstream. Etapas 8 a 12 não começam. A D-090 continua aberta no
+gate 2, e a v2 permanece proibida em operação real.
+
+**Riscos registrados:** "Ⅸ" e "IX" são a mesma senha após o SASLprep; o
+Python desta máquina usa OpenSSL 1.1.1t, fora de suporte, o que precisa ser
+resolvido antes de qualquer TLS de produção; TLS no servidor não verifica a
+identidade dele para o cliente — isso exige `sslmode=verify-full` com a CA, e
+o `-PLUS` só detecta MITM se o cliente exigir `channel_binding=require`.
+
+*(Nota posterior: a frase "Fora deste incremento" acima descreve o recorte da
+D-109. Settings e o `SSLContext` de produto passaram a ser escopo da D-110,
+autorizada em 2026-10-09; o restante segue pendente.)*
+
+## D-110 — Integração do listener PGWire: settings, TLS, admissão e shutdown
+
+**Autorização (2026-10-09, explícita do usuário):** listener, TLS e
+autenticação **sem SQL**; configuração externa; admissão e shutdown seguros;
+testes só em loopback e em ambientes descartáveis; revisão antes de qualquer
+commit/push. **Sem** deploy nem liberação de produção. O runtime moderno é um
+gate separado: não instalar Python nem recriar a `.venv` (nota posterior: em
+2026-10-13 o usuário autorizou, de forma estreita, um Python moderno
+**temporário e isolado** para esse gate, sem tocar a `.venv` — ver "Gate de
+runtime moderno — autorização estreita" mais abaixo). Essa autorização
+amplia estreitamente o escopo anterior. Não libera as Etapas 8–12, consultas,
+cancelamento real, forwarding, upstream nem operação real da v2. A D-090 segue
+aberta no gate 2, que trata de validação e masking de consultas locais nas
+Etapas 8/11; o gate 1, verificação de candidatos, foi entregue pela D-107.
+
+**Execução em lotes, cada um revisado antes do seguinte.** O desenho corrigido
+(driver, listener, ownership D-107/D-108 no produto, bootstrap) é a referência
+e **não** está fechado como um todo.
+
+- **Lote 1 (este registro):** `pgwire/settings.py` e `pgwire/tls.py`, com
+  testes focados. Nenhum listener, driver, socket de produto nem bootstrap; o
+  `main` não lê `MASKGW_PGWIRE_*` e o pacote continua fora do composition
+  root.
+- **Lotes seguintes (não iniciados):** driver de startup sobre socket,
+  listener com admissão, recolhimento e shutdown, e integração interna em
+  `build_application`. No `main`, `MASKGW_PGWIRE_ENABLED=1` exato será
+  recusado com erro fixo enquanto a ativação operacional não for entregue.
+
+**Settings (lote 1):**
+- **Ativação:** só o valor bruto `1` liga. Desligado, nenhum outro setting é
+  lido ou validado e nenhum segredo é consultado.
+- **Senha:** vem do `SecretProvider` existente, com a normalização antiga
+  intacta: bordas removidas, vazio é ausente.
+- **Defaults da §5.1:** bind `127.0.0.1`, porta 6432, 32 sessões e idle
+  300000 ms.
+- **Inteiros:** só dígitos ASCII, sem sinal nem zero à esquerda, até 9
+  dígitos. Esse limite de representação/parse é uma escolha delegada, não
+  aprovada individualmente, e **impõe** uma faixa efetiva exata:
+  `MAX_SESSIONS` e `IDLE_TIMEOUT_MS` de 1 a 999.999.999; a porta, de 1 a
+  65535. Não é um teto oculto de 32 sessões: 32 é só o default da §5.1, e a
+  integração usará o mesmo valor no registry.
+- **Bind:** preservado exatamente como veio. Só os literais `127.0.0.1` e
+  `::1` contam como loopback; qualquer outro IP e qualquer hostname são
+  externos e exigem cert e chave. O hostname é mantido como veio (a §5.2 o
+  admite), sem DNS; a estratégia de resolução limitada é do lote do listener.
+- **Cert e chave:** vêm juntos ou não vêm.
+- **`repr` e erros:** sem senha, usuário, bind, caminho nem valor.
+
+**TLS (lote 1):**
+- **Contexto:** mínimo TLS 1.2, sem compressão, sem renegociação, sem
+  certificado de cliente.
+- **Arquivos:** regular, sem symlink nem reparse point (junction, medida),
+  com o pai imediato no mesmo critério. No POSIX: chave sem bits para grupo e
+  outros, cert e pai sem escrita para grupo e outros. **ACL do Windows não é
+  verificada** (best-effort documentado). Ancestrais acima do pai não são
+  conferidos.
+- **Cert:** lido uma única vez, de forma incremental, até limite + 1. O leaf
+  precisa estar dentro de `not_before`/`not_after` (UTC) e no perfil da D-109.
+- **Chave cifrada:** recusada pelo callback de senha, sem prompt.
+- **Identidade:** dispositivo, inode, tamanho e mtime de cert e chave são
+  iguais antes e depois do `load_cert_chain`.
+- **Leaf e binding:** um handshake em memória limitado (voltas, bytes e prazo)
+  captura o leaf efetivamente apresentado, que precisa ser byte a byte o do PEM
+  lido; o binding sai desse leaf.
+- **Caminho com NUL:** recusado antes do `abspath`, porque no Windows ele
+  trunca em silêncio no NUL e apontaria para outro arquivo (medido).
+- **Erros:** fixos, sem caminho, PEM, cadeia ou mensagem do OpenSSL.
+- **TOCTOU:** não há prova de que os bytes da chave inspecionada são os lidos
+  pelo OpenSSL, nem contra uma troca dupla rápida (A→B→A) que preserve os
+  metadados.
+
+**Números auxiliares — defaults escolhidos sob delegação, nenhum aprovado
+individualmente, configuráveis só internamente:**
+- prazo de startup 10 s, 8 vagas pré-auth, bucket 20 com recarga 5/s e poll de
+  250 ms, para o listener futuro;
+- 64 KiB por arquivo PEM e handshake em memória com no máximo 32 voltas,
+  256 KiB e 2 s.
+
+**Runtime:** medido só em Python 3.11.3 / OpenSSL 1.1.1t, fora de suporte.
+Nenhum contexto de produção é certificado; o gate de runtime moderno continua
+aberto.
+
+**Para a revisão dos lotes futuros (registrado, não implementado):**
+- não depender de `sendall` para retomar envio parcial depois de timeout:
+  usar `send` com offset e prazo;
+- uma exceção depois que o `wrap_socket` destaca o fd pode perder o fd: a
+  alternativa é um `SSLObject`/MemoryBIO sobre o socket raw, que nunca muda;
+- o `_quiesce` atual fecha o `config_store` mesmo com `work_settled` falso: a
+  integração precisa provar quais dependências o PGWire toca e retê-las.
+
+Evidência: `docs/PHASE-9-STAGE-7-VALIDATION.md`, §1.6.
+
+**Lote 2 — transporte e driver de startup/autenticação (implementado
+localmente, sem commit, aguardando revisão).** Sem listener, bootstrap nem
+DNS. Escolhas feitas sob delegação:
+
+- **TLS por `SSLObject`/MemoryBIO sobre o mesmo socket raw.** O socket nunca
+  é destacado nem trocado, e não há `wrap_socket` no produto. Motivo: o
+  `wrap_socket` destaca o fd, e uma exceção depois disso, ou um `stop`
+  concorrente, perderia o ownership. O objeto SSL é usado por uma única
+  thread; um `stop` futuro só sinaliza e fecha a admissão.
+  - **Saída cifrada:** drenada em blocos de no máximo `chunk_bytes`.
+  - **Entrada:** só é alimentada quando o `SSLObject` pede leitura.
+  - **Parada e prazo:** conferidos em cada passo, inclusive nos que se
+    resolvem só com dados em buffer.
+  - **Limite:** o handshake tem teto de voltas e de bytes, que vale também
+    no passo final.
+  - **Escrita:** avança pelo valor que o `write` devolve, porque a aceitação
+    pode ser parcial.
+- **E/S:** fatias finitas, de no máximo `poll`, sob um `Deadline` absoluto;
+  bytes parciais não o renovam. O envio usa `send` com offset: um timeout
+  continua do offset, e não há retry de `sendall`. Um `send` que devolve 0 é
+  falha de I/O imediata, nunca um laço de CPU até o prazo.
+- **Prazo de startup (correção da revisão do lote 2):** o `Deadline` é
+  criado **pelo dono no accept** e passado como parâmetro **obrigatório** de
+  `run_startup_session`, sem fallback; o driver nunca cria nem reinicia
+  prazo, então atraso de agendamento da thread não o renova. Prazo vencido na
+  entrada encerra sem nenhum I/O, sem callback e sem reserva. Parada e prazo
+  são conferidos de novo imediatamente antes da reserva, porque o callback
+  de alias pode ter consumido o prazo. O listener futuro passará o prazo do
+  próprio registro da conexão.
+- **Driver (`run_startup_session`):** roda na thread do chamador, não cria
+  thread, não fecha o socket (o chamador fecha em `finally`) e não libera
+  vaga.
+  - **SSLRequest e TLS:** o SSLRequest é aceito uma única vez. `S` só sai com
+    contexto TLS válido e `N` só com TLS opcional sem contexto. TLS exigido
+    recusa o startup em claro com `08P01`. Se o handshake falha depois de
+    `S`, a conexão só termina, sem erro em claro.
+  - **Autenticação:** SCRAM-SHA-256/-PLUS da D-109, com o binding do lote 1.
+    O alias é lido só pelo callback do selo e entra na decisão final, com o
+    mesmo `28P01`; um callback que falha conta como alias recusado.
+  - **Reserva:** `reserve_session()` é chamada depois da prova e antes do
+    `AuthenticationOk`. Recusa dá `53300` (categoria nova
+    `TOO_MANY_CONNECTIONS`); erro do callback dá `XX000`.
+  - **Pós-autenticação:** `SASLFinal`, `AuthenticationOk`, `ParameterStatus`
+    fixos (`server_version` 16.0, `server_encoding`/`client_encoding` UTF8,
+    `DateStyle` ISO, MDY, `integer_datetimes` on, `standard_conforming_strings`
+    on), `BackendKeyData` aleatório de `secrets` e `ReadyForQuery 'I'`. A
+    fachada é sintética e não certifica IDE nem upstream.
+  - **Depois do Ready:** a ociosidade é absoluta, e só `Terminate` (`X` de
+    tamanho 4) encerra limpo. `X` malformado dá `08P01`. Qualquer outro tipo
+    recebe `0A000` FATAL **sem ler o corpo**.
+- **Encerramento gracioso limitado depois de um erro final** (decisão nova,
+  sob delegação, aceita tecnicamente na revisão do lote 2 como escolha de
+  transporte; os números não foram aprovados pelo usuário). Medido no Windows: o close de um socket com
+  entrada não lida (por exemplo, o corpo não lido de uma mensagem recusada)
+  vira RST, que pode apagar no cliente o `ErrorResponse` já enviado.
+  - **O que faz:** depois do erro, `shutdown(SHUT_WR)` e descarte da entrada
+    até EOF, sem interpretar nada, com teto de `linger_ms` (1 s) e
+    `linger_bytes` (64 KiB), conferindo a parada.
+  - **O que não é:** o corpo pode ser descartado no transporte, mas nunca é
+    parseado, interpretado nem executado; o socket continua do chamador.
+  - **O que não promete:** a entrega do erro a todo peer e a todo sistema
+    operacional. É melhor esforço limitado.
+- **Defaults auxiliares, delegados e não aprovados individualmente:** poll de
+  250 ms, blocos de 16 KiB, handshake TLS com no máximo 64 voltas e 256 KiB,
+  linger de 1 s/64 KiB.
+- **Limites honestos:**
+  - um `send` bloqueante que o SO não libera depois do timeout não é coberto;
+  - o `shutdown` não é usado para acordar outra thread, porque o driver é de
+    uma única thread;
+  - o runtime continua o OpenSSL 1.1.1t, fora de suporte.
+
+**Lote 3 — listener PGWire (`pgwire/listener.py`; implementado localmente,
+sem commit, aguardando revisão).** O bootstrap fica para o lote seguinte: o
+listener ainda não é composto nem ativado, e o `main` não o conhece. Ele
+recebe settings, principal, TLS e o callback de alias já preparados, e não lê
+ambiente, não resolve DNS, não abre registry, sessão de datasource nem
+upstream, e não executa SQL.
+
+- **Validação antes do bind:** os settings injetados passam por
+  `settings.validate()`, novo e com as mesmas regras do `resolve`, porque a
+  dataclass não se valida sozinha. Também são verificados:
+  - a coerência do TLS: o contexto existe se, e só se, há cert configurado;
+  - TLS obrigatório fora de `127.0.0.1`/`::1`, inclusive para `localhost`;
+  - `test_port`, que só aceita 0 e é colaborador explícito de teste.
+- **Hostname (escolha sob delegação, pendente antes de liberar operação):**
+  sem DNS no listener. O bind por hostname exige o colaborador interno
+  `resolved_addresses` com **exatamente um** IP literal; sem ele, falha
+  fechada antes do bind. O endereço é passado ao `getaddrinfo` só com
+  `AI_NUMERICHOST`. A resolução limitada do hostname no composition root
+  continua **pendente** e não foi implementada. O requisito normativo da §5.2
+  não mudou.
+- **Threads:** um acceptor e um worker por conexão, todos não daemon, criados
+  por uma fábrica injetável; no máximo `1 + P + S`. Nenhum backend é criado.
+- **Ownership D-107/D-108:**
+  - cada thread vive num `_Owned`, adotado **antes** do `start()`, com os
+    estados `idle → starting → started` e `ran`/`cancelled`/`done`;
+  - `settled()` só vale com `idle`, ou com `done` **mais** a thread morta;
+  - um `start()` que falha cancela o alvo que ainda não entrou; sem prova de
+    término, o registro e a vaga ficam retidos e o listener vai a `broken`;
+  - o worker nunca remove o próprio registro, nunca libera vaga e nunca fecha
+    o socket. O dono (reaper do acceptor e o `stop()`) fecha o socket só com o
+    worker `settled` ou cancelado antes de entrar, e remove o registro e libera
+    o contador só com `settled` **e** `close()` concluído sem erro;
+  - **`close()` com `OSError`** retém o registro para sempre e leva a
+    `broken`. Limite do SO: depois de um `close()` falho, não há como reprovar
+    a liberação do handle.
+- **Erros inesperados:** do driver viram uma categoria fixa; do acceptor
+  (`accept()` ou admissão) viram `broken`, e um socket aceito ainda não
+  registrado é fechado pelo dono (ou retido). Nada chega ao
+  `threading.excepthook`, e nenhuma exceção é guardada.
+- **Barreira:** um lock governa estado, admissão, adoção, contadores e a
+  passagem de pré-auth para auth. Nunca envolve handshake, `join`, `close`
+  nem espera.
+- **Admissão:** a cada conexão aceita, o `Deadline` é criado logo depois do
+  `accept` e registrado antes do `start`. Sob o lock são exigidos estado
+  `running`, um token do bucket **global** (reservado por tentativa: EOF,
+  framing inválido e falha TLS também consomem) e uma vaga pré-auth. Sem
+  isso, o listener responde `53300` sem bloquear e fecha na hora, sem criar
+  thread. A reserva de sessão leva a conexão de pré-auth para auth, até S
+  (`max_sessions`, sem teto oculto). Em `broken`, o acceptor deixa de
+  aceitar, e o backlog do SO vira o teto.
+- **Parada:** `stop()` é permanente e idempotente:
+  - fecha a admissão e sinaliza acceptor e workers, que conferem a cada
+    fatia; o socket raw nunca muda de dono;
+  - espera sem prazo os que comprovaram início, como na D-108. `join` com
+    timeout nunca serve de prova;
+  - recolhe e fecha o socket do listener;
+  - termina `incomplete`, com erro fixo, se algo não tiver prova física,
+    inclusive um `start()` ainda em voo;
+  - repetir o `stop()` recolhe de novo;
+  - chamado de uma thread do próprio listener, recusa antes de qualquer
+    efeito.
+- **Start:** o bind é síncrono, e a referência ao socket é adotada antes de
+  qualquer efeito; o acceptor também é adotado antes do `start`. Com uma
+  parada pedida durante o bind, o `start()` desfaz o que criou e não inicia o
+  acceptor. Uma falha parcial conserva o ownership para o `stop()` do
+  chamador.
+- **Defaults delegados (D-110):** os de `PgwireLimits` do lote 1 e o backlog
+  do `listen` igual a P. Nenhum foi aprovado individualmente.
+- **Limites honestos:**
+  - uma interrupção assíncrona entre o retorno do `accept` e a adoção do
+    socket não é coberta, como na D-108;
+  - não há teto absoluto de shutdown se uma chamada do SO bloquear;
+  - S deve ser coerente com `RegistryLimits.max_sessions` quando o bootstrap
+    compuser os dois (lote seguinte).
+
+**Lote 4 — integração INTERNA do listener no composition root (implementado
+localmente, sem commit, aguardando revisão).** Sem ativação operacional, sem
+SQL, sem deploy. O MCP continua o legado: stdio, com a única tool
+`query_database(sql)` inalterada.
+
+- **API:**
+  - `build_application(..., pgwire: PgwireComposition | None = None)`, só
+    interno. O `PgwireComposition(settings, resolved_addresses=None,
+    test_port=None)` mora em `pgwire/composition.py`.
+  - `resolved_addresses` é o colaborador explícito de hostname: exatamente um
+    IP literal já resolvido, sem DNS.
+  - `test_port` só aceita `0` e só é usado por testes; nunca é setting
+    externo nem default de produto.
+  - `Application.pgwire_listener` expõe o listener já escutando, ou `None`.
+- **`pgwire=None`:** nada de `maskgw.pgwire` é importado (lazy imports e
+  `TYPE_CHECKING`), e o catálogo segue com os limites antigos.
+- **Antes de qualquer efeito:** exige o catálogo, revalida os settings
+  injetados, valida o colaborador de hostname e a porta de teste, prepara o
+  TLS e depois o principal. Só então abre store, config, banco ou listener.
+- **S como fonte única (escolha sob delegação):** o `max_sessions` do PGWire
+  vira também o `RegistryLimits.max_sessions` (via `session_limits`);
+  candidatos e aposentados são preservados. Não há teto 32: 40 foi medido.
+- **Alias:** o callback é `sealed_alias_check(service)` e lê **só**
+  `service.view()`, que toma apenas o `_view_lock` curto da referência do selo
+  (não é lock-free); sem lock do store nem da seção de escrita, sem
+  filesystem, DNS ou upstream. É `True` apenas para um alias válido, publicado no selo e
+  com o registro do mesmo selo habilitado; qualquer outro caso é `False`.
+  Policy, HMAC e segredos nunca chegam ao listener.
+- **Startup:** o listener é adotado antes do `start()` (§11 passo 9), e o
+  bind síncrono fica confirmado antes do `build_mcp_server`.
+- **Fechamento (`Application.close`):**
+  - `close()` chamado de uma thread do listener é recusado antes de efeitos,
+    como já valia para HTTP e fila;
+  - `_quiesce` fecha **todas** as admissões — barreira da fila v2,
+    `PgwireListener.request_stop()` (novo, curto, sem `join`) e seção crítica
+    v1 — antes da drenagem; o trabalho v2 aceito ainda conclui com registry e
+    verificador aptos (D-108);
+  - depois vêm `begin_shutdown` do catálogo, `stop()` do listener com prova e
+    `stop()` do HTTP.
+- **Lista de dependências provada:** o listener usa **só**
+  `datasources.service` (o selo) e principal e TLS em memória. Por isso:
+  - o runtime legado e o `masking.yaml` fecham com o HTTP comprovadamente
+    parado, como antes;
+  - o catálogo só fecha com a fila **e** o listener comprovados;
+  - sem essa prova, a `Application` fica `closing`, levanta
+    `PgwireListenerIncompleteError` fixo, e um `close()` repetido retenta.
+    `_closed` só vira verdadeiro com tudo provado.
+- **Retenção no fechamento normal (correção da revisão do lote 4):** com
+  PGWire, o `close()` coloca a própria `Application` (dona do listener e do
+  catálogo que ele lê) no ledger D-108 **antes** de qualquer passo falível,
+  logo depois da recusa de auto-encerramento.
+  - Encerramento sem prova ou exceção no cleanup mantêm a retenção: descartar
+    a `Application` não faz o GC soltar o listener nem o lock do catálogo.
+  - Só o fechamento completo e provado, depois de `_closed`, solta a
+    retenção.
+  - Uma flag por instância evita duplicata nas novas tentativas.
+  - Sem PGWire, o ledger não é tocado.
+  - O mesmo vão existe, por analogia, no fechamento normal com a fila v2 sem
+    PGWire. Fica **fora** deste recorte, registrado para revisão. Na revisão
+    do lote 4, ficou classificado como **risco** para revisão separada, e não
+    como achado reproduzido.
+
+**Gates finais do lote 4 (2026-10-12).** Executados sobre a fonte final
+congelada, sem mudança de produto, testes, recursos ou dependências. Fonte:
+224 arquivos funcionais, com os hashes iguais antes e depois. Resultados:
+- suíte integral com PG 16.15 real, 0 falhas e 0 skips por DSN;
+- seleção `integration` verde;
+- wheel e sdist instalados, cada um com a sonda real de 165/165, e as
+  contraprovas de isolamento reprovando.
+
+Evidência: `docs/PHASE-9-STAGE-7-VALIDATION.md`, §1.6, "Gates finais".
+Continuam abertos: o gate de runtime TLS moderno (o runtime medido é o
+OpenSSL 1.1.1t, fora de suporte), a resolução limitada de hostname no
+composition root e a ativação operacional. A Etapa 7 não está concluída, e
+nada foi liberado para operação real.
+
+**Gate de runtime moderno — autorização estreita (2026-10-13).** O usuário
+aprovou um Python moderno em ambiente **temporário e isolado**, só para
+validação de runtime. Isso substitui, **apenas nesse ponto**, o "não instalar
+Python nem recriar a `.venv`" acima: permite extrair um pacote oficial num
+diretório temporário fora do checkout, preservando a `.venv`, o Python atual,
+o PATH, o launcher `py`, o registro e as associações de arquivo. Não autoriza
+deploy, ativação operacional, commit, push ou Etapa 8+.
+- **Escolha delegada:** CPython 3.14.8 x64, build normal com GIL, pelo pacote
+  oficial `python` 3.14.8 do nuget.org, invocado só pelo caminho absoluto
+  `tools/python.exe`.
+- **Execução em lotes revisados:** lote A — procedência, runtime, testes
+  `test_pgwire*` e estática; lote B — PG16 real e pacotes; lote C —
+  correção só de teste e nova suíte integral.
+- **Lote A medido:** ver a §1.6, "Runtime moderno — lote A".
+- **Lote B medido** (§1.6, "Runtime moderno — lote B"): a rodada 1 da suíte
+  integral foi interrompida. A troca do ID da `bridge`, o buffer de eventos
+  vazio e a saída 255 do PG próprio indicam um reinício do motor do Docker,
+  mas esse reinício é inferência, sem evidência direta salva, e a causa não
+  foi atribuída. A rodada 2 deu 4.927 aprovados, **2 falhas** e 20 skips de
+  plataforma em 4.949. `integration` (572 aprovados, 3 skips POSIX) e wheel e
+  sdist (168/168 cada, 6 contraprovas reprovando) passaram.
+- **As 2 falhas do lote B:** os casos `1\x00` de dois testes de
+  `tests/test_admin_ui_startup.py`. O `monkeypatch.setenv` levanta
+  `ValueError` antes do Gateway, porque o CPython 3.14 no Windows recusa NUL
+  em variável de ambiente, e o 3.11.3 aceitava. Não é falha do produto.
+- **Correção só de teste (lote C, autorizada pelo usuário e aprovada em
+  revisão independente):** os dois testes passam a distinguir o valor que o
+  SO não representa do setting bruto injetado. Um helper tenta o
+  `monkeypatch.setenv`; só um `ValueError` com mensagem exata `embedded null
+  character`, para valor com NUL, é tratado como recusa do SO, e a variável
+  precisa continuar ausente. Qualquer outro `ValueError` propaga. Na recusa,
+  o mesmo valor bruto chega por `MappingRawSettings` a
+  `resolve_admin_ui_enabled` e ao `main`, que continuam obrigados a **não**
+  habilitar a UI e a não consultar o `SecretProvider` pela flag. Valores que
+  o SO aceita seguem pelo `EnvRawSettings` real. `RAW_VALUES` não mudou, e
+  não há skip, xfail nem checagem de versão. Isso **não** significa que a
+  aplicação lê NUL do ambiente no 3.14: lá o valor não chega ao ambiente.
+- **Lote C medido** (§1.6, "Runtime moderno — lote C"): procedência
+  reverificada; perfil CPython 3.14.8 com GIL e OpenSSL 3.5.9; teste focado
+  90/90 e adjacentes 181/181; suíte integral com PG16 real **4.929
+  aprovados, 0 falhas, 0 erros e 20 skips de plataforma em 4.949**, 0 skips
+  por DSN. Mypy strict limpo só com o alvo configurado 3.11; os 4
+  `union-attr` do alvo 3.14 continuam abertos.
+- **Divergência estática relatada, não corrigida:** com `--python-version
+  3.14`, o mypy acusa 4 `union-attr` em `datasource/destination.py`
+  (`ipv4_mapped`). O comportamento em tempo de execução é idêntico ao do
+  3.11.3, e com o alvo 3.11 configurado no projeto não há erro.
+- **Startup parcial (`_unwind_partial`):**
+  - sem fila e sem listener, o caminho é idêntico ao anterior;
+  - com qualquer um dos dois, fila, listener e catálogo ficam retidos antes de
+    qualquer passo falível; depois fecham todas as admissões, inclusive a
+    seção crítica v1 (achado do revisor), drena-se e o listener é recolhido;
+  - o catálogo só fecha com fila e listener comprovados, e só então a
+    retenção é solta;
+  - o erro original é sempre o propagado.
+- **`main`:** lê `MASKGW_PGWIRE_ENABLED` bruto como a primeira flag via
+  `RawSettings` (o `MASKGW_CONFIG` já era lido antes, só para o caminho, sem
+  abrir nada), sem importar `maskgw.pgwire` e sem ler outro setting PGWire. Com exatamente `1`, emite o `STARTUP_FAILURE`
+  fixo e encerra antes de admin, secrets, construção, store, bind ou runtime;
+  uma falha ao ler a flag também recusa. Qualquer outro valor deixa o legado
+  intacto e nenhum outro setting PGWire é lido. É um bloqueio temporário de
+  entrega e de autoridade, não um limite oculto.
+- **Teste rastreado ajustado:** `tests/test_admin_ui_startup.py` tinha um fake
+  de `RawSettings` que devolvia `1` para **qualquer** nome; com a leitura da
+  flag PGWire, isso passou a recusar o startup. O fake agora responde por nome,
+  e o teste também confere que a primeira leitura via `RawSettings` é a da
+  flag PGWire.
+- **Teste rastreado ajustado no lote C (só os casos NUL):** ver acima,
+  "Correção só de teste".
+- **Resolução limitada do hostname do bind PGWire — autorização (2026-10-14).**
+  Depois da revisão do desenho e das condições, o usuário aprovou implementar
+  a opção B: reutilizar de forma estreita a supervisão interna de
+  `datasource/verify.py` para um job DNS fixo, com política de respostas
+  própria do PGWire e integração na composição interna. Sem ativação
+  operacional, SQL, dependências, settings ou Etapas 8–12. Execução em lotes
+  revisados. O lote 1 (job DNS e supervisão em `verify.py`) foi revisado e
+  aprovado. O lote 2 (`pgwire/bind_resolution.py` e as duas fases em
+  `pgwire/composition.py`) foi implementado localmente, sem commit, e
+  revisado. Três defeitos de prazo, achados pelas contraprovas do revisor,
+  foram corrigidos. A validação final no runtime legado (3.11.3) foi medida:
+  - suíte integral com PG16 real, 0 falhas;
+  - `integration` verde;
+  - wheel e sdist gerados da árvore atual, cada um com a sonda real de
+    191/191, inclusive o bind por hostname pelos pacotes instalados;
+  - as 6 contraprovas reprovando.
+
+  A repetição no runtime moderno temporário (CPython 3.14.8 com OpenSSL
+  3.5.9, procedência reverificada) também foi medida, depois de uma
+  interrupção por limite de conta, registrada como histórico:
+  - suíte integral com PG16 real, 0 falhas;
+  - `integration` e seleção focada verdes;
+  - wheel e sdist com a sonda de 193/193 cada e as 6 contraprovas reprovando.
+
+  Evidência: `PHASE-9-STAGE-7-VALIDATION.md`, §1.6, "Resolução limitada do
+  hostname do bind". A ativação operacional segue bloqueada e a D-090 gate 2,
+  aberta.
+- **Fechamento local (2026-10-14).** O usuário aprovou explicitamente fechar
+  o trabalho validado da Etapa 7 (D-109/D-110: startup, TLS e autenticação
+  PGWire, composição interna e a resolução limitada do bind) num commit local
+  novo. A aprovação não autoriza push, fetch, amend, reset, ativação
+  operacional, Etapa 8, dependência nova nem mudança funcional. A Etapa 7
+  continua parcial.
+- **Pendentes:** a ativação operacional e a D-090 gate 2. A resolução
+  limitada de hostname tem medições finais no Windows, no runtime legado e no
+  moderno temporário. O gate de runtime moderno foi medido
+  nos lotes A–C, só no Windows com CPython 3.14.8; ele não cobre POSIX nem
+  tipagem com o alvo 3.14 e não libera operação real.

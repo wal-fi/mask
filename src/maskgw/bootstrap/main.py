@@ -27,7 +27,12 @@ from maskgw.bootstrap.application import (
     resolve_admin_settings,
     resolve_admin_ui_enabled,
 )
-from maskgw.bootstrap.settings import RawSettings
+from maskgw.bootstrap.settings import (
+    PGWIRE_ENABLED_ENV,
+    PGWIRE_ENABLED_VALUE,
+    EnvRawSettings,
+    RawSettings,
+)
 
 STARTUP_FAILURE: Final = "maskgw: falha na inicializacao\n"
 RUNTIME_FAILURE: Final = "maskgw: falha durante a execucao\n"
@@ -45,6 +50,22 @@ def main(*, stderr: TextIO | None = None, raw_settings: RawSettings | None = Non
     """Constroi, executa e encerra o processo. Devolve o codigo de saida."""
     sink = stderr if stderr is not None else sys.stderr
     config_path = os.environ.get(CONFIG_PATH_ENV, "").strip() or DEFAULT_CONFIG_PATH
+
+    try:
+        # D-110: a ativacao operacional do PGWire ainda NAO foi entregue. A flag
+        # bruta e a primeira flag lida via `RawSettings` (o `MASKGW_CONFIG` acima
+        # so define o caminho, sem abrir nada), sem importar `maskgw.pgwire`:
+        # valor exatamente `1` recusa o startup antes de admin, secrets, store,
+        # bind ou runtime. Qualquer outro valor deixa o legado intacto e nenhum
+        # outro setting PGWire e lido. Bloqueio temporario de entrega, nao um
+        # limite.
+        raw = raw_settings if raw_settings is not None else EnvRawSettings()
+        refused = raw.get_raw(PGWIRE_ENABLED_ENV) == PGWIRE_ENABLED_VALUE
+    except BaseException:
+        refused = True
+    if refused:
+        _write_stderr(sink, STARTUP_FAILURE)
+        return 1
 
     try:
         admin_ui_enabled = resolve_admin_ui_enabled(raw_settings)

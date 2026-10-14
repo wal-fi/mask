@@ -25,12 +25,38 @@ administrativa, barreira e leitura selada (D-108, fechamento aprovado e
 publicação autorizada em 2026-10-07; estado confirmado pelo Git). Listener
 PGWire, startup, TLS e autenticação da Etapa 7 e as Etapas 8–12 continuam sem
 autorização; a D-090 segue aberta no gate 2.
+**Atualização de estado (2026-10-08):** terceira exceção estreita da Etapa 7,
+a D-109 — só peças puras sobre bytes (framing do startup, credencial, troca
+SCRAM e channel binding), implementadas localmente, sem commit e em revisão
+independente. Naquela data não existiam listener, bind, settings, `SSLContext`
+de produto, driver sobre socket nem ativação; nada disso estava liberado, nem
+operação real. A Etapa 7 não está concluída.
+**Atualização de estado (2026-10-09):** o usuário autorizou explicitamente a
+integração do listener (D-110): listener, TLS e autenticação **sem SQL**,
+configuração externa, admissão e shutdown seguros, testes só em loopback e em
+ambientes descartáveis, revisão antes de commit/push, sem deploy nem liberação
+de produção, com o runtime moderno como gate separado. Execução em lotes
+revisados: existem o lote 1 (settings e preparo do `SSLContext`), o lote 2
+(transporte e driver de startup/autenticação sobre um socket já aceito) e o
+lote 3 (listener com admissão, ownership e parada) e o lote 4 (composição
+interna no composition root, só por parâmetro interno), locais e sem commit.
+O `main` recusa `MASKGW_PGWIRE_ENABLED=1`. Os gates finais do lote 4 foram
+medidos em 2026-10-12 (PG16 real e pacotes). O gate de runtime moderno foi
+medido em 2026-10-13 só no Windows com CPython 3.14.8 (lotes A–C, evidência
+da Etapa 7). A resolução limitada do hostname do bind foi implementada
+localmente em 2026-10-14 e medida no Windows, e o usuário aprovou fechar
+esse trabalho validado num commit local, sem push (o "sem commit" acima é o
+estado anterior); a ativação operacional continua pendente; nada foi
+liberado para operação real. Os
+requisitos normativos desta especificação não mudam.
 
 Esta aprovação normativa não autoriza as Etapas 5–12, que continuam
 condicionadas à revisão e autorização próprias, na ordem desta especificação.
-Não existem listener, UI v2, variável de ambiente nova nem integração do
-registry com MCP ou PGWire no produto. As rotas `/admin/v2` da Etapa 4 só
-existem quando o composition root recebe o catálogo e a fronteira HTTP.
+Não existem listener PGWire, ativação do catálogo por ambiente nem integração
+do registry com MCP ou PGWire no produto. A Admin UX v2 das Etapas 5–6 e as
+rotas `/admin/v2` da Etapa 4 existem somente na composição interna autorizada,
+quando o composition root recebe o catálogo e a fronteira HTTP; não estão
+liberadas para operação real.
 
 ## 1. Motivo e resultado esperado
 
@@ -157,6 +183,13 @@ proof recebido para o upstream:
 - acesso a todos os aliases habilitados;
 - sem matriz de permissões por usuário nesta fase.
 
+**Aval do usuário (2026-10-08):** além de SCRAM-SHA-256, o mecanismo
+**SCRAM-SHA-256-PLUS** (`tls-server-end-point`) quando houver TLS, com
+normalização Unicode da senha (SASLprep) e `scramp==1.4.17` fixada. Como a
+`scramp` é usada só para derivar o verifier, e qual é o perfil mínimo, está na
+D-109, escolhida sob delegação. O aval não libera listener, ativação nem
+operação real, não fecha a Etapa 7 e mantém a D-090 aberta no gate 2.
+
 A senha do Gateway só existe na fonte de segredo e na memória necessária para
 autenticação; não é persistida no catálogo, não aparece na UI e não é enviada
 ao PostgreSQL upstream. Falhas de usuário, senha ou alias usam a mesma resposta
@@ -229,7 +262,8 @@ O listener implementa e testa:
 
 - `SSLRequest` e startup protocol 3.0;
 - `StartupMessage` com `user`, `database` e `application_name` limitado;
-- autenticação SCRAM-SHA-256, sem método alternativo no MVP;
+- autenticação SCRAM-SHA-256 e, sobre TLS, SCRAM-SHA-256-PLUS (aval de
+  2026-10-08, D-109), sem outro método no MVP;
 - `ParameterStatus`, `BackendKeyData` sintético e `ReadyForQuery`;
 - simple query;
 - extended query: `Parse`, `Bind`, `Describe`, `Execute`, `Close` e `Sync`;

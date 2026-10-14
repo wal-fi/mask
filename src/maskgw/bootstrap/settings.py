@@ -8,6 +8,11 @@ from typing import Final, Protocol
 
 ADMIN_UI_ENABLED_ENV: Final = "MASKGW_ADMIN_UI_ENABLED"
 
+#: Flag do ingresso PGWire (spec §5.1), lida pela fronteira de processo SEM
+#: importar `maskgw.pgwire`. Mesmo nome de `maskgw.pgwire.settings.ENABLED_ENV`.
+PGWIRE_ENABLED_ENV: Final = "MASKGW_PGWIRE_ENABLED"
+PGWIRE_ENABLED_VALUE: Final = "1"
+
 
 class RawSettings(Protocol):
     def get_raw(self, name: str) -> str | None:

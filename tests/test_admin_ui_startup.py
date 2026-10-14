@@ -85,15 +85,35 @@ def config_file(tmp_path):
     return path
 
 
+def _setenv_or_os_refusal(monkeypatch: pytest.MonkeyPatch, key: str, value: str) -> bool:
+    """Define a variavel; False somente se o SO recusar um valor com NUL.
+
+    O CPython 3.14 no Windows recusa NUL em `os.environ`; o 3.11 aceitava.
+    Qualquer outro `ValueError` (ou NUL aceito) segue o caminho normal, e a
+    recusa nao pode deixar a variavel definida.
+    """
+    try:
+        monkeypatch.setenv(key, value)
+    except ValueError as error:
+        if "\x00" not in value or str(error) != "embedded null character":
+            raise
+        assert EnvRawSettings().get_raw(key) is None
+        return False
+    return True
+
+
 @pytest.mark.parametrize("value", RAW_VALUES)
 @pytest.mark.parametrize("environment", [False, True])
 def test_exact_raw_flag(value, environment, monkeypatch):
     values = {} if value is None else {ADMIN_UI_ENABLED_ENV: value}
     source: RawSettings
     if environment:
-        for key, item in values.items():
-            monkeypatch.setenv(key, item)
-        source = EnvRawSettings()
+        accepted = all(
+            _setenv_or_os_refusal(monkeypatch, key, item) for key, item in values.items()
+        )
+        # Valor que o SO nao representa continua adversarial como setting bruto
+        # injetado; valores representaveis usam o `EnvRawSettings` real.
+        source = EnvRawSettings() if accepted else MappingRawSettings(values)
     else:
         source = MappingRawSettings(values)
     assert source.get_raw(ADMIN_UI_ENABLED_ENV) == value
@@ -348,7 +368,16 @@ def test_positive_startup_order_and_shutdown(monkeypatch, config_file):
     compiled = load_config_bundle_text
 
     class Source:
-        def get_raw(self, _name):
+        # D-110: o `main` le primeiro `MASKGW_PGWIRE_ENABLED` (desligado aqui)
+        # e so depois a flag de UI. O fake responde por nome, e nao `1` para
+        # qualquer variavel, que agora recusaria o startup por ativacao PGWire.
+        def __init__(self) -> None:
+            self.names: list[str] = []
+
+        def get_raw(self, name):
+            self.names.append(name)
+            if name != "MASKGW_ADMIN_UI_ENABLED":
+                return None
             events.append("flags")
             return "1"
 
@@ -392,7 +421,9 @@ def test_positive_startup_order_and_shutdown(monkeypatch, config_file):
     monkeypatch.setattr(composition, "build_mcp_server", mcp)
     before = thread_snapshot()
     stderr = io.StringIO()
-    assert process.main(stderr=stderr, raw_settings=Source()) == 0
+    source = Source()
+    assert process.main(stderr=stderr, raw_settings=source) == 0
+    assert source.names == ["MASKGW_PGWIRE_ENABLED", "MASKGW_ADMIN_UI_ENABLED"]
     assert events == [
         "flags",
         "settings",
@@ -536,8 +567,10 @@ def test_stage_three_does_not_change_http_policy_or_secret_normalization():
 def test_process_uses_raw_flag_without_querying_secret_provider(value, monkeypatch):
     monkeypatch.setenv("MASKGW_ADMIN_ENABLED", "1")
     monkeypatch.setenv("MASKGW_ADMIN_TOKEN", TOKEN)
-    if value is not None:
-        monkeypatch.setenv(ADMIN_UI_ENABLED_ENV, value)
+    raw_settings: RawSettings | None = None
+    if value is not None and not _setenv_or_os_refusal(monkeypatch, ADMIN_UI_ENABLED_ENV, value):
+        # Recusado pelo SO: o mesmo valor bruto chega ao `main` injetado.
+        raw_settings = MappingRawSettings({ADMIN_UI_ENABLED_ENV: value})
     resolved: list[bool] = []
 
     class App:
@@ -563,6 +596,6 @@ def test_process_uses_raw_flag_without_querying_secret_provider(value, monkeypat
     monkeypatch.setattr(EnvSecretProvider, "get", guarded_get)
     monkeypatch.setattr(process, "build_application", build)
     stderr = io.StringIO()
-    assert process.main(stderr=stderr) == 0
+    assert process.main(stderr=stderr, raw_settings=raw_settings) == 0
     assert resolved == [value == "1"]
     assert stderr.getvalue() == "maskgw: revision carregada: 0\n"
