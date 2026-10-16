@@ -46,7 +46,12 @@ lote 3 (`pgwire/listener.py`) e o lote 4 (composição interna em
 `build_application(pgwire=...)`) foram implementados localmente e revisados,
 sem commit (§1.6). Os gates finais do lote 4 (2026-10-12: suíte integral e
 `integration` com PG16 real, e wheel/sdist com sonda) passaram. O `main`
-recusa `MASKGW_PGWIRE_ENABLED=1`. O gate de runtime moderno foi medido em
+recusa `MASKGW_PGWIRE_ENABLED=1` (estado até 2026-10-14; em 2026-10-15 foi
+autorizada só localmente a ativação sobre catálogo existente e sem Admin/UI,
+com o lote 1 implementado e os gates medidos só no Windows, no runtime legado
+3.11.3 e, em 2026-10-16, no CPython 3.14.8 temporário; ver a §1.6, lote 2c e
+repetição moderna; POSIX não medido; fechado num commit local aprovado em
+2026-10-16, sem push). O gate de runtime moderno foi medido em
 2026-10-13 só no Windows com CPython 3.14.8 temporário (lotes A–C, §1.6):
 suíte integral verde depois da correção só de teste dos casos NUL, e os 4
 `union-attr` do mypy com o alvo 3.14 abertos. O lote C foi revisado. A

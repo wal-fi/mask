@@ -16,7 +16,12 @@ usuário autorizou explicitamente a integração do listener (D-110), sem SQL,
 deploy nem liberação de produção, em lotes revisados; existem o lote 1
 (settings e preparo do `SSLContext`), o lote 2 (transporte e driver de
 startup/autenticação), o lote 3 (listener) e o lote 4 (composição interna no
-composition root; o `main` recusa a ativação), locais e sem commit, com os
+composition root; o `main` recusava a ativação até 2026-10-14, e em
+2026-10-15 foi autorizada só localmente a ativação sobre catálogo existente,
+sem Admin/UI e sem SQL, implementada localmente e medida só no Windows,
+nos runtimes legado e moderno temporário (3.14.8), sem POSIX, e fechada num
+commit local aprovado em 2026-10-16), locais e sem commit (estado anterior a
+esse fechamento), com os
 gates finais do lote 4 medidos em 2026-10-12 e o gate de runtime moderno
 medido em 2026-10-13, só no Windows com CPython 3.14.8 (lotes A–C). A
 resolução limitada do hostname do bind foi implementada localmente em

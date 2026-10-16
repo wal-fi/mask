@@ -40,7 +40,12 @@ revisados: existem o lote 1 (settings e preparo do `SSLContext`), o lote 2
 (transporte e driver de startup/autenticação sobre um socket já aceito) e o
 lote 3 (listener com admissão, ownership e parada) e o lote 4 (composição
 interna no composition root, só por parâmetro interno), locais e sem commit.
-O `main` recusa `MASKGW_PGWIRE_ENABLED=1`. Os gates finais do lote 4 foram
+O `main` recusa `MASKGW_PGWIRE_ENABLED=1` (estado até 2026-10-14; em
+2026-10-15 foi autorizada só localmente a ativação sobre catálogo existente,
+sem Admin/UI e sem SQL, implementada localmente e medida só no Windows,
+nos runtimes legado e moderno temporário (3.14.8), sem POSIX, e fechada num
+commit local aprovado em 2026-10-16, sem push; os requisitos
+normativos não mudam). Os gates finais do lote 4 foram
 medidos em 2026-10-12 (PG16 real e pacotes). O gate de runtime moderno foi
 medido em 2026-10-13 só no Windows com CPython 3.14.8 (lotes A–C, evidência
 da Etapa 7). A resolução limitada do hostname do bind foi implementada

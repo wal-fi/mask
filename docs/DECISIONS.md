@@ -3354,6 +3354,51 @@ deploy, ativação operacional, commit, push ou Etapa 8+.
   novo. A aprovação não autoriza push, fetch, amend, reset, ativação
   operacional, Etapa 8, dependência nova nem mudança funcional. A Etapa 7
   continua parcial.
+- **Ativação local no `main` — autorização (2026-10-15).** Depois do desenho
+  só de leitura e das correções da revisão, o usuário autorizou implementar
+  **só localmente**, sem commit nem push, a ativação PGWire no `main`.
+  Contrato:
+  - flag desligada: o legado inteiro preservado, inclusive as leituras
+    normais de Admin e UI, sem importar PGWire nem o catálogo;
+  - flag exata `1`: Admin ou UI ligados são recusados antes de qualquer
+    efeito (a v2 não é exposta pelo `main`); depois, `pgwire.settings.resolve`;
+  - catálogo **existente**, sem `initialize`, migração, alias default nem
+    queda para o legado;
+  - store: ausente, `<pai absoluto do MASKGW_CONFIG efetivo>/datasources.store`;
+    absoluto explícito fica como está; relativo explícito é relativo a esse
+    pai. Âncora: ausente, `<pai do store>/.maskgw-anchor/datasources.anchor`;
+    explícita, precisa ser absoluta. Os dois caminhos são resolvidos uma vez
+    e passados explicitamente;
+  - a recusa antecipada por `lstat` não é atômica; as checagens
+    autoritativas continuam no `CatalogStore`;
+  - o listener só autentica, e a SQL de cliente recebe `0A000` sem repasse;
+  - MCP stdio, DSN legado e o fim no EOF do MCP não mudam; não há modo
+    daemon.
+
+  Isso substitui **apenas** a recusa incondicional da flag; não é liberação de
+  produção. O lote 1 está implementado localmente.
+
+  A suíte integral do lote 2 achou uma violação do invariante de separação de
+  planos: o `main` importava `maskgw.admin`. A correção revisada pelo root
+  usa a função já pública `resolve_admin_settings(secrets)`; uma tentativa
+  intermediária, que falhava no mypy strict, foi descartada. Os gates foram
+  medidos no Windows com o runtime legado 3.11.3 (§1.6, lote 2c):
+  - suíte integral 5.230/5.210, com 20 skips de plataforma e 0 falhas;
+  - `integration` 585/582;
+  - operacionais 10/10;
+  - wheel e sdist 208/208 cada, com as 6 contraprovas reprovando.
+
+  Em 2026-10-16 a mesma validação foi repetida, com autorização explícita,
+  no CPython 3.14.8 temporário e isolado (OpenSSL 3.5.9), também só no
+  Windows (§1.6, repetição moderna):
+  - suíte integral 5.230/5.210, `integration` 585/582 e operacionais 10/10;
+  - wheel e sdist 210/210 cada (o perfil 3.14 substitui a checagem 3.11),
+    com as 6 contraprovas reprovando exatamente o mesmo conjunto do lote 2c.
+
+  POSIX não foi medido. Os 4 `union-attr` do mypy com o alvo 3.14 seguem
+  abertos. Em 2026-10-16 o usuário aprovou fechar o incremento validado num
+  commit local novo, sem push. A D-090 gate 2 segue aberta, e a v2 segue
+  proibida em operação real.
 - **Pendentes:** a ativação operacional e a D-090 gate 2. A resolução
   limitada de hostname tem medições finais no Windows, no runtime legado e no
   moderno temporário. O gate de runtime moderno foi medido

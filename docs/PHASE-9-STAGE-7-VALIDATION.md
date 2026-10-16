@@ -2139,6 +2139,501 @@ para o commit.
   `union-attr` informativos continuam abertos);
 - não há afirmação de prontidão para produção.
 
+#### Ativação local do PGWire no `main` — lote 1 (D-110, 2026-10-15)
+
+**Autoridade:** em 2026-10-15, depois do desenho só de leitura e das
+correções da revisão, o usuário autorizou implementar **só localmente** a
+ativação PGWire no `main`. A autorização não cobre commit, push, liberação de
+produção, Etapa 8 nem mudança de runtime. Ela substitui **apenas** a recusa
+incondicional de `MASKGW_PGWIRE_ENABLED=1`, que fica como histórico nas seções
+anteriores. Contrato: D-110, "Ativação local no `main`".
+
+**Escopo do lote 1:**
+- produto: só `bootstrap/main.py` e o helper `resolve_catalog_paths` em
+  `bootstrap/settings.py`. `build_application`, `pgwire/*`, `store.py` e
+  `verify.py` não mudaram;
+- testes: `tests/test_pgwire_main_activation.py`, novo, com 66 casos;
+- teste normal atualizado de propósito:
+  `test_pgwire_bootstrap.py::test_main_com_flag_exata_e_settings_incompletos_falha_fechado_sem_efeitos`.
+  O cenário antigo virou recusa por settings incompletos, com garantias mais
+  fortes: stderr exato, nenhum arquivo criado e nenhum canário;
+- o root substituiu sozinho a contraprova obsoleta da recusa incondicional
+  em `test_pgwire_bootstrap_increment_review.py` e acrescentou
+  `tests/test_pgwire_activation_review.py`. Não editei nenhum `*_review.py`.
+
+**Defeitos achados pelas contraprovas do revisor e corrigidos:** no caminho de
+ativação, uma falha ao ler a porta do listener, ao escrever a metadata no
+stderr (por uma vez ou de forma permanente) ou ao relatar
+`STARTUP_FAILURE`/`RUNTIME_FAILURE` deixava uma exceção crua escapar e,
+nalguns casos, não fechava a aplicação. Agora a aplicação é fechada antes, e o
+relato é best-effort, sem exceção crua. **Decisão registrada:** essa contenção
+vale só para a ativação, e o legado mantém o comportamento anterior (um teste
+fixa isso).
+
+**Medido (`.venv` 3.11.3, sem DSN, sem PostgreSQL, sem rede externa):**
+
+| seleção | coletados | resultado |
+|---|---|---|
+| `test_pgwire_main_activation.py` | 66 | 66 aprovados |
+| `test_pgwire_activation_review.py` (revisor) | 9 | 9 aprovados |
+| vizinhos: `test_pgwire_bootstrap`, `test_admin_ui_startup`, `test_bootstrap`, `test_admin_http_lifecycle`, `test_pgwire_settings`, `test_pgwire_listener`, `test_pgwire_bind_resolution`, `test_datasource_verify_bind_dns` | 541 | 541 aprovados |
+| contraprovas anteriores do revisor (`*_increment_review`, `bind_*_review`) | 43 | 43 aprovados |
+
+- **Cobertura:**
+  - flag desligada: legado e leituras normais de UI/Admin, sem importar
+    PGWire nem o catálogo, verificado em subprocesso;
+  - Admin e UI em todas as combinações; settings inválidos;
+  - caminhos: default, relativo, absoluto, vazio, NUL, âncora relativa,
+    caminho ambíguo e symlink;
+  - store ou âncora ausentes, ou diretório no lugar, sem criar nada;
+  - erro fixo sem segredo, e stdout intocado;
+  - composição explícita sem Admin e linha do listener só com host numérico
+    e porta;
+  - caminho real com catálogo vazio, legado e MCP duble e porta em loopback:
+    o listener sobe, e o fim do MCP libera a porta e as threads.
+- **Mutações temporárias** (restauradas com hash conferido): 6 de 6
+  detectadas. São elas: sem recusa de Admin/UI, default em `config/config`,
+  âncora relativa aceita, sem recusa antecipada, queda para o legado e
+  metadata sem contenção.
+- **Estática:** ruff e format limpos em 223 arquivos; mypy strict limpo em
+  223 fontes; `git diff --check` limpo; nenhum `.pyc` novo e nenhum cp314 no
+  checkout.
+
+**Gates pendentes** (próximo lote, depois da revisão):
+- PG16 descartável em loopback: autenticação SCRAM e -PLUS com `verify-full`,
+  senha e alias errados recusados, e consulta do cliente com `0A000` **sem**
+  repasse ao upstream (as checagens de capability do startup continuam
+  executando SQL no upstream);
+- fim do processo no EOF real do MCP stdio;
+- suíte integral e `integration`;
+- wheel e sdist com a sonda atualizada;
+- runtime moderno, se for reautorizado.
+
+A Etapa 7 continua **parcial**: a D-090 gate 2 segue aberta, a v2 segue
+proibida em operação real, não há SQL pelo PGWire e não há afirmação de
+prontidão para produção.
+
+#### Ativação local no `main` — lote 2, interrompido por achado (2026-10-15)
+
+Raiz de evidência: `%LOCALAPPDATA%\Temp\maskgw-d110-activation-lote2b\`. A
+tentativa anterior (`…-lote2`) só criou retratos e foi preservada.
+
+**Ambiente:**
+- `.venv` 3.11.3, sem mudança;
+- Docker Desktop parado no início, iniciado sem janela e devolvido ao estado
+  parado;
+- PG16 próprio `maskgw-d110-activation-pg16-452bf677` em loopback:
+  PostgreSQL 16.15, UTF8, UTC, `scram-sha-256`. Credencial só num arquivo
+  próprio (depois removido); 45 arquivos de evidência varridos, 0
+  ocorrências.
+
+**Testes reais novos:** `tests/test_pgwire_main_operational.py`, 10 casos com
+o ponto de entrada real `python -I -B -m maskgw`:
+- catálogo provisionado pelo harness; datasource num banco dedicado;
+- SCRAM e -PLUS com `verify-full`; senha e alias errados com a mesma falha;
+- SQL de cliente com `0A000`. Prova observável de não repasse:
+  `pg_stat_database.sessions` do banco do datasource inalterado, e marcador
+  ausente das consultas upstream vivas. Contraprova: uma conexão direta faz
+  o contador subir;
+- MCP stdio aberto até o EOF, rc 0 e porta liberada;
+- recusas reais sanitizadas, sem queda para o legado.
+
+**Histórico de execução:**
+- rodada 1: **10 casos, 9 falhas**, 0 erros, 0 skips, 27,156 s, todas do
+  harness. No Windows, o stderr do filho chega com `\r\n`, e a leitura foi
+  normalizada. **Correção desta contagem:** este registro dizia "6 falhas",
+  porque eu tinha contado linhas `E` de um log truncado; o JUnit
+  (`operational-1.xml`), relido pelo root e por mim, tem 9;
+- rodada 2: 10/10;
+- o root corrigiu depois o harness:
+  - `repr=False` no `Gateway`, porque o `repr` incluía credenciais;
+  - `autocommit` + `ClientCursor`: sem isso, o `0A000` caía no `BEGIN`
+    implícito, e o `SELECT` do cliente não era exercitado;
+  - leitor de stderr com dono e pipes fechados;
+  - marcador ausente das consultas upstream vivas;
+- a auditoria dos logs e XML das rodadas 1 e 2 não achou nenhuma credencial;
+- rodada 3, sobre o harness final (hash `117c8b7d…8d74`): **10/10**, 34,0 s.
+
+**Suíte integral** (runner de 64 MiB; ela coletou o harness **anterior**,
+`061ba544…`): **5.230 coletados, 5.209 aprovados, 1 falha, 0 erros, 20
+skips só de plataforma, 0 por DSN**, 824,0 s. A falha é
+`tests/test_plan_separation.py::test_bootstrap_really_composes_the_admin_plane`.
+
+**Achado de produto do lote 1:** o `main.py` importava
+`maskgw.admin.http.settings`, e o invariante diz que, dentro de `bootstrap/`,
+só `application.py` importa `maskgw.admin`. A seleção focada do lote 1 não
+incluía esse teste. A validação **parou** antes de `integration`, pacotes e
+documentação de fechamento.
+
+**Correção do root, dentro do escopo autorizado de `main.py`:**
+- **Versão intermediária, descartada:** às 21:02:41 houve uma tentativa de
+  importar o alias `is_admin_http_enabled` por `maskgw.bootstrap.application`.
+  Ela **falha no mypy strict** (`attr-defined`: o nome não é exportado), e o
+  root a descartou.
+  - **Correção deste registro:** a versão anterior desta seção dizia que essa
+    intermediária tinha passado no mypy strict. Essa execução minha, feita com
+    o cache do mypy da raiz `lote2b`, não é prova e não deve ser considerada.
+- **Versão final:** o `main.py` usa `resolve_admin_settings(secrets)`, que já
+  é pública, e recusa um resultado não nulo. Uma configuração de Admin
+  ligada mas inválida também falha fechada antes de efeitos, e o conflito
+  com a UI continua curto-circuitando como antes.
+  - Não houve mudança em `application.py`, em API pública nem em teste
+    estrutural.
+  - SHA-256 final do `main.py`: `71d8e7458f1216673cb9c356eb579c1261f5b504b1b917cebd1513abf535ee98`.
+  - O root rodou ruff e mypy strict e 93 testes
+    (`test_plan_separation`, a contraprova de ativação e
+    `test_pgwire_main_activation`), todos aprovados.
+
+A fonte congelada desta rodada não corresponde ao `main.py` final: **nenhum
+gate desta rodada vale para ele**. Os gates foram refeitos do zero sobre a
+fonte final, na raiz `…-lote2c` (seção seguinte).
+
+**Limpeza:** contêiner e volume próprios removidos, com nome, label e montagem
+conferidos; credencial e cache do mypy removidos por caminho literal. Docker
+voltou ao estado parado, e os recursos e o host estão iguais ao início. Mais
+14 `tmp*` da suíte, no padrão conhecido, ficaram no lugar.
+
+#### Ativação local no `main` — lote 2c, gates sobre a fonte final (2026-10-15)
+
+Raiz de evidência: `%LOCALAPPDATA%\Temp\maskgw-d110-activation-lote2c\`.
+As raízes `…-lote2` e `…-lote2b` ficaram preservadas, com as suas falhas.
+
+**Fonte congelada:** 232 arquivos funcionais (224 Python), digest
+`e18c5d4262499b28a664677c7d9d53e222ce2d40730b015307adf3ce47c1569c`, iguais
+antes e depois. Hashes:
+- `bootstrap/main.py`: `71d8e745…ee98`, com a correção final do root;
+- `bootstrap/settings.py`: `949c3693…4646`;
+- `tests/test_pgwire_main_operational.py`: `117c8b7d…8d74`.
+
+HEAD `5d173ea`, índice vazio e inventário do `git status` igual.
+
+**Ambiente:**
+- `.venv` 3.11.3 (OpenSSL 1.1.1t), sem mudança;
+- Docker Desktop parado no início, iniciado sem janela e devolvido ao estado
+  parado;
+- PG16 próprio `maskgw-d110-activation-pg16-1036eec8` em loopback:
+  PostgreSQL 16.15 (`160015`), UTF8, UTC, `scram-sha-256`;
+- recursos Docker do início (0 contêineres, 17 volumes, 3 redes, 1 imagem)
+  iguais no fim; credencial só num arquivo próprio, removido depois.
+
+**Gates** (runner revisado de 64 MiB; sem deselect, skip novo nem xfail):
+
+| gate | coletados | resultado |
+|---|---|---|
+| `test_pgwire_main_operational.py` (ponto de entrada real) | 10 | 10 aprovados, 34,5 s, exit 0 |
+| suíte integral | **5.230** | **5.210 aprovados, 0 falhas, 0 erros, 20 skips só de plataforma** (9 bits POSIX, 6 symlink, 5 `fsync` POSIX), **0 por DSN**, 815,8 s, exit 0 |
+| `-m integration` | 585 | 582 aprovados, 3 skips `fsync` POSIX, 0 por DSN, 275,3 s, exit 0 |
+
+- O único aviso é o antigo `match=""` de `tests/test_admin_http_lifecycle.py:679`.
+- `test_plan_separation` passou na suíte integral.
+
+**Erro de procedimento meu, preservado:** o `gates.sh` foi gravado com
+`"$RW\$name.xml"` (a camada do shell converteu `\\` em `\`). O `\$` deixou
+`$name` literal, e as três etapas gravaram o JUnit no mesmo arquivo, fora da
+raiz (`%TEMP%\maskgw-d110-activation-lote2c$name.xml`), cada uma
+sobrescrevendo a anterior. O root copiou cada XML completo, **sem
+modificação**, para `operational.xml`, `suite-full.xml` e `integration.xml`
+antes da etapa seguinte, e conferiu as contagens: a suíte integral contém
+`test_plan_separation`, e a `integration` não. Depois de conferir que o
+arquivo perdido era idêntico à última cópia, removi-o pelo caminho literal.
+
+**Pacotes**, gerados da fonte congelada numa cópia de staging (112 arquivos
+iguais) com `python -m build` 1.6.1:
+- wheel `93aa54e8aa3bcf98e2cf9f9976822de45060ce8661755331b557ff688b825180`
+  (114 entradas);
+- sdist `a5f3d2d662c6f408291983a932e1d79fe89e7e02e30f8e2f1e16c43fcd2669be`
+  (140 entradas).
+
+Nos dois: as fontes iguais às congeladas, nenhum `tests/`, `docs/`,
+`frontend/` ou `node_modules`, e os pins `cryptography==50.0.1`,
+`scramp==1.4.17` e `asn1crypto==1.5.1`. Duas venvs novas fora do checkout, com
+o mesmo conjunto fixado da validação legada (38 dependências de runtime na
+mesma versão); `scramp` e `asn1crypto` de um wheelhouse com os SHA-256 do
+desenho conferidos.
+
+**Sonda dos pacotes:**
+- **Ajustes:** as 3 checagens obsoletas de recusa incondicional viraram o
+  contrato condicional. Entraram a seção 6, com o `main` real instalado, e os
+  ajustes do root: `ClientCursor`/autocommit, leitor de stderr com dono e
+  metadata redigida. Nenhuma checagem de origem, isolamento, TLS ou
+  channel binding foi removida.
+- **Primeira rodada, misturada e preservada:**
+  - as 3 primeiras execuções do wheel (positiva, `checkout` e `tls`)
+    rodaram antes de uma correção do root e reprovaram 8 checagens
+    `main_operacional_*`;
+  - **causa:** o ambiente do `main` filho não tinha `MASKGW_HMAC_KEY`, e o
+    catálogo usa `hmac_sha256`; o root acrescentou só essa variável;
+  - **prova controlada**, mudando uma só variável no `main` real do wheel
+    sobre um catálogo `hmac_sha256` (`hmac-cause-check.json`): sem a chave,
+    rc 1 e `STARTUP_FAILURE`; com ela, a linha do listener aparece e o EOF
+    dá rc 0; nenhum segredo no stderr;
+  - as outras 5 execuções da primeira rodada já usaram a sonda corrigida.
+- **Rodada `-r2`, sobre a sonda final** (`abc32b5e99948af7319f0025690847a7cd4d08f6b323396a4192b1342eed23c5`,
+  hash igual antes e depois):
+
+| pacote | positiva | `checkout` | `tls` | `binding` |
+|---|---|---|---|---|
+| wheel | **208/208**, exit 0 | 181/208, exit 1 | 207/208, exit 1 | 206/208, exit 1 |
+| sdist | **208/208**, exit 0 | 181/208, exit 1 | 207/208, exit 1 | 206/208, exit 1 |
+
+- **O que as positivas provam pelo `main` instalado** (`python -I -B -m maskgw`,
+  sem `PYTHONPATH`, cwd fora do checkout):
+  - flag exata com settings incompletos falha fechada, sem efeito;
+  - flag desligada roda o legado real sem importar `maskgw.pgwire`;
+  - SCRAM e -PLUS com `verify-full`; senha e alias errados recusados;
+  - SQL de cliente com `0A000`;
+  - MCP aberto até o EOF, rc 0, leitor recolhido e porta liberada;
+  - nenhum segredo no stderr.
+- **Contraprovas**, reprovando só o esperado:
+  - `checkout`: 27, entre origens, `embarcado_*` e `requires`;
+  - `tls`: `verify_full_com_a_ca`;
+  - `binding`: `plus_channel_binding_require` e `verify_full_com_a_ca`.
+
+**Estática:** ruff 0.16.5 check e format limpos em 224 arquivos; mypy 2.3.1
+strict limpo em 224 fontes, com cache novo; `git diff --check` limpo. Nenhum
+`.pyc` novo nem cp314 no checkout. Varredura da credencial: 0 ocorrências em
+120 arquivos e no log do contêiner.
+
+**Limpeza** (alvos exatos conferidos; remoção por caminho literal): credencial,
+as duas venvs, o wheelhouse, o staging, o cache do mypy, o contêiner e o
+volume próprios, e o arquivo perdido. Host igual ao início. Mais 14 `tmp*` da
+suíte ficaram no lugar.
+
+**Estado:**
+- a ativação local no `main` foi validada **só** no Windows, com o runtime
+  legado 3.11.3;
+- runtime moderno e POSIX não foram medidos para este incremento *(estado na
+  data do lote 2c; o runtime moderno foi medido depois, na seção seguinte;
+  POSIX continua sem medição)*;
+- a Etapa 7 continua **parcial**: a D-090 gate 2 segue aberta, a v2 segue
+  proibida em operação real, e não há SQL pelo PGWire;
+- o MCP stdio não mudou, e não há modo daemon;
+- não há afirmação de prontidão para produção.
+
+#### Ativação local no `main` — repetição no runtime moderno temporário (2026-10-16)
+
+**Autoridade:** o usuário autorizou explicitamente repetir a validação do
+incremento atual, sem nenhuma implementação nova, num CPython 3.14.8
+temporário e isolado. O runtime vem do pacote oficial do nuget.org, extraído
+fora do checkout e invocado só pelo caminho absoluto. Nada foi instalado no
+sistema; PATH, registro, launcher, associações, configurações globais e a
+`.venv` ficaram sem mudança. Não houve escrita no Git, mudança de produto ou
+de teste, nem dependência nova.
+
+Raiz de evidência, nova e própria:
+`%LOCALAPPDATA%\Temp\maskgw-d110-activation-modern-28a59667\`. As raízes
+anteriores ficaram preservadas.
+
+**Fonte congelada:** os 232 arquivos funcionais (224 Python) são iguais, um a
+um, ao `frozen-before.json` do lote 2c, no início e no fim. HEAD `5d173ea`,
+índice vazio e inventário do `git status` igual.
+
+**Procedência, verificada de novo antes de executar:**
+- `python.3.14.8.nupkg`, baixado de novo por HTTPS:
+  - SHA-256 `ce85f674d9a63029f709cbff7a3da1c6bc5bfcfaefdd9999f98fa0290470c454`;
+  - SHA512 e tamanho (15.554.015 bytes) iguais ao `packageHash`/`packageSize`
+    do catálogo, idêntico ao da repetição anterior;
+  - autor Python Software Foundation, listado, publicado em 2026-09-30.
+- `nuget.exe` 7.9.0.83 (SHA-256 `992d70ca…b800`): Authenticode `Valid` de
+  `CN=Microsoft Corporation`, conferido antes de rodar, com `NuGet.Config`
+  isolado.
+- `verify -Signatures`: êxito, sem `NU3`. A assinatura é só de repositório
+  (`CN=NuGet.org Repository by Microsoft`). O log é idêntico ao anterior,
+  salvo o caminho.
+- Extração validada: 1.382 entradas aceitas, 0 recusadas, 0 divergentes e 0
+  reparse points.
+- Authenticode PSF `Valid`, igual ao anterior: `python.exe`, `python314.dll`,
+  `python3.dll`, `_ssl.pyd`, `_hashlib.pyd`, `libssl-3.dll` e
+  `libcrypto-3.dll` (3.5.9).
+
+**Perfil medido:**
+- CPython **3.14.8 final** (`tags/v3.14.8:8e6e75d`, MSC v.1944, AMD64);
+- **GIL ativo**, build não free-threaded;
+- `ssl` da stdlib com **OpenSSL 3.5.9 29 Sep 2026**; `python314.dll`,
+  `libssl-3.dll` e `libcrypto-3.dll` carregadas da extração;
+- cliente dos testes: libpq 18.0.3 (`psycopg-binary` 3.3.4).
+
+**Ambientes temporários:**
+- pip com `--isolated --no-cache-dir --only-binary=:all:`;
+- restrições do lote A; `scramp` 1.4.17 e `asn1crypto` 1.5.1 de um wheelhouse
+  novo, com os SHA-256 do desenho conferidos;
+- `venv314`: 51 pacotes nas mesmas versões da repetição moderna anterior;
+  os caminhos locais dos wheels de `scramp` e `asn1crypto` no freeze mudam
+  para a nova raiz temporária, com os mesmos hashes;
+- wheel novo instalado com `--no-deps` na `venv314`, para os filhos `-I`; os
+  105 fontes instalados são iguais aos congelados.
+
+**Pacotes**, gerados de novo no 3.14.8 a partir da árvore congelada, numa cópia
+fora do checkout (`build` 1.6.1, `setuptools` 84.0.0 isolado):
+- wheel `57c49527a9e2ec219b01b66b428e8ce3a9334cf029cae0ee18df33b7d7419c8f`,
+  com 114 entradas;
+- sdist `5228ed971ad5c96765e5184d99934e7cca8d0384fc8c301b1f6022db30c8af81`,
+  com 140 membros (119 arquivos);
+- o conteúdo dos arquivos internos é **idêntico**, entrada por entrada, ao
+  do lote 2c. Os hashes dos contêineres ZIP/TAR diferem, sem diferença no
+  conteúdo interno comparado; não foi isolada a causa da diferença binária;
+- cada pacote foi instalado numa venv 3.14.8 nova, fora do checkout, com 38
+  dependências de runtime na mesma versão da `venv314`; a sdist foi
+  construída na instalação.
+
+**Testes focados, sem DSN:**
+- primeira rodada (`focused.xml`, exit 0): 149 coletados, 113 aprovados e 36
+  skips por DSN. Por erro meu, ela usou `test_admin_adversarial.py` no lugar
+  do teste estrutural. Fica preservada, mas não conta como prova de
+  separação de planos;
+- `focused-r2`, com `test_pgwire_main_activation`,
+  `test_pgwire_activation_review`, `test_pgwire_bootstrap`,
+  `test_pgwire_bootstrap_increment_review` e `test_plan_separation`: **129
+  coletados, 129 aprovados**, 0 skips, 31,3 s, exit 0;
+- o `junit_summary.py` reaproveitado não reconhece skips por DSN: na primeira
+  rodada mostrou 0. As contagens de skip abaixo usam o texto integral da
+  mensagem.
+
+**PG16 próprio:**
+- Docker Desktop parado no início, iniciado sem janela e devolvido ao estado
+  parado;
+- contêiner `maskgw-d110-activation-modern-pg16-816e4a94` e volume próprio
+  (`maskgw.lote=d110-activation-modern`), sem pull, na porta efêmera de
+  `127.0.0.1`;
+- PostgreSQL **16.15**, UTF8, UTC, `password_encryption=scram-sha-256`, sem
+  regra de `pg_hba` fora de `scram-sha-256`;
+- o monitor registrou o contêiner `running`, sem reinício, e a `bridge` com
+  ID estável;
+- contêineres, volumes, imagens e redes, com IDs, iguais no início e no fim
+  (0, 17, 1 e 3).
+
+**Gates** (venv 3.14.8, `-I -B`, runner revisado de 64 MiB, que limpa
+`MASKGW_*`/`PG*` e injeta só a DSN própria; JUnit gerado por
+`cygpath -w "$R/<nome>.xml"`; parada no primeiro exit diferente de 0; sem
+deselect, skip novo nem xfail):
+
+| gate | coletados | resultado |
+|---|---|---|
+| `test_pgwire_main_operational.py` (`python -I -B -m maskgw` real) | 10 | **10 aprovados**, 40,2 s, exit 0 |
+| suíte integral | **5.230** | **5.210 aprovados, 0 falhas, 0 erros, 20 skips só de plataforma** (9 bits POSIX, 6 symlink, 5 `fsync` POSIX), **0 por DSN, 0 xfail**, 790,9 s, exit 0 |
+| `-m integration` | **585** | **582 aprovados**, 0 falhas, 0 erros, 3 skips `fsync` POSIX, 0 por DSN, 250,3 s, exit 0 |
+
+- A suíte integral contém os 18 casos de `test_plan_separation` e os 10
+  operacionais; a `integration` contém os 10 operacionais.
+- Avisos da suíte integral, ambos em testes antigos e conhecidos:
+  - o `match=""` de `tests/test_admin_http_lifecycle.py:679`;
+  - o `PytestUnraisableExceptionWarning` do `_BadStream` de
+    `tests/test_admin_http_writes_adversarial.py`, que só aparece no 3.14.
+- A `integration` não teve avisos.
+- SHA-256 dos JUnit: `operational.xml` `0bf23cb8…0fc2`, `suite-full.xml`
+  `96849fc5…fab5` e `integration.xml` `ca0d8457…5e26`.
+
+**Sonda dos pacotes** (`package_probe.py`
+`2556bf0b5e1aad99e7327ddd04ce68449f84a3e624f38f861b672385a43901bb`):
+- É a sonda final do lote 2c (`abc32b5e…3c5`), com HMAC no filho, `SELECT`
+  real com `ClientCursor` e autocommit, leitor de stderr com dono e pipes.
+- Foi adaptada **só** na expectativa de perfil, como na repetição moderna
+  revisada do bind: `runtime_3_11_3` virou `runtime_3_14_8`, `gil_ativo` e
+  `ssl_openssl_3_5_9`. Por isso o total passa de **208 para 210**.
+- As outras 207 checagens são idênticas.
+- Ambiente: `python -I -B`, cwd fora do checkout, sem `PYTHONPATH`, PATH só
+  com System32 e sem Node/npm.
+
+| pacote | positiva | `checkout` | `tls` | `binding` |
+|---|---|---|---|---|
+| wheel | **210/210**, exit 0 | 183/210, exit 1 | 209/210, exit 1 | 208/210, exit 1 |
+| sdist | **210/210**, exit 0 | 183/210, exit 1 | 209/210, exit 1 | 208/210, exit 1 |
+
+- **Comparação com o lote 2c, conferida por programa:**
+  - os nomes das checagens correspondem 1:1, salvo o mapeamento do perfil;
+  - o conjunto de reprovações de cada contraprova é **idêntico** ao do `-r2`
+    do lote 2c:
+    - `checkout`: 27 (origens, `embarcado_*`, `requires_*_pin`);
+    - `tls`: `verify_full_com_a_ca`;
+    - `binding`: `plus_channel_binding_require` e `verify_full_com_a_ca`.
+- **Positivas:**
+  - origem `Lib/site-packages`;
+  - perfil 3.14.8 com GIL e OpenSSL 3.5.9;
+  - `main` instalado com SCRAM, -PLUS e `verify-full`;
+  - SQL de cliente com `0A000`;
+  - MCP aberto até o EOF, com rc 0 e porta liberada;
+  - stderr só com a linha de escuta;
+  - filho DNS travado recusado em 5,031 s (wheel) e 5,029 s (sdist).
+- A verificação de capacidade no startup usa SQL **upstream**. O SQL de
+  **cliente** recebe `0A000` e não é repassado (prova de não repasse dos
+  testes operacionais).
+
+**Estática na `venv314`** (escopo do gate: `src tests`; caches fora do
+checkout):
+- ruff 0.16.5 check limpo; `format --check` com 224 arquivos já formatados;
+- mypy 2.3.1 strict com o alvo configurado (3.11) limpo em 224 fontes;
+- informativo `--python-version 3.14`: **só** os mesmos 4 `union-attr`
+  (`ipv4_mapped`) de `datasource/destination.py`, sem achado novo. Continuam
+  **abertos**, e a tipagem strict com alvo 3.14 **não** está certificada.
+  São diagnóstico estático; nenhum teste falhou;
+- **erro de procedimento meu, preservado:** a primeira rodada usou o escopo
+  `.`, que inclui `frontend/tools/` (fora do gate), e chamou o mypy sem
+  alvo. Os logs ficaram como `*-escopo-ponto.log`.
+
+**Bytecode e temporários:**
+- a suíte gerou 71 `*.cpython-314.pyc` (08:51), o mesmo conjunto das
+  repetições modernas anteriores;
+- eles foram removidos pela lista exata. Os 219 `.pyc` do retrato inicial
+  ficaram com caminho, mtime e tamanho iguais, e há 0 cp314 no checkout;
+- mais 14 `%TEMP%\tmp*` da suíte (08:50) ficaram no lugar.
+
+**Limpeza** (alvos exatos conferidos dentro da raiz, sem link nem reparse
+point):
+- antes, varredura da credencial em 132 arquivos e no log do contêiner: 0
+  ocorrências;
+- **removidos:** credencial, runtime extraído, `venv314`, venv de build,
+  duas venvs de pacote, wheelhouse, ferramentas, nupkg, caches do mypy,
+  staging, contêiner e volume próprios, e um arquivo-ponteiro próprio em
+  `%TEMP%`;
+- **preservados:** JUnit, logs, JSON e hashes das sondas, roteiros,
+  procedência e os pacotes gerados.
+
+**Host:** o retrato final saiu igual ao inicial em `py -0p`, associações,
+registro, PATH de usuário e de máquina (conjunto e ordem), `.venv` e
+configuração NuGet/pip do usuário (ausentes). Docker parado no início e no
+fim.
+
+**Estado:**
+- a ativação local no `main` foi validada **só no Windows**, no runtime
+  legado 3.11.3 (lote 2c) e no runtime moderno temporário 3.14.8 (esta
+  seção);
+- POSIX não foi medido;
+- a tipagem strict com alvo 3.14 não está certificada (4 `union-attr`
+  abertos);
+- a Etapa 7 continua **parcial**: D-090 gate 2 aberta, v2 proibida em
+  operação real, MCP stdio inalterado, sem modo daemon;
+- nenhuma aprovação do usuário sobre estes resultados é presumida, e não há
+  afirmação de prontidão para produção.
+
+#### Fechamento local da ativação no `main` (2026-10-16)
+
+O usuário aprovou explicitamente, em 2026-10-16, fechar o incremento validado
+da ativação local do PGWire no `main` num **commit local novo**, com pai
+`5d173ea`. A aprovação não cobre:
+- push, fetch nem pull;
+- amend nem reset;
+- ativação operacional ou de produção, nem deploy;
+- trabalho da Etapa 8 ou posterior;
+- dependência nova nem mudança funcional.
+
+O commit inclui:
+- `bootstrap/main.py` e `bootstrap/settings.py`;
+- os testes focados, os do revisor e os operacionais;
+- as notas de estado medido nos documentos já existentes.
+
+Antes do commit, os 232 arquivos funcionais foram conferidos contra o
+inventário congelado da repetição moderna, e nenhuma suíte foi repetida só
+para o commit.
+
+**Estado depois do fechamento:**
+- a Etapa 7 continua **parcial**: a D-090 gate 2 segue aberta, e a Admin/UI
+  v2 continua proibida em operação real;
+- todo SQL de cliente no PGWire recebe `0A000` sem repasse;
+- o MCP continua o legado em stdio, com o fim no EOF;
+- POSIX não está certificado. Os 4 `union-attr` antigos com alvo 3.14
+  continuam abertos; a tipagem com o alvo configurado (3.11) passa;
+- não há afirmação de prontidão para produção.
+
 ## 2. NÃO entregue (estado atual; itens históricos marcados)
 
 - *(Histórico: o item abaixo descreve o estado antes do incremento da §1.4

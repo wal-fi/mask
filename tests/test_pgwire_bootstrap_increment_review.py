@@ -1,4 +1,4 @@
-"""Independent checks of the deliberately closed operational activation gate."""
+"""Independent activation isolation and composition lifecycle checks."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ from maskgw.admin import AdminConfigService
 from maskgw.admin.http import AdminHttpServer
 from maskgw.admin.http.settings import build as build_admin_settings
 from maskgw.bootstrap.application import Application
-from maskgw.bootstrap.settings import RawSettings
+from maskgw.bootstrap.settings import MappingRawSettings, RawSettings
 from maskgw.datasource import CatalogStore
 from maskgw.pgwire.composition import PgwireComposition
 from maskgw.pgwire.listener import PgwireListener, PgwireListenerIncompleteError
@@ -71,23 +71,23 @@ class _App:
         self.closes += 1
 
 
-def test_exact_enable_is_refused_before_admin_secrets_or_construction(
+def test_exact_enable_with_missing_settings_is_refused_before_construction(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    raw = _Raw("1")
+    """Activation is conditional now; incomplete settings still cannot compose."""
+    raw = MappingRawSettings({FLAG: "1"})
     forbidden_calls: list[str] = []
-    monkeypatch.setattr(main_module, "resolve_admin_ui_enabled", lambda _raw: False)
+    monkeypatch.setenv("MASKGW_ADMIN_ENABLED", "0")
+    monkeypatch.delenv("MASKGW_PGWIRE_PASSWORD", raising=False)
 
     def forbidden(*_args: object, **_kwargs: object) -> None:
         forbidden_calls.append("forbidden")
-        pytest.fail("operational activation must stop before secrets/resources")
+        pytest.fail("invalid activation must stop before construction")
 
-    monkeypatch.setattr(main_module, "resolve_admin_settings", forbidden)
     monkeypatch.setattr(main_module, "build_application", forbidden)
     sink = io.StringIO()
     assert main_module.main(stderr=sink, raw_settings=raw) == 1
     assert sink.getvalue() == main_module.STARTUP_FAILURE
-    assert raw.reads == [FLAG]
     assert forbidden_calls == []
 
 

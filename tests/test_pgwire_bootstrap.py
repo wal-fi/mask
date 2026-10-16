@@ -1,7 +1,8 @@
 """Fase 9, Etapa 7 (D-110, lote 4): composicao INTERNA do listener PGWire.
 
-`build_application(pgwire=PgwireComposition(...))` e o unico caminho, so
-interno e testavel; o `main` recusa a ativacao (`MASKGW_PGWIRE_ENABLED=1`).
+`build_application(pgwire=PgwireComposition(...))` e o caminho de composicao.
+Ate 2026-10-14 o `main` recusava a ativacao (`MASKGW_PGWIRE_ENABLED=1`); a
+ativacao local de 2026-10-15 e coberta em `test_pgwire_main_activation.py`.
 Catalogo com adapters duble, legado com adapter duble, MCP duble; socket real
 so em `127.0.0.1` efemero; libpq so faz handshake, sem SQL. Prova:
 
@@ -226,25 +227,27 @@ def test_sem_pgwire_nenhum_modulo_pgwire_e_carregado(tmp_path: Path) -> None:
     assert result.stdout.strip() == "[]"
 
 
-def test_main_com_flag_exata_recusa_sem_importar_pgwire(tmp_path: Path) -> None:
+def test_main_com_flag_exata_e_settings_incompletos_falha_fechado_sem_efeitos(
+    tmp_path: Path,
+) -> None:
+    # Historico: ate 2026-10-14 a flag exata era recusada incondicionalmente.
+    # Desde a ativacao local (2026-10-15) ela entra no caminho PGWire, que
+    # valida os settings ANTES de qualquer recurso: sem usuario, falha fechada.
     script = textwrap.dedent(
         """
         import sys
         import maskgw.bootstrap.main as main_module
-        rc = main_module.main()
-        print(sorted(m for m in sys.modules if m.startswith("maskgw.pgwire")), file=sys.stderr)
-        sys.exit(rc)
+        sys.exit(main_module.main())
         """
     )
-    env = {
-        **os.environ,
+    env = {k: v for k, v in os.environ.items() if not k.startswith(("MASKGW_", "PG"))} | {
         "PYTHONPATH": str(SRC),
         "MASKGW_PGWIRE_ENABLED": "1",
         "MASKGW_CONFIG": str(tmp_path / "nao-existe.yaml"),
         "MASKGW_PGWIRE_PASSWORD": "senha-canario-main",
     }
     result = subprocess.run(  # noqa: S603 - interpretador e codigo fixos do teste
-        [sys.executable, "-c", script],
+        [sys.executable, "-B", "-c", script],
         capture_output=True,
         text=True,
         env=env,
@@ -253,8 +256,9 @@ def test_main_com_flag_exata_recusa_sem_importar_pgwire(tmp_path: Path) -> None:
     )
     assert result.returncode == 1
     assert result.stdout == ""  # stdout continua so do protocolo
-    assert result.stderr == "maskgw: falha na inicializacao\n[]\n"
+    assert result.stderr == "maskgw: falha na inicializacao\n"
     assert "canario" not in result.stderr
+    assert sorted(p.name for p in tmp_path.iterdir()) == []  # nada criado ao lado da config
 
 
 def test_pgwire_sem_catalogo_falha_antes_de_qualquer_efeito(

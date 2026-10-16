@@ -121,6 +121,30 @@ PG16 e pacotes) no runtime legado e no runtime moderno temporário 3.14.8. A
 ativação operacional segue bloqueada no `main`. O gate de runtime moderno foi medido só no
 Windows com CPython 3.14.8 (lotes A–C) e não libera operação real.
 
+**Atualização (2026-10-15):** o usuário autorizou implementar, só
+localmente, a **ativação PGWire no `main`**. Ela vale sobre um catálogo **já
+existente** (abre, nunca cria nem migra) e **sem** Admin nem UI, combinação
+recusada para que a v2 não seja exposta. O listener autentica, e toda SQL de
+cliente recebe `0A000` sem ser repassada. O MCP stdio, o DSN legado e o fim
+no EOF do MCP não mudam, e não há modo daemon. A autorização substitui
+**apenas** a recusa incondicional de `MASKGW_PGWIRE_ENABLED=1` citada acima,
+que passa a ser histórico; não é liberação de produção. O lote 1
+(`bootstrap/main.py` e `bootstrap/settings.py`, com testes focados) está
+implementado localmente. Depois de uma correção revisada no `main.py`, os
+gates foram medidos no Windows com o runtime legado 3.11.3 (§1.6, lote 2c):
+- suíte integral com PG16, 0 falhas;
+- `integration` verde;
+- testes operacionais reais pelo `python -I -B -m maskgw`;
+- wheel e sdist com 208/208 cada, e as 6 contraprovas reprovando.
+
+Em 2026-10-16, com autorização explícita, os mesmos gates foram repetidos no
+CPython 3.14.8 temporário e isolado, só no Windows, e ficaram verdes. Os
+pacotes passaram 210/210, com o perfil 3.14 no lugar da checagem 3.11, e as
+6 contraprovas reprovaram exatamente o esperado (§1.6, repetição moderna).
+POSIX não foi medido. Os 4 `union-attr` do mypy com o alvo 3.14 seguem
+abertos. Em 2026-10-16 o usuário aprovou fechar esse incremento validado num
+**commit local** novo, sem push. A Etapa 7 continua **parcial**.
+
 A D-090 continua aberta no gate 2, e a v2 segue proibida em operação real.
 Fora dessas quatro exceções, não iniciar listener PGWire, autenticação
 SCRAM/TLS de produção, dependência ou variável de ambiente nova, bind externo,
