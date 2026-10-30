@@ -1,5 +1,18 @@
 # Handoff
 
+## Leitor shell PG16 aceito, somente código puro — 2026-10-30
+
+Novo helper efe69a79 (núcleo80219269) aceito pelo Claude2 emreview32442.
+B1 de NUL final corrigido no desenho antes do código;30testes próprios e
+408relacionados/82,03s passaram. Ruff/format328/mypy311/314327 limpos,
+runtime Windows3.11.3.23vetores públicos e parser por exit real; nenhum shell,
+Docker, banco ou segredo executado. Nota para próxima composição: RETAIN
+exige variante que não feche stdin; e6ca fecha e produziria EOF, não QUIET.
+Rodada PG pública anterior486481f publicada e consumida, intacta, DesktopOff.
+Próximo: perfil/canal/host públicos do leitor, revisão antes de efeitos.
+B1/B2/D090/C1/SQL/produção abertos; Gateway indisponível. Sem job/quota ou
+segundo escritor. Registros seguintes são históricos.
+
 ## Sonda pública PG16 concluída e revisada — 2026-10-30
 
 Rodada única task81e72756/rootc3a916a7 terminou exit0/PG16_PUBLIC_VERIFIED.

@@ -1,4 +1,14 @@
-# Rodada PG16 concluída — revisão factual aceita
+# Leitor shell PG16 — incremento puro aceito
+
+Review32442 aceitou fonte efe69a79/núcleo80219269, sem bloqueador.30testes
+próprios/408relacionados82,03s e Ruff/format/mypy311/314327 limpos. Shell não
+executado; sem efeito nativo novo. Nota obrigatória para próxima composição:
+e6ca send_seed fecha stdin; RETAIN/QUIET exige variante explícita que conserve
+o pipe aberto e sua semântica admitida. Não mudar oráculo após rodar. Fontes
+consumidas anteriores intactas, DesktopOff. Próximo desenho perfil/canal/host
+do leitor, antes de código/caller/efeitos correspondentes. Sem quota/job.
+
+# Registro anterior — rodada PG16 concluída e revisão factual aceita
 
 Claude2 aceitou os fatos em2026-10-30T14:41:43.508Z, sessão51ea0d85:
 nenhum bloqueador. Duas notas para próximo desenho, sem mudar fontes
