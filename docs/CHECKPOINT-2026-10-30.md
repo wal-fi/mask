@@ -51,8 +51,8 @@ reduzir verificações só para conseguir executar.
 pyproject.toml e fontes Python src/tests, inclusive CRLF já medido. A comparação
 do índice encontrou várias fontes históricas CRLF, além de postgres.py/result.py;
 por isso todas as fontes Python usam preservação exata, sem normalização.
-O objetivo é impedir que core.autocrlf altere os hashes; verificação
-por clone novo ainda pendente neste ponto. Nenhuma fonte consumida foi
+O objetivo é impedir que core.autocrlf altere os hashes; a segunda verificação
+por clone novo confirmou os bytes no escopo abaixo. Nenhuma fonte consumida foi
 renormalizada. Fixtures de tests também preservam bytes exatos. Configuração
 .codex/.claude local, stackdumps e systeminfo ficam fora
 do checkpoint e são preservados no disco.
@@ -77,4 +77,22 @@ e fonte histórica CRLF preservados. Um fixture JSON (phase7-ui-off.json)
 foi convertido por autocrlf; rodada reprovada preservada em
 `docs/poc/evidence/checkpoint-portability-20261030/verification.json`.
 Acrescentada proteção de bytes para tests/fixtures, sem editar o fixture;
-nova verificação ainda pendente neste ponto. Não é teste de execução do app.
+nova verificação concluída abaixo. Não é teste de execução do app.
+
+## Segunda verificação por clone novo — aprovada
+
+Commit5dc1f6a clonado em outro diretório novo, sem hardlinks, com
+core.autocrlf=true: **695/695 arquivos comparados, zero diferença de bytes**.
+Escopo: docs/poc, deploy, src, tests e pyproject.toml rastreados naquele
+commit, incluindo a primeira medição reprovada. Fonte histórica CRLF,
+pyproject917fe735, fontes e fixtures preservados. Evidência pública em
+`docs/poc/evidence/checkpoint-portability-20261030-b/verification.json`.
+Não houve execução de aplicativo, Docker, banco ou laboratório nativo.
+As duas cópias locais de verificação estão no Temp, fora do Git; não são
+instalações nem ambientes operacionais. A cópia dos bytes não certifica
+o ambiente externo de outra máquina, conforme os limites acima.
+
+Rerevisão64823, sessão51ea0d85: metadados e prova do clone aceitos para
+checkpoint incompleto, sem bloqueador e sem declarar release. Depois de
+5dc1f6a mudaram somente registros/documentos de fechamento, sem alterar
+fontes executáveis, fixtures, atributos ou os bytes medidos.

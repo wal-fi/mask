@@ -2,6 +2,11 @@
 
 ## Checkpoint para continuidade — 2026-10-30
 
+Checkpoint7875dc8 e correção5dc1f6a commitados; clone novo autocrlftrue,
+695/695 fontes/evidências iguais, pyproject917fe735/CRLF preservados. Primeira
+rodada693/694 reprovada preservada. Metadados aceitos pelo Claude2 (64823).
+Publicação/sincronização devem ser confirmadas pelo Git, não por este texto.
+
 Usuário solicitou commit de todo o trabalho acumulado antes de mudar de local.
 HostPG16 corrigido7275c8ae aceito10847: info/version bruto descartado, só projeção
 pública persistida, stop zerado em finally.39fakes12,98s e seleção final dos

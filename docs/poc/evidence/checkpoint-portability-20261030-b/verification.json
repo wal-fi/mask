@@ -1,0 +1,11 @@
+{
+  "byte_mismatches": [],
+  "clone_autocrlf": "true",
+  "clone_commit": "5dc1f6ad35b762113dee309c8d0a9c3ce55412ac",
+  "files_compared": 695,
+  "historical_crlf_source_preserved": true,
+  "kind": "MASKGW_CHECKPOINT_PORTABILITY_V1",
+  "pyproject_sha256": "917fe7353178849ec9e7f53627fc0ce2e0be9fb7678d6dcd2e42f79b925de8f9",
+  "scope": "fresh local clone and byte comparison; no application, native lab, Docker or database execution",
+  "source_commit": "5dc1f6ad35b762113dee309c8d0a9c3ce55412ac"
+}

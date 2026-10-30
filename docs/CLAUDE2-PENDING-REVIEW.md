@@ -1,4 +1,22 @@
-# Checkpoint solicitado — nenhuma revisão ativa
+# Checkpoint revisado — nenhuma revisão ativa
+
+Rerevisão64823 aceitou atributos/handoff/evidências: cloneB695/695 igual,
+pyproject protegido, primeira reprovação preservada. Checkpoint de desenvolvimento
+incompleto, sem release. Publicar somente caminhos do projeto e conferir Git.
+Próximo incremento: entrada PG16 pública/driver HELD e revisão própria, seguido
+de exportador/preparador/proposta antes de qualquer efeito. Sem quota/job.
+
+# Registro anterior — revisão final de portabilidade
+
+Checkpoint7875dc8 criado conforme usuário, sem dados pessoais/dumps. Review13568
+encontrou pyproject pinado sem proteção; corrigido. Comparação detectou outros
+Python CRLF históricos, preservados por -text em src/tests sem editar fonte.
+CloneA693/694, um fixture JSON convertido; falha preservada, proteção fixtures
+em5dc1f6a. CloneB695/695/zero divergência, autocrlftrue/sem hardlinks, pyproject
+917fe735 e fonte CRLF iguais. Rerevisão final somente de metadados/evidências,
+antes de publicar. Sem novo Docker/DB/SQL, quota/job/outro escritor.
+
+# Registro anterior — fechamento do host aceito
 
 Rerevisão10847 aceitou host7275c8ae após corrigir61744/B1 e stop-finally,
 três regressões vermelhas antes;39fakes12,98s/estáticos323 limpos. Seleção
