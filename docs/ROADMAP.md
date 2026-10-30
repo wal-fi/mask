@@ -1,5 +1,18 @@
 # Implementation Roadmap
 
+## Perfil interativo PG16 aceito, sem execução nativa — 2026-10-30
+
+Perfil8906e846/8415bytes aceito pelo Claude2 (review28829), manifesto867617ca.
+55testes próprios/205relacionados3,76s, Ruff/format330/mypy311/314329 limpos;
+runtime sóWindows3.11.3. Duas regressões de Mounts malformados falharam antes
+do fix. Todos23casos medidos para argv Windows: máximo4747/margem21253.
+Wrapper/manifest próprios, stdintrue/true/TTYfalse, Attach* só observações.
+Nenhum Docker/shell/PG/seed/caller novo, nem alteração das fontes consumidas.
+Bloqueio transitório do aprovador automático resolvido; revisão executada,
+nenhum limite do Claude2 atribuído. Próximo: cleanup/watchdog/caller específicos
+do leitor e entrega exata antes da rodada. DesktopOff, Gateway indisponível;
+B1/B2/D090/C1/SQL/produção abertos. Sem quota/job ou segundo escritor.
+
 ## Canal público do leitor PG16 aceito — 2026-10-30
 
 Owner d6718800 foi aceito pelo Claude2 após a correção L1 (review60994).

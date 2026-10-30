@@ -1,4 +1,22 @@
-# Canal público PG16 — L1 corrigido e aceito
+# Perfil público do leitor PG16 — revisão aceita
+
+Review28829/sessão51ea0d85 aceitou8906e846 isolado, sem bloqueador.55testes
+próprios/205relacionados3,76s, Ruff/format330/mypy311/314329 limpos. O limite
+transitório do aprovador automático foi resolvido; a revisão chegou ao
+Claude2 e concluiu, sem quota de conta atribuída ou job novo. Próximo:
+adapter de posse/cleanup e watchdog/caller do leitor, revistos antes de efeitos.
+
+# Registro anterior — perfil em revisão
+
+Perfil8906e846/8415bytes implementado após desenho98150, manifesto867617ca,
+55focados/205relacionados3,76s e Ruff/format330/mypy311/314329 limpos. Duas
+regressões de Mounts malformados vermelhas antes do fix. Revisão28829 ativa,
+somente leitura na sessão51ea0d85, agora concluída; não duplicar escritor.
+A tentativa anterior não foi executada por limite do aprovador automático,
+não do Claude2. Nenhum desvio de aprovação/conta. Sem Docker/shell/PG/seed
+novo ou caller operacional. Próximo: concluir parecer antes de publicar.
+
+# Registro anterior — canal público PG16 aceito
 
 Owner d6718800/9727bytes aceito emreview60994 após52446. L1 teve regressão
 vermelha antes do fix;33próprios/168relacionados7,61s e1unidade nativa
