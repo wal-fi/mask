@@ -6,6 +6,11 @@ checkpoint de desenvolvimento incompleto da Fase9, não release de produção.
 
 ## Continuidade posterior ao checkpoint81ead94
 
+Exportador95f09bbb e preparador02d1 implementados e aceitos em55166/94684.
+378 testes conjuntos passaram em52,39s, estáticos326 limpos, só fakes. Próximo
+atual: proposta exata e revisão antes de materializar ou executar a sonda.
+Nenhuma raiz operacional/PG/SQL/serviço novo. Brutos continuam fora do Git.
+
 Entrada pública PG16a6089275 implementada e aceita pelo Claude2 (32225),
 com319 testes conjuntos aprovados em43,26s; condição do parecer atendida.
 Estáticos324 limpos, só fakes; nenhuma execução PG16 ou serviço ativados.

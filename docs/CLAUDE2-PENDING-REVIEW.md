@@ -1,4 +1,21 @@
-# Entrada PG16 aceita — nenhuma revisão ativa
+# Exportador e preparador PG16 aceitos — nenhuma revisão ativa
+
+Preparador02d1/desenho aceitos55166; exportador95f09bbb aceito94684.42testes
+de exportação30,38s e17preparo2,19s; Ruff/format328/mypy311/314326 limpos.
+Notas de origem temporal/último inspect documentadas sem mudar fontes.
+Próximo: proposta exata e revisão antes de materializar root ou executar.
+Sem Docker/PG/SQL/segredo/raiz operacional novo, quota/job ou outro escritor.
+
+# Registro anterior — revisão do exportador
+
+Preparador02d1 e desenho aceitos55166;17 casos, sem efeito nativo. Exportador
+95f09bbb implementado com schema prévio,42passed30,38s/Ruff/format328/mypy311/
+314326 limpos. Dois fixes de alias/marker e cinco de coerência/tipos com
+regressões vermelhas antes. PUBLIC-EXPORT-VALIDATION preserva o histórico.
+Nenhum raw/local-* copiado, só summary/transport derivados. Sem raiz/rodada
+operacional, SQL ou segredo novo. Sem quota/job/outro escritor.
+
+# Registro anterior — entrada aceita
 
 Incrementof51d63a commitado; clone novo confirmou698/698 bytes iguais, fonte
 a6089275 preservada, autocrlftrue/sem hardlinks. Prova registrada sem execução

@@ -1,6 +1,19 @@
 # AI Data Masking Gateway
 
-## Entrada PG16 pública aceita — 2026-10-30
+## Preparo e exportação PG16 aceitos — 2026-10-30
+
+Preparador02d1dadd e desenho aceitos pelo Claude2 (55166); exportador95f09bbb
+por projeção aceito94684.378 testes conjuntos passaram em52,39s, Ruff/mypy311/
+314326 e format328 limpos. Raw nunca é publicado: summary/transport derivados,
+volumes/ledger/report/journal validados. Dois fixes de alias/marker e cinco
+sobre tipos/coerência tiveram regressões vermelhas primeiro. Precisões do
+último inspect e do source_unchanged antes da escrita documentadas.
+Próximo: proposta exata de raiz/task/estado/script e revisão antes de qualquer
+materialização/rodada. Nenhum novo Docker/PG/SQL/seed/credencial ou serviço.
+Fontes/raízes consumidas intactas. DesktopOff, Gateway indisponível e gates
+B1/B2/D090/C1/produção abertos. Sem quota/job ou segundo escritor.
+
+## Registro anterior — entrada PG16 pública aceita — 2026-10-30
 
 Incremento commitado emf51d63a. Clone novo autocrlftrue/sem hardlinks confirmou
 698/698 arquivos iguais e entradaa6089275 preservada; evidência pública em
