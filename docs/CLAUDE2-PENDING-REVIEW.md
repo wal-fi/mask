@@ -1,4 +1,13 @@
-# Entrega pública e desenho do host aceitos
+# Coordenador público do leitor PG16 aceito
+
+61196 aceitou8c41605f/40791bytes, sem P1/P2 de código.52testes49,90s e
+Ruff/format334/mypy333 alvos3.11/3.14 limpos.29625/59784 preservados com suas
+recusas e regressões vermelhas antes dos fixes, inclusive report_category.
+Seconds não incluem pins: medição/composição exigida antes de proposta nativa.
+Nenhuma revisão ativa, outro escritor, quota/job ou efeito nativo novo.
+Próximos: entrada/HELD e orçamento, exportador/preparador, cada qual revisado.
+
+# Registro anterior — entrega pública e desenho do host aceitos
 
 Delivery42f7e647 aceito42864,25próprios/143relacionados5,97s e Ruff/format333/
 mypy311/314332 limpos. Nota de saída antes de close tem dois fakes, sem mudar

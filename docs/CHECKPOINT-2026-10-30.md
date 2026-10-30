@@ -6,6 +6,17 @@ checkpoint de desenvolvimento incompleto da Fase9, não release de produção.
 
 ## Continuação atual — leitor PG16 e supervisão revisados
 
+Atualização mais recente: Host8c41605f/40791bytes aceito pelo Claude2 em61196,
+só definições/fakes, sem main/efeito nativo.52próprios/49,90s e Ruff/format334/
+mypy333 alvos3.11/3.14 limpos, runtime sóWindows3.11.3. Recusas29625/59784
+e regressões vermelhas antes dos fixes preservadas em SHELL-HOST-VALIDATION.
+Pins só fontes, gate após hashes, teardown coleta todos, inspect ligado e
+categorias dos19negativos conferidas. Fired sempre reprova. Nenhuma revisão
+ativa/outro escritor/quota/job ou Docker/shell/PG novo. Próximo: entry/HELD,
+orçamento (medir pins fora de seconds), export/prep/proposta antes de rodada.
+B1/B2/D090/C1 abertos, Gateway indisponível. Fontes consumidas intactas.
+Este parágrafo substitui o estado corrente das atualizações anteriores.
+
 Atualização posterior: entrega42f7e647 foi aceita42864, com25testes próprios
 incluídos em143relacionados/5,97s. Só constructor da subclasse muda: HEADER
 envia prefixo≤16 (short15), demais wire/chunks intactos. Oráculos/prazos/IO

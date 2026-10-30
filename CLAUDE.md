@@ -1,5 +1,22 @@
 # AI Data Masking Gateway
 
+## Coordenador público do leitor PG16 aceito, só definições — 2026-10-30
+
+Host8c41605f/40791bytes aceito pelo Claude2 em61196, só definições/fakes.
+52próprios/49,90s; Ruff/format334/mypy333 alvos3.11/3.14 limpos, runtime
+Windows3.11.3. P2 das revisões29625/59784 corrigidos com regressões vermelhas:
+pins puro+gate após hashes, teardown continua/coleta todos, inspect ligado
+a label/índice/artefato e categorias dos19negativos preservadas. NOT_INVOKED
+distinto de create ambíguo; checkpoint/journal reais, timeout e constructors
+reais com start simulado. Heartbeat cancelado só é coletado na nova tentativa
+quando o próprio foreground não está sendo cancelado. Fired sempre reprova.
+Cada caso exige release/volumes/join/nofire. Sem main/entry/export/prep/raiz/
+Docker/shell/PG novo; Timer auxiliar real. Custo dos pins fica fora dos seconds
+antigos: medir/somar antes de proposta nativa; orçamento B300 não liberado.
+B1/B2/D090/C1/SQL/produção abertos, Gateway indisponível, nenhum outro escritor.
+Este estado substitui o estado corrente dos registros anteriores abaixo.
+
+
 ## Entrega pública do leitor PG16 aceita — 2026-10-30
 
 Variante42f7e647/2528bytes aceita pelo Claude2 (42864).25testes próprios
