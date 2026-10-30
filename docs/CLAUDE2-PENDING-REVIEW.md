@@ -1,4 +1,29 @@
-# Checkpoint revisado — nenhuma revisão ativa
+# Entrada PG16 aceita — nenhuma revisão ativa
+
+Review32225 aceitou a6089275 condicionada ao gate319: terminal exit0/319passed
+43,26s confirmado, condição atendida. Origem/diagnóstico, lifecycle e entrada
+aceitos isoladamente; sem efeitos nativos. Próximo exportador/preparador, com
+revisão própria antes de estado/raiz/comando. Sem quota/job/outro escritor.
+
+# Registro anterior — rerevisão da entrada
+
+Review32225/sessão51ea0d85: fonte a6089275, categorias e origens fechadas após
+B1/99175.24 regressões vermelhas antes, tipos exatos/conjuntos AST só em teste,
+classes bounded frescas reconhecidas só por frames pais capturados.319passed
+43,26s (entrada62), Ruff/format325/mypy311/314324 limpos. Sem efeitos nativos.
+Checkpoint81ead94 publicado; exportador/preparador/root/comando continuam
+posteriores. Sem quota/job/outro escritor; gates de produção abertos.
+
+# Registro anterior — primeira revisão da entrada
+
+Review99175/sessão51ea0d85: entrada88a3d43c, teste e PUBLIC-ENTRY-VALIDATION.
+31fakes10,01s, Ruff/format325/mypy311/314324 limpos. Variante835c sobre host7275,
+uma sonda/journal12 e driver HELD; restore incerto não vira interrupção nem
+Desktopstop. Sem efeito nativo, exportador/preparador/raiz/comando pendentes.
+Checkpoint81ead94 já publicado/sincronizado, dados pessoais fora. Sem quota/
+job ou segundo escritor; Gateway indisponível e gates de produção abertos.
+
+# Registro anterior — checkpoint revisado
 
 Rerevisão64823 aceitou atributos/handoff/evidências: cloneB695/695 igual,
 pyproject protegido, primeira reprovação preservada. Checkpoint de desenvolvimento

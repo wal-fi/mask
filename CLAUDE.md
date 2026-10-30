@@ -1,6 +1,21 @@
 # AI Data Masking Gateway
 
-## Checkpoint para continuidade — 2026-10-30
+## Entrada PG16 pública aceita — 2026-10-30
+
+Checkpoint81ead94 publicado para continuidade. Entradaa6089275 implementada
+sobre host7275, aceita pelo Claude2 (32225), condição319testes atendida:
+319passed43,26s, Ruff/format325/mypy311/314324 limpos. B1 diagnóstico corrigido
+com24 regressões vermelhas primeiro; categorias/origens por tipos capturados,
+conjuntos AST só em teste. HELD conserva loop/owners; restore incerto não
+inventa interrupção nem para Desktop. Sem Docker/PG/SQL/seed/credencial novo.
+Próximo: exportador PG próprio que retém local-* e baseline completa, depois
+preparador/proposta/raiz/comando e revisão antes de rodada única. Nenhuma raiz
+ou tentativa operacional PG16 materializada. Fontes consumidas intactas.
+DesktopOff, Gateway indisponível, B1/B2/D090/C1/SQL/produção abertos. Sem
+quota/job ou segundo escritor. Publicação do incremento deve ser conferida
+pelo Git; registros abaixo são históricos.
+
+## Registro anterior — checkpoint para continuidade — 2026-10-30
 
 Checkpoint7875dc8 e correção5dc1f6a commitados; clone novo autocrlftrue,
 695/695 fontes/evidências iguais, pyproject917fe735/CRLF preservados. Primeira

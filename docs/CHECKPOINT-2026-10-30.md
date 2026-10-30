@@ -4,7 +4,16 @@ Criado por solicitação do usuário em2026-10-30. Inclui o trabalho acumulado
 após4a5e556, preservando resultados históricos e tentativas reprovadas. É
 checkpoint de desenvolvimento incompleto da Fase9, não release de produção.
 
-## Estado atual
+## Continuidade posterior ao checkpoint81ead94
+
+Entrada pública PG16a6089275 implementada e aceita pelo Claude2 (32225),
+com319 testes conjuntos aprovados em43,26s; condição do parecer atendida.
+Estáticos324 limpos, só fakes; nenhuma execução PG16 ou serviço ativados.
+Próximo: exportador S1 próprio que retém local-* e baseline completa, depois
+preparador/proposta/estado/raiz/comando revisados antes de uma rodada única.
+Os contratos de HELD e diagnóstico constam em PUBLIC-ENTRY-VALIDATION.
+
+## Estado no checkpoint81ead94
 
 - Destino aceito: Docker local nesta máquina, Oracle Linux9.8 sobre WSL2.
   Não presumir esse mesmo destino, daemon, imagens, pins ou credenciais em
@@ -23,7 +32,7 @@ checkpoint de desenvolvimento incompleto da Fase9, não release de produção.
   Gateway indisponível para teste IDE/MCP/Admin ou produção. Nenhum banco
   existente ou credencial antiga de aceitação deve ser utilizado.
 
-## Próximo incremento
+## Próximo incremento registrado em81ead94 (histórico)
 
 Implementar entrada PG16 pública sobre o coordenador aceito, com driver que
 retém loop/owners em HELD e captura falha de reconciliação no restore como
