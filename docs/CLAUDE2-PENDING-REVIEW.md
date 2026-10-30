@@ -1,4 +1,12 @@
-# Perfil público do leitor PG16 — revisão aceita
+# Posse do leitor PG16 — adapter aceito
+
+Review35578 aceitou adapter96e8a4c/3984bytes.37focados/117relacionados3,74s,
+Ruff/format331/mypy311/314330 limpos. Nota de contagem23 incorporada em teste,
+fonte intacta. Hash não autentica namespace após exec; TCB/imutabilidade do
+coordenador explícitos. Próximo: SHELL-WATCHDOG-DESIGN, antes de variante e
+caller. Sem efeito nativo, Docker/PG/shell/seed novo ou segundo escritor.
+
+# Registro anterior — perfil público do leitor PG16 aceito
 
 Review28829/sessão51ea0d85 aceitou8906e846 isolado, sem bloqueador.55testes
 próprios/205relacionados3,76s, Ruff/format330/mypy311/314329 limpos. O limite

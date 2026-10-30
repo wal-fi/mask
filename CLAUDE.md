@@ -1,5 +1,17 @@
 # AI Data Masking Gateway
 
+## Posse do leitor PG16 aceita, sem efeitos — 2026-10-30
+
+Adapter96e8a4c/3984bytes aceito pelo Claude2 (review35578).37testes próprios/
+117relacionados3,74s, Ruff/format331/mypy311/314330 limpos, runtime sóWindows
+3.11.3. Tipos JSON exatos bloqueiam igualdade hostil; captura vinculada a
+task/case/wrapper/CID, independente de Env/aceitação. Sem reread vivo, CLI,
+admissão, rm ou autoridade de release. Namespace capturado é TCB, hash não
+o autentica após exec. Perfil8906/owner d671/reader efe6 intactos.
+Próximo: desenho/variante de watchdog própria antes de caller ou efeitos.
+Nenhum Docker/shell/PG/seed/raiz novo; DesktopOff, Gateway indisponível.
+B1/B2/D090/C1/SQL/produção abertos. Sem quota/job ou segundo escritor.
+
 ## Perfil interativo PG16 aceito, sem execução nativa — 2026-10-30
 
 Perfil8906e846/8415bytes aceito pelo Claude2 (review28829), manifesto867617ca.
