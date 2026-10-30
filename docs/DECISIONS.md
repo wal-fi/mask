@@ -3404,3 +3404,479 @@ deploy, ativação operacional, commit, push ou Etapa 8+.
   moderno temporário. O gate de runtime moderno foi medido
   nos lotes A–C, só no Windows com CPython 3.14.8; ele não cobre POSIX nem
   tipagem com o alvo 3.14 e não libera operação real.
+
+## D-111 — Núcleo B-1: snapshot da compilação, opt-in interno e equivalência
+
+**Estado (2026-10-19): implementado localmente e revisado tecnicamente;
+núcleo aprovado explicitamente pelo usuário, sem commit/push.**
+O desenho foi aprovado em 2026-10-18 e, em 2026-10-19, o usuário autorizou só
+snapshot e testes de equivalência do masking, com revisão pelo Claude2.
+Não é autorização de worker, protocolo, integração de sessão ou produção.
+
+- **Sem mudança operacional:** `build_candidate(capture_snapshot=False)`
+  preserva o caminho existente. Somente a opção interna explícita `True`
+  envolve a mesma compilação com `RecordingSecrets` e guarda um
+  `SnapshotTemplate` em `PreparedRuntime`. Não há setting, dependência,
+  rota ou chamador operacional habilitando essa opção. O novo teto não
+  limita políticas existentes no caminho default.
+- **Uma chave por compilação:** somente os nomes realmente pedidos são
+  capturados, hoje exclusivamente `MASKGW_HMAC_KEY`. O primeiro valor por
+  nome é reutilizado na mesma compilação, sem reler uma fonte que pode mudar
+  entre regras. Preserva-se o valor exato devolvido pelo provider; a
+  normalização já pertence ao provider original. Não é lida a chave-mestra
+  do catálogo nem copiado o ambiente. Fonte ausente/inválida recusa captura.
+- **Entradas destacadas:** o template guarda bytes imutáveis da policy
+  normalizada, limites efetivos, conninfo já fixado e mapa mínimo de segredos.
+  Não reconstrói config a partir de transformers nem relê `file_config`
+  mutável ao serializar uma sessão. A identidade `datasource_id`, geração e
+  record revision é vinculada explicitamente depois; o registry/lease não
+  foi alterado neste lote.
+- **Formato fechado privado v1:** JSON de entradas com chaves ordenadas,
+  separadores sem espaços, ASCII com escapes, sem NaN/Infinity, duplicatas
+  ou representação alternativa. Não é RFC 8785 nem JSON de resultado.
+  Envelope completo de até 64 KiB; template reserva 512 bytes para metadados;
+  guarda de profundidade 32 antes do parser. Identidade tem inteiros exatos
+  positivos de até 63 bits, nunca bool/float. Erro sanitizado e fora do
+  handler, sem valores ou cadeia original.
+- **Recompilação única:** usa `parse_config_bundle` e `MaskingEngine`
+  existentes, provider fechado sem fallback de ambiente e igualdade entre
+  nomes fornecidos e consumidos. Recusa segredo ausente, desconhecido ou
+  não usado e limite efetivo que enfraqueça o da policy. Campos desconhecidos
+  ou entradas que normalizariam para outro documento são recusados.
+- **Representação redigida:** template, recorder e objeto recompilado não
+  expõem segredo em `repr`/`str`/`format`. `bind()` e `connection_target()`
+  são extrações explícitas e secret-bearing para código confiável; não podem
+  ser logadas ou retornar em DTO administrativo. A senha upstream e HMAC
+  estão nesses bytes, como previsto no desenho. Canonicalização e igualdade
+  de identidade **não autenticam** remetente, código ou payload.
+- **Prova local:** equivalência de decisões e saída dos transformers
+  determinísticos, canonicalização de tipos, exceptions autoritativas,
+  aliases, derivados, ordem, SQL/limites e rotação HMAC. `random` tem
+  parâmetros/invariantes comparados e entropia controlada só em contexto
+  temporário de teste, restaurada ao sair; nenhum seed/hook de produção.
+  Evidência e limites em `PHASE-9-STAGE-8-B1-VALIDATION.md`.
+
+B-1 fim a fim continua aberto: sem worker ou medição de handshake/transporte
+e captura de geração no ingresso real. B-2, memória do pai e D-090 gate 2
+continuam abertos. Nenhuma mudança em masking, canonicalização D-015, cursor,
+SQL, driver, bootstrap, registry, leases, D-107, MCP ou Admin/UI.
+
+**Incremento somente de testes autorizado em 2026-10-19:** após aprovar o
+núcleo e esta decisão, o usuário autorizou a prova de equivalência em outro
+processo, com revisão pelo Claude2, local e sem commit/push. O probe recebe
+o snapshot por stdin, recompila pelo mesmo código e compara observações
+sintéticas agregadas; não é worker, protocolo ou codec operacional e não
+muda o formato privado nem o contrato de compilação. Ver
+`PHASE-9-STAGE-8-B1-PROCESS-VALIDATION.md`. B-1 fim a fim, B-2 e D-090 gate 2
+permanecem abertos; nenhuma integração operacional ou SQL foi autorizada.
+O usuário aprovou explicitamente esse incremento de testes em 2026-10-19,
+sem ampliar a autorização nem autorizar commit/push.
+
+## D-112 — B2-B1: reservas lógicas isoladas, imagem imutável e retenção
+
+**Estado (2026-10-20): implementação do núcleo autorizada; implementado
+localmente e revisado pelo Claude2, sem bloqueador no núcleo isolado.
+Fechamento e D-112 aprovados explicitamente pelo usuário em 2026-10-20,
+sem ampliar a autorização; sem commit/push.**
+
+O usuário autorizou somente o controle lógico de reservas e testes
+determinísticos, conforme `PHASE-9-STAGE-8-B2-B-PLAN.md`. Não é autorização
+de integração, worker, SQL, pressão de memória ou contenção do produto.
+
+- **Isolado:** `runtime/budget.py`, stdlib somente, sem chamador operacional,
+  export no `runtime/__init__`, efeito externo ou lock próprio. Todas as
+  chamadas exigem serialização pelo coordenador confiável. Os testes modelam
+  ordens; não comprovam atomicidade do registry real.
+- **Conta fechada:** base e margem explícitas + cobranças compartilhadas de
+  candidato/geração/auxiliar + worker/pai por sessão, dentro do total lógico.
+  Capacidades global, por datasource, de workers e slots são verificadas
+  juntas antes da publicação. Um worker por sessão, inclusive reservado/ocioso.
+  Custos são informados pelo colaborador confiável, não derivados ou medidos.
+- **Metadados finitos:** datasources são ordinais internos fixos, sem alias
+  ou segredo. Até 4.096 slots e 1.024 ordinais por construção neste modelo,
+  sem default operacional ou nova variável. Custos/identidades de até 63 bits
+  positivos, sem bool, float ou infinito. A época do slot nunca volta a zero;
+  ao esgotá-la o slot fica indisponível. Sem tombstones/histórico crescente.
+- **Commit lógico único:** nova imagem imutável preparada antes da troca de
+  referência, incluindo publicação que altera candidato e geração anterior.
+  Falha modelada restaura a imagem anterior; falha da restauração retém as
+  duas imagens possíveis e quarentena todo crédito restante, terminalmente
+  fail-closed. Uma só referência publica a falha e os dois donos, sem janela
+  entre flag e diagnóstico. Erros fixos, sem exceção interna encadeada;
+  Python pode anexar o contexto já ativo do chamador, suprimido por `from None`.
+  Não certifica OOM arbitrário.
+- **Lifecycle:** geração compartilhada é cobrada uma vez, cópias privadas
+  por sessão separadamente. Candidato pré-reservado pode publicar durante
+  fechamento, sem novo crédito. Aposentadoria não muda sessões admitidas.
+  Geração/candidato continuam cobrados durante descarte fora do lock;
+  devolução lógica é segunda transição, após confirmação explícita.
+- **Retenção:** processos, threads, pipes, handles e saída são fatos de
+  cleanup declarados pelo chamador, não ACK do filho ou medição do SO.
+  Qualquer fato incompleto ou referência de sessão mantém dono/crédito.
+  Cliente lento, worker ocioso e falha de reap não devolvem capacidade.
+  Release confirmado é idempotente enquanto a época não foi reutilizada.
+- **Resultado de release explícito:** `RELEASED`, `HELD` e `ALREADY_RELEASED`
+  são distintos. Coerção booleana levanta `TypeError` fixo, não `BudgetError`,
+  para não confundir dono ainda
+  retido com descarte já concluído. Repetir confirmação ainda incompleta
+  sobre uma reserva HELD não republica imagem nem abre outra janela de falha.
+- **Sem prova física:** descartar referências ou devolver créditos não prova
+  devolver commit ao SO. Resíduo do alocador, orçamento real do pai,
+  verificador D-107, vários workers e integração de locks/fechamento ainda
+  precisam de provas próprias. Nenhum critério agregado foi substituído.
+
+Evidência: `PHASE-9-STAGE-8-B2-B1-VALIDATION.md`. B-1 fim a fim, B-2 e D-090
+gate 2 continuam abertos. Nenhuma mudança em registry, lease, bootstrap,
+driver, cursor, masking, D-107, MCP/Admin/UI, dependência ou configuração.
+
+## D-113 — resultado completo imutável e validação PGWire limitada no pai
+
+**Estado (2026-10-20): escolhida sob delegação do usuário; plano e código
+revisados pelo Claude2, sem bloqueador no núcleo isolado, implementado e validado localmente.
+Não é aprovação individual inventada, integração ou liberação de produção.**
+
+Substitui a representação proposta de objetos decodificados no pai das
+§§6.4/10.3 do desenho da Etapa 8 por bytes completos imutáveis, com header
+privado v1 de 76 bytes e corpo PGWire T/D*/C já codificado. O pai valida
+integralmente antes de expor fatias para envio, sem lista de linhas/células.
+O futuro worker continua obrigado a executar o mesmo pipeline/engine antes
+de codificar; formato e identidade não provam masking nem autenticam código.
+
+- Módulo puro em `pgwire/result_frame.py`, sem import/export operacional.
+  A localização evita o `runtime/__init__` que importa registry/psycopg/rede;
+  não refatora APIs existentes. Import normal medido sem rede/banco/planos.
+- Header `!4sBBH16s16sQQQIII`: magic MGWR, versão 1, flags fechadas, reservado
+  zero, sessão/datasource de 16 bytes, geração/revisão/job de até 63 bits,
+  contagens e comprimento exato. Correlação com pendência é responsabilidade
+  da integração, não autenticação ou prevenção isolada de replay.
+- Corpo exato T, D×rows, C; comprimentos/mínimos/consumo conferidos, sem tag
+  arbitrário. Oito OIDs do subconjunto aprovado; table_oid/attribute zero,
+  typmod −1 normalizado, formato texto. name é perfil padrão de 64 bytes,
+  valor até 63; não certifica build PostgreSQL customizado. Zero colunas será
+  erro controlado no worker futuro, nunca frame malformado deliberado.
+- Inteiros canônicos com faixa/até 20 bytes e sem −0/+; bool t/f; NULL;
+  UTF-8 incremental estrito em blocos de 4 KiB, sem NUL e sem string da
+  célula inteira. Tabela de OIDs fixa, sem alocar por rows×columns. Nomes
+  vazios/repetidos são posicionais. Sem generic JSON/default=str/pickle.
+- Limites positivos/injetados, até 16 MiB no frame completo, 1 MiB por célula,
+  1.664 colunas, 256 bytes por nome; max_rows sempre respeitado. Truncated
+  requer rows=max_rows; NOTICE/ReadyForQuery futuros pertencem ao driver.
+- Só bytes exato, dono imutável retido no descritor; chunks somente leitura
+  de até 64 KiB do corpo. `.obj` mantém o frame completo: não é ocultação
+  contra introspecção Python; o driver futuro só pode enviar a fatia.
+- Prazo absoluto cooperativo, relógio confiável injetável e conferência por
+  bloco/unidades estruturais; prazo de escrita separado. Sem preempção de
+  chamada C, timeout de socket ou abandono de thread implementado neste núcleo.
+  Erros fechados sem dados/offset/OID/exceção interna; contexto previamente
+  ativo do chamador pode ser anexado pelo Python e fica suprimido.
+  Traceback do próprio erro ainda retém frames/input: não registrar locals
+  ou armazenar exceções no caminho futuro; soltar erro, resultado e todas
+  as views antes de devolver créditos. Args sanitizados não provam descarte.
+
+O receptor futuro deve reservar antes da alocação **2F + scratch + envio/TLS
+e demais custos**, incluindo buffer recebido e cópia imutável; 32 sessões
+no máximo de 16 MiB exigiriam pelo menos 1 GiB apenas nesses dois buffers.
+Medição tracemalloc do núcleo exclui o frame preexistente e não prova quotas,
+commit do SO, allocator, TLS, worker ou compartilhada/nativa. Sem reserva real,
+codec do worker, lease, receiver, pipeline ou cliente lento integrados aqui.
+
+Plano: `PHASE-9-STAGE-8-RESULT-PLAN.md`. Evidência:
+`PHASE-9-STAGE-8-RESULT-VALIDATION.md`. B-1 fim a fim, B-2 e D-090 gate 2
+continuam abertos; SQL continua recusada. Sem commit/push/deploy deste lote.
+
+## D-114 — receptor limitado, ownership e pin nos créditos da sessão
+
+**Estado (2026-10-20): escolha sob delegação, implementada e validada
+localmente, com revisão somente leitura pelo Claude2. Não é aval individual
+inventado nem liberação de worker/SQL/produção.**
+
+`pgwire/result_receiver.py` é consumidor interno do núcleo D-113 e do ledger
+D-112, sem chamador operacional. Header de 76 bytes validado antes de alocar
+o corpo, recv_into limitado, bytearray exato + cópia imutável, mutável
+descartado antes da validação. API só de operação/metadados escalares;
+envio exclusivamente de slices do corpo completo validado, para RawChannel
+ou TlsChannel auditados. Não é sandbox contra Python hostil/reflexão.
+
+- Pin prévio no mesmo ledger/lock: F/overhead declarados e `2F + overhead <= P`
+  da sessão LIVE; token/épocas separados sem wrap, uma saída por sessão.
+  Nenhuma nova reserva ou crédito adicional. Release da sessão respeita pin.
+- Plain Lock externo único, aquisição limitada a deadline/250 ms, sem I/O ou
+  descarte pesado sob ele. Events distintos por operação evitam conclusão
+  antiga interferindo em envio novo. Deadline absoluto comum à leitura/parser;
+  prazo separado de envio/cleanup, sem renovar por progresso.
+- Close em duas fases físicas e commit lógico: tirar dono sob lock, descartar
+  fora, publicar descarte e só depois limpar pin/drain atomicamente. Não libera
+  recursos ou créditos da sessão; sem finalizer ou liberação por suposição.
+- Tracebacks inativos limpos; views/geradores fechados. Grupos, cadeias opacas,
+  interrupção ou limpeza não comprovada retêm pin. Transporte carrega apenas
+  flag escalar de incerteza ao sanitizar erro, inclusive timeout opaco; não
+  anexa texto/exceção. Timeout simples mantém o deadline sem reenviar bytes.
+
+**Três obrigações do coordenador futuro:** (1) incerteza é quarentena
+permanente nesta API, sem recuperação/reutilização até encerrar/reiniciar o
+processo; (2) send_to pode falhar BUSY/DEADLINE depois de entregar todo o corpo,
+logo qualquer ReceiverError significa saída não comprovada, drain/fechamento,
+sem retry; (3) um frame por job e canal quieto devem ser garantidos pela
+integração, pois bytes residuais permanecem no canal e o receptor isolado
+não autentica produtor nem prova monotonicidade/pipeline.
+
+Medição de 2F+512 KiB é complementar em tracemalloc, não cota física de
+SSL/nativa/compartilhada/SO ou ausência de retenção por debugger. Worker,
+registry, lease, masking fim a fim e limites físicos continuam gates próprios.
+Evidência: `PHASE-9-STAGE-8-RECEIVER-VALIDATION.md`; B-1/B-2/D-090 gate 2
+abertos, sem nova dependência/configuração/SQL/commit/push/deploy neste lote.
+
+## D-115 — resultado tipado já protegido e encoder fechado do worker futuro
+
+**Estado (2026-10-20): escolha sob delegação, implementada e validada localmente;
+revisão do código pelo Claude2 sem bloqueador no escopo isolado. Suíte PG16:
+6.395 passed/20 skips de plataforma, zero falhas/erros; 12/12 integrações
+tipadas executadas. Não é aval individual ou liberação de SQL/produção.**
+
+`db/result.py` acrescenta wrapper frozen/tuplas estruturais com `MaskedResult`
+já protegido e OIDs anunciados posicionais; células exatas são conferidas no
+preflight. Não amplia o resultado MCP nem os exports legados do pacote db.
+`PostgresAdapter._execute_typed_validated` é opt-in interno, sem chamador
+operacional, e compartilha o mesmo corpo de validação/AST, execução,
+proveniência, decisão, masking, max_rows e `_settle` do legado.
+
+- MASK anuncia text25 sem ler/reter OID upstream; o engine continua recebendo
+  o valor psycopg original. ALLOW/EXCEPTION preservam somente oito OIDs
+  anunciados antes do fetch: 16/21/23/20/19/25/1042/1043, mesmo em NULL.
+  Isso esclarece §6.2 do desenho à luz da §5.5 normativa, não promete preservar
+  tipos arbitrários. Domínios cujo OID o servidor anuncia como tipo base são
+  aceitos/codificados como esse tipo base; só OID próprio de domínio anunciado
+  fora da tabela é recusado. Domínio text foi observado como OID25 no
+  PostgreSQL16.15/psycopg3.3.4; não se generaliza a outros perfis.
+- Encoder em `pgwire/result_encoder.py`, puro/sem I/O: preflight completo,
+  bytearray exato limitado, cópia bytes, descarte do mutável e autovalidação
+  independente D-113 antes de retornar frame privado v1 T/D*/C. Não há lista
+  de células codificadas, serialização genérica ou resposta parcial.
+- Tipos exatos/fechados, UTF-8 sem NUL em blocos, nomes/valores posicionais,
+  normalização de metadados de origem e limites idênticos ao D-113. Prazo
+  absoluto cooperativo por blocos/contador; nenhum teto foi ampliado para
+  fazer passar a prova densa inicialmente reprovada.
+- `DatabaseResultTypeError` é recusa de tipo antes do fetch;
+  `DatabaseResultIntegrityError` é falha fatal estrutural/interna. OOM em
+  metadata é MemoryError nova e sanitizada, nunca recusa de tipo.
+  Encoder TYPE/LIMIT só admitem continuidade com conexão comprovada;
+  MEMORY/PROTOCOL/DEADLINE são fatais. Worker deverá capturar Integrity e
+  MemoryError antes da base DatabaseError e encerrar a sessão fatal.
+- D-113 mantém categoria pública LIMIT no OOM, mas sinaliza um bool escalar
+  interno. Encoder classifica esse caso como MEMORY fatal; D-114 mantém
+  sua recusa/ownership anterior. Não anexar entrada, exceção ou traceback
+  nativo ao erro externo; limpeza de frames não prova apagar RAM ou locals
+  que o chamador/debugger mantenha.
+
+O limite complementar 2F+scratch do encoder exclui resultado já materializado,
+AST/libpq/masking e memória nativa/compartilhada/SSL. Não fecha B-2. Max_rows
+do worker virá dos settings da geração capturada; deadline inclui trabalho
+local de codificação/validação e não é renovado por progresso. Interrupção ou
+ownership incerto exige encerramento/quarentena, não release otimista.
+
+Plano e evidência: `PHASE-9-STAGE-8-ENCODER-PLAN.md` e
+`PHASE-9-STAGE-8-ENCODER-VALIDATION.md`. B-1 fim a fim, B-2 e D-090 gate 2
+seguem abertos. Sem worker, ingressos novos, dependência, configuração,
+commit/push ou deploy neste lote; SQL PGWire continua recusada.
+
+## D-116 — C1: reconciliação pura de domínio, evidência e orçamento
+
+**2026-10-23: escolha sob delegação, implementada localmente e código revisto
+pelo Claude2 sem bloqueador após F1. Sem aval individual inventado, backend
+ou liberação de SQL/produção; evidência final revisada sem bloqueador.**
+
+runtime/domain.py verifica plano fechado junto a BudgetLimits de D-112,
+sem segundo ledger/lifecycle. Custos têm dono, identidade, localização e
+grandeza única; W>=cota imposta, P>=2F+overhead, capacidades de papéis e
+threads, supervisor/bootstrap cobrado dentro, IN e OUT sem compensação.
+Gerações/candidatos/snapshots só nas reservas shared_bytes, nunca em B.
+
+Registro fechado por identidade contém apenas dois perfis históricos, ambos
+NOT_READY: Linux HELD AS128 (AS individual versus residente agregado sem
+conversão/prova estrita) e Windows private32 (SHARED_ANON=GAP_OBSERVED).
+Clone/referência/fixture não vira evidência confiável; não há STRICT_PROVEN.
+Cgroup transiente/margem arbitrária não certificam limite agregado estrito.
+
+O núcleo confere consistência de modelo, não atesta SO vivo nem custo físico.
+Mesmo custo sob IDs diferentes depende do plano confiável. Futuro chamador
+deve reconciliar antes do ledger, usar cobranças pelo menos tão grandes e
+provar associação/limites/cleanup reais antes de trabalho. Hoje não há
+chamador operacional. Nenhum processo existente/legado é migrado/limitado.
+
+Contrato/evidência: DOMAIN-DESIGN e DOMAIN-VALIDATION em docs/. B-1 fim a fim,
+B-2/D-090 gate2 e SQL permanecem abertos/recusada. Sem nova dependência,
+configuração, camada pública, worker, commit/push ou deploy neste lote.
+
+## D-117 — erro tipado privado e saúde positiva antes de continuidade
+
+**2026-10-23: escolha sob delegação, implementada localmente; código e
+evidência final revistos pelo Claude2 sem bloqueador. Não é aprovação
+individual nem autorização de SQL/produção.**
+
+Execução typed=True usa classificação fechada sem reter SQLSTATE, mensagem,
+diagnóstico ou exceção original. Legado mantém sanitize_error exatamente.
+QUERY admite classes0A/21/22/23/40/42/54 e somente25006;57014 mantém
+QueryTimeout por compatibilidade, sem afirmar que seja statement_timeout.
+RESOURCE53, CONNECTION08/sem SQLSTATE e INTERNAL/demais são fatais para
+o worker futuro. CONNECTION inclui falhas locais/driver não classificadas.
+MemoryError nativa e integridade/ownership incerto continuam fatais.
+
+Categoria candidata a continuar não basta: após settle, dono exclusivo
+precisará observar closed/broken False, ConnStatus.OK e TransactionStatus.IDLE.
+Método de saúde é privado, não muta nem faz I/O e falha fechado na dúvida.
+Não atesta rede/read-only futuro, não permite retry/reconexão/fallback.
+Nenhum chamador operacional integrado. Erro genérico fora da classificação
+continua sem promessa de recuperação. Mensagens tipadas privadas diferem
+do legado, cuja compatibilidade foi preservada.
+
+Evidência WORKER-ERRORS-VALIDATION:100 testes novos, suíte PG16 integral
+7.503 passed/20 skips de plataforma;17 casos obrigatórios executados,
+wheel/sdist com40 módulos iguais aos fontes e contraprovas recusadas.
+Runtime só Windows3.11.3, mypy3.11/3.14 limpos. SQL PGWire recusada,
+B-1 fim a fim/B-2/D-090 gate2 abertos. Sem novo setting/dependência,
+worker/IPC operacional, commit/push/deploy ou liberação de produção.
+
+## D-118 — corpo privado de um job: pipeline, frame e continuidade condicionada
+
+**2026-10-23: escolha sob delegação, sem aval individual inventado. Código
+e evidência final revistos pelo Claude2 sem bloqueador após corrigir J7.
+Nenhum worker integrado ou SQL liberada.**
+
+runtime/worker_job.py compõe uma chamada do adapter tipado D-115 e encoder
+D-113/D-115, sem modificar caminhos legados ou criar lifecycle/ledger.
+SQL str exata limitada a64KiB UTF8, sem NUL/surrogate, estruturas revalidadas
+e max_rows igual à geração. Identidade não é vinculada ao adapter aqui:
+lease/geração/IDs monotônicos são obrigação do dono futuro.
+
+Só frame completo ou categoria fechada em JobOutcome frozen/repr redigido;
+bool implícito recusado. QUERY/TIMEOUT/TYPE/LIMIT só são candidatos com
+saúde positiva e deadline vigente, checados em cada fase. Prazo cooperativo
+não limita driver/CPU bloqueados; precisa de supervisor físico futuro.
+Erros opacos/nativos/RESOURCE/integridade/subclasses não listadas são fatais.
+Mapeamento usa identidade exata de tipo, nunca igualdade de metaclass.
+
+J6 explícita: KeyboardInterrupt/SystemExit/GeneratorExit/grupos viram
+INTERNAL fatal sem frame ou referência nativa, não sinais propagados.
+**Todo fatal exige parar/recolher**, mesmo causado por interrupção: jamais
+seguir sessão nem usar run_job como wrapper de cancelamento/shutdown.
+Não conecta/fecha/cancela/retry/reconecta/libera crédito. Dono futuro mantém
+fatal persistente, reservas/pin/HELD e prova reap; can_continue sozinho não
+autoriza reutilização. Resultado não autentica produtor/frame IPC.
+
+Evidência WORKER-JOB-VALIDATION: conexão fake com parser/engine/adapter/
+encoder/validator reais, testes adversariais e sonda instalada limitada.
+Não é PG/OS/IPC ou B-1 fim a fim. Todos os perfis C1 continuam NOT_READY;
+B-1/B-2/D-090 gate2 abertos e SQL PGWire0A000. Sem novo setting/dependência,
+ingresso operacional, commit/push/deploy ou liberação de produção.
+
+## D-119 — perfil Docker local com contrato documentado de memória
+
+**2026-10-23: Opção A aprovada explicitamente pelo usuário (resposta "A"),
+após escolher Oracle Linux9 disponível9.8 nesta máquina. Implementação e
+evidências do novo perfil ainda pendentes; não é liberação de SQL.**
+
+Somente para teste local Docker Desktop/Linux nesta máquina Windows, o
+critério estrito de B-2 é substituído prospectivamente pelos itens3–7 de
+PHASE-9-CONTAINER-MEMORY-DECISION: memória cobrada sob semântica documentada
+de memory.max, aceitando excesso transitório sem limite numérico inventado;
+pressão pode matar pai/container ou worker de outra sessão. Restart inicial
+no/manual; sem reenviar consulta ou escrita. Nenhum FAIL anterior vira PASS.
+
+Todo custo imputável de aplicação novo dentro do container, com controlador,
+workers, listeners/TLS/saída, gerações/candidatos/auxiliares. Limites finitos
+de memória/swap/pids/fds, AS distinto e herdado antes de trabalho, rootfs e
+volumes/caches dimensionados, secrets/ambiente/core/dumpable/logs controlados.
+Não instala/migra processos Windows/VM/kernel; não promete limitar toda RAM
+do Windows ou certificar kernel/SELinux de host RHEL/Oracle. Privilegiados
+do host e comprometimento do produtor confiável continuam fora do modelo.
+
+Resource/OOM/prazo/integridade incerta → falha fechada, fim local/reap
+comprovado antes de liberar créditos, sem original não protegido ou retry.
+Pode chegar prefixo de frame já validado/mascarado antes da desconexão;
+completude não comprovada fecha sessão conforme D-114. Reap local não prova
+término instantâneo do backend upstream, ainda sujeito a timeouts do servidor.
+
+B-2 só fecha com evidência e controles dos itens6/7; B-1 fim a fim/D-090
+têm gates próprios. Novo tipo de perfil C1 terá nome diferente de
+STRICT_PROVEN e reconciliação própria de AS versus memória cobrada; não
+reclassificar AS como RAM ou inserir perfil pronto por essa decisão.
+Atualizações de kernel/runtime/Desktop exigem revalidar o perfil medido.
+Não se estende automaticamente a outro host/kernel ou produção externa.
+
+Detalhes revisados/limites em PHASE-9-CONTAINER-MEMORY-DECISION.md e
+PHASE-9-CONTAINER-TARGET-PLAN.md. Sem alteração de código, política de
+masking/read-only, configuração de sistema, dependência, SQL, commit/push
+ou deploy por este registro. Escolhas posteriores de implementação continuam
+delegadas, sem inventar aprovação individual de enums/código pelo usuário.
+
+## D-120 — proteção pré-segredo dos processos finais no perfil Linux local
+
+**2026-10-26, decisão técnica sob delegação vigente, revisada pelo Claude2.
+Guard isolado medido; não é liberação de SQL/produção ou fechamento de B-2.**
+
+runtime/linux_guard.py não tem chamador operacional. O processo final, após
+exec e com thread única, deve aplicar/conferir UID/GID10001, capabilities0,
+NNP/seccomp, CORE0, AS finito/hard sem aumentar cota, DUMPABLE0 e, no worker,
+PDEATHSIG(SIGKILL) com PPID esperado relido. VmSize atual mais8MiB de margem
+de bootstrap deve caber estritamente antes de mudar limites; margem não é
+prova de custo máximo. Nenhum segredo em argv/env/FD herdado no exec;
+entrega só por canal fechado depois da proteção. Erros são categorias
+fechadas, fatos imutáveis não autenticam um perfil C1 nem código malicioso.
+Falha exige encerrar/recolher pelo dono; exec/troca de credenciais posteriores
+invalidam a proteção. PDEATHSIG depende da thread criadora, de lifetime
+integral; PPID1 não distingue adoção, exigindo prova própria do namespace.
+
+106testes novos/695relacionados e estáticos declarados verdes. Rodada única
+secretless na candidata87871290 comprovou controle positivo e negação nas
+5interfaces proc/mem/process_vm/ptrace/environ/fd do mesmo UID; parentdeath
+SIGKILL com reap, negativo PPID errado sem mutação e zero descendentes.
+13CLI0+2restore0, CID removido e DesktopOff17:21:32Z. Módulo **copiado**,
+não wheel novo; fatos não substituem artefato instalado/futura ordem real
+de segredos, pressão/cgroup/capacidade/EOF do worker ou morte do PID1.
+AS não vira RAM cobrada. Fontes congeladas A–Off, hashes/evidências em
+PHASE-9-ORACLE9-PROCESS-GUARD-VALIDATION.md. Desvio de pausa entre observações
+declarado nesse documento; próximo procedimento deve bloquear idade máxima
+em código e abortar sem B, sem aprovação retroativa da pausa ou retry.
+
+B-1 fim a fim, B-2/D-090 gate2 e SQL continuam abertos. Legado/MCP/PGWire,
+dependências, configuração e .venv do host preservados. Escolha não inventa
+aprovação individual do usuário e não cria requisito de novo aval por lote.
+
+## D-121 — sessão privada W1, antes da integração de ingressos
+
+**2026-10-26. Decisão técnica sob delegação, código/desenho revisados pelo
+Claude2. Só testes simulados no Windows3.11.3; nenhum worker operacional.**
+
+Um worker Linux persistente e uma conexão upstream por sessão, com snapshot
+D-111 da mesma geração, D-120 antes de secrets, envelope privado v2 e S1
+selecionado no próprio adapter. GUARD_READY precede INIT por stdin vazio;
+argv/ambiente são públicos/fixos, stdout/stderr descartados. Pai qualificado
+por contrato de bootstrap aplica guard antes de secrets e usa interpretador
+instalado/inventariado com -I/-B. GuardFacts/nonce/tag não autenticam código
+hostil nem substituem C1; SO_PEERCRED do socketpair não identifica o filho.
+
+Codec v1 foi aceito isolado e arquivado, nunca usado em processo. v2 recusa
+v1/cruzado sem fallback: RESULT vazio deixa D-113 como única autoridade do
+tamanho, pin D-114 pelo máximo antes de header/body e DONE correlacionado
+antes de qualquer exposição. Não há decoder paralelo de linhas. Filho usa
+run_job e sonda S1 antes/depois de sucesso/erro recuperável, sem reset/retry.
+S1 compara invariantes selecionadas, não promete impedir qualquer UDF/efeito
+externo; privilégios read-only mínimos e riscos aceitos continuam necessários.
+
+Owner registrado antes de open, thread dona de lifetime integral e adoção
+SESSION RESERVED→LIVE sob lock comum antes de Popen. Novo adopt_session
+estreito do ledger recusa tipo errado/segunda adoção sem liberar reserva
+alheia. Custos declarados não são cota do SO. Popen tardio não recebe segredo;
+spawn/cleanup incerto retém capacidade/HELD. Sem writer thread, communicate,
+fila, retry/reconnect, parsing/masking ou conexão de banco no pai. Apenas
+send_result_to expõe chunks já validados depois de DONE; saída incerta mantém
+pin, descarte sem envio drena e encerra. Kill/reap/FDs/pipe são conferidos,
+não presumidos pelo retorno de close. Lock espera em fatias até prazo fixo.
+
+Evidências separadas WORKER-PROTOCOL/STATE/PROCESS/OWNER-VALIDATION. Seleção
+final1266passed,48do owner,57do filho,101do codec e59S1; Ruff/format/mypy
+3.11/3.14 em291arquivos limpos (runtime somente3.11.3). Falha temporal do
+encoder em rodada anterior preservada, causa indeterminada; sem mudar40s.
+Não certifica Linux/PG16/wheel novo, memória agregada, B-1 fim a fim, B-2,
+D-090/C1, namespace/EOF ou SQL. Próximo procedimento nativo impõe idade de
+ciclo/boot em código antes de Docker. Sem commit/push/deploy por este registro.

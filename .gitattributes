@@ -1,2 +1,11 @@
 /frontend/** text eol=lf
 /src/maskgw/admin/ui/** text eol=lf
+
+# Laboratory sources and exported evidence are pinned by their exact bytes.
+# Preserve the historical CRLF source too; never renormalize these files.
+/docs/poc/** -text
+/docs/poc/oracle9_python_prepare.py whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/deploy/** -text
+/src/**/*.py -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/tests/**/*.py -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/pyproject.toml -text

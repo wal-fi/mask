@@ -57,7 +57,8 @@ from maskgw.datasource.models import (
 from maskgw.db.postgres import PostgresAdapter
 from maskgw.errors import CapabilityError, ConfigError, TransformerError
 from maskgw.masking.engine import MaskingEngine
-from maskgw.secretsource import SecretProvider
+from maskgw.runtime.snapshot import RecordingSecrets, SnapshotTemplate, capture_template
+from maskgw.secretsource import EnvSecretProvider, SecretProvider
 
 #: Espera maxima, em segundos, para estabelecer uma conexao upstream. Um
 #: destino que nao responde nao pode prender o startup nem a operacao
@@ -214,6 +215,7 @@ class PreparedRuntime:
         "_engine",
         "_file_config",
         "_max_sessions",
+        "_snapshot_template",
     )
 
     def __init__(  # noqa: PLR0913 - conteudo da geracao, todo keyword-only
@@ -226,6 +228,7 @@ class PreparedRuntime:
         addresses: tuple[str, ...],
         max_sessions: int,
         adapter_factory: AdapterFactory,
+        snapshot_template: SnapshotTemplate | None = None,
     ) -> None:
         self._file_config = file_config
         self._config = config
@@ -234,6 +237,7 @@ class PreparedRuntime:
         self._addresses = addresses
         self._max_sessions = max_sessions
         self._adapter_factory = adapter_factory
+        self._snapshot_template = snapshot_template
 
     @property
     def file_config(self) -> MaskingFileConfig:
@@ -255,6 +259,11 @@ class PreparedRuntime:
     @property
     def max_sessions(self) -> int:
         return self._max_sessions
+
+    @property
+    def snapshot_template(self) -> SnapshotTemplate | None:
+        """B-1 opt-in compilation capture. Absent in every operational caller."""
+        return self._snapshot_template
 
     def new_adapter(self) -> PostgresAdapter:
         """Adapter novo e NAO conectado para uma sessao ou verificacao."""
@@ -307,13 +316,14 @@ def build_conninfo(spec: CandidateSpec, addresses: Sequence[str]) -> str:
     )
 
 
-def build_candidate(
+def build_candidate(  # noqa: PLR0913 - explicit internal collaborators; capture is opt-in
     spec: CandidateSpec,
     *,
     secrets: SecretProvider | None = None,
     resolver: AddressResolver | None = None,
     adapter_factory: AdapterFactory | None = None,
     verifier: Verifier | None = None,
+    capture_snapshot: bool = False,
 ) -> PreparedRuntime:
     """Constroi e VERIFICA um candidato. Nunca publica nem persiste.
 
@@ -341,15 +351,29 @@ def build_candidate(
 
     prepared: PreparedRuntime | None = None
     try:
-        loaded, config = _compile(spec.policy, spec.limits, secrets=secrets)
+        capture = (
+            RecordingSecrets(secrets if secrets is not None else EnvSecretProvider())
+            if capture_snapshot
+            else None
+        )
+        loaded, config = _compile(
+            spec.policy, spec.limits, secrets=capture if capture is not None else secrets
+        )
+        conninfo = build_conninfo(spec, addresses)
+        template = (
+            capture_template(spec.policy, config, conninfo, capture)
+            if capture is not None
+            else None
+        )
         prepared = PreparedRuntime(
             file_config=loaded.file_config,
             config=config,
             engine=MaskingEngine(config.masking),
-            conninfo=build_conninfo(spec, addresses),
+            conninfo=conninfo,
             addresses=addresses,
             max_sessions=spec.limits.max_sessions,
             adapter_factory=factory,
+            snapshot_template=template,
         )
     except (ConfigError, TransformerError, DatasourceValidationError, TypeError, ValueError):
         failure = CandidateFailure.POLICY

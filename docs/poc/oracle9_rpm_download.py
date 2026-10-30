@@ -1,0 +1,264 @@
+"""One bounded download of nine public Oracle RPMs; never executes an RPM."""
+
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import stat
+import subprocess
+import sys
+
+CURL = Path("C:/Windows/System32/curl.exe")
+CURL_SHA = "73d24149ff289afc49ec41f08918ef9faa727d39ad993e929757dc2ddafab805"
+REPO = Path(__file__).resolve().parents[2]
+PAYLOAD = REPO / "deploy/oracle9_python_payload.py"
+RPM_ROWS = (
+    ("baseos/latest", "expat", "2.5.0", "6.el9_8.7", "x86_64"),
+    ("appstream", "libnsl2", "2.0.0", "1.el9", "x86_64"),
+    ("baseos/latest", "libtirpc", "1.3.3", "9.el9", "x86_64"),
+    ("appstream", "mpdecimal", "2.5.1", "3.el9", "x86_64"),
+    ("appstream", "python3.11", "3.11.13", "10.0.1.el9_8", "x86_64"),
+    ("appstream", "python3.11-libs", "3.11.13", "10.0.1.el9_8", "x86_64"),
+    ("appstream", "python3.11-pip", "22.3.1", "6.el9", "noarch"),
+    ("appstream", "python3.11-pip-wheel", "22.3.1", "6.el9", "noarch"),
+    ("appstream", "python3.11-setuptools-wheel", "65.5.1", "5.el9", "noarch"),
+)
+MAX_FILE = 16 * 1024 * 1024
+MAX_TOTAL = 64 * 1024 * 1024
+
+
+def require(value):
+    if not value:
+        raise RuntimeError("BUNDLE_REFUSED")
+
+
+def regular(path):
+    s = path.lstat()
+    require(stat.S_ISREG(s.st_mode) and not getattr(s, "st_file_attributes", 0) & 0x400)
+
+
+def manifest_rows():
+    result = []
+    for repo, name, version, release, arch in RPM_ROWS:
+        filename = f"{name}-{version}-{release}.{arch}.rpm"
+        require(re.fullmatch(r"[A-Za-z0-9_.-]+\.rpm", filename))
+        result.append(
+            {
+                "filename": filename,
+                "url": f"https://yum.oracle.com/repo/OracleLinux/OL9/{repo}/x86_64/getPackage/{filename}",
+                "header": f"{name}|{arch}|0|{version}|{release}",
+            }
+        )
+    return result
+
+
+def curl_args(path, url, limit):
+    require(0 < limit <= MAX_FILE)
+    require(url in {r["url"] for r in manifest_rows()})
+    return [
+        str(CURL),
+        "-q",
+        "--noproxy",
+        "*",
+        "--proto",
+        "=https",
+        "--max-redirs",
+        "0",
+        "--no-ssl-auto-client-cert",
+        "--fail",
+        "--silent",
+        "--connect-timeout",
+        "10",
+        "--max-time",
+        "30",
+        "--max-filesize",
+        str(limit),
+        "--output",
+        str(path),
+        "--write-out",
+        "%{http_code}\n%{url_effective}",
+        "--url",
+        url,
+    ]
+
+
+def environment():
+    return {
+        key: os.environ[key] for key in ("SystemRoot", "WINDIR", "TEMP", "TMP") if key in os.environ
+    }
+
+
+def write_new(path, data):
+    with path.open("xb") as f:
+        f.write(data)
+        f.flush()
+        os.fsync(f.fileno())
+
+
+def save_state(path, value):
+    temp = path.with_suffix(".next")
+    write_new(temp, (json.dumps(value) + "\n").encode())
+    os.replace(temp, path)
+
+
+def check_bundle(root, state):
+    bundle = root / "bundle"
+    require(bundle.is_dir() and not bundle.is_symlink())
+    require(not getattr(bundle.stat(), "st_file_attributes", 0) & 0x400)
+    for name in ("bundle.json", "inputs.sha256", "expected-rpms.txt"):
+        regular(bundle / name)
+        require((bundle / name).stat().st_size <= 16384)
+    mraw = (bundle / "bundle.json").read_bytes()
+    require(
+        len(mraw) <= 16384 and hashlib.sha256(mraw).hexdigest() == state["bundle_manifest_sha256"]
+    )
+    m = json.loads(mraw)
+    require(set(m) == {"kind", "files"} and m["kind"] == "oracle9-rpms-v1")
+    require(type(m["files"]) is list and len(m["files"]) == 10)
+    names = [v["filename"] for v in m["files"]]
+    require(len(names) == len(set(names)))
+    expected = {v["filename"]: v for v in manifest_rows()}
+    require(set(names) == set(expected) | {"runtime_probe.py"})
+    require(
+        {p.name for p in bundle.iterdir()}
+        == set(names) | {"bundle.json", "inputs.sha256", "expected-rpms.txt"}
+    )
+    total = 0
+    for v in m["files"]:
+        name = v["filename"]
+        require(
+            set(v)
+            == (
+                {"filename", "url", "header", "bytes", "sha256"}
+                if name in expected
+                else {"filename", "bytes", "sha256"}
+            )
+        )
+        require(re.fullmatch(r"[A-Za-z0-9_.-]+", name) is not None)
+        p = bundle / name
+        regular(p)
+        require(type(v["bytes"]) is int and 0 < v["bytes"] <= MAX_FILE)
+        require(p.stat().st_size == v["bytes"])
+        data = p.read_bytes()
+        require(hashlib.sha256(data).hexdigest() == v["sha256"])
+        if name in expected:
+            require(v["url"] == expected[name]["url"] and v["header"] == expected[name]["header"])
+            require(data[:4] == b"\xed\xab\xee\xdb")
+            total += len(data)
+        else:
+            require(v["sha256"] == state["payload_sha256"])
+    require(total <= MAX_TOTAL)
+    # These auxiliary inputs are regenerated byte-for-byte, never trusted by name.
+    headers = ("\n".join(sorted(v["header"] for v in expected.values())) + "\n").encode()
+    require((bundle / "expected-rpms.txt").read_bytes() == headers)
+    checked = [(v["filename"], v["sha256"]) for v in m["files"]]
+    checked += [
+        ("bundle.json", hashlib.sha256(mraw).hexdigest()),
+        ("expected-rpms.txt", hashlib.sha256(headers).hexdigest()),
+    ]
+    sums = "".join(f"{h}  {name}\n" for name, h in sorted(checked)).encode()
+    require((bundle / "inputs.sha256").read_bytes() == sums)
+    for name in ("bundle.json", "expected-rpms.txt", "inputs.sha256"):
+        regular(bundle / name)
+    return m
+
+
+def main(root):
+    require(sys.flags.optimize == 0 and root.name.startswith("maskgw-oracle9-python-20261023-"))
+    require(root.parent.resolve() == (Path(os.environ["LOCALAPPDATA"]) / "Temp").resolve())
+    require(root.resolve().parent == root.parent.resolve() and not root.is_symlink())
+    require(not getattr(root.stat(), "st_file_attributes", 0) & 0x400)
+    state_path = root / "attempt.json"
+    state = json.loads(state_path.read_bytes())
+    require(
+        state["kind"] == "maskgw-oracle9-python"
+        and state["invoked"] is False
+        and state["desktop_initial"] == "unobserved"
+        and "phase" not in state
+        and not state.get("bundle_download_invoked")
+        and state.get("bundle_ready") is False
+    )
+    require(
+        hashlib.sha256(Path(__file__).read_bytes()).hexdigest() == state["download_program_sha256"]
+    )
+    payload = PAYLOAD.read_bytes()
+    require(hashlib.sha256(payload).hexdigest() == state["payload_sha256"])
+    require(hashlib.sha256(CURL.read_bytes()).hexdigest() == CURL_SHA)
+    state["bundle_download_invoked"] = True
+    save_state(state_path, state)
+    bundle = root / "bundle"
+    bundle.mkdir()
+    result = {"kind": "oracle9-download-v1", "outcome": "NOT_PASSED", "files": []}
+    total = 0
+    try:
+        for entry in manifest_rows():
+            name = entry["filename"]
+            result["current_filename"] = name
+            p = bundle / (name + ".part")
+            write_new(p, b"")
+            p_limit = min(MAX_FILE, MAX_TOTAL - total)
+            proc = subprocess.run(
+                curl_args(p, entry["url"], p_limit),
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+                env=environment(),
+                timeout=35,
+                check=False,
+            )
+            result["files"].append({"filename": name, "exit": proc.returncode})
+            require(proc.returncode == 0 and len(proc.stdout) <= 4096)
+            require(proc.stdout.replace(b"\r\n", b"\n") == ("200\n" + entry["url"]).encode("ascii"))
+            regular(p)
+            require(0 < p.stat().st_size <= p_limit)
+            with p.open("r+b") as f:
+                require(f.read(4) == b"\xed\xab\xee\xdb")
+                f.flush()
+                os.fsync(f.fileno())
+            entry["bytes"] = p.stat().st_size
+            entry["sha256"] = hashlib.sha256(p.read_bytes()).hexdigest()
+            total += entry["bytes"]
+            os.replace(p, bundle / name)
+            result["files"][-1].update(entry)
+        write_new(bundle / "runtime_probe.py", payload)
+        inputs = [dict(v) for v in result["files"]]
+        for v in inputs:
+            del v["exit"]
+        inputs.append(
+            {
+                "filename": "runtime_probe.py",
+                "bytes": len(payload),
+                "sha256": hashlib.sha256(payload).hexdigest(),
+            }
+        )
+        mraw = (
+            json.dumps({"kind": "oracle9-rpms-v1", "files": inputs}, sort_keys=True) + "\n"
+        ).encode()
+        write_new(bundle / "bundle.json", mraw)
+        headers = ("\n".join(sorted(v["header"] for v in manifest_rows())) + "\n").encode()
+        write_new(bundle / "expected-rpms.txt", headers)
+        checked = [(v["filename"], v["sha256"]) for v in inputs]
+        checked += [
+            ("bundle.json", hashlib.sha256(mraw).hexdigest()),
+            ("expected-rpms.txt", hashlib.sha256(headers).hexdigest()),
+        ]
+        write_new(
+            bundle / "inputs.sha256", "".join(f"{h}  {n}\n" for n, h in sorted(checked)).encode()
+        )
+        state["bundle_manifest_sha256"] = hashlib.sha256(mraw).hexdigest()
+        check_bundle(root, state)
+        state["bundle_ready"] = True
+        result["outcome"] = "BUNDLE_DOWNLOADED"
+    except BaseException:
+        state["bundle_ready"] = False
+    finally:
+        save_state(state_path, state)
+        write_new(root / "download.json", (json.dumps(result, sort_keys=True) + "\n").encode())
+    print(json.dumps(result, sort_keys=True))
+    return 0 if result["outcome"] == "BUNDLE_DOWNLOADED" else 2
+
+
+if __name__ == "__main__":
+    require(len(sys.argv) == 2)
+    raise SystemExit(main(Path(sys.argv[1])))

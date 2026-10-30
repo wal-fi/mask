@@ -1,0 +1,24 @@
+{
+  "kind": "oracle9-libtirpc-header-facts-v1",
+  "method": "Bounded read-only RPM header extraction on Windows, no install or payload execution; basename1117/dirname1118/dirindexes1116, mode1030, digest1035, link1036/flags1037; package hash checked against verified bundle. Signatures measured earlier in Linux, not verified by this header reader.",
+  "rpm_tags_source": "https://rpm.org/docs/latest/manual/tags",
+  "package": "libtirpc-1.3.3-9.el9.x86_64.rpm",
+  "sha256": "9dbae1a07cb6462180daf1aa59924cdbbd84266753729c1dd85cdf61eacff379",
+  "files": [
+    {
+      "path": "/lib64/libtirpc.so.3",
+      "mode": 41471,
+      "digest": "",
+      "linkto": "libtirpc.so.3.0.0",
+      "flags": 0
+    },
+    {
+      "path": "/lib64/libtirpc.so.3.0.0",
+      "mode": 33261,
+      "digest": "a49b5fc0698b359730de2566c15fee3186a1f9b801c58abae9ee25a672c9447c",
+      "linkto": "",
+      "flags": 0
+    }
+  ],
+  "not_proven": "Actual lib64 symlink identity and target directory attributes inside image; pending prospective checks."
+}

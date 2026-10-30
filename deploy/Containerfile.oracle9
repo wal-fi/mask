@@ -1,0 +1,39 @@
+# Runtime artifact only. The foreground service/SQL gates are separate.
+# Build from a small generated context, never from the repository root.
+# BASE_IMAGE must be an inspected official Oracle Linux9 digest, not a tag.
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
+
+# Exact vendor NEVRAs resolved and recorded by the controlled Linux build.
+# Missing values must fail, rather than selecting whatever happens to be latest.
+ARG PYTHON311_NEVRA
+ARG PIP311_NEVRA
+RUN test -n "${PYTHON311_NEVRA}" && test -n "${PIP311_NEVRA}" \
+    && microdnf install -y "${PYTHON311_NEVRA}" "${PIP311_NEVRA}" \
+    && microdnf clean all \
+    && python3.11 -m venv /opt/maskgw/venv
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_INDEX=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_CONFIG_FILE=/dev/null \
+    HOME=/var/empty
+
+# The generated context contains only these inputs plus this Containerfile.
+# requirements.lock pins the project wheel AND every Linux dependency by hash.
+COPY requirements.lock /opt/maskgw/requirements.lock
+COPY wheels/ /opt/maskgw/wheels/
+RUN /opt/maskgw/venv/bin/python -I -B -m pip install \
+        --no-index --no-compile --only-binary=:all: --require-hashes \
+        --find-links=/opt/maskgw/wheels -r /opt/maskgw/requirements.lock \
+    && rm -rf /opt/maskgw/wheels \
+    && mkdir -p /var/empty /var/lib/maskgw /run/maskgw \
+    && chown 10001:10001 /var/lib/maskgw /run/maskgw
+
+WORKDIR /var/empty
+USER 10001:10001
+
+# No bundled config, secrets, port, state volume, restart or readiness claim.
+# The current product entrypoint preserves stdio/EOF and its SQL refusal.
+ENTRYPOINT ["/opt/maskgw/venv/bin/python", "-I", "-B", "-m", "maskgw"]

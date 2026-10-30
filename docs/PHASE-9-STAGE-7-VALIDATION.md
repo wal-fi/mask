@@ -2634,6 +2634,184 @@ para o commit.
   continuam abertos; a tipagem com o alvo configurado (3.11) passa;
 - não há afirmação de prontidão para produção.
 
+#### Correção dos 4 `union-attr` com alvo 3.14 — lote A (2026-10-16, local, em revisão)
+
+**Autoridade:** em 2026-10-16 o usuário aprovou, de forma estreita:
+- (A) corrigir os 4 `union-attr` conhecidos de `datasource/destination.py`
+  sem mudar o comportamento de segurança do destino;
+- (B) escrever **só o desenho** do isolamento por sessão da Etapa 8
+  (`docs/PHASE-9-STAGE-8-DESIGN.md`, proposta, não aprovada).
+
+Foi autorizado também um CPython 3.14.8 temporário e isolado. Sem stage,
+commit ou push. A aprovação não cobre SQL de cliente, dependência, rota,
+variável, MCP, Admin/UI nem implementação de etapa posterior.
+
+Raiz de evidência:
+`%LOCALAPPDATA%\Temp\maskgw-d090g2-batchA-3fa5f1a4\`. **Ao fim do lote A**,
+runtime e `venv314` foram mantidos nessa raiz para o lote B; nenhum banco foi
+usado no lote A. O runtime e as venvs foram removidos ao fim do lote B,
+conforme a limpeza registrada abaixo.
+
+**Ponto de partida:**
+- HEAD `4a5e556`, um commit à frente do `origin/master` em cache
+  (`5d173ea`);
+- 233 arquivos funcionais: os 232 anteriores, inalterados, mais o
+  `tests/test_datasource_destination_review.py` do root (99 casos,
+  `af3bb429…7b63e`), que não foi editado.
+
+**Procedência** (refeita do zero; os mesmos critérios da repetição moderna):
+- nupkg com SHA-256 `ce85f674…c454`, SHA512 e tamanho iguais aos do catálogo;
+- `nuget.exe` 7.9.0.83 com Authenticode Microsoft `Valid` e `NuGet.Config`
+  isolado;
+- `verify -Signatures` com êxito e sem `NU3`;
+- extração de 1.382 entradas, 0 recusadas;
+- Authenticode PSF igual ao anterior;
+- perfil: 3.14.8 final, GIL ativo, OpenSSL 3.5.9, com as DLLs carregadas da
+  raiz.
+
+A `venv314` tem as mesmas 51 versões resolvidas; as URLs dos wheels de
+`scramp`/`asn1crypto` mudam só pela raiz temporária, com os mesmos hashes. O
+`maskgw` é visto pela `venv314` por um `.pth` que aponta para o `src/` do
+checkout, como o editável da `.venv`, sem instalação no checkout.
+
+**Linha de base, sobre a fonte original** (caches novos, 225 fontes):
+
+| interpretador | alvo | resultado |
+|---|---|---|
+| 3.14.8 | `--python-version 3.14` | **4 `union-attr`** em `destination.py:62/63/72/73`, exit 1 |
+| 3.14.8 | configurado (3.11) | limpo, exit 0 |
+| 3.11.3 (`.venv`) | `--python-version 3.14` | os mesmos 4, exit 1 |
+
+**Correção (só `src/maskgw/datasource/destination.py`):**
+- os dois guardas `address.version == _IPV6` passaram a
+  `isinstance(address, ipaddress.IPv6Address)` antes do acesso a
+  `ipv4_mapped`;
+- a constante `_IPV6`, que ficou sem uso, foi removida;
+- sem `cast`, `ignore` nem mudança de classificação, política, DNS ou
+  configuração do mypy.
+
+**Depois da correção:**
+
+| checagem | 3.11.3 | 3.14.8 |
+|---|---|---|
+| focados (revisor 99 + `test_datasource_catalog` 114 + `test_datasource_resolver` 18 + `test_datasource_verify_bind_dns` 68) | 299 coletados, 298 aprovados, 1 skip de symlink, exit 0 | 299 coletados, 298 aprovados, 1 skip de symlink, exit 0 |
+| mesmos focados ANTES da correção | 298/299, mesmo skip | 298/299, mesmo skip |
+| `ruff check` / `format --check` em `src tests` | limpo; 225 formatados | limpo; 225 formatados |
+| mypy strict, alvo configurado (3.11) | 0 achados em 225 | 0 achados em 225 |
+| mypy strict, `--python-version 3.14` | 0 achados em 225 | 0 achados em 225 (o interpretador 3.14.8 roda o mypy) |
+
+Nenhum `.pyc` do checkout foi criado ou alterado (219 iguais), e não sobrou
+nenhum temporário novo.
+
+**Não medido neste lote:** suíte integral, `integration`, pacotes e POSIX.
+Os registros anteriores dos 4 `union-attr` abertos ficam como histórico;
+**ao fim do lote A**, o estado era "corrigidos localmente, em revisão, sem a
+suíte integral". O lote B abaixo registra a validação integral posterior. A
+D-090 gate 2 continua aberta, e o desenho da Etapa 8 é só proposta.
+
+#### Correção dos 4 `union-attr` — lote B, validação integral (2026-10-16, local, em revisão)
+
+O root revisou o lote A e aprovou a correção mínima exata (os dois guardas
+`isinstance` e a remoção de `_IPV6`) para validação. Pelo relato do root,
+ele também comparou o módulo da HEAD com o atual em 24.096 combinações
+determinísticas de endereço e política, pela API pública, só no 3.11.3 nativo,
+sem DNS nem socket, com zero diferenças. Esse diferencial **não** foi rodado
+no 3.14.
+
+Mesma raiz do lote A:
+`%LOCALAPPDATA%\Temp\maskgw-d090g2-batchA-3fa5f1a4\`. A linha de base dos 4
+erros e o freeze anterior à correção ficaram intactos.
+
+**Fonte final:** 233 arquivos funcionais (`final-validation-before.json`),
+diferentes do freeze anterior à correção só em
+`src/maskgw/datasource/destination.py` (`7b3c5a9c…618a`); o teste do revisor
+continua `af3bb429…7b63e`. Iguais antes e depois. HEAD `4a5e556`, 1 à
+frente e 0 atrás do `origin/master` em cache, nada em stage.
+
+**PG16 próprio:**
+- Docker parado no início, iniciado sem janela e devolvido ao estado parado;
+- contêiner `maskgw-d090g2-batchB-pg16-b1fafb22` com volume próprio, porta
+  efêmera em `127.0.0.1`: PostgreSQL 16.15, UTF8, UTC, só `scram-sha-256`;
+- `running`, sem reinício, durante as duas suítes;
+- recursos Docker (0 contêineres, 17 volumes, 3 redes, 1 imagem) iguais no
+  início e no fim.
+
+**Suítes integrais** (runner revisado de 64 MiB, uma vez por interpretador,
+JUnit separados, parada na primeira falha; sem deselect, skip novo nem
+xfail):
+
+| interpretador | coletados | resultado |
+|---|---|---|
+| 3.11.3 (`.venv`) | **5.329** | **5.309 aprovados, 0 falhas, 0 erros, 20 skips só de plataforma** (9 bits POSIX, 6 symlink, 5 `fsync` POSIX), 0 por DSN, 0 xfail, 791,7 s, exit 0 |
+| 3.14.8 temporário | **5.329** | **5.309 aprovados, 0 falhas, 0 erros**, os mesmos 20 skips de plataforma, 0 por DSN, 0 xfail, 794,9 s, exit 0 |
+
+- As duas incluem os 99 casos do revisor, os 18 de `test_plan_separation` e
+  os 10 operacionais.
+- Avisos: o antigo `match=""` nas duas suítes, e o `_BadStream`
+  `PytestUnraisableExceptionWarning`, só no 3.14.
+- A seleção `-m integration` **não** foi repetida à parte, porque a suíte
+  integral já executa esses casos.
+
+**Pacotes** (construídos no 3.14.8 a partir de uma cópia da árvore congelada
+final, fora do checkout):
+- wheel `d71594be6d96e09f2ed7739321d3fbc2a636d8f4681d214e4fba2e501227733a`,
+  com 114 entradas;
+- sdist `4e7b8e447194d9077727ef2bc797ec33515a66745e0cf93747bc3e54d9a39d55`,
+  com 140 membros;
+- nenhuma entrada de `tests/`, `docs/`, `frontend/`, `node_modules` ou
+  `.pyc`;
+- cada pacote numa venv 3.14.8 nova fora do checkout, com 38 dependências de
+  runtime nas mesmas versões da `venv314`; a sdist foi construída na
+  instalação.
+
+**Smoke dos pacotes instalados** (`package_smoke.py`; `python -I -B`, cwd
+próprio fora do checkout, PATH só com System32, sem `PYTHONPATH`): **27/27 no
+wheel e 27/27 na sdist**, exit 0.
+- Origem em `site-packages`.
+- Os 110 fontes e recursos de `src/maskgw/` instalados são iguais ao freeze
+  final, inclusive o `destination.py` corrigido, sem `_IPV6`.
+- Os pins `cryptography`, `scramp` e `asn1crypto` estão intactos.
+- 15 invariantes públicos de destino, com resolver injetado e sem DNS:
+  - mapeado igual ao literal e duplicados canônicos;
+  - IPv6 nativo privado aceito;
+  - metadata recusada, inclusive mapeada e com loopback permitido;
+  - loopback recusado por padrão e permitido só com a política;
+  - conjunto completo falha fechado; global, malformado e vazio recusados;
+  - pin alterado recusado e pin igual aceito.
+
+As sondas TLS antigas, de 208/210 checagens, **não** foram repetidas sobre
+esses pacotes: listener, autenticação, UI e MCP não mudaram, e as suítes
+integrais cobrem regressões das fontes. Também não houve gate de browser nem
+de npm.
+
+**Segredo:** 0 ocorrências da credencial em 141 arquivos de evidência e no
+log do contêiner.
+
+**Bytecode:**
+- as suítes geraram 79 `*.cpython-314.pyc` novos (os 71 conhecidos mais 8 de
+  `datasource` e `runtime`). Nenhum existia antes, e foram removidos pela
+  lista exata (`b-pyc-removidos.txt`);
+- um `.pyc` **preexistente** foi reescrito: um filho da suíte 3.11, que roda
+  sem `-B`, recompilou `src/maskgw/datasource/__pycache__/destination.cpython-311.pyc`
+  às 10:40, porque a fonte mudou (6.828 → 6.840 bytes). Não foi restaurado;
+- os outros 218 ficaram com caminho, mtime e tamanho iguais.
+
+**Limpeza:**
+- **removidos**, com alvos exatos conferidos: credencial, runtime extraído,
+  `venv314`, venv de build, duas venvs de pacote, wheelhouse, ferramentas,
+  nupkg, staging, sete caches do mypy, contêiner e volume próprios;
+- **preservados:** logs, JUnit, JSON, roteiros, procedência e os pacotes;
+- mais 28 `%TEMP%\tmp*` das duas suítes, 14 cada, ficaram no lugar.
+
+**Host:** igual ao retrato inicial do lote B em `py -0p`, associações,
+registro, PATH (conjunto e ordem), `.venv` e configuração NuGet/pip.
+
+**Estado:** a correção dos 4 `union-attr` foi validada localmente nos dois
+runtimes, só no Windows; POSIX não foi medido. A tipagem strict passa nos
+alvos 3.11 e 3.14 em 225 fontes (lote A). Não houve commit. A D-090 gate 2
+continua **aberta**, o desenho da Etapa 8 é só proposta com bloqueantes
+(B-1 e B-2), e a Etapa 7 continua **parcial**.
+
 ## 2. NÃO entregue (estado atual; itens históricos marcados)
 
 - *(Histórico: o item abaixo descreve o estado antes do incremento da §1.4

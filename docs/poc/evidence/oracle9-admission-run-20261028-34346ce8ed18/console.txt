@@ -1,0 +1,11 @@
+{"phase":"PRE_INVOKE","utc":"2026-10-28T19:14:58.9736169Z","desktop_processes":[]}
+{"phase": "OBSERVE", "count": 1}
+{"phase": "OBSERVE", "count": 2}
+{"phase": "OBSERVE", "count": 3}
+{"phase": "OBSERVE", "count": 4}
+{"phase": "OBSERVE", "count": 5}
+{"phase": "OBSERVE", "count": 6}
+{"phase": "OBSERVE", "count": 7}
+{"phase": "OBSERVE", "count": 8}
+{"phase": "OBSERVE", "count": 9}
+{"phase": "FINISHED", "category": "ORACLE9_ADMISSION_CAPTURED", "root": "C:\\Users\\w.filho\\AppData\\Local\\Temp\\maskgw-oracle9-admission-20261028-2dd94bfb4502755ce8fa8cd496f637c8"}

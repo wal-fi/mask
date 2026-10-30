@@ -1,0 +1,12 @@
+{
+  "kind": "maskgw-worker-job-related-terminal-v1",
+  "session_id": 50258,
+  "claim": "executor tool terminal fragment only; earlier stdout chunks not included; no PG or OS proof",
+  "tool_result": {
+    "chunk_id": "28b495",
+    "wall_time_seconds": 0.0000189,
+    "exit_code": 0,
+    "original_token_count": 20,
+    "output": "....                               [100%]\r\n1410 passed in 107.11s (0:01:47)\r\n"
+  }
+}

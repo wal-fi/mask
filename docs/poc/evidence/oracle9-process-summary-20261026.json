@@ -1,0 +1,419 @@
+{
+  "all_cli_exits_zero": true,
+  "cli_seconds_sum": 13.621999999857508,
+  "command_count": 13,
+  "containers": [
+    {
+      "cid": "a9cfc5652e9e9be182126be89d8917fbba763a3687060a6568faa9e580c5b887",
+      "name": "maskgw-ol9-process-b2f6ae6f5579",
+      "removed": true
+    }
+  ],
+  "full_evidence_sha256": "df6ae40585bd4509efd7cf016a8cf65b5cf6b99ae5cc5143d8363d8a796ad528",
+  "kind": "oracle9-process-attempt1",
+  "native": {
+    "active_access": {
+      "environ": {
+        "allowed": false,
+        "equal": false,
+        "errno": 13
+      },
+      "exit_code": 0,
+      "fd": {
+        "allowed": false,
+        "equal": false,
+        "errno": 13
+      },
+      "mem": {
+        "allowed": false,
+        "equal": false,
+        "errno": 13
+      },
+      "ptrace": {
+        "allowed": false,
+        "equal": false,
+        "errno": 1
+      },
+      "ready": {
+        "address": 125092400961328,
+        "body": {
+          "imported": [
+            "maskgw.runtime.worker_job"
+          ],
+          "memory": {
+            "Threads": "1",
+            "VmPeak": "91248 kB",
+            "VmRSS": "53728 kB",
+            "VmSize": "91248 kB"
+          }
+        },
+        "bytes": 49,
+        "dumpable": 0,
+        "guard": {
+          "as_bytes": 268435456,
+          "core": [
+            0,
+            0
+          ],
+          "dumpable": 0,
+          "observed_address_bytes": 25329664,
+          "parent_pid": 1,
+          "pdeathsig": 9,
+          "pid": 8,
+          "role": "WORKER"
+        },
+        "pid": 8,
+        "ready": true
+      },
+      "role": "protected",
+      "vm": {
+        "allowed": false,
+        "equal": false,
+        "errno": 1
+      }
+    },
+    "controller": {
+      "as_bytes": 402653184,
+      "core": [
+        0,
+        0
+      ],
+      "dumpable": 0,
+      "observed_address_bytes": 25358336,
+      "parent_pid": 0,
+      "pdeathsig": 0,
+      "pid": 1,
+      "role": "CONTROLLER"
+    },
+    "controller_body": {
+      "imported": [
+        "maskgw.runtime.worker_job"
+      ],
+      "memory": {
+        "Threads": "1",
+        "VmPeak": "91184 kB",
+        "VmRSS": "53240 kB",
+        "VmSize": "91184 kB"
+      }
+    },
+    "differential": {
+      "environ": true,
+      "fd": true,
+      "mem": true,
+      "ptrace": true,
+      "vm": true
+    },
+    "negative": {
+      "environ": {
+        "allowed": false,
+        "equal": false,
+        "errno": 13
+      },
+      "exit_code": 0,
+      "fd": {
+        "allowed": false,
+        "equal": false,
+        "errno": 13
+      },
+      "mem": {
+        "allowed": false,
+        "equal": false,
+        "errno": 13
+      },
+      "ptrace": {
+        "allowed": false,
+        "equal": false,
+        "errno": 1
+      },
+      "ready": {
+        "address": 125092400961328,
+        "body": {
+          "imported": [
+            "maskgw.runtime.worker_job"
+          ],
+          "memory": {
+            "Threads": "1",
+            "VmPeak": "91248 kB",
+            "VmRSS": "53728 kB",
+            "VmSize": "91248 kB"
+          }
+        },
+        "bytes": 49,
+        "dumpable": 0,
+        "guard": {
+          "as_bytes": 268435456,
+          "core": [
+            0,
+            0
+          ],
+          "dumpable": 0,
+          "observed_address_bytes": 25329664,
+          "parent_pid": 1,
+          "pdeathsig": 9,
+          "pid": 8,
+          "role": "WORKER"
+        },
+        "pid": 8,
+        "ready": true
+      },
+      "role": "protected",
+      "vm": {
+        "allowed": false,
+        "equal": false,
+        "errno": 1
+      }
+    },
+    "outcome": "ORACLE9_PROCESS_GUARD_VERIFIED",
+    "parent_death": {
+      "grandchild_signal": 9,
+      "guard": {
+        "as_bytes": 268435456,
+        "core": [
+          0,
+          0
+        ],
+        "dumpable": 0,
+        "observed_address_bytes": 25329664,
+        "parent_pid": 9,
+        "pdeathsig": 9,
+        "pid": 10,
+        "role": "WORKER"
+      },
+      "intermediate_exit": 0,
+      "reaped": true
+    },
+    "phase": "COMPLETE",
+    "pid1_death_proved": false,
+    "positive": {
+      "environ": {
+        "allowed": true,
+        "equal": true,
+        "errno": 0
+      },
+      "exit_code": 0,
+      "fd": {
+        "allowed": true,
+        "equal": true,
+        "errno": 0
+      },
+      "mem": {
+        "allowed": true,
+        "equal": true,
+        "errno": 0
+      },
+      "ptrace": {
+        "allowed": true,
+        "equal": true,
+        "errno": 0
+      },
+      "ready": {
+        "address": 124014779979824,
+        "body": {
+          "imported": [
+            "maskgw.runtime.worker_job"
+          ],
+          "memory": {
+            "Threads": "1",
+            "VmPeak": "91256 kB",
+            "VmRSS": "53152 kB",
+            "VmSize": "91256 kB"
+          }
+        },
+        "bytes": 49,
+        "dumpable": 1,
+        "guard": {
+          "as_bytes": 268435456,
+          "core": [
+            0,
+            0
+          ],
+          "dumpable": 0,
+          "observed_address_bytes": 25329664,
+          "parent_pid": 1,
+          "pdeathsig": 9,
+          "pid": 7,
+          "role": "WORKER"
+        },
+        "pid": 7,
+        "ready": true
+      },
+      "role": "control",
+      "vm": {
+        "allowed": true,
+        "equal": true,
+        "errno": 0
+      }
+    },
+    "profile": {
+      "core_pattern": "|/wsl-capture-crash %t %E %p %s",
+      "gid": 10001,
+      "kernel": "6.18.54.1-microsoft-standard-WSL2",
+      "limits": {
+        "cpu.max": "100000 100000",
+        "memory.max": "536870912",
+        "memory.swap.max": "0",
+        "pids.max": "32"
+      },
+      "ptrace_scope": "1",
+      "root_read_only": true,
+      "suid_dumpable": "0",
+      "uid": 10001
+    },
+    "remaining_pids": [
+      1
+    ],
+    "wrong_parent": {
+      "actual_parent_pid": 1,
+      "as_unchanged": true,
+      "dumpable": 1,
+      "expected_parent_pid": 2,
+      "pid": 11,
+      "ready": false,
+      "refused": "PARENT"
+    }
+  },
+  "native_sha256": "63e7015534f06fbbf212eb3821fddbd6a4d10f7a9870e55f04892afcdf3376ec",
+  "observations": [
+    {
+      "DockerProcessCount": 9,
+      "sameIdentity": true,
+      "utc": "2026-10-26T15:01:50.1039480Z"
+    },
+    {
+      "DockerProcessCount": 9,
+      "sameIdentity": true,
+      "utc": "2026-10-26T15:02:00.1414072Z"
+    },
+    {
+      "DockerProcessCount": 9,
+      "sameIdentity": true,
+      "utc": "2026-10-26T15:02:10.1653600Z"
+    },
+    {
+      "DockerProcessCount": 9,
+      "sameIdentity": true,
+      "utc": "2026-10-26T17:18:54.9506626Z"
+    },
+    {
+      "DockerProcessCount": 9,
+      "sameIdentity": true,
+      "utc": "2026-10-26T17:19:05.0045089Z"
+    },
+    {
+      "DockerProcessCount": 9,
+      "sameIdentity": true,
+      "utc": "2026-10-26T17:19:15.0421469Z"
+    },
+    {
+      "DockerProcessCount": 9,
+      "sameIdentity": true,
+      "utc": "2026-10-26T17:19:35.7331734Z"
+    },
+    {
+      "DockerProcessCount": 9,
+      "sameIdentity": true,
+      "utc": "2026-10-26T17:19:45.7851972Z"
+    },
+    {
+      "DockerProcessCount": 9,
+      "sameIdentity": true,
+      "utc": "2026-10-26T17:19:55.8238589Z"
+    }
+  ],
+  "outcome": "ORACLE9_PROCESS_GUARD_VERIFIED",
+  "procedure_sha256": "0d26f5a446d53fb1ab90f1a29ebaf3e9024f779762a4fd06aa2a92b2862fe10f",
+  "raw_files": {
+    "attempt.json": {
+      "bytes": 1759,
+      "sha256": "14f3658ec51850c61ec80dc81b5d24b446cdbcae393e4f616a8cf8e0836f5d66"
+    },
+    "diff.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "image-inspect.json": {
+      "bytes": 2285,
+      "sha256": "fe2d6a432986b26ca8ca9ebcdf3fd4bbf47afc5b061fdd3383efefc7eec0ab6e"
+    },
+    "inspect-after.json": {
+      "bytes": 32129,
+      "sha256": "9f500bffeb5ae4daef6d583f06fd624812517f20ba273006116d025ecc865354"
+    },
+    "inspect-before.json": {
+      "bytes": 31752,
+      "sha256": "bbcbeeebee6a9c3777e2e5d9cfbd3ad4c6f9c2c9bc011a6a945238ffe7865939"
+    },
+    "native.stdout": {
+      "bytes": 3084,
+      "sha256": "63e7015534f06fbbf212eb3821fddbd6a4d10f7a9870e55f04892afcdf3376ec"
+    },
+    "observations.json": {
+      "bytes": 1173,
+      "sha256": "1006e541a543022a6ae47258522e4d024632cd2d9453a5bad393e402afaf596c"
+    },
+    "restore.json": {
+      "bytes": 149,
+      "sha256": "8746f865c47ed0617f407abf2266e4e467c5262a51fc7f242b84883a1eee7575"
+    },
+    "result.json": {
+      "bytes": 6042,
+      "sha256": "87f1c8f8b9390ff0810a6bfdc245ff49b1e5efabe1aceb0b54050bf98a6837d8"
+    },
+    "version.json": {
+      "bytes": 1145,
+      "sha256": "b27155d4fb34cee0c8a3df8ea292b1a141c56188086248ae1838886b5f4ce752"
+    }
+  },
+  "restore": {
+    "inventory_empty": true,
+    "inventory_exit": 0,
+    "outcome": "STOP_RETURNED_ZERO",
+    "profile": "oracle9-process",
+    "stop_attempted": true,
+    "stop_exit": 0
+  },
+  "root": "C:\\Users\\w.filho\\AppData\\Local\\Temp\\maskgw-oracle9-process-20261026-f6c89e76",
+  "sources_revalidated_after_off": true,
+  "state": {
+    "absence_observed_utc": "2026-10-26T17:21:32.6804182Z",
+    "desktop_initial": "off",
+    "desktop_restored_off": true,
+    "desktop_started_by_attempt": true,
+    "environment_keys": [
+      "APPDATA",
+      "ComSpec",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "LOCALAPPDATA",
+      "Path",
+      "PATHEXT",
+      "ProgramData",
+      "ProgramFiles",
+      "ProgramFiles(x86)",
+      "ProgramW6432",
+      "SystemDrive",
+      "SystemRoot",
+      "TEMP",
+      "TMP",
+      "USERDOMAIN",
+      "USERNAME",
+      "USERPROFILE",
+      "windir"
+    ],
+    "guard_sha256": "dd10fb725b846ca097d7bef8b434fa4846f80e36216b34a3a16e658f1d15d0b4",
+    "image": "sha256:87871290b01b0e4b8cd9dd90b8001a89ff4e04bd018e12c01ddbff8d6b16483a",
+    "invoked": true,
+    "kind": "maskgw-oracle9-process",
+    "launch_pid": 31052,
+    "launch_time": 134375004832370747,
+    "minimum_commanded_wait_seconds": 90,
+    "observations": 9,
+    "payload_sha256": "0b3b46b1abb90a743920aa333e5a04d109db9503a133f2168c7edbed897e1332",
+    "phase": "COMPLETE_DESKTOP_OFF",
+    "program_sha256": "5d258c28b373956d5d96f03f34c074e74420900e17d2ce5935edebf7d73a1326",
+    "restore_invoked": true,
+    "stop_allowed": false,
+    "task": "b2f6ae6f557943fbadde9da9705cc85f"
+  },
+  "task": "b2f6ae6f557943fbadde9da9705cc85f"
+}

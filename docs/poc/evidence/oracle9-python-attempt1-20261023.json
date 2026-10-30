@@ -1,0 +1,46 @@
+{
+  "kind": "oracle9-python-attempt1-v1",
+  "root": "C:\\Users\\w.filho\\AppData\\Local\\Temp\\maskgw-oracle9-python-20261023-2cb63b66",
+  "raw": {
+    "attempt.json": {
+      "bytes": 1578,
+      "sha256": "0b4e1941c1fd916141c170619b3978c3c136a74a9c0200ee65a8cca3eeab293e",
+      "utf8": "{\r\n    \"desktop_initial\":  \"off\",\r\n    \"desktop_started_by_attempt\":  true,\r\n    \"environment_keys\":  [\r\n                             \"APPDATA\",\r\n                             \"ComSpec\",\r\n                             \"HOMEDRIVE\",\r\n                             \"HOMEPATH\",\r\n                             \"LOCALAPPDATA\",\r\n                             \"Path\",\r\n                             \"PATHEXT\",\r\n                             \"ProgramData\",\r\n                             \"ProgramFiles\",\r\n                             \"ProgramFiles(x86)\",\r\n                             \"ProgramW6432\",\r\n                             \"SystemDrive\",\r\n                             \"SystemRoot\",\r\n                             \"TEMP\",\r\n                             \"TMP\",\r\n                             \"USERDOMAIN\",\r\n                             \"USERNAME\",\r\n                             \"USERPROFILE\",\r\n                             \"windir\"\r\n                         ],\r\n    \"invoked\":  true,\r\n    \"kind\":  \"maskgw-oracle9-python\",\r\n    \"launch_pid\":  25428,\r\n    \"launch_time\":  134372713654139746,\r\n    \"minimum_commanded_wait_seconds\":  90,\r\n    \"observations\":  9,\r\n    \"payload_sha256\":  \"1f738b2fb6561f6d478a41ce987df2464b95b25a61e1e0a0f56cd54998631563\",\r\n    \"phase\":  \"COMPLETE_DESKTOP_OFF\",\r\n    \"program_sha256\":  \"2779f74205646a2840e83e08390ec79cf4802f96ae8f4ed7ab2be145b61861dc\",\r\n    \"stop_allowed\":  false,\r\n    \"task\":  \"1405edda0f844b4e8a5a5ae170c116c1\",\r\n    \"restore_invoked\":  true,\r\n    \"desktop_restored_off\":  true,\r\n    \"absence_observed_utc\":  \"2026-10-23T23:25:36.7645308Z\"\r\n}"
+    },
+    "observations.json": {
+      "bytes": 1173,
+      "sha256": "19c601456ab830faf0015ed108754b80e9c2ba34f918ae32ffa6ff0f55aa3805",
+      "utf8": "[\r\n    {\r\n        \"utc\":  \"2026-10-23T23:23:04.4504916Z\",\r\n        \"DockerProcessCount\":  9,\r\n        \"sameIdentity\":  true\r\n    },\r\n    {\r\n        \"utc\":  \"2026-10-23T23:23:14.4979962Z\",\r\n        \"DockerProcessCount\":  9,\r\n        \"sameIdentity\":  true\r\n    },\r\n    {\r\n        \"utc\":  \"2026-10-23T23:23:24.5439681Z\",\r\n        \"DockerProcessCount\":  9,\r\n        \"sameIdentity\":  true\r\n    },\r\n    {\r\n        \"utc\":  \"2026-10-23T23:23:38.7527339Z\",\r\n        \"DockerProcessCount\":  9,\r\n        \"sameIdentity\":  true\r\n    },\r\n    {\r\n        \"utc\":  \"2026-10-23T23:23:48.8284765Z\",\r\n        \"DockerProcessCount\":  9,\r\n        \"sameIdentity\":  true\r\n    },\r\n    {\r\n        \"utc\":  \"2026-10-23T23:23:58.9267242Z\",\r\n        \"DockerProcessCount\":  9,\r\n        \"sameIdentity\":  true\r\n    },\r\n    {\r\n        \"utc\":  \"2026-10-23T23:24:12.9293754Z\",\r\n        \"DockerProcessCount\":  9,\r\n        \"sameIdentity\":  true\r\n    },\r\n    {\r\n        \"utc\":  \"2026-10-23T23:24:22.9762566Z\",\r\n        \"DockerProcessCount\":  9,\r\n        \"sameIdentity\":  true\r\n    },\r\n    {\r\n        \"utc\":  \"2026-10-23T23:24:33.0957731Z\",\r\n        \"DockerProcessCount\":  9,\r\n        \"sameIdentity\":  true\r\n    }\r\n]"
+    },
+    "install.stdout": {
+      "bytes": 485,
+      "sha256": "0db610b12e43ea2b26484419e851e79d81bcfc3f9d0de91387a781e9da901550",
+      "utf8": "@@STAGE@@BASELINE\n[ol9_baseos_latest]\nname=Oracle Linux 9 BaseOS\nbaseurl=https://yum.oracle.com/repo/OracleLinux/OL9/baseos/latest/x86_64/\nenabled=1\ngpgcheck=1\nsslverify=1\ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-oracle\n[ol9_appstream]\nname=Oracle Linux 9 AppStream\nbaseurl=https://yum.oracle.com/repo/OracleLinux/OL9/appstream/x86_64/\nenabled=1\ngpgcheck=1\nsslverify=1\ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-oracle\n@@STAGE@@INSTALL\nerror: (--setopt) Unable to handle: gpgcheck=1\n"
+    },
+    "result.json": {
+      "bytes": 2213,
+      "sha256": "38d611043b7bff0f7db19ad5787de1d14b9fa387e9eb9af56de5db3e3fddfe1f",
+      "utf8": "{\"commands\": [{\"bytes\": 917, \"category\": \"OK\", \"exit\": 0, \"name\": \"version\", \"seconds\": 0.17199999999866122, \"sha256\": \"f9d284332db444f09750c1aae942822529fb6fc4e204fdd31b0cce129f04b9fd\"}, {\"bytes\": 0, \"category\": \"OK\", \"exit\": 0, \"name\": \"inventory-before\", \"seconds\": 0.09399999999732245, \"sha256\": \"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"}, {\"bytes\": 0, \"category\": \"OK\", \"exit\": 0, \"name\": \"tag-collision\", \"seconds\": 0.10899999999674037, \"sha256\": \"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"}, {\"bytes\": 1472, \"category\": \"OK\", \"exit\": 0, \"name\": \"base-image\", \"seconds\": 0.11000000000058208, \"sha256\": \"10f8e686f453b43d333d9f43ceadf0abc249ea20727d7ef036b6a4511ad22937\"}, {\"bytes\": 65, \"category\": \"OK\", \"exit\": 0, \"name\": \"create-prep\", \"seconds\": 0.2969999999986612, \"sha256\": \"96fcf7068965ebed3c1d5b565db5dbee77b592d6a380f7e5b7aab6289c2f878c\"}, {\"bytes\": 33815, \"category\": \"OK\", \"exit\": 0, \"name\": \"inspect-own\", \"seconds\": 0.11000000000058208, \"sha256\": \"56cbf25987b8a56e5b8c8e6295b50ce618463ba58cb9b390b8533bf11556a833\"}, {\"bytes\": 485, \"category\": \"NONZERO\", \"exit\": 1, \"name\": \"install-runtime\", \"seconds\": 2.7660000000032596, \"sha256\": \"0db610b12e43ea2b26484419e851e79d81bcfc3f9d0de91387a781e9da901550\"}, {\"bytes\": 34197, \"category\": \"OK\", \"exit\": 0, \"name\": \"inspect-own\", \"seconds\": 0.14099999999598367, \"sha256\": \"f1d465fa72f445e308c884fe02dc3dd82400ce0a8975e8c0a1b97ed8e1caa0cb\"}, {\"bytes\": 65, \"category\": \"OK\", \"exit\": 0, \"name\": \"remove-own\", \"seconds\": 0.125, \"sha256\": \"96fcf7068965ebed3c1d5b565db5dbee77b592d6a380f7e5b7aab6289c2f878c\"}, {\"bytes\": 0, \"category\": \"OK\", \"exit\": 0, \"name\": \"inventory-after\", \"seconds\": 0.125, \"sha256\": \"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"}], \"containers\": [{\"cid\": \"e561ce10ddea8240225cd24a2e423c491a2eaa77a8bd09f343a76362671f0aee\", \"image\": \"sha256:d8c0a1f95f3394a2b40ece95dbff199cea94d06ac0ed354a7b88e96e2df5bb94\", \"name\": \"maskgw-ol9-python-1405edda0f84-prep\"}], \"failure_stage\": \"install-runtime\", \"inventory_restored\": true, \"outcome\": \"NOT_PASSED\", \"owned_cleanup\": true, \"profile\": \"oracle9-python\", \"stage\": \"inventory-after\", \"task\": \"1405edda0f844b4e8a5a5ae170c116c1\"}\n"
+    },
+    "restore.json": {
+      "bytes": 148,
+      "sha256": "2e38f631da41aff128d9b7251154f63e8a24acd22af89a2260525b33c623dec4",
+      "utf8": "{\"profile\": \"oracle9-python\", \"stop_attempted\": true, \"outcome\": \"STOP_RETURNED_ZERO\", \"inventory_exit\": 0, \"inventory_empty\": true, \"stop_exit\": 0}"
+    }
+  },
+  "outer_exit": {
+    "start": 0,
+    "observe": [
+      0,
+      0,
+      0
+    ],
+    "ready": 0,
+    "preparation": 2,
+    "allow_stop": 0,
+    "restore": 0,
+    "off": 0
+  },
+  "claim": "NOT_PASSED; microdnf rejected global setopt gpgcheck=1; no image commit, owned CID removed and Desktop processes absent",
+  "source_copy": "oracle9-python-procedure-v3-20261023.json"
+}

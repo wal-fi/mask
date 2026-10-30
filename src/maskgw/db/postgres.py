@@ -43,12 +43,22 @@ from psycopg.rows import tuple_row
 from maskgw.config.gateway import DatabaseSettings
 from maskgw.db.capabilities import check_provenance_capability
 from maskgw.db.columns import describe_columns
+from maskgw.db.execution_error import classify_typed_error
 from maskgw.db.provenance import ProvenanceResolver, provenance_keys
-from maskgw.db.result import MaskedResult
+from maskgw.db.result import (
+    MAX_WIRE_COLUMNS,
+    WIRE_TEXT_OID,
+    WIRE_TYPE_SIZES,
+    DatabaseResultIntegrityError,
+    DatabaseResultTypeError,
+    MaskedResult,
+    TypedMaskedResult,
+)
 from maskgw.db.sanitize import sanitize_error
+from maskgw.db.session_state import SESSION_STATE_SQL, WorkerSessionState, WorkerSessionStateError
 from maskgw.errors import CapabilityError, DatabaseError
 from maskgw.masking.descriptor import ColumnDescriptor
-from maskgw.masking.engine import MaskingEngine
+from maskgw.masking.engine import Action, Decision, MaskingEngine
 from maskgw.sql.policy import DEFAULT_SQL_POLICY, SqlPolicy
 from maskgw.sql.sensitivity import Sensitivity, analyze_sensitivity
 from maskgw.sql.validator import validate_select
@@ -183,9 +193,71 @@ class PostgresAdapter:
         resultado e um indice de regra por posicao, que os descritores
         carregam. Ver D-043.
         """
+        return self.execute(sql, sensitivity=self._validated_sensitivity(sql))
+
+    def _validated_sensitivity(self, sql: str) -> Sensitivity | None:
         statement = validate_select(sql, policy=self._sql_policy)
-        sensitivity = analyze_sensitivity(statement, self._engine.policy)
-        return self.execute(sql, sensitivity=sensitivity)
+        return analyze_sensitivity(statement, self._engine.policy)
+
+    def _execute_typed_validated(self, sql: str) -> TypedMaskedResult:
+        """Internal worker opt-in: same pipeline, plus advertised OIDs before fetch.
+
+        No operational caller yet. Legacy API and cursor behavior are unchanged.
+        Source type is never read/retained for a MASK column, announced as text.
+        """
+        result, oids = self._run(sql, sensitivity=self._validated_sensitivity(sql), typed=True)
+        return TypedMaskedResult(result, oids)
+
+    def _typed_connection_healthy(self) -> bool:
+        """Local state after settle, under the owner's exclusive connection use.
+
+        No I/O or mutation. This does not prove a live network, read-only
+        settings or future success: a peer may have closed without libpq
+        noticing. Error intent must separately permit continuation. Nothing
+        operational calls this method until the worker is integrated.
+        """
+        connection = self._connection
+        if connection is None:
+            return False
+        try:
+            return (
+                connection.closed is False
+                and connection.broken is False
+                and connection.info.status is psycopg.pq.ConnStatus.OK
+                and connection.info.transaction_status is psycopg.pq.TransactionStatus.IDLE
+            )
+        except Exception:
+            return False
+
+    def _worker_session_state(self) -> WorkerSessionState:
+        """Opt-in W1 metadata probe; parent never receives this private record.
+
+        Call exclusively in the worker before and after every job, within the
+        same hard parent deadline. Failure is fatal; never reset or reconnect.
+        No current caller. Legacy connect/execute behavior is unchanged.
+        """
+        state: WorkerSessionState | None = None
+        row: tuple[Any, ...] | None = None
+        try:
+            if not self._typed_connection_healthy():
+                raise WorkerSessionStateError()
+            connection = self._require_connection()
+            with connection.cursor() as cursor:
+                cursor.execute(SESSION_STATE_SQL)
+                row = cursor.fetchone()
+                if row is None or cursor.fetchone() is not None:
+                    raise WorkerSessionStateError()
+                state = WorkerSessionState(row)
+            if not self._typed_connection_healthy():
+                state = None
+        except MemoryError:
+            raise
+        except Exception:
+            state = None
+        row = None
+        if state is None:
+            raise WorkerSessionStateError()
+        return state
 
     def execute(
         self,
@@ -200,6 +272,18 @@ class PostgresAdapter:
         PostgreSQL, nao o validator — e disso que dependem os testes de defesa
         em profundidade.
         """
+        result, _ = self._run(query, params, sensitivity=sensitivity, typed=False)
+        return result
+
+    def _run(
+        self,
+        query: str,
+        params: Sequence[Any] | None = None,
+        *,
+        sensitivity: Sensitivity | None,
+        typed: bool,
+    ) -> tuple[MaskedResult, tuple[int, ...]]:
+        """Single execution/provenance/masking/settle body for both result APIs."""
         connection = self._require_connection()
         failure: DatabaseError | None = None
         try:
@@ -207,10 +291,11 @@ class PostgresAdapter:
                 cursor.execute(query, params)
                 columns = self._describe(cursor, sensitivity)
                 decisions = tuple(self._engine.decide(column) for column in columns)
+                oids = self._typed_oids(cursor, decisions) if typed else ()
                 rows, truncated = self._read_masked(cursor, columns)
         except psycopg.Error as exc:
             # Guardado, nao levantado aqui: ver `_raise_sanitized`.
-            failure = sanitize_error(exc)
+            failure = classify_typed_error(exc) if typed else sanitize_error(exc)
         finally:
             # Roda inclusive quando uma excecao nao-psycopg esta a caminho.
             self._settle()
@@ -218,12 +303,42 @@ class PostgresAdapter:
         if failure is not None:
             _raise_sanitized(failure)
 
-        return MaskedResult(
-            columns=columns,
-            decisions=decisions,
-            rows=rows,
-            truncated=truncated,
+        return (
+            MaskedResult(columns=columns, decisions=decisions, rows=rows, truncated=truncated),
+            oids,
         )
+
+    @staticmethod
+    def _typed_oids(cursor: _Cursor, decisions: tuple[Decision, ...]) -> tuple[int, ...]:
+        description = cursor.description
+        if description is None or not 1 <= len(description) <= MAX_WIRE_COLUMNS:
+            raise DatabaseResultTypeError from None
+        if len(description) != len(decisions):
+            raise DatabaseResultIntegrityError from None
+        result: list[int] = []
+        for column, decision in zip(description, decisions, strict=True):
+            if decision.action is Action.MASK:
+                result.append(WIRE_TEXT_OID)
+                continue
+            oid: object = None
+            memory_failed = False
+            integrity_failed = False
+            try:
+                oid = column.type_code
+            except MemoryError:
+                memory_failed = True
+            except AttributeError:
+                oid = None
+            except Exception:
+                integrity_failed = True
+            if memory_failed:
+                raise MemoryError from None  # fatal worker condition, never recoverable TYPE
+            if integrity_failed:
+                raise DatabaseResultIntegrityError from None
+            if type(oid) is not int or oid not in WIRE_TYPE_SIZES:
+                raise DatabaseResultTypeError from None
+            result.append(oid)
+        return tuple(result)
 
     def _session_conninfo(self) -> str:
         """DSN com os limites de execucao anexados em `options`.

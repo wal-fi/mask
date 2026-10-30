@@ -1,0 +1,15 @@
+{
+  "kind": "oracle9-dependencies-attempt1-before-start-v1",
+  "root": "C:\\Users\\w.filho\\AppData\\Local\\Temp\\maskgw-oracle9-resolve-20261025-f74abc9d",
+  "source_snapshot": "oracle9-dependencies-procedure-v3-20261025.json",
+  "outer_start_exit": 1,
+  "failure": "BUNDLE_NOT_READY in copied RPM start precondition before START_RESERVED and before any Docker/Desktop launch",
+  "state_after": {
+    "bytes": 615,
+    "sha256": "5c340da745142b6d23eb72eba2285a701260ffd7f492d7ce133a407de45651ab",
+    "utf8": "{\"kind\": \"maskgw-oracle9-resolve\", \"task\": \"4831a64ee91c4732a57eb502e0afe227\", \"invoked\": false, \"desktop_initial\": \"unobserved\", \"desktop_started_by_attempt\": false, \"stop_allowed\": false, \"image\": \"sha256:1546afefa358aa8c6049350948b1d5d4f272017da8997ae3974c93af7fdc07c4\", \"project_sha256\": \"917fe7353178849ec9e7f53627fc0ce2e0be9fb7678d6dcd2e42f79b925de8f9\", \"seed_sha256\": \"fd77310ae3394648acba2883fe2e96cbc398b506a3b980fe8e8047c2695f0e1e\", \"program_sha256\": \"55c1eeddc1f01f1b07d33ef3d956441bf0022fe5f59196820c0494c91ff13239\", \"payload_sha256\": \"011ba3744ab393b1887fcd3290e66d3a507eb9297f1929e39f2e5a03269f2c3a\"}\n"
+  },
+  "docker_processes_after": 0,
+  "native_resolution_executed": false,
+  "claim": "Failed before starting app; no DockerCLI/PyPI/install/DB action; no retry or fake bundle fields. Do not reuse failed root. Guard must check resolution inputs in fresh root."
+}

@@ -23,15 +23,20 @@ levantadas fora de `except` (D-017); nada delas vai para o cliente.
 from __future__ import annotations
 
 import contextlib
+import math
 import socket
 import ssl
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Final, NoReturn
+from typing import Final, NoReturn, Protocol
 
 _TLS_WRITE_BLOCK: Final = 16 * 1024
+
+
+class _RemainingDeadline(Protocol):
+    def remaining(self) -> float: ...
 
 
 class TransportFailure(StrEnum):
@@ -46,13 +51,29 @@ class TransportFailure(StrEnum):
 class TransportError(Exception):
     """Falha de transporte: so a categoria interna."""
 
-    def __init__(self, kind: TransportFailure) -> None:
+    def __init__(self, kind: TransportFailure, *, cleanup_uncertain: bool = False) -> None:
         super().__init__(kind.value)
         self.kind = kind
+        self.cleanup_uncertain = cleanup_uncertain
 
 
-def _fail(kind: TransportFailure) -> NoReturn:
-    raise TransportError(kind)
+def _fail(kind: TransportFailure, *, cleanup_uncertain: bool = False) -> NoReturn:
+    raise TransportError(kind, cleanup_uncertain=cleanup_uncertain)
+
+
+def _opaque_error(error: BaseException) -> bool:
+    """Do not lose a cleanup uncertainty when replacing an error with a scalar.
+
+    Native direct socket failures have released views on the audited paths.
+    Groups/chains may own arbitrary inactive frames, which are NOT retained or
+    claimed discarded here. The receiver must quarantine their output pin.
+    """
+    return (
+        isinstance(error, BaseExceptionGroup)
+        or error.__cause__ is not None
+        or error.__context__ is not None
+        or (isinstance(error, TransportError) and error.cleanup_uncertain)
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -123,20 +144,31 @@ class RawChannel:
     def limits(self) -> TransportLimits:
         return self._limits
 
-    def check(self, deadline: Deadline) -> float:
+    def check(self, deadline: _RemainingDeadline) -> float:
         """Parada e prazo; devolve o tempo restante. Usado tambem pelo TLS em
         passos que se resolvem so com dados em buffer, sem tocar o socket."""
-        if self._stop():
+        stopped = False
+        remaining = 0.0
+        failed = False
+        uncertain = False
+        try:
+            stopped = self._stop()
+            remaining = deadline.remaining()
+        except Exception as error:
+            failed = True
+            uncertain = _opaque_error(error)
+        if failed:
+            _fail(TransportFailure.IO, cleanup_uncertain=uncertain)
+        if stopped:
             _fail(TransportFailure.STOPPED)
-        remaining = deadline.remaining()
-        if remaining <= 0:
+        if type(remaining) not in (int, float) or not math.isfinite(remaining) or remaining <= 0:
             _fail(TransportFailure.TIMEOUT)
         return remaining
 
-    def _slice(self, deadline: Deadline) -> float:
+    def _slice(self, deadline: _RemainingDeadline) -> float:
         return min(self.check(deadline), self._limits.poll_ms / 1000)
 
-    def recv_some(self, maximum: int, deadline: Deadline) -> bytes:
+    def recv_some(self, maximum: int, deadline: _RemainingDeadline) -> bytes:
         """Ate `maximum` bytes (no maximo `chunk_bytes`); EOF e falha."""
         size = min(maximum, self._limits.chunk_bytes)
         while True:
@@ -156,34 +188,77 @@ class RawChannel:
                 _fail(TransportFailure.EOF)
             return data
 
-    def recv_exact(self, size: int, deadline: Deadline) -> bytes:
+    def recv_into(self, view: memoryview, deadline: _RemainingDeadline) -> int:
+        """Fill existing bounded storage; never grow/concatenate proportional data."""
+        valid = False
+        with contextlib.suppress(ValueError):  # released views are closed input, not raw errors
+            valid = (
+                type(view) is memoryview
+                and not view.readonly
+                and view.c_contiguous
+                and view.ndim == 1
+                and view.format == "B"
+                and len(view) > 0
+            )
+        if not valid:
+            _fail(TransportFailure.IO)
+        size = min(len(view), self._limits.chunk_bytes)
+        while True:
+            wait = self._slice(deadline)
+            failed = False
+            uncertain = False
+            received = 0
+            try:
+                self._sock.settimeout(wait)
+                with view[:size] as piece:
+                    received = self._sock.recv_into(piece, size)
+            except TimeoutError as error:
+                if not _opaque_error(error):
+                    continue
+                failed = True
+                uncertain = True
+            except (OSError, ValueError, TypeError) as error:
+                failed = True
+                uncertain = _opaque_error(error)
+            if failed or type(received) is not int or not 0 <= received <= size:
+                _fail(TransportFailure.IO, cleanup_uncertain=uncertain)
+            if received == 0:
+                _fail(TransportFailure.EOF)
+            return received
+
+    def recv_exact(self, size: int, deadline: _RemainingDeadline) -> bytes:
         buffer = bytearray()
         while len(buffer) < size:
             buffer += self.recv_some(size - len(buffer), deadline)
         return bytes(buffer)
 
-    def send_all(self, data: bytes, deadline: Deadline) -> None:
+    def send_all(self, data: bytes | memoryview, deadline: _RemainingDeadline) -> None:
         """Envia tudo com offset; timeout continua do offset, nunca reenvia."""
-        view = memoryview(data)
-        offset = 0
-        while offset < len(view):
-            wait = self._slice(deadline)
-            failure: TransportFailure | None = None
-            sent = 0
-            try:
-                self._sock.settimeout(wait)
-                sent = self._sock.send(view[offset : offset + self._limits.chunk_bytes])
-            except TimeoutError:
-                continue
-            except OSError:
-                failure = TransportFailure.IO
-            # Zero sem excecao nao progride: falha fechada imediata, nunca um
-            # laco de CPU ate o prazo.
-            if failure is None and (not isinstance(sent, int) or sent <= 0):
-                failure = TransportFailure.IO
-            if failure is not None:
-                _fail(failure)
-            offset += sent
+        with memoryview(data) as view:
+            offset = 0
+            while offset < len(view):
+                wait = self._slice(deadline)
+                failure: TransportFailure | None = None
+                uncertain = False
+                sent = 0
+                size = min(len(view) - offset, self._limits.chunk_bytes)
+                try:
+                    self._sock.settimeout(wait)
+                    with view[offset : offset + size] as piece:
+                        sent = self._sock.send(piece)
+                except TimeoutError as error:
+                    if not _opaque_error(error):
+                        continue
+                    failure = TransportFailure.IO
+                    uncertain = True
+                except (OSError, ValueError, TypeError) as error:
+                    failure = TransportFailure.IO
+                    uncertain = _opaque_error(error)
+                if failure is None and (type(sent) is not int or not 1 <= sent <= size):
+                    failure = TransportFailure.IO
+                if failure is not None:
+                    _fail(failure, cleanup_uncertain=uncertain)
+                offset += sent
 
     def linger(self) -> None:
         """Encerramento gracioso limitado depois de um erro final.
@@ -228,7 +303,7 @@ class TlsChannel:
             _fail(TransportFailure.TLS)
         self._ssl = created
 
-    def _flush(self, deadline: Deadline) -> int:
+    def _flush(self, deadline: _RemainingDeadline) -> int:
         """Drena a saida cifrada em blocos limitados; devolve bytes enviados."""
         sent = 0
         while self._outgoing.pending:
@@ -237,12 +312,12 @@ class TlsChannel:
             sent += len(block)
         return sent
 
-    def _feed(self, deadline: Deadline) -> int:
+    def _feed(self, deadline: _RemainingDeadline) -> int:
         data = self._raw.recv_some(self._raw.limits.chunk_bytes, deadline)
         self._incoming.write(data)
         return len(data)
 
-    def handshake(self, deadline: Deadline) -> None:
+    def handshake(self, deadline: _RemainingDeadline) -> None:
         limits = self._raw.limits
         transferred = 0
         for _ in range(limits.tls_handshake_rounds):
@@ -268,7 +343,7 @@ class TlsChannel:
                 _fail(TransportFailure.LIMIT)
         _fail(TransportFailure.LIMIT)
 
-    def recv_exact(self, size: int, deadline: Deadline) -> bytes:
+    def recv_exact(self, size: int, deadline: _RemainingDeadline) -> bytes:
         buffer = bytearray()
         while len(buffer) < size:
             # Mesmo com texto ja decifrado em buffer, parada e prazo valem.
@@ -296,25 +371,25 @@ class TlsChannel:
             buffer += piece
         return bytes(buffer)
 
-    def send_all(self, data: bytes, deadline: Deadline) -> None:
-        view = memoryview(data)
-        offset = 0
-        while offset < len(view):
-            self._raw.check(deadline)
-            accepted = 0
-            failed = False
-            try:
-                accepted = self._ssl.write(view[offset : offset + _TLS_WRITE_BLOCK])
-            except (ssl.SSLError, ValueError):
-                failed = True
-            # `write` devolve quanto aceitou: avanca so isso. Zero sem excecao
-            # seria laco sem progresso, e e tratado como falha.
-            if failed or not isinstance(accepted, int) or accepted <= 0:
-                _fail(TransportFailure.TLS)
-            offset += accepted
-            # Drena a cada escrita: a saida cifrada pendente nunca passa de um
-            # bloco de texto mais o overhead dos registros TLS.
-            self._flush(deadline)
+    def send_all(self, data: bytes | memoryview, deadline: _RemainingDeadline) -> None:
+        with memoryview(data) as view:
+            offset = 0
+            while offset < len(view):
+                self._raw.check(deadline)
+                accepted = 0
+                failed = False
+                uncertain = False
+                size = min(len(view) - offset, _TLS_WRITE_BLOCK)
+                try:
+                    with view[offset : offset + size] as piece:
+                        accepted = self._ssl.write(piece)
+                except (ssl.SSLError, ValueError, TypeError) as error:
+                    failed = True
+                    uncertain = _opaque_error(error)
+                if failed or type(accepted) is not int or not 1 <= accepted <= size:
+                    _fail(TransportFailure.TLS, cleanup_uncertain=uncertain)
+                offset += accepted
+                self._flush(deadline)
 
 
 __all__ = [

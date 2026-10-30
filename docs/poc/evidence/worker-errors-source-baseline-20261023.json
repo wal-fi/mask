@@ -1,0 +1,2474 @@
+[
+  {
+    "path": ".gitattributes",
+    "hash": "5bf443e968a1b10c83ad66c7d71a47122d66e7f668e9a7ac4f593679934649b6"
+  },
+  {
+    "path": ".gitignore",
+    "hash": "6e763a8e3034b0029e489879b16fc7571a657ffd61a281bf72f33f1b5213c9b2"
+  },
+  {
+    "path": ".venv/pyvenv.cfg",
+    "hash": "6e2514351382cfae93b50d0e64644884d45febbf6dbc6ed97bcf3cab6536ff82"
+  },
+  {
+    "path": "AGENTS.md",
+    "hash": "8429b895df25feb12417a7bbbf3ebd6853083a111694cce6ded743efb57dd833"
+  },
+  {
+    "path": "CLAUDE.md",
+    "hash": "50d56201974cc409ed253c79cca687ba5cea2b86c569d568e5d46cda92190718"
+  },
+  {
+    "path": "config/masking.yaml",
+    "hash": "33aa7f48d727d600b98951749649fcb41e1d4a51c1516fdee4ed0f08b2a0e768"
+  },
+  {
+    "path": "docs/ARCHITECTURE.md",
+    "hash": "2c4468754cdab1fd3db41607cd8a99eb3679768dd98326ddd2a02513ea333d1d"
+  },
+  {
+    "path": "docs/CLAUDE2-PENDING-REVIEW.md",
+    "hash": "bc2b7dfa74ae637624ac5f36b9036fecc4db8d0c74d05b71b47e337de489035b"
+  },
+  {
+    "path": "docs/DECISIONS.md",
+    "hash": "a06809096433e174e752578f728f92411614b1d675ab3074de4e7373ce84e03c"
+  },
+  {
+    "path": "docs/FUTURE-HARDENING.md",
+    "hash": "1bab49242454de46404d60c5573585d454484c541bd3fb3a8f1b632a776ab4bd"
+  },
+  {
+    "path": "docs/HANDOFF.md",
+    "hash": "e6198a97f4d8680956726eb59979eb9835c2ac38f13345eed97b1e4547c0a874"
+  },
+  {
+    "path": "docs/MASKING-SPEC.md",
+    "hash": "2bdfbc2101ec43aa30646425028d33c23957973090c2e744a8ef18ebddfc3302"
+  },
+  {
+    "path": "docs/PHASE-7-SPEC.md",
+    "hash": "8d3dce7472907969c43285121210baeb4847fa36e2b1ef93fa9e043c352a6601"
+  },
+  {
+    "path": "docs/PHASE-8-SPEC.md",
+    "hash": "34c7b15f1fda234269a509cd823fd0a3132ace9b05189bad50622127b07a7f71"
+  },
+  {
+    "path": "docs/PHASE-8-STAGE-1-VALIDATION.md",
+    "hash": "9ff3a551d2acbd2c6363b48984ca96bc85b52995acfd931f1102837fc2a51ba4"
+  },
+  {
+    "path": "docs/PHASE-8-STAGE-2-VALIDATION.md",
+    "hash": "4369320eeb57190d1774da4a0505a0924674df24e5d3bf7bf38b2f2b42fe5d04"
+  },
+  {
+    "path": "docs/PHASE-8-STAGE-3-VALIDATION.md",
+    "hash": "8f7f7a79eca62e71481f28d11904e9acfe461709a622511598a0bf20dc7c3ad1"
+  },
+  {
+    "path": "docs/PHASE-8-STAGE-4-VALIDATION.md",
+    "hash": "04686d424c2bc8245ce66b9089c9c2940ad823d0cb8225886f86a62f48aa1247"
+  },
+  {
+    "path": "docs/PHASE-8-STAGE-5-VALIDATION.md",
+    "hash": "0f0b932baf8d07862056d8d9bd12fe656682ed540cbdde02cb9266b80a2ba460"
+  },
+  {
+    "path": "docs/PHASE-8-STAGE-6-VALIDATION.md",
+    "hash": "68122ec7553fbeb05a3ec5b331a570d21d8cfde36d19c1979be26d1dca4205a1"
+  },
+  {
+    "path": "docs/PHASE-8-STAGE-7-VALIDATION.md",
+    "hash": "b9c2965329f380bc5cb0f750f1bb93100ee45536d8c8e4f75928d0fcb4524f21"
+  },
+  {
+    "path": "docs/PHASE-8-STAGE-8-VALIDATION.md",
+    "hash": "95511ca68dd6ddabd7a76a3b66d4ff1f33475541d7533435f051a6d3b07ab4a9"
+  },
+  {
+    "path": "docs/PHASE-8-STAGE-9-VALIDATION.md",
+    "hash": "2cb8d5c70f18b154957f6a6ef7455d1fc9c136af13f3cf40b5dc48d131c93662"
+  },
+  {
+    "path": "docs/PHASE-8-TRACEABILITY.md",
+    "hash": "da2dfa5a8abc50a0117033577bdd921a5d3f4dcdae66f586af5e603fcd97240e"
+  },
+  {
+    "path": "docs/PHASE-9-SPEC.md",
+    "hash": "381a78e29ee815b86fd1da4da431893fc54502365efb9a9e9c28de0584aae6ab"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-1-VALIDATION.md",
+    "hash": "27d5ce009e266dcb022da05309aa0d8ab8d3bb146d71da5145dd2971c235c36a"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-2-DESIGN.md",
+    "hash": "eeb9c0c27cdc3871f8c8bebef02fc6ec15426469e42bee2b142e278ff95c2ba8"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-2-VALIDATION.md",
+    "hash": "767a46c6dfb9b75c45b05beacca234682f25da70e9897299f8bde6f074376628"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-3-VALIDATION.md",
+    "hash": "b75602492be76f5f8d1b6e982358e373c1f789761c9ed2c5765ca5dd00eb721b"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-4-VALIDATION.md",
+    "hash": "b12a0315ce707c58fcee03b3fca18c25aabd1d5073f0835887e0013088a4f369"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-5-VALIDATION.md",
+    "hash": "f82be4d5e9e8a4b5e7f39e229e9ce0116e9781a8045fa4cc3941ad40be96f04a"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-6-VALIDATION.md",
+    "hash": "8df9c0b56789b8f1b0759d38ab79931442bf5fdda66e532305c6b9d1ee4fdac2"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-7-VALIDATION.md",
+    "hash": "b5f423484e1d7b7e7805f6ecdb277cb24b6127a9f11df1350257d2a204c4e7a4"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-B1-PROCESS-VALIDATION.md",
+    "hash": "9379038e07df82fc5d5b6f26c0225db2542a473d194cf9f641eb203238ecb500"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-B1-VALIDATION.md",
+    "hash": "7a999b4bf66546acbc858e32ae532e0629e20a1c5e64b02fe5510baae442b01f"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-B2-A-VALIDATION.md",
+    "hash": "db0d5d8d462133f7d1d2cd3a692108145985d0aed58ea2b1d49eb76b69f5f94c"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-B2-B1-VALIDATION.md",
+    "hash": "9fcbf4c7bebcbdff3bbc5b9272abae3a33a47785093d6e86c706379ff425e8fc"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-B2-B2A-VALIDATION.md",
+    "hash": "c743c1640d527650c5d9d8c675fa30296ff2d9c4613421f09fed027b70af4097"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-B2-B2-PLAN.md",
+    "hash": "71df01d73fcc75c11d018145b3b010107c24e4801c991e5bfa0a9bdd95e9ae99"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-B2-B-PLAN.md",
+    "hash": "27052e0ddb2e5831ff79f19e2fddafc470a350dc545e2113ae2dedeb1568f5e3"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-B2-PLAN.md",
+    "hash": "298b0431bff441a9c345f237e1d2d7578674ce14c54dc2d9e569161f5f0285ee"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-CONTAINMENT-NEXT.md",
+    "hash": "bae98c5a07cc1160bfecf5ec85c6c97bf949b8dbdf4516cb59fe8ed1a05297f8"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-DESIGN.md",
+    "hash": "6fb9b956226afff37780d253fb0e65dc12aa3608879993394a9a86b0f39de988"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-DOMAIN-DESIGN.md",
+    "hash": "386ca4ec356a542e01a185087c8176fb4c164855bc388988f856f5421e4ebdf2"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-DOMAIN-VALIDATION.md",
+    "hash": "97bcce83ab4fd30026a9c7c8613433bc273a7010ae91c554c3e0ca9a70a44e0d"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-ENCODER-PLAN.md",
+    "hash": "cf8cad11558a54c70debfda711e8a4b899d3da6ef515349ff42bf43ed4d9eee5"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-ENCODER-VALIDATION.md",
+    "hash": "8ee4508b9258d7887ee3bc9e8569eec8f868b2d24a8814418a0a5c9324c27186"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-HELD-ENTRY-VALIDATION.md",
+    "hash": "bbb33bced772122e23c344ab2b2bdd8a0febc2c466632c5c15e52b6ad6437550"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-HELD-EVIDENCE-DESIGN.md",
+    "hash": "50e0b14696f34229d01e06f7fb4c34d4105836169428b4c14967b53d5b7e076f"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-HELD-EVIDENCE-VALIDATION.md",
+    "hash": "e2f36879b3bbe56cee316e079b734f2b9671bfb7c20ad8322acb4ac69f7989ac"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-HELD-HOST-DESIGN.md",
+    "hash": "4a449fe332c643a590182521d507c22032112abbeaa7c88f7e8e026fa515d183"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-HELD-HOST-VALIDATION.md",
+    "hash": "9860bb5647d5b61992124b29ada05f3cc85487ae3044def2ccacb8cbb554d0f8"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-HELD-INTEGRATION-DESIGN.md",
+    "hash": "313acb8396ca07e06d80565d356c84938e93bfe9f784f9521730101ed3dc9011"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-HELD-RUN-PLAN.md",
+    "hash": "8706c911091eab37a3ac16cf8193e89a848983e008b747c36965d05e0de8e463"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-HELD-RUN-VALIDATION.md",
+    "hash": "deb2d8312d053e2e5429d8a425420f954117cd779ceabe704f92350d320bbc41"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-LINUX-AS-VALIDATION.md",
+    "hash": "82aac53dde2f8cf867f61abe90ff26fe63da60f8cfc18b9cbc189ec1aa2baf4d"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-LINUX-IMPORTS-ATTRIBUTION-PLAN.md",
+    "hash": "063ef9ed245857e94522d64dccf0e4a3bc6f9b9e220a27b4742ee638cf132ec6"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-LINUX-IMPORTS-ATTRIBUTION-VALIDATION.md",
+    "hash": "7811b7b2454807ed6a1f6064978e6e9462e0a52ae2549d85a69741fed4b9b7a2"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-LINUX-IMPORTS-BATCH-PLAN.md",
+    "hash": "f4dbe7f26f61eddfec1f0ddd9e9999b957f13132ab2f6fc202656550d37eb913"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-LINUX-IMPORTS-BATCH-VALIDATION.md",
+    "hash": "0736528d50617b10633a4dec9642015d6d3eef02ee5038c5e1f9e74ec4295bf0"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-LINUX-IMPORTS-LIB-DESIGN.md",
+    "hash": "1a13bf1b595044465a7c0db0827b0fd26629a1f50952fe28e7dfd20ad839ed68"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-LINUX-IMPORTS-LIB-RUN-PLAN.md",
+    "hash": "3ae093fba4f99e3fb818bc35c45ded204f046ea50fcb65fc595a9f8b01f0dfac"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-LINUX-IMPORTS-LIB-RUN-VALIDATION.md",
+    "hash": "69a9554b6a46b0bcfe753826225e0b779dd89e394552dfa2b4b55ae6a1e2bef0"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-LINUX-IMPORTS-LIB-VALIDATION.md",
+    "hash": "5bca86ce916d9234ddbcd5edde27e38253ae4bf02139b722c8d26fff2f3a0acd"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-LINUX-IMPORTS-NAME-PLAN.md",
+    "hash": "1280716177e232cecd3680864062d35f0c8b9befae460b44bfc198f8f3a55a14"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-LINUX-IMPORTS-NAME-VALIDATION.md",
+    "hash": "06551cd6a125790583dccec21620bc1b2c8f464f1ea08aa0562fc95b58d18cb4"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-LINUX-IMPORTS-OBSERVABILITY.md",
+    "hash": "9261a7f6c5335fe9446a6740a1f6681a359fcb05fae70154b9734a8340671fcd"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-LINUX-IMPORTS-OBSERVABILITY-VALIDATION.md",
+    "hash": "1b1f37ae5fd427e4c6c3a6cd8f0c0de337c2509e57c3c0d6b48ffa3890e15f6b"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-LINUX-IMPORTS-PLAN.md",
+    "hash": "f1ee2e77fd450aecf613c9af754af1eca5c5fea0b2847e6b14b3607ca2ca49ea"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-LINUX-IMPORTS-PREFLIGHT-PLAN.md",
+    "hash": "576f205ac761b14325cb33fc43aa1df7ea947c213f4d1a1199f9d9b95ab23eb1"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-LINUX-IMPORTS-PREFLIGHT-VALIDATION.md",
+    "hash": "1030e44bfb430452ee0cba78ff30ca4ffece5d2d4bf1aa5b41453f484d4b972c"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-LINUX-IMPORTS-PREPARATION.md",
+    "hash": "7d3908aae14fae2bb43704f1bfcc18d19764c9516f0daf608db1b89db54feba0"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-LINUX-IMPORTS-STATIC-NOTE.md",
+    "hash": "2625f2ff6a9deea97bb422f771084a7a81c91099c54496ab223cbfa22776718c"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-LINUX-IMPORTS-VALIDATION.md",
+    "hash": "876505a2eeb4e193b41c977709a8884ad3b7242a7b43094437f5306c6a990721"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-LINUX-LOADED-HOST-DESIGN.md",
+    "hash": "2638fd6b1d1c1d214ed76fb7831392c4ffc4d2023d9a754976dbb0242174fa6b"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-LINUX-LOADED-HOST-VALIDATION.md",
+    "hash": "ed822976eefc049a556a6cf8009de0aa6d5ac662b49efde31774a430949ad276"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-LINUX-LOADED-MEMBER-DESIGN.md",
+    "hash": "b9ad37c20f498b24b36feedf001f2befeacc6109d3bb1e854bf35bce96e144ea"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-LINUX-LOADED-MEMBER-VALIDATION.md",
+    "hash": "8f32342abc34485dd5ad670e10bf19a8cb54b50815932df4a429959deb2aea78"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-LINUX-LOADED-MEMORY-PLAN.md",
+    "hash": "d9d7bb173bc14bccea5290a17a8d2472a28f49bc3c488948ded566aee59595af"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-LINUX-LOADED-PROTOCOL.md",
+    "hash": "6ba2ad84efa9cf7ea2ec1ef0dd70c3bdbb5b400383137aea7eb2c51adbdad664"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-LINUX-LOADED-PROTOCOL-VALIDATION.md",
+    "hash": "d91ee23f88573647ec0ace39f8ad9341129afa0b018af49390c444bb1fb9d08f"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-LINUX-LOADED-RUN-PLAN.md",
+    "hash": "203c385668a6a2117b6917cd87eacc9c2ca5e1cfd60af0f6307f06ee35139b4a"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-LINUX-LOADED-RUN-VALIDATION.md",
+    "hash": "d3e2bcf197237fc67a7dca1004253b46b97fc24e1ca1a135849be3dbc94cfb6f"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-LINUX-LOADED-SUPERVISOR-DESIGN.md",
+    "hash": "f03fa47360dac7708683f913b7bc065d8467991f06ef5151d362616db73ab50a"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-LINUX-LOADED-SUPERVISOR-VALIDATION.md",
+    "hash": "cd6d9f43e7d3e206ed942dd5be3e8d0bb4810d1589c49b20dcc0c01b96482299"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-RECEIVER-PLAN.md",
+    "hash": "fe88b22f5faad80291a1a7c85170ec49d93ee82973176d7516adfcac7828d930"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-RECEIVER-VALIDATION.md",
+    "hash": "7d56e40334732ffd40c22c2f47e0e9b5e1ca21c62a14137a16194ecf7ac7edb9"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-RESULT-PLAN.md",
+    "hash": "3b0c651224149ba16e62442be74dc9ec71323027c83bec2a3b4076d4f69934f0"
+  },
+  {
+    "path": "docs/PHASE-9-STAGE-8-RESULT-VALIDATION.md",
+    "hash": "1a00db602bfc944101b9f2be1df8360cebe34f5cb7460792cbfd32a54f4cad06"
+  },
+  {
+    "path": "docs/PHASE-9-TRACEABILITY.md",
+    "hash": "d21711049a5bcdda4cab0d49ef755e9d43be3f38960fdb2ccb0a418a02fd60b6"
+  },
+  {
+    "path": "docs/poc/b2b2_controls.py",
+    "hash": "41c80c101becc1055ab28e5357f17b917c380c12a4101aeede1a19742d40fe67"
+  },
+  {
+    "path": "docs/poc/evidence/domain-package-20261023.json",
+    "hash": "14a5b19b1e44c734349daf4e3dc831e8ff4397211a0ce6af0302aa1632390d66"
+  },
+  {
+    "path": "docs/poc/evidence/linux-as-20261020-summary.json",
+    "hash": "c82eaa4050de02599cb01fd196c5f9c721e33fec93adf540fe898ea00656aee5"
+  },
+  {
+    "path": "docs/poc/evidence/linux-held-20261023.json",
+    "hash": "8d4d60de764be866c6287b7d85fb7cbd61efa494084c98e4d3d84aad48aba794"
+  },
+  {
+    "path": "docs/poc/evidence/linux-imports-20261021.json",
+    "hash": "49a1794f2919d725326f25af36d82b6e4bfb8a745704761d4061068e4e6c04fe"
+  },
+  {
+    "path": "docs/poc/evidence/linux-imports-attribution-20261021.json",
+    "hash": "95842cccc77be7e8c98c38bec1c46e1572d238864e67ef238b3256601a2ad2ed"
+  },
+  {
+    "path": "docs/poc/evidence/linux-imports-batch-20261021.json",
+    "hash": "4b6c999434d8369685122526e1e41f14cd67ce7f63209a286016ddeaeb3c0522"
+  },
+  {
+    "path": "docs/poc/evidence/linux-imports-lib-20261021.json",
+    "hash": "3dadee975f84f10c0f84184634bc7dc689d8c924d5de98f250bc87cae46950ba"
+  },
+  {
+    "path": "docs/poc/evidence/linux-imports-name-20261021.json",
+    "hash": "d5db4f9233f8ae20b1e081a3f9395b06578b724aa5dd59254d1edb9d382f776a"
+  },
+  {
+    "path": "docs/poc/evidence/linux-imports-observability-20261021.json",
+    "hash": "b9ff5f117fb819e58172dc9ff69f87e6f55ddc2c1eb3eeb5b8bd8e92e34b4111"
+  },
+  {
+    "path": "docs/poc/evidence/linux-loaded-as128-20261022.json",
+    "hash": "c9c45157c7bac80efaf6806c3f56c42d84a65a019a3673ad528f6b4cff3dfeb3"
+  },
+  {
+    "path": "docs/poc/linux_as_probe.py",
+    "hash": "8170a37b892bd6d2bdae351bacd05f0e047d8bbc9b2b54bad695da7419380e0b"
+  },
+  {
+    "path": "docs/poc/linux_held_probe.py",
+    "hash": "3ec0b4fd4c0b061687e388ca735ee4061492a051d0fb68ba55f169720e2e56b4"
+  },
+  {
+    "path": "docs/poc/linux_import_probe.py",
+    "hash": "e92acbacded3aeab72c8237a26bd9471a0e43a83358f250d8dd0933d63af9c1b"
+  },
+  {
+    "path": "docs/poc/linux_loaded_probe.py",
+    "hash": "40ead31f7fe57cb2102f30c1be3f535fa342e3ae22d8696e0970d4eab4315466"
+  },
+  {
+    "path": "docs/poc/loaded_memory_collect.py",
+    "hash": "6d06bfe5344e53596dbbde9e3ae14914b6550cb73147b399e788300e54a733bb"
+  },
+  {
+    "path": "docs/poc/loaded_memory_evidence.py",
+    "hash": "7f0307106e9a139f626c96b7bade14395863cd468f83e22730fceb57dc7d9f53"
+  },
+  {
+    "path": "docs/poc/loaded_memory_member.py",
+    "hash": "fea05d739b61eff9ba8b23d49cf283f8de9837e711218f7f1965d7392d47eddd"
+  },
+  {
+    "path": "docs/poc/loaded_memory_protocol.py",
+    "hash": "384fe081261086b6437cd9b53b8afe76c72c97262855d9c6465a4488cf1c5b1c"
+  },
+  {
+    "path": "docs/poc/loaded_memory_tap.py",
+    "hash": "aae25eb187ccd483847b725049e8932df469a5d1b9722dad786cb328436f504d"
+  },
+  {
+    "path": "docs/poc/prepare_linux_imports.py",
+    "hash": "506f7eb057320377371224e687fb8c79d5ce79208dc31d82c8986961fa38c9f0"
+  },
+  {
+    "path": "docs/poc/run_linux_as_probe.py",
+    "hash": "58c692a775a2dffdaa6be86866cdb15ddb307f97aeb8a04b4f7c737ea56c3627"
+  },
+  {
+    "path": "docs/poc/run_linux_held.py",
+    "hash": "02d2774a4c7af48a8e2f3b1491bc4384872806231d8e2dbfee5c210736f2a0b0"
+  },
+  {
+    "path": "docs/poc/run_linux_imports.py",
+    "hash": "5f85bec97f2c55d7bae13e0663507d78e42698323a3ed460a49a51b45ce60e3e"
+  },
+  {
+    "path": "docs/poc/run_linux_loaded.py",
+    "hash": "d95cdfe231ab273fba96c4ecd808ce829327caea466992ee90c98c9d27a0e821"
+  },
+  {
+    "path": "docs/poc/scram_interop.py",
+    "hash": "6f11a66e61dead6d84769e544a4859e79c047313f12dcf2d364b63bd215e68cc"
+  },
+  {
+    "path": "docs/poc/scram_poc.py",
+    "hash": "e6d6460757e7a2f6cf81b0c4cd1c567c01e8c5f53c8435cb5feb72adf33e3d19"
+  },
+  {
+    "path": "docs/poc/scram_vector_check.py",
+    "hash": "0e1720adc2adcdf0c8456c0f0f19982c7f84f8c12416d1febc2ca0c78a8083c8"
+  },
+  {
+    "path": "docs/poc/SCRAM-COMPARISON.md",
+    "hash": "4f646148cd8ce24487c26dab05b94286e3ea52450446101df821dce4d257ac76"
+  },
+  {
+    "path": "docs/PRODUCTION-EXECUTION.md",
+    "hash": "de4b074e92cbc5b0a2f4b6e5d841f2e822dc4b18c45af9e881d5c464ac705257"
+  },
+  {
+    "path": "docs/ROADMAP.md",
+    "hash": "9ddfabafd5313752cf2254b01e70479c4982ccf567e5bf4075b0623b33fc8174"
+  },
+  {
+    "path": "docs/SECURITY.md",
+    "hash": "4f408439227382348776c23471bb7688135a22be671c7da389f76e1223098e1f"
+  },
+  {
+    "path": "docs/SECURITY-REVIEW.md",
+    "hash": "9a960b250d84b8c1fecdb67907fab08126835fbb6e19cbd58334ea789db62d51"
+  },
+  {
+    "path": "docs/TEST-PLAN.md",
+    "hash": "1e115f42626a2e43584480d90e067d39953c81a7a4c5c083ccb7308dd0d2a089"
+  },
+  {
+    "path": "docs/THREAT-MODEL.md",
+    "hash": "b8ba01042017f6aef9b3d9c80992b4f716b8b70c6f3cf7f5ef2e88df206de488"
+  },
+  {
+    "path": "docs/ux-v2/antes/chromium-dark-1280-03-lista.png",
+    "hash": "d61a9573a8cc435765c11ae36fa7dda1cf2e0f173c04ebb8d16ea0be94cd4413"
+  },
+  {
+    "path": "docs/ux-v2/antes/chromium-estado-catalogo-bloqueado.png",
+    "hash": "723569450b535fd3232c938c447669542700be04e0eb7296d7c15b8926fa134f"
+  },
+  {
+    "path": "docs/ux-v2/antes/chromium-light-1280-02-painel.png",
+    "hash": "63fb00447fefe690c360524f8e8b6ed149c02921346c8fd09cd328845ae79ba9"
+  },
+  {
+    "path": "docs/ux-v2/antes/chromium-light-320-02-painel.png",
+    "hash": "aed8f4880b9e0b214b25fe6b9a4515dbfbd9b9c57885d0c9fe5c62f91e758c32"
+  },
+  {
+    "path": "docs/ux-v2/antes/chromium-light-320-03-lista.png",
+    "hash": "bb037a00110b8ec4e9f100ecc551ace8699faac7fb3f8387bf2fed7dc223c236"
+  },
+  {
+    "path": "docs/ux-v2/antes/v1/chromium-dark-1280-11-politica-v1.png",
+    "hash": "5440d7227b6c228e0fb4c5e10e1ac0f706c1ff5d4202501a6ca1e14e842e4219"
+  },
+  {
+    "path": "docs/ux-v2/antes/v1/chromium-dark-1280-12-v1-configuracao.png",
+    "hash": "b551b6b3d859b9810923e5aaa1a7ad91ea7bbad0917ca56c1a8d3333be03a5a3"
+  },
+  {
+    "path": "docs/ux-v2/antes/v1/chromium-dark-1280-13-v1-regras.png",
+    "hash": "16e8933866d17fdc0fca44dc119ac98aa7394e40f210da80cf0c4e1275c7a299"
+  },
+  {
+    "path": "docs/ux-v2/antes/v1/chromium-dark-1280-14-v1-excecoes.png",
+    "hash": "25eae50177d5537f26b324bdbc9b77120fcaac2f9d64f12a6b281fe0c94daf51"
+  },
+  {
+    "path": "docs/ux-v2/antes/v1/chromium-dark-1280-15-v1-banco.png",
+    "hash": "b73bc4e171b99c02e0f3d323bf0b7c959d81e3508bd6e8ba2e2ad91fd17fc309"
+  },
+  {
+    "path": "docs/ux-v2/antes/v1/chromium-dark-1280-16-v1-politica-sql.png",
+    "hash": "bc52e046a55055aee83555e3d71315c90e3fca47398ca9943c951925f414b588"
+  },
+  {
+    "path": "docs/ux-v2/antes/v1/chromium-dark-320-11-politica-v1.png",
+    "hash": "47a9ffc7f77a3328fb98ab275f3dd1cf88a03f81decbfdbb21d535466453e3b8"
+  },
+  {
+    "path": "docs/ux-v2/antes/v1/chromium-dark-320-12-v1-configuracao.png",
+    "hash": "180488362453644a8b90be05636aa3823e55d5b4cd2142f198265556abd869df"
+  },
+  {
+    "path": "docs/ux-v2/antes/v1/chromium-dark-320-13-v1-regras.png",
+    "hash": "6cae122b69448817f1e9bd30ff1dc68b86c86242501eb777a4e86cf9d889f350"
+  },
+  {
+    "path": "docs/ux-v2/antes/v1/chromium-dark-320-14-v1-excecoes.png",
+    "hash": "bffbad16590c714c9cf54e4f76b8f36965fcf095e2adf5bec7a42d4ddeb78c88"
+  },
+  {
+    "path": "docs/ux-v2/antes/v1/chromium-dark-320-15-v1-banco.png",
+    "hash": "9aa0ae4624d3d7d781381557c84effa480545a34a6eaa151d57483293f6b1d17"
+  },
+  {
+    "path": "docs/ux-v2/antes/v1/chromium-dark-320-16-v1-politica-sql.png",
+    "hash": "ab66efae4de43140293db1f698fbd8b2bedfab72a72670472cf6de4bd82c6f8d"
+  },
+  {
+    "path": "docs/ux-v2/antes/v1/chromium-estado-v1-nao-adotada-regras.png",
+    "hash": "b2d98607ffb25ff1d8c9bf46a09d24e6e860065af646f374e33be9cafb845f30"
+  },
+  {
+    "path": "docs/ux-v2/antes/v1/chromium-estado-v1-nao-adotada-regras-320.png",
+    "hash": "9f3672552c4b760d8ab303105f22010db88caffb980a844267f197803558f6b3"
+  },
+  {
+    "path": "docs/ux-v2/antes/v1/chromium-estado-v1-nao-adotada-visao.png",
+    "hash": "5bc5d9b5a458196f7ade4c855865c3a10350e6eaa107592fc9d0346881ac816b"
+  },
+  {
+    "path": "docs/ux-v2/antes/v1/chromium-estado-v1-nao-adotada-visao-320.png",
+    "hash": "ec54afe7a13a96781d20f0dcfed318e669e360a08af9e963e45318236a53060d"
+  },
+  {
+    "path": "docs/ux-v2/antes/v1/chromium-light-1280-11-politica-v1.png",
+    "hash": "ab854da91fde23ef8fb1c4b878083dfaf9397d7d10954b406e87cc8717a034aa"
+  },
+  {
+    "path": "docs/ux-v2/antes/v1/chromium-light-1280-12-v1-configuracao.png",
+    "hash": "e73cfef5f165340a957d79dda248cb7f470ff51c208d8f28ef78d58c57d8779c"
+  },
+  {
+    "path": "docs/ux-v2/antes/v1/chromium-light-1280-13-v1-regras.png",
+    "hash": "1c0e936d0f0fe0dcb063e67364b36edebc6bea79c573042cb47bb1937150fef9"
+  },
+  {
+    "path": "docs/ux-v2/antes/v1/chromium-light-1280-14-v1-excecoes.png",
+    "hash": "eb8f050e8ee1829361cb2b28f36d0dbeeafe614d426df2ac821042593b80bca8"
+  },
+  {
+    "path": "docs/ux-v2/antes/v1/chromium-light-1280-15-v1-banco.png",
+    "hash": "76d583f72aa78d92a21a2a07a57d35d00d905dd0158e6106c9eff5d5d23382c8"
+  },
+  {
+    "path": "docs/ux-v2/antes/v1/chromium-light-1280-16-v1-politica-sql.png",
+    "hash": "13dca6b27b3588a52497b4a43cf634ce1dc65297e6d1887c30a38eec1b0e11b4"
+  },
+  {
+    "path": "docs/ux-v2/antes/v1/chromium-light-320-11-politica-v1.png",
+    "hash": "0a0139d270ffe2a8e3873e64824a70e3a25dfb25c6f484493a0db7daa9e20bfd"
+  },
+  {
+    "path": "docs/ux-v2/antes/v1/chromium-light-320-12-v1-configuracao.png",
+    "hash": "a1b9700b3630d7626ede20b5af77324b1fa3c61e267ac0928c676a912c919652"
+  },
+  {
+    "path": "docs/ux-v2/antes/v1/chromium-light-320-13-v1-regras.png",
+    "hash": "3298c9a4a469dedb11bfd66b0b3b3ce3daa5a2f5bfd9f04486c394345851e016"
+  },
+  {
+    "path": "docs/ux-v2/antes/v1/chromium-light-320-14-v1-excecoes.png",
+    "hash": "3793537b4c0d72ed2d1378772192117ebe6769e53cf3f405f1c93eb22375dc1f"
+  },
+  {
+    "path": "docs/ux-v2/antes/v1/chromium-light-320-15-v1-banco.png",
+    "hash": "c0a714016654a566254b81c736690a29c380cb2adcd95c3e7cfa6e28f1d5eef2"
+  },
+  {
+    "path": "docs/ux-v2/antes/v1/chromium-light-320-16-v1-politica-sql.png",
+    "hash": "cbf21ad765a61b9588ecf9f32f9b9544860dc41c600cd682cb6130ad25046c9c"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-1280-01-entrada.png",
+    "hash": "538c90638b248cfd286af022b8ee8b1ccd195581d5e3fd237d11a42073bee804"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-1280-02-painel.png",
+    "hash": "0cb90e9c83bd5f6602629e7b1adc5ed15b4084ef618b62d9a66118dc6ca4b53c"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-1280-03-lista.png",
+    "hash": "082d6489c420b0ac54da8f56f18367e152c0849205b6183d010781a2cc19753c"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-1280-04-busca-vazia.png",
+    "hash": "ef8854bf9d016ed91be0e5ea6015cf0e329b9c19d90df0b6185ac2d46f1809b4"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-1280-05b-detalhe-desabilitado.png",
+    "hash": "ffdf246abd2737f7046e924f7e0674bae8f58354d214feb73ef875aa9f67f0f7"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-1280-05-detalhe-visao.png",
+    "hash": "2f64db84a455b27905b17fdb24dfc1ac36b43ba0a48da0de78dca1843019edfa"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-1280-06-detalhe-conexao.png",
+    "hash": "8e77525443a1743c291db9191a1b65ad273e1ff5c788887a8eb56483d69afa4b"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-1280-07-detalhe-masking.png",
+    "hash": "ed5a8b94ad67a2f9ad0b77098487ac5ea49973a80ae489b1e6f732d8a34bc8ab"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-1280-08b-detalhe-sql.png",
+    "hash": "ff20670d8491e5a64a3686f8be80002ff50e1a942638c0ae72e1012b62821d6c"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-1280-08-detalhe-limites.png",
+    "hash": "24be5f43e92cc96947656d48fa7f17eb44dd9dcfe0c37f1ce05a7b2dfaa27ad6"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-1280-09b-cadastro-politica.png",
+    "hash": "fc1a0615e8419a3ff4ecdfaa5bb896f7c961ecbf5838490f92cc59a6b177d383"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-1280-09-cadastro-inicio.png",
+    "hash": "8ba8bc311a017310ea29d5fb639746b9c403f329ea5a10575c7a7cf024841756"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-1280-09c-cadastro-teste.png",
+    "hash": "b4601e543966e6823a89820d06636b12340d120d66f3508e646befa02a9ee1e2"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-1280-10-cadastro-revisao.png",
+    "hash": "c620b239a9872d367a02470ddfa06e04bd25e8d6c6c1589933fa0d7bfeeafa6b"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-1280-11-politica-v1.png",
+    "hash": "c2c9ed47402b0a3054559ebf3fba925cfd174016672a790bdee914f87362d1a8"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-1280-12-v1-configuracao.png",
+    "hash": "519f84cb52ecae7205c9ebbd0a0fc3c354ad2f52c10411c09a58154c081afe56"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-1280-13-v1-regras.png",
+    "hash": "ae700cb38d5c8dae16522a59123eabfc5a098801e71097791748c987bfc52341"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-1280-14-v1-excecoes.png",
+    "hash": "7002e85f1056e84694c9079a16babd63ee6f54bbaddae8fe8ee04290b78c3a32"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-1280-15-v1-banco.png",
+    "hash": "cbabf30f218715babebc4cbb7317eaf4977e07d540626ac34fbfff04c237ba2d"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-1280-16-v1-politica-sql.png",
+    "hash": "838f2b602c5cc2975f04157a1fe5c6eb49de290d7ffed91ee4859f43af0b93d8"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-1280-17-editar-rascunho.png",
+    "hash": "9cbb9037f43720fab4a7d47cdea6cbc42e3b31e9447bcc0975522e46cc1e6172"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-1280-18-editar-revisao.png",
+    "hash": "795f8b364f925d474fec808c94582cb8d6e018a0c2944be7a6be57b1ca3bfc84"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-1280-19-conflito.png",
+    "hash": "a465ce6a3f3365e7898a3b42f105f1bc5b8fdfb65e4cfc293579ef3f3bdc4c6d"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-1280-20-politica-editor.png",
+    "hash": "4f2e367e203868c84404503342ebeba1f568cade6cd8bea1ccd1e1fa9cbdd842"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-1280-21-remover.png",
+    "hash": "77df4c3d626bce379b785d4ed6ab9788ed02c465b42105a05646960abc6e9f8e"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-1280-22-resultado-desconhecido.png",
+    "hash": "d0d4ed90eed6158dfcafeebd29e0c1f80c4b26b080a1f356fb89e8d98e740c93"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-320-01-entrada.png",
+    "hash": "3e27c76921b2d8f21becf17dd13649a8b5bec8ddf9a4af8c3ebff58df0f03e97"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-320-02b-menu-aberto.png",
+    "hash": "bd13833f0e1af078348722d7367688aa194092a45a7a72c1767f50fc90cc6606"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-320-02-painel.png",
+    "hash": "88f0b10a641d49e1a9b36b553ab22a259e198216372b32e66a0847be66d760f0"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-320-03-lista.png",
+    "hash": "8f8248a7aac60209fcaf4d4fe2a1dbfeadfc2ba93c85f4f86d582b100349ccda"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-320-04-busca-vazia.png",
+    "hash": "ac1bdfe90b5c8cdda33ce9623965113ee8aeae46e22c60c0f937f9b6a097b5a5"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-320-05b-detalhe-desabilitado.png",
+    "hash": "56b4b439615261e4e0a61794ff24c54074e45732e5c11dd03c8b021937931d77"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-320-05-detalhe-visao.png",
+    "hash": "bee6c7adbfb2d879ce19c59628bcc8bbdf7f13778e6ebb91402ed1f378368ea9"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-320-06-detalhe-conexao.png",
+    "hash": "fa880abe312f3717336e3e5730cc47f30c1b32056c3823758b62b7ae4db1e64f"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-320-07-detalhe-masking.png",
+    "hash": "9e17631c64ca2cd7bd35262543d73759a58a29de2c4f5d3046df44d36373150e"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-320-08b-detalhe-sql.png",
+    "hash": "6cc13e0dafb1b613ef9e13d206dc8407c217250378fd7be22ca5ed09535af831"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-320-08-detalhe-limites.png",
+    "hash": "2acc6c01c39077b1a86fe803e4d4e4ff904dd58c04efaea4d15384e7ea032cd2"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-320-09b-cadastro-politica.png",
+    "hash": "795066be0c901540c535d37547c8561acd0a521f3cf4c4c5d0e0c1bd2052a74a"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-320-09-cadastro-inicio.png",
+    "hash": "f246fdd050f545b24990055cfdbe964d32870a090d14aef0abac846b593d6268"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-320-09c-cadastro-teste.png",
+    "hash": "1f0775af58b7e339414523bd32ab0cee5ca2aece40d3f33efe63c570e8a25154"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-320-10-cadastro-revisao.png",
+    "hash": "fe3b0d99f41afb422f36293a53118af66f82b0e49da4bffdabdf181f71d19e3e"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-320-11-politica-v1.png",
+    "hash": "6d672452385f7870acefe0fab2b13230a2d9b1ef3a0edd9f5334f0888785b69a"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-320-12-v1-configuracao.png",
+    "hash": "eeb0d7a70b8968cdc017126cd140ad1aa0b45ac8e1f4f4011a5a35731eb394c7"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-320-13-v1-regras.png",
+    "hash": "1d1b7bcd31a3fc08f12631d4396f14fba5209f320cb8a9f807d8cef03f6760b6"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-320-14-v1-excecoes.png",
+    "hash": "81a3777043c0572269c1672479bf14b99418c42931266c167ff603b5b88e70f3"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-320-15-v1-banco.png",
+    "hash": "8eac4bd65f73468f0cfa70ebf1bf921e8be4c556d62a4e588d36d54664ef68ed"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-320-16-v1-politica-sql.png",
+    "hash": "8533ed88d6202d35c86ab62345d3e36ed1bd70cdf93e38f3eabe52585d08e11d"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-320-17-editar-rascunho.png",
+    "hash": "b758632b4699e57f7cc50b645bf9695d6b9deb6297f865471bfbcbc558b9c6bc"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-320-18-editar-revisao.png",
+    "hash": "011668557c0d745bdbf5e4394ec5e760e66d0cf4ecd13f7b24fa9d702f8a60be"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-320-19-conflito.png",
+    "hash": "1cdfe64744a9c5a27d91d29762a41f492ba34f53a72bca2e34f5ef3f39058933"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-320-20-politica-editor.png",
+    "hash": "6ddb4fa6ccae303f8d70d547951474667f11d749c97c304e9216ad2a33e51f73"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-320-21-remover.png",
+    "hash": "3c69ddd894af1766a9304e3bdc7c1e613201b4263065d266c79bd07cb5ccb541"
+  },
+  {
+    "path": "docs/ux-v2/chromium-dark-320-22-resultado-desconhecido.png",
+    "hash": "44ab43716fbc67e39b4b82dd9f345389c37235b1b507daf17f949e9d48435c43"
+  },
+  {
+    "path": "docs/ux-v2/chromium-estado-catalogo-bloqueado.png",
+    "hash": "b73bb6a4c59b6531cdc3dfa12241035479dfb63770d066022258221ab255f060"
+  },
+  {
+    "path": "docs/ux-v2/chromium-estado-catalogo-bloqueado-320.png",
+    "hash": "d35ab36f7110080d21e69d46342ad805589f4a37a2b676e7cf843699f5a4bc93"
+  },
+  {
+    "path": "docs/ux-v2/chromium-estado-catalogo-desligado.png",
+    "hash": "a9c8d256765e3ce1e149faf6cdc28fc1049c457d4c7dad95454b9f6586e7789f"
+  },
+  {
+    "path": "docs/ux-v2/chromium-estado-catalogo-desligado-320.png",
+    "hash": "c0d375278e0b58434ade78e32c8f896dd1486807c2cf24d8e23aac074798d0af"
+  },
+  {
+    "path": "docs/ux-v2/chromium-estado-painel-bloqueado.png",
+    "hash": "e46fda95324e7eba9ae62a709fb5c07a83fed4d4f3ea7686b1da90fad822980e"
+  },
+  {
+    "path": "docs/ux-v2/chromium-estado-painel-bloqueado-320.png",
+    "hash": "ce7ac06fcc8708b6c2b6bbf248defa7dbcdc8bdc6e23a47ea3c1f8f10dbf3b37"
+  },
+  {
+    "path": "docs/ux-v2/chromium-estado-v1-nao-adotada-regras.png",
+    "hash": "7de9d0cf8cab795dbf90fdb875c5ba3ec96cf5abbd808da16f3e21c62d5b14f8"
+  },
+  {
+    "path": "docs/ux-v2/chromium-estado-v1-nao-adotada-regras-320.png",
+    "hash": "99b2a467468882433c16d3546ec45a1399306b3b6d7486594cff5be8d5753b4f"
+  },
+  {
+    "path": "docs/ux-v2/chromium-estado-v1-nao-adotada-visao.png",
+    "hash": "969f2bf41868b1613dd8bcc04c1301ed22b898ce686f5b1d91b890c7175c4ca3"
+  },
+  {
+    "path": "docs/ux-v2/chromium-estado-v1-nao-adotada-visao-320.png",
+    "hash": "b7c8030dfe4fc24c0503b4df471a49cf350754538456976c293a7ce477a5145a"
+  },
+  {
+    "path": "docs/ux-v2/chromium-estado-vazio.png",
+    "hash": "8ef03fafddfc4725e4e680de71b91d13c1f7aba975ee1aa662ea51a25e2fdea3"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-1280-01-entrada.png",
+    "hash": "d4c27997d680bc945b96c883785efd37295e743d4ef06ba9a2b9fe173cb08d06"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-1280-02-painel.png",
+    "hash": "c2c778713db6812ef99c3c8ee3034044235761297f69284d378a9c2187a8e942"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-1280-03-lista.png",
+    "hash": "baef53a2da31ff306d8a23e2f90d45f7c9f148fdbbebf83e2ab33365e8909794"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-1280-04-busca-vazia.png",
+    "hash": "36f1cd3a5317016b51da86583e8146c90717122a320ee75dfa5d80f9905df052"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-1280-05b-detalhe-desabilitado.png",
+    "hash": "4dc1da68dd3047d21e1e5c98a9b6f039f4cff343df70a7a49b315f2f70e90194"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-1280-05-detalhe-visao.png",
+    "hash": "81d1c91ed42bbead807d1a21f8e5289b2790372cc4939fc2225fb5991c8fa742"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-1280-06-detalhe-conexao.png",
+    "hash": "7bfa1554e8215453045a3bd7e76e78026f2c57f3cc05aae0d07814714712ccc2"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-1280-07-detalhe-masking.png",
+    "hash": "832bba9844a8683ad31ba3c9c297fa118d32c35f0998079602671670185b7583"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-1280-08b-detalhe-sql.png",
+    "hash": "48e587329797dc241442f117673ef09f611cac1c405f94e7fdc7fa362796d27a"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-1280-08-detalhe-limites.png",
+    "hash": "0503dc83513793cb43538a7251ca41e090fc334976149e237208e7a47f24dcd9"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-1280-09b-cadastro-politica.png",
+    "hash": "08f1323dd2212302d09e8bc9c033833867b0530c1f93a60c15b1459f6ef03500"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-1280-09-cadastro-inicio.png",
+    "hash": "e1288ddc0b7bd56ccea33e330792761a37a1d42baa1e8b6407f172f971df9d7b"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-1280-09c-cadastro-teste.png",
+    "hash": "6da3ba04e986642dc7cabaad3889ff2a611ba2185d9304634ed83978acb412e9"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-1280-10-cadastro-revisao.png",
+    "hash": "fc898665b6f2dd6d759e2845cdceafffe423f102c69b8ecdd36019e7df9a9501"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-1280-11-politica-v1.png",
+    "hash": "56fbd768eba7881df6e2221fb49b96bcd8b4f30d8ff654cc4a7a4d38b5457a58"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-1280-12-v1-configuracao.png",
+    "hash": "bff651fa55599bbac1b2140b6c7a289962cee4d727341c090fe5152e9d9eef1f"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-1280-13-v1-regras.png",
+    "hash": "6c3e8c146235f22d7862c654c1f3cf82f964f53e2caa784189f703d62b5afd73"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-1280-14-v1-excecoes.png",
+    "hash": "5f1eccd8faede47174a3a6c751cd50f3ee05c523ab24ecaa32c49f390f288c42"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-1280-15-v1-banco.png",
+    "hash": "cff2c12b4e37f7c5b87745be07b63fbf3e1bc59b60ae66d6a9400838350fe867"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-1280-16-v1-politica-sql.png",
+    "hash": "d0dfe6812fece15c639c8e895704be9b2c95fdc103b787ef3ddc1ff7aa098645"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-1280-17-editar-rascunho.png",
+    "hash": "6349f48c9fb4cc397b20255c8aaa96a8829d3c59118db3ccdef5d3cca3b2f9dc"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-1280-18-editar-revisao.png",
+    "hash": "2751790c395a725043848a28dca754be1b7b67d1558dd3adae52325fc0750a6a"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-1280-19-conflito.png",
+    "hash": "78bdf681e425849a073f65ebc9fbebf90dea19d3e34cd3f1fbe3003b950f30d3"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-1280-20-politica-editor.png",
+    "hash": "5eb8f754ac6c6ca37f742ef0670590adf09beac636bd3e382a4dead078e99c4a"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-1280-21-remover.png",
+    "hash": "19c079cd85b7ffb3ac7a67a799ba6312455d1c9f584ab660e2131bcb537e8d2f"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-1280-22-resultado-desconhecido.png",
+    "hash": "212ad607d0b2030c7541458a32ef43db2478eee4e09a9eaf6a19b6ebb7a27c59"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-320-01-entrada.png",
+    "hash": "8dea20403cc30bd0c41fc76b765f8d630f925fe75e2e304ef85849711de64b8e"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-320-02b-menu-aberto.png",
+    "hash": "3ec5d2a09d41e2b62e1027417bd368afa72ba97f9c967947405553d1d5cd415c"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-320-02-painel.png",
+    "hash": "762125284cc7defcdf6aa678082b86a31b81f5ee2a3c343f2420945c5456bb59"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-320-03-lista.png",
+    "hash": "f1dd41da48d3f508f4fc4ccc2d1d70a28641657e9e6fb44096f746378cd8b447"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-320-04-busca-vazia.png",
+    "hash": "0883fc178c7000974edd3e375489a6581842d3e9cf754bba404864c9fccc27ac"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-320-05b-detalhe-desabilitado.png",
+    "hash": "64c953ea0e636e2aa9cfedd4c9eafe98d28f54472d814097a7fb51e24a4bcb7c"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-320-05-detalhe-visao.png",
+    "hash": "0cedc96219216b00a0bf77ef7d81e65dfb0ba56b4e70e468094ec868f1210fec"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-320-06-detalhe-conexao.png",
+    "hash": "4500303f14dc58751d14e52faf0cebfe820a9b7fdddae298f71868f7a595dab3"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-320-07-detalhe-masking.png",
+    "hash": "b4b018cf7f0d372271a34f2c829659f0347e79a40a3b0b8dc9583ae26438800f"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-320-08b-detalhe-sql.png",
+    "hash": "751e6b14a41b39096a2c09a3bfc4a956447f79d2cd09c56210054cd25807380c"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-320-08-detalhe-limites.png",
+    "hash": "7914697204fdaae4ec2a779096da34745d44be640a5c80a995d3de03edee97d8"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-320-09b-cadastro-politica.png",
+    "hash": "70f45eaa9ea17bbf2f39347e4f3f39a139d16e827d98e770146d02801c9c2cdb"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-320-09-cadastro-inicio.png",
+    "hash": "fd104e0b56f4d3e0d05b9376f4d7a222ac977ac0bc9568a81ce217a7fc3c9a59"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-320-09c-cadastro-teste.png",
+    "hash": "12fe249f56d7f68ac552a08ead56be0a64a179556bbc0e59c35cdc3336d1d2b4"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-320-10-cadastro-revisao.png",
+    "hash": "8b9a93e0e5cb23f68e849f957771385900e574aa90363be3dc5ce6db8bd827be"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-320-11-politica-v1.png",
+    "hash": "a87fe5640af6c00330321cf6c57e7e9932449ab3fc5c5bffd1c42869f247ba81"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-320-12-v1-configuracao.png",
+    "hash": "91a3f001f1d19b310d825594f65cc65e811b7d1f1067f02de0eb33e2743c7e0d"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-320-13-v1-regras.png",
+    "hash": "8b376f25b89974917d8fe2b6ebb871553cee70fd31bc60980714afd2e69ae4b9"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-320-14-v1-excecoes.png",
+    "hash": "9ffb892b392ec37c3a8acf8f60ded2db179e981635470b077e6f02391d39bf6c"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-320-15-v1-banco.png",
+    "hash": "3aa7f04c284231344d05047c72490579d5ef62fb682583503a280727cc7c304f"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-320-16-v1-politica-sql.png",
+    "hash": "3e40da13b00b86dc865feeb0e9fa17897a918a028af9e331f4cd18f83f3ee485"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-320-17-editar-rascunho.png",
+    "hash": "950d88e4ed66c84bbe9351158586a08ce17bca6c566014cfe3e18706e9fc2f7b"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-320-18-editar-revisao.png",
+    "hash": "a8e2d30bcc77ccfdc73a791fe38e95789580c773f183c7cbc0c6c1e62dbb61e1"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-320-19-conflito.png",
+    "hash": "497e0e4a19f2ec510618a061078b49400459ee039732d1975160ef66ca8e72e9"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-320-20-politica-editor.png",
+    "hash": "359660790de2a91b37d5e74f350c8d59a55b946c55e637bd6e6f264642c6ef6a"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-320-21-remover.png",
+    "hash": "64de714041f20ca21e8d95c286ed55522b1b798925b9df282e744acd025f8fc0"
+  },
+  {
+    "path": "docs/ux-v2/chromium-light-320-22-resultado-desconhecido.png",
+    "hash": "80154b146943a6861e457049a04370cc8e416f5c3e614290b0d0870e93f41485"
+  },
+  {
+    "path": "docs/ux-v2/firefox-light-1280-01-entrada.png",
+    "hash": "ed201b1b8eaa93c5786a9392f33d7422be8a1acc3106f8e6e3f4281f4742e5ef"
+  },
+  {
+    "path": "docs/ux-v2/firefox-light-1280-02-painel.png",
+    "hash": "26b9aca1c391fa59d44ef2a8bb9724682ff7eb43180a61979c81d06cfdcef377"
+  },
+  {
+    "path": "docs/ux-v2/firefox-light-1280-03-lista.png",
+    "hash": "7fe98e73d70e215bdaf8196530e6eee1240c75d5e87a28ce9b081e37f4947e4c"
+  },
+  {
+    "path": "docs/ux-v2/firefox-light-1280-05-detalhe-visao.png",
+    "hash": "749941a2e412f731532025ba5ec58a3cafcac44c558687c7e8125e1d3ad4f654"
+  },
+  {
+    "path": "docs/ux-v2/firefox-light-1280-17-editar-rascunho.png",
+    "hash": "71e221dea1ca8c8dfd35623c3211ec0d54032a3183b8ea7936d07d87b95b95c3"
+  },
+  {
+    "path": "docs/ux-v2/webkit-light-1280-01-entrada.png",
+    "hash": "e24c5eaa0833799f5f1391b4bc3a2bb933192c1559753fbdceef0b237740c345"
+  },
+  {
+    "path": "docs/ux-v2/webkit-light-1280-02-painel.png",
+    "hash": "9b8a6c62bc32566a7a17602d6662c8d1dd28047832ef698d7874734c49aa8d1c"
+  },
+  {
+    "path": "docs/ux-v2/webkit-light-1280-03-lista.png",
+    "hash": "d41fb4516296ff33436d65b6f14ce0b07a8132a6084411160d5a7a49fb193cc9"
+  },
+  {
+    "path": "docs/ux-v2/webkit-light-1280-05-detalhe-visao.png",
+    "hash": "1cb63563b6af1305c699622198cba0c3712e25c0f8379e5298cf03e3a8b7f702"
+  },
+  {
+    "path": "docs/ux-v2/webkit-light-1280-17-editar-rascunho.png",
+    "hash": "3fada57458d1b6db1738441371fdf16e227a2405d151e8b261358d51236a537f"
+  },
+  {
+    "path": "frontend/.node-version",
+    "hash": "5b9d0e73029969ae9000117cb877f17bb9841c1279bfe8024e294acfcf017800"
+  },
+  {
+    "path": "frontend/.npmrc",
+    "hash": "f93526be2f2cb1f1b0c8c607cd26722a118d5b4e36d8ae3faeb95a99d1bda51f"
+  },
+  {
+    "path": "frontend/browser/batches.spec.js",
+    "hash": "85dbad9e074464d8664703df5ee692792195022332983c2c9c49ed5ccfc6b394"
+  },
+  {
+    "path": "frontend/browser/console.spec.js",
+    "hash": "6e345e5a07e30b7293a6d96000859cd6d69418c25033bd81f379783bc78170a4"
+  },
+  {
+    "path": "frontend/browser/coordinator.spec.js",
+    "hash": "19be46f0c89ad536d03932bdac5991441ec31acf545a07e31a15e0d13026a084"
+  },
+  {
+    "path": "frontend/browser/datasources.spec.js",
+    "hash": "07895452d030dd6ddedf57ff296f8e9810ffc493824ac000263eaaf5324c7eeb"
+  },
+  {
+    "path": "frontend/browser/editing.spec.js",
+    "hash": "bac538c1349974666eb07b1032c036d933704b02625d8b3ff61de268ae480161"
+  },
+  {
+    "path": "frontend/browser/harness.js",
+    "hash": "0b51f072a3fac6ed82dcf44892bdfcfa904bbea0ea1754391984204f6d687f8b"
+  },
+  {
+    "path": "frontend/browser/lifecycle.spec.js",
+    "hash": "c4d9b146e2a73b8e2c67602b75a75e6a60a65682634655fed97114c180b58408"
+  },
+  {
+    "path": "frontend/browser/package.spec.js",
+    "hash": "bd6f4456a66bdbefd7619840746ab50cae2f87f2359062befa6fd444c5f97a25"
+  },
+  {
+    "path": "frontend/browser/reading.spec.js",
+    "hash": "623a45ac95b0a95ef4f8888f2dae8aaf12a61bc4bbc9ac33b9246d37977d490c"
+  },
+  {
+    "path": "frontend/browser/replies.js",
+    "hash": "828beda2a79fcba5e847f51902a9fbdbee2f27a486a3439e5f114d7db38009ac"
+  },
+  {
+    "path": "frontend/browser/reporter.js",
+    "hash": "ca58c4cab74ef47eaf688f18606813dba22679f927c05aa786de4ff22cbb9f93"
+  },
+  {
+    "path": "frontend/browser/transport.spec.js",
+    "hash": "daf2be1694cb77097785468163fd3ff79ebcb47aa6a7ef655afb9fc9b9b5f533"
+  },
+  {
+    "path": "frontend/package.json",
+    "hash": "dd5d0a09546951e36d5d0835cbae84f0f2d4d57f47eff17b4bfd538f67dc9205"
+  },
+  {
+    "path": "frontend/package-lock.json",
+    "hash": "dc802036517f7e9c07d48c05b889729239c82e3dda33c8da830655bc5aa757c0"
+  },
+  {
+    "path": "frontend/playwright.config.js",
+    "hash": "c8a04efa8a61a04eb38b624c68674c1da9ee2b061c4f1e4d63b89509ab27eb08"
+  },
+  {
+    "path": "frontend/private/calls.json",
+    "hash": "d61744292e4e16d7ca0fd6cc31a7fb7f480a1992b812ffb40a4c95888b33dcb5"
+  },
+  {
+    "path": "frontend/private/contracts.d.ts",
+    "hash": "20a2f1e22fad09736f1f99e3e7ba44bc08f7addb3239c797aa15301d1a9b6e38"
+  },
+  {
+    "path": "frontend/private/model-names.json",
+    "hash": "3ec7929e7feb3a2bffa554a8fea5ff7be1374861e53da455ae8132d911201fdc"
+  },
+  {
+    "path": "frontend/private/presentation.json",
+    "hash": "0964dc7cc7599a0ef9fd1335191a33e3451cfd8cd8ae86a93eb3aca406669a3b"
+  },
+  {
+    "path": "frontend/private/protocol-schema.json",
+    "hash": "5c69f664f695ba02a48f90857399aa681d6cc3642dd3281c7371dba1852633d9"
+  },
+  {
+    "path": "frontend/private/vocabulary.json",
+    "hash": "d3e95e87e5eb4feeade90a3db8241ee450fe1d8a5fed887b8924c93202105490"
+  },
+  {
+    "path": "frontend/private/vocabulary-tokens.json",
+    "hash": "0b4d14f066339d2c50a1a463090dff84307030ce62a82a6535cf90bedc704546"
+  },
+  {
+    "path": "frontend/private/wire-schemas.json",
+    "hash": "b95b24efac6eba42163617ce6a35f8b1be467b831b7138cdf793e025070b2e3e"
+  },
+  {
+    "path": "frontend/private/wire-schemas-v2.json",
+    "hash": "93c4ed2924105dac4213500d80424ec0df1fc34e8ca49f15026373b7ec78b0f3"
+  },
+  {
+    "path": "frontend/README.md",
+    "hash": "d3c8fc2050b0c09d4367b01594bc2c8d050770fbae2ff20cc030a357aa1df788"
+  },
+  {
+    "path": "frontend/src/author.js",
+    "hash": "667661e0729a6b004f51400e620f24669421da7c1ebc921f6f75c9487ce171a5"
+  },
+  {
+    "path": "frontend/src/commands.js",
+    "hash": "3f65ce2f10a4e260f4e9a88a43eda80fbe094bbc1102d60fa1989dc3a6a8dfb3"
+  },
+  {
+    "path": "frontend/src/coordinator.js",
+    "hash": "c94b96cc068fbda90b9861e4e00a54ace4ba4e9c8d4b70b59c9852b1dd381024"
+  },
+  {
+    "path": "frontend/src/desk.js",
+    "hash": "ab7335ec1e4d72be9a28255fe2f98291906c6babf30de6c76ca01fce843827c8"
+  },
+  {
+    "path": "frontend/src/protocol.js",
+    "hash": "e9663cbdd804d41baf0201d7c7f36727faa5ec4cfa0f07120b63cda5b7789642"
+  },
+  {
+    "path": "frontend/src/reader.js",
+    "hash": "628372c70680ce66ff17c9e5d8028ec0e0aeb91ff201f23ecd7a968b77055b20"
+  },
+  {
+    "path": "frontend/src/screen.js",
+    "hash": "5e8fd8faf094bf241ad055ddeeece3f38fef9838f13382544dde75b7fca9c23b"
+  },
+  {
+    "path": "frontend/src/transport.js",
+    "hash": "d519dbc92f68d88ce39d0da7a7b2ec6849f3d2a2ef087133475f894b13685c5d"
+  },
+  {
+    "path": "frontend/src/workbench.js",
+    "hash": "e9a92f38a3a7bde6ebaf75d7bc6d9de89bfaa27c79fda81f1215a0113c506ece"
+  },
+  {
+    "path": "frontend/test/author.test.js",
+    "hash": "8bb951b473f553db132a63414077b172acad36b3644b4d4869d33a13d8959eab"
+  },
+  {
+    "path": "frontend/test/batches.test.js",
+    "hash": "e444adcf8c41c9e57774f1df7c0400dfeca0daae712d2a4f7b181dd2c998615b"
+  },
+  {
+    "path": "frontend/test/commands.test.js",
+    "hash": "4c6454889f135ddc9b9adf2adc1950d711db39817c846c4e394797d03c7a75a2"
+  },
+  {
+    "path": "frontend/test/contracts.js",
+    "hash": "67245eb474d7ee9099e41c5c3ee668dcf10a3ae7bbf895c1198f3952f5874ae1"
+  },
+  {
+    "path": "frontend/test/coordinator.test.js",
+    "hash": "347b83e162651f5f2d32d3973c866d93af76888b2c093cc48f747752c11277d5"
+  },
+  {
+    "path": "frontend/test/protocol.test.js",
+    "hash": "5293fc0fdcd58f042301048d45404a682d9857f079573e04e57bad4f197c2e90"
+  },
+  {
+    "path": "frontend/test/reader.test.js",
+    "hash": "90652b2dcc6cb5589bbd8f90bdcaafff3a7370be0191de979b757342cf5498db"
+  },
+  {
+    "path": "frontend/test/replies.test.js",
+    "hash": "2d6c188d6264f24abb3e020119d910ff45fa63ea8539382bcf64772f93247867"
+  },
+  {
+    "path": "frontend/test/samples.js",
+    "hash": "365339e21b2e96126c561b9a6cb71ce471317ff5fdcd20951afdf3372e22e5f1"
+  },
+  {
+    "path": "frontend/test/surface.test.js",
+    "hash": "e7097f71fa7d0b39385118cb0028dbae7591611188283092608960445549fdf1"
+  },
+  {
+    "path": "frontend/test/transport.test.js",
+    "hash": "4f9720e9a50aa88b019dbb1cfab6fe83f8ef959c68a244b1ad26c1eddc1c23a4"
+  },
+  {
+    "path": "frontend/tools/build.js",
+    "hash": "5ce7c5dd30acaca031d87d8af8ed508e5095939fbb46a1d492dfd54402ca08bc"
+  },
+  {
+    "path": "frontend/tools/catalog.py",
+    "hash": "98546f46d72701489772ea0b24761806974586f85b4800c55f7fbbe1bd388a90"
+  },
+  {
+    "path": "frontend/tools/console.py",
+    "hash": "2b978528cd8f732d02b02afeec9ba062c2e48e19b5fe6a2de079be78186175c7"
+  },
+  {
+    "path": "frontend/tools/generate.py",
+    "hash": "f8fc0a062b7fec8794cf07941bd85c3cf7216c94755b489761596cae5be4b889"
+  },
+  {
+    "path": "frontend/tools/inspect.js",
+    "hash": "20ad8ab89c10f79a843bb1fbc2479383d8d35ec4c24624cf242592b3ed76a2a7"
+  },
+  {
+    "path": "frontend/tools/presentation.py",
+    "hash": "94aebf1f8ba9ee67b0bd2f3df11cd10d65529437603b765b9d4e3bf416af697e"
+  },
+  {
+    "path": "frontend/tools/screenshots.js",
+    "hash": "41f23637480a93fb67f333c929c90d6f16fe4ab32118405a93ad5fa537a28673"
+  },
+  {
+    "path": "frontend/tsconfig.json",
+    "hash": "a48b78bd389864500667d73c0815205a0e073cfaef813924e9afd6fa3f0145b0"
+  },
+  {
+    "path": "frontend/tsconfig.source.json",
+    "hash": "cbc314305fe74e05d531cd08dc448f1d3ba97053cae922152857a2afee4e1c55"
+  },
+  {
+    "path": "MANIFEST.in",
+    "hash": "d69c78876465b6c72e164490c31191039c16c457e3e485dd30b91492f2e108b5"
+  },
+  {
+    "path": "PROMPT-01-ARCHITECTURE.txt",
+    "hash": "48af10ec7fdf0f5242045a35a4988c19ad4b7ef6cebcc4d28a9989df76f0fb87"
+  },
+  {
+    "path": "PROMPT-02-IMPLEMENTATION.txt",
+    "hash": "a3a0ce98bb9c268d56eb6f199aadeeb7a62c5993162d546b3c7f9cfd0dd69281"
+  },
+  {
+    "path": "PROMPT-03-SECURITY-AUDIT.txt",
+    "hash": "2e1bfff74df990c335bfd4fb34baf9b837a06bbc09aa4554244d4478ae0c3731"
+  },
+  {
+    "path": "pyproject.toml",
+    "hash": "917fe7353178849ec9e7f53627fc0ce2e0be9fb7678d6dcd2e42f79b925de8f9"
+  },
+  {
+    "path": "skills/architecture/SKILL.md",
+    "hash": "6d7f785141ed422ed65a284132768305200fef308176536f3f7f42dc1ed8acbc"
+  },
+  {
+    "path": "skills/masking/SKILL.md",
+    "hash": "781c54e2e83a66e0db5e69853efd1088e708a8038dc4da16f69c92b3f1ed896e"
+  },
+  {
+    "path": "skills/mcp/SKILL.md",
+    "hash": "3c8b4cc738ed5d04247d6e49f513a089ca42b1f95022503d0de152cd756f16c6"
+  },
+  {
+    "path": "skills/security/SKILL.md",
+    "hash": "0b0e351af37bc5c02214848b955085447e254d1e1e03f87ce8ea7cccb2fb0e9e"
+  },
+  {
+    "path": "skills/testing/SKILL.md",
+    "hash": "620981a2474499fb140a5672adfbe2c30f32dad21d698bb177c8f72e72a44476"
+  },
+  {
+    "path": "src/maskgw/__init__.py",
+    "hash": "728aec5edade0613b430d4e34a4caa2e498f2964a4cfcff49c42728f5302ce94"
+  },
+  {
+    "path": "src/maskgw/__main__.py",
+    "hash": "cf277e816692552f0e6cec5fe01d6b2449f320079394e97e4a44aac359f4ee09"
+  },
+  {
+    "path": "src/maskgw/admin/__init__.py",
+    "hash": "96db608c29d867b72ba4a0e9c2cd3fe93ba90771ffb1665a3227e53aa50509ac"
+  },
+  {
+    "path": "src/maskgw/admin/document.py",
+    "hash": "bbd838364c3fd4abc444258e3ec67c37153b371a011f292d12f7cd7aa775d4ed"
+  },
+  {
+    "path": "src/maskgw/admin/errors.py",
+    "hash": "8de3f2ca749eca6b483393beca1ebc4a543818c778d40f7872c4830f8b1efbf5"
+  },
+  {
+    "path": "src/maskgw/admin/http/__init__.py",
+    "hash": "dfbd417e692bc6afa0728f33e87f5a1cac61be5143f3ef38cccdcfda71b99a5d"
+  },
+  {
+    "path": "src/maskgw/admin/http/app.py",
+    "hash": "6a08f08c453c2471b649d6310644010af52df6d256b3b3ae2028c62dcd6d63f7"
+  },
+  {
+    "path": "src/maskgw/admin/http/audit.py",
+    "hash": "8f03b19706c782849f48eaa677d78b2433eefc4c42775a9ecc503c632c032ba3"
+  },
+  {
+    "path": "src/maskgw/admin/http/browser.py",
+    "hash": "5bd9eedc9af6a8a6053537c6968f7d7bd86d8c14f70492e5cd93a456d07dc8da"
+  },
+  {
+    "path": "src/maskgw/admin/http/middleware.py",
+    "hash": "2d33e37ae952d278dda205707529d6fb9f4dd9808c081754048a7fe1a43b1ac5"
+  },
+  {
+    "path": "src/maskgw/admin/http/mutations.py",
+    "hash": "33c42d98d968174a10969143c5d8b037f576168fa898004b385feea941e01a2c"
+  },
+  {
+    "path": "src/maskgw/admin/http/responses.py",
+    "hash": "d88c35e2d79ce972cbbf16ec99ff9b88fa66d069b6f368fc97b8362d2293b2a4"
+  },
+  {
+    "path": "src/maskgw/admin/http/schemas.py",
+    "hash": "ed3b1a1d9e2a7dbbd1069c41e10895fb21c25eb49dcc2d1deeb3855e7ffdf5b9"
+  },
+  {
+    "path": "src/maskgw/admin/http/server.py",
+    "hash": "6eba2a857760ccccbf7332a288cab97e50a22f6c93730c0c3ed1eac09ca593e9"
+  },
+  {
+    "path": "src/maskgw/admin/http/settings.py",
+    "hash": "0e3f00d966874800f3b028993dc432b1f38ede1d5a07cdf9f558a25a44f1c683"
+  },
+  {
+    "path": "src/maskgw/admin/http/ui.py",
+    "hash": "cbc4e4fa10399a0f6428c7248d06b9272bc5a5d27521d8d32cd2f84d68ed74a3"
+  },
+  {
+    "path": "src/maskgw/admin/http/v2/__init__.py",
+    "hash": "d4d6257873651834e98b7f5dd3f5d68e6a3e9eb08eb82ac4948594d351fb25e0"
+  },
+  {
+    "path": "src/maskgw/admin/http/v2/audit.py",
+    "hash": "d823a4ee0a751b09e997414bb292d9dfef2d27749c822ae1df2b37dc4ad89a24"
+  },
+  {
+    "path": "src/maskgw/admin/http/v2/errors.py",
+    "hash": "5bff9c9ddce37d027edd60772346ee082e2307891820d2131e99160544485f52"
+  },
+  {
+    "path": "src/maskgw/admin/http/v2/operations.py",
+    "hash": "69070a4fd249402bda5bf1ffd34211e5f58d9b4111d398a916321a97e9aff00e"
+  },
+  {
+    "path": "src/maskgw/admin/http/v2/routes.py",
+    "hash": "e1556e8508bb17e33fc0712093436b55032f4a8d52f266233e39f7b1d44e3776"
+  },
+  {
+    "path": "src/maskgw/admin/http/v2/schemas.py",
+    "hash": "dc74e62919a8a62b72c3f0698afab7da17de64a19beab17d444ecdc60fe5f79d"
+  },
+  {
+    "path": "src/maskgw/admin/http/validate.py",
+    "hash": "b0f8f83409c06c5e7a2d3a82957842e6f49748bd93be648223e381b738e493d4"
+  },
+  {
+    "path": "src/maskgw/admin/http/views.py",
+    "hash": "57aaefb9289ca8c351be2ffb6562de054eb6169ea7ca95e5cb24bb64a1f1ab8a"
+  },
+  {
+    "path": "src/maskgw/admin/service.py",
+    "hash": "aeb1582da0382f34cc1ea2896d0aacfc01dd0c6f7964f0c64f737ef41fea6b7b"
+  },
+  {
+    "path": "src/maskgw/admin/ui/__init__.py",
+    "hash": "a21de80bc2943384618a01f1c866b80cdeb4786f8717819c487987669f115b9c"
+  },
+  {
+    "path": "src/maskgw/admin/ui/_anchor.py",
+    "hash": "21905f8c846277ef820e1f1579d36dfa8b8a22767d81c34f9e4b407085f5ee5e"
+  },
+  {
+    "path": "src/maskgw/admin/ui/_catalog.py",
+    "hash": "3565edabbc44f01bb692175ba8ebffa70ffaa292f7a5a68b0f1a8c03a997b818"
+  },
+  {
+    "path": "src/maskgw/admin/ui/assets/index.html",
+    "hash": "e61f2541dca9aa21f1bdc756c6fd30ba83192e1b46d5fa1af1e2c33e2f421b54"
+  },
+  {
+    "path": "src/maskgw/admin/ui/assets/manifest.json",
+    "hash": "33fb918f83bf1b87aba995c485d55c188269f1deab252bf40e640bb4ada540ba"
+  },
+  {
+    "path": "src/maskgw/admin/ui/assets/presentation.json",
+    "hash": "0964dc7cc7599a0ef9fd1335191a33e3451cfd8cd8ae86a93eb3aca406669a3b"
+  },
+  {
+    "path": "src/maskgw/admin/ui/assets/ui.css",
+    "hash": "e4fbb1284eefd60b74a099840af2974eefdc47f67e9c34c1e89d6a885cc1d07b"
+  },
+  {
+    "path": "src/maskgw/admin/ui/assets/ui.js",
+    "hash": "dbb51c17c677b4c339d69bdff2e8a4e6ba5b9175eedd377bb30857004fce265c"
+  },
+  {
+    "path": "src/maskgw/admin/ui/protocol.py",
+    "hash": "86c9d2987b9e31f1744a0d8d0cc0b9772e98465b28c70c3a5885415e68586255"
+  },
+  {
+    "path": "src/maskgw/admin/ui/resources.py",
+    "hash": "47690441c5dbc059b722699b3bcc4883e210aa658eeaf40ea73c5cd0dd9b3679"
+  },
+  {
+    "path": "src/maskgw/audit/__init__.py",
+    "hash": "5ad52b0c57b8bfc025a3266a19aeaa57b5d6030183a1ca5f5774206ceb031b40"
+  },
+  {
+    "path": "src/maskgw/audit/datasource.py",
+    "hash": "d303f19e196ac1bc2dcf5a748cd55e7b56c7dab46a0b8f7609adcbf32c76b4c8"
+  },
+  {
+    "path": "src/maskgw/audit/log.py",
+    "hash": "bc4a3b44700c162e3a31a18029ca04e55fc999ddfde9995fb12a59c6613e8748"
+  },
+  {
+    "path": "src/maskgw/bootstrap/__init__.py",
+    "hash": "3691aef610454119461c00a412a31cfb9675c474f0196f7f93532cb9de61085b"
+  },
+  {
+    "path": "src/maskgw/bootstrap/application.py",
+    "hash": "f7735a0863f15f16722994bb7886a0b09d8efdbb100a98dd3829f67d88446ec1"
+  },
+  {
+    "path": "src/maskgw/bootstrap/main.py",
+    "hash": "71d8e7458f1216673cb9c356eb579c1261f5b504b1b917cebd1513abf535ee98"
+  },
+  {
+    "path": "src/maskgw/bootstrap/settings.py",
+    "hash": "949c3693942357f28097a829d69f8bc40936ace43b8b9eda9275105f82ab4646"
+  },
+  {
+    "path": "src/maskgw/config/__init__.py",
+    "hash": "da71b7a27dd9304ac3dc0d2f00045202592df82e3bd77d5a625411b6e3c00333"
+  },
+  {
+    "path": "src/maskgw/config/filesystem.py",
+    "hash": "a8c0f9b3e1387a31e076fe93cd95ca46fb6cf3b1ee9141b64fd3e2f2b6654410"
+  },
+  {
+    "path": "src/maskgw/config/gateway.py",
+    "hash": "253f53076605213f0335438ffe2b2d2e22adeed5c56f41b47d5b6ffbb5c4850f"
+  },
+  {
+    "path": "src/maskgw/config/ids.py",
+    "hash": "cc38e1b161f911f54b61dc862c9a0377ccf8d35af99a1e423464fe0312abc33a"
+  },
+  {
+    "path": "src/maskgw/config/loader.py",
+    "hash": "bd1f039afea5ffdd9a23a519f0899269b5c3f257b6b527b1373ec2bacb887be7"
+  },
+  {
+    "path": "src/maskgw/config/models.py",
+    "hash": "2ffdd436bd25e64c1cc10beeeb611e98f188bc322a844c3b4f4b6c9a4d264dae"
+  },
+  {
+    "path": "src/maskgw/datasource/__init__.py",
+    "hash": "bbba731e179713aefe1b5138d1291ee5b1924c3cd356f09c990c81e267af198f"
+  },
+  {
+    "path": "src/maskgw/datasource/crypto.py",
+    "hash": "e187137e9ab31de8bed8ed93e10a472aae6465b1a8441547dcce2c73d758c32f"
+  },
+  {
+    "path": "src/maskgw/datasource/destination.py",
+    "hash": "7b3c5a9c1cb47e86fd8668bad6dfee9f3f7cdb468ae0d7a3c54961529f6c618a"
+  },
+  {
+    "path": "src/maskgw/datasource/migration.py",
+    "hash": "6ace9916578476c860a3ff77c0dbd2fe47bf01b0199aeaccc85f3b28d7fda584"
+  },
+  {
+    "path": "src/maskgw/datasource/models.py",
+    "hash": "e30c1a2fe992f736d13762c28340406a4dae4640aee5a60666946886d84a696e"
+  },
+  {
+    "path": "src/maskgw/datasource/resolver.py",
+    "hash": "dcfc3a5abd9c032717e11fd4540fd5a3bbc0dcc664fce0f30d6cbe3ceb49a2d8"
+  },
+  {
+    "path": "src/maskgw/datasource/store.py",
+    "hash": "bb017c7b255bce5d00d4e92cbfe577a02c5ca53e398c9cafa4bc00c15d42c776"
+  },
+  {
+    "path": "src/maskgw/datasource/verify.py",
+    "hash": "84d78bc201b976a9834bdfaf51228f580f4ba8aeb177a9fd17b2ffc50125dccc"
+  },
+  {
+    "path": "src/maskgw/db/__init__.py",
+    "hash": "e79b5031d881c1e27910567e90fdb97a637bd7062cebfbfe7d3fbeff72391296"
+  },
+  {
+    "path": "src/maskgw/db/capabilities.py",
+    "hash": "693656ec9370e1a8c67f88ee67babc196af5720048669ab9f8b3995247fd20f7"
+  },
+  {
+    "path": "src/maskgw/db/columns.py",
+    "hash": "cbe6c376f466d581606796e2300210f1ef9785acc6155ac206c79dd1a5169db7"
+  },
+  {
+    "path": "src/maskgw/db/postgres.py",
+    "hash": "170dafb9c792f113b8892a52b3a0c6603c98010004dac40983d729f6d1ca6081"
+  },
+  {
+    "path": "src/maskgw/db/provenance.py",
+    "hash": "af46714d03a47b562fa5adb17007e5abe543dfde20568de7c95accce8c97f2bf"
+  },
+  {
+    "path": "src/maskgw/db/result.py",
+    "hash": "adf586c7608acf2dd32e9e57d28844a439fc0362411ee3552f2eb12a2487c01b"
+  },
+  {
+    "path": "src/maskgw/db/sanitize.py",
+    "hash": "7368aabe0395231b49c07280bfffcc2f38a13451381a04adf7271e772eb5925e"
+  },
+  {
+    "path": "src/maskgw/errors.py",
+    "hash": "a60c5ea67e3986cb4e75cf79a0423b2d3bf3ddd3f0cc29cb4c952925df942e24"
+  },
+  {
+    "path": "src/maskgw/gateway/__init__.py",
+    "hash": "fbbe368715a16dd6db3658a47264f7fc1e167df9aa82fd555be7ffd02e2898c6"
+  },
+  {
+    "path": "src/maskgw/gateway/datasources.py",
+    "hash": "53ab272bc014eaa16630445672e52ee5de6e3944c77b11c547bf8a767107ba7b"
+  },
+  {
+    "path": "src/maskgw/gateway/models.py",
+    "hash": "20ac89c5968835392268b424330b6d0f64b457273c457faaa86940680687a402"
+  },
+  {
+    "path": "src/maskgw/gateway/service.py",
+    "hash": "cb1ab5ca23c1fda83147f379b499bcfd8db3c0d784abcc5ccf8b78d00f053abd"
+  },
+  {
+    "path": "src/maskgw/masking/__init__.py",
+    "hash": "53502246a23f42d78918aaecea027440c9413b330d73f540fd20b3f749e01043"
+  },
+  {
+    "path": "src/maskgw/masking/canonical.py",
+    "hash": "8ff63d26aee92437ec471f20b19e009efa86dd6891c638dbeeb700fba31fb02f"
+  },
+  {
+    "path": "src/maskgw/masking/descriptor.py",
+    "hash": "95fdda4ec4e08bca8e446040046344616546a8d355fde4cc3023b78b3fc9db14"
+  },
+  {
+    "path": "src/maskgw/masking/engine.py",
+    "hash": "70875147ec9c5eb2d637492d983e826f8c3031c653c96a06d1fb2dca9dd7527f"
+  },
+  {
+    "path": "src/maskgw/masking/matcher.py",
+    "hash": "0a44e0ef8272f914297b9404455c3e411972b3392445dd26e2602549334fe6fc"
+  },
+  {
+    "path": "src/maskgw/masking/rules.py",
+    "hash": "54732dc29e6426a6b46a71d300fcf9ef5211b02c9d47bca5c55d8719af60efb1"
+  },
+  {
+    "path": "src/maskgw/masking/transformers/__init__.py",
+    "hash": "6f78b88e2cf32c279c0b07895e794a1f66265547e9be941929d4137abbe76207"
+  },
+  {
+    "path": "src/maskgw/masking/transformers/base.py",
+    "hash": "b8511cf1798182dfd344a37a1fb13e0b456790d5176d4aadb959f266c30592b8"
+  },
+  {
+    "path": "src/maskgw/masking/transformers/hashes.py",
+    "hash": "892fcfab8dd238a5975c12d91cf81574873129127bc805a1f8c4d6bc96287956"
+  },
+  {
+    "path": "src/maskgw/masking/transformers/params.py",
+    "hash": "0c09c52f75c54b087e01b59e104a0dd7aefe958f1c2cc85f6021806f076d22b0"
+  },
+  {
+    "path": "src/maskgw/masking/transformers/randomize.py",
+    "hash": "40bc7a7cfb8ae5c5dc3b00d19834d6bc2b3447a4a3fccf03bd835e6a6a65e1eb"
+  },
+  {
+    "path": "src/maskgw/masking/transformers/regex_transformer.py",
+    "hash": "852f8b079aa5d62d07ed2a920dd753cef8621106301b3497a123c523c5d61fef"
+  },
+  {
+    "path": "src/maskgw/masking/transformers/registry.py",
+    "hash": "87a7869d0ee7da5e3c96c5e5896a3d3db870abbc823d2a27f589c52151290429"
+  },
+  {
+    "path": "src/maskgw/masking/transformers/simple.py",
+    "hash": "b5595c14e0aa8bd4808ebbd3722dce2187cb075c9b33415541fc81dbfdf22fd0"
+  },
+  {
+    "path": "src/maskgw/mcp/__init__.py",
+    "hash": "c354151adab6b71f8b72671fdb6d0439ddc99254d8cd70c7ef0bc1ecb8e8860f"
+  },
+  {
+    "path": "src/maskgw/mcp/__main__.py",
+    "hash": "831f8b5677b94af48a180637df21e5fd01aacc36a0144383e9d985535c3270e8"
+  },
+  {
+    "path": "src/maskgw/mcp/server.py",
+    "hash": "0d4a3d3ca09bb8fc78a7dc50b86efb9886141014e43266fd21216b2a5268afb8"
+  },
+  {
+    "path": "src/maskgw/pgwire/__init__.py",
+    "hash": "9ea9a00611e515c55b3f1ecdbf72d5a8288d1cb386d0994b8f9dbc73e5da822f"
+  },
+  {
+    "path": "src/maskgw/pgwire/bind_resolution.py",
+    "hash": "461d785cfc41fc94ba93366bbca48a4998af3c281bcfcfd2cf6254ec571d09fc"
+  },
+  {
+    "path": "src/maskgw/pgwire/channel_binding.py",
+    "hash": "8549556bef2c220ecc0f6d341e4ecccee50195676a0d5472c8e0c86c49fa4d0e"
+  },
+  {
+    "path": "src/maskgw/pgwire/composition.py",
+    "hash": "d3209d44a9507adf3d1bb199bb0c1b68a10352f87ad9c01a5820e347b325221c"
+  },
+  {
+    "path": "src/maskgw/pgwire/credential.py",
+    "hash": "38a44fb37f9878e832bbb3aad9cab1a8d0ee7a66fa780f55c1f00139e4172a1c"
+  },
+  {
+    "path": "src/maskgw/pgwire/driver.py",
+    "hash": "1093919dc92f233655419c0971ffc34797c138441a4f24a84cfea3438712cc4f"
+  },
+  {
+    "path": "src/maskgw/pgwire/errors.py",
+    "hash": "4de8cbc2d5e38e84fcd597330d3d044ba5d6423528555e5f67a25d751a3b05c7"
+  },
+  {
+    "path": "src/maskgw/pgwire/framing.py",
+    "hash": "6419e768633848d804cd34f1488adb0bcd2b5e61a1965e30b2ee3f5403f95f26"
+  },
+  {
+    "path": "src/maskgw/pgwire/listener.py",
+    "hash": "855f5576b4b8e3818895fdcb8c63b6d1b954605a0cae6f776141a4037d724cf3"
+  },
+  {
+    "path": "src/maskgw/pgwire/result_encoder.py",
+    "hash": "707e8431d0cd5d33f24fe43c5181086dc0eb894e0e02d01bf89a5f9e95436d4f"
+  },
+  {
+    "path": "src/maskgw/pgwire/result_frame.py",
+    "hash": "0a83171ff85b2ea01b1fd55d1e1213328a640adf53b1750b756a7f361a156778"
+  },
+  {
+    "path": "src/maskgw/pgwire/result_receiver.py",
+    "hash": "730c6c8e2cf7f1df6b4ef0f02325e0927ddaa173cf0689eaba54e6eb4c652495"
+  },
+  {
+    "path": "src/maskgw/pgwire/scram.py",
+    "hash": "d7bde9591e88fa54ff6e613cf30bd10a656d388f11f0c4b8e38b4e3b1bf9673e"
+  },
+  {
+    "path": "src/maskgw/pgwire/settings.py",
+    "hash": "e531f8142fe7767142dafa44545e0e5bc9cf6d31453e4b8e5536c846a6e52e97"
+  },
+  {
+    "path": "src/maskgw/pgwire/tls.py",
+    "hash": "a48c84e1b93d7b5b1c0f5383d2275e3b7509480d25beba86d1ca4f2364f677a0"
+  },
+  {
+    "path": "src/maskgw/pgwire/transport.py",
+    "hash": "2ae86fe27b288d59d1f6d7e8c63113e1188152b14ec16ae664e4c07f64115444"
+  },
+  {
+    "path": "src/maskgw/runtime/__init__.py",
+    "hash": "4b5a1698b6cd8f3541cd9aa4604d3afca437dc549a18296b8f55edc8ad70be80"
+  },
+  {
+    "path": "src/maskgw/runtime/admin_work.py",
+    "hash": "f74858c5066fba21953e5e34052c71570307f06cd0f37fc03fa0a1f941614d2f"
+  },
+  {
+    "path": "src/maskgw/runtime/budget.py",
+    "hash": "510ca741cac660afb33ce5ae97da2685f472ebcac36e90dc8cd94fd2dcf1ed7e"
+  },
+  {
+    "path": "src/maskgw/runtime/candidate.py",
+    "hash": "09a0ff4df176a4cd74aef622c5463187125d23e589d5651fe4107ae30c404186"
+  },
+  {
+    "path": "src/maskgw/runtime/datasource_service.py",
+    "hash": "a538edca724251e2f69eaf26e1d464bf465de059dfab9ab382d80f50be740351"
+  },
+  {
+    "path": "src/maskgw/runtime/datasources.py",
+    "hash": "0f630989156370808caab0e774656d295091d6919bf0c1c1962889b7489e303e"
+  },
+  {
+    "path": "src/maskgw/runtime/domain.py",
+    "hash": "414c9b0957f1d40ebb54ca080ec270fc5fdb59130e8415f8d63f63dcd629e91d"
+  },
+  {
+    "path": "src/maskgw/runtime/registry.py",
+    "hash": "c8b5093f25db75d4c1e8740333093f9d76f888e9a9f24de59a57fb03c00d598f"
+  },
+  {
+    "path": "src/maskgw/runtime/snapshot.py",
+    "hash": "75b43e79a23fee01492fd86a881930e3807d5e98b9b754a4ddaf9971d98aa7b2"
+  },
+  {
+    "path": "src/maskgw/secretsource.py",
+    "hash": "d4d0a17d4a87207d832e3eed60934630a04e33a86f7296a020de2b42e96d4be8"
+  },
+  {
+    "path": "src/maskgw/sql/__init__.py",
+    "hash": "fca918c3b76093cbd5b07bfa08dc4446041bc467fe2a682177c87be3aa94d3a7"
+  },
+  {
+    "path": "src/maskgw/sql/parser.py",
+    "hash": "14f298d94eefc00085d2b0028dae47919a2745f55bcc58d4cb7c48830361fe7d"
+  },
+  {
+    "path": "src/maskgw/sql/policy.py",
+    "hash": "4cde64d9e12a39a64dbcacea204bba69bdb79bde168b8f1240804e20f25c0faa"
+  },
+  {
+    "path": "src/maskgw/sql/sensitivity.py",
+    "hash": "a1a10ba059b22f22cb070912acc64468e67634b17289e2c4175291496a639913"
+  },
+  {
+    "path": "src/maskgw/sql/validator.py",
+    "hash": "00df71a3de33a004b8fff3f994c916c1b8dd3d7b3e5da2566e3ecf35edeed0ea"
+  },
+  {
+    "path": "tests/__init__.py",
+    "hash": "e21669a76754c8788c5aef3c1da504d331f0d05ea494b2e27a4845287d95c6b7"
+  },
+  {
+    "path": "tests/admin_http_support.py",
+    "hash": "322baf3bea9b1d43aef72e1ef6deda24fe1fa07025482fb2a32161aa548cc4f9"
+  },
+  {
+    "path": "tests/admin_ui_compat_support.py",
+    "hash": "120c177192299507634b0c0ccf0ff4cd61cf6f2eda68c7adce279638e5db809e"
+  },
+  {
+    "path": "tests/admin_v2_support.py",
+    "hash": "c2179379b6aa29d8239ab861c0825f6f78a8c79756437fd740aa35b5214cbc85"
+  },
+  {
+    "path": "tests/browser_console_server.py",
+    "hash": "881e980dbfd1421dde62a364de147bdc17c05e6f6b1a6422477ab2f3f03a094e"
+  },
+  {
+    "path": "tests/browser_edit_server.py",
+    "hash": "76a9350699f6237da9ee2812b9b9bfbbb8cbbea0eaf314b7c481b3b9eef07157"
+  },
+  {
+    "path": "tests/browser_server.py",
+    "hash": "cbde56e2797292231f7282b3b82883581ad7bac5af1c9b7594d9e063decb40b7"
+  },
+  {
+    "path": "tests/conftest.py",
+    "hash": "61e83e1028f521ca7c21d73b7ec12da1fdb87d2b695a9b4c5719a4578b5dcc0e"
+  },
+  {
+    "path": "tests/datasource_runtime_support.py",
+    "hash": "ebbe88e6bfb8f57479d689538a93115c228c75c4f143a51fac0a4d2c2ec240e2"
+  },
+  {
+    "path": "tests/domain_package_probe.py",
+    "hash": "62ed224d188deed4e5e708dd80178426fbe16cb110df389ca1aaa330734ad3fc"
+  },
+  {
+    "path": "tests/fixtures/phase7-ui-off.json",
+    "hash": "10aabaeb3dad9bcf2afc3713041191e055633c5409769d4a15e5bbe4f82fde2b"
+  },
+  {
+    "path": "tests/installed_console_probe.py",
+    "hash": "fa20143aa1e78c437d7c411fc5081eb8f6c0cd39bf0fd7798eac8d5cd3b8719f"
+  },
+  {
+    "path": "tests/installed_package_probe.py",
+    "hash": "1ed231bdcd99b5b6d20f5c7241e218f1b7e013ad5943bd411f20917f0ba553e9"
+  },
+  {
+    "path": "tests/installed_support.py",
+    "hash": "f37077a773418aa946534ff567dd9e1301f2f88a59cb0800cc53131489c69fbc"
+  },
+  {
+    "path": "tests/pgwire_driver_support.py",
+    "hash": "c33427b0a113ad2bb8da5533c251967c4ab0cb1340edbf9d22c55272c830a355"
+  },
+  {
+    "path": "tests/pgwire_listener_support.py",
+    "hash": "47c11fd55b6253af6baeda55a7ff461e5d68a52ccaaaaf1293e1c2ee4e1228df"
+  },
+  {
+    "path": "tests/pgwire_support.py",
+    "hash": "c5043e8a78e2075a0d1bf554721f5113d81275216732ca677f55a8849c33d169"
+  },
+  {
+    "path": "tests/result_encoder_package_probe.py",
+    "hash": "636eafc3bc48d4583d98f463f934e003a440a58760ea734e79bf513a0af09b81"
+  },
+  {
+    "path": "tests/result_receiver_package_probe.py",
+    "hash": "8d440a6732aa413ff33621f07f221cc282fcf8c5c35fae14cb8963258e3d1ef4"
+  },
+  {
+    "path": "tests/security/__init__.py",
+    "hash": "ad258b78b87d1b42f1ada84d969673d809b8826ab32076c7b73814054cefc893"
+  },
+  {
+    "path": "tests/security/conftest.py",
+    "hash": "634b3b2842f6a8ffdfdeb0bea24fa5f1b440af1b843e7f0281c07f12c67f6d45"
+  },
+  {
+    "path": "tests/security/test_attack_expressions.py",
+    "hash": "e332e4f8a83560b52baab5ad15633f3f32aa145e71f254dccaa00ae1f2ecbd27"
+  },
+  {
+    "path": "tests/security/test_attack_functions_catalog.py",
+    "hash": "beb8315862abd548c597f71a3de154ff9cc6fed3329e288a413ebd2073cf58c5"
+  },
+  {
+    "path": "tests/security/test_attack_oracle_errors.py",
+    "hash": "274458278aaa14772d089ccfe68085e9b5395948cc722c67685c684afaf43409"
+  },
+  {
+    "path": "tests/security/test_attack_protocol.py",
+    "hash": "90915df5cd9e03ee20d3d614cad56c1baefdde03e638a5e84961b5ba14ce49d1"
+  },
+  {
+    "path": "tests/security/test_attack_union_views.py",
+    "hash": "ce10be34ad7376355b6f501b47e416732cead15f042a166dd1ac8665e8af7f2c"
+  },
+  {
+    "path": "tests/snapshot_child_probe.py",
+    "hash": "6c1c8c2c6322aebcdf3c3a8bbe4e447a06d046a218f9215915c2b3aab7621708"
+  },
+  {
+    "path": "tests/test_admin_adversarial.py",
+    "hash": "0b994b0442b7734edb8a7a387e7b5aedb76777ef85611e290b7c5e433b024b83"
+  },
+  {
+    "path": "tests/test_admin_audit.py",
+    "hash": "a1795aaf223b7eedbb8bfabd69c69ee4e7961aa0e192ce0baf12001decc0af6c"
+  },
+  {
+    "path": "tests/test_admin_audit_closed.py",
+    "hash": "033a1886ba5a21721afc74c523e9aa739c8ae50177fba09bb39603e34df6e4ef"
+  },
+  {
+    "path": "tests/test_admin_http_audit.py",
+    "hash": "953240842933dda8ee6bd00ba95db48dd2e027ef4f53098d57164d03ea232cfc"
+  },
+  {
+    "path": "tests/test_admin_http_boundary.py",
+    "hash": "0c7672dc2db587f0023069afd43488bdb1d635443350f13d526b4b529ff2d2a0"
+  },
+  {
+    "path": "tests/test_admin_http_leakage.py",
+    "hash": "376ab8e212c394224f71aa1463bf5a9d9c81e23f816d40684ad18a4fbde5bad5"
+  },
+  {
+    "path": "tests/test_admin_http_lifecycle.py",
+    "hash": "9446f6ffb3364f430ee0cbe433e59387e8be3afc63a6cbe722fed205e053784b"
+  },
+  {
+    "path": "tests/test_admin_http_mcp_coexistence.py",
+    "hash": "d64f2354a78a0901d866b5f4c068f3ac410117a1ea97d5387a8096dffc9d0146"
+  },
+  {
+    "path": "tests/test_admin_http_reads.py",
+    "hash": "0ea0b00dc6bf5eeed18bc1870d8a4ddbec5834eacf456e4a84a6143785982707"
+  },
+  {
+    "path": "tests/test_admin_http_settings.py",
+    "hash": "b79219365564f6ce4ef2c5741d9e665fe0523487253f5a1ffe7502e8ab7d7dc4"
+  },
+  {
+    "path": "tests/test_admin_http_snapshot.py",
+    "hash": "e767c4a991628a1c8af88ea143d677176bf64937d49004885ed9440cac0ae43c"
+  },
+  {
+    "path": "tests/test_admin_http_surface.py",
+    "hash": "e8be8298cbe3a997f13456a3dfb54ef49bcc77752462bab96051c3f60fb6407a"
+  },
+  {
+    "path": "tests/test_admin_http_validate.py",
+    "hash": "d43a2f6c1906ae46ffa2a0b30883b79df152a669bc996ab83fa9dd73cbb2ed55"
+  },
+  {
+    "path": "tests/test_admin_http_writes.py",
+    "hash": "e3b5875dcf8ba34f92a8eaf0f6185dbeb255be46ab9d5cebeabe6804598e4017"
+  },
+  {
+    "path": "tests/test_admin_http_writes_adversarial.py",
+    "hash": "bf28b48778d15e1d203d289419b603fe6e867541f9f686ed647e22313fa047fb"
+  },
+  {
+    "path": "tests/test_admin_http_writes_e2e.py",
+    "hash": "b2a0d0b68e17498300ef6ed9445b189efdb3d7d3dcfddf4e26db7d8222365037"
+  },
+  {
+    "path": "tests/test_admin_service.py",
+    "hash": "5fc075b6bf2e5396580bab460a8baf788524fdf6f79a7c6a7e13bd2819035fc9"
+  },
+  {
+    "path": "tests/test_admin_ui_actions.py",
+    "hash": "d0c93b947a8dfddae255c3b44b3224e41152ea26f811e3d8ed14559206159df2"
+  },
+  {
+    "path": "tests/test_admin_ui_console_groups.py",
+    "hash": "77697cf90e1538d4490c5580cd1d0bb7d523bfeeae4561d65f6dea3db67c69b8"
+  },
+  {
+    "path": "tests/test_admin_ui_http.py",
+    "hash": "ebb92effd41062322b83639abc6acbfd78aacb33f66583f11d9365eb0fd66b71"
+  },
+  {
+    "path": "tests/test_admin_ui_resources.py",
+    "hash": "00de8002e0302a8358afada09927571cef935d4c8b67d040394aa05c0524428d"
+  },
+  {
+    "path": "tests/test_admin_ui_startup.py",
+    "hash": "7bb4c714472f7479601705044ef033357e3f9ac6a96c7f8aa8e40ccb0237e1c2"
+  },
+  {
+    "path": "tests/test_admin_v2_audit.py",
+    "hash": "dfcdc80eb797b8374725c39e2334cb9c9028db91b424e681b6d2010de04afd32"
+  },
+  {
+    "path": "tests/test_admin_v2_concurrency.py",
+    "hash": "5ffa6be2764ac8d29d080963c6552634bd3c84ba1ed50802a13218476267337b"
+  },
+  {
+    "path": "tests/test_admin_v2_executor.py",
+    "hash": "ce4dd6888b65763094166ca294cc4ae2647228437d128c263477baa49c2a2b70"
+  },
+  {
+    "path": "tests/test_admin_v2_http.py",
+    "hash": "12fac4759db0255fbd42296a5bd6135eb21550a0464776042e9e83a51138b15b"
+  },
+  {
+    "path": "tests/test_admin_v2_integration.py",
+    "hash": "5868e9a1b8653eedf346cc20b5d3d52d6b87328fd5c00291a3bc28f01200b8bd"
+  },
+  {
+    "path": "tests/test_admin_v2_lifecycle.py",
+    "hash": "9f9cb5ac2263d36ae7991ed34f90dee7d119b4cbd0cd60373f4df63dcdb0db0a"
+  },
+  {
+    "path": "tests/test_admin_work_bootstrap.py",
+    "hash": "45c7481003a06637ef4381e3c35427db6c6e6309785ece5ff0fac66d1fc981ad"
+  },
+  {
+    "path": "tests/test_admin_work_queue.py",
+    "hash": "2955c71e86bd9781a402256e7570b89ebf532571262da6d94171a61c1667234f"
+  },
+  {
+    "path": "tests/test_audit.py",
+    "hash": "cacee0abd4ae3f0bdc79dd1123d0bccbd24434e57be0f5b2baed95655881ac62"
+  },
+  {
+    "path": "tests/test_bootstrap.py",
+    "hash": "9e9fa79c70b6322f4f89f0c7e37c09a74179d99e025dc0cf1a122455db0bc2f7"
+  },
+  {
+    "path": "tests/test_browser_edit_harness.py",
+    "hash": "eba99639417e4d585f54ed46a513d5303606a605533a4804162cf60a8ccf6372"
+  },
+  {
+    "path": "tests/test_browser_harness.py",
+    "hash": "b69134d083bdf21916622bfcc3d51b9d7f213a9b0e0643e783e1f3bb7f6f4417"
+  },
+  {
+    "path": "tests/test_canonical.py",
+    "hash": "e54997d7624ee41a7fd0d16358196acc3a3d814c84c5634ad472cf669438fcbb"
+  },
+  {
+    "path": "tests/test_config_filesystem.py",
+    "hash": "3feec2bd1e2d4128643b3452b98261215fd398a2b079b48b22087523d7a23d59"
+  },
+  {
+    "path": "tests/test_config_gateway.py",
+    "hash": "a53a3abd7100923865da9f21b5b2181efc690c1825aeaa9f79936876026b9d4b"
+  },
+  {
+    "path": "tests/test_config_hazards.py",
+    "hash": "fc9b6fedf1c5f12586653bd9540663bdb600e2522df4f5945839fe7047974562"
+  },
+  {
+    "path": "tests/test_config_ids.py",
+    "hash": "31b8a85065a7156ff23eddbe3466aff4e121eff50bd8565a81748bcabe21f627"
+  },
+  {
+    "path": "tests/test_config_loader.py",
+    "hash": "a56a3d5018a054227ebb60205de576c1628faffa77480b9fe432ab3069c25469"
+  },
+  {
+    "path": "tests/test_datasource_bootstrap.py",
+    "hash": "10df67dc0f3e686e9b3834103a641e02cf1e15d5e38a9ab7003ac6d9b7d98d5a"
+  },
+  {
+    "path": "tests/test_datasource_catalog.py",
+    "hash": "6a71bc1167b9286dbd483e0f02d442f88e23218a29d2156b4e0842fd01e676e1"
+  },
+  {
+    "path": "tests/test_datasource_destination_review.py",
+    "hash": "af3bb429e07aa42bee98499fd10317f2ab3f75a26b0d770316c20a3a8397b63e"
+  },
+  {
+    "path": "tests/test_datasource_registry.py",
+    "hash": "f33a69dcf833b42760b1d02f7aa228f0b04a71bc843baea62390bd9470e02928"
+  },
+  {
+    "path": "tests/test_datasource_resolver.py",
+    "hash": "07f28b14f48f5bdab9d0e1261a09f094060a4a41efea00a432f53fa62be5267c"
+  },
+  {
+    "path": "tests/test_datasource_runtime_integration.py",
+    "hash": "5b13564478d546f3aacf4086e9c136af8f51c3cd5354edd542b1311bcdcece91"
+  },
+  {
+    "path": "tests/test_datasource_runtime_service.py",
+    "hash": "de8370a545474506b1716105418ed93602331f6fdd66aa9b351ba77829cd18dc"
+  },
+  {
+    "path": "tests/test_datasource_service_v2.py",
+    "hash": "33865a8761532db49174550f01fe472350c649fa5fab7b360ec26ea22045f4ca"
+  },
+  {
+    "path": "tests/test_datasource_verify_bind_dns.py",
+    "hash": "f1398f55ac9d0477294bd230d8073bf39e5106e09292a62d108e5effffb5e780"
+  },
+  {
+    "path": "tests/test_datasource_verify_gate.py",
+    "hash": "a19532c2a6a6dc3784387c178d0f231f240c7852220f1487492174f23b472c4c"
+  },
+  {
+    "path": "tests/test_datasource_verify_supervisor.py",
+    "hash": "ad8455a630b21258aba3c2a4a22c376d50119d4e34b410276a86a3e896b4831a"
+  },
+  {
+    "path": "tests/test_db_columns.py",
+    "hash": "89cd27a14219383a830dcaf0022bb6d9bbd56e9e5931367e635e651ec6780daf"
+  },
+  {
+    "path": "tests/test_db_errors.py",
+    "hash": "4f9811fca82be979d475c6fa1c01585088df8037431a8b894736dce1a7c43a29"
+  },
+  {
+    "path": "tests/test_db_integration.py",
+    "hash": "77ba514413bfe6e681b5b6c8c7e4b825ed0a8dacfe692006e7042daa690d4407"
+  },
+  {
+    "path": "tests/test_db_leakage.py",
+    "hash": "c92fa06ddc2bea8dd6041330e80179307654a9927490b3b515bb0493b9ebe95c"
+  },
+  {
+    "path": "tests/test_db_masking.py",
+    "hash": "6c285d30810d33d7de3c9d450c55b50d5ab22ea1a318c286bbdc034cbf66c40b"
+  },
+  {
+    "path": "tests/test_db_provenance.py",
+    "hash": "eccd746a472888eb10e385a4e3469106745166def920287b06bebbc8638a5d0d"
+  },
+  {
+    "path": "tests/test_db_typed_integration.py",
+    "hash": "9e1d4227fb48d5d2c811337fb263ed645e558ce749861a4a0b5ae3e136940ad3"
+  },
+  {
+    "path": "tests/test_db_typed_result.py",
+    "hash": "3b8637705c39048985d6b5f86e15fa566d5b0a6a088a08ab5ea291738f3202cd"
+  },
+  {
+    "path": "tests/test_engine.py",
+    "hash": "b034999e83af1af1557547d1864f4df96d9a03e05b28f3147092c20b633bfd2b"
+  },
+  {
+    "path": "tests/test_execution_safety.py",
+    "hash": "dceaa9c7bc53ed0c5ac664a2790d85adb19eba1d8b77065413aa6efe14bcac0b"
+  },
+  {
+    "path": "tests/test_gateway.py",
+    "hash": "d477bda11229b527b1b6ef74e9354c3e5789e9d68c4a4ed7d0158afc5d119c0c"
+  },
+  {
+    "path": "tests/test_gateway_runtime.py",
+    "hash": "1d3bb12f50eb9b7535332d4c93017802a76616de87ccadd9c4f2ba2a7f059b2e"
+  },
+  {
+    "path": "tests/test_leakage.py",
+    "hash": "c2559adf678b0966959e718467482e0bc240e2fd9ea674db4f049d23eb31750b"
+  },
+  {
+    "path": "tests/test_linux_as_diagnostic.py",
+    "hash": "1fb4447538acbd22f3cc1e384bf349bbf694f8196979440a47e273f04ef996e1"
+  },
+  {
+    "path": "tests/test_linux_as_observer.py",
+    "hash": "5743287c2f770a3e3ae8a9e1bd36119e48041c8eee1787127f571e49abc37022"
+  },
+  {
+    "path": "tests/test_linux_imports_batch.py",
+    "hash": "fd6d41c8e629cba818d828d7b6e533845f5e2089f39aabca66fbfb23f38a208d"
+  },
+  {
+    "path": "tests/test_linux_imports_lib.py",
+    "hash": "d3082deaf30e6fd2e457d140b8ffad6bee537703677dd7d1dbd95b0f64fce92a"
+  },
+  {
+    "path": "tests/test_linux_imports_preflight.py",
+    "hash": "ba2c4161a8fd9e2643a397f6e8fee7f0aa53cfa76814705ad491566caea62a43"
+  },
+  {
+    "path": "tests/test_linux_imports_preparation.py",
+    "hash": "04bdbca65773697bf1179ee86ac956aa98e7de0442799e860408aed33fe3c091"
+  },
+  {
+    "path": "tests/test_linux_imports_probe.py",
+    "hash": "b9623cff4813581430915998637ac66ee0268b4a291cfb6c3d3e06ce7b6677bd"
+  },
+  {
+    "path": "tests/test_loaded_memory_collect.py",
+    "hash": "fd5b611c37b3a37010ee646dcc72c42212986fd0102cf5c24cd956bbf71651c2"
+  },
+  {
+    "path": "tests/test_loaded_memory_entry.py",
+    "hash": "432141380018591c2059ffc1a5897c7621b1964efea698f51b3890ba07909649"
+  },
+  {
+    "path": "tests/test_loaded_memory_evidence.py",
+    "hash": "09b43ba5962529447109cf78a792d06cb90c382d57f1802b8d15e1d73de208dc"
+  },
+  {
+    "path": "tests/test_loaded_memory_held_host.py",
+    "hash": "d264bc9537025c42ef3bb5a4e2d9196cab26cc23bf1ea7f4a9b5f42a84e4f091"
+  },
+  {
+    "path": "tests/test_loaded_memory_host.py",
+    "hash": "cc8ab88a536f6d43e0ac74e9d942510f8deaeb994bf401ca5946381ed1c1d0e9"
+  },
+  {
+    "path": "tests/test_loaded_memory_member.py",
+    "hash": "1f6afae395c08596dde6ae994606e28be1d18945bae7112ef9e92018ee670da4"
+  },
+  {
+    "path": "tests/test_loaded_memory_protocol.py",
+    "hash": "5b81839711cb59b788d8cdc60d7f341bdb0823fb611939b3c0e1069a4689a295"
+  },
+  {
+    "path": "tests/test_loaded_memory_supervisor.py",
+    "hash": "2a2d6afb07673e5b032bbeb90bf0bccbd6bb68f8d7ea9a80cb0f7ac41af2ef16"
+  },
+  {
+    "path": "tests/test_matching.py",
+    "hash": "308b736183e4f9fd61438e6deacbceeb242b0f8579523914491ac8f7eca7c6a5"
+  },
+  {
+    "path": "tests/test_mcp_integration.py",
+    "hash": "48cc9e197d1d3ad3ac43396a9b22abc1abb6760ed80fbc4545a3123fa9f21f89"
+  },
+  {
+    "path": "tests/test_mcp_server.py",
+    "hash": "0f7a12a4366cf902849c7fe3b85776d57ea782239c6008e058c5ca80b955b8ad"
+  },
+  {
+    "path": "tests/test_pgresult_metadata.py",
+    "hash": "d4266f4ceafda9020347df3b72e8d9a57261f5f9822294d63a459903cd8d48f7"
+  },
+  {
+    "path": "tests/test_pgwire_activation_review.py",
+    "hash": "5d37c1eb935f8665e3af27b187d8fffd79a9b4ff058dcde16e69f6b644a79250"
+  },
+  {
+    "path": "tests/test_pgwire_bind_deadline_review.py",
+    "hash": "69ede0d230b5ce11006768541cdc195ee4ca15aad1af41c666e0e1dd0dd4b0a2"
+  },
+  {
+    "path": "tests/test_pgwire_bind_policy_review.py",
+    "hash": "f0dd9717cd43b421200ec51a31c1e1c8aad98470e0a2639e8fcbc0d506f20583"
+  },
+  {
+    "path": "tests/test_pgwire_bind_resolution.py",
+    "hash": "1c3d26e2ea45dab7a78dc0c6536b50caf31d12f2117efb5e189771b025d3e34f"
+  },
+  {
+    "path": "tests/test_pgwire_bootstrap.py",
+    "hash": "302c147ce487e1c833e718de143c7f2779f1a799672a868873335e15bce3073a"
+  },
+  {
+    "path": "tests/test_pgwire_bootstrap_increment_review.py",
+    "hash": "76c312026ecff74d8328b3293cd8ff62bc0331ae2c5ddedcafe66645d435fa24"
+  },
+  {
+    "path": "tests/test_pgwire_channel_binding.py",
+    "hash": "86eb62e593fd9d4834d6ea1d1bd8018410af1aa9f83a431cc0f653bd86d7822c"
+  },
+  {
+    "path": "tests/test_pgwire_driver.py",
+    "hash": "51d5ec5c9331a6e6f17329954c52addcf625929bc72695220b8574029669977d"
+  },
+  {
+    "path": "tests/test_pgwire_driver_increment_review.py",
+    "hash": "d68727f6df804821309d49e337a4fae7180c7defa49de114f5b81a9f72e01893"
+  },
+  {
+    "path": "tests/test_pgwire_driver_interop.py",
+    "hash": "cdd93d58f8ce9f1eae2aee05bef8e3695f1d43824478f3097b4d4dea756229f1"
+  },
+  {
+    "path": "tests/test_pgwire_framing.py",
+    "hash": "291f474b4a0d919ed84baab03e0ac99c9cb1c7581c02c8e4f7be0e40de6b03dc"
+  },
+  {
+    "path": "tests/test_pgwire_increment_review.py",
+    "hash": "14c0822992e1caa63ae522a5e3af5b1ac9250a5de709578fbc1a8abd90b0a5e2"
+  },
+  {
+    "path": "tests/test_pgwire_interop.py",
+    "hash": "33075a7686a7cefb9311081ce625c4571e5c50b2fa9c93f30e14a47dd1baceb8"
+  },
+  {
+    "path": "tests/test_pgwire_listener.py",
+    "hash": "6d193fae0e701ce5077e68534de4cf7617b7dafd53bce6b92c4704ba3f87478e"
+  },
+  {
+    "path": "tests/test_pgwire_listener_increment_review.py",
+    "hash": "3f9fc096493399f265d1f506c6fdb58ca5875f4cea8c7d9f14c85caa9cb17805"
+  },
+  {
+    "path": "tests/test_pgwire_listener_interop.py",
+    "hash": "87c1259bb0afa1551228f82697eed73ecf4030e4e181581c80f33ef42cb2c56c"
+  },
+  {
+    "path": "tests/test_pgwire_main_activation.py",
+    "hash": "03272644e4a9bb3054d24f754e053d233e1737a374cdfedbc6a329e068117d4d"
+  },
+  {
+    "path": "tests/test_pgwire_main_operational.py",
+    "hash": "117c8b7dc3bb657eef6c5b3754449bb52d38874315c3155906e9403404728d74"
+  },
+  {
+    "path": "tests/test_pgwire_scram.py",
+    "hash": "85349a0bf636d01ecd66466b995d2b23a0b7a3498ecf4b73d90d24c8080f0713"
+  },
+  {
+    "path": "tests/test_pgwire_settings.py",
+    "hash": "e111372d12ece72751686460ae084523fae8c3f206ac25f9ce615346c3e161e1"
+  },
+  {
+    "path": "tests/test_pgwire_tls.py",
+    "hash": "bcd5cf786d24e8fd4562beed6e28e0cd656b326df7fa54b6f43cdd5d89096d95"
+  },
+  {
+    "path": "tests/test_pgwire_tls_increment_review.py",
+    "hash": "b11c51e5e82641b7c82f4a1b493e8a2e7291227aed6e47ff4d771c02e7b6e2bb"
+  },
+  {
+    "path": "tests/test_pgwire_transport.py",
+    "hash": "aae4290a92f88600f1ac72ac3cc98580bf59355ef57d941cc98cb39912caf4e7"
+  },
+  {
+    "path": "tests/test_pgwire_transport_increment_review.py",
+    "hash": "df7b1cb907c19136f21ccedc312621ab41550346a9092751e25606d2d0759eb3"
+  },
+  {
+    "path": "tests/test_phase8_final_inventory.py",
+    "hash": "0a4f30b83505b31f26f8347c6e4bf0f57d37901dfec339b3ab6fd5ea2690f2cb"
+  },
+  {
+    "path": "tests/test_plan_separation.py",
+    "hash": "a6565c3c39f323618b0cb53d37d663f91cc0afbcba0e56364bc62fd07f0f97f2"
+  },
+  {
+    "path": "tests/test_purity.py",
+    "hash": "eb96d3f6414ca2dfd51dc8fcc4ade6de503480e2b4065bbb7d40de0bf2dfe3ef"
+  },
+  {
+    "path": "tests/test_result_budget.py",
+    "hash": "8314c6ed31070fbe7e397ba6535b198d35056fc83d085812a6db1f2c4ca69e2f"
+  },
+  {
+    "path": "tests/test_result_encoder.py",
+    "hash": "9983a34f8ac72a3a75afc09d2137a1b80bf5ee209bda3f956bec2f4215b8290c"
+  },
+  {
+    "path": "tests/test_result_frame.py",
+    "hash": "c2b13e404da422371de059bfaabe4afabb7f6b1dbc567884d1a74185355e80ea"
+  },
+  {
+    "path": "tests/test_result_receive_primitives.py",
+    "hash": "3d9c16c086bc25dfb9fc28d84c94a8a58f33cf18cde8b9092da3075126fb1dff"
+  },
+  {
+    "path": "tests/test_result_receiver.py",
+    "hash": "b806538bda08c5f42d9083b9ae18b1237eeb5c0c7b05a30b6bf0f1c58a800ea5"
+  },
+  {
+    "path": "tests/test_runtime_budget.py",
+    "hash": "c15659c60563680dec017b45e40a6bca3b295cda3cc9c7313ae83a7a47de465e"
+  },
+  {
+    "path": "tests/test_runtime_domain.py",
+    "hash": "350c7b98e9f423fe3c67ff51a1553e4077cae2dcea6d100c28362c46d5a755d8"
+  },
+  {
+    "path": "tests/test_runtime_registry.py",
+    "hash": "5372ced6e0d22c01f303d62af39f8df1b4ea01681798921efe35866f5ad6280e"
+  },
+  {
+    "path": "tests/test_runtime_snapshot.py",
+    "hash": "fb38c35c2d0ceecca80a1c9ebe7e9c0a1aa249f26e8adf21785b28185f541bca"
+  },
+  {
+    "path": "tests/test_runtime_snapshot_process.py",
+    "hash": "0c7d05f9c6b23a92de22e113a0c023f94674cf0df1d03eb44ca3b544e38e9e61"
+  },
+  {
+    "path": "tests/test_sensitivity.py",
+    "hash": "b9d0c645fd2be29fcbce21837c112a6a3dc07b1363cf6caeca70c2fc1630b191"
+  },
+  {
+    "path": "tests/test_sql_parser.py",
+    "hash": "3e171b4a7f7150919e9222b8f8c40323e2ec3c69c651dc40fe0188ab17a9e6ab"
+  },
+  {
+    "path": "tests/test_sql_validator.py",
+    "hash": "b4b6d2fa6f32d54b28da797c7ded2ef70a245c651108646274a83336993d875e"
+  },
+  {
+    "path": "tests/test_transformers.py",
+    "hash": "3e1d4bdabffa57f0e8a3e96a49e963de3d29ec73eb46264b984bceac6234502e"
+  }
+]

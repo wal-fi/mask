@@ -1,0 +1,6 @@
+{
+  "kind": "MASKGW_T4_V2_CONSOLE_OBSERVER_V1",
+  "session_id": 10282,
+  "exit": 0,
+  "output": "{\"phase\": \"OBSERVE\", \"count\": 1}\r\n{\"phase\": \"OBSERVE\", \"count\": 2}\r\n{\"phase\": \"OBSERVE\", \"count\": 3}\r\n{\"phase\": \"OBSERVE\", \"count\": 4}\r\n{\"phase\": \"OBSERVE\", \"count\": 5}\r\n{\"phase\": \"OBSERVE\", \"count\": 6}\r\n{\"phase\": \"OBSERVE\", \"count\": 7}\r\n{\"phase\": \"OBSERVE\", \"count\": 8}\r\n{\"phase\": \"OBSERVE\", \"count\": 9}\r\n{\"phase\": \"FINISHED\", \"category\": \"ORACLE9_T4_V2_VERIFIED\", \"root\": \"C:\\\\Users\\\\w.filho\\\\AppData\\\\Local\\\\Temp\\\\maskgw-oracle9-t4-v2-20261029-de8e832ca4c67fd35f3647779adfaad0\"}\r\n"
+}

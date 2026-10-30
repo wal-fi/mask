@@ -27,7 +27,7 @@ BOOTSTRAP_DIR = SRC_ROOT / "bootstrap"
 RUNTIME_DIR = SRC_ROOT / "runtime"
 GATEWAY_DIR = SRC_ROOT / "gateway"
 
-#: Pacotes de rede/HTTP. Permitidos SO em `admin/http/`.
+#: Runtime has only the explicit private W1 AF_UNIX exception below, never HTTP.
 HTTP_PACKAGES = {"fastapi", "starlette", "uvicorn", "http", "socket", "ssl"}
 
 
@@ -92,13 +92,56 @@ def test_the_admin_http_subpackage_exists_since_stage_seven() -> None:
 
 
 def test_no_other_plane_acquires_a_network_dependency() -> None:
-    """Somente `admin/http/` fala HTTP. O MCP continua stdio only (D-036)."""
+    """HTTP stays in admin/http; W1 may adopt one private AF_UNIX descriptor."""
     for directory in (MCP_DIR, GATEWAY_DIR, RUNTIME_DIR):
         for path in python_files(directory):
             offending = sorted(
                 name for name in imports_of(path) if name.split(".")[0] in HTTP_PACKAGES
             )
+            if path in (RUNTIME_DIR / "worker_process.py", RUNTIME_DIR / "worker_session.py"):
+                offending = [name for name in offending if name != "socket"]
             assert offending == [], f"{path.name} importa {offending}"
+
+
+def test_private_worker_socket_cannot_become_a_network_listener() -> None:
+    source = RUNTIME_DIR / "worker_process.py"
+    tree = ast.parse(source.read_text(encoding="utf-8"))
+    constructors = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
+            continue
+        if isinstance(node.func.value, ast.Name) and node.func.value.id == "socket":
+            assert node.func.attr == "socket"
+            constructors.append(node)
+        if isinstance(node.func.value, ast.Name) and node.func.value.id == "sock":
+            assert node.func.attr not in {"bind", "connect", "listen", "accept", "makefile"}
+    assert len(constructors) == 1
+    assert constructors[0].args == [] and [k.arg for k in constructors[0].keywords] == ["fileno"]
+
+
+def test_private_worker_owner_only_creates_one_unix_socketpair() -> None:
+    tree = ast.parse((RUNTIME_DIR / "worker_session.py").read_text(encoding="utf-8"))
+    constructors = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
+            continue
+        assert node.func.attr not in {"bind", "connect", "listen", "accept", "makefile"}
+        if isinstance(node.func.value, ast.Name) and node.func.value.id == "socket":
+            assert node.func.attr == "socketpair"
+            constructors.append(node)
+    assert len(constructors) == 1 and len(constructors[0].args) == 2
+    assert ast.unparse(constructors[0].args[0]) == "family"
+    assert ast.unparse(constructors[0].args[1]) == "socket.SOCK_STREAM"
+    assert any(
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "getattr"
+        and len(node.args) == 2
+        and ast.unparse(node.args[0]) == "socket"
+        and isinstance(node.args[1], ast.Constant)
+        and node.args[1].value == "AF_UNIX"
+        for node in ast.walk(tree)
+    )
 
 
 def test_importing_the_admin_plane_does_not_load_fastapi() -> None:

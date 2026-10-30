@@ -10,7 +10,524 @@ IA → MCP → Gateway → Database → Result Set → Masking Engine → MCP �
 ## Objetivo
 Permitir que IAs consultem bancos de dados sem expor dados sensíveis.
 
+## Delegação vigente — 2026-10-20
+
+O usuário autorizou seguir autonomamente até a entrega em produção, escolhendo
+o melhor caminho técnico, sem pedir nova aprovação a cada lote. Esta autorização
+posterior substitui os limites de autorização por lote e pedidos de aval futuro
+nos registros abaixo; eles permanecem como histórico, não como bloqueio ao
+trabalho novo. Não altera fatos medidos, requisitos de segurança ou o escopo
+funcional aprovado da Fase 9. Decisões novas devem registrar que foram tomadas
+sob delegação, não inventar aprovação individual do usuário.
+
+Implementar em incrementos revisados pelo Claude2, corrigir findings, preservar
+alterações anteriores e publicar somente resultados verificados, respeitando
+as permissões efetivas das ferramentas. Preparar deploy reproduzível e executar
+somente no destino identificado; não presumir servidor, credenciais ou permissão
+para alterar bancos existentes. Pedir apenas informação ou autoridade realmente
+faltante, sem parar trabalho independente que continue seguro.
+
+Se o Claude2 atingir limite, registrar a revisão pendente e programar retomada
+conservadora, sem burlar cotas, trocar conta automaticamente ou duplicar escritores.
+Não declarar job agendado sem confirmar seu registro. B-1 fim a fim, B-2 e
+D-090 gate 2 continuam abertos até evidência própria; SQL PGWire continua
+recusada até a integração passar seus gates. Autonomia não é liberação imediata
+de produção nem dispensa revisão, isolamento, masking, read-only ou sigilo.
+
 ## Escopo atual
+
+## Checkpoint para continuidade — 2026-10-30
+
+Usuário solicitou commit de todo o trabalho acumulado antes de mudar de local.
+HostPG16 corrigido7275c8ae aceito10847: info/version bruto descartado, só projeção
+pública persistida, stop zerado em finally.39fakes12,98s e seleção final dos
+sete componentes257passed16,70s; Ruff/mypy311/314323 limpos. Sem efeito nativo
+novo. `.gitattributes` preserva bytes de docs/poc/deploy, inclusive CRLF
+histórico; não renormalizar fontes consumidas. CHECKPOINT-2026-10-30.md orienta
+continuidade. Falhas e limitações históricas preservadas; sem release.
+Próximo: entrada PG16/HELD, exportador local-only/S1, preparador/proposta e
+revisões antes de rodada única. Sem entrada/root/comando operacional ainda.
+Config pessoal/dumps/systeminfo fora do commit. Imagens/Temp/wheels/ambientes
+não são transportados pelo Git; nova máquina exige readmissão própria.
+DesktopOff, Gateway indisponível e B1/B2/D090/C1/SQL/produção abertos.
+Sem quota/job ou segundo escritor. Não há revisão ativa neste instante.
+
+## Registro anterior — PG16 público — coordenador em revisão, sem efeitos — 2026-10-29
+
+Perfilfe2f aceito6796, ownera02f aceito70705, adapterf1d9 aceito5979,
+volumes6e38 aceitos78090. Watchb868/emergency54cc aceitos17011 após minimizar
+nomes e corrigir flag antes de fsync;218focados5,18s/estáticos322 limpos.
+Novo hostd63650d6 integra somente definições4bc/b593 e colaboradores PG:
+36fakes8,21s, cinco regressões próprias vermelhas antes do fix; Ruff/mypy311/
+314323 limpos. CLI fechada, baseline30s+listagem antes de create, um create,
+decisão durável antes de rm/v, conjunto final/ownerclose/join antes de stop.
+Raw/baseline completos local-only, exportador futuro deve reter. Sem entrada/
+root/comando operacional; host em revisão antes do próximo incremento.
+Falha temporal histórica250(A249/1falha;B250) preservada na CLEANUP-VALIDATION,
+causa indeterminada. Nenhum novo Docker/PG/banco/SQL/secret/worker, DesktopOff;
+Gateway indisponível, B1/B2/D090/C1/produção abertos. Sem commit/push/job/
+quota ou segundo escritor. Registros seguintes são históricos.
+
+## Registro anterior — T4 v2 medida e aceita — 2026-10-29
+
+Rodada de8e832c/task42d363a1 terminou0/ORACLE9_T4_V2_VERIFIED, sete casos/owners
+liberados e sete CIDs próprios removidos.12checkpoints119281ms/66comandos0,
+watchdogjoined/nofire/heldfalse, inventário vazio e DesktopOff13:15:07Z.
+ExportS1aeade45d:53fontes732390bytes/53publicadas0retidas, transporte3a274347
+aceito pelo Claude2 (39884). Normal/reader-negative16384iguais/EOFtrue; retain
+vivo após CLIreap e removido depois. SENT só pipe local. T4antiga0566 intacta.
+Fontes3a5b/28b5/aead/8e02 e raiz agora consumidas, não editar/reexecutar.
+Desenho PG16 público60182/P1 confirmado22157. Núcleo puro de volumes6e3827af:
+33testes0,27s/estáticos317 limpos, aceito78090, sem caller/CLI/release.
+Perfil/builder/parser/S1 puros fe2f8ba8 implementados:120focados0,91s/estáticos
+318311/314 limpos; fixes ulimits/Env/TAB com regressões vermelhas antes.
+Em revisão6796 junto ao desenho PUBLIC-HOST-DESIGN, ainda sem owner/host/
+rodada PG nova. Só memória, ferramentas/UID/tmpfs reais não medidos neste
+lote. Leitor shell/segredos continuam posteriores. Nenhum novo Docker/PG/banco/SQL/worker
+ou serviço operacional; Gateway indisponível. B1/B2/D090/C1/produção abertos.
+Sem commit/push, quota/job ou segundo escritor; DesktopOff, nenhum recurso vivo.
+
+## Registro anterior — T4 v2 em execução em2026-10-29
+
+Proposta aceita pelo Claude2 (review52272); materializada uma vez,3305bytes/
+bec0accd iguais à proposta, sóattempt e comando iguais. DesktopOff confirmado
+13:11:00Z. Scriptb01ce0b2 invocado uma vez, sessão10282 em andamento: NÃO repetir
+root/main, iniciar outro DockerCLI/escritor ou editar fontes agora consumidas.
+Raizde8e832ca4c67fd35f3647779adfaad0/task42d363a1115633d15fbb809fc0dc666e.
+Aguardar terminal e provas de recursos; depois exportaeade45d uma vez viaS1,
+sem ler raw em ferramentas/conversa antes do filtro. HELD não exporta/reexecuta.
+Canários públicos somente; sem PG/SQL/serviço. Gateway indisponível e gates
+B1/B2/D090/C1/produção continuam abertos. Sem quota/job/segundo escritor.
+
+## Registro anterior — T4 v2 preparada e revisada em2026-10-29
+
+Perfil3a5bb9a3/main28b56013 aceitos pelo Claude2 após corrigir C1 herdado;
+65 testes novos aprovados em14,41s, quatro overrides/driver preservados.
+Exportaeade45d/prep8e024cf4 aceitos;28testes31,07s, retain vivo passa S1 próprio
+com SHA/tamanho ligados à CLI. Ruff/mypy311/314 em316arquivos limpos, runtime
+sóWindows3113. Proposta checkout oracle9-t4-v2-prep-20261029, RootTempde8e832c/
+task42d363a1/estado3305bytesbec0accd/scriptb01ce0b2 em revisão antes de qualquer
+materialização ou invocação. Nenhum novo DockerCLI/PG/container/attach/seed;
+DesktopOff confirmado13:09:54Z. Fontes/raízes consumidas anteriores intactas.
+Sem quota/job/outroescritor, T4/B1/B2/D090/C1/SQL/produção abertos; indisponível.
+
+## Registro anterior — admissão medida em2026-10-28
+
+Rodada2dd94bfb/task34346ce8 terminou0/ORACLE9_ADMISSION_CAPTURED, sócreate/
+inspect de dois perfis, nuncastart/attach/owner/seed. Única divergência nos
+dois: StdinOncefalse esperado/true observado, CONFIG/profileacceptedfalse;
+demais predicados iguais, labelsCID3/imagem4.12checkpoints119156ms,33comandos0,
+doisCIDs removidos/ausências/inventário vazio/threadjoined/DesktopOff; relido
+Off19:18:42Z. Exportador S1recalculado:33fontes204300bytes/33publicados/0retidos,
+transporte4f771777 aceito pelo Claude2 como diagnóstico, sem liberar perfil/
+canal. Fontes96/7c/1b/beeb e raiz agora consumidas, congeladas, além das T4antigas.
+Novo desenho T4v2 em review27358: só predicadoStdinOnceTrue, outrosperfistetos/
+fábrica/leitor/canário iguais, rawantesvalidação/S1 todosaliases inclusive
+retainvivo. Sem código/root/Docker novo nesse desenho, sem quota/job/segundo
+escritor. T4/B-1/B-2/D-090/C1/SQL/PG/produção abertos, Gateway indisponível.
+
+## Registro anterior — execução de admissão em andamento
+
+Proposta2dd94bfb/task34346ce8, código e comando aceitos pelo Claude2.
+Materializados2392bytes/SHA24d647a0 iguais à proposta/onlyattempt/comando;
+scripta17e4275 invocado uma vez19:14:58Z, Desktop inicialmente Off. Sessão91808
+em andamento: NÃO iniciar outra CLI/Docker/escritor ou repetir root/main.
+Aguardar terminal e provas de recursos antes de exportador S1beeb85d6;
+nenhum raw em ferramenta/conversa/repositório antes desse filtro. Sem start
+de container/attach/seed/PG/SQL. Fontes T4consumidas preservadas, Gateway
+indisponível e gates de produção ainda abertos.
+
+## Registro anterior — proposta exata de admissão
+
+Comparador9612/71, runner7c113617/20, exportadorbeeb85d6/16 e preparador1b069987/8
+aceitos pelo Claude2.115focados16,07s, Ruff/mypy311arquivos311/314 limpos,
+runtime só3113. Variante só cria/inspeciona normal e retain, nunca inicia
+container/attach/owner/seed; todos aliases raw passam S1 antes de exportar.
+PropostaRoot2dd94bfb4502755ce8fa8cd496f637c8/task34346ce8ed18f936d482c3c19aaeb04f,
+estado2392bytes/SHA24d647a0/scripta17e4275 em revisão antes de materializar;
+root ainda não existe, sem DockerCLI novo. T4reprovada0566/raiz86e5 e fontes
+88e2/835c/c789 intactas, DesktopOff. Sem quota/job/segundo escritor. T4/B-1/
+B-2/D-090/C1/SQL/PG/produção abertos, Gateway indisponível.
+
+## Registro anterior — T4 reprovada na admissão, recursos restaurados
+
+Rodada única86e5417c/task52cdd340 terminou exit1/NOT_PASSED, antes de owner/
+attach/start/seed.12checkpoints/replay121360ms, createCID94d9d33a confirmado,
+inspect31711bytes validou posse mas não aceitação. Raw não persistido antes
+da validação: lacuna explícita, sem atribuir campo/causa.28comandos0, rm próprio/
+ausência/inventário vazio, threadjoined e DesktopOff comprovados. Transporte
+24arquivos37910bytes/SHA0566dd40, resultado aceito pelo Claude2 como baseline
+reprovada. Não repetir fonte/raiz consumidos88e2/835c/c789. Nenhum recurso vivo
+pendente. Próximo desenho create/inspect público somente, captura antes da
+validação e categorias fechadas, sem start/attach/seed/PG; ainda sem código ou
+efeito novo. Núcleo puro de diferenças/publicação72e8/66 aceito; reforço9612/
+71tests em rerevisão (4regressões vermelhas antes). Vincula CID/nome capturados,
+varre proxy/auth e oculta texto/Env. Nenhum chamador/exportador operacional;
+Ruff/mypy308311/314 limpos, runtime só3113. Desenho S1/fivehooks para integração,
+sem nova raiz/rodada. B-1/B-2/D-090/C1/SQL/produção abertos, Gateway indisponível.
+
+## Registro anterior — execução T4 em andamento
+
+RootTemp86e5417cd7958015ace880173d138553/task52cdd3407a6bcc71f77d8d2610c59e5c
+materializados uma vez, bytes2254/SHA26548003 iguais à proposta aceita;
+script6ddb78bf invocado uma vez17:53:03Z, Desktop inicialmente Off. Primeiras
+2observações/3checkpoints xb conferidos, sessão50033 em andamento. Não iniciar
+outra CLI/Docker/escritor, não repetir main/raiz. Aguardar término e capturar
+evidência integral antes de qualquer próximo lote. Host88e2/entry835c/prepc789
+originais aceitos, labelimagem4/CID3 conforme inspect real. Proposta anterior
+de herança1f rejeitada, nunca materializada; preservada. T4 pública sem PG/
+seed privado/SQL; C1/B-1/B-2/D-090/produção continuam abertos, Gateway indisponível.
+
+## Registro anterior — preparo do código T4
+
+Canale6ca/77, canárioe3cf/47, identidadedc248/28fakes, emergência2fdc/22 e
+watchdog3e98/26 revistos pelo Claude2. Prova nativa única de identidade:
+1pass/1,45s, somente filho Python próprio+2PS, todos recolhidos; não repetir.
+Seleção relacionada medida665pass/46,79s, separada das
+unidades de identidade/emergência/watchdog. Binding88e220eb/32fakes aceito
+após3regressões vermelhas de oráculos. Entry2e9fc/26 aceito; delta835c/27
+marca interrupção no join. Preparadorc789/9 e delta em revisão, sem raiz/
+estado/comando operacional. Seleção dos três novos arquivos:68pass/15,78s.
+Ruff/mypy src/tests307 limpos, alvos311/314, runtime sóWindows3.11.3.
+Nenhum DockerCLI/PG/seed privado novo; Desktop último estado Off, imagem621
+inalterada, T4 ainda não executada. B-1/B-2/D-090/C1/SQL/produção abertos;
+Gateway indisponível. Sem commit/push/job/quota/segundo escritor.
+
+## Registro anterior — bootstrap privado aceito em 2026-10-28
+
+Canal docs/poc/w1_bootstrap_channel.pye6ca9e60 revisto pelo Claude2;77focados
+verdes e618relacionados/47,94s. R1 spawn tardio, B1 pipes e B2 cancelamento
+corrigidos com regressões antes do fix; L1 callbacks também revisto. Ticket
+só após CLI/tarefas/handles recolhidos; release só com ausência de CID posterior
+ligada ao ticket. Entrega NOT_SENT/SENTlocal/UNKNOWN; IO não vira sucesso.
+Unidade de2PipeHandles nativos passou fora do sandbox, stdlib3.11.3/Proactor
+pinado; Ruff/mypy src/tests300 limpos (alvos3.11/3.14, runtime só3.11.3).
+Nenhum DockerCLI/DB/credencial novo; candidata621cc7f7 inalterada. Histórico
+de falhas de harness e revisões em BOOTSTRAP-CHANNEL-VALIDATION. Direção da
+sonda pública T4 aceita, contratos watchdog/oráculos em revisão antes de
+código próprio/estado/comando/ciclo novo. T4 ainda não executada; nenhum
+seed privado autorizado antes dela. B-1/B-2/D-090/C1/SQL/produção abertos,
+Gateway indisponível. Sem commit/push/job/quota/segundo escritor.
+
+## Registro anterior — W1 instalado e sondado, evidência aceita em2026-10-28
+
+Rodada independente v2b59388f5 em27/10:exit0/ORACLE9_W1_CANDIDATE_VERIFIED.
+Imagem local621cc7f702ec34d7014809411fda7fc89ab6b95f6dc7d16315274d4a7006ef0b,
+Oracle9.8/Python3.11.13, wheel6b63f239,39versões/3337paths/5módulos W1.
+Update offline8,75s/probeUID10001RO/networknone4,641s;5adds/3changes,
+L3real155linhas, Config4layers/labels exatos.12checkpoints124656ms replayados
+no host;50comandos0(35DockerCLI), doisCIDs removidos/globalvazio/DesktopOff.
+Transportee257a536:36arquivos2236940bytes; atestaçãof0c3cd54. Claude2 aceitou
+como insumo fixo para próximo desenho W1/PG16, não para operação. Fontes,
+tentativa1falha/recuperação preservadas. Nenhuma query/worker/DB/listener,
+commit/push/deploy, quota/job ou segundo escritor. B-1/B-2/D-090/C1/SQL e
+produção abertos; patches/minimalização de runtime seguem pendentes.
+Gateway ainda indisponível. Próximo: prova privada com PG16 descartável,
+isolamento e segredos próprios, plano/código/comando revisados antes de carga.
+
+## Registro anterior — rodada W1 abortada e recursos restaurados, 2026-10-27
+
+Main4bc0b083 executado uma vez, exit1 após create e antes de cp/start/pip.
+CID72891af0 não iniciado/Statecreated/Pid0 ficou pendente após a tentativa.
+Identidade/perfil originais válidos, somente label de apresentação
+Desktop não herdado; cleanup reutilizava essa exigência adicional e recusou.
+Evidência RUN-VALIDATION/transportce09d005 preserva falha; não repetir rodada.
+Restore9d4fa8b9/14fakes, estado e comando revisados, execução única exit0:
+CID removido/ausente, inventário vazio, DesktopOff confirmado. Transporte
+c1351f16 preserva6arquivos/56089bytes, tentativa falha original intacta.
+Recuperação aceita como baseline; desenho R1–R5/hooks aceito antes do código.
+Novo coordenador privado v2a46227c9 em revisão somente leitura:31novos/
+384relacionados aprovados,1skip symlink; Ruff/mypy src/tests299 limpos.
+Cinco overrides, journal12xb/replay, posse distinta de aceitação e label
+de imagem explícito. Nenhuma raiz/main/DockerCLI/CIM novo; DesktopOff.
+Nenhuma instalação W1, SQL/DB/worker ou serviço operacional. Não iniciar
+outro DockerCLI/escritor; permissões/gates B-1/B-2/D-090/C1 preservados.
+
+## Preparo histórico W1 — 2026-10-27, somente preparo público
+
+Wheel6b63f239 e contexto d4d4b29b materializados uma vez e revisados;
+payload de update566c46a8 revisado, ainda sem instalação. Builders do host
+7540b7bf aceitos com exigência de Config exato antes de B. Coordenador
+oracle9_w1_run.py761915e2 aceito após corrigir B1/B2; delta N1 final4bc0b083
+com48 testes focados verdes,338 relacionados/1skip medidos no delta anterior.
+Ruff/mypy3.11/3.14 em297 arquivos limpos. Root5cb698ce/estado d43f3b2a
+preparados, não invocados; revisão N1/estado/comando único em andamento.
+Só fakes/arquivos públicos no Windows3.11.3, nenhum DockerCLI/clock real novo,
+Desktop continua Off. Próximo: fechar revisão N1 e do estado/comando
+de rodada única antes de A. Imagem87871290 ainda não inclui W1; serviço
+indisponível. B-1/B-2/D-090/C1/SQL/produção abertos. Sem commit/push/job ou
+outro escritor. Os registros seguintes são históricos.
+
+## W1 privado revisado - 2026-10-26
+
+D-121: codec v2, S1, loop e owner privados revisados pelo Claude2, sem
+chamador operacional.48 testes owner/57 filho/101 codec/59 S1; selecao final
+1266passed, Ruff/format/mypy3.11/3.14 em291arquivos limpos (runtime so3.11.3).
+O1 de lock e fechamento incerto corrigidos com regressoes vermelhas antes
+do fix. Rodada temporal reprovada do encoder preservada; repeticao final
+verde sem aumentar40s, causa indeterminada. Evidencias WORKER-*-VALIDATION.
+Nenhum novo DockerCLI/DB/subprocesso real/artefato instalado; DesktopOff.
+Core de idade61/sampler18fakes e serieF2 unica7exit0 aceitos, boot exato
+na janela169547ms. WheelW1 6b63f239 (448821bytes) em dois builds identicos,
+aceito como insumo fixo; ainda sem instalacao. Proximo: desenho concreto
+app-only update e integracao do ciclo fresco antes de Docker.
+Imagem87871290 nao inclui W1. B-1/B-2/D-090/C1/SQL/producao abertos.
+Sem commit/push/deploy, quota/job ou segundo escritor. Registros seguintes
+sao historicos; permissao autonoma vigente preservada.
+
+## Guard Linux medido — 2026-10-26
+
+D-120: bootstrap sem chamador operacional, 106 testes novos e 695 relacionados
+verdes. Rodada secretless na candidata87871290: cinco diferenciais de acesso
+do mesmo UID, DUMPABLE0/CORE0/AS256, parentdeath SIGKILL/reap e PPID errado
+recusado sem mutação; zero descendentes. 13CLI0+2restore0, CID removido,
+DesktopOff17:21:32Z. Claude2 aceitou fatos como entrada do próximo desenho.
+Guard copiado, ainda fora do wheel; não libera SQL/B-1/B-2/D-090/produção.
+Desvio: pausa longa entre observações, declarada na evidência; próximo ciclo
+deve impor idade máxima monotônica/aborto sem B. Evidência PROCESS-GUARD-
+VALIDATION; fontes/pins/propostas anteriores preservados. Próximo: protocolo
+e integração privada do worker, com revisão antes de novos efeitos reais.
+Nenhum commit/push/deploy, quota ou job novo neste incremento.
+
+## Registro anterior — candidata Oracle instalada — 2026-10-26
+
+Imagem local sha256:87871290b01b0e4b8cd9dd90b8001a89ff4e04bd018e12c01ddbff8d6b16483a,
+Oracle Linux9.8/Python3.11.13,37wheels fechados+2ferramentas vendor. Instalação
+sem rede e sondaUID10001/read-only/networknone passaram:39versões/pipcheck,
+1382arquivos de origem/records e cincoassets.31CLI0+2restore0, dois CIDs
+próprios removidos, DesktopOff em2026-10-26T14:04:01.0239836Z. Revisão final
+aceitou como base de integração, não serviço/SQL/release. Evidência:
+`docs/PHASE-9-ORACLE9-OFFLINE-INSTALL-VALIDATION.md` e seus artefatos hashados.
+
+Permanecem abertos B-1 fim a fim/B-2/D-090 gate2, worker/IPC/proteções D-119,
+serviço foreground e aceitação IDE/MCP/Admin. Antes de release: examinar
+patches das libs empacotadas (psycopg OpenSSL3.5.4; sistema3.5.8; crypto4.0.2)
+e fechar a decisão sobre pip/setuptools/.pth do runtime final. Nenhuma
+conexão a banco existente, secret ou porta de Gateway. Não repetir preparo
+nem iniciar outro escritor. Registros seguintes são históricos.
+
+## Runtime Oracle Linux medido — 2026-10-25
+
+A imagem intermediária local com Oracle Linux 9.8 e Python 3.11.13 passou
+na atestação e na sonda final (UID 10001, read-only, network none,
+cap-drop ALL, 128 MiB). ID:
+`sha256:1546afefa358aa8c6049350948b1d5d4f272017da8997ae3974c93af7fdc07c4`.
+Os nove RPMs vieram da mesma cópia verificada; sem novo download. Fontes,
+manifesto e imagem identificados por hash, sem promessa de rebuild bit a bit.
+154 testes direcionados passaram; 24 comandos Docker da rodada final com
+exit 0. Dois containers próprios removidos, inventário vazio; Desktop
+restaurado off em 2026-10-25T23:07:58.6258954Z. Nove tentativas anteriores
+NOT_PASSED e imagem anterior em quarentena preservadas. Evidência:
+`docs/PHASE-9-ORACLE9-PYTHON-VALIDATION.md` e cópias attempt10/summary.
+Revisão final 79449 aceitou esta imagem como base da preparação seguinte.
+Resolução nativa posterior selecionou36wheels, sem instalação; evidência
+em PHASE-9-ORACLE9-DEPENDENCIES-VALIDATION. B-1/B-2/D-090 seguem abertos.
+
+**Gateway ainda não disponível:** faltam fechamento das dependências Linux,
+aplicação instalada e integração do worker/domínio. B-1 fim a fim, B-2,
+D-090 gate 2, SQL PGWire e produção continuam abertos/recusados. O destino
+é Docker nesta máquina, Oracle 9.8 aceita pelo usuário; não perguntar de
+novo. Userland Oracle sobre kernel WSL2, sem certificação de kernel RHEL/
+Oracle ou SELinux. D-119/opção A mantém o contrato prospectivo, sem marcar
+C1 pronto. Não usar o banco ou credenciais antigos de aceitação.
+
+**Registro histórico do destino em2026-10-23 — Docker local, família Enterprise Linux9:**
+O usuário indicou esta máquina, imagem RHEL9.9 ou Oracle Linux9.9, e pediu
+aviso quando disponível. Ainda não existe instância pronta para testar.
+Usuário aceitou Oracle Linux9 disponível9.8. Tags minor não publicadas no
+DockerHub;9-slim foi conferida por digest: /etc/os-release confirmou9.8.
+Primeiro attempt NOT_PASSED preservado; diagnóstico novo passou uma vez,
+container próprio removido, Desktop restaurado off. Evidência em
+PHASE-9-ORACLE9-BASE-VALIDATION. Python3.11 ainda ausente na base.
+Userland EL9 não certifica kernel RHEL: kernel medido WSL2 nesta máquina. Contrato/
+sequência em PHASE-9-CONTAINER-TARGET-PLAN. Opção A aprovada explicitamente pelo usuário: D-119, contrato prospectivo
+Docker local com excesso transitório/possível queda e restart manual.
+Aceite B-2 muda só para este perfil; evidência/controles ainda pendentes.
+CONTAINER-MEMORY-DECISION preserva garantias e riscos explícitos. C1 NOT_READY,
+B-1/B-2/D-090 e SQL/produção continuam bloqueados.
+Não voltar a pedir host como desconhecido; manter históricos anteriores.
+
+**Estado local 2026-10-23 — corpo privado do job revisado:**
+D-118, runtime/worker_job.py novo, compõe uma chamada typed e um encoder;
+nenhum produto anterior ou ingresso operacional alterado. SQL64KiB UTF8,
+max_rows da geração, saúde/deadline por fase e somente frame completo ou
+categoria fechada. J6: interrupções são fatal, dono futuro deve parar/reap;
+sem lifecycle/ledger/worker novo. J7 (igualdade de metaclass) reproduzida
+vermelha e corrigida para identidade is.104 próprios/1.410 relacionados
+finais verdes. Rodada Unicode anterior estourou40s; causa indeterminada,
+isolado30,25s e repetição relacionada107,11s passaram sem ampliar teto.
+Ruff/format/mypy3.11/3.14 em267 arquivos limpos, runtime só Windows3.11.3.
+Pacotes A históricos antesJ7 e B finais separados;44 módulos iguais aos
+fontes, sonda só adapter fechado, não job saudável/PG/OS. WORKER-JOB-VALIDATION
+e J7 revistos pelo Claude2 sem bloqueador. Dois guards admitem só este
+consumidor privado; guarda operacional continua ativa. Sem novo PG/DockerCLI,
+worker processual, SQL, commit/push/deploy. B-1/B-2/D-090 e produção abertos,
+C1 NOT_READY; destino ainda não identificado.
+
+**Lote anterior 2026-10-23 — erros tipados e saúde revisados:**
+D-117 implementada sob delegação, sem worker/SQL operacional. Classificador
+privado só typed=True; legado preservado. Continuidade exige categoria
+permitida e saúde libpq positiva pós-settle, não prova de rede/read-only.
+100 testes novos; PG16.15 próprio:7.503 passed/20 skips de plataforma,
+nenhuma falha/erro ou skip por DSN;17 obrigatórios passaram. Container/volume
+removidos, Desktop restaurado off. Wheel/sdist:40 módulos iguais aos fontes,
+contraprovas stale/checkout recusadas; sonda limitada. Ruff/format/mypy3.11/
+3.14 em265 arquivos limpos; runtime só Windows3.11.3. Código, procedimento
+e evidência WORKER-ERRORS-VALIDATION revistos pelo Claude2 sem bloqueador.
+Domínios C1 continuam NOT_READY; B-1/B-2/D-090, SQL e produção seguem
+abertos/recusadas. Destino ainda não informado; sem commit/push/deploy.
+Próximo: domínio real/worker e integração sob gates próprios.
+
+**Lote anterior 2026-10-23 — C1 implementado e revisado:**
+D-116, reconciliação pura em runtime/domain.py, sem chamador operacional.
+Registro fechado de perfis, custos IN/OUT, grandeza única e W>=cota; ambos
+perfis atuais NOT_READY, sem atestado de SO ou custo físico. Três regressões
+próprias e F1 (gap Windows) corrigidas antes do aceite do Claude2; P1 da
+sonda corrigido antes do uso.113 novos/916 relacionados verdes, Ruff/format/
+mypy3.11/3.14 em261 arquivos; runtime só Windows3.11.3. Wheel/sdist:39
+módulos iguais aos fontes, stale/checkout recusados; sonda limitada.
+Evidência DOMAIN-VALIDATION e cópia de pacote revisadas sem bloqueador.
+Próximo: domínio real incluindo pai/auxiliares e worker, com prova própria.
+Destino ainda não informado; não presumir OS/servidor/credencial.
+B-1/B-2/D-090/SQL/produção seguem abertos; sem commit/push/deploy.
+
+**Lote anterior 2026-10-23 — HELD III real revisado:**
+Procedimento corrigido por S1/R1 e revisado antes de start/A/B/C únicos.
+Externo READY/exit0; control_ok/imposed/imposed,37,141s/exit0,467 linhas
+iguais e14 fontes intactas. Transportes/envelopes imutáveis persistem HELD;
+rechecagem lógica conserva categoria/blocos como relatos do membro, só
+pico/limites corroborados. Cleanup próprio e Desktop restaurado off.
+Evidência HELD-RUN-VALIDATION e cópia linux-held-20261023.json revisadas
+pelo Claude2 sem bloqueador para registro diagnóstico; plano consumido.
+Nenhum código de produto/teste/helper mudou neste lote. Próximo C1:
+DOMAIN-DESIGN revisado, D1/D2 e R1/R2 corrigidos no contrato antes de código;
+reconciliação pura com D-112, sem backend/ativação. Implementação ainda ausente.
+Destino de produção perguntado ao usuário, ainda não identificado.
+B-1/B-2/D-090/SQL/produção seguem abertos; sem commit/push/deploy.
+
+**Lote anterior 2026-10-22 — integração HELD I/II revisada, só fakes:**
+novos tap stdlib/wrapper PID1 e observador próprio. I1 corrigido antes de
+código: captura no container, E/replay só no host, sem packaging sob -S.
+Artefatos transporte/envelope separados, imutáveis, com admissão/cleanup e
+pins cruzados. Prazo final corrigido após regressão vermelha de121s.
+Revisões e rerevisão sem bloqueador no escopo isolado.92 testes novos
+(46 I+46 II),895 relacionados verdes; Ruff/format/mypy3.11/3.14 limpos,
+runtime só Windows3.11.3. Nenhum DockerCLI, factory Linux ou carga neste lote.
+Evidências HELD-ENTRY-VALIDATION e HELD-HOST-VALIDATION em docs/.
+Fontes/medições anteriores preservadas. Próximo gate III: procedimento,
+Desktop/contexto,14 hashes e comando/rodada única revisados antes de executar.
+B-1/B-2/D-090/SQL/produção continuam abertos. Sem commit/push/deploy.
+
+**Lote anterior — evidência HELD isolada revisada:**
+novo docs/poc/loaded_memory_evidence.py,59 testes novos/803 relacionados
+verdes com fakes; Ruff/format e mypy3.11/3.14 limpos (runtime só3.11.3).
+Envelope versionado preserva bytes exatos/hash/tamanho do original e linhas
+HELD; replay lógico revalida regras/observações sem inventar tempo ou origem.
+T1 reproduzido primeiro e corrigido: erro delegado mantém categoria, só
+falha própria da captura gera broken/fallback. Rerevisão sem bloqueador.
+Evidência: `docs/PHASE-9-STAGE-8-HELD-EVIDENCE-VALIDATION.md`.
+Sem integração/entrypoint/host real, DockerCLI ou nova carga; dez helpers e
+artefatos anteriores preservados. Q1 da rodada anterior não é reescrita.
+Próximo: desenho/revisão da integração e perfis/hashes/comando antes de carga.
+B-1/B-2/D-090/SQL/produção seguem abertos. Sem commit/push/deploy.
+
+**Rodada anterior — loaded-as128 real revisada:**
+procedimento/comandos revisados antes de uma única execução. Preflight
+externo READY/exit0 conferido; interno obrigatório passou antes de create.
+Controle control_ok e privado/shared128 imposed; três inventários iguais467
+linhas,25,671s/exit0, cleanup e integridade confirmados. Desktop já ativo foi
+preservado; sem SQL/banco/produção. Evidência e limitação da linha HELD não
+persistida em `docs/PHASE-9-STAGE-8-LINUX-LOADED-RUN-VALIDATION.md`.
+Revisão sem bloqueador para registro diagnóstico, com Q1–Q3: classificação
+depende do supervisor hashado; escopo/kernel/imports limitados; fd/readlink
+só comprovados neste perfil. Próximo desenho deve persistir HELD validado.
+Não fecha contenção total/B-2/D-090 ou B-1 fim a fim. Nenhum produto/src,
+dependência ou configuração mudou.
+Sem retry, outro escritor, commit/push/deploy ou tarefa nova.
+
+**Lote anterior — observador externo do laboratório (somente fakes):** novo
+docs/poc/run_linux_loaded.py implementado e revisado pelo Claude2 sem
+bloqueador após corrigir B1 (evidência dos negativos fortes).
+75 novos testes/744 relacionados verdes; Ruff/format e mypy3.11/3.14 limpos.
+Só CLI/watchdog simulados e arquivos pequenos Windows3.11.3; nenhum DockerCLI,
+processo de laboratório, preparação real ou carga executado. Supervisor59/669,
+produtor/coletor136/610, núcleo puro179/474 e seis rodadas preservados.
+Evidência: `docs/PHASE-9-STAGE-8-LINUX-LOADED-HOST-VALIDATION.md`.
+Próximos gates: procedimento externo/estado do Desktop, preflight externo
+com exits conferidos, abort sem retry, comando exato e rodada única revisados.
+Sem mudança de src/produto/MCP legado, dependência, ambiente, commit/push;
+B-1/B-2/D-090 gate2, SQL e produção continuam abertos.
+
+**Medição anterior preservada — sexta rodada:**
+identificada --run concluída depois de revisão de código/testes/plano.
+Preflight externo READY/exit0 conferido antes do observador e interno
+obrigatório READY, ps/imagem aprovados. Controle normal:465 linhas
+auditadas, três imports completos, native_check/binary psycopg; _openssl.lib
+associado só por identidade ao slot da âncora. Wrappers algorithms/modes
+vieram de seus .py pelas regras antigas, sem nova exceção. Limited AS32
+falhou IMPORT/etapa0/member73: **did_not_fit**, sem atribuir causa ao AS.
+complete=true significa dois casos, não contenção/fit. Sem repetição,
+aumento de cota, SQL ou serviço operacional. Evidência revisada sem bloqueador:
+`docs/PHASE-9-STAGE-8-LINUX-IMPORTS-LIB-RUN-VALIDATION.md`.
+295 testes puros relacionados e estáticos limpos; contexto null só no
+nome exato, L1(a) sem promessa global read-free. Os cinco lotes anteriores
+e suas fontes preservados; desvio de procedimento da quinta continua
+**não aprovado**, sem repetição retroativa. Cleanup próprio confirmado,
+inventário Docker vazio antes de stop; Desktop restaurado off.
+Produto/src e MCP legado inalterados neste incremento. Sem cota observada,
+job novo, segundo escritor, commit ou push. B-1/B-2/D-090/SQL PGWire/produção abertos.
+
+**Progresso local (2026-10-20):** B2-B2a executou cinco controles sintéticos
+após revisão do Claude2; as seções SEC_COMMIT/SEC_RESERVE de 40 MiB foram
+mantidas sob cota privada de 32 MiB (lacuna explícita), com cleanup confirmado.
+Não é contenção de memória total ou integração de worker. A matriz maior
+foi adiada até definir cobertura de memória compartilhada e do pai.
+Evidência: `docs/PHASE-9-STAGE-8-B2-B2A-VALIDATION.md`, revisada pelo Claude2.
+
+**Incremento local seguinte (2026-10-20):** D-113, núcleo puro de validação
+de resultado em `pgwire/result_frame.py`, revisado pelo Claude2 sem bloqueador
+no núcleo isolado. Frame completo imutável, consumo PGWire exato e chunks
+limitados; 293 testes novos, 916 relacionados, sem chamador operacional.
+Import/fixture pequena em wheel e sdist instalados fora do checkout conferidos,
+sem alegação de aplicação completa. `docs/PHASE-9-STAGE-8-RESULT-VALIDATION.md`.
+Receiver/2F, worker, memória compartilhada/nativa/SSL e B-1/B-2/D-090 seguem
+abertos; SQL continua recusada. Escolha sob delegação, não aval individual.
+
+**D-114 local (2026-10-20):** receptor de resultado + ownership/pin nos
+créditos existentes, sem chamador operacional. Cabeçalho antes de alocação,
+recv_into limitado, envio só validado e descarte antes de unpin; 85 testes
+novos focados, 1.036 relacionados e 306 de transporte/driver/lifecycle
+aprovados. Ruff/format/mypy alvos 3.11/3.14 em 238 arquivos; runtime executado
+só Windows 3.11.3. Sonda limitada dos pacotes instalados, não app completa.
+Revisão do Claude2 somente leitura; evidência e contratos obrigatórios em
+`docs/PHASE-9-STAGE-8-RECEIVER-VALIDATION.md`. Pin incerto permanece em
+quarentena; falha pós-envio é saída não comprovada; integração ainda deve
+garantir um frame por job/canal quieto. Sem worker, SQL, commit/push ou deploy;
+B-1 fim a fim, B-2 e D-090 gate 2 continuam abertos.
+
+**D-115 local (2026-10-20):** pipeline tipado opt-in no adapter, com OIDs
+anunciados somente depois da decisão de masking, e encoder puro com preflight,
+alocação exata e autovalidação D-113. Nenhum chamador operacional ou worker;
+MASK anuncia text25 sem ler o tipo upstream, legado/MCP inalterados.
+Revisão somente leitura pelo Claude2 sem bloqueador no escopo isolado;
+408 testes relacionados e sondas limitadas de wheel/sdist com PG16 real
+aprovados. Ruff/format/mypy 3.11/3.14 em 243 arquivos; execução só Windows
+3.11.3. Suíte integral PG16: **6.395 passed/20 skips de plataforma**, zero
+falhas/erros ou skips por DSN; 12/12 integrações tipadas executadas.
+Evidência: `docs/PHASE-9-STAGE-8-ENCODER-VALIDATION.md`. OOM/integridade/prazo
+são fatais no worker futuro, não recusas recuperáveis. Sem fechar B-1/B-2/D-090,
+liberar SQL, commit/push ou produção.
+
+**Diagnóstico Linux AS posterior (2026-10-20):** harness isolado revisado
+pelo Claude2 após corrigir dois bloqueadores; quatro casos executados uma vez,
+com baseline/controle positivos e recusa privada/MAP_SHARED sob AS32 MiB,
+cleanup confirmado e Desktop restaurado desligado. 46 testes puros; Ruff,
+format e mypy 3.11/3.14 em 245 arquivos. Só Python mínimo 3.11.17 em container
+Linux/WSL2, não imports/worker real nem imposição dos 192 MiB externos.
+Evidência: `docs/PHASE-9-STAGE-8-LINUX-AS-VALIDATION.md`. Não certifica
+Windows/Linux de produção, memória total ou B-1/B-2/D-090; SQL permanece
+recusada. Sem mudança de produto, dependências, commit ou push neste lote.
+
 - MCP Server
 - PostgreSQL
 - SELECT read-only
@@ -145,8 +662,81 @@ POSIX não foi medido. Os 4 `union-attr` do mypy com o alvo 3.14 seguem
 abertos. Em 2026-10-16 o usuário aprovou fechar esse incremento validado num
 **commit local** novo, sem push. A Etapa 7 continua **parcial**.
 
+**Atualização (2026-10-16, local, sem commit, em revisão):** o usuário aprovou
+só duas coisas:
+- corrigir os 4 `union-attr` de `datasource/destination.py` sem mudar o
+  comportamento; feito, com mypy limpo nos alvos 3.11 e 3.14, e validado no
+  Windows: suíte integral de 5.329 testes sem falhas nos runtimes 3.11.3 e
+  3.14.8, e smoke dos pacotes. POSIX não foi medido;
+- escrever o desenho do isolamento por sessão da Etapa 8, em
+  `docs/PHASE-9-STAGE-8-DESIGN.md`, que é **proposta**, não aprovada e com
+  bloqueantes de segurança abertos (B-1 e B-2).
+
+Nenhum worker foi implementado, e a D-090 gate 2 continua aberta.
+
+**Atualização (2026-10-19, local, sem commit):** o desenho da Etapa 8 foi
+aprovado pelo usuário em 2026-10-18. Em 2026-10-19 ele autorizou somente o
+lote **B-1: snapshot e testes de equivalência do masking**, com revisão pelo
+Claude2, sem worker integrado, SQL de cliente, commit ou push. O núcleo está
+implementado em `runtime/snapshot.py`, com captura **opt-in interna** em
+`build_candidate(capture_snapshot=True)`; o default permanece `False` e
+nenhum chamador operacional a habilita. O usuário aprovou explicitamente
+esse lote e a D-111 em 2026-10-19, sem ampliar sua autorização. A evidência própria é
+`docs/PHASE-9-STAGE-8-B1-VALIDATION.md` e a decisão é D-111. Isso não fecha a
+prova fim a fim de B-1, B-2 nem a D-090 gate 2. Sem subprocesso novo, codec
+de resultado, transporte, integração de lease/registry, troca de cursor,
+dependência, configuração externa ou liberação de produção.
+
 A D-090 continua aberta no gate 2, e a v2 segue proibida em operação real.
-Fora dessas quatro exceções, não iniciar listener PGWire, autenticação
+**Incremento autorizado em 2026-10-19:** após aprovar o núcleo B-1, o usuário
+autorizou somente sua prova de equivalência em outro processo, com revisão
+pelo Claude2, localmente e sem commit/push. Implementação só em testes:
+`tests/snapshot_child_probe.py` e `tests/test_runtime_snapshot_process.py`.
+Sem worker ou transporte operacional, SQL de cliente ou integração em
+produção. Evidência: `docs/PHASE-9-STAGE-8-B1-PROCESS-VALIDATION.md`.
+O usuário aprovou explicitamente esse incremento em 2026-10-19, sem ampliar
+a autorização nem autorizar commit/push.
+B-1 fim a fim, B-2 e D-090 gate 2 permanecem abertos.
+
+**Preparação autorizada em 2026-10-19:** o usuário autorizou somente
+preparar com o Claude2 o próximo lote para B-2 (memória), sem worker ou SQL.
+Plano em `docs/PHASE-9-STAGE-8-B2-PLAN.md`. Depois da preparação e revisão,
+o usuário autorizou separadamente **B2-A**: criar o harness temporário fora
+do checkout e executar o diagnóstico pequeno **após revisão do Claude2**.
+Só §4 do plano, sem banco/Docker, código de produção, worker integrado,
+SQL de cliente ou commit/push. Demais lotes e fechamento de B-2 não autorizados.
+O diagnóstico foi executado no Windows 3.11.3: seis controles e 36 casos,
+limpeza confirmada. Os 12 casos job-only excederam o pico de 32 MiB; não é
+gate de contenção aprovado. Evidência em
+`docs/PHASE-9-STAGE-8-B2-A-VALIDATION.md`, revisada tecnicamente sem bloqueador
+para registrar o diagnóstico. O usuário aprovou esse registro em 2026-10-19,
+sem aprovar contenção de produção, fechar B-2 ou autorizar próximos lotes,
+commit ou push. B-2 segue aberto.
+
+**Preparação B2-B autorizada em 2026-10-19:** após o registro B2-A, o usuário
+autorizou preparar com o Claude2 o próximo lote de contenção e orçamento
+global, ainda sem implementação. Proposta em
+`docs/PHASE-9-STAGE-8-B2-B-PLAN.md`: núcleo lógico isolado de reservas como
+menor candidato, sem integração ou prova de contenção real. Nenhum código,
+teste de pressão, novo harness, worker, SQL, commit/push ou produção
+autorizado por essa preparação. O plano não está aprovado; B-2 e D-090 gate 2
+continuam abertos.
+
+**Autorização posterior B2-B1 (2026-10-19):** o usuário respondeu "sim" ao
+lote do núcleo lógico isolado de reservas e testes determinísticos, com
+revisão pelo Claude2. Implementado localmente em `runtime/budget.py`, sem
+importação por qualquer chamador operacional. Custos e confirmação de
+cleanup são fatos declarados pelo colaborador confiável, não cotas nem
+medições do SO. D-112 e evidência em
+`docs/PHASE-9-STAGE-8-B2-B1-VALIDATION.md`, com revisão técnica concluída sem
+bloqueador no núcleo isolado; o usuário aprovou explicitamente o fechamento
+do B2-B1 e a D-112 em 2026-10-20, sem ampliar a autorização.
+Sem integração, worker, SQL, pressão de memória ou commit/push.
+O aval é somente desse núcleo, não dos gates posteriores de B2-B. B-1 fim a
+fim, B-2 e D-090 gate 2 continuam abertos.
+
+Fora das exceções da Etapa 7 e dos lotes estreitos B-1, B2-A e B2-B1
+explicitados acima, não iniciar listener PGWire, autenticação
 SCRAM/TLS de produção, dependência ou variável de ambiente nova, bind externo,
 extensão da tool MCP (MCP multi-datasource) nem qualquer etapa posterior
 (Etapas 8–12).

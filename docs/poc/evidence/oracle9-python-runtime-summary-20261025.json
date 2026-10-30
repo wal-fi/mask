@@ -1,0 +1,446 @@
+{
+  "commands": [
+    {
+      "bytes": 917,
+      "category": "OK",
+      "exit": 0,
+      "name": "version",
+      "seconds": 0.23499999998603016,
+      "sha256": "f9d284332db444f09750c1aae942822529fb6fc4e204fdd31b0cce129f04b9fd"
+    },
+    {
+      "bytes": 0,
+      "category": "OK",
+      "exit": 0,
+      "name": "inventory-before",
+      "seconds": 0.125,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 12,
+      "category": "OK",
+      "exit": 0,
+      "name": "daemon-memory",
+      "seconds": 0.5470000000204891,
+      "sha256": "5c31be8ebae422e7d85217ca1c0fb817abe4e824265545fa7cab20cc293cf6db"
+    },
+    {
+      "bytes": 0,
+      "category": "OK",
+      "exit": 0,
+      "name": "tag-collision",
+      "seconds": 0.10899999999674037,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 1472,
+      "category": "OK",
+      "exit": 0,
+      "name": "base-image",
+      "seconds": 0.11000000001513399,
+      "sha256": "10f8e686f453b43d333d9f43ceadf0abc249ea20727d7ef036b6a4511ad22937"
+    },
+    {
+      "bytes": 65,
+      "category": "OK",
+      "exit": 0,
+      "name": "create-prep",
+      "seconds": 0.20300000000861473,
+      "sha256": "80c135b047c1aeb989654ab12f444dff03c8ecaafd718ad86559e3dffccbc22d"
+    },
+    {
+      "bytes": 16647,
+      "category": "OK",
+      "exit": 0,
+      "name": "inspect-own",
+      "seconds": 0.09299999999348074,
+      "sha256": "5dbbd516544cdb36929b864b54ece8ea1393f2ec3556724fb9b445a952e73962"
+    },
+    {
+      "bytes": 0,
+      "category": "OK",
+      "exit": 0,
+      "name": "copy-bundle",
+      "seconds": 1.0150000000139698,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 16647,
+      "category": "OK",
+      "exit": 0,
+      "name": "inspect-own",
+      "seconds": 0.14100000000325963,
+      "sha256": "5dbbd516544cdb36929b864b54ece8ea1393f2ec3556724fb9b445a952e73962"
+    },
+    {
+      "bytes": 41332,
+      "category": "OK",
+      "exit": 0,
+      "name": "install-runtime",
+      "seconds": 10.40600000001723,
+      "sha256": "9b3516741b3b48bbfddf0b76a9f0f5cc0b0ef535f92d9686edca54e22c8e275c"
+    },
+    {
+      "bytes": 17029,
+      "category": "OK",
+      "exit": 0,
+      "name": "inspect-own",
+      "seconds": 0.125,
+      "sha256": "49d06cfd200a807df9a320ab9d62d39ce0df98036ad0f710c65fecd21c26f8f7"
+    },
+    {
+      "bytes": 462192,
+      "category": "OK",
+      "exit": 0,
+      "name": "diff",
+      "seconds": 0.4220000000204891,
+      "sha256": "8fb4fdaca9c7ca617eb5bf550f94e55c5fb3de7495211eefe5edec3e7218e32c"
+    },
+    {
+      "bytes": 0,
+      "category": "OK",
+      "exit": 0,
+      "name": "tag-collision",
+      "seconds": 0.10899999999674037,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 179,
+      "category": "OK",
+      "exit": 0,
+      "name": "commit-image",
+      "seconds": 5.687000000005355,
+      "sha256": "630115a57b4ec4ea5c1b9c3211efd0c3590633453fb515db047892d089c8222f"
+    },
+    {
+      "bytes": 1962,
+      "category": "OK",
+      "exit": 0,
+      "name": "prepared-inspect",
+      "seconds": 0.125,
+      "sha256": "08847697ae7a5a04129230f416fada8c6f4749c108787e782cf6a75afb1133f8"
+    },
+    {
+      "bytes": 65,
+      "category": "OK",
+      "exit": 0,
+      "name": "create-probe",
+      "seconds": 5.0,
+      "sha256": "21f0356f10abfa71f6f98baf1124833c2e96314e86a25fc66c3a15c7ff04d924"
+    },
+    {
+      "bytes": 6943,
+      "category": "OK",
+      "exit": 0,
+      "name": "inspect-own",
+      "seconds": 0.10999999998603016,
+      "sha256": "4b7c2947c0413996efba9b73f9c553974a34e78b5165800c69e5c8a09e8960c1"
+    },
+    {
+      "bytes": 212,
+      "category": "OK",
+      "exit": 0,
+      "name": "probe",
+      "seconds": 0.5940000000118744,
+      "sha256": "658291ebbc3830a795b9798ed56ede872a293b4ab41fca30ba1d4683ea32be65"
+    },
+    {
+      "bytes": 7325,
+      "category": "OK",
+      "exit": 0,
+      "name": "inspect-own",
+      "seconds": 0.10899999999674037,
+      "sha256": "5f0edba45e532d425a3fd9c24b42b7cba26b29b2bcc430ee42ee147e558ba540"
+    },
+    {
+      "bytes": 7325,
+      "category": "OK",
+      "exit": 0,
+      "name": "inspect-own",
+      "seconds": 0.10999999998603016,
+      "sha256": "5f0edba45e532d425a3fd9c24b42b7cba26b29b2bcc430ee42ee147e558ba540"
+    },
+    {
+      "bytes": 65,
+      "category": "OK",
+      "exit": 0,
+      "name": "remove-own",
+      "seconds": 0.21899999998277053,
+      "sha256": "21f0356f10abfa71f6f98baf1124833c2e96314e86a25fc66c3a15c7ff04d924"
+    },
+    {
+      "bytes": 17029,
+      "category": "OK",
+      "exit": 0,
+      "name": "inspect-own",
+      "seconds": 0.125,
+      "sha256": "49d06cfd200a807df9a320ab9d62d39ce0df98036ad0f710c65fecd21c26f8f7"
+    },
+    {
+      "bytes": 65,
+      "category": "OK",
+      "exit": 0,
+      "name": "remove-own",
+      "seconds": 0.3120000000053551,
+      "sha256": "80c135b047c1aeb989654ab12f444dff03c8ecaafd718ad86559e3dffccbc22d"
+    },
+    {
+      "bytes": 0,
+      "category": "OK",
+      "exit": 0,
+      "name": "inventory-after",
+      "seconds": 0.10899999999674037,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "containers": [
+    {
+      "cid": "0fb0b795393788f73f5e35ec90f22d8610bae368bc19d42a62add83b35b86ddc",
+      "image": "sha256:d8c0a1f95f3394a2b40ece95dbff199cea94d06ac0ed354a7b88e96e2df5bb94",
+      "name": "maskgw-ol9-python-4f1d385b3e18-prep",
+      "state_before_cleanup": {
+        "ExitCode": 0,
+        "OOMKilled": false,
+        "Running": false
+      }
+    },
+    {
+      "cid": "8127365c8a3597056f5224f840c8b77d425aaaa903bac3a7c13d614faf318f25",
+      "image": "sha256:1546afefa358aa8c6049350948b1d5d4f272017da8997ae3974c93af7fdc07c4",
+      "name": "maskgw-ol9-python-4f1d385b3e18-probe",
+      "state_before_cleanup": {
+        "ExitCode": 0,
+        "OOMKilled": false,
+        "Running": false
+      }
+    }
+  ],
+  "daemon_memory_total": 16689967104,
+  "inventory_restored": true,
+  "outcome": "PYTHON_RUNTIME_PASSED",
+  "owned_cleanup": true,
+  "prepared_image": "sha256:1546afefa358aa8c6049350948b1d5d4f272017da8997ae3974c93af7fdc07c4",
+  "prepared_tag": "maskgw-oracle9-python:4f1d385b3e18464792773488386438dd",
+  "probe": {
+    "kind": "oracle9-python-probe",
+    "python": [
+      3,
+      11,
+      13
+    ],
+    "runtime_sha256": "e9b652d7ec7bd1d1f030ecb09e75b4601e80e6753dd4e93eec5d45d8eb995db7",
+    "sqlite": "3.34.1",
+    "ssl": "OpenSSL 3.5.8 25 Aug 2026",
+    "uid": 10001
+  },
+  "profile": "oracle9-python",
+  "stage": "inventory-after",
+  "task": "4f1d385b3e18464792773488386438dd",
+  "kind": "oracle9-python-runtime-summary-v1",
+  "evidence": {
+    "path": "docs\\poc\\evidence\\oracle9-python-attempt10-20261025.json",
+    "bytes": 876824,
+    "sha256": "057bff0522d6297f408e627793c180eada11fbbb0cf4cfe0e03be03520b3e583"
+  },
+  "runtime": {
+    "python": [
+      3,
+      11,
+      13
+    ],
+    "executable": "/opt/maskgw/venv/bin/python",
+    "openssl": "OpenSSL 3.5.8 25 Aug 2026",
+    "runtime_bytes": 912858,
+    "runtime_sha256": "e9b652d7ec7bd1d1f030ecb09e75b4601e80e6753dd4e93eec5d45d8eb995db7",
+    "base_verify_accepted": true,
+    "base_verify_unchanged": false,
+    "verification_policy": "oracle9-python-restored-directories-v1",
+    "restored_directories": [
+      "/usr/share/man",
+      "/usr/share/man/man1",
+      "/var/cache/ldconfig"
+    ],
+    "restored_directory_facts": {
+      "/usr/share/man": {
+        "gid": 0,
+        "kind": "directory",
+        "mode": 493,
+        "symlink": false,
+        "uid": 0
+      },
+      "/usr/share/man/man1": {
+        "gid": 0,
+        "kind": "directory",
+        "mode": 493,
+        "symlink": false,
+        "uid": 0
+      },
+      "/var/cache/ldconfig": {
+        "gid": 0,
+        "kind": "directory",
+        "mode": 448,
+        "symlink": false,
+        "uid": 0
+      }
+    },
+    "aux_cache": {
+      "action": "retained-base-glibc",
+      "bytes": 8576,
+      "gid": 0,
+      "mode": 384,
+      "owner": [
+        "glibc",
+        "x86_64"
+      ],
+      "path": "/var/cache/ldconfig/aux-cache",
+      "sha256": "46b766d88b74f71b4ce22bb7877535700eea1618fd15fcfa452cf0862cd37d71",
+      "uid": 0
+    },
+    "runtime_attestation_policy": "oracle9-python-lib64-cache-v1",
+    "lib64": {
+      "after": {
+        "alias": {
+          "dev": 88,
+          "gid": 0,
+          "ino": 48311,
+          "kind": "symlink",
+          "mode": 511,
+          "uid": 0
+        },
+        "link": "usr/lib64",
+        "target": {
+          "dev": 88,
+          "gid": 0,
+          "ino": 49204,
+          "kind": "directory",
+          "mode": 365,
+          "uid": 0
+        }
+      },
+      "before": {
+        "alias": {
+          "dev": 88,
+          "gid": 0,
+          "ino": 48311,
+          "kind": "symlink",
+          "mode": 511,
+          "uid": 0
+        },
+        "link": "usr/lib64",
+        "target": {
+          "dev": 88,
+          "gid": 0,
+          "ino": 49204,
+          "kind": "directory",
+          "mode": 365,
+          "uid": 0
+        }
+      },
+      "nodes": {
+        "/usr/lib64/libtirpc.so.3": {
+          "alias_dev": 88,
+          "alias_ino": 51728,
+          "declared_digest": "",
+          "kind": "symlink",
+          "linkto": "libtirpc.so.3.0.0",
+          "owner": [
+            "libtirpc",
+            "x86_64"
+          ],
+          "physical_dev": 88,
+          "physical_ino": 51728,
+          "rpm_path": "/lib64/libtirpc.so.3",
+          "sha256": "3ea5fb9886b097a0c0b2c40e7e58e9938024319a74d5a1d7665ba1394094714a"
+        },
+        "/usr/lib64/libtirpc.so.3.0.0": {
+          "alias_dev": 88,
+          "alias_ino": 51729,
+          "declared_digest": "a49b5fc0698b359730de2566c15fee3186a1f9b801c58abae9ee25a672c9447c",
+          "kind": "regular",
+          "linkto": "",
+          "owner": [
+            "libtirpc",
+            "x86_64"
+          ],
+          "physical_dev": 88,
+          "physical_ino": 51729,
+          "rpm_path": "/lib64/libtirpc.so.3.0.0",
+          "sha256": "a49b5fc0698b359730de2566c15fee3186a1f9b801c58abae9ee25a672c9447c"
+        }
+      }
+    },
+    "linker_cache": {
+      "after": {
+        "bytes": 6383,
+        "gid": 0,
+        "kind": "regular",
+        "mode": 420,
+        "owner": [
+          "glibc",
+          "x86_64"
+        ],
+        "path": "/etc/ld.so.cache",
+        "sha256": "78d465015ebb9550d9925e59c626fa5fddf4bfb67dd03335efe3ad27bfb387ca",
+        "uid": 0
+      },
+      "before": {
+        "kind": "absent"
+      }
+    },
+    "os_unchanged": true,
+    "privilege_checked_nodes": 5938,
+    "no_new_privilege_bits_or_caps": true,
+    "added": [
+      [
+        "expat",
+        "x86_64"
+      ],
+      [
+        "libnsl2",
+        "x86_64"
+      ],
+      [
+        "libtirpc",
+        "x86_64"
+      ],
+      [
+        "mpdecimal",
+        "x86_64"
+      ],
+      [
+        "python3.11",
+        "x86_64"
+      ],
+      [
+        "python3.11-libs",
+        "x86_64"
+      ],
+      [
+        "python3.11-pip",
+        "noarch"
+      ],
+      [
+        "python3.11-pip-wheel",
+        "noarch"
+      ],
+      [
+        "python3.11-setuptools-wheel",
+        "noarch"
+      ]
+    ],
+    "empty_dirs": {
+      "/tmp": true,
+      "/var/empty": true,
+      "/var/log": true,
+      "/var/tmp": true
+    }
+  },
+  "new_paths_count": 4035,
+  "commit_stdout": "Flag --pause has been deprecated, and enabled by default. Use --no-pause to disable pausing during commit.\nsha256:1546afefa358aa8c6049350948b1d5d4f272017da8997ae3974c93af7fdc07c4\n",
+  "limitations": [
+    "Image inspect raw bytes not persisted; hash/size/exit and mandatory source validation are retained. No independent full read-only reinspection of successful image after stopping Desktop.",
+    "Not a bit-identical rebuild promise: timestamps, inodes and runtimeJSON vary; exact image ID and reviewed sources/inputs identify this artifact.",
+    "Oracle userland on WSL2 kernel, not Oracle or RHEL kernel/SELinux certification.",
+    "Only intermediate Python vendor image; no app, SQL or full memory domain readiness."
+  ]
+}

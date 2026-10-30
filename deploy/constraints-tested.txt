@@ -1,0 +1,14 @@
+# Resolution seed only: directly measured Windows3.11.3 production packages.
+# Resolve platform markers/dependency closure inside Oracle Linux before build.
+# This is NOT requirements.lock, a Linux compatibility or security attestation.
+asn1crypto==1.5.1
+cryptography==50.0.1
+fastapi==0.141.1
+mcp==2.1.1
+pglast==8.4
+psycopg==3.3.4
+psycopg-binary==3.3.4
+pydantic==2.13.5
+PyYAML==6.0.3
+scramp==1.4.17
+uvicorn==0.52.4

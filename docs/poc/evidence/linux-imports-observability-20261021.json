@@ -1,0 +1,988 @@
+{
+  "summary": {
+    "cases": [
+      {
+        "case": "control",
+        "cleanup_confirmed": true,
+        "outcome": "inconclusive",
+        "report_sha256": "4708ebc7fd70dfc304410234d1d9904010fcd20efa635810efd73489e3689779"
+      }
+    ],
+    "complete": false,
+    "deadline_exceeded": false,
+    "elapsed_seconds": 4.889999999999418,
+    "image": "python@sha256:8a00ecb83ed9d0864dfd102a1bdb2067fda907ceb30bb86d09da9ee558b19590",
+    "imports_fit_as32": false,
+    "inventory_restored": true,
+    "runtime_manifest_unchanged": true,
+    "source_hashes": {
+      "linux_as_probe.py": "8170a37b892bd6d2bdae351bacd05f0e047d8bbc9b2b54bad695da7419380e0b",
+      "linux_import_probe.py": "e17f540331541b6b7b168cdfa16fa851d1cf3f58de0950f5ac74e9b88f9d33cd",
+      "prepare_linux_imports.py": "506f7eb057320377371224e687fb8c79d5ce79208dc31d82c8986961fa38c9f0",
+      "run_linux_as_probe.py": "58c692a775a2dffdaa6be86866cdb15ddb307f97aeb8a04b4f7c737ea56c3627",
+      "run_linux_imports.py": "6a446e5fad7752e6527f17d9a6e542fee4792293d20233b9cbe77bc956f59fa3"
+    },
+    "sources_unchanged": true,
+    "total_memory_contained": false,
+    "tree_unchanged": true,
+    "watchdog_closed": true
+  },
+  "control": {
+    "case": "control",
+    "cleanup_confirmed": true,
+    "container_cleanup_confirmed": true,
+    "container_id": "a08a43a6d0bbea3a6b55ce1ac97c7e1713bc37f2733d1f970f9a0c6b61c91736",
+    "diagnostic": {
+      "audit_error": {
+        "category": "OTHER",
+        "has_file": true,
+        "module": null,
+        "phase": "audit_error",
+        "stage": 0,
+        "under_installed": false
+      },
+      "case": "control",
+      "cleanup_confirmed": true,
+      "diagnostic_failure": "AUDIT_ERROR",
+      "environment_names": [
+        "GPG_KEY",
+        "HOME",
+        "HOSTNAME",
+        "LANG",
+        "PATH",
+        "PYTHON_SHA256",
+        "PYTHON_VERSION"
+      ],
+      "events": [
+        {
+          "phase": "start",
+          "stage": 0
+        },
+        {
+          "category": "OTHER",
+          "has_file": true,
+          "module": null,
+          "phase": "audit_error",
+          "stage": 0,
+          "under_installed": false
+        }
+      ],
+      "final_cgroup": {
+        "current": 36478976,
+        "events": {
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0
+        },
+        "peak": 91111424,
+        "pids_current": 1,
+        "procs": [
+          1
+        ],
+        "stat": {
+          "anon": 11620352,
+          "file": 22372352,
+          "kernel": 1376256,
+          "shmem": 0,
+          "sock": 0
+        }
+      },
+      "final_inventory": [
+        1
+      ],
+      "glibc": "glibc 2.36",
+      "imports_fit_as32": false,
+      "inventory": [
+        1,
+        7
+      ],
+      "kernel": "6.18.54.1-microsoft-standard-WSL2",
+      "member_returncode": 75,
+      "module_inventory": {
+        "codec": "zlib-base64",
+        "payload": "eJytWNty2yAQ/Zc8R3bdS6b/ksloMMI2jQQUUBL568tNisAra5XpQzuJzoUFFnbJ83N1eHx+qOtTb3vN6vrh8cHYpuXH6Yf9J7hTw8PLy+Oo6QgXQXEhWjBj3E9KyyPbt1z0HzXvlNS2Dp9yJTnS+TjHnreWi0rq6qTllYkZlcqGUYNnty2jlkvxFUkZ1zj/gpLPJRqmyc51nwYTtq+PUlpjNVH3TWr2YZkWpEW6TfzCthfUStmiF8N5o6kSy/xjpADm4f5VzSBaSZp94OyoGuxFiurH4VB9/H6qn35WIZOqs+h3Rs4spWKaWKmxIRh+LhbzLlszNNUSi+fqntq1lYisDWthL5qRBhvEuzuqXJzRGfHOyKtmp410w6B5ztAsT+FjV560IzHs6SdAjEDO5YIYyvnKYo80/GqnuWOX7/b2SlFEIIt54e6aBBPqLmQuuC2uYyqFdbcAfAN9goVGDZqdQUFAMjYTLuoydxJ/wuDgJnhHWu62675F4iw49PZU/76rD4xC3XegpO9yntYCe6+dREcsvQC2Ccmcwat45I9YpjgzwTSnilhojBmaqZB1CNqkCd4tFMKZvjycM+1UlL5SCSGf/1MMP517y+9beUKulRBf5hxFmkbHLuiGOmK5wkW5pTov1FH/Gd7QUFTdPePuGr0kTPCtLhynZV2Cb3WGEiGWdQnOdK9seJe6ASQJydgd0eaCLubCLhygCGTOUFeR2COU86G9lqbg7BYCUNLwj5sY/Af49CYkZ3sP5EpM46FjydugRNUMTjbNdjV11/YpD2imSuitSnaKt2DKBFmCAZ1w7Zew0C5EYcJvlMql0OJ4ESw0SsObkpCCbWSvKbR48+ZjpOGbD8N8C7BiG0kbTIsONln6z9msFrvX1LBm3AF7p8Xm1VVtwHjCMm/LO2x3bgcFdhrhe2ba6xbe3wjAGR+xXciXZWmAMx3UgifNCGX8K1exNgGCCcsV8GTmaeIpqCT5Fh7sBvHKScxBULBezkcfafgIjtys535ibXBtySv7vuoaWBtcr+uW1w1+/gb03QMH6/8cHrMgyULT/+YScC2cGXVDWOZt1de8bfBbOq+5ZTy9eNfAq3/Uh9o/HtUwkM43D6GBJpY1VWTsua8W7pHV7D1jX/v/vzDM9ziMGdwT6lz5F6Ye7g+XuHXkugIUf//S2P5hpM5tPK/3xgycfap16JEa51ZewNAmjbwNzozyDmzxc+NIw/teiFnopzLfRNvgy4j6u+rqSXjPVlLSIopbJF87sja+5+CHl8q39GuekYV3Da2l6Y9KSwq/jjL7go4f52/P+tXgAwnvqYloJPSHg8w0svCu7vXy67BaISJrg6ukr+Bf3XLXwNrgalaPpKNs8LO6aPagFH/5B+eWZKA=",
+        "raw_bytes": 6295
+      },
+      "outcome": "inconclusive",
+      "python": "3.11.17",
+      "ready": {
+        "limits": [
+          -1,
+          -1
+        ],
+        "phase": "ready",
+        "pid": 7,
+        "ppid": 1,
+        "vm": {
+          "peak": 19951616,
+          "rss": 16429056,
+          "size": 19668992,
+          "threads": 1
+        }
+      },
+      "startup_cgroup": {
+        "current": 24817664,
+        "events": {
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0
+        },
+        "peak": 25059328,
+        "pids_current": 1,
+        "procs": [
+          1
+        ],
+        "stat": {
+          "anon": 11608064,
+          "file": 11247616,
+          "kernel": 770048,
+          "shmem": 0,
+          "sock": 0
+        }
+      },
+      "startup_vm": {
+        "peak": 20762624,
+        "rss": 17600512,
+        "size": 20471808,
+        "threads": 1
+      },
+      "supervisor_as": [
+        -1,
+        -1
+      ],
+      "total_memory_contained": false
+    },
+    "elapsed_seconds": 4.5310000000026776,
+    "exit_code": 0,
+    "oom_killed": false,
+    "outcome": "inconclusive"
+  },
+  "decoded_module_inventory": [
+    [
+      -1,
+      [
+        "__future__",
+        "stdlib",
+        "stdlib/__future__.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "__main__",
+        "harness",
+        "probe/linux_import_probe.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "_abc",
+        "stdlib",
+        "builtin-or-frozen"
+      ]
+    ],
+    [
+      -1,
+      [
+        "_codecs",
+        "stdlib",
+        "builtin-or-frozen"
+      ]
+    ],
+    [
+      -1,
+      [
+        "_collections",
+        "stdlib",
+        "builtin-or-frozen"
+      ]
+    ],
+    [
+      -1,
+      [
+        "_collections_abc",
+        "stdlib",
+        "stdlib/_collections_abc.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "_frozen_importlib",
+        "stdlib",
+        "stdlib/importlib/_bootstrap.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "_frozen_importlib_external",
+        "stdlib",
+        "stdlib/importlib/_bootstrap_external.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "_functools",
+        "stdlib",
+        "builtin-or-frozen"
+      ]
+    ],
+    [
+      -1,
+      [
+        "_imp",
+        "stdlib",
+        "builtin-or-frozen"
+      ]
+    ],
+    [
+      -1,
+      [
+        "_io",
+        "stdlib",
+        "builtin-or-frozen"
+      ]
+    ],
+    [
+      -1,
+      [
+        "_json",
+        "stdlib",
+        "stdlib/lib-dynload/_json.cpython-311-x86_64-linux-gnu.so"
+      ]
+    ],
+    [
+      -1,
+      [
+        "_operator",
+        "stdlib",
+        "builtin-or-frozen"
+      ]
+    ],
+    [
+      -1,
+      [
+        "_signal",
+        "stdlib",
+        "builtin-or-frozen"
+      ]
+    ],
+    [
+      -1,
+      [
+        "_sre",
+        "stdlib",
+        "builtin-or-frozen"
+      ]
+    ],
+    [
+      -1,
+      [
+        "_stat",
+        "stdlib",
+        "builtin-or-frozen"
+      ]
+    ],
+    [
+      -1,
+      [
+        "_struct",
+        "stdlib",
+        "stdlib/lib-dynload/_struct.cpython-311-x86_64-linux-gnu.so"
+      ]
+    ],
+    [
+      -1,
+      [
+        "_thread",
+        "stdlib",
+        "builtin-or-frozen"
+      ]
+    ],
+    [
+      -1,
+      [
+        "_warnings",
+        "stdlib",
+        "builtin-or-frozen"
+      ]
+    ],
+    [
+      -1,
+      [
+        "_weakref",
+        "stdlib",
+        "builtin-or-frozen"
+      ]
+    ],
+    [
+      -1,
+      [
+        "_weakrefset",
+        "stdlib",
+        "stdlib/_weakrefset.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "abc",
+        "stdlib",
+        "stdlib/abc.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "base64",
+        "stdlib",
+        "stdlib/base64.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "binascii",
+        "stdlib",
+        "stdlib/lib-dynload/binascii.cpython-311-x86_64-linux-gnu.so"
+      ]
+    ],
+    [
+      -1,
+      [
+        "builtins",
+        "stdlib",
+        "builtin-or-frozen"
+      ]
+    ],
+    [
+      -1,
+      [
+        "codecs",
+        "stdlib",
+        "stdlib/codecs.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "collections",
+        "stdlib",
+        "stdlib/collections/__init__.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "contextlib",
+        "stdlib",
+        "stdlib/contextlib.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "copyreg",
+        "stdlib",
+        "stdlib/copyreg.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "encodings",
+        "stdlib",
+        "stdlib/encodings/__init__.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "encodings.aliases",
+        "stdlib",
+        "stdlib/encodings/aliases.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "encodings.utf_8",
+        "stdlib",
+        "stdlib/encodings/utf_8.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "enum",
+        "stdlib",
+        "stdlib/enum.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "errno",
+        "stdlib",
+        "builtin-or-frozen"
+      ]
+    ],
+    [
+      -1,
+      [
+        "fnmatch",
+        "stdlib",
+        "stdlib/fnmatch.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "functools",
+        "stdlib",
+        "stdlib/functools.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "genericpath",
+        "stdlib",
+        "stdlib/genericpath.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "importlib",
+        "stdlib",
+        "stdlib/importlib/__init__.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "importlib._abc",
+        "stdlib",
+        "stdlib/importlib/_abc.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "importlib._bootstrap",
+        "stdlib",
+        "stdlib/importlib/_bootstrap.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "importlib._bootstrap_external",
+        "stdlib",
+        "stdlib/importlib/_bootstrap_external.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "importlib.util",
+        "stdlib",
+        "stdlib/importlib/util.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "io",
+        "stdlib",
+        "stdlib/io.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "ipaddress",
+        "stdlib",
+        "stdlib/ipaddress.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "itertools",
+        "stdlib",
+        "builtin-or-frozen"
+      ]
+    ],
+    [
+      -1,
+      [
+        "json",
+        "stdlib",
+        "stdlib/json/__init__.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "json.decoder",
+        "stdlib",
+        "stdlib/json/decoder.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "json.encoder",
+        "stdlib",
+        "stdlib/json/encoder.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "json.scanner",
+        "stdlib",
+        "stdlib/json/scanner.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "keyword",
+        "stdlib",
+        "stdlib/keyword.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "marshal",
+        "stdlib",
+        "builtin-or-frozen"
+      ]
+    ],
+    [
+      -1,
+      [
+        "ntpath",
+        "stdlib",
+        "stdlib/ntpath.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "operator",
+        "stdlib",
+        "stdlib/operator.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "os",
+        "stdlib",
+        "stdlib/os.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "os.path",
+        "stdlib",
+        "stdlib/posixpath.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "pathlib",
+        "stdlib",
+        "stdlib/pathlib.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "posix",
+        "stdlib",
+        "builtin-or-frozen"
+      ]
+    ],
+    [
+      -1,
+      [
+        "posixpath",
+        "stdlib",
+        "stdlib/posixpath.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "re",
+        "stdlib",
+        "stdlib/re/__init__.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "re._casefix",
+        "stdlib",
+        "stdlib/re/_casefix.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "re._compiler",
+        "stdlib",
+        "stdlib/re/_compiler.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "re._constants",
+        "stdlib",
+        "stdlib/re/_constants.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "re._parser",
+        "stdlib",
+        "stdlib/re/_parser.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "reprlib",
+        "stdlib",
+        "stdlib/reprlib.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "resource",
+        "stdlib",
+        "stdlib/lib-dynload/resource.cpython-311-x86_64-linux-gnu.so"
+      ]
+    ],
+    [
+      -1,
+      [
+        "select",
+        "stdlib",
+        "stdlib/lib-dynload/select.cpython-311-x86_64-linux-gnu.so"
+      ]
+    ],
+    [
+      -1,
+      [
+        "stat",
+        "stdlib",
+        "stdlib/stat.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "struct",
+        "stdlib",
+        "stdlib/struct.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "sys",
+        "stdlib",
+        "builtin-or-frozen"
+      ]
+    ],
+    [
+      -1,
+      [
+        "threading",
+        "stdlib",
+        "stdlib/threading.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "time",
+        "stdlib",
+        "builtin-or-frozen"
+      ]
+    ],
+    [
+      -1,
+      [
+        "types",
+        "stdlib",
+        "stdlib/types.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "urllib",
+        "stdlib",
+        "stdlib/urllib/__init__.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "urllib.parse",
+        "stdlib",
+        "stdlib/urllib/parse.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "warnings",
+        "stdlib",
+        "stdlib/warnings.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "zipimport",
+        "stdlib",
+        "stdlib/zipimport.py"
+      ]
+    ],
+    [
+      -1,
+      [
+        "zlib",
+        "stdlib",
+        "stdlib/lib-dynload/zlib.cpython-311-x86_64-linux-gnu.so"
+      ]
+    ],
+    [
+      0,
+      [
+        "_ast",
+        "stdlib",
+        "builtin-or-frozen"
+      ]
+    ],
+    [
+      0,
+      [
+        "_asyncio",
+        "stdlib",
+        "stdlib/lib-dynload/_asyncio.cpython-311-x86_64-linux-gnu.so"
+      ]
+    ],
+    [
+      0,
+      [
+        "_bisect",
+        "stdlib",
+        "stdlib/lib-dynload/_bisect.cpython-311-x86_64-linux-gnu.so"
+      ]
+    ],
+    [
+      0,
+      [
+        "_blake2",
+        "stdlib",
+        "stdlib/lib-dynload/_blake2.cpython-311-x86_64-linux-gnu.so"
+      ]
+    ],
+    [
+      0,
+      [
+        "_bz2",
+        "stdlib",
+        "stdlib/lib-dynload/_bz2.cpython-311-x86_64-linux-gnu.so"
+      ]
+    ],
+    [
+      0,
+      [
+        "_compression",
+        "stdlib",
+        "stdlib/_compression.py"
+      ]
+    ],
+    [
+      0,
+      [
+        "_contextvars",
+        "stdlib",
+        "stdlib/lib-dynload/_contextvars.cpython-311-x86_64-linux-gnu.so"
+      ]
+    ],
+    [
+      0,
+      [
+        "_csv",
+        "stdlib",
+        "stdlib/lib-dynload/_csv.cpython-311-x86_64-linux-gnu.so"
+      ]
+    ],
+    [
+      0,
+      [
+        "_ctypes",
+        "stdlib",
+        "stdlib/lib-dynload/_ctypes.cpython-311-x86_64-linux-gnu.so"
+      ]
+    ],
+    [
+      0,
+      [
+        "_cython_3_1_4",
+        "pyyaml",
+        "generated-cython/installed/yaml/_yaml.cpython-311-x86_64-linux-gnu.so"
+      ]
+    ],
+    [
+      0,
+      [
+        "_cython_3_2_4",
+        "psycopg-binary",
+        "generated-cython/installed/psycopg_binary/_psycopg.cpython-311-x86_64-linux-gnu.so"
+      ]
+    ],
+    [
+      0,
+      [
+        "_cython_3_2_8",
+        "pglast",
+        "generated-cython/installed/pglast/parser.cpython-311-x86_64-linux-gnu.so"
+      ]
+    ],
+    [
+      0,
+      [
+        "_datetime",
+        "stdlib",
+        "stdlib/lib-dynload/_datetime.cpython-311-x86_64-linux-gnu.so"
+      ]
+    ],
+    [
+      0,
+      [
+        "_decimal",
+        "stdlib",
+        "stdlib/lib-dynload/_decimal.cpython-311-x86_64-linux-gnu.so"
+      ]
+    ],
+    [
+      0,
+      [
+        "_hashlib",
+        "stdlib",
+        "stdlib/lib-dynload/_hashlib.cpython-311-x86_64-linux-gnu.so"
+      ]
+    ],
+    [
+      0,
+      [
+        "_heapq",
+        "stdlib",
+        "stdlib/lib-dynload/_heapq.cpython-311-x86_64-linux-gnu.so"
+      ]
+    ],
+    [
+      0,
+      [
+        "_locale",
+        "stdlib",
+        "builtin-or-frozen"
+      ]
+    ],
+    [
+      0,
+      [
+        "_lzma",
+        "stdlib",
+        "stdlib/lib-dynload/_lzma.cpython-311-x86_64-linux-gnu.so"
+      ]
+    ],
+    [
+      0,
+      [
+        "_opcode",
+        "stdlib",
+        "stdlib/lib-dynload/_opcode.cpython-311-x86_64-linux-gnu.so"
+      ]
+    ],
+    [
+      0,
+      [
+        "_posixsubprocess",
+        "stdlib",
+        "stdlib/lib-dynload/_posixsubprocess.cpython-311-x86_64-linux-gnu.so"
+      ]
+    ],
+    [
+      0,
+      [
+        "_queue",
+        "stdlib",
+        "stdlib/lib-dynload/_queue.cpython-311-x86_64-linux-gnu.so"
+      ]
+    ],
+    [
+      0,
+      [
+        "_random",
+        "stdlib",
+        "stdlib/lib-dynload/_random.cpython-311-x86_64-linux-gnu.so"
+      ]
+    ],
+    [
+      0,
+      [
+        "_sha512",
+        "stdlib",
+        "stdlib/lib-dynload/_sha512.cpython-311-x86_64-linux-gnu.so"
+      ]
+    ],
+    [
+      0,
+      [
+        "_socket",
+        "stdlib",
+        "stdlib/lib-dynload/_socket.cpython-311-x86_64-linux-gnu.so"
+      ]
+    ],
+    [
+      0,
+      [
+        "_ssl",
+        "stdlib",
+        "stdlib/lib-dynload/_ssl.cpython-311-x86_64-linux-gnu.so"
+      ]
+    ],
+    [
+      0,
+      [
+        "_string",
+        "stdlib",
+        "builtin-or-frozen"
+      ]
+    ]
+  ],
+  "original_control_sha256": "4708ebc7fd70dfc304410234d1d9904010fcd20efa635810efd73489e3689779",
+  "original_summary_sha256": "fe920967909bb9e529826c562d9a6d3849b4aae2a18df2031474c3b27aca6408"
+}

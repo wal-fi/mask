@@ -17,7 +17,6 @@ _METADATA_ADDRESSES: Final = frozenset(
         "169.254.170.2",  # ECS metadata
     }
 )
-_IPV6: Final = 6
 _MAX_PORT: Final = 65_535
 
 
@@ -59,7 +58,7 @@ def _canonical_addresses(addresses: Sequence[str]) -> tuple[str, ...]:
             address = ipaddress.ip_address(raw)
         except ValueError:
             raise DestinationValidationError("endereco resolvido invalido") from None
-        if address.version == _IPV6 and address.ipv4_mapped is not None:
+        if isinstance(address, ipaddress.IPv6Address) and address.ipv4_mapped is not None:
             address = address.ipv4_mapped
         normalized.add(address.compressed)
     if not normalized:
@@ -69,7 +68,7 @@ def _canonical_addresses(addresses: Sequence[str]) -> tuple[str, ...]:
 
 def _validate_address(address_text: str, *, host: str, policy: DestinationPolicy) -> None:
     address = ipaddress.ip_address(address_text)
-    if address.version == _IPV6 and address.ipv4_mapped is not None:
+    if isinstance(address, ipaddress.IPv6Address) and address.ipv4_mapped is not None:
         address = address.ipv4_mapped
     canonical = address.compressed
     if canonical in _METADATA_ADDRESSES:

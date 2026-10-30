@@ -1,0 +1,145 @@
+{
+  "kind": "b2-c1-package-review-copy",
+  "date": "2026-10-23",
+  "files": [
+    {
+      "name": "result.json",
+      "sha256": "cc4a2a2e8f65c137da14d05726219b527cc40ddf157fe83a3c271121957886c3",
+      "bytes": 2818,
+      "utf8": "{\r\n  \"claim\": \"installed C1 module origins and source equality only\",\r\n  \"commands\": [\r\n    {\r\n      \"exit\": 0,\r\n      \"name\": \"build-sdist\"\r\n    },\r\n    {\r\n      \"exit\": 0,\r\n      \"name\": \"install-wheel\"\r\n    },\r\n    {\r\n      \"exit\": 0,\r\n      \"name\": \"probe-wheel\"\r\n    },\r\n    {\r\n      \"exit\": 0,\r\n      \"name\": \"install-sdist\"\r\n    },\r\n    {\r\n      \"exit\": 0,\r\n      \"name\": \"probe-sdist\"\r\n    },\r\n    {\r\n      \"exit\": 1,\r\n      \"name\": \"reject-stale\"\r\n    },\r\n    {\r\n      \"exit\": 1,\r\n      \"name\": \"reject-checkout\"\r\n    }\r\n  ],\r\n  \"python\": \"3.11.3\",\r\n  \"reports\": {\r\n    \"sdist\": {\r\n      \"dependencies\": \"existing interpreter, not isolated\",\r\n      \"known_profiles_not_ready\": {\r\n        \"linux-held-as128\": [\r\n          \"AGGREGATE_UNPROVEN\",\r\n          \"COVERAGE_GAP\",\r\n          \"CLEANUP_UNPROVEN\",\r\n          \"UNIT_MISMATCH\",\r\n          \"WORKER_UNDER_RESERVED\",\r\n          \"TOPOLOGY\"\r\n        ],\r\n        \"windows-job-private32\": [\r\n          \"AGGREGATE_UNPROVEN\",\r\n          \"COVERAGE_GAP\",\r\n          \"CREATION_UNPROVEN\",\r\n          \"CLEANUP_UNPROVEN\",\r\n          \"UNIT_MISMATCH\",\r\n          \"TOPOLOGY\"\r\n        ]\r\n      },\r\n      \"maskgw_outside_checkout\": true,\r\n      \"matched_module_count\": 39,\r\n      \"module_hashes\": {\r\n        \"budget\": \"510ca741cac660afb33ce5ae97da2685f472ebcac36e90dc8cd94fd2dcf1ed7e\",\r\n        \"domain\": \"414c9b0957f1d40ebb54ca080ec270fc5fdb59130e8415f8d63f63dcd629e91d\"\r\n      },\r\n      \"python\": \"3.11.3\",\r\n      \"source_match\": true\r\n    },\r\n    \"wheel\": {\r\n      \"dependencies\": \"existing interpreter, not isolated\",\r\n      \"known_profiles_not_ready\": {\r\n        \"linux-held-as128\": [\r\n          \"AGGREGATE_UNPROVEN\",\r\n          \"COVERAGE_GAP\",\r\n          \"CLEANUP_UNPROVEN\",\r\n          \"UNIT_MISMATCH\",\r\n          \"WORKER_UNDER_RESERVED\",\r\n          \"TOPOLOGY\"\r\n        ],\r\n        \"windows-job-private32\": [\r\n          \"AGGREGATE_UNPROVEN\",\r\n          \"COVERAGE_GAP\",\r\n          \"CREATION_UNPROVEN\",\r\n          \"CLEANUP_UNPROVEN\",\r\n          \"UNIT_MISMATCH\",\r\n          \"TOPOLOGY\"\r\n        ]\r\n      },\r\n      \"maskgw_outside_checkout\": true,\r\n      \"matched_module_count\": 39,\r\n      \"module_hashes\": {\r\n        \"budget\": \"510ca741cac660afb33ce5ae97da2685f472ebcac36e90dc8cd94fd2dcf1ed7e\",\r\n        \"domain\": \"414c9b0957f1d40ebb54ca080ec270fc5fdb59130e8415f8d63f63dcd629e91d\"\r\n      },\r\n      \"python\": \"3.11.3\",\r\n      \"source_match\": true\r\n    }\r\n  },\r\n  \"root\": \"C:\\\\Users\\\\w.filho\\\\AppData\\\\Local\\\\Temp\\\\maskgw-domain-package-20261023-c1f24dc8\",\r\n  \"sdist_members\": 146,\r\n  \"sha256\": {\r\n    \"rebuilt\": \"25954b071dc45d214dd815e80ca7ce93441b3bfca9044597a1264c921533cfdb\",\r\n    \"sdist\": \"5b45596cefd6daa6f74f5253223be8f2a91a6b7fef94a859176645235ddae90d\",\r\n    \"wheel\": \"f73a335218ce2e7377107b0c8370b4eebd744e96cf3cac89889bac5f6cba5909\"\r\n  },\r\n  \"wheel_members\": 120\r\n}\r\n"
+    },
+    {
+      "name": "package_checks.py",
+      "sha256": "6cf0f314b2aad3972c74c354045a52ea4202554e0768f9cd58c0c4b8bc85ea41",
+      "bytes": 4967,
+      "utf8": "\"\"\"Own temporary packaging checks; no network, DB, listener or OS limits.\"\"\"\nimport hashlib\nimport json\nimport os\nfrom pathlib import Path, PurePosixPath\nimport shutil\nimport subprocess\nimport sys\nimport tarfile\nimport zipfile\n\nroot = Path(__file__).resolve().parent\ncheckout = Path(\"C:/Users/w.filho/Desktop/codes/mask\")\nassert root.name.startswith(\"maskgw-domain-package-20261023-\")\nassert root.is_relative_to(Path(os.environ[\"LOCALAPPDATA\"]) / \"Temp\")\nassert not root.is_relative_to(checkout)\nos.chdir(root)\nenv_names = {\"PATH\", \"PATHEXT\", \"COMSPEC\", \"SYSTEMROOT\", \"WINDIR\", \"TEMP\", \"TMP\",\n             \"APPDATA\", \"LOCALAPPDATA\", \"USERPROFILE\", \"SYSTEMDRIVE\", \"PROGRAMFILES\",\n             \"PROGRAMFILES(X86)\", \"PROGRAMW6432\", \"HOMEDRIVE\", \"HOMEPATH\", \"OS\"}\nenv = {key: value for key, value in os.environ.items() if key.upper() in env_names}\nenv.update(PIP_NO_INDEX=\"1\", PIP_DISABLE_PIP_VERSION_CHECK=\"1\",\n           PIP_CONFIG_FILE=os.devnull, PYTHONDONTWRITEBYTECODE=\"1\")\ncommands = []\ndef run(name, args, *, negative=False):\n    with (root / (name + \".log\")).open(\"xb\") as log:\n        result = subprocess.run(args, cwd=root, env=env, timeout=120,\n                                stdout=log, stderr=subprocess.STDOUT, check=False)\n    commands.append({\"name\": name, \"exit\": result.returncode})\n    if (result.returncode == 0) == negative:\n        raise RuntimeError(\"unexpected command result\")\n    return (root / (name + \".log\")).read_text(encoding=\"utf8\")\ndef names_ok(names):\n    assert 1 <= len(names) <= 1024 and len(names) == len(set(names))\n    for name in names:\n        assert len(name) <= 512 and \"\\\\\" not in name and \":\" not in name\n        path = PurePosixPath(name)\n        assert not path.is_absolute() and not {\"..\", \".codex\", \".claude\", \"docs\", \"tests\", \"frontend\"} & set(path.parts)\n        assert not any(part.endswith(\".stackdump\") or part == \"systeminfo\" for part in path.parts)\n        assert (root / \"extracted\" / str(path)).resolve().is_relative_to(root / \"extracted\")\nwheel = next((root / \"artifacts\").glob(\"*.whl\"))\nsdist = next((root / \"artifacts\").glob(\"*.tar.gz\"))\nwith zipfile.ZipFile(wheel) as archive:\n    items = archive.infolist()\n    names_ok([item.filename for item in items])\n    assert sum(item.file_size for item in items) <= 16 * 1024 * 1024\n    assert archive.read(\"maskgw/runtime/domain.py\") == (checkout / \"src/maskgw/runtime/domain.py\").read_bytes()\n    wheel_members = len(items)\nextract = root / \"extracted\"\nextract.mkdir()\nwith tarfile.open(sdist, \"r:gz\") as archive:\n    items = archive.getmembers()\n    names_ok([item.name for item in items])\n    assert all(item.isdir() or item.isfile() for item in items)\n    assert sum(item.size for item in items) <= 16 * 1024 * 1024\n    assert all(item.name.split(\"/\")[0] == \"maskgw-0.1.0\" for item in items)\n    archive.extractall(extract, members=items)\n    sdist_members = len(items)\nprobe = root / \"domain_package_probe.py\"\nshutil.copyfile(checkout / \"tests/domain_package_probe.py\", probe)\nsdist_wheels = root / \"sdist-wheel\"\nrun(\"build-sdist\", [sys.executable, \"-m\", \"build\", \"--no-isolation\", \"--wheel\",\n                   \"--outdir\", str(sdist_wheels), str(extract / \"maskgw-0.1.0\")])\nrebuilt = next(sdist_wheels.glob(\"*.whl\"))\nreports = {}\nfor label, package in ((\"wheel\", wheel), (\"sdist\", rebuilt)):\n    target = root / (\"target-\" + label)\n    target.mkdir()\n    run(\"install-\" + label, [sys.executable, \"-m\", \"pip\", \"install\", \"--no-index\",\n        \"--no-deps\", \"--no-compile\", \"--target\", str(target), str(package)])\n    raw = run(\"probe-\" + label, [sys.executable, \"-I\", \"-B\", str(probe), str(target), str(checkout)])\n    report = json.loads(raw)\n    assert report[\"source_match\"] is True and report[\"maskgw_outside_checkout\"] is True\n    reports[label] = report\nnegative = root / \"target-stale\"\nshutil.copytree(root / \"target-wheel\", negative)\nwith (negative / \"maskgw/runtime/domain.py\").open(\"a\", encoding=\"utf8\") as stream:\n    stream.write(\"\\n# deliberately stale package counterexample\\n\")\nraw = run(\"reject-stale\", [sys.executable, \"-I\", \"-B\", str(probe), str(negative),\n                           str(checkout)], negative=True)\nassert \"installed module differs from reviewed source\" in raw\nraw = run(\"reject-checkout\", [sys.executable, \"-I\", \"-B\", str(probe),\n                              str(checkout / \"src\"), str(checkout)], negative=True)\nassert \"probe must run outside checkout\" in raw\nresult = {\n    \"root\": str(root), \"python\": sys.version.split()[0],\n    \"wheel_members\": wheel_members, \"sdist_members\": sdist_members,\n    \"commands\": commands, \"reports\": reports,\n    \"sha256\": {label: hashlib.sha256(path.read_bytes()).hexdigest()\n               for label, path in ((\"wheel\", wheel), (\"sdist\", sdist), (\"rebuilt\", rebuilt))},\n    \"claim\": \"installed C1 module origins and source equality only\",\n}\n(root / \"result.json\").write_text(json.dumps(result, sort_keys=True, indent=2) + \"\\n\", encoding=\"utf8\")\nprint(json.dumps(result, sort_keys=True))\n"
+    },
+    {
+      "name": "probe-wheel.log",
+      "sha256": "08afe0162ccd50486bb24d732b04a2adbc026fe78b9c4e821cfdbb483a2a483c",
+      "bytes": 633,
+      "utf8": "{\"dependencies\": \"existing interpreter, not isolated\", \"known_profiles_not_ready\": {\"linux-held-as128\": [\"AGGREGATE_UNPROVEN\", \"COVERAGE_GAP\", \"CLEANUP_UNPROVEN\", \"UNIT_MISMATCH\", \"WORKER_UNDER_RESERVED\", \"TOPOLOGY\"], \"windows-job-private32\": [\"AGGREGATE_UNPROVEN\", \"COVERAGE_GAP\", \"CREATION_UNPROVEN\", \"CLEANUP_UNPROVEN\", \"UNIT_MISMATCH\", \"TOPOLOGY\"]}, \"maskgw_outside_checkout\": true, \"matched_module_count\": 39, \"module_hashes\": {\"budget\": \"510ca741cac660afb33ce5ae97da2685f472ebcac36e90dc8cd94fd2dcf1ed7e\", \"domain\": \"414c9b0957f1d40ebb54ca080ec270fc5fdb59130e8415f8d63f63dcd629e91d\"}, \"python\": \"3.11.3\", \"source_match\": true}\r\n"
+    },
+    {
+      "name": "probe-sdist.log",
+      "sha256": "08afe0162ccd50486bb24d732b04a2adbc026fe78b9c4e821cfdbb483a2a483c",
+      "bytes": 633,
+      "utf8": "{\"dependencies\": \"existing interpreter, not isolated\", \"known_profiles_not_ready\": {\"linux-held-as128\": [\"AGGREGATE_UNPROVEN\", \"COVERAGE_GAP\", \"CLEANUP_UNPROVEN\", \"UNIT_MISMATCH\", \"WORKER_UNDER_RESERVED\", \"TOPOLOGY\"], \"windows-job-private32\": [\"AGGREGATE_UNPROVEN\", \"COVERAGE_GAP\", \"CREATION_UNPROVEN\", \"CLEANUP_UNPROVEN\", \"UNIT_MISMATCH\", \"TOPOLOGY\"]}, \"maskgw_outside_checkout\": true, \"matched_module_count\": 39, \"module_hashes\": {\"budget\": \"510ca741cac660afb33ce5ae97da2685f472ebcac36e90dc8cd94fd2dcf1ed7e\", \"domain\": \"414c9b0957f1d40ebb54ca080ec270fc5fdb59130e8415f8d63f63dcd629e91d\"}, \"python\": \"3.11.3\", \"source_match\": true}\r\n"
+    },
+    {
+      "name": "reject-stale.log",
+      "sha256": "cc0874661bfbcf07fa53573e9f105e7ca56ab49a8fe41fd83cce26ad190f9e56",
+      "bytes": 611,
+      "utf8": "Traceback (most recent call last):\r\n  File \"C:\\Users\\w.filho\\AppData\\Local\\Temp\\maskgw-domain-package-20261023-c1f24dc8\\domain_package_probe.py\", line 78, in <module>\r\n    print(json.dumps(run(Path(sys.argv[1]).resolve(), Path(sys.argv[2]).resolve()), sort_keys=True))\r\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\Users\\w.filho\\AppData\\Local\\Temp\\maskgw-domain-package-20261023-c1f24dc8\\domain_package_probe.py\", line 38, in run\r\n    raise ValueError(\"installed module differs from reviewed source\")\r\nValueError: installed module differs from reviewed source\r\n"
+    },
+    {
+      "name": "reject-checkout.log",
+      "sha256": "03d66a679e593349a6bff2382c094cb4ca501bee9e1ab0ce4efb9fa0f683de27",
+      "bytes": 583,
+      "utf8": "Traceback (most recent call last):\r\n  File \"C:\\Users\\w.filho\\AppData\\Local\\Temp\\maskgw-domain-package-20261023-c1f24dc8\\domain_package_probe.py\", line 78, in <module>\r\n    print(json.dumps(run(Path(sys.argv[1]).resolve(), Path(sys.argv[2]).resolve()), sort_keys=True))\r\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\Users\\w.filho\\AppData\\Local\\Temp\\maskgw-domain-package-20261023-c1f24dc8\\domain_package_probe.py\", line 22, in run\r\n    raise ValueError(\"probe must run outside checkout\")\r\nValueError: probe must run outside checkout\r\n"
+    }
+  ],
+  "result": {
+    "claim": "installed C1 module origins and source equality only",
+    "commands": [
+      {
+        "exit": 0,
+        "name": "build-sdist"
+      },
+      {
+        "exit": 0,
+        "name": "install-wheel"
+      },
+      {
+        "exit": 0,
+        "name": "probe-wheel"
+      },
+      {
+        "exit": 0,
+        "name": "install-sdist"
+      },
+      {
+        "exit": 0,
+        "name": "probe-sdist"
+      },
+      {
+        "exit": 1,
+        "name": "reject-stale"
+      },
+      {
+        "exit": 1,
+        "name": "reject-checkout"
+      }
+    ],
+    "python": "3.11.3",
+    "reports": {
+      "sdist": {
+        "dependencies": "existing interpreter, not isolated",
+        "known_profiles_not_ready": {
+          "linux-held-as128": [
+            "AGGREGATE_UNPROVEN",
+            "COVERAGE_GAP",
+            "CLEANUP_UNPROVEN",
+            "UNIT_MISMATCH",
+            "WORKER_UNDER_RESERVED",
+            "TOPOLOGY"
+          ],
+          "windows-job-private32": [
+            "AGGREGATE_UNPROVEN",
+            "COVERAGE_GAP",
+            "CREATION_UNPROVEN",
+            "CLEANUP_UNPROVEN",
+            "UNIT_MISMATCH",
+            "TOPOLOGY"
+          ]
+        },
+        "maskgw_outside_checkout": true,
+        "matched_module_count": 39,
+        "module_hashes": {
+          "budget": "510ca741cac660afb33ce5ae97da2685f472ebcac36e90dc8cd94fd2dcf1ed7e",
+          "domain": "414c9b0957f1d40ebb54ca080ec270fc5fdb59130e8415f8d63f63dcd629e91d"
+        },
+        "python": "3.11.3",
+        "source_match": true
+      },
+      "wheel": {
+        "dependencies": "existing interpreter, not isolated",
+        "known_profiles_not_ready": {
+          "linux-held-as128": [
+            "AGGREGATE_UNPROVEN",
+            "COVERAGE_GAP",
+            "CLEANUP_UNPROVEN",
+            "UNIT_MISMATCH",
+            "WORKER_UNDER_RESERVED",
+            "TOPOLOGY"
+          ],
+          "windows-job-private32": [
+            "AGGREGATE_UNPROVEN",
+            "COVERAGE_GAP",
+            "CREATION_UNPROVEN",
+            "CLEANUP_UNPROVEN",
+            "UNIT_MISMATCH",
+            "TOPOLOGY"
+          ]
+        },
+        "maskgw_outside_checkout": true,
+        "matched_module_count": 39,
+        "module_hashes": {
+          "budget": "510ca741cac660afb33ce5ae97da2685f472ebcac36e90dc8cd94fd2dcf1ed7e",
+          "domain": "414c9b0957f1d40ebb54ca080ec270fc5fdb59130e8415f8d63f63dcd629e91d"
+        },
+        "python": "3.11.3",
+        "source_match": true
+      }
+    },
+    "root": "C:\\Users\\w.filho\\AppData\\Local\\Temp\\maskgw-domain-package-20261023-c1f24dc8",
+    "sdist_members": 146,
+    "sha256": {
+      "rebuilt": "25954b071dc45d214dd815e80ca7ce93441b3bfca9044597a1264c921533cfdb",
+      "sdist": "5b45596cefd6daa6f74f5253223be8f2a91a6b7fef94a859176645235ddae90d",
+      "wheel": "f73a335218ce2e7377107b0c8370b4eebd744e96cf3cac89889bac5f6cba5909"
+    },
+    "wheel_members": 120
+  },
+  "note": "Original bytes/hashes measured by executor. Limited installed-module probe only, not full app/dependency isolation/containment."
+}

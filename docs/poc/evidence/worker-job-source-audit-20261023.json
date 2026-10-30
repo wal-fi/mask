@@ -1,0 +1,59 @@
+{
+  "baseline": 632,
+  "baseline_sha256": "a16e502ee59787df17aa4e8d1e6acb29b442813a8356bd7d5839118aeeb6ab6d",
+  "changed_existing": {
+    "AGENTS.md": {
+      "after": "638c3ec82a7ff10f3496665f69222738685639dd1438a678451e1a159ba71ca7",
+      "before": "045f6ac55a6605d8e3ede69994146b58401950c03e6bc4fee367e5ca8491da22"
+    },
+    "CLAUDE.md": {
+      "after": "51baa9f80b17b0e21a9b26de58aa479ece5063e60e9dfad5dca22708b1eac163",
+      "before": "3d599032cbb8090f01666f30fec2f630bffb250ff01b6644784da7e711bc6fa7"
+    },
+    "docs/CLAUDE2-PENDING-REVIEW.md": {
+      "after": "01b7a7d064048e4acce020921c96802ceaf43072ba9dec14b8fa5133699f332d",
+      "before": "6f12ba9fd0e57d2ded3d96e9a02a63a276afb6b298115d58d9adbd4581d4cf05"
+    },
+    "docs/DECISIONS.md": {
+      "after": "1a57cd22a8ed9ade62460464eb86ff73d60890e16305672db3168ee68641f720",
+      "before": "6e91a5d4f6ab1cd069be87269e6b7b7f6256de8a0f00bc5b0a7102641bb3de7d"
+    },
+    "docs/HANDOFF.md": {
+      "after": "043891b63df15f2d7c206bc13f97e245f0c8e846a45b558b6c638ac5c02c2a64",
+      "before": "afaa1ad5d1d77ac41f63904003224e90eee91eb0c8a49ae08f3a6e30f2fd6d6a"
+    },
+    "docs/PHASE-9-STAGE-8-WORKER-JOB-PLAN.md": {
+      "after": "900b77fbcca21639e7a910b20c3699b3df293a250c6b0a3b4e662107ee3b35fb",
+      "before": "96c8d3b4c61327709c2d08d4e028be1b2169d529185652e8b420e13d83a4c9bb"
+    },
+    "docs/PHASE-9-TRACEABILITY.md": {
+      "after": "c52685ffd63a48ea14f269e5710295546101c2840432fc85897b1b9c5acd5f3a",
+      "before": "36da1f3d8dbcb91a6ea5c8ba67de452178926b7a7dfcbf4058b476f8c86a20eb"
+    },
+    "docs/ROADMAP.md": {
+      "after": "a613c658ccec9478265aff76348914a2e4bb525fca52a1de5532d9fe0f6fa825",
+      "before": "8d80fe1bdd1345c1d41531a5f4e4b1598ad216a2794cc7863e07851cafd19797"
+    },
+    "tests/test_result_encoder.py": {
+      "after": "585324b38dbcbd120c9920bfcc72b42a9187d26cf8a7d3a6ca2d352767487893",
+      "before": "9983a34f8ac72a3a75afc09d2137a1b80bf5ee209bda3f956bec2f4215b8290c"
+    },
+    "tests/test_result_frame.py": {
+      "after": "ef776988809d117cde7344696d1219eb4ea749335f7612914c0ca2b8717a95fa",
+      "before": "c2b13e404da422371de059bfaabe4afabb7f6b1dbc567884d1a74185355e80ea"
+    }
+  },
+  "claim": "byte audit of versionable files only; personal files/caches excluded; not containment or Git write",
+  "final_source_hashes": {
+    "src/maskgw/runtime/worker_job.py": "e93e3c3e38aeeb212c0bca5d5ab6f961eb5c7df1ee37aafb70bc8498bf5758a8",
+    "tests/test_result_encoder.py": "585324b38dbcbd120c9920bfcc72b42a9187d26cf8a7d3a6ca2d352767487893",
+    "tests/test_result_frame.py": "ef776988809d117cde7344696d1219eb4ea749335f7612914c0ca2b8717a95fa",
+    "tests/test_worker_job.py": "b5b4089d9719bc6ff502fc7f52706b80c28eb107229d1a141dfa21ce9d6f03e2"
+  },
+  "guard_reverse_bytes_match": true,
+  "kind": "maskgw-worker-job-source-audit-v1",
+  "old_product_unchanged": true,
+  "package_raw_matches_external": true,
+  "unexpected": [],
+  "venv_config_and_prior_screenshots_unchanged": true
+}

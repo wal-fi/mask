@@ -1,0 +1,656 @@
+{
+  "kind": "oracle9-wheel-download-procedure-v1",
+  "root": "C:\\Users\\w.filho\\AppData\\Local\\Temp\\maskgw-oracle9-wheels-20261025-8ca7de53",
+  "task": "0db814cd7c2844bca53f54a1bcca0726",
+  "state": {
+    "kind": "maskgw-oracle9-wheels",
+    "task": "0db814cd7c2844bca53f54a1bcca0726",
+    "invoked": false,
+    "wheelhouse_ready": false,
+    "program_sha256": "e3c243cc714123e15589e70442d439ed37d68c0c58618e5e93bfbae0bead50b1",
+    "policy_sha256": "011ba3744ab393b1887fcd3290e66d3a507eb9297f1929e39f2e5a03269f2c3a",
+    "evidence_sha256": "8b737f8fe07f6ec42d8984fec013bf43bdf483e3629a04cf3390b3b9f4807113"
+  },
+  "sources": {
+    "docs/poc/oracle9_wheels_download.py": {
+      "bytes": 10208,
+      "sha256": "e3c243cc714123e15589e70442d439ed37d68c0c58618e5e93bfbae0bead50b1",
+      "utf8": "\"\"\"Closed public-wheel downloads only; no ZIP interpretation or installation.\"\"\"\n\nimport hashlib\nimport json\nimport os\nfrom pathlib import Path\nimport re\nimport stat\nimport subprocess\nimport sys\nimport time\n\nREPO = Path(__file__).resolve().parents[2]\nCURL = Path(\"C:/Windows/System32/curl.exe\")\nCURL_SHA = \"73d24149ff289afc49ec41f08918ef9faa727d39ad993e929757dc2ddafab805\"\nPOLICY = REPO / \"deploy/oracle9_dependencies.py\"\nPOLICY_SHA = \"011ba3744ab393b1887fcd3290e66d3a507eb9297f1929e39f2e5a03269f2c3a\"\nEVIDENCE = REPO / \"docs/poc/evidence/oracle9-dependencies-attempt2-20261025.json\"\nEVIDENCE_SHA = \"8b737f8fe07f6ec42d8984fec013bf43bdf483e3629a04cf3390b3b9f4807113\"\nMAX_FILE = 32 * 1024 * 1024\nMAX_TOTAL = 128 * 1024 * 1024\n\n\ndef require(value):\n    if not value:\n        raise RuntimeError(\"WHEELHOUSE_DOWNLOAD_REFUSED\")\n\n\ndef digest(path):\n    h = hashlib.sha256()\n    with path.open(\"rb\") as f:\n        while block := f.read(65536):\n            h.update(block)\n    return h.hexdigest()\n\n\ndef regular(path):\n    s = path.lstat()\n    require(stat.S_ISREG(s.st_mode) and not getattr(s, \"st_file_attributes\", 0) & 0x400)\n\n\ndef write_new(path, raw):\n    with path.open(\"xb\") as f:\n        f.write(raw)\n        f.flush()\n        os.fsync(f.fileno())\n\n\ndef save(path, value):\n    raw = (json.dumps(value, sort_keys=True) + \"\\n\").encode()\n    require(len(raw) <= 1024 * 1024)\n    candidate = path.with_suffix(path.suffix + \".next\")\n    write_new(candidate, raw)\n    os.replace(candidate, path)\n\n\ndef selected_files():\n    regular(POLICY)\n    regular(EVIDENCE)\n    require(POLICY.stat().st_size <= 65536 and EVIDENCE.stat().st_size <= 1024 * 1024)\n    source, evidence = POLICY.read_bytes(), EVIDENCE.read_bytes()\n    require(\n        hashlib.sha256(source).hexdigest() == POLICY_SHA\n        and hashlib.sha256(evidence).hexdigest() == EVIDENCE_SHA\n    )\n    ns = {\"__file__\": str(POLICY), \"__name__\": \"_frozen_linux_dependency_policy\"}\n    exec(compile(source, str(POLICY), \"exec\"), ns)\n    original = json.loads(evidence)\n    state = json.loads(original[\"raw\"][\"attempt.json\"][\"utf8\"])\n    require(\n        state[\"task\"] == \"d8c06b17ed9e4287aff515719d5bcf1a\"\n        and state[\"desktop_restored_off\"] is True\n    )\n    block = original[\"raw\"][\"resolution.stdout\"]\n    raw = block[\"utf8\"].encode()\n    require(len(raw) == block[\"bytes\"] and hashlib.sha256(raw).hexdigest() == block[\"sha256\"])\n    packet = json.loads(raw)\n    ns[\"validate_packet\"](packet, packet[\"inputs\"])\n    inputs = packet[\"inputs\"]\n    require(digest(REPO / \"pyproject.toml\") == inputs[\"project_sha256\"])\n    require(digest(REPO / \"deploy/constraints-tested.txt\") == inputs[\"seed_sha256\"])\n    result = json.loads(original[\"raw\"][\"result.json\"][\"utf8\"])\n    require(\n        result[\"outcome\"] == \"LINUX_DEPENDENCY_REPORT_PASSED\"\n        and result[\"owned_cleanup\"] is True\n        and result[\"inventory_restored\"] is True\n    )\n    require(\n        result[\"resolution_sha256\"] == block[\"sha256\"]\n        and result[\"projection\"] == packet[\"projection\"]\n    )\n    files = packet[\"projection\"][\"files\"]\n    require(len(files) == 36)\n    return files\n\n\ndef curl_args(path, entry, files, limit):\n    require(0 < limit <= MAX_FILE and entry in files)\n    require(entry[\"url\"] in {v[\"url\"] for v in files} and path.name == entry[\"filename\"])\n    require(\n        re.fullmatch(\n            r\"https://files\\.pythonhosted\\.org/packages/[A-Za-z0-9/._+!-]+\\.whl\", entry[\"url\"]\n        )\n    )\n    require(entry[\"url\"].rsplit(\"/\", 1)[-1] == entry[\"filename\"])\n    return [\n        str(CURL),\n        \"-q\",\n        \"--noproxy\",\n        \"*\",\n        \"--proto\",\n        \"=https\",\n        \"--max-redirs\",\n        \"0\",\n        \"--no-ssl-auto-client-cert\",\n        \"--fail\",\n        \"--silent\",\n        \"--connect-timeout\",\n        \"10\",\n        \"--max-time\",\n        \"30\",\n        \"--max-filesize\",\n        str(limit),\n        \"--retry\",\n        \"0\",\n        \"--output\",\n        str(path),\n        \"--write-out\",\n        \"%{http_code}\\n%{url_effective}\",\n        \"--url\",\n        entry[\"url\"],\n    ]\n\n\ndef environment():\n    return {\n        key: os.environ[key] for key in (\"SystemRoot\", \"WINDIR\", \"TEMP\", \"TMP\") if key in os.environ\n    }\n\n\ndef lock_bytes(files):\n    return (\n        \"# Candidate only: Linux x86_64 / CPython 3.11; not an installed application lock.\\n\"\n        + \"\".join(\n            v[\"name\"] + \"==\" + v[\"version\"] + \" --hash=sha256:\" + v[\"sha256\"] + \"\\n\" for v in files\n        )\n    ).encode(\"ascii\")\n\n\ndef check_wheelhouse(root, files, manifest):\n    require(\n        type(manifest) is dict\n        and set(manifest) == {\"kind\", \"source_evidence_sha256\", \"files\", \"total_bytes\"}\n    )\n    directory = root / \"wheels\"\n    s = directory.lstat()\n    require(stat.S_ISDIR(s.st_mode) and not getattr(s, \"st_file_attributes\", 0) & 0x400)\n    require({v.name for v in directory.iterdir()} == {v[\"filename\"] for v in files})\n    require(\n        manifest[\"kind\"] == \"oracle9-closed-wheels-v1\"\n        and manifest[\"source_evidence_sha256\"] == EVIDENCE_SHA\n    )\n    require(len(manifest[\"files\"]) == len(files))\n    total = 0\n    for source, entry in zip(files, manifest[\"files\"]):\n        require(set(entry) == {\"name\", \"version\", \"filename\", \"url\", \"sha256\", \"bytes\"})\n        require(\n            {key: entry[key] for key in source if key in entry}\n            == {key: source[key] for key in entry if key != \"bytes\"}\n        )\n        path = directory / entry[\"filename\"]\n        regular(path)\n        require(\n            type(entry[\"bytes\"]) is int\n            and 0 < entry[\"bytes\"] <= MAX_FILE\n            and path.stat().st_size == entry[\"bytes\"]\n        )\n        require(digest(path) == entry[\"sha256\"])\n        total += entry[\"bytes\"]\n    require(total <= MAX_TOTAL and manifest[\"total_bytes\"] == total)\n    regular(root / \"requirements.dependencies.lock\")\n    require((root / \"requirements.dependencies.lock\").read_bytes() == lock_bytes(files))\n    return total\n\n\ndef main(root):\n    require(os.name == \"nt\" and sys.flags.isolated and not sys.flags.optimize)\n    require(root.parent.resolve() == (Path(os.environ[\"LOCALAPPDATA\"]) / \"Temp\").resolve())\n    require(root.name.startswith(\"maskgw-oracle9-wheels-20261025-\") and not root.is_symlink())\n    require(not root.lstat().st_file_attributes & 0x400)\n    state = json.loads((root / \"attempt.json\").read_bytes())\n    require(\n        state[\"kind\"] == \"maskgw-oracle9-wheels\" and re.fullmatch(\"[0-9a-f]{32}\", state[\"task\"])\n    )\n    require(state[\"invoked\"] is False and not (root / \"download-result.json\").exists())\n    require(digest(Path(__file__)) == state[\"program_sha256\"] and digest(CURL) == CURL_SHA)\n    files = selected_files()\n    require(state[\"policy_sha256\"] == POLICY_SHA and state[\"evidence_sha256\"] == EVIDENCE_SHA)\n    state.update(invoked=True, phase=\"DOWNLOAD_CONSUMED\")\n    save(root / \"attempt.json\", state)\n    result = {\n        \"kind\": \"oracle9-wheel-download-result-v1\",\n        \"task\": state[\"task\"],\n        \"outcome\": \"NOT_PASSED\",\n        \"files\": [],\n    }\n    started = time.monotonic()\n    total = 0\n    entries = []\n    try:\n        directory = root / \"wheels\"\n        directory.mkdir()\n        for entry in files:\n            require(digest(CURL) == CURL_SHA)\n            remaining = 1500 - (time.monotonic() - started)\n            require(remaining > 0 and total < MAX_TOTAL)\n            path = directory / entry[\"filename\"]\n            write_new(path, b\"\")\n            regular(path)\n            limit = min(MAX_FILE, MAX_TOTAL - total)\n            p = subprocess.run(\n                curl_args(path, entry, files, limit),\n                stdin=subprocess.DEVNULL,\n                stdout=subprocess.PIPE,\n                stderr=subprocess.DEVNULL,\n                cwd=CURL.parent,\n                env=environment(),\n                timeout=min(35, remaining),\n                check=False,\n            )\n            result[\"files\"].append({\"filename\": path.name, \"exit\": p.returncode})\n            require(p.returncode == 0 and len(p.stdout) <= 4096)\n            require(p.stdout.replace(b\"\\r\\n\", b\"\\n\") == (\"200\\n\" + entry[\"url\"]).encode(\"ascii\"))\n            regular(path)\n            size = path.stat().st_size\n            require(0 < size <= limit)\n            with path.open(\"r+b\") as f:\n                os.fsync(f.fileno())\n            require(digest(path) == entry[\"sha256\"])\n            total += size\n            entries.append(\n                {key: entry[key] for key in (\"name\", \"version\", \"filename\", \"url\", \"sha256\")}\n                | {\"bytes\": size}\n            )\n            print(\n                json.dumps(\n                    {\n                        \"downloaded\": len(entries),\n                        \"total\": len(files),\n                        \"name\": entry[\"name\"],\n                        \"bytes\": size,\n                    }\n                ),\n                flush=True,\n            )\n        manifest = {\n            \"kind\": \"oracle9-closed-wheels-v1\",\n            \"source_evidence_sha256\": EVIDENCE_SHA,\n            \"files\": entries,\n            \"total_bytes\": total,\n        }\n        write_new(root / \"requirements.dependencies.lock\", lock_bytes(files))\n        require(check_wheelhouse(root, files, manifest) == total)\n        require(selected_files() == files and digest(Path(__file__)) == state[\"program_sha256\"])\n        require(digest(CURL) == CURL_SHA)\n        write_new(root / \"manifest.json\", (json.dumps(manifest, sort_keys=True) + \"\\n\").encode())\n        state[\"wheelhouse_ready\"] = True\n        state[\"manifest_sha256\"] = digest(root / \"manifest.json\")\n        save(root / \"attempt.json\", state)\n        result.update(\n            outcome=\"WHEELS_DOWNLOADED_VERIFIED\",\n            total_bytes=total,\n            manifest_sha256=state[\"manifest_sha256\"],\n        )\n    except BaseException:\n        result[\"failure_after_completed_files\"] = len(entries)\n    finally:\n        result[\"seconds\"] = time.monotonic() - started\n        save(root / \"download-result.json\", result)\n        print(json.dumps(result), flush=True)\n    return 0 if result[\"outcome\"] == \"WHEELS_DOWNLOADED_VERIFIED\" else 2\n\n\nif __name__ == \"__main__\":\n    require(len(sys.argv) == 2)\n    raise SystemExit(main(Path(sys.argv[1])))\n"
+    },
+    "deploy/oracle9_dependencies.py": {
+      "bytes": 15465,
+      "sha256": "011ba3744ab393b1887fcd3290e66d3a507eb9297f1929e39f2e5a03269f2c3a",
+      "utf8": "\"\"\"Public native-Linux dependency resolution; no calls on import, no application.\"\"\"\n\nimport base64\nimport hashlib\nimport json\nimport os\nimport pathlib\nimport re\nimport stat\nimport subprocess\nimport sys\nimport urllib.parse\nimport zlib\n\nMAX_RAW = 16 * 1024 * 1024\nMAX_ENVELOPE = 2 * 1024 * 1024\nCERT = \"/etc/pki/tls/certs/ca-bundle.crt\"\nCONFIGS = (\"/etc/pip.conf\", \"/etc/xdg/pip/pip.conf\", \"/opt/maskgw/venv/pip.conf\")\nINDEX = \"https://pypi.org/simple\"\n\n\ndef require(value):\n    if not value:\n        raise RuntimeError(\"DEPENDENCY_RESOLUTION_REFUSED\")\n\n\ndef sha(data):\n    return hashlib.sha256(data).hexdigest()\n\n\ndef name_key(value):\n    require(type(value) is str and re.fullmatch(r\"[A-Za-z0-9][A-Za-z0-9_.-]{0,100}\", value))\n    return re.sub(r\"[-_.]+\", \"-\", value).lower()\n\n\ndef validate_inputs(value):\n    require(\n        type(value) is dict\n        and set(value) == {\"requirements\", \"constraints\", \"project_sha256\", \"seed_sha256\"}\n    )\n    require(type(value[\"constraints\"]) is str and len(value[\"constraints\"].encode()) <= 8192)\n    require(sha(value[\"constraints\"].encode()) == value[\"seed_sha256\"])\n    require(re.fullmatch(\"[0-9a-f]{64}\", value[\"project_sha256\"]) is not None)\n    pins = {}\n    for line in value[\"constraints\"].splitlines():\n        line = line.strip()\n        if not line or line.startswith(\"#\"):\n            continue\n        m = re.fullmatch(r\"([A-Za-z0-9_.-]+)==([A-Za-z0-9.!+_]+)\", line)\n        require(m is not None)\n        key = name_key(m[1])\n        require(key not in pins)\n        pins[key] = m[2]\n    require(1 <= len(pins) <= 32)\n    roots = []\n    reqs = value[\"requirements\"]\n    require(type(reqs) is list and 1 <= len(reqs) <= 32)\n    for req in reqs:\n        require(type(req) is str and len(req) <= 256 and req.isascii())\n        require(not any(c in req for c in (\"\\r\", \"\\n\", \"\\x00\", \"@\", \":\", \"/\", \"\\\\\")))\n        m = re.match(r\"([A-Za-z0-9][A-Za-z0-9_.-]*)(?:\\[[A-Za-z0-9_,.-]+\\])?(?=[<>=!~;]|$)\", req)\n        require(m is not None)\n        key = name_key(m[1])\n        require(key in pins and key not in roots)\n        roots.append(key)\n    return pins, roots\n\n\ndef wheel_filename(filename, package, version, glibc):\n    require(type(filename) is str and len(filename) <= 256)\n    require(re.fullmatch(r\"[A-Za-z0-9_.+!-]+\\.whl\", filename) is not None)\n    parts = filename[:-4].split(\"-\")\n    require(len(parts) in (5, 6))\n    require(name_key(parts[0]) == package and parts[1] == version)\n    if len(parts) == 6:\n        require(re.fullmatch(r\"[0-9][A-Za-z0-9_.]*\", parts[2]) is not None)\n    py, abi, platform = parts[-3:]\n    if platform == \"any\":\n        require(py in (\"py3\", \"py2.py3\") and abi == \"none\")\n        return\n    require(\n        py == \"cp311\"\n        and abi == \"cp311\"\n        or abi == \"abi3\"\n        and re.fullmatch(r\"cp3(?:[2-9]|10|11)\", py)\n    )\n    aliases = {\n        \"manylinux1_x86_64\": (2, 5),\n        \"manylinux2010_x86_64\": (2, 12),\n        \"manylinux2014_x86_64\": (2, 17),\n    }\n    for tag in platform.split(\".\"):\n        minimum = aliases.get(tag)\n        if minimum is None:\n            m = re.fullmatch(r\"manylinux_(2)_([0-9]{1,2})_x86_64\", tag)\n            require(m is not None)\n            minimum = (int(m[1]), int(m[2]))\n        require(minimum <= glibc)\n\n\ndef project_report(report, inputs, glibc):\n    pins, roots = validate_inputs(inputs)\n    require(\n        type(report) is dict and set(report) == {\"version\", \"pip_version\", \"install\", \"environment\"}\n    )\n    require(report[\"version\"] == \"0\" and report[\"pip_version\"] == \"22.3.1\")\n    require(\n        type(glibc) is tuple and len(glibc) == 2 and all(type(v) is int and v >= 0 for v in glibc)\n    )\n    environment = report[\"environment\"]\n    expected = {\n        \"sys_platform\": \"linux\",\n        \"platform_machine\": \"x86_64\",\n        \"python_full_version\": \"3.11.13\",\n        \"implementation_name\": \"cpython\",\n        \"platform_system\": \"Linux\",\n    }\n    require(type(environment) is dict and all(environment.get(k) == v for k, v in expected.items()))\n    require(\n        all(type(k) is str and type(v) is str and len(v) <= 512 for k, v in environment.items())\n    )\n    rows = report[\"install\"]\n    require(type(rows) is list and 1 <= len(rows) <= 64)\n    files, seen, seen_files = [], set(), set()\n    for item in rows:\n        require(\n            type(item) is dict\n            and set(item)\n            in (\n                {\"is_direct\", \"requested\", \"download_info\", \"metadata\"},\n                {\"is_direct\", \"requested\", \"download_info\", \"metadata\", \"requested_extras\"},\n            )\n        )\n        require(item[\"is_direct\"] is False and type(item[\"requested\"]) is bool)\n        metadata = item[\"metadata\"]\n        key, version = name_key(metadata[\"name\"]), metadata[\"version\"]\n        require(type(version) is str and re.fullmatch(r\"[A-Za-z0-9.!+_]+\", version) is not None)\n        require(key not in seen and key not in {\"pywin32\", \"pypiwin32\", \"pywin32-ctypes\"})\n        require(key not in pins or pins[key] == version)\n        seen.add(key)\n        require(item[\"requested\"] == (key in roots))\n        extras = item.get(\"requested_extras\", [])\n        require(type(extras) is list and len(extras) <= 8 and all(name_key(v) == v for v in extras))\n        require(extras == sorted(set(extras)))\n        download = item[\"download_info\"]\n        require(type(download) is dict and set(download) == {\"url\", \"archive_info\"})\n        url = download[\"url\"]\n        require(type(url) is str and url.isascii() and len(url) <= 2048)\n        parsed = urllib.parse.urlsplit(url)\n        require(parsed.scheme == \"https\" and parsed.netloc == \"files.pythonhosted.org\")\n        require(url == urllib.parse.urlunsplit(parsed))\n        require(not parsed.query and not parsed.fragment and parsed.path.startswith(\"/packages/\"))\n        require(re.fullmatch(r\"/packages/[A-Za-z0-9/._+!-]+\", parsed.path) is not None)\n        require(all(part not in (\"\", \".\", \"..\") for part in parsed.path.split(\"/\")[1:]))\n        filename = urllib.parse.unquote(parsed.path.rsplit(\"/\", 1)[-1], errors=\"strict\")\n        wheel_filename(filename, key, version, glibc)\n        require(filename not in seen_files)\n        seen_files.add(filename)\n        archive = download[\"archive_info\"]\n        require(type(archive) is dict and set(archive) == {\"hash\"})\n        require(\n            type(archive[\"hash\"]) is str and re.fullmatch(\"sha256=[0-9a-f]{64}\", archive[\"hash\"])\n        )\n        requires_python = metadata.get(\"requires_python\")\n        require(\n            requires_python is None or type(requires_python) is str and len(requires_python) <= 256\n        )\n        requires_dist = metadata.get(\"requires_dist\", [])\n        require(type(requires_dist) is list and len(requires_dist) <= 128)\n        require(\n            all(\n                type(v) is str and len(v) <= 1024 and \"\\x00\" not in v and \"\\n\" not in v\n                for v in requires_dist\n            )\n        )\n        files.append(\n            {\n                \"name\": key,\n                \"version\": version,\n                \"url\": url,\n                \"filename\": filename,\n                \"sha256\": archive[\"hash\"][7:],\n                \"requires_python\": requires_python,\n                \"requires_dist\": requires_dist,\n                \"requested\": item[\"requested\"],\n                \"requested_extras\": extras,\n            }\n        )\n    require(set(pins) <= seen and set(roots) <= seen)\n    return {\n        \"schema\": \"oracle9-pip22-projection-v1\",\n        \"pip_version\": \"22.3.1\",\n        \"report_version\": \"0\",\n        \"environment\": environment,\n        \"glibc\": list(glibc),\n        \"index_url\": INDEX,\n        \"files\": sorted(files, key=lambda v: v[\"name\"]),\n    }\n\n\ndef pack_report(raw):\n    require(type(raw) is bytes and 0 < len(raw) <= MAX_RAW)\n    packed = base64.b64encode(zlib.compress(raw, 9)).decode(\"ascii\")\n    require(len(packed) <= MAX_ENVELOPE)\n    return {\"encoding\": \"zlib-base64-v1\", \"raw_bytes\": len(raw), \"sha256\": sha(raw), \"data\": packed}\n\n\ndef unpack_report(value):\n    require(type(value) is dict and set(value) == {\"encoding\", \"raw_bytes\", \"sha256\", \"data\"})\n    require(\n        value[\"encoding\"] == \"zlib-base64-v1\"\n        and type(value[\"raw_bytes\"]) is int\n        and 0 < value[\"raw_bytes\"] <= MAX_RAW\n    )\n    require(type(value[\"data\"]) is str and len(value[\"data\"]) <= MAX_ENVELOPE)\n    packed = base64.b64decode(value[\"data\"], validate=True)\n    stream = zlib.decompressobj()\n    raw = stream.decompress(packed, MAX_RAW + 1)\n    require(stream.eof and not stream.unused_data and not stream.unconsumed_tail)\n    require(len(raw) == value[\"raw_bytes\"] and sha(raw) == value[\"sha256\"])\n    return raw\n\n\ndef child_environment():\n    return {\n        \"PATH\": \"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\",\n        \"HOME\": \"/var/empty\",\n        \"LANG\": \"C.UTF-8\",\n        \"TMPDIR\": \"/tmp/maskgw-resolve\",\n    }\n\n\ndef validate_packet(value, inputs):\n    require(\n        type(value) is dict\n        and set(value)\n        == {\n            \"kind\",\n            \"projection\",\n            \"raw\",\n            \"diagnostic\",\n            \"config_absent\",\n            \"child_environment\",\n            \"cert\",\n            \"inputs\",\n        }\n    )\n    require(value[\"kind\"] == \"oracle9-pip-resolution-v1\" and value[\"inputs\"] == inputs)\n    require(\n        value[\"config_absent\"] == list(CONFIGS)\n        and value[\"child_environment\"] == child_environment()\n    )\n    require(value[\"projection\"][\"glibc\"] == [2, 34])\n    raw = unpack_report(value[\"raw\"])\n    require(value[\"projection\"] == project_report(json.loads(raw), inputs, (2, 34)))\n    cert = value[\"cert\"]\n    require(set(cert) == {\"path\", \"resolved_path\", \"uid\", \"gid\", \"mode\", \"bytes\", \"sha256\"})\n    require(cert[\"path\"] == CERT and cert[\"resolved_path\"].startswith(\"/etc/pki/\"))\n    require(\"..\" not in cert[\"resolved_path\"].split(\"/\") and \"\\x00\" not in cert[\"resolved_path\"])\n    require(\n        type(cert[\"uid\"]) is int and type(cert[\"gid\"]) is int and cert[\"uid\"] == cert[\"gid\"] == 0\n    )\n    require(type(cert[\"mode\"]) is int and 0 <= cert[\"mode\"] <= 0o7777 and not cert[\"mode\"] & 0o6022)\n    require(type(cert[\"bytes\"]) is int and 0 < cert[\"bytes\"] <= 4 * 1024 * 1024)\n    require(re.fullmatch(\"[0-9a-f]{64}\", cert[\"sha256\"]) is not None)\n    diagnostic = value[\"diagnostic\"]\n    require(\n        set(diagnostic)\n        == {\n            \"exit\",\n            \"stdout_bytes\",\n            \"stdout_sha256\",\n            \"stdout_utf8\",\n            \"stderr_bytes\",\n            \"stderr_sha256\",\n            \"stderr_utf8\",\n        }\n    )\n    require(type(diagnostic[\"exit\"]) is int and diagnostic[\"exit\"] == 0)\n    for label, limit in ((\"stdout\", 65536), (\"stderr\", 16384)):\n        data = diagnostic[label + \"_utf8\"].encode(\"utf8\")\n        require(type(diagnostic[label + \"_bytes\"]) is int and len(data) <= limit)\n        require(\n            len(data) == diagnostic[label + \"_bytes\"] and sha(data) == diagnostic[label + \"_sha256\"]\n        )\n    return raw\n\n\ndef pip_args(requirements):\n    return [\n        sys.executable,\n        \"-I\",\n        \"-B\",\n        \"-m\",\n        \"pip\",\n        \"--isolated\",\n        \"--no-input\",\n        \"--no-cache-dir\",\n        \"--disable-pip-version-check\",\n        \"install\",\n        \"--dry-run\",\n        \"--ignore-installed\",\n        \"--quiet\",\n        \"--report\",\n        \"/tmp/maskgw-resolve/report.json\",\n        \"--only-binary=:all:\",\n        \"--index-url\",\n        INDEX,\n        \"--cert\",\n        CERT,\n        \"--retries\",\n        \"0\",\n        \"--timeout\",\n        \"15\",\n        \"--constraint\",\n        \"/tmp/maskgw-resolve/constraints.txt\",\n        *requirements,\n    ]\n\n\ndef failure_log(path, limit):\n    count, digest, prefix = 0, hashlib.sha256(), bytearray()\n    with path.open(\"rb\") as f:\n        while block := f.read(8192):\n            count += len(block)\n            digest.update(block)\n            if len(prefix) < limit:\n                prefix.extend(block[: limit - len(prefix)])\n    require(count == path.stat().st_size)\n    return {\n        \"bytes\": count,\n        \"sha256\": digest.hexdigest(),\n        \"prefix_bytes\": len(prefix),\n        \"prefix_utf8\": prefix.decode(\"utf8\", errors=\"replace\"),\n    }\n\n\ndef native(inputs):\n    validate_inputs(inputs)\n    require(os.getuid() == os.getgid() == 10001 and sys.version_info[:3] == (3, 11, 13))\n    require(\n        sys.prefix == \"/opt/maskgw/venv\" and sys.flags.isolated and sys.flags.dont_write_bytecode\n    )\n    os.environ.clear()\n    os.environ.update(child_environment())\n    require(all(not pathlib.Path(v).exists() and not pathlib.Path(v).is_symlink() for v in CONFIGS))\n    m = re.fullmatch(r\"glibc ([0-9]+)\\.([0-9]+)\", os.confstr(\"CS_GNU_LIBC_VERSION\"))\n    require(m is not None)\n    glibc = (int(m[1]), int(m[2]))\n    require(glibc == (2, 34))\n    cert = pathlib.Path(CERT).resolve(strict=True)\n    s = cert.lstat()\n    require(stat.S_ISREG(s.st_mode) and s.st_uid == s.st_gid == 0 and not s.st_mode & 0o6022)\n    require(0 < s.st_size <= 4 * 1024 * 1024)\n    cert_proof = {\n        \"path\": CERT,\n        \"resolved_path\": str(cert),\n        \"uid\": s.st_uid,\n        \"gid\": s.st_gid,\n        \"mode\": stat.S_IMODE(s.st_mode),\n        \"bytes\": s.st_size,\n        \"sha256\": sha(cert.read_bytes()),\n    }\n    tmp = pathlib.Path(\"/tmp/maskgw-resolve\")\n    tmp.mkdir(mode=0o700)\n    (tmp / \"constraints.txt\").write_text(inputs[\"constraints\"], encoding=\"utf8\")\n    with (tmp / \"stdout\").open(\"xb\") as out, (tmp / \"stderr\").open(\"xb\") as err:\n        p = subprocess.run(\n            pip_args(inputs[\"requirements\"]),\n            stdin=subprocess.DEVNULL,\n            stdout=out,\n            stderr=err,\n            timeout=150,\n            check=False,\n            env=child_environment(),\n        )\n    if p.returncode != 0:\n        print(\n            json.dumps(\n                {\n                    \"kind\": \"oracle9-pip-refused-v1\",\n                    \"exit\": p.returncode,\n                    \"stdout\": failure_log(tmp / \"stdout\", 16384),\n                    \"stderr\": failure_log(tmp / \"stderr\", 16384),\n                }\n            )\n        )\n        raise SystemExit(2)\n    require((tmp / \"stdout\").stat().st_size <= 65536 and (tmp / \"stderr\").stat().st_size <= 16384)\n    stdout, stderr = (tmp / \"stdout\").read_bytes(), (tmp / \"stderr\").read_bytes()\n    diagnostic = {\n        \"exit\": p.returncode,\n        \"stdout_bytes\": len(stdout),\n        \"stdout_sha256\": sha(stdout),\n        \"stdout_utf8\": stdout.decode(\"utf8\", errors=\"strict\"),\n        \"stderr_bytes\": len(stderr),\n        \"stderr_sha256\": sha(stderr),\n        \"stderr_utf8\": stderr.decode(\"utf8\", errors=\"strict\"),\n    }\n    require((tmp / \"report.json\").stat().st_size <= MAX_RAW)\n    raw = (tmp / \"report.json\").read_bytes()\n    report = json.loads(raw)\n    result = {\n        \"kind\": \"oracle9-pip-resolution-v1\",\n        \"projection\": project_report(report, inputs, glibc),\n        \"raw\": pack_report(raw),\n        \"diagnostic\": diagnostic,\n        \"config_absent\": list(CONFIGS),\n        \"child_environment\": child_environment(),\n        \"cert\": cert_proof,\n        \"inputs\": inputs,\n    }\n    validate_packet(result, inputs)\n    encoded = json.dumps(result, sort_keys=True).encode()\n    require(len(encoded) + 1 <= MAX_ENVELOPE)\n    sys.stdout.buffer.write(encoded + b\"\\n\")\n    sys.stdout.buffer.flush()\n\n\nif __name__ == \"__main__\":\n    require(len(sys.argv) == 2 and len(sys.argv[1]) <= 16384)\n    native(json.loads(base64.b64decode(sys.argv[1], validate=True)))\n"
+    },
+    "pyproject.toml": {
+      "bytes": 7628,
+      "sha256": "917fe7353178849ec9e7f53627fc0ce2e0be9fb7678d6dcd2e42f79b925de8f9",
+      "utf8": "[build-system]\nrequires = [\"setuptools>=68\"]\nbuild-backend = \"setuptools.build_meta\"\n\n[project]\nname = \"maskgw\"\nversion = \"0.1.0\"\ndescription = \"AI Data Masking Gateway\"\nrequires-python = \">=3.11\"\ndependencies = [\n    # SDK MCP oficial, linha v2. O pin impede um major incompativel.\n    \"mcp>=2.1,<3\",\n    \"pglast>=6\",\n    \"psycopg[binary]>=3.1\",\n    \"pydantic>=2.6\",\n    \"PyYAML>=6\",\n    # Fase 9, Etapa 2: AES-256-GCM, HKDF e primitives de integridade do\n    # cat\u00e1logo cifrado. O pin mant\u00e9m o envelope e os vetores reprodut\u00edveis.\n    \"cryptography==50.0.1\",\n    # Fase 9, Etapa 7 (D-109): SASLprep e derivacao do verifier SCRAM-SHA-256\n    # pela API publica `make_auth_info`. A troca de mensagens do servidor e\n    # propria: o parser da scramp rejeita o `n=` vazio que o libpq envia\n    # (medido). `asn1crypto` e a dependencia transitiva, fixada junto.\n    \"scramp==1.4.17\",\n    \"asn1crypto==1.5.1\",\n    # Fase 7, Etapa 7: a fronteira HTTP administrativa. Entram juntas e so\n    # agora, porque a especificacao condicionava a adocao do FastAPI a\n    # aprovacao da Fase 7 (secao 14.2). Sao usadas EXCLUSIVAMENTE pelo plano\n    # administrativo: o MCP continua stdio only (D-036), e nenhuma porta e\n    # aberta sem MASKGW_ADMIN_ENABLED=1.\n    \"fastapi>=0.110\",\n    # >= 0.29 por causa de `timeout_graceful_shutdown`: e ele que limita a\n    # espera do SERVIDOR por requisicoes em voo, para que o `join` do shutdown\n    # possa ser integral sem risco de prender o processo (D-057).\n    \"uvicorn>=0.29\",\n]\n\n[project.optional-dependencies]\ndev = [\n    \"pytest>=8\",\n    \"ruff>=0.6\",\n    \"mypy>=1.11\",\n    \"types-PyYAML\",\n]\n\n[tool.pytest.ini_options]\npythonpath = [\"src\"]\ntestpaths = [\"tests\"]\naddopts = \"-q --strict-markers\"\nmarkers = [\n    \"integration: exige um PostgreSQL real via MASKGW_TEST_DSN; skip sem ela\",\n]\n\n[tool.setuptools.packages.find]\nwhere = [\"src\"]\n\n[tool.ruff]\nline-length = 100\ntarget-version = \"py311\"\nsrc = [\"src\", \"tests\"]\n# PoCs em `docs/poc/` nao sao produto (fora do wheel/sdist, nao importadas por\n# `maskgw`): o truque de `sys.path` e os imports apos codigo sao deliberados.\nextend-exclude = [\"docs/poc\"]\n\n[tool.ruff.lint]\nselect = [\n    \"E\", \"W\",   # pycodestyle\n    \"F\",        # pyflakes\n    \"I\",        # isort\n    \"N\",        # pep8-naming\n    \"UP\",       # pyupgrade\n    \"B\",        # bugbear\n    \"S\",        # bandit\n    \"C4\",       # comprehensions\n    \"SIM\",      # simplify\n    \"RET\",      # return\n    \"ARG\",      # unused arguments\n    \"ANN\",      # annotations\n    \"TID\",      # tidy imports\n    \"PL\",       # pylint\n    \"RUF\",\n]\n\n[tool.ruff.lint.per-file-ignores]\n\"tests/*\" = [\"S101\", \"PLR2004\", \"ANN\"]\n# Os arquivos de integracao e de sondagem montam SQL a partir de constantes do\n# proprio modulo, nunca de entrada externa. A validacao de SQL do Gateway e da\n# Fase 4.\n\"tests/test_db_integration.py\" = [\"S608\"]\n\"tests/test_datasource_runtime_integration.py\" = [\"S608\"]\n\"tests/test_admin_v2_integration.py\" = [\"S608\"]\n\"tests/test_pgresult_metadata.py\" = [\"S608\"]\n\"tests/test_execution_safety.py\" = [\"S608\"]\n# Os testes adversariais do validator PRECISAM montar SQL maliciosa: e o que\n# esta sendo testado. Nenhuma delas chega a um banco.\n\"tests/test_sql_validator.py\" = [\"S608\"]\n\"tests/test_mcp_integration.py\" = [\"S608\"]\n\"tests/test_mcp_server.py\" = [\"S608\"]\n\"tests/test_audit.py\" = [\"S608\"]\n\"tests/test_gateway.py\" = [\"S608\"]\n# A suite adversarial PRECISA montar SQL de ataque: e o objeto do teste.\n# Os homoglifos Unicode (RUF001) sao exatamente o que se testa.\n\"tests/security/*\" = [\"S608\", \"RUF001\"]\n\"tests/test_sensitivity.py\" = [\"S608\"]\n# Fase 7, Etapa 7 \u2014 a suite da fronteira HTTP administrativa.\n#\n# Os codigos abaixo sao propriedades do que esta sendo testado, e nao descuido:\n#\n# ARG001/ARG002  uma app ASGI precisa aceitar `(scope, receive, send)` mesmo\n#                quando nao usa os tres; a assinatura e o protocolo.\n# N802           varios testes gritam a parte que importa no nome \u2014\n#                `..._vem_ANTES_do_415`, `..._e_NOT_FOUND` \u2014 porque e a ordem\n#                entre camadas que o teste existe para fixar.\n# PLC0415        imports locais, para nao carregar em modulo o que so um teste\n#                usa (`hashlib`, `json`, `Runtime`).\n# S104/S105/S106 `0.0.0.0` e o bind que o startup TEM de recusar, e os tokens\n#                sao marcadores de teste que os testes de vazamento procuram.\n#                Nenhum e credencial real.\n# S310           `urlopen` contra `127.0.0.1`, com esquema fixo no proprio\n#                teste; e o cliente HTTP do teste de coexistencia com o MCP.\n# S324           `md5` usado para PROVAR que o hash de um segredo nao aparece\n#                na resposta \u2014 o oposto de usar md5 para proteger algo.\n# S608           SQL montada a partir de constantes do proprio modulo, como nos\n#                demais arquivos de integracao.\n# PLR0913        o cliente HTTP cru: cada header controlavel e um parametro.\n# RUF012         tabela de dados de teste declarada como atributo de classe.\n\"tests/admin_http_support.py\" = [\"ARG001\", \"PLC0415\", \"PLR0913\", \"S105\"]\n\"tests/test_admin_http_boundary.py\" = [\"ARG001\", \"ARG002\", \"N802\", \"PLC0415\"]\n\"tests/test_admin_http_leakage.py\" = [\"ARG002\", \"N802\", \"S106\", \"S324\"]\n\"tests/test_admin_http_lifecycle.py\" = [\"ARG001\", \"N802\", \"PLC0415\", \"S104\", \"S106\"]\n\"tests/test_admin_http_mcp_coexistence.py\" = [\"S106\", \"S310\", \"S608\"]\n\"tests/test_admin_audit.py\" = [\"PLC0415\", \"S105\"]\n\"tests/test_admin_http_audit.py\" = [\"S105\"]\n\"tests/test_admin_http_reads.py\" = [\"N802\", \"PLC0415\", \"RUF012\", \"S105\"]\n\"tests/test_admin_http_settings.py\" = [\"S104\", \"S105\"]\n\"tests/test_admin_http_surface.py\" = [\"N802\", \"PLC0415\", \"S106\"]\n\"tests/test_admin_http_writes.py\" = [\"S105\"]\n\"tests/test_admin_http_writes_e2e.py\" = [\"S105\", \"S608\"]\n# O subprocesso mede o que `maskgw.admin` carrega; interpretador e programa sao\n# constantes do proprio teste, como em `test_purity.py`.\n\"tests/test_plan_separation.py\" = [\"S603\"]\n# Fase 9, Etapa 7 \u2014 gate pos-conexao em processo filho.\n#\n# S105/S106/S107 senhas de teste (marcadores que os canarios de vazamento\n#                procuram); nenhuma e credencial real.\n# PLC0415        imports locais de `conninfo_to_dict`, usados so num teste.\n# S603           subprocesso com interpretador e codigo fixos do proprio teste,\n#                sem shell \u2014 o filho de importacao isolada.\n\"tests/test_datasource_verify_gate.py\" = [\"PLC0415\", \"S105\", \"S106\", \"S107\", \"S603\"]\n# Fase 9, Etapa 7 (D-109) \u2014 pecas puras do startup PGWire.\n#\n# S105/S106      senhas de teste (marcadores procurados nos testes de\n#                vazamento); nenhuma e credencial real.\n# RUF001         os caracteres Unicode ambiguos (espaco nao separavel, bidi)\n#                sao exatamente o que o SASLprep tem de tratar.\n# PLR0913        o cliente SCRAM minimo do teste: cada campo adulteravel e um\n#                parametro.\n\"tests/test_pgwire_scram.py\" = [\"PLR0913\", \"RUF001\", \"S105\", \"S106\"]\n# Fase 9, Etapa 7 (D-110) \u2014 settings: senha e usuario de teste sao marcadores\n# procurados nos testes de vazamento (S105); o digito de largura total e o\n# arabe-indico (RUF001) sao exatamente o que o parse estrito tem de recusar.\n\"tests/test_pgwire_settings.py\" = [\"RUF001\", \"S105\"]\n\n[tool.ruff.lint.flake8-tidy-imports]\nban-relative-imports = \"parents\"\n\n[tool.mypy]\npython_version = \"3.11\"\nmypy_path = \"src\"\nstrict = true\nwarn_unreachable = true\nplugins = [\"pydantic.mypy\"]\n\n[[tool.mypy.overrides]]\nmodule = \"tests.*\"\ndisallow_untyped_defs = false\n\n[tool.setuptools.package-data]\n\"maskgw.admin.ui\" = [\"assets/*.html\", \"assets/*.js\", \"assets/*.css\", \"assets/*.json\"]\n"
+    },
+    "deploy/constraints-tested.txt": {
+      "bytes": 415,
+      "sha256": "fd77310ae3394648acba2883fe2e96cbc398b506a3b980fe8e8047c2695f0e1e",
+      "utf8": "# Resolution seed only: directly measured Windows3.11.3 production packages.\n# Resolve platform markers/dependency closure inside Oracle Linux before build.\n# This is NOT requirements.lock, a Linux compatibility or security attestation.\nasn1crypto==1.5.1\ncryptography==50.0.1\nfastapi==0.141.1\nmcp==2.1.1\npglast==8.4\npsycopg==3.3.4\npsycopg-binary==3.3.4\npydantic==2.13.5\nPyYAML==6.0.3\nscramp==1.4.17\nuvicorn==0.52.4\n"
+    }
+  },
+  "selected_files": [
+    {
+      "filename": "annotated_doc-0.0.5-py3-none-any.whl",
+      "name": "annotated-doc",
+      "requested": false,
+      "requested_extras": [],
+      "requires_dist": [],
+      "requires_python": ">=3.9",
+      "sha256": "117bac03a25ede5df5440e855b32d556049ca169ead221505badf432fed4b101",
+      "url": "https://files.pythonhosted.org/packages/3e/30/e900b21425a860e195f32e37657aa1f7c7f2b1bfb26f03ca209b90933c06/annotated_doc-0.0.5-py3-none-any.whl",
+      "version": "0.0.5"
+    },
+    {
+      "filename": "annotated_types-0.8.0-py3-none-any.whl",
+      "name": "annotated-types",
+      "requested": false,
+      "requested_extras": [],
+      "requires_dist": [],
+      "requires_python": ">=3.10",
+      "sha256": "f072f4d804ea359e4eaf198b1af7a8b0943881a87f31bb764f8bf219bb9419e0",
+      "url": "https://files.pythonhosted.org/packages/99/91/8acff4f5e50511b911bbccb72b8628a49c68ce14148cd9f6431094859a90/annotated_types-0.8.0-py3-none-any.whl",
+      "version": "0.8.0"
+    },
+    {
+      "filename": "anyio-4.15.1-py3-none-any.whl",
+      "name": "anyio",
+      "requested": false,
+      "requested_extras": [],
+      "requires_dist": [
+        "exceptiongroup>=1.0.2; python_version < \"3.11\"",
+        "idna>=2.8",
+        "typing_extensions>=4.16.0; python_version < \"3.15\"",
+        "trio>=0.32.0; extra == \"trio\""
+      ],
+      "requires_python": ">=3.10",
+      "sha256": "6152fdbbf9a77fdec97731721bebf7c4c44f7c29b424b0065826173efc7ed101",
+      "url": "https://files.pythonhosted.org/packages/12/b8/4bd346e22b28902df4d651910f5242c28d84e4a5c2435ca5c3f797ed7e2e/anyio-4.15.1-py3-none-any.whl",
+      "version": "4.15.1"
+    },
+    {
+      "filename": "asn1crypto-1.5.1-py2.py3-none-any.whl",
+      "name": "asn1crypto",
+      "requested": true,
+      "requested_extras": [],
+      "requires_dist": [],
+      "requires_python": null,
+      "sha256": "db4e40728b728508912cbb3d44f19ce188f218e9eba635821bb4b68564f8fd67",
+      "url": "https://files.pythonhosted.org/packages/c9/7f/09065fd9e27da0eda08b4d6897f1c13535066174cc023af248fc2a8d5e5a/asn1crypto-1.5.1-py2.py3-none-any.whl",
+      "version": "1.5.1"
+    },
+    {
+      "filename": "attrs-26.1.0-py3-none-any.whl",
+      "name": "attrs",
+      "requested": false,
+      "requested_extras": [],
+      "requires_dist": [],
+      "requires_python": ">=3.9",
+      "sha256": "c647aa4a12dfbad9333ca4e71fe62ddc36f4e63b2d260a37a8b83d2f043ac309",
+      "url": "https://files.pythonhosted.org/packages/64/b4/17d4b0b2a2dc85a6df63d1157e028ed19f90d4cd97c36717afef2bc2f395/attrs-26.1.0-py3-none-any.whl",
+      "version": "26.1.0"
+    },
+    {
+      "filename": "cffi-2.1.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+      "name": "cffi",
+      "requested": false,
+      "requested_extras": [],
+      "requires_dist": [
+        "pycparser; implementation_name != \"PyPy\""
+      ],
+      "requires_python": ">=3.10",
+      "sha256": "34e261f78cb6ceaaa36f42f2613f4380d94d9c759a9c73c769ee6e0247364632",
+      "url": "https://files.pythonhosted.org/packages/f7/a4/4399daaf8f7dfee9d7c3327fdb0426ee041cc63edc358b93911ceb2bfc7a/cffi-2.1.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+      "version": "2.1.1"
+    },
+    {
+      "filename": "click-8.5.0-py3-none-any.whl",
+      "name": "click",
+      "requested": false,
+      "requested_extras": [],
+      "requires_dist": [],
+      "requires_python": ">=3.10",
+      "sha256": "255bc9599cf7748b4b1a446ccc735421bd08a2ae529a8b88597d3de5664ee360",
+      "url": "https://files.pythonhosted.org/packages/58/50/6c0d534c5f134586a8e1ba4e330569e32f057e33372ae556463212fb4cd3/click-8.5.0-py3-none-any.whl",
+      "version": "8.5.0"
+    },
+    {
+      "filename": "cryptography-50.0.1-cp311-abi3-manylinux_2_34_x86_64.whl",
+      "name": "cryptography",
+      "requested": true,
+      "requested_extras": [],
+      "requires_dist": [
+        "cffi>=2.0.0 ; platform_python_implementation != 'PyPy'",
+        "typing-extensions>=4.13.2 ; python_full_version < '3.11'",
+        "bcrypt>=3.1.5 ; extra == 'ssh'"
+      ],
+      "requires_python": ">=3.9, !=3.9.0, !=3.9.1",
+      "sha256": "51afcfceb15597cf2635068e4ac9a56b2abde622edde17f37d85fd7b5306497a",
+      "url": "https://files.pythonhosted.org/packages/85/66/6ccca4722987ddedaa7fc9c3f4708af7431f5535666c174350830888c6b7/cryptography-50.0.1-cp311-abi3-manylinux_2_34_x86_64.whl",
+      "version": "50.0.1"
+    },
+    {
+      "filename": "fastapi-0.141.1-py3-none-any.whl",
+      "name": "fastapi",
+      "requested": true,
+      "requested_extras": [],
+      "requires_dist": [
+        "starlette>=0.46.0",
+        "pydantic>=2.9.0",
+        "typing-extensions>=4.8.0",
+        "typing-inspection>=0.4.2",
+        "annotated-doc>=0.0.2",
+        "fastapi-cli[standard]>=0.0.32; extra == \"standard\"",
+        "fastar>=0.9.0; extra == \"standard\"",
+        "httpx<1.0.0,>=0.23.0; extra == \"standard\"",
+        "jinja2>=3.1.5; extra == \"standard\"",
+        "python-multipart>=0.0.18; extra == \"standard\"",
+        "email-validator>=2.0.0; extra == \"standard\"",
+        "uvicorn[standard]>=0.12.0; extra == \"standard\"",
+        "pydantic-settings>=2.0.0; extra == \"standard\"",
+        "pydantic-extra-types>=2.0.0; extra == \"standard\"",
+        "fastapi-cli[standard-no-fastapi-cloud-cli]>=0.0.32; extra == \"standard-no-fastapi-cloud-cli\"",
+        "httpx<1.0.0,>=0.23.0; extra == \"standard-no-fastapi-cloud-cli\"",
+        "jinja2>=3.1.5; extra == \"standard-no-fastapi-cloud-cli\"",
+        "python-multipart>=0.0.18; extra == \"standard-no-fastapi-cloud-cli\"",
+        "email-validator>=2.0.0; extra == \"standard-no-fastapi-cloud-cli\"",
+        "uvicorn[standard]>=0.12.0; extra == \"standard-no-fastapi-cloud-cli\"",
+        "pydantic-settings>=2.0.0; extra == \"standard-no-fastapi-cloud-cli\"",
+        "pydantic-extra-types>=2.0.0; extra == \"standard-no-fastapi-cloud-cli\"",
+        "fastapi-cli[standard]>=0.0.32; extra == \"all\"",
+        "httpx<1.0.0,>=0.23.0; extra == \"all\"",
+        "jinja2>=3.1.5; extra == \"all\"",
+        "python-multipart>=0.0.18; extra == \"all\"",
+        "itsdangerous>=1.1.0; extra == \"all\"",
+        "pyyaml>=5.3.1; extra == \"all\"",
+        "email-validator>=2.0.0; extra == \"all\"",
+        "uvicorn[standard]>=0.12.0; extra == \"all\"",
+        "pydantic-settings>=2.0.0; extra == \"all\"",
+        "pydantic-extra-types>=2.0.0; extra == \"all\""
+      ],
+      "requires_python": ">=3.10",
+      "sha256": "bfb91aa2d334c61cb35ba9a116fc123b3d3df31640b801cf57a7a78ec3f603b3",
+      "url": "https://files.pythonhosted.org/packages/cb/03/10388a42375ee7e4ac9b94eb2c5c569c8b5795e377e701c9ac3ad63de890/fastapi-0.141.1-py3-none-any.whl",
+      "version": "0.141.1"
+    },
+    {
+      "filename": "h11-0.16.0-py3-none-any.whl",
+      "name": "h11",
+      "requested": false,
+      "requested_extras": [],
+      "requires_dist": [],
+      "requires_python": ">=3.8",
+      "sha256": "63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86",
+      "url": "https://files.pythonhosted.org/packages/04/4b/29cac41a4d98d144bf5f6d33995617b185d14b22401f75ca86f384e87ff1/h11-0.16.0-py3-none-any.whl",
+      "version": "0.16.0"
+    },
+    {
+      "filename": "httpcore2-2.16.0-py3-none-any.whl",
+      "name": "httpcore2",
+      "requested": false,
+      "requested_extras": [],
+      "requires_dist": [
+        "h11>=0.16",
+        "truststore>=0.10",
+        "anyio<5.0,>=4.5.0; extra == 'asyncio'",
+        "h2<5,>=3; extra == 'http2'",
+        "socksio==1.*; extra == 'socks'",
+        "trio<1.0,>=0.34.0; extra == 'trio'"
+      ],
+      "requires_python": ">=3.11",
+      "sha256": "5c4358319f2602d984ad93182c9fee5160f22e9da7babdda870a5e7c4e2dc34f",
+      "url": "https://files.pythonhosted.org/packages/af/c2/ce417c397afa5181f0e3c6ff01a4d01639414e1adef08730d97571297151/httpcore2-2.16.0-py3-none-any.whl",
+      "version": "2.16.0"
+    },
+    {
+      "filename": "httpx2-2.16.0-py3-none-any.whl",
+      "name": "httpx2",
+      "requested": false,
+      "requested_extras": [],
+      "requires_dist": [
+        "anyio>=4.10; sys_platform != 'emscripten'",
+        "httpcore2==2.16.0; sys_platform != 'emscripten'",
+        "httpx2-jsfetch; sys_platform == 'emscripten' and python_version >= '3.12'",
+        "idna>=3.18",
+        "truststore>=0.10; sys_platform != 'emscripten'",
+        "typing-extensions>=4.5.0; python_version < '3.13'",
+        "brotli>=1.2.0; (platform_python_implementation == 'CPython') and extra == 'brotli'",
+        "brotlicffi>=1.2.0.2; (platform_python_implementation != 'CPython') and extra == 'brotli'",
+        "click>=8.4.2; extra == 'cli'",
+        "pygments==2.*; extra == 'cli'",
+        "rich<16,>=10; extra == 'cli'",
+        "h2<5,>=3; extra == 'http2'",
+        "socksio==1.*; extra == 'socks'",
+        "wsproto>=1.2; extra == 'ws'",
+        "backports-zstd>=1.0.0; (python_version <= '3.13') and extra == 'zstd'"
+      ],
+      "requires_python": ">=3.11",
+      "sha256": "fd2c5d7909e8d86fe92d53020c310ca0e4e431b838c207c5754b9bbf0308d49a",
+      "url": "https://files.pythonhosted.org/packages/7b/3d/2e4bc4fd1ef9770871669adb348d612a6e4786b303a23f9935b81c48dd60/httpx2-2.16.0-py3-none-any.whl",
+      "version": "2.16.0"
+    },
+    {
+      "filename": "idna-3.20-py3-none-any.whl",
+      "name": "idna",
+      "requested": false,
+      "requested_extras": [],
+      "requires_dist": [
+        "ruff >= 0.16.0 ; extra == \"all\"",
+        "mypy >= 1.11.2 ; extra == \"all\"",
+        "ty >= 0.0.37 ; extra == \"all\"",
+        "pytest >= 8.3.2 ; extra == \"all\"",
+        "hypothesis >= 6.141.1 ; extra == \"all\"",
+        "coverage >= 7.10.0 ; extra == \"all\""
+      ],
+      "requires_python": ">=3.9",
+      "sha256": "ab7ae7122974553370f0bdb919e1a960b2cd1bc1ef0276416d896db81c14582c",
+      "url": "https://files.pythonhosted.org/packages/58/a2/bb081bab032533a855d44de1d56f8e8426114ff1ba5d1f07a438a0a654f8/idna-3.20-py3-none-any.whl",
+      "version": "3.20"
+    },
+    {
+      "filename": "jsonschema-4.26.0-py3-none-any.whl",
+      "name": "jsonschema",
+      "requested": false,
+      "requested_extras": [],
+      "requires_dist": [
+        "attrs>=22.2.0",
+        "jsonschema-specifications>=2023.03.6",
+        "referencing>=0.28.4",
+        "rpds-py>=0.25.0",
+        "fqdn; extra == 'format'",
+        "idna; extra == 'format'",
+        "isoduration; extra == 'format'",
+        "jsonpointer>1.13; extra == 'format'",
+        "rfc3339-validator; extra == 'format'",
+        "rfc3987; extra == 'format'",
+        "uri-template; extra == 'format'",
+        "webcolors>=1.11; extra == 'format'",
+        "fqdn; extra == 'format-nongpl'",
+        "idna; extra == 'format-nongpl'",
+        "isoduration; extra == 'format-nongpl'",
+        "jsonpointer>1.13; extra == 'format-nongpl'",
+        "rfc3339-validator; extra == 'format-nongpl'",
+        "rfc3986-validator>0.1.0; extra == 'format-nongpl'",
+        "rfc3987-syntax>=1.1.0; extra == 'format-nongpl'",
+        "uri-template; extra == 'format-nongpl'",
+        "webcolors>=24.6.0; extra == 'format-nongpl'"
+      ],
+      "requires_python": ">=3.10",
+      "sha256": "d489f15263b8d200f8387e64b4c3a75f06629559fb73deb8fdfb525f2dab50ce",
+      "url": "https://files.pythonhosted.org/packages/69/90/f63fb5873511e014207a475e2bb4e8b2e570d655b00ac19a9a0ca0a385ee/jsonschema-4.26.0-py3-none-any.whl",
+      "version": "4.26.0"
+    },
+    {
+      "filename": "jsonschema_specifications-2025.9.1-py3-none-any.whl",
+      "name": "jsonschema-specifications",
+      "requested": false,
+      "requested_extras": [],
+      "requires_dist": [
+        "referencing>=0.31.0"
+      ],
+      "requires_python": ">=3.9",
+      "sha256": "98802fee3a11ee76ecaca44429fda8a41bff98b00a0f2838151b113f210cc6fe",
+      "url": "https://files.pythonhosted.org/packages/41/45/1a4ed80516f02155c51f51e8cedb3c1902296743db0bbc66608a0db2814f/jsonschema_specifications-2025.9.1-py3-none-any.whl",
+      "version": "2025.9.1"
+    },
+    {
+      "filename": "mcp-2.1.1-py3-none-any.whl",
+      "name": "mcp",
+      "requested": true,
+      "requested_extras": [],
+      "requires_dist": [
+        "anyio>=4.10; python_version >= '3.14'",
+        "anyio>=4.9; python_version < '3.14'",
+        "httpx2>=2.5.0",
+        "jsonschema>=4.20.0",
+        "mcp-types==2.1.1",
+        "opentelemetry-api>=1.28.0",
+        "pydantic>=2.12.0",
+        "pyjwt[crypto]>=2.10.1",
+        "python-multipart>=0.0.9",
+        "pywin32>=311; sys_platform == 'win32'",
+        "sse-starlette>=3.0.0",
+        "starlette>=0.27; python_version < '3.14'",
+        "starlette>=0.48.0; python_version >= '3.14'",
+        "typing-extensions>=4.13.0",
+        "typing-inspection>=0.4.1",
+        "uvicorn>=0.31.1; sys_platform != 'emscripten'",
+        "python-dotenv>=1.0.0; extra == 'cli'",
+        "typer>=0.16.0; extra == 'cli'",
+        "rich>=13.9.4; extra == 'rich'"
+      ],
+      "requires_python": ">=3.10",
+      "sha256": "1c6c31c5d6471c58db76af3af8af67f46d11d01f0a59077d0a308cbdb3d3e915",
+      "url": "https://files.pythonhosted.org/packages/50/af/8644cc5fa26a59afd2df2e98eeb19e72926887fa4b7441aba4ff661140db/mcp-2.1.1-py3-none-any.whl",
+      "version": "2.1.1"
+    },
+    {
+      "filename": "mcp_types-2.1.1-py3-none-any.whl",
+      "name": "mcp-types",
+      "requested": false,
+      "requested_extras": [],
+      "requires_dist": [
+        "pydantic>=2.12.0",
+        "typing-extensions>=4.13.0"
+      ],
+      "requires_python": ">=3.10",
+      "sha256": "26f9f7f03f2a5730717a5b98e2ab7eb640ac352d05a00cdc725c311864778295",
+      "url": "https://files.pythonhosted.org/packages/71/d0/242e63c510f4a17381f55b1549a3f94f5687a0595984febd2b6f87a687a0/mcp_types-2.1.1-py3-none-any.whl",
+      "version": "2.1.1"
+    },
+    {
+      "filename": "opentelemetry_api-1.45.1-py3-none-any.whl",
+      "name": "opentelemetry-api",
+      "requested": false,
+      "requested_extras": [],
+      "requires_dist": [
+        "typing-extensions>=4.5.0"
+      ],
+      "requires_python": ">=3.10",
+      "sha256": "b31553efa588ae44bc306f863c785c5333a9ecc091248c6ee68b4b6c87fdedfb",
+      "url": "https://files.pythonhosted.org/packages/1e/41/f7dcf80b81ee8e71c1a2b59f14208bc723edbd89ed027a73b175abf6348e/opentelemetry_api-1.45.1-py3-none-any.whl",
+      "version": "1.45.1"
+    },
+    {
+      "filename": "pglast-8.4-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+      "name": "pglast",
+      "requested": true,
+      "requested_extras": [],
+      "requires_dist": [
+        "bump-my-version==1.4.1; extra == \"dev\"",
+        "cython==3.2.8; extra == \"dev\"",
+        "pycparser==3.0; extra == \"dev\"",
+        "readme-renderer==45.0; extra == \"dev\"",
+        "setuptools==83.0.0; extra == \"dev\"",
+        "sphinx==9.0.4; extra == \"dev\"",
+        "twine==6.2.0; extra == \"dev\"",
+        "coverage==7.15.2; extra == \"test\"",
+        "mypy==2.3.0; extra == \"test\"",
+        "pytest-cov==7.1.0; extra == \"test\"",
+        "pytest==9.1.1; extra == \"test\"",
+        "sphinx==9.0.4; extra == \"test\"",
+        "ty==0.0.62; extra == \"test\""
+      ],
+      "requires_python": null,
+      "sha256": "578591aaafb0ebb6a9916f86708a878449dc533a2bcc43ab4cca77390f33f12d",
+      "url": "https://files.pythonhosted.org/packages/dc/83/de8c502b7e01033b528c4e8a88200fa4c627700253239365a57d770edec2/pglast-8.4-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+      "version": "8.4"
+    },
+    {
+      "filename": "psycopg-3.3.4-py3-none-any.whl",
+      "name": "psycopg",
+      "requested": true,
+      "requested_extras": [
+        "binary"
+      ],
+      "requires_dist": [
+        "typing-extensions>=4.6; python_version < \"3.13\"",
+        "tzdata; sys_platform == \"win32\"",
+        "psycopg-c==3.3.4; implementation_name != \"pypy\" and extra == \"c\"",
+        "psycopg-binary==3.3.4; implementation_name != \"pypy\" and extra == \"binary\"",
+        "psycopg-pool; extra == \"pool\"",
+        "anyio>=4.0; extra == \"test\"",
+        "mypy>=1.19.0; implementation_name != \"pypy\" and extra == \"test\"",
+        "pproxy>=2.7; extra == \"test\"",
+        "pytest>=6.2.5; extra == \"test\"",
+        "pytest-cov>=3.0; extra == \"test\"",
+        "pytest-randomly>=3.5; extra == \"test\"",
+        "ast-comments>=1.1.2; extra == \"dev\"",
+        "black>=26.1.0; extra == \"dev\"",
+        "codespell>=2.2; extra == \"dev\"",
+        "cython-lint>=0.16; extra == \"dev\"",
+        "dnspython>=2.1; extra == \"dev\"",
+        "flake8>=4.0; extra == \"dev\"",
+        "isort[colors]>=6.0; extra == \"dev\"",
+        "isort-psycopg; extra == \"dev\"",
+        "mypy>=1.19.0; extra == \"dev\"",
+        "pre-commit>=4.0.1; extra == \"dev\"",
+        "types-setuptools>=57.4; extra == \"dev\"",
+        "types-shapely>=2.0; extra == \"dev\"",
+        "wheel>=0.37; extra == \"dev\"",
+        "Sphinx>=9.1; extra == \"docs\"",
+        "furo==2025.12.19; extra == \"docs\"",
+        "sphinx-autobuild>=2025.8.25; extra == \"docs\"",
+        "sphinx-autodoc-typehints>=3.10.2; extra == \"docs\""
+      ],
+      "requires_python": ">=3.10",
+      "sha256": "b6bbc25ccf05c8fad3b061d9db2ef0909a555171b84b07f29458a447253d679a",
+      "url": "https://files.pythonhosted.org/packages/5c/e0/7b3dee031daae7743609ce3c746565d4a3ed7c2c186479eb48e34e838c64/psycopg-3.3.4-py3-none-any.whl",
+      "version": "3.3.4"
+    },
+    {
+      "filename": "psycopg_binary-3.3.4-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+      "name": "psycopg-binary",
+      "requested": false,
+      "requested_extras": [],
+      "requires_dist": [],
+      "requires_python": ">=3.10",
+      "sha256": "ab8cca8ef8fb1ccf5b048ae5bd78ba55b9e4b5d472e3ce5ca39ff4d2a9c249e4",
+      "url": "https://files.pythonhosted.org/packages/72/9b/023433e2b20f970de1e22d29132a95281277646da0b2e2879dd4ee94b8c1/psycopg_binary-3.3.4-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+      "version": "3.3.4"
+    },
+    {
+      "filename": "pycparser-3.12-py3-none-any.whl",
+      "name": "pycparser",
+      "requested": false,
+      "requested_extras": [],
+      "requires_dist": [],
+      "requires_python": ">=3.11",
+      "sha256": "a076f3f489b39b43ed13563a1dafe42447445bec2e294154ec5c57fcdda4c85e",
+      "url": "https://files.pythonhosted.org/packages/b6/ae/315bbeee126a769cbde43cf4908acb4b40408d8bf8bbf334dd7368d8dadf/pycparser-3.12-py3-none-any.whl",
+      "version": "3.12"
+    },
+    {
+      "filename": "pydantic-2.13.5-py3-none-any.whl",
+      "name": "pydantic",
+      "requested": true,
+      "requested_extras": [],
+      "requires_dist": [
+        "annotated-types>=0.6.0",
+        "pydantic-core==2.46.5",
+        "typing-extensions>=4.14.1",
+        "typing-inspection>=0.4.2",
+        "email-validator>=2.0.0; extra == 'email'",
+        "tzdata; (python_version >= '3.9' and platform_system == 'Windows') and extra == 'timezone'"
+      ],
+      "requires_python": ">=3.9",
+      "sha256": "346a034f080da3755d8e9cb5e00e8b07de1d39e4f6e2c87d8ab7cafa0b269a73",
+      "url": "https://files.pythonhosted.org/packages/eb/47/c95ffc2009878c7aac0c5e08528022dcb885933252a88b5f170058014464/pydantic-2.13.5-py3-none-any.whl",
+      "version": "2.13.5"
+    },
+    {
+      "filename": "pydantic_core-2.46.5-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+      "name": "pydantic-core",
+      "requested": false,
+      "requested_extras": [],
+      "requires_dist": [
+        "typing-extensions>=4.14.1"
+      ],
+      "requires_python": ">=3.9",
+      "sha256": "49776eab08766a08dfff7012f8b422dcd7e25e43b316eedf0477c24fcfa84b7c",
+      "url": "https://files.pythonhosted.org/packages/cf/bc/3fa2d76b83162820a17da7f645b28d1cba99fc8e1e5fc6517067ec450fa1/pydantic_core-2.46.5-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+      "version": "2.46.5"
+    },
+    {
+      "filename": "pyjwt-2.15.1-py3-none-any.whl",
+      "name": "pyjwt",
+      "requested": false,
+      "requested_extras": [],
+      "requires_dist": [
+        "typing_extensions>=4.0; python_version < \"3.11\"",
+        "cryptography>=3.4.0; extra == \"crypto\""
+      ],
+      "requires_python": ">=3.9",
+      "sha256": "42d59d631f7768a1028a64c7ff581a9bf7519804daf91fc5b6c56e30eec5e193",
+      "url": "https://files.pythonhosted.org/packages/50/ca/44de4e75f8aadc457f0634be3b542815078ded46dca30efb960edeecad6e/pyjwt-2.15.1-py3-none-any.whl",
+      "version": "2.15.1"
+    },
+    {
+      "filename": "python_multipart-0.0.32-py3-none-any.whl",
+      "name": "python-multipart",
+      "requested": false,
+      "requested_extras": [],
+      "requires_dist": [],
+      "requires_python": ">=3.10",
+      "sha256": "ff6d3f776f16878c894e52e107296ffc890e913c611b1a4ec6c44e2821fe2e23",
+      "url": "https://files.pythonhosted.org/packages/e1/04/e8135ebd1ad02c56ec633277529b2602ff99ff634be76cdba5744cf554fd/python_multipart-0.0.32-py3-none-any.whl",
+      "version": "0.0.32"
+    },
+    {
+      "filename": "pyyaml-6.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+      "name": "pyyaml",
+      "requested": true,
+      "requested_extras": [],
+      "requires_dist": [],
+      "requires_python": ">=3.8",
+      "sha256": "b8bb0864c5a28024fac8a632c443c87c5aa6f215c0b126c449ae1a150412f31d",
+      "url": "https://files.pythonhosted.org/packages/71/60/917329f640924b18ff085ab889a11c763e0b573da888e8404ff486657602/pyyaml-6.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+      "version": "6.0.3"
+    },
+    {
+      "filename": "referencing-0.37.0-py3-none-any.whl",
+      "name": "referencing",
+      "requested": false,
+      "requested_extras": [],
+      "requires_dist": [
+        "attrs>=22.2.0",
+        "rpds-py>=0.7.0",
+        "typing-extensions>=4.4.0; python_version < '3.13'"
+      ],
+      "requires_python": ">=3.10",
+      "sha256": "381329a9f99628c9069361716891d34ad94af76e461dcb0335825aecc7692231",
+      "url": "https://files.pythonhosted.org/packages/2c/58/ca301544e1fa93ed4f80d724bf5b194f6e4b945841c5bfd555878eea9fcb/referencing-0.37.0-py3-none-any.whl",
+      "version": "0.37.0"
+    },
+    {
+      "filename": "rpds_py-2026.9.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+      "name": "rpds-py",
+      "requested": false,
+      "requested_extras": [],
+      "requires_dist": [],
+      "requires_python": ">=3.11",
+      "sha256": "136a1c3fe4402b7008bc81cb62ee538481795b61a7e83df88dff3b3f02b726ff",
+      "url": "https://files.pythonhosted.org/packages/2d/5c/aac3b960fd55d37b49f77c0eebbe043eaf36762ebd48e7b46951e59c1c05/rpds_py-2026.9.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+      "version": "2026.9.1"
+    },
+    {
+      "filename": "scramp-1.4.17-py3-none-any.whl",
+      "name": "scramp",
+      "requested": true,
+      "requested_extras": [],
+      "requires_dist": [
+        "asn1crypto>=1.5.1"
+      ],
+      "requires_python": ">=3.10",
+      "sha256": "a4e3fd2e8169461a28a13777a166d3da94274454f0714a7d3023fee124474ac8",
+      "url": "https://files.pythonhosted.org/packages/7f/99/0e372781210cd36b2f2727e5be3ea93066edad7edd6fa2dfdec3b3e28845/scramp-1.4.17-py3-none-any.whl",
+      "version": "1.4.17"
+    },
+    {
+      "filename": "sse_starlette-3.6.0-py3-none-any.whl",
+      "name": "sse-starlette",
+      "requested": false,
+      "requested_extras": [],
+      "requires_dist": [
+        "starlette>=0.49.1",
+        "anyio>=4.7.0",
+        "uvicorn>=0.34.0; extra == \"examples\"",
+        "fastapi>=0.115.12; extra == \"examples\"",
+        "pydantic>=2; extra == \"examples\"",
+        "sqlalchemy[asyncio]>=2.0.41; extra == \"examples-db\"",
+        "aiosqlite>=0.21.0; extra == \"examples-db\"",
+        "uvicorn>=0.34.0; extra == \"uvicorn\"",
+        "granian>=2.3.1; extra == \"granian\"",
+        "daphne>=4.2.0; extra == \"daphne\""
+      ],
+      "requires_python": ">=3.11",
+      "sha256": "e4dfa4d237d2712cb2b4d4918eda9b457cd6b44bbecdc838af75de836565bafd",
+      "url": "https://files.pythonhosted.org/packages/cf/49/35053078cdfcf639237e8bee6dc6f34f1b3a3cc8d01800a1e213e1660ff6/sse_starlette-3.6.0-py3-none-any.whl",
+      "version": "3.6.0"
+    },
+    {
+      "filename": "starlette-1.10.0-py3-none-any.whl",
+      "name": "starlette",
+      "requested": false,
+      "requested_extras": [],
+      "requires_dist": [
+        "anyio<5,>=4.0.0",
+        "typing-extensions>=4.10.0; python_version < '3.13'",
+        "httpx2>=2.0.0; extra == 'full'",
+        "httpx<0.29.0,>=0.27.0; extra == 'full'",
+        "itsdangerous; extra == 'full'",
+        "jinja2; extra == 'full'",
+        "opentelemetry-api; extra == 'full'",
+        "python-multipart>=0.0.18; extra == 'full'",
+        "pyyaml; extra == 'full'"
+      ],
+      "requires_python": ">=3.11",
+      "sha256": "478c0ab3b4ced6e82719849c118fa406f0278a3499c1a898cd15cd31bdc38ce4",
+      "url": "https://files.pythonhosted.org/packages/88/2e/947cfe02def9371c07cd5bf5b6b61c829e9aecb9904db02a66cfafbc1eec/starlette-1.10.0-py3-none-any.whl",
+      "version": "1.10.0"
+    },
+    {
+      "filename": "truststore-0.10.5-py3-none-any.whl",
+      "name": "truststore",
+      "requested": false,
+      "requested_extras": [],
+      "requires_dist": [],
+      "requires_python": ">= 3.10",
+      "sha256": "9aaaedaefaf06d8b206278cf8b5012bc897f485a874503501e12d776df78951c",
+      "url": "https://files.pythonhosted.org/packages/51/e9/3a7820be2bb0fe53b6bc9c3be26d3d1158004e4c3ab953aa6840b955b1e9/truststore-0.10.5-py3-none-any.whl",
+      "version": "0.10.5"
+    },
+    {
+      "filename": "typing_extensions-4.16.0-py3-none-any.whl",
+      "name": "typing-extensions",
+      "requested": false,
+      "requested_extras": [],
+      "requires_dist": [],
+      "requires_python": ">=3.9",
+      "sha256": "481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8",
+      "url": "https://files.pythonhosted.org/packages/49/d3/b8441a820a491ddfc024b0b0cf0393375b75ea13866d9c66727e54c2fc80/typing_extensions-4.16.0-py3-none-any.whl",
+      "version": "4.16.0"
+    },
+    {
+      "filename": "typing_inspection-0.4.4-py3-none-any.whl",
+      "name": "typing-inspection",
+      "requested": false,
+      "requested_extras": [],
+      "requires_dist": [
+        "typing-extensions>=4.15.0"
+      ],
+      "requires_python": ">=3.10",
+      "sha256": "65b8397ba37ccbce054456aaccddfc91e6e3083c92824df348d96ca832f3f147",
+      "url": "https://files.pythonhosted.org/packages/67/81/4add07e5172b7ac40d8ed5ff580409a7801a4fe26d529bdd915401dabfbe/typing_inspection-0.4.4-py3-none-any.whl",
+      "version": "0.4.4"
+    },
+    {
+      "filename": "uvicorn-0.52.4-py3-none-any.whl",
+      "name": "uvicorn",
+      "requested": true,
+      "requested_extras": [],
+      "requires_dist": [
+        "click>=7.0",
+        "h11>=0.8",
+        "typing-extensions>=4.0; python_version < '3.11'",
+        "httptools>=0.8.0; extra == 'standard'",
+        "python-dotenv>=0.13; extra == 'standard'",
+        "pyyaml>=5.1; extra == 'standard'",
+        "uvloop>=0.15.1; (sys_platform != 'win32' and (sys_platform != 'cygwin' and platform_python_implementation != 'PyPy')) and extra == 'standard'",
+        "watchfiles>=0.20; extra == 'standard'",
+        "websockets>=13.0; extra == 'standard'"
+      ],
+      "requires_python": ">=3.10",
+      "sha256": "f86e41a149d7d05a9969337e3946a9c171c06a5d42680896daaba624aeac8da1",
+      "url": "https://files.pythonhosted.org/packages/f1/79/4a20b54ab0491485ccd8c077db2d39187c7f12b3e15485d38a7be37c81b4/uvicorn-0.52.4-py3-none-any.whl",
+      "version": "0.52.4"
+    }
+  ],
+  "curl_sha256": "73d24149ff289afc49ec41f08918ef9faa727d39ad993e929757dc2ddafab805",
+  "actions_executed": false,
+  "claim": "fresh public download root, exactly36 selected filenames/URLs/hashes; no Docker/network/install/extraction occurred preparing it"
+}

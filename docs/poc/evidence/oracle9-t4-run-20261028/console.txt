@@ -1,0 +1,11 @@
+{"phase":"PRE_INVOKE","utc":"2026-10-28T17:53:03.7936399Z","desktop_processes":[]}
+{"phase": "OBSERVE", "count": 1}
+{"phase": "OBSERVE", "count": 2}
+{"phase": "OBSERVE", "count": 3}
+{"phase": "OBSERVE", "count": 4}
+{"phase": "OBSERVE", "count": 5}
+{"phase": "OBSERVE", "count": 6}
+{"phase": "OBSERVE", "count": 7}
+{"phase": "OBSERVE", "count": 8}
+{"phase": "OBSERVE", "count": 9}
+{"phase": "ABORTED", "category": "NOT_PASSED", "root": "C:\\Users\\w.filho\\AppData\\Local\\Temp\\maskgw-oracle9-t4-20261028-86e5417cd7958015ace880173d138553"}

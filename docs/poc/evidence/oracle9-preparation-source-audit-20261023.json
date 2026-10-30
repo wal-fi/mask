@@ -1,0 +1,7 @@
+{
+  "kind": "oracle9-preparation-source-audit-v1",
+  "checked_prior_non_markdown": 529,
+  "unexpected": [],
+  "final_d118_hashes_match": true,
+  "claim": "prior product, tests, helpers, config, venv config and images unchanged; new preparation and new test files are additional"
+}

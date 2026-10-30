@@ -1,0 +1,45 @@
+{
+  "baseline": 618,
+  "baseline_sha256": "c6834befad4aecc1b34ed27b2663ea69e123cd6e5900bf45f87ec224a29eefbf",
+  "changed_existing": {
+    "AGENTS.md": {
+      "after": "045f6ac55a6605d8e3ede69994146b58401950c03e6bc4fee367e5ca8491da22",
+      "before": "8429b895df25feb12417a7bbbf3ebd6853083a111694cce6ded743efb57dd833"
+    },
+    "CLAUDE.md": {
+      "after": "3d599032cbb8090f01666f30fec2f630bffb250ff01b6644784da7e711bc6fa7",
+      "before": "50d56201974cc409ed253c79cca687ba5cea2b86c569d568e5d46cda92190718"
+    },
+    "docs/CLAUDE2-PENDING-REVIEW.md": {
+      "after": "6f12ba9fd0e57d2ded3d96e9a02a63a276afb6b298115d58d9adbd4581d4cf05",
+      "before": "bc2b7dfa74ae637624ac5f36b9036fecc4db8d0c74d05b71b47e337de489035b"
+    },
+    "docs/DECISIONS.md": {
+      "after": "6e91a5d4f6ab1cd069be87269e6b7b7f6256de8a0f00bc5b0a7102641bb3de7d",
+      "before": "a06809096433e174e752578f728f92411614b1d675ab3074de4e7373ce84e03c"
+    },
+    "docs/HANDOFF.md": {
+      "after": "afaa1ad5d1d77ac41f63904003224e90eee91eb0c8a49ae08f3a6e30f2fd6d6a",
+      "before": "e6198a97f4d8680956726eb59979eb9835c2ac38f13345eed97b1e4547c0a874"
+    },
+    "docs/PHASE-9-TRACEABILITY.md": {
+      "after": "36da1f3d8dbcb91a6ea5c8ba67de452178926b7a7dfcbf4058b476f8c86a20eb",
+      "before": "d21711049a5bcdda4cab0d49ef755e9d43be3f38960fdb2ccb0a418a02fd60b6"
+    },
+    "docs/ROADMAP.md": {
+      "after": "8d80fe1bdd1345c1d41531a5f4e4b1598ad216a2794cc7863e07851cafd19797",
+      "before": "9ddfabafd5313752cf2254b01e70479c4982ccf567e5bf4075b0623b33fc8174"
+    },
+    "src/maskgw/db/postgres.py": {
+      "after": "461e544fb185b6a3984e451d839034d8233c0a866b0bb46cb5ed0e68e284cd63",
+      "before": "170dafb9c792f113b8892a52b3a0c6603c98010004dac40983d729f6d1ca6081"
+    }
+  },
+  "claim": "versionable byte-preservation audit only; excludes personal files and caches; no Git write or containment claim",
+  "kind": "maskgw-worker-errors-source-audit-v1",
+  "pg_manifest_current": true,
+  "prior_screenshots_unchanged": true,
+  "raw_copies_match": true,
+  "unexpected": [],
+  "venv_config_unchanged": true
+}
