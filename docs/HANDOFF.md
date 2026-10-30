@@ -1,5 +1,18 @@
 # Handoff
 
+## Canal público do leitor PG16 aceito — 2026-10-30
+
+Owner d6718800 foi aceito pelo Claude2 após a correção L1 (review60994).
+O teste de callbacks falhou antes do fix; depois passaram33 testes próprios
+e168 relacionados/7,61s, com1 unidade nativa explicitamente desmarcada.
+A seleção anterior167/1falha WinError5 permanece registrada; não se repetiu
+a prova nativa de pipes. Ruff/format329/mypy311/314328 limpos, runtime só
+Windows3.11.3. RETAIN/WAIT mantêm stdin aberto; observação leva exit e contagens
+reais. Sem caller, shell, Docker, banco ou segredo novo; Desktop continua Off.
+Próximo: perfil explícito do wrapper e desenho da entrega/matriz nativa antes
+de efeitos. Fontes consumidas anteriores intactas. Gateway indisponível,
+B1/B2/D090/C1/SQL/produção abertos; sem quota/job ou segundo escritor.
+
 ## Leitor shell PG16 aceito, somente código puro — 2026-10-30
 
 Novo helper efe69a79 (núcleo80219269) aceito pelo Claude2 emreview32442.

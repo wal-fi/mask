@@ -1,4 +1,13 @@
-# Leitor shell PG16 — incremento puro aceito
+# Canal público PG16 — L1 corrigido e aceito
+
+Owner d6718800/9727bytes aceito emreview60994 após52446. L1 teve regressão
+vermelha antes do fix;33próprios/168relacionados7,61s e1unidade nativa
+explicitamente desmarcada. Ruff/format329/mypy311/314328 limpos. Histórico
+167/1falha WinError5 e repetição fakes167/1desmarcado preservados na validação.
+Nenhum native rerun/elevation, Docker/shell/PG/segredo novo. Próximo desenho
+perfil+entrega exata antes de caller/rodada. DesktopOff, gates abertos. Sem job.
+
+# Registro anterior — leitor shell PG16 aceito
 
 Review32442 aceitou fonte efe69a79/núcleo80219269, sem bloqueador.30testes
 próprios/408relacionados82,03s e Ruff/format/mypy311/314327 limpos. Shell não
