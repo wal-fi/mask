@@ -13,6 +13,12 @@ Próximo: exportador S1 próprio que retém local-* e baseline completa, depois
 preparador/proposta/estado/raiz/comando revisados antes de uma rodada única.
 Os contratos de HELD e diagnóstico constam em PUBLIC-ENTRY-VALIDATION.
 
+Incremento de entrada commitado emf51d63a; clone novo autocrlftrue confirmou
+698/698 arquivos sem diferenças, com entradaa6089275 preservada. Prova em
+`docs/poc/evidence/checkpoint-entry-portability-20261030/verification.json`.
+A publicação e o HEAD mais recente devem ser conferidos pelo Git. Novas
+medições continuam só de fakes/bytes, sem iniciar serviço ou banco.
+
 ## Estado no checkpoint81ead94
 
 - Destino aceito: Docker local nesta máquina, Oracle Linux9.8 sobre WSL2.

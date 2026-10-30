@@ -1,5 +1,9 @@
 # Entrada PG16 aceita — nenhuma revisão ativa
 
+Incrementof51d63a commitado; clone novo confirmou698/698 bytes iguais, fonte
+a6089275 preservada, autocrlftrue/sem hardlinks. Prova registrada sem execução
+de produto ou mudança funcional. Publicação deve ser confirmada por Git.
+
 Review32225 aceitou a6089275 condicionada ao gate319: terminal exit0/319passed
 43,26s confirmado, condição atendida. Origem/diagnóstico, lifecycle e entrada
 aceitos isoladamente; sem efeitos nativos. Próximo exportador/preparador, com

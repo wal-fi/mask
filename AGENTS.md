@@ -38,6 +38,10 @@ de produção nem dispensa revisão, isolamento, masking, read-only ou sigilo.
 
 ## Entrada PG16 pública aceita — 2026-10-30
 
+Incremento commitado emf51d63a. Clone novo autocrlftrue/sem hardlinks confirmou
+698/698 arquivos iguais e entradaa6089275 preservada; evidência pública em
+checkpoint-entry-portability-20261030. Somente cópia de bytes, sem executar app.
+
 Checkpoint81ead94 publicado para continuidade. Entradaa6089275 implementada
 sobre host7275, aceita pelo Claude2 (32225), condição319testes atendida:
 319passed43,26s, Ruff/format325/mypy311/314324 limpos. B1 diagnóstico corrigido

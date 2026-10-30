@@ -105,3 +105,9 @@ fakes, sem subprocesso nativo, DB, listener ou rodada Docker. Fonte a6089275
 confirmada igual antes e depois da seleção. Rerevisão32225 aceitou o delta
 isolado sob condição do resultado conjunto; condição atendida por essa saída
 terminal exit0, sem falhas. Nenhuma alegação de release ou operação real.
+
+Após commitf51d63a, clone novo local sem hardlinks e com autocrlftrue comparou
+698 arquivos rastreados em docs/poc/deploy/src/tests/pyproject: zero diferenças,
+entradaa6089275 idêntica. Evidência em checkpoint-entry-portability-20261030.
+Foi verificação de bytes, sem executar app/Docker/PG. Fechamento seguinte só
+documenta essa prova; fontes, testes, atributos e resultados permanecem iguais.

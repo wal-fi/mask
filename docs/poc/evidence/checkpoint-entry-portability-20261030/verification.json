@@ -1,0 +1,10 @@
+{
+  "byte_mismatches": [],
+  "clone_autocrlf": "true",
+  "clone_commit": "f51d63ac315abeafacada8f673af8a3294f7414c",
+  "entry_sha256": "a6089275cbbc3b9db251f587ec69f9bce5e892dcd093f1d285c1ae6efaff67be",
+  "files_compared": 698,
+  "kind": "MASKGW_PG16_ENTRY_PORTABILITY_V1",
+  "scope": "fresh local clone, no hardlinks, exact byte comparison only; no app, Docker, PG or native lab execution",
+  "source_commit": "f51d63ac315abeafacada8f673af8a3294f7414c"
+}
