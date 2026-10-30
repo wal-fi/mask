@@ -1,0 +1,17 @@
+{
+  "byte_mismatches": [
+    {
+      "clone_sha256": "0f6356f0ac4ecd96be2e0e7582270bab0b2b275f030e15e21f215209e099f68c",
+      "original_sha256": "10aabaeb3dad9bcf2afc3713041191e055633c5409769d4a15e5bbe4f82fde2b",
+      "path": "tests/fixtures/phase7-ui-off.json"
+    }
+  ],
+  "clone_autocrlf": "true",
+  "clone_commit": "7875dc83c7fb5fef7a86346c08e6aac5dd596220",
+  "files_compared": 694,
+  "historical_crlf_source_preserved": true,
+  "kind": "MASKGW_CHECKPOINT_PORTABILITY_V1",
+  "pyproject_sha256": "917fe7353178849ec9e7f53627fc0ce2e0be9fb7678d6dcd2e42f79b925de8f9",
+  "scope": "fresh local clone and byte comparison; no application, native lab, Docker or database execution",
+  "source_commit": "7875dc83c7fb5fef7a86346c08e6aac5dd596220"
+}

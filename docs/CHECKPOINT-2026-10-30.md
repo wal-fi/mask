@@ -53,7 +53,8 @@ do índice encontrou várias fontes históricas CRLF, além de postgres.py/resul
 por isso todas as fontes Python usam preservação exata, sem normalização.
 O objetivo é impedir que core.autocrlf altere os hashes; verificação
 por clone novo ainda pendente neste ponto. Nenhuma fonte consumida foi
-renormalizada. Configuração .codex/.claude local, stackdumps e systeminfo ficam fora
+renormalizada. Fixtures de tests também preservam bytes exatos. Configuração
+.codex/.claude local, stackdumps e systeminfo ficam fora
 do checkpoint e são preservados no disco.
 
 Varredura dos candidatos encontrou só três URLs sintéticas nos testes de
@@ -67,3 +68,13 @@ runtime medido Windows3.11.3. A suíte PostgreSQL integral e os pacotes de
 incrementos anteriores mantêm seus resultados nas evidências; não foram
 reexecutados para este fechamento de checkpoint. Nenhuma alegação de
 validação integral nova ou de disponibilidade de produção.
+
+## Primeira verificação por clone novo
+
+Commit7875dc8 clonado localmente em diretório novo, sem hardlinks, com
+core.autocrlf=true:693/694 arquivos de fonte/evidência iguais, pyproject917fe735
+e fonte histórica CRLF preservados. Um fixture JSON (phase7-ui-off.json)
+foi convertido por autocrlf; rodada reprovada preservada em
+`docs/poc/evidence/checkpoint-portability-20261030/verification.json`.
+Acrescentada proteção de bytes para tests/fixtures, sem editar o fixture;
+nova verificação ainda pendente neste ponto. Não é teste de execução do app.
