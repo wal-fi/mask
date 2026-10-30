@@ -36,6 +36,38 @@ de produção nem dispensa revisão, isolamento, masking, read-only ou sigilo.
 
 ## Escopo atual
 
+## Sonda pública PG16 concluída e revisada — 2026-10-30
+
+Rodada única task81e72756/rootc3a916a7 terminou exit0/PG16_PUBLIC_VERIFIED.
+Claude2 aceitou os fatos em2026-10-30T14:41:43Z, sessão51ea0d85.12 checkpoints
+119515ms/34comandos0, perfil aceito em3inspects, PG16.15/Alpine3.24.1/UID70.
+OwnerCLOSED/released, CID removido,17volumes→17 conjuntos iguais, watchdog
+joined/nofire/heldfalse. DesktopOff observado externamente14:32:51Z.
+Export95f0 único reteve50fontes77312bytes; sósummary/transport derivados
+publicados. RUN-VALIDATION registra limites e duas notas do revisor: próximo
+resumo deve incluir returncode/stdout_bytes do owner e rótulo do inspect final.
+Fontes/root/script consumidos congelados, nenhum recurso vivo pendente.
+Próximo: leitor shell exato e fixture PG privada, com revisão própria antes
+de efeitos. Nenhum initdb/servidor/SQL/seed/credencial neste ensaio.
+Gateway indisponível; B1/B2/D090/C1/SQL/produção abertos. Sem quota/job ou
+segundo escritor. Registros seguintes são históricos.
+
+## PG16 público materializado — chamada única — 2026-10-30
+
+Script37de40fe invocado uma vez, sessão9384 em execução. Intenção registrada
+antes da chamada; não repetir. Acompanhar essa sessão até terminal/recursos.
+
+Proposta v2 aceita1553 após corrigir6483;34pins/script9700bytes37de40fe.
+RootTemp maskgw-pg16-public-20261030-c3a916a7a7ff43f89608c6e8a1d26428/task
+81e727564dff42578c0aa93a9a470d72 materializado uma vez: sóattempt1935bytes/
+721f642f iguais à proposta e argv igual, DesktopOff confirmado. Prova pública
+em pg16-public-prep-20261030/materialized-proof.json. Uma única invocação do
+texto exato será registrada antes da chamada. NÃO repetir root/main/script,
+iniciar outro DockerCLI/escritor ou editar a cadeia pinada. Aguardar terminal
+e recursos antes de exportar95f0 com exit real. Sem raw do Temp na conversa/Git.
+Só ferramentas/versões/UID/tmpfs, sem PG/SQL/seed/credencial. Gateway ainda
+indisponível; B1/B2/D090/C1/produção abertos. Sem quota/job novo.
+
 ## Preparo e exportação PG16 aceitos — 2026-10-30
 
 Preparador02d1dadd e desenho aceitos pelo Claude2 (55166); exportador95f09bbb

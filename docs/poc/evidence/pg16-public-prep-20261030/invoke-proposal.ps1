@@ -1,0 +1,48 @@
+$ErrorActionPreference='Stop'
+[Console]::OutputEncoding=[Text.UTF8Encoding]::new($false)
+$OutputEncoding=[Console]::OutputEncoding
+if ((Get-FileHash -LiteralPath 'C:\Users\w.filho\Desktop\codes\mask\docs\poc\pg16_public_run.py' -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'a6089275cbbc3b9db251f587ec69f9bce5e892dcd093f1d285c1ae6efaff67be') {throw 'PG16_PUBLIC_PIN'}
+if ((Get-FileHash -LiteralPath 'C:\Users\w.filho\Desktop\codes\mask\docs\poc\pg16_public_host.py' -Algorithm SHA256).Hash.ToLowerInvariant() -ne '7275c8ae9e7ccbadc6591cdbb051482ac76c3f3bb52a4f4b86f2966b2261c19e') {throw 'PG16_PUBLIC_PIN'}
+if ((Get-FileHash -LiteralPath 'C:\Users\w.filho\Desktop\codes\mask\docs\poc\pg16_public_prepare.py' -Algorithm SHA256).Hash.ToLowerInvariant() -ne '02d1dadd0772a873943f434423bb103ad8781ffaf4dea44274c49e2e71846c7c') {throw 'PG16_PUBLIC_PIN'}
+if ((Get-FileHash -LiteralPath 'C:\Users\w.filho\Desktop\codes\mask\docs\poc\pg16_public_export.py' -Algorithm SHA256).Hash.ToLowerInvariant() -ne '95f09bbbc04cdf9389d0b8621b3b2e0a49201928b7605c14b84761bbfbd1b6d1') {throw 'PG16_PUBLIC_PIN'}
+if ((Get-FileHash -LiteralPath 'C:\Users\w.filho\Desktop\codes\mask\docs\poc\oracle9_w1_run.py' -Algorithm SHA256).Hash.ToLowerInvariant() -ne '4bc0b083c9df44edd2aa532de7f43cf9f7f9f5a581edb267d8414d21057fd753') {throw 'PG16_PUBLIC_PIN'}
+if ((Get-FileHash -LiteralPath 'C:\Users\w.filho\Desktop\codes\mask\docs\poc\oracle9_w1_run_v2.py' -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'b59388f52a38319c19c2c60b25100347d319a59c2778395cc68bea64d2bc0c37') {throw 'PG16_PUBLIC_PIN'}
+if ((Get-FileHash -LiteralPath 'C:\Users\w.filho\Desktop\codes\mask\.venv\Scripts\python.exe' -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'bfff517165ad6d1f3bf02d1782eaf7588fb7c20cd78d1c81788c4444e7bc5d82') {throw 'PG16_PUBLIC_PIN'}
+if ((Get-FileHash -LiteralPath 'C:\Users\w.filho\AppData\Local\Programs\Python\Python311\python.exe' -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'ff9b669828a66882f3d43ed2f9192ea9d8a08f80b8ffbc2186ee946823394418') {throw 'PG16_PUBLIC_PIN'}
+if ((Get-FileHash -LiteralPath 'C:\Users\w.filho\Desktop\codes\mask\docs\poc\oracle9_clock_sample.py' -Algorithm SHA256).Hash.ToLowerInvariant() -ne '6bcbdbe5b9345a5d70e408e1988226ad300d4e57d64eb6beec1d4d7cd55a692d') {throw 'PG16_PUBLIC_PIN'}
+if ((Get-FileHash -LiteralPath 'C:\Users\w.filho\Desktop\codes\mask\docs\poc\oracle9_cycle_freshness.py' -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'd2b485c29d2cef36599af51fc342ac39a991f9564bb919baa18d3cb1ff7e5b66') {throw 'PG16_PUBLIC_PIN'}
+if ((Get-FileHash -LiteralPath 'C:\Users\w.filho\Desktop\codes\mask\docs\poc\oracle9_python_prepare.py' -Algorithm SHA256).Hash.ToLowerInvariant() -ne '0b0bb1719834bdc9ccaa4a2ffd4c8da23824d92320e05bf1218af734d2ede1b5') {throw 'PG16_PUBLIC_PIN'}
+if ((Get-FileHash -LiteralPath 'C:\Users\w.filho\Desktop\codes\mask\docs\poc\oracle9_w1_context.py' -Algorithm SHA256).Hash.ToLowerInvariant() -ne '94cfa9118625d175a67a398bb2c416b5ca392e7a3b458cc433dc63fa02c75d78') {throw 'PG16_PUBLIC_PIN'}
+if ((Get-FileHash -LiteralPath 'C:\Users\w.filho\Desktop\codes\mask\docs\poc\oracle9_w1_prepare.py' -Algorithm SHA256).Hash.ToLowerInvariant() -ne '7540b7bff5072013cb26613878760cb68e61c3269ab9a842a43c630ead1040cc') {throw 'PG16_PUBLIC_PIN'}
+if ((Get-FileHash -LiteralPath 'C:\Users\w.filho\Desktop\codes\mask\docs\poc\run_linux_as_probe.py' -Algorithm SHA256).Hash.ToLowerInvariant() -ne '58c692a775a2dffdaa6be86866cdb15ddb307f97aeb8a04b4f7c737ea56c3627') {throw 'PG16_PUBLIC_PIN'}
+if ((Get-FileHash -LiteralPath 'C:\Users\w.filho\Desktop\codes\mask\docs\poc\pg16_public_cleanup_policy.py' -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'f1d94928112afc6a2c0f179201cab74e60dd515c94337e625e1ea8912d28a46c') {throw 'PG16_PUBLIC_PIN'}
+if ((Get-FileHash -LiteralPath 'C:\Users\w.filho\Desktop\codes\mask\docs\poc\pg16_public_emergency.py' -Algorithm SHA256).Hash.ToLowerInvariant() -ne '54cc8f68ffa7b46e0fbb66c3076cd80fabd849ac2d9284635c2b39253be30ebc') {throw 'PG16_PUBLIC_PIN'}
+if ((Get-FileHash -LiteralPath 'C:\Users\w.filho\Desktop\codes\mask\docs\poc\pg16_public_owner.py' -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'a02f0b71311fabd44685606e36134c50b719ecf863de98f164268a04d6b54e4c') {throw 'PG16_PUBLIC_PIN'}
+if ((Get-FileHash -LiteralPath 'C:\Users\w.filho\Desktop\codes\mask\docs\poc\pg16_public_profile.py' -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'fe2f8ba8bfabc5572fe7aeb85c31c54de38ceaa23c1a6c34dd631425371d9277') {throw 'PG16_PUBLIC_PIN'}
+if ((Get-FileHash -LiteralPath 'C:\Users\w.filho\Desktop\codes\mask\docs\poc\pg16_public_volumes.py' -Algorithm SHA256).Hash.ToLowerInvariant() -ne '6e3827affcb1a02c00c365a54ecccae5d8e768c188d8232b699efa4c6ddad128') {throw 'PG16_PUBLIC_PIN'}
+if ((Get-FileHash -LiteralPath 'C:\Users\w.filho\Desktop\codes\mask\docs\poc\pg16_public_watchdog.py' -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'b86841ea9c7329e1636ee08e3314e29dde6b9572b45c121a1095b4eb5b13cf03') {throw 'PG16_PUBLIC_PIN'}
+if ((Get-FileHash -LiteralPath 'C:\Users\w.filho\Desktop\codes\mask\docs\poc\w1_bootstrap_identity.py' -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'dc2481f5a54c1408f6c91c38f99c138d82431b5b1324afdfe9443087323b140d') {throw 'PG16_PUBLIC_PIN'}
+if ((Get-FileHash -LiteralPath 'C:\Users\w.filho\AppData\Local\Programs\DockerDesktop\resources\bin\docker.exe' -Algorithm SHA256).Hash.ToLowerInvariant() -ne '60028870931ea6e91955bfeaee358ec6c6920f6162c17a3d828c3c82ab3c3599') {throw 'PG16_PUBLIC_PIN'}
+if ((Get-FileHash -LiteralPath 'C:\Users\w.filho\AppData\Local\Programs\DockerDesktop\Docker Desktop.exe' -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'f3100322884b025ead78c49b512ece5e8c1f444ea91c57a4e045cc409386a3de') {throw 'PG16_PUBLIC_PIN'}
+if ((Get-FileHash -LiteralPath 'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe' -Algorithm SHA256).Hash.ToLowerInvariant() -ne '60c9b29843624dd8af6b6a7b26147753be6aeef65098b9a503cc50850afe410f') {throw 'PG16_PUBLIC_PIN'}
+if ((Get-FileHash -LiteralPath 'C:\Users\w.filho\.docker\config.json' -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'f173396ef80b3c0bf4f8a5f6f944d3e426cee041ae3a2a8a07602ff6846a9f1a') {throw 'PG16_PUBLIC_PIN'}
+if ((Get-FileHash -LiteralPath 'C:\Users\w.filho\.docker\contexts\meta\fe9c6bd7a66301f49ca9b6a70b217107cd1284598bfc254700c989b916da791e\meta.json' -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'c16649b1a2f1c6fbb68b85158a956862331e86543e25df46341f5fe5df2f9a25') {throw 'PG16_PUBLIC_PIN'}
+if ((Get-FileHash -LiteralPath 'C:\Users\w.filho\Desktop\codes\mask\docs\poc\w1_bootstrap_channel.py' -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'e6ca9e606567289fa312049b071aa777e1764579813829747cb32df05d4ee87a') {throw 'PG16_PUBLIC_PIN'}
+if ((Get-FileHash -LiteralPath 'C:\Users\w.filho\AppData\Local\Programs\Python\Python311\Lib\asyncio\windows_utils.py' -Algorithm SHA256).Hash.ToLowerInvariant() -ne '23ff6c7fececfe35a06eaf7615c1e1e67c0740b78ca75a04c548b184be87b958') {throw 'PG16_PUBLIC_PIN'}
+if ((Get-FileHash -LiteralPath 'C:\Users\w.filho\AppData\Local\Programs\Python\Python311\Lib\asyncio\proactor_events.py' -Algorithm SHA256).Hash.ToLowerInvariant() -ne '76eb32c35e8db62d4ce258d512e5870c79ec2d381466013a6ffbcc126e1b3fc5') {throw 'PG16_PUBLIC_PIN'}
+if ((Get-FileHash -LiteralPath 'C:\Users\w.filho\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_subprocess.py' -Algorithm SHA256).Hash.ToLowerInvariant() -ne '0e07c6d91c88e3f2e587e5edceb9f14d6c9afdf9f55bcdbc6610ad1bcde93df7') {throw 'PG16_PUBLIC_PIN'}
+if ((Get-FileHash -LiteralPath 'C:\Users\w.filho\AppData\Local\Programs\Python\Python311\Lib\asyncio\windows_events.py' -Algorithm SHA256).Hash.ToLowerInvariant() -ne '16e963782a4424deb6380601abb19f1dd80df24db0dab03ef3f8a4e6829b5f6c') {throw 'PG16_PUBLIC_PIN'}
+if ((Get-FileHash -LiteralPath 'C:\Users\w.filho\AppData\Local\Programs\Python\Python311\Lib\asyncio\streams.py' -Algorithm SHA256).Hash.ToLowerInvariant() -ne '34a6fca4720f83042e1c4b1567a2a2adc501ebe39b06f30d9327beb55d61fd52') {throw 'PG16_PUBLIC_PIN'}
+if ((Get-FileHash -LiteralPath 'C:\Users\w.filho\AppData\Local\Programs\Python\Python311\Lib\asyncio\subprocess.py' -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'a511d0d64d2d8086b7cb8e81dbbb0d906fa12d8731da52f20ff198f44bdf415a') {throw 'PG16_PUBLIC_PIN'}
+if ((Get-FileHash -LiteralPath 'C:\Users\w.filho\Desktop\codes\mask\.venv\pyvenv.cfg' -Algorithm SHA256).Hash.ToLowerInvariant() -ne '6e2514351382cfae93b50d0e64644884d45febbf6dbc6ed97bcf3cab6536ff82') {throw 'PG16_PUBLIC_PIN'}
+$root='C:\Users\w.filho\AppData\Local\Temp\maskgw-pg16-public-20261030-c3a916a7a7ff43f89608c6e8a1d26428'
+$state=Join-Path $root 'attempt.json'
+$rootItem=Get-Item -LiteralPath $root -Force
+if(-not $rootItem.PSIsContainer -or ($rootItem.Attributes -band [IO.FileAttributes]::ReparsePoint)){throw 'PG16_PUBLIC_ROOT'}
+if(@(Get-ChildItem -LiteralPath $root -Force).Count -ne 1 -or -not (Test-Path -LiteralPath $state -PathType Leaf)){throw 'PG16_PUBLIC_FRESH_ROOT'}
+if((Get-Item -LiteralPath $state -Force).Attributes -band [IO.FileAttributes]::ReparsePoint){throw 'PG16_PUBLIC_STATE'}
+if ((Get-FileHash -LiteralPath $state -Algorithm SHA256).Hash.ToLowerInvariant() -ne '721f642f890058722c0fd5a49368c9f61b76b36feedc15e37f97edf098d83d79'){throw 'PG16_PUBLIC_STATE_PIN'}
+$desktop=@(Get-Process -ErrorAction SilentlyContinue | Where-Object {$_.ProcessName -match '^(Docker Desktop|com\.docker\..*|docker.*|vpnkit)$'})
+if($desktop.Count -ne 0){throw 'PG16_PUBLIC_DESKTOP_PRECONDITION'}
+& 'C:\Users\w.filho\Desktop\codes\mask\.venv\Scripts\python.exe' '-I' '-B' 'C:\Users\w.filho\Desktop\codes\mask\docs\poc\pg16_public_run.py' 'C:\Users\w.filho\AppData\Local\Temp\maskgw-pg16-public-20261030-c3a916a7a7ff43f89608c6e8a1d26428'
+exit $LASTEXITCODE

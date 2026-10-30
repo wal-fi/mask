@@ -1,5 +1,21 @@
 # Implementation Roadmap
 
+## Sonda pública PG16 concluída e revisada — 2026-10-30
+
+Rodada única task81e72756/rootc3a916a7 terminou exit0/PG16_PUBLIC_VERIFIED.
+Claude2 aceitou os fatos em2026-10-30T14:41:43Z, sessão51ea0d85.12 checkpoints
+119515ms/34comandos0, perfil aceito em3inspects, PG16.15/Alpine3.24.1/UID70.
+OwnerCLOSED/released, CID removido,17volumes→17 conjuntos iguais, watchdog
+joined/nofire/heldfalse. DesktopOff observado externamente14:32:51Z.
+Export95f0 único reteve50fontes77312bytes; sósummary/transport derivados
+publicados. RUN-VALIDATION registra limites e duas notas do revisor: próximo
+resumo deve incluir returncode/stdout_bytes do owner e rótulo do inspect final.
+Fontes/root/script consumidos congelados, nenhum recurso vivo pendente.
+Próximo: leitor shell exato e fixture PG privada, com revisão própria antes
+de efeitos. Nenhum initdb/servidor/SQL/seed/credencial neste ensaio.
+Gateway indisponível; B1/B2/D090/C1/SQL/produção abertos. Sem quota/job ou
+segundo escritor. Registros seguintes são históricos.
+
 ## Preparo e exportação PG16 aceitos — 2026-10-30
 
 Preparador02d1dadd e desenho aceitos pelo Claude2 (55166); exportador95f09bbb

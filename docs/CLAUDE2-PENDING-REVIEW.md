@@ -1,4 +1,48 @@
-# Exportador e preparador PG16 aceitos — nenhuma revisão ativa
+# Rodada PG16 concluída — revisão factual aceita
+
+Claude2 aceitou os fatos em2026-10-30T14:41:43.508Z, sessão51ea0d85:
+nenhum bloqueador. Duas notas para próximo desenho, sem mudar fontes
+consumidas: incluir returncode/stdout_bytes do owner e rótulo do inspect que
+originou post_execution_state. Ferramentas presentes não comprovam semântica
+dos flags do leitor shell. Nenhum gate de produção fechado; próximo desenho
+é leitor exato/fixture privada, antes de novos efeitos.
+
+Sessão9384 terminou exit0/PG16_PUBLIC_VERIFIED. Task81e72756/rootc3a916a7;
+12checkpoints119515ms,34comandos0,ownerCLOSED/released,17volumes→17conjuntos
+iguais, CID removido/ausente, watchdogjoined/nofire/heldfalse, DesktopOff
+externo14:32:51Z. Export95f0 único:50fontes77312bytes/todasretidas, sósummary/
+transport derivados, hashese3594e23/f78c5647. Revisar RUN-VALIDATION e os dois
+arquivos públicos conferidos; nenhum raw do Temp. Fontes/raiz/script agora consumidos,
+não editar/reexecutar. Nenhum recurso vivo pendente. Gates de produção abertos.
+
+# Registro anterior — execução única
+
+Invocação única do script37de40fe iniciada, sessão9384 ativa. Não repetir
+comando/main/root. Aguardar terminal e provas de recurso antes do export.
+
+Review1553 aceitou37de40fe/9700bytes/34pins, após6483. Materialize02d1 único:
+rootc3a916a7/task81e72756, sóattempt1935/721f642f iguais à proposta e argv igual.
+DesktopOff; prova pública materialized-proof.json. Registrar intenção antes
+de chamada única e acompanhar terminal. Nenhum segundo CLI/writer, reexecução,
+raw do Temp em ferramenta/Git ou mudança de fonte pinada. Export95f0 só depois
+de recursos positivos e exit real. Gateway indisponível, gates abertos.
+
+# Registro anterior — rerevisão da proposta
+
+Review6483 recusou script603/13969 por guardas ausentes; versão recusada
+preservada e nunca invocada. V2:9700bytes/37de40fe,34 pins+root fresh/reparse+
+state721f642f no instante da chamada. Mesmo task81e72756/rootc3a916a7/estado1935.
+Root ainda ausente; sem Desktop/Docker novo. Em rerevisão do texto exato.
+
+# Registro anterior — proposta inicial
+
+Proposta pg16-public-prep-20261030: task81e72756/rootc3a916a7, estado1935bytes/
+721f642f/script603bytes13969d61. Fontes/pins externos conferidos sem efeito,
+DesktopOff14:10:14Z; root ainda não existe. Código aceito/publicado emf40d4a6,
+378testes52,39s/estáticos326 limpos. Revisar RUN-PLAN e os3arquivos antes de
+qualquer materialização ou invocação. Sem Docker/PG/SQL/seed/serviço novo.
+
+# Registro anterior — exportador/preparador aceitos
 
 Preparador02d1/desenho aceitos55166; exportador95f09bbb aceito94684.42testes
 de exportação30,38s e17preparo2,19s; Ruff/format328/mypy311/314326 limpos.
