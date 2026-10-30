@@ -1,4 +1,15 @@
-# Coordenador público do leitor PG16 aceito
+# Desenho da entrada do leitor PG16 aceito
+
+23065 aceitou direção ENTRY-DESIGN com sete precisões incorporadas antes de
+código. Sem revisão ativa, quota/job ou outro escritor. Entrada ainda ausente.
+Pins transitivos em memória/ao vivo, categorias AST fechadas, foregroundA
+ligado ao primeiro monitor, tabela de coleta/join/retry único, pré-A e
+sucesso23 sem fired. Primeira matriz pode medir total real se diagnóstico
+de pins e estimativa/margem fecharem antes da proposta; não exige reduzido
+nativo automaticamente. P2 orçamento continua aberto. Próximo: código/fakes
+da entrada, revisão antes de qualquer efeito novo. Host8c41605f publicado.
+
+# Registro anterior — coordenador público do leitor PG16 aceito
 
 61196 aceitou8c41605f/40791bytes, sem P1/P2 de código.52testes49,90s e
 Ruff/format334/mypy333 alvos3.11/3.14 limpos.29625/59784 preservados com suas

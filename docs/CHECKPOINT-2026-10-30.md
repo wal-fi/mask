@@ -6,6 +6,15 @@ checkpoint de desenvolvimento incompleto da Fase9, não release de produção.
 
 ## Continuação atual — leitor PG16 e supervisão revisados
 
+Desenho seguinte ENTRY-DESIGN aceito23065, sete precisões incorporadas antes
+do código: pins transitivos/puro-final, categorias AST/identidades, foreAone,
+coleta/retry único por fire/join, pré-A, sucesso23 e medidas de admissão/estado.
+Host8c41605f publicado emc5cacc2. Entrada/export/prep ainda sem implementação.
+Orçamento exige diagnóstico de pins revisado + estimativa por caso/margem,
+incluindo hashes em cleanup/restore. Primeira matriz pode medir23 reais;
+nenhuma medição nativa antecipada é inventada. Sem revisão ativa/novo job/
+quota/outro escritor ou efeito nativo. Próximo: implementar entrada com fakes.
+
 Atualização mais recente: Host8c41605f/40791bytes aceito pelo Claude2 em61196,
 só definições/fakes, sem main/efeito nativo.52próprios/49,90s e Ruff/format334/
 mypy333 alvos3.11/3.14 limpos, runtime sóWindows3.11.3. Recusas29625/59784
