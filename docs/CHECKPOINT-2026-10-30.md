@@ -4,6 +4,61 @@ Criado por solicitação do usuário em2026-10-30. Inclui o trabalho acumulado
 após4a5e556, preservando resultados históricos e tentativas reprovadas. É
 checkpoint de desenvolvimento incompleto da Fase9, não release de produção.
 
+## Continuação atual — leitor PG16 e supervisão revisados
+
+Esta seção substitui o estado corrente dos registros históricos abaixo.
+Publicações de referência:486481f (sonda pública), aed24fb (reader),7d42a49
+(owner),8a8d063 (perfil),270eaad (posse). O fechamento do watchdog integra
+este checkpoint; confirmar HEAD/origin/ahead/behind pelo Git, sem presumir
+hash autorreferente neste documento.
+
+Sonda pública PG16 task81e72756/rootc3a916a7 terminou exit0/PUBLIC_VERIFIED,
+revisão factual aceita. PG16.15/Alpine3.24.1/UID70,12checkpoints119515ms,
+owner/CID/volumes recolhidos;17volumes preservados.50fontes/77312bytes retidas
+no Temp desta máquina; somente summary/transport derivados estão no Git.
+Não transportar brutos ou reexecutar fontes/root/script consumidos. Resultado
+não mede servidor PG, SQL, segredo ou Gateway. Ver PUBLIC-RUN-VALIDATION.
+
+Componentes novos do leitor, ainda sem execução shell/Docker:
+
+| Componente | SHA da fonte | Revisão final | Gate próprio/relacionado |
+| --- | --- | --- | --- |
+| pg16_shell_reader.py | efe69a79 |32442|30/408 |
+| pg16_shell_owner.py | d6718800 |60994|33/168,1 unidade nativa desmarcada |
+| pg16_shell_profile.py |8906e846|28829|55/205 |
+| pg16_shell_cleanup_policy.py |96e8a4c|35578|37/117 |
+| pg16_shell_watchdog.py |cf6634da|74378|33/122 |
+
+São seleções sobrepostas, não somar. Validações SHELL-*-VALIDATION preservam
+falhas/regressões: NUL final no desenho, L1 de callbacks, Mounts malformados,
+Store não monotônico e ordem de __eq__. A unidade histórica nativa de pipes
+incluída por engano falhou no sandbox/WinError5; não foi elevada nem repetida.
+Nas seleções de fakes que incluam esse arquivo, excluir explicitamente:
+
+    -k 'not test_pinned_native_windows_pipe_handle_has_explicit_closed_state'
+
+Estáticos mais recentes: Ruff/format332/mypy strict331 (alvos3.11/3.14),
+runtime apenas Windows3.11.3. Helpers docs/poc têm check E9/F63/F7/F82,
+não alegar mypy strict dos helpers. Get-Process confirmou DesktopOff em
+2026-10-30T18:05:18.9591291Z, observação pontual. Nenhum job novo, revisão
+ativa ou segundo escritor. Limite transitório do aprovador OpenAI foi
+resolvido; não houve quota do Claude2 medida neste lote.
+
+Próximo incremento seguro: desenho do coordenador público do leitor,
+classificação fechada dos comandos, entrega dos negativos antes da rodada,
+Store/Watchdog por caso e CID com Bstart global. check_snapshot precede
+publish; próximo caso somente após CLI/pumps/handles/ticket/ausência/volumes/
+release positivos e join; fired aborta tudo. Propagação real do exit42 deve
+concordar com inspect;12s do host não vira DEADLINE esperado do leitor.
+Depois vêm exportador próprio, entrada/preparador/proposta/comando exatos e
+revisão antes de um ensaio. Não usar logger/exportador público com segredos.
+
+**Gateway continua indisponível.** SQL PGWire recusada; B1 fim a fim/B2/
+D090gate2/C1/produção não fechados. Oracle9.8 candidata621 inalterada. Destino
+continua Docker desta máquina; pins/daemons/imagens/Temp não são portáveis
+por inferência a outro computador. Código/evidência públicos estão no Git;
+arquivos pessoais .codex/.claude/stackdumps/systeminfo permanecem excluídos.
+
 ## Continuidade posterior ao checkpoint81ead94
 
 Exportador95f09bbb e preparador02d1 implementados e aceitos em55166/94684.

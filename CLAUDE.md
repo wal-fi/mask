@@ -1,5 +1,19 @@
 # AI Data Masking Gateway
 
+## Watchdog do leitor PG16 aceito, só definições — 2026-10-30
+
+Variante cf6634da/17411bytes aceita pelo Claude2 (74378 após21812).33testes
+próprios/122relacionados5,72s, Ruff/format332/mypy311/314331 limpos; runtime
+sóWindows3.11.3. Oito regressões B1 vermelhas antes do Store monotônico;
+nota de __eq__ também reproduzida antes de validar tipo antes da comparação.
+Um Store/CID por caso; Bstart global não se renova. _bound antes de qualquer
+CLI, fired sempre HELD, join não libera. 54cc/6e38 e fontes consumidas intactos.
+Nenhuma thread/CLI/Docker/PG/seed/raiz novo. Get-Process observou DesktopOff
+em18:05:18Z (pontual). Próximo: desenho do coordenador/caller público do leitor,
+matriz/entrega exatas, exportador e entrada/proposta antes de efeitos nativos.
+Gateway indisponível; B1/B2/D090/C1/SQL/produção abertos. Sem job novo ou
+segundo escritor. CHECKPOINT-2026-10-30 registra a continuação e os limites.
+
 ## Posse do leitor PG16 aceita, sem efeitos — 2026-10-30
 
 Adapter96e8a4c/3984bytes aceito pelo Claude2 (review35578).37testes próprios/

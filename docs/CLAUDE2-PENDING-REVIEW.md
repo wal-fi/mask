@@ -1,4 +1,15 @@
-# Posse do leitor PG16 — adapter aceito
+# Watchdog do leitor PG16 — revisão final aceita
+
+Review74378 aceitou cf6634da/17411bytes após21812.33próprios/122relacionados
+5,72s, Ruff/format332/mypy311/314331 limpos. B1 Store e igualdade hostil têm
+regressões vermelhas antes dos fixes. Nenhuma thread/CLI/PG/shell nativo novo.
+Todos os pareceres deste lote concluíram; nenhuma revisão ativa/segunda
+instância, quota Claude2 ou job criado. Próximo: desenho de composição do
+caller público e entrega/matriz antes de efeito real. Obrigações do caller:
+check_snapshot antes de publish, Store único/CID/globalBstart, próximo caso
+só após release+join, fired aborta lote. Gateway indisponível/gates abertos.
+
+# Registro anterior — posse do leitor PG16 aceita
 
 Review35578 aceitou adapter96e8a4c/3984bytes.37focados/117relacionados3,74s,
 Ruff/format331/mypy311/314330 limpos. Nota de contagem23 incorporada em teste,
