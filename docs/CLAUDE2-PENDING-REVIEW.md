@@ -1,4 +1,13 @@
-# Watchdog do leitor PG16 — revisão final aceita
+# Entrega pública e desenho do host aceitos
+
+Delivery42f7e647 aceito42864,25próprios/143relacionados5,97s e Ruff/format333/
+mypy311/314332 limpos. Nota de saída antes de close tem dois fakes, sem mudar
+helper. DesenhoHost2192 sem bloqueador; oito precisões incorporadas antes de
+código. Nenhuma revisão ativa/segunda instância. Próximo: implementar host
+específico com fakes; não antecipar entry/Root/CLI/native. B300 failclosed,
+margem534<600 inclui join bloqueante. Nenhum gate de produção fechado.
+
+# Registro anterior — watchdog do leitor PG16 aceito
 
 Review74378 aceitou cf6634da/17411bytes após21812.33próprios/122relacionados
 5,72s, Ruff/format332/mypy311/314331 limpos. B1 Store e igualdade hostil têm

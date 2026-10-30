@@ -6,6 +6,19 @@ checkpoint de desenvolvimento incompleto da Fase9, não release de produção.
 
 ## Continuação atual — leitor PG16 e supervisão revisados
 
+Atualização posterior: entrega42f7e647 foi aceita42864, com25testes próprios
+incluídos em143relacionados/5,97s. Só constructor da subclasse muda: HEADER
+envia prefixo≤16 (short15), demais wire/chunks intactos. Oráculos/prazos/IO
+inalterados; metadata não prova recepção. Fonte pinada separadamente do owner
+base no futuro host, sem reescrever manifesto8906. HOST-DESIGN foi revisto2192
+e as oito precisões foram incorporadas; host ainda sem código nesta atualização.
+Store/Watchdogs preparados antes de A, todos armados com mesmo Bstart;
+join→heartbeat→metadata antes de ativar próximo. Gate de CLI/Intent/owner por
+record, artefatos case-NN e pastas watch-NN, exit CLI vs State0/42. B300 é
+meta típica fail-closed; margem com join dentro de B passa a534<600.
+Últimos estáticos: Ruff/format333/mypy strict332 alvos3.11/3.14; runtime só
+Windows3.11.3. Nenhum Docker/shell/seed privado/raiz operacional novo.
+
 Esta seção substitui o estado corrente dos registros históricos abaixo.
 Publicações de referência:486481f (sonda pública), aed24fb (reader),7d42a49
 (owner),8a8d063 (perfil),270eaad (posse). O fechamento do watchdog integra
@@ -28,6 +41,7 @@ Componentes novos do leitor, ainda sem execução shell/Docker:
 | pg16_shell_profile.py |8906e846|28829|55/205 |
 | pg16_shell_cleanup_policy.py |96e8a4c|35578|37/117 |
 | pg16_shell_watchdog.py |cf6634da|74378|33/122 |
+| pg16_shell_delivery.py |42f7e647|42864|25/143 |
 
 São seleções sobrepostas, não somar. Validações SHELL-*-VALIDATION preservam
 falhas/regressões: NUL final no desenho, L1 de callbacks, Mounts malformados,

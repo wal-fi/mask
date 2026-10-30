@@ -1,5 +1,21 @@
 # Implementation Roadmap
 
+## Entrega pública do leitor PG16 aceita — 2026-10-30
+
+Variante42f7e647/2528bytes aceita pelo Claude2 (42864).25testes próprios
+incluídos em143relacionados/5,97s; Ruff/format333/mypy311/314332 limpos,
+runtime Windows3.11.3. Só constructor difere de d671; nove HEADER levam
+prefixo≤16bytes (short15),14casos preservam wire/chunks exatos. Wrapper/core/
+parser/prazos e IO/BrokenPipe permanecem; metadata descreve configuração,
+não syscall/recepção. GuardTimer de pytest é real, não watchdog do ensaio.
+Hostdesenho2192 aceito com oito precisões incorporadas antes de código:
+23monitores preparados antes de A, gates por record, artefatos/diretórios
+próprios, Bstart global, todos joins, callbacks vinculados e exit0/42 real.
+Host ainda não implementado; B300 é meta fail-closed, margem534<600,
+não soma de piores casos. Nenhum Docker/shell/seed/raiz operacional novo.
+Fontes consumidas intactas; Gateway indisponível, B1/B2/D090/C1/produção
+abertos. Próximo: host com fakes, depois entry/export/prep/rodada revisados.
+
 ## Watchdog do leitor PG16 aceito, só definições — 2026-10-30
 
 Variante cf6634da/17411bytes aceita pelo Claude2 (74378 após21812).33testes
