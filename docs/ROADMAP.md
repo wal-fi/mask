@@ -1,5 +1,16 @@
 # Implementation Roadmap
 
+## Captura diagnóstica e comando aceitos, ainda sem medição — 2026-10-31
+
+Capturadorde8f0391 aceito20331 após desenho34978, sem P1/P2.34próprios0,99s,
+426relacionados91,17s (33da captura nessa seleção), Ruff/format339/mypy337
+alvos3.11/3.14 limpos; runtimeWindows3113. Comando aceito54015 após P2 de
+stderr/Stop e escopo LASTEXITCODE corrigidos, somente Process/restauração e
+uma invocação. Task3eb3f616e3f24f3e943bd2135b0007ba não invocada/root ausente;
+commit antes da leitura. Nenhum revisor/outro escritor/quota/job ativo. Falha
+consome proposta sem retry. Orçamento pendente; sem Docker/PG/worker/SQL/
+serviço. Gateway/B1/B2/D090/C1/produção indisponíveis/abertos. Históricos abaixo.
+
 ## Helper de custo dos pins aceito, sem medição real — 2026-10-31
 
 Helper0195b1e4/12028bytes aceito99073, só código/fakes.37próprios11,61s e

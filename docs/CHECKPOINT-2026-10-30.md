@@ -6,6 +6,14 @@ checkpoint de desenvolvimento incompleto da Fase9, não release de produção.
 
 ## Continuação atual — leitor PG16 e supervisão revisados
 
+Capturadorde8f0391 aceito20331/desenho34978,34próprios0,99s e426relacionados
+91,17s (33da captura nessa seleção), Ruff/format339/mypy337 alvos311/314.
+Comando54015 aceito após correções P2 (stderr/Stop e global:LASTEXITCODE),
+parse sem executar. Task3eb3f616e3f24f3e943bd2135b0007ba/root ainda ausente,
+nenhuma medição; commit antes da leitura. Sem revisão ativa/quota/job/outro
+escritor ou Docker/PG/worker/SQL/serviço. Orçamento/produção ainda abertos.
+Ver PIN-CAPTURE-COMMAND e PIN-CAPTURE-VALIDATION. Registros abaixo históricos.
+
 Helper de pins0195b1e4/12028bytes aceito99073, código/fakes apenas.37focados
 11,61s/399relacionados104,82s, Ruff/format339/mypy336 alvos3.11/3.14 limpos. Dois Hosts/final0/final23,
 20amostras, sem captura ao importar ou efeito de root/processo/thread. Fakes

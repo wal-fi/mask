@@ -1,4 +1,14 @@
-# Helper de custo dos pins aceito
+# Captura diagnóstica e comando aceitos
+
+20331 aceitou capturadorde8f0391,34fakes finais0,99s,426relacionados91,17s
+(33da captura nessa seleção), estáticos337/format339 limpos. Desenho34978.
+41271 recusou stderr/Stop no comando;54015 conferiu fix e exigiu global:
+LASTEXITCODE, aplicado literalmente. Aceite condicionado satisfeito, parse
+sem execução. Task3eb3f616e3f24f3e943bd2135b0007ba não invocada/root ausente;
+commit antes da única leitura. Sem revisão ativa/quota/job/outro escritor ou
+Docker/PG/worker/SQL/serviço. Orçamento/produção continuam pendentes.
+
+# Registro anterior — helper de custo dos pins aceito
 
 99073 aceitou0195b1e4/12028bytes sem P1/P2 de implementação.37próprios11,61s,
 399relacionados104,82s, Ruff/format339/mypy336 alvos3.11/3.14 limpos. Duas
