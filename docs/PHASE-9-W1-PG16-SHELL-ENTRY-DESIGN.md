@@ -28,6 +28,9 @@ não repetir main nessa raiz. Manter alvo de admissão3s do ensaio anterior;
 excesso reprova antes de A, sem ampliar depois. Os23Watchdogs ainda só serão
 construídos em run/start_supervision, antes de start_cycle/A. Falhas antes de
 gravar INVOKED não executam A e não são motivo para apagar/reciclar a raiz.
+Precisão8601: qualquer recusa, inclusive ADMISSION_TIME antes de INVOKED,
+consome a raiz. Não repetir essa raiz nem criar outra até passar sem nova
+revisão; o fato de invoked.json ainda não existir não autoriza retry.
 
 ## Execução e diagnóstico
 

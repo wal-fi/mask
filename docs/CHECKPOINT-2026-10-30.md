@@ -6,6 +6,15 @@ checkpoint de desenvolvimento incompleto da Fase9, não release de produção.
 
 ## Continuação atual — leitor PG16 e supervisão revisados
 
+Próximo desenho PIN-COST-DESIGN aceito8601, seis precisões incorporadas.
+Entradaafaf publicada em0e370e4. Diagnóstico ainda sem código/execução:
+dois Hosts para final0/final23, quatro modos/cinco ciclos20amostras, só leitura
+com schema sem privados. Construtores reais23sem start/loop/raiz materializada.
+Admissão estimada por construção+final0; prepare ainda gate3s. Recusa prévia
+também consome raiz sem retry/nova raiz até passar sem nova revisão. Próximo:
+helper/fakes/revisão antes de comando único de leitura; orçamento continua
+aberto. Nenhuma revisão ativa/quota/job/segundo escritor ou efeito nativo novo.
+
 Continuação2026-10-31: entradaafaffad0/24081bytes aceita58487, código/fakes
 somente.58próprios35,14s/362relacionados77,86s, Ruff/format336/mypy334 alvos
 3.11/3.14 limpos.7256 e regressões vermelhas preservados; prova precede

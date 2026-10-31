@@ -1,4 +1,15 @@
-# Entrada do leitor PG16 aceita
+# Desenho de custo dos pins aceito
+
+8601 aceitou direção PIN-COST-DESIGN com seis precisões incorporadas antes
+do código. Não há revisão ativa. Próximo: helper/fakes, sem executáveis ou
+config reais ainda. Dois Hosts, final0/final23 separados, quatro modos em
+cinco ciclos/20amostras; construtores reais sem thread/raiz/loop/escrita,
+schema/privacidade estritos. Admissão só estimada por construção+final0;
+prepare mantém3s e qualquer recusa consome a raiz, sem retry não revisado.
+Nenhum efeito nativo/quota/job/outro escritor. Entradaafaf publicada0e370e4,
+gates B1/B2/D090/C1/SQL/Gateway/produção continuam abertos.
+
+# Registro anterior — entrada do leitor PG16 aceita
 
 58487 aceitouafaffad0/24081bytes, código/fakes sem P1/P2 de implementação.
 58próprios35,14s/362relacionados77,86s e Ruff/format336/mypy334 alvos3.11/
