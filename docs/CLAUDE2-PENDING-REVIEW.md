@@ -1,4 +1,47 @@
-# Exportador revisado e validado; nenhuma revisão pendente
+# Preparador parcial; Claude2 em quota; retomada única registrada
+
+Estado em2026-10-31: último commit verificado/publicado9e4e37e. O único
+programador Claude2 (Opus5.5/esforço medium) gravou parcialmente
+docs/poc/pg16_shell_prepare.py:9391bytes,
+SHA256 b0359405d7f1d3ef38100a831e5bba702b10db751dadc212048839acf162c6d6.
+CLI82419 terminou exit1/API429; não há escritor ativo. Nenhum código parcial
+foi commitado/publicado. Testes próprios e desenho ainda não existem.
+
+O retorno informa liberação às21h40 America/Sao_Paulo de31/10. Tarefa existente
+Maskgw-Claude2-Resume-01a05804 reativada para uma única execução em
+2026-10-31T21:45:00-03:00. Registro relido:Ready, NextRunTime exato, IgnoreNew,
+Limited, ação codex queue dirigida somente à conversa
+01a05804-2c07-71f2-bfef-7e3c90c06476, mensagem/argumentos conferidos.
+Não é confirmação de execução futura. Exige computador ligado, usuário
+conectado e app server disponível. Não há nova conta/modelo ou outra tarefa.
+
+Na retomada:
+
+1. Conferir estado Git atual e se há algum Claude2 ativo; se houver, apenas
+   acompanhá-lo. Não iniciar segundo escritor nem repetir tarefa consumida.
+2. Retomar somente a sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f, sempre
+   --model claude-opus-5-5 --effort medium. Deixar Claude2 terminar o preparador,
+   criar tests/test_pg16_shell_prepare.py e o desenho correspondente, sem Bash
+   ou execução de efeitos. O assistente principal permanece revisor/validador.
+3. Usar fonte aceita como autoridade: entradaafaffad0 exige exatamente16campos
+   (a instrução inicial dizia17 por engano). Sonda independente do preparador
+   parcial:6959bytes/16campos/23medidas/23entregas/FRESH/invokedFalse/ASCII.
+4. Cobrir importação sem efeitos, estado determinístico, raiz/ancestrais sem
+   reparse, diretório ocupado, launcher alterado, limites, argv sem invocação,
+   XB/fsync/escrita curta/leitura final/falhas sem retry e erros sanitizados.
+   Usar fakes/temporários próprios, sem materializar raiz operacional.
+5. Revisar e validar testes próprios/relacionados e estáticos nos escopos
+   configurados. docs/poc é excluído deliberadamente de Ruff; não impor
+   anotações integrais ou mudar configuração para ocultar defeitos.
+6. Admissão nativa3s continua NOT_MEASURED. Exige proposta/rodada de leitura
+   própria revisada; não chamar prepare/run/admit/Host/final_pins operacionais
+   antes desse procedimento. Não acionar Docker/PG/SQL ou ler configuração/
+   executável real neste incremento de código/fakes.
+
+Ver PHASE-9-W1-PG16-SHELL-PREPARE-REVIEW.md. Fontes/raízes consumidas
+permanecem congeladas. Gateway/B1/B2/D090/C1/produção seguem bloqueados.
+
+# Registro anterior — exportador revisado e validado
 
 Instrução atual: Claude2 programa, Opus5.5/esforço medium sempre; assistente
 principal revisa e executa gates. CLI73775/56110 concluíram, nenhum escritor
