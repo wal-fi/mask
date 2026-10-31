@@ -1,5 +1,19 @@
 # Handoff
 
+## Exportador dos 23 casos revisado e validado — 2026-10-31
+
+Claude2 é o programador único, Opus5.5/esforço medium por preferência explícita
+atual do usuário; assistente principal revisa/testa. Exportadored491c01 e
+testes906a8cae:54passed/110,51s, cinco contraprovas independentes CLEAN/18,21s,
+481relacionados213,91s, Ruff/format341/mypy338 alvos3.11/3.14 limpos, runtime
+Windows3113. QuatroP2/umP3 iniciais reproduzidos e corrigidos pelo Claude2,
+13regressões acrescentadas. Parecer do revisor aprovado no componente isolado;
+ver SHELL-EXPORT-VALIDATION/DESIGN. Próximo preparador/estado≤32768/admissão3s/
+proposta/comando antes de rodada. Sem revisão/escritor/Claude2 ativo, quota/job
+novo. Só fakes/arquivos próprios, sem Docker/PG/worker/SQL/serviço/observação
+nova do Desktop.3eb3 intacta/consumida. Gateway indisponível; B1/B2/D090/C1/
+produção abertos. Registros abaixo históricos.
+
 ## Diagnóstico e envelope prospectivo aceitos — 2026-10-31
 
 Após2034cd4 publicado, task3eb3f616e3f24f3e943bd2135b0007ba executada uma vez,

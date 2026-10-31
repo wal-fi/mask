@@ -1,4 +1,18 @@
-# Medição nativa69592 e envelope47012 aceitos
+# Exportador revisado e validado; nenhuma revisão pendente
+
+Instrução atual: Claude2 programa, Opus5.5/esforço medium sempre; assistente
+principal revisa e executa gates. CLI73775/56110 concluíram, nenhum escritor
+ativo. Exportadored491c01/testes906a8cae:54passed/110,51s, cinco contraprovas
+independentes CLEAN/18,21s, Ruff/format341/mypy338311/314 limpos. Primeira
+entrega41passed revelou quatroP2/umP3 por hook independente; corrigidos pelo
+Claude2 e13regressões acrescentadas. Seleção relacionada481passed/213,91s,
+nenhuma falha/skip/deselected. Parecer independente aprovado no componente,
+sem P1/P2 remanescentes. Código/testes não mudaram depois dos gates. Próximo
+preparador/estado≤32768/admissão3s/proposta/comando; nenhum escritor/revisor ativo.
+Sem quota/job novo/Docker/PG/SQL/worker/serviço, produção ainda indisponível.
+Ver SHELL-EXPORT-VALIDATION.3eb3 consumida/intacta, não repetir.
+
+# Registro anterior — medição nativa69592 e envelope47012 aceitos
 
 Após2034cd4 publicado, task3eb3f616e3f24f3e943bd2135b0007ba executada uma vez,
 exit0/MEASURED/SOURCE_UNCHANGED em7,272s. Três artefatos públicos conferidos,

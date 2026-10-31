@@ -42,8 +42,13 @@ Hipóteses novas e **não medidas**, declaradas antes de qualquer rodada:
 - Só uma cauda adicional6,3s de rm na estimativa. Repetição de caudas é risco
   de reprovação, não fenômeno medido nem excluído pela hipótese.
 
-O propósito é decidir se vale a tentativa diagnóstica. O tempo real de O,
-CLI e fsync será dado da primeira matriz; violar hipótese não autoriza retry,
+O propósito é decidir se vale a tentativa diagnóstica. A primeira matriz
+mostra conclusão/prazo e os tempos de CLI que o Host8c registra depois dos
+pins. Não persiste durações individuais de owner ou fsync: O/w continuam
+hipóteses, sem promover a conclusão agregada a medição direta desses termos.
+Instrumentação própria seria necessária para isso. Esta precisão editorial
+do fechamento do exportador preserva contas, margens e hipóteses de47012.
+Violar hipótese não autoriza retry,
 ampliar limites ou converter NOT_PASSED em passe. A presença de hipóteses
 não libera serviço, DB privado ou SQL. São somente canários públicos.
 

@@ -6,6 +6,17 @@ checkpoint de desenvolvimento incompleto da Fase9, não release de produção.
 
 ## Continuação atual — leitor PG16 e supervisão revisados
 
+2026-10-31: Claude2 programou novo exportadored491c01/testes906a8cae; modelo
+Opus5.5/esforço medium fixados por solicitação atual. Assistente principal é
+revisor/validador.54passed/110,51s e hook independente5CLEAN/18,21s, estáticos
+341/338 alvos311/314 limpos. QuatroP2/umP3 anteriores reproduzidos antes do
+fix,13regressões acrescentadas pelo Claude2. Relacionados481passed/213,91s,
+sem falhas/skips/deselected; revisão aprovada no componente, sem P1/P2
+remanescentes. Sem escritor/revisor/Claude2 ativo/quota/job novo ou novo
+Docker/PG/worker/SQL/serviço. Gateways/B1/B2/D090/C1/produção abertos. Próximo
+após fechamento: preparador/estado/admissão/proposta/comando;3eb3 intacta,
+consumida, não executar. Este estado substitui os registros históricos abaixo.
+
 Após2034cd4 publicado: task3eb3f616e3f24f3e943bd2135b0007ba executada uma vez,
 exit0/MEASURED/SOURCE_UNCHANGED em7,272s. Três artefatos públicos conferidos,
 result2257bytes/SHA71eb429d,20samples. Root público consumido, NÃO editar ou

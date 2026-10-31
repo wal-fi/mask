@@ -20,9 +20,13 @@ trabalho novo. Não altera fatos medidos, requisitos de segurança ou o escopo
 funcional aprovado da Fase 9. Decisões novas devem registrar que foram tomadas
 sob delegação, não inventar aprovação individual do usuário.
 
-Implementar em incrementos revisados pelo Claude2, corrigir findings, preservar
-alterações anteriores e publicar somente resultados verificados, respeitando
-as permissões efetivas das ferramentas. Preparar deploy reproduzível e executar
+Conforme instrução posterior do usuário em2026-10-31, o Claude2 é o único
+programador; o assistente principal revisa as alterações e executa as validações.
+Usar sempre Claude Opus5.5 (`claude-opus-5-5`) com esforço `medium` no Claude2.
+Esta atribuição substitui a distribuição anterior de papéis, preservada nos
+registros históricos. Corrigir findings, preservar alterações anteriores e
+publicar somente resultados verificados, respeitando as permissões efetivas
+das ferramentas. Preparar deploy reproduzível e executar
 somente no destino identificado; não presumir servidor, credenciais ou permissão
 para alterar bancos existentes. Pedir apenas informação ou autoridade realmente
 faltante, sem parar trabalho independente que continue seguro.
@@ -35,6 +39,20 @@ recusada até a integração passar seus gates. Autonomia não é liberação im
 de produção nem dispensa revisão, isolamento, masking, read-only ou sigilo.
 
 ## Escopo atual
+
+## Exportador dos 23 casos revisado e validado — 2026-10-31
+
+Claude2 é o programador único, Opus5.5/esforço medium por preferência explícita
+atual do usuário; assistente principal revisa/testa. Exportadored491c01 e
+testes906a8cae:54passed/110,51s, cinco contraprovas independentes CLEAN/18,21s,
+481relacionados213,91s, Ruff/format341/mypy338 alvos3.11/3.14 limpos, runtime
+Windows3113. QuatroP2/umP3 iniciais reproduzidos e corrigidos pelo Claude2,
+13regressões acrescentadas. Parecer do revisor aprovado no componente isolado;
+ver SHELL-EXPORT-VALIDATION/DESIGN. Próximo preparador/estado≤32768/admissão3s/
+proposta/comando antes de rodada. Sem revisão/escritor/Claude2 ativo, quota/job
+novo. Só fakes/arquivos próprios, sem Docker/PG/worker/SQL/serviço/observação
+nova do Desktop.3eb3 intacta/consumida. Gateway indisponível; B1/B2/D090/C1/
+produção abertos. Registros abaixo históricos.
 
 ## Diagnóstico e envelope prospectivo aceitos — 2026-10-31
 
