@@ -6,6 +6,17 @@ checkpoint de desenvolvimento incompleto da Fase9, não release de produção.
 
 ## Continuação atual — leitor PG16 e supervisão revisados
 
+Helper de pins0195b1e4/12028bytes aceito99073, código/fakes apenas.37focados
+11,61s/399relacionados104,82s, Ruff/format339/mypy336 alvos3.11/3.14 limpos. Dois Hosts/final0/final23,
+20amostras, sem captura ao importar ou efeito de root/processo/thread. Fakes
+de construtores negam efeitos; contagens por A/B/collect/retry/restore separam
+observado de substituído, sem usar tempos fakes. Duas regressões bool/duas
+stdout IO vermelhas antes dos fixes. Ver PIN-COST-VALIDATION. Nenhuma medição
+de executável/config real; próximo revisar launcher/comando e leitura única.
+Sem revisão ativa/quota/job/outro escritor. Fonteafaf/8c preservadas, gates
+de produção ainda abertos. PIN-COST-VALIDATION registra tetos/compile/emergência
+que ainda entram na estimativa, sem promover tempo fake a medição nativa.
+
 Próximo desenho PIN-COST-DESIGN aceito8601, seis precisões incorporadas.
 Entradaafaf publicada em0e370e4. Diagnóstico ainda sem código/execução:
 dois Hosts para final0/final23, quatro modos/cinco ciclos20amostras, só leitura

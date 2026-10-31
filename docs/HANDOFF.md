@@ -1,5 +1,19 @@
 # Handoff
 
+## Helper de custo dos pins aceito, sem medição real — 2026-10-31
+
+Helper0195b1e4/12028bytes aceito99073, só código/fakes.37próprios11,61s e
+399relacionados104,82s, Ruff/format339/mypy336 alvos3.11/3.14 limpos,
+runtimeWindows3.11.3. Dois Hosts/final0/final23,20amostras/ordem fixa,
+construtores reais sem start/raiz/loop, stdout/schema fechados. Duas regressões
+bool/duas IO vermelhas antes dos fixes. Contagens distinguem observado de
+PS/clock/final substituído; compile fora de pins e limites de pior caso ainda
+entram no orçamento. Nenhum executável/config real lido, Docker/PG acionado,
+raiz operacional ou segundo escritor. Próximo: comando único de leitura
+revisado antes de executar. Sem quota/job/revisão ativa; Gateway e B1/B2/
+D090/C1/SQL/produção seguem bloqueados. Registros seguintes históricos.
+
+
 ## Entrada pública do leitor PG16 aceita, sem execução — 2026-10-31
 
 Entradaafaffad0/24081bytes aceita pelo Claude2 em58487, só código/fakes.

@@ -1,4 +1,14 @@
-# Desenho de custo dos pins aceito
+# Helper de custo dos pins aceito
+
+99073 aceitou0195b1e4/12028bytes sem P1/P2 de implementação.37próprios11,61s,
+399relacionados104,82s, Ruff/format339/mypy336 alvos3.11/3.14 limpos. Duas
+regressões bool/duas stdout IO vermelhas preservadas. Contagens nominais e
+substituídas separadas; futuras contas incluem kill/reinspect/polls/compile/
+emergência, sem confundir tempos de fakes. Sem revisão ativa/quota/job/outro
+escritor ou leitura de executável/config real. Próximo: revisar comando único
+antes da medição, depois orçamento. Gateway/B1/B2/D090/C1/produção bloqueados.
+
+# Registro anterior — desenho de custo dos pins aceito
 
 8601 aceitou direção PIN-COST-DESIGN com seis precisões incorporadas antes
 do código. Não há revisão ativa. Próximo: helper/fakes, sem executáveis ou
