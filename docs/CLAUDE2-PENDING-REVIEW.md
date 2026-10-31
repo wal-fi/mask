@@ -1,4 +1,14 @@
-# Desenho da entrada do leitor PG16 aceito
+# Entrada do leitor PG16 aceita
+
+58487 aceitouafaffad0/24081bytes, código/fakes sem P1/P2 de implementação.
+58próprios35,14s/362relacionados77,86s e Ruff/format336/mypy334 alvos3.11/
+3.14 limpos.7256 e duas regressões vermelhas preservados; prova precede
+passed/escritas. Callback externo residual/TCB e demais limites registrados.
+Nenhuma revisão ativa/outro escritor/quota/job/efeito nativo. Próximo: desenho
+de diagnóstico dos pins e exportador, antes de preparador/proposta/rodada.
+B1/B2/D090/C1/produção continuam abertos, Gateway indisponível.
+
+# Registro anterior — desenho da entrada do leitor PG16 aceito
 
 23065 aceitou direção ENTRY-DESIGN com sete precisões incorporadas antes de
 código. Sem revisão ativa, quota/job ou outro escritor. Entrada ainda ausente.

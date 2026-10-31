@@ -6,6 +6,15 @@ checkpoint de desenvolvimento incompleto da Fase9, não release de produção.
 
 ## Continuação atual — leitor PG16 e supervisão revisados
 
+Continuação2026-10-31: entradaafaffad0/24081bytes aceita58487, código/fakes
+somente.58próprios35,14s/362relacionados77,86s, Ruff/format336/mypy334 alvos
+3.11/3.14 limpos.7256 e regressões vermelhas preservados; prova precede
+passed/escritas e HELD não mantém released. Ver ENTRY-VALIDATION para nota
+residual de callback externo/TCB. FonteHost8c intacta, sem raiz/comando de
+execução/export/prep ou efeito nativo. Nenhuma revisão ativa/quota/job/outro
+escritor. Próximo: publicar verificado e seguir orçamento/exportador, antes
+de proposta nativa. Gateway e B1/B2/D090/C1/produção continuam bloqueados.
+
 Desenho seguinte ENTRY-DESIGN aceito23065, sete precisões incorporadas antes
 do código: pins transitivos/puro-final, categorias AST/identidades, foreAone,
 coleta/retry único por fire/join, pré-A, sucesso23 e medidas de admissão/estado.

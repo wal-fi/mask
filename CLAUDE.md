@@ -1,5 +1,20 @@
 # AI Data Masking Gateway
 
+## Entrada pública do leitor PG16 aceita, sem execução — 2026-10-31
+
+Entradaafaffad0/24081bytes aceita pelo Claude2 em58487, só código/fakes.
+58próprios/35,14s e362relacionados/77,86s aprovados; Ruff/format336/mypy334
+alvos3.11/3.14 limpos, runtimeWindows3.11.3.7256 preservado: prova terminal
+tardia, duas regressões vermelhas antes do fix. Agora físico+all_tasks antes
+de passed/escritas, releasedFalse em HELD, categorias da entrega exatas.
+Callback externo pós-finish é risco residual da TCB documentado, sem aval
+individual inventado. FontesHost8c/consumidas intactas; nenhum Docker/PG
+acionado. Sem raiz/estado/comando operacional/export/prep ou outro escritor.
+Orçamento de pins/proposta nativa bloqueados até medidas próprias; Gateway
+indisponível, B1/B2/D090/C1/SQL/produção abertos. Sem quota/job/revisão ativa.
+Este é o estado corrente; os registros seguintes são históricos.
+
+
 ## Coordenador público do leitor PG16 aceito, só definições — 2026-10-30
 
 Host8c41605f/40791bytes aceito pelo Claude2 em61196, só definições/fakes.
