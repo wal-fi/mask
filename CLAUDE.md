@@ -1,15 +1,17 @@
 # AI Data Masking Gateway
 
-## Captura diagnóstica e comando aceitos, ainda sem medição — 2026-10-31
+## Diagnóstico e envelope prospectivo aceitos — 2026-10-31
 
-Capturadorde8f0391 aceito20331 após desenho34978, sem P1/P2.34próprios0,99s,
-426relacionados91,17s (33da captura nessa seleção), Ruff/format339/mypy337
-alvos3.11/3.14 limpos; runtimeWindows3113. Comando aceito54015 após P2 de
-stderr/Stop e escopo LASTEXITCODE corrigidos, somente Process/restauração e
-uma invocação. Task3eb3f616e3f24f3e943bd2135b0007ba não invocada/root ausente;
-commit antes da leitura. Nenhum revisor/outro escritor/quota/job ativo. Falha
-consome proposta sem retry. Orçamento pendente; sem Docker/PG/worker/SQL/
-serviço. Gateway/B1/B2/D090/C1/produção indisponíveis/abertos. Históricos abaixo.
+Após2034cd4 publicado, task3eb3f616e3f24f3e943bd2135b0007ba executada uma vez,
+exit0/MEASURED/SOURCE_UNCHANGED em7,272s. Três artefatos públicos conferidos:
+result2257bytes/SHA71eb429d,20samples; evidência aceita69592. Root consumido,
+NÃO editar/repetir. Envelope prospectivo aceito47012 após orientação1125 e
+quatro precisões incorporadas: estimativas176,94/289,08 e cauda578,84s, não
+latência demonstrada de owner/CLI/fsync. Ver PIN-CAPTURE-RUN-VALIDATION e
+SHELL-BUDGET-DESIGN. Próximo exportador23diretórios/preparador/estado≤32768/
+admissão3s/proposta/comando revisados antes de nova rodada. Sem Docker/PG/
+worker/SQL/serviço/observação nova do Desktop, quota/job/revisão ativa/outro
+escritor. Gateway/B1/B2/D090/C1/produção abertos. Históricos abaixo.
 
 ## Helper de custo dos pins aceito, sem medição real — 2026-10-31
 

@@ -6,6 +6,17 @@ checkpoint de desenvolvimento incompleto da Fase9, não release de produção.
 
 ## Continuação atual — leitor PG16 e supervisão revisados
 
+Após2034cd4 publicado: task3eb3f616e3f24f3e943bd2135b0007ba executada uma vez,
+exit0/MEASURED/SOURCE_UNCHANGED em7,272s. Três artefatos públicos conferidos,
+result2257bytes/SHA71eb429d,20samples. Root público consumido, NÃO editar ou
+reexecutar. Ver PIN-CAPTURE-RUN-VALIDATION; evidência/contas base aceitas
+69592; envelope prospectivo47012 aceito com quatro precisões incorporadas,
+sem desempenho nativo de owner/CLI/fsync alegado. Próximo exportador23dirs,
+preparador/estado/admissão/proposta/comando antes de qualquer rodada. Nenhuma
+revisão ativa/CLI Docker/PG/worker/SQL/serviço/
+observação nova do Desktop. Sem quota/job/outro escritor, Gateway indisponível.
+Este é o estado atual; registros seguintes históricos.
+
 Capturadorde8f0391 aceito20331/desenho34978,34próprios0,99s e426relacionados
 91,17s (33da captura nessa seleção), Ruff/format339/mypy337 alvos311/314.
 Comando54015 aceito após correções P2 (stderr/Stop e global:LASTEXITCODE),

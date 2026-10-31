@@ -1,5 +1,9 @@
 # Proposta de comando único — captura diagnóstica dos pins
 
+**Consumida uma vez após2034cd4; exit0/MEASURED, evidência aceita69592. NÃO
+executar novamente.** Ver PIN-CAPTURE-RUN-VALIDATION. O restante preserva a
+proposta literal e as revisões anteriores à execução, não comando pendente.
+
 2026-10-31, sob delegação vigente. Desenho34978 e capturadorde8f0391 aceito
 20331, sem P1/P2, somente código/fakes. Este arquivo ainda não foi executado.
 Não é comando de rodada PG16/Oracle nem de serviço. Proposta/task fixa

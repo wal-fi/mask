@@ -1,4 +1,16 @@
-# Captura diagnóstica e comando aceitos
+# Medição nativa69592 e envelope47012 aceitos
+
+Após2034cd4 publicado, task3eb3f616e3f24f3e943bd2135b0007ba executada uma vez,
+exit0/MEASURED/SOURCE_UNCHANGED em7,272s. Três artefatos públicos conferidos,
+result2257bytes/SHA71eb429d,20samples/max/mediana recalculados. Root consumido:
+NÃO editar/reexecutar. Revisão69592 aceitou resultado/contas base sem P1/P2.
+1125 recomendou envelope sem controle separado;47012 aceitou a conta após
+quatro precisões incorporadas. Somente base para propor uma matriz23; não
+latência demonstrada nem comando de execução. Nenhuma revisão ativa. Próximo
+exportador23diretórios/preparador/estado/admissão/proposta/comando. Nenhuma CLI Docker/PG/worker/SQL/serviço/observação
+nova do Desktop. Sem quota/job/outro escritor. Gateway/produção indisponíveis.
+
+# Registro anterior — captura diagnóstica e comando aceitos
 
 20331 aceitou capturadorde8f0391,34fakes finais0,99s,426relacionados91,17s
 (33da captura nessa seleção), estáticos337/format339 limpos. Desenho34978.

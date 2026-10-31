@@ -1,5 +1,10 @@
 # Captura do diagnóstico de pins — implementação e fakes
 
+**Fechamento histórico do código2034cd4.** Depois dele, a proposta foi
+consumida uma vez/exit0/MEASURED; evidência aceita69592 e registrada em
+PIN-CAPTURE-RUN-VALIDATION. Não executar novamente. Os gates abaixo são
+anteriores à leitura real, não instrução atual de criar nova captura.
+
 2026-10-31, sob delegação vigente. Baseline1053379 sincronizado; arquivos
 pessoais não rastreados preservados. Desenho34978 aceito antes do código.
 Capturadorde8f03910836799f90705265264e2f9fc71c878b517ff06b46c56b7150b0559d

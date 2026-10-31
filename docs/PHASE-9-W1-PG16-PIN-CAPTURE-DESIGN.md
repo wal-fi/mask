@@ -1,5 +1,9 @@
 # Captura da medição de pins — desenho para revisão
 
+**Histórico de desenho34978, implementado/revisto20331.** A proposta foi
+consumida uma vez após2034cd4, evidência aceita69592. Não executar novamente;
+ver PIN-CAPTURE-RUN-VALIDATION para a medição, sem alterar artefatos consumidos.
+
 2026-10-31, sob delegação vigente. Helper0195b1e4 aceito99073 e publicado em
 1053379,37próprios/399relacionados aprovados. Este texto não executa helper,
 não lê configuração/binários reais nem materializa evidência/tentativa.
