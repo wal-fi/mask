@@ -1,0 +1,13 @@
+{
+  "kind": "MASKGW_BINDING_REVIEW_BASELINE_V1",
+  "source_sha256": "5dd5a9fe4dc050ea798bb4d0890191ae323cbb911abc7e9e5dcc6d548a8795ff",
+  "source_bytes": 32910,
+  "independent_findings": [
+    "P2_TRANSPORT_OMITS_PRIVATE_SUPERVISION",
+    "P3_HELD_TERMINATE_FLAG_STALE"
+  ],
+  "own_passed": 112,
+  "own_seconds": 6.24,
+  "native_execution": false,
+  "do_not_execute": true
+}

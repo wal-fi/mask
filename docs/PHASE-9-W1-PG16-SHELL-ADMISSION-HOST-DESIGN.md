@@ -1,8 +1,8 @@
-# Chamador nativo da sonda de admissão — desenho antes de código
+# Chamador da sonda de admissão — desenho e implementação privada
 
 Data: 2026-11-01, America/Sao_Paulo. Sob delegação vigente. Desenho do
-chamador, ainda não implementado. O núcleo Win32 privado e seus testes com
-fakes foram implementados no incremento descrito ao final; nenhuma raiz,
+chamador e implementação privada com fakes, descrita ao final. O núcleo
+Win32 privado já foi revisado; nenhuma raiz,
 claim, comando ou execução nativa neste lote. Sonda
 congelada 738ee1e3, preparador 8d0bf39e, entrada afaffad0, exportador
 ed491c01 e raízes consumidas ficam intactos. Admissão de 3 s continua
@@ -41,8 +41,10 @@ controle nativo benigno antes de qualquer raiz de sonda.
 
 ## Escopo do chamador proposto: `docs/poc/pg16_shell_admission_host.py`
 
-API pública: `run(root, task)` e `__main__` com exatamente esses dois
-argumentos. Nenhum parâmetro de executável, argv, ambiente, módulo, callback,
+Contrato público futuro: `run(root, task)` e `__main__` com exatamente esses
+dois argumentos. Neste incremento existe somente a API privada `run`, sem
+CLI ou consumidor, até o controle/procedimento próprios. Nenhum parâmetro
+de executável, argv, ambiente, módulo, callback,
 diretório de saída ou deadline. Constantes fechadas, limites iniciais fixos e
 **não medidos**, que não mudam depois de uma execução:
 
@@ -160,7 +162,9 @@ Duas áreas distintas, mesmo nonce para ligação:
 Sequência:
 
 1. Runtime do chamador (Windows, 3.11.3, `-I -B`, optimize 0); fontes da
-   sonda/preparador/entrada e do próprio chamador por SHA, leitura limitada.
+   sonda/preparador/entrada/backend por SHA, leitura limitada. O hash próprio
+   do chamador é metadado; seu pin externo será conferido no procedimento,
+   sem pretensão de autoautenticação ou dependência circular.
 2. Raiz/task: forma exata da sonda; raiz já materializada pelo preparador
    congelado, só com `attempt.json`; claim, resultado e diretório privado
    ausentes. Qualquer ocupante significa consumido: recusa sem tocar.
@@ -364,10 +368,83 @@ Limites restantes: o terminate de contenção na interrupção é uma tentativa
 uma segunda interrupção durante essa tentativa propaga; a quarentena não é
 liberada por este módulo e fica como pendência de recuperação externa.
 
-Faltam (não implementados, sem consumidor): o chamador `run(root, task)`, o
-laço de supervisão com retenção de 1024 bytes/prazos 60+10 s, a persistência,
-o controle nativo benigno e qualquer prova nativa. A correção do ABI e dos
+Ao fechar o incremento do núcleo, ainda faltavam o chamador `run(root, task)`,
+seu laço e persistência. A implementação privada com fakes está descrita a
+seguir; continuam ausentes CLI/consumidor, controle benigno e prova nativa.
+A correção do ABI e dos
 `argtypes` reais só é verificada pela futura execução do controle; os fakes
 conferem tamanhos/offsets, ordem, flags, listas e ciclo de vida.
+
+## Notas de implementação — chamador privado (`pg16_shell_admission_host.py`)
+
+2026-11-01, America/Sao_Paulo, sob delegação vigente. Só definições e fakes;
+sem `__main__`, CLI ou consumidor; nenhum teste executado pelo programador e
+nenhuma evidência nativa. Backend aceito 10c9058f, sonda 738ee1e3, preparador
+8d0bf39e, entrada afaffad0 e estado de 16 campos ficam inalterados.
+
+Decisões sob delegação (não aprovação individual do usuário):
+
+- API privada só `run(root, task)`. Pontos de substituição em teste são globais
+  internas (`_load_backend`, `_launcher_pin`, `_expected_state`, `_environ`,
+  `_monotonic`, `_sleep`, `HOME`, `EVIDENCE`, `sys`, `os`), nunca parâmetros.
+- Stdout da sonda: exatamente um objeto JSON canônico com terminador LF ou
+  CRLF; nenhum outro espaço/linha. O framing real ainda não foi observado.
+- Os dez nomes de ambiente são obrigatórios e validados; valores nunca são
+  persistidos nem publicados. `Request` é construído uma vez.
+- Auto-hash do chamador é só metadado; o pin do chamador será externo.
+- Evidência `ACCEPTED_*` nunca é a admissão original: `entry_gate` é sempre
+  `NOT_EVALUATED`. `REFUSED`/`INTERRUPTED` da sonda nunca são aceitos.
+
+Comportamento no código:
+
+- Owner registrado em `_LIVE` antes do `setup` e removido só depois de
+  `CLOSED` comprovado; um owner retido recusa outra `run` antes de qualquer
+  artefato ou recurso. Não há método de recuperação nem persistência do owner.
+- Orçamento de decisão começa imediatamente antes do `setup`, verificado entre
+  chamadas: entre `setup` e `start` uma leitura inválida ou ≥60 s fecha o owner
+  `READY` (prova de `CLOSED`) sem criar filho, com `CALLER_CLOCK`/`DEADLINE`.
+  Relógio exige float finito e não decrescente; quebrado permanece quebrado.
+  Turnos limitados (1200 de decisão, 200 de limpeza) impedem laço infinito.
+- Cada turno de drenagem espera (`wait(50)`) ou pausa (50 ms) depois de ler,
+  inclusive em overflow: não há `continue` que pule a cooperação. Retenção
+  ≤1024 bytes, leitura ≤4096; o excedente é descartado até EOF.
+- Conclusão exige EOF, sinalizado/exit lido, total 1 ou 2 com zero ativos e
+  lista de PIDs vazia; qualquer terminate, overflow, árvore incerta ou prazo
+  nunca vira `ACCEPTED_*`. Depois do `close` comprovado, uma última leitura de
+  relógio inválida ou ≥60 s também força `NOT_ACCEPTED` (`CALLER_CLOCK` ou
+  `DEADLINE`), sem recursos pendentes.
+- Os fatos da supervisão vivem no contexto do chamador. Em interrupção de
+  controle (`BaseException`) ou falha inesperada: registra HELD em memória,
+  mantém o owner, faz no máximo um terminate guardado só se o backend estiver
+  `RUNNING`, grava por melhor esforço `supervision.json` (HELD) e
+  `local-stdout.bin` parcial no diretório privado com `xb`, sem sobrescrita,
+  remoção ou nova tentativa, e repropaga exatamente a exceção original.
+  Erros ou uma segunda interrupção no terminate ou na gravação são absorvidos
+  e não substituem a original; nada é publicado.
+- HELD do backend nunca é contornado (sem métodos privados); caminhos HELD
+  gravam o mesmo registro privado e levantam `HOST_HELD` fechado.
+- Projeção estrita de claim/marca/resultado (18 chaves, sem duplicatas/NaN,
+  relações condicionais, rótulo recalculado 0..3,0 inclusivo) e publicação com
+  todos os bytes preparados antes do rename final não sobrescrevente.
+
+Correções após revisão de 5dd5a9fe (achados reproduzidos pelo revisor):
+
+- P2: a projeção substituía `context["artifacts"]` e o transporte aceito
+  vinculava só os três arquivos da sonda. Agora acrescenta claim/resultado/
+  marca às entradas já vinculadas; o transporte liga os seis: `invocation.json`,
+  `supervision.json`, `local-stdout.bin`, `probe-claim`, `probe-result`,
+  `probe-marker`. Regressão recomputa tamanho e SHA de cada um a partir dos
+  arquivos, para os quatro desfechos aceitos.
+- P3: na interrupção, o registro HELD gravava `terminated=false` mesmo após
+  terminate bem-sucedido. Agora `terminated` é verdadeiro só quando a chamada
+  de terminate retornou sem erro; falha, HELD do backend ou segunda interrupção
+  deixam falso (não confirmado). Definição: `terminated` significa chamada de
+  terminate bem-sucedida, **não** prova de processos colhidos nem de recursos
+  liberados; o owner continua retido e nada é publicado.
+
+Limites não medidos: nenhum comportamento nativo (launcher, job, pipe,
+framing, tempos) foi observado; o tempo de chamadas síncronas do SO não tem
+limite; retenção do owner vale só enquanto o processo vive; o registro HELD é
+melhor esforço e pode faltar após falha de disco ou nova interrupção.
 
 Gateway, B1/B2/D090/C1/SQL e produção seguem abertos.

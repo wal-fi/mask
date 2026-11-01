@@ -1,4 +1,69 @@
-# Núcleo Win32 privado revisado e validado; nenhum escritor ativo
+# Chamador privado revisado e validado — nenhum escritor ativo
+
+2026-11-01T19:25:00Z/16h25SãoPaulo: tarefa autorizada executou, LastTaskResult0
+e esta mensagem chegou à mesma conversa. Nenhum processo da sessão Claude2
+estava ativo antes de retomar. Tarefa única desativada após conferir a execução;
+sem próximo horário. Não confundir a confirmação atual com previsão anterior.
+
+CLI93212/40628 terminaram exit0, alterando apenas testes. Revisor mediu
+6failed/104passed/24,45s e depois8failed/102passed/6,21s contra helper
+db97193d intacto. Hook causal independente4findings/1error/1,65s; Ruff,
+formato e mypy342 alvos311/314 limpos. Snapshotfd53e107 dos testes vermelhos
+preservado antes de liberar a correção, sem execução nativa.
+CLI58180 terminou exit0:revisor mediu112passed/6,24s, hook causal CLEAN/1,07s,
+Ruff/lint,format349/mypy342311/314 limpos. Composição do backend real com
+kernel fake passou em3cenários. Novo hook1passed/1error/1,43s reproduziu
+P2 transporte descartando3artefatos de base e P3 flag terminated desatualizada
+no registro HELD. Snapshot5dd5a9fe preservado; ainda não aprovado/publicado.
+CLI79555 terminou exit0, mesma sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f,
+claude-opus-5-5/esforço medium. Revisor mediu119passed/5,56s, hook causal4CLEAN/
+0,59s e composição3/vínculo/flag2CLEAN/0,49s. Ruff/lint/format349/mypy342311/314
+aprovados. Fonte dfcc4ed6/testesdcfbd5d5 estáveis. Nenhum escritor ativo.
+Suíte relacionada18arquivos41590 terminou exit0:859passed/309,01s,
+sem falhas/skips. Fingerprints finais estáveis, parecer aprovado somente
+no componente privado sob fakes, sem P1/P2 remanescentes nesse escopo.
+Ver SHELL-ADMISSION-HOST-VALIDATION. Não é admissão nativa nem release.
+Depois: desenho/procedimento e controle separados antes de qualquer efeito
+nativo; sem CLI/consumidor neste fechamento. Assistente principal não
+programou a correção. Backend10c9058f/fontes/raízes
+consumidas/estado16campos fixos. Sem CLI/controle nativo/raiz operacional,
+Docker/PG/SQL/worker/serviço. Native3s NOT_MEASURED e produção bloqueada.
+Registros seguintes históricos.
+
+# Registro anterior — chamador parcial, quatro findings e quota
+
+2026-11-01. HEAD/origin/master49865c6, backend10c9058f aceito. Plano de leitura
+CLI49174 concluído exit0; revisão independente pediu retenção de owner antes
+de setup, orçamento desde setup, validação numérica/temporal e framing fechado
+LF/CRLF. Claude2 é o único programador, mesma sessão
+51ea0d85-05bb-4d24-ba9a-c9627c3f832f, Opus5.5/esforço medium.
+CLI96055 terminou exit1/API429. Nenhum escritor ativo; reset informado às
+16h20 America/Sao_Paulo de01/11. Não tentar outra conta/modelo ou antes dele.
+Escopo de escrita: pg16_shell_admission_host.py, seu teste e notas no
+SHELL-ADMISSION-HOST-DESIGN. Código db97193d/30239bytes e testes
+7286545d/30795bytes locais, não aprovados.103passed/6,50s; hook independente
+1passed/1error/18,61s reproduziu quatroP2: relógio final inválido aceito,
+start após setup61s, drain de overflow sem pausa e interrupção sem registro
+privado HELD. Ruff2erros/formato1/mypy3112erros. Ver SHELL-ADMISSION-HOST-REVIEW
+para reprodução, snapshots e instruções. Regressões vermelhas antes do fix;
+o assistente principal não implementa em lugar do Claude2.
+
+Tarefa Maskgw-Claude2-Resume-01a05804 reativada/relida Ready, uma vez em
+2026-11-01T16:25:00-03:00/19:25Z, IgnoreNew/Limited,1trigger, mensagem exata
+para esta conversa01a05804-2c07-71f2-bfef-7e3c90c06476. Confirmado registro,
+não execução futura; computador/usuário/app server precisam estar disponíveis.
+Na retomada conferir escritor/Git antes de tocar. Se ativo, monitorar apenas.
+Não publicar código parcial ou não revisado.
+
+Somente código/fakes, sem CLI/consumidor, controle nativo, binários/config de
+runtime, raiz operacional, Docker/PG/SQL/worker/serviço. Fontes aceitas e raízes
+consumidas intactas; estado16campos preservado. Native3s NOT_MEASURED e
+B1/B2/D090/C1/produção abertos. Quota/job acima são os fatos atuais.
+Restrições Read/Edit/Write com negações explícitas mantidas; não reintroduzir
+Grep/Glob/Bash/MCP nem inventar aprovação individual do usuário.
+Registros abaixo históricos; reconferir sessão e Git antes de retomar.
+
+# Registro anterior — núcleo Win32 privado revisado e validado
 
 Claude2 concluiu a implementação e as correções na sessão
 51ea0d85-05bb-4d24-ba9a-c9627c3f832f, sempre Opus5.5/esforço medium.

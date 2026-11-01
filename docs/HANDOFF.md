@@ -1,5 +1,44 @@
 # Handoff
 
+## Chamador privado revisado com fakes — 2026-11-01
+
+Claude2 foi o único programador, Opus5.5/esforço medium, mesma sessão51ea0d85.
+Chamador dfcc4ed6/testesdcfbd5d5:119próprios/5,56s; quatro contraprovas causais
+CLEAN/0,59s e composição3/vínculo/flag2CLEAN/0,49s. 859relacionados/18arquivos/309,01s, todos exit0, sem falhas/skips.
+Ruff/lint/format349/mypy342 alvos311/314 limpos; runtime sóWindows3113.
+CincoP2/umP3 corrigidos;8regressões medidas vermelhas antes do primeiro fix.
+Baselines/snapshots e histórico preservados na SHELL-ADMISSION-HOST-REVIEW/
+VALIDATION. Retenção de owner, orçamento desde setup, drain cooperativo,
+registro HELD e transporte com seis artefatos conferidos.
+
+Retomada16h25 observada LastTaskResult0/mensagem nesta conversa, sem escritor
+antes dela; tarefa única desativada, sem próximo horário. Nenhum escritor
+ativo, nova quota/job ou outro modelo/conta. Sem CLI/consumidor, controle
+Win32 nativo, raiz operacional, binários/config reais, Docker/PG/SQL/serviço.
+Backend10c9058f e fontes/raízes consumidas intactos; estado16campos mantido.
+API privada não é deployment;3s NOT_MEASURED e entry_gate NOT_EVALUATED.
+Próximo: procedimento/controle próprios revisados antes de efeito real.
+Gateway/B1/B2/D090/C1/SQL/produção abertos. Registros seguintes históricos.
+
+## Chamador parcial, revisão bloqueada e retomada — 2026-11-01
+
+Após49865c6 publicado, Claude2 Opus5.5/esforço medium gravou chamador
+`pg16_shell_admission_host.py` db97193d e teste7286545d. CLI96055 terminou
+exit1/API429; não há escritor ativo.103próprios/6,50s passaram, mas hook
+independente1passed/1error/18,61s reproduziu quatroP2; Ruff2/formato1/mypy3112
+continuam reprovados. Código/testes e snapshots apenas locais, sem commit/push.
+Ver SHELL-ADMISSION-HOST-REVIEW; revisor não programa correções em lugar dele.
+
+Reset informado16h20 SãoPaulo de01/11. Tarefa existente
+Maskgw-Claude2-Resume-01a05804 relida Ready para uma execução às16h25-03:00,
+IgnoreNew/Limited, mesma conversa; registro confirmado, execução futura não.
+Retomar só sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f após conferir escritor;
+se ativo, acompanhar. Sem trocar conta/modelo ou contornar quota. Escopo só
+chamador/fakes/notas; nenhuma raiz operacional, controle Win32 nativo,
+Docker/PG/SQL/worker/serviço. Backend10c9058f/fontes/raízes consumidas intactos,
+estado16campos e3s NOT_MEASURED. Gateway/B1/B2/D090/C1/produção abertos.
+Registros seguintes históricos.
+
 ## Núcleo Win32 privado revisado com fakes — 2026-11-01
 
 Claude2, único programador Opus5.5/esforço medium, implementou o backend

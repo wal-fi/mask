@@ -1,0 +1,11 @@
+{
+  "kind": "MASKGW_RED_REGRESSIONS_REVIEW_V1",
+  "source_sha256": "db97193dae8a076b94594a7b0b1979666303c013441ceb50c8a3f2c8e4bb4799",
+  "tests_sha256": "fd53e1079ddaf5f024a210190aa9172eeac1dec395d1563539edbc41a2730ced",
+  "tests_bytes": 36736,
+  "passed": 102,
+  "failed": 8,
+  "seconds": 6.21,
+  "native_execution": false,
+  "do_not_execute": true
+}

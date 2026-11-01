@@ -1,0 +1,21 @@
+{
+  "kind": "MASKGW_PUBLIC_PARTIAL_REVIEW_SNAPSHOT_V1",
+  "baseline_commit": "49865c643cabcdf5a761e552b086ce8b871db42f",
+  "status": "QUOTA_PARTIAL_NOT_APPROVED",
+  "native_execution": false,
+  "do_not_execute": true,
+  "files": [
+    {
+      "artifact": "baseline-source.b64",
+      "source": "docs/poc/pg16_shell_admission_host.py",
+      "decoded_bytes": 30239,
+      "decoded_sha256": "db97193dae8a076b94594a7b0b1979666303c013441ceb50c8a3f2c8e4bb4799"
+    },
+    {
+      "artifact": "baseline-tests.b64",
+      "source": "tests/test_pg16_shell_admission_host.py",
+      "decoded_bytes": 30795,
+      "decoded_sha256": "7286545d718b42a12505bfb9009b405c01c6a8ffe91ce0709e9863875d5414b7"
+    }
+  ]
+}
