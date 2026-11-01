@@ -40,6 +40,34 @@ de produção nem dispensa revisão, isolamento, masking, read-only ou sigilo.
 
 ## Escopo atual
 
+## Orquestrador privado dos controles — revisado com fakes, 2026-11-01
+
+Claude2 foi o único programador, Opus5.5/esforço medium, mesma sessão51ea0d85.
+Runner b4198fe1/testes2aeca33d:83próprios/10,98s; quatro probes causais
+independentes CLEAN/1,32s. QuatroP2 corrigidos com regressões medidas antes
+dos fixes:8failed/72passed e depois2failed/1passed/80deselected. Baselines e
+testes vermelhos preservados como dados em native-control-review-20261101.
+Ruff/lint restrito/format353/mypy344 alvos311/314 limpos, runtime sóWindows3113.
+975relacionados/20arquivos/284,25s, exit0, sem falhas/skips. Parecer aprovado
+somente neste componente privado simulado; fontes finais estáveis.
+
+run(nonce) privado, sem CLI/consumidor; casos fixos NORMAL/TERMINATE/LAST_CLOSE,
+backend único para erros, owner antes de setup, auditoria única após CLOSED,
+retenção idempotente e brutos duráveis antes da projeção. Rename final é a
+última tentativa de I/O; falha após efeito é indeterminada. Interrupção
+original preservada; nova interrupção na limpeza ordinária propaga. Owner
+não comprovado fica retido; CLOSED sai mesmo se o auxiliar falhar.
+Ver SHELL-NATIVE-CONTROL-VALIDATION e desenho correspondente.
+
+Retomada21h24m15Z/18h24m15 observada nesta conversa/LastTaskResult0; tarefa
+única desativada, sem próximo horário. Nenhum escritor ativo, nova quota/reset
+ou outra conta/modelo. Sem controle Win32/job/processo real, leitura explícita
+de runtime/config/binários, raiz operacional, Docker/PG/SQL/serviço/deployment.
+Backend10c9058f/hostdfcc4ed6/adaptereaebedd6/estado16/fontes consumidas fixos.
+Próximo: procedimento/proposta/comando sob revisão antes de efeito nativo.
+Native3s NOT_MEASURED e entry_gate NOT_EVALUATED; Gateway indisponível e
+B1/B2/D090gate2/C1/SQL/produção abertos. Registros seguintes históricos.
+
 ## Adaptador privado aninhado — revisão com fakes, 2026-11-01
 
 Claude2 foi o único programador, mesma sessão51ea0d85, Opus5.5/esforço medium.

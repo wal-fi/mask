@@ -1,0 +1,12 @@
+{
+  "kind": "MASKGW_NATIVE_CONTROL_RED_REGRESSIONS_V1",
+  "source_sha256": "0dfcd0f4e4ab4ac09ffba565b64920aab6614e7e78ada3abef5a1e7cdda2f450",
+  "test_bytes": 42602,
+  "test_sha256": "d325b907d884e1bf3e8946aa774921900d394ebe083366c6b2909098367cf5da",
+  "failed": 8,
+  "passed": 72,
+  "seconds": 6.83,
+  "exit_code": 1,
+  "native_execution": false,
+  "reporting": "closed-report-only; assertions and runtime bans unchanged"
+}

@@ -1,0 +1,12 @@
+{
+  "kind": "MASKGW_NATIVE_CONTROL_REENTRY_RED_V1",
+  "source_sha256": "31fd2ead52044e8d3fd557a041e64a0157bbbb0a0466f77c444604b2079e15c5",
+  "test_sha256": "01d4abecc6818956f20f019be699122aa2804b6aa43abde4ddb40d177ce489fb",
+  "test_bytes": 45808,
+  "failed": 2,
+  "passed": 1,
+  "deselected": 80,
+  "seconds": 1.27,
+  "exit_code": 1,
+  "native_execution": false
+}

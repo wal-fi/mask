@@ -4,6 +4,74 @@ Criado por solicitação do usuário em2026-10-30. Inclui o trabalho acumulado
 após4a5e556, preservando resultados históricos e tentativas reprovadas. É
 checkpoint de desenvolvimento incompleto da Fase9, não release de produção.
 
+## Orquestrador privado dos controles — revisado com fakes, 2026-11-01
+
+Claude2 foi o único programador, Opus5.5/esforço medium, mesma sessão51ea0d85.
+Runner b4198fe1/testes2aeca33d:83próprios/10,98s; quatro probes causais
+independentes CLEAN/1,32s. QuatroP2 corrigidos com regressões medidas antes
+dos fixes:8failed/72passed e depois2failed/1passed/80deselected. Baselines e
+testes vermelhos preservados como dados em native-control-review-20261101.
+Ruff/lint restrito/format353/mypy344 alvos311/314 limpos, runtime sóWindows3113.
+975relacionados/20arquivos/284,25s, exit0, sem falhas/skips. Parecer aprovado
+somente neste componente privado simulado; fontes finais estáveis.
+
+run(nonce) privado, sem CLI/consumidor; casos fixos NORMAL/TERMINATE/LAST_CLOSE,
+backend único para erros, owner antes de setup, auditoria única após CLOSED,
+retenção idempotente e brutos duráveis antes da projeção. Rename final é a
+última tentativa de I/O; falha após efeito é indeterminada. Interrupção
+original preservada; nova interrupção na limpeza ordinária propaga. Owner
+não comprovado fica retido; CLOSED sai mesmo se o auxiliar falhar.
+Ver SHELL-NATIVE-CONTROL-VALIDATION e desenho correspondente.
+
+Retomada21h24m15Z/18h24m15 observada nesta conversa/LastTaskResult0; tarefa
+única desativada, sem próximo horário. Nenhum escritor ativo, nova quota/reset
+ou outra conta/modelo. Sem controle Win32/job/processo real, leitura explícita
+de runtime/config/binários, raiz operacional, Docker/PG/SQL/serviço/deployment.
+Backend10c9058f/hostdfcc4ed6/adaptereaebedd6/estado16/fontes consumidas fixos.
+Próximo: procedimento/proposta/comando sob revisão antes de efeito nativo.
+Native3s NOT_MEASURED e entry_gate NOT_EVALUATED; Gateway indisponível e
+B1/B2/D090gate2/C1/SQL/produção abertos. Registros seguintes históricos.
+
+## Orquestrador privado — correções e regressão de reentrada
+
+2026-11-01. Retomada21h24m15Z/18h24m15 SãoPaulo observada: a mensagem chegou
+a esta conversa e LastTaskResult0 confirmou o horário. Tarefa única foi
+desativada e relida Disabled, sem próximo horário. CLI16034 terminou exit0;
+zero processos da sessão antes da revisão. HEAD/origin06c4d2e sincronizados.
+
+Entrega inicial do Claude2: runner0dfcd0f4/28272bytes, testesc4c02c82/37898bytes,
+desenho atualizado.70próprios/5,83s e Ruff/lint/format353/mypy344 alvo311
+passaram; alvo314 e relacionados ainda não medidos neste incremento.
+Revisão independente fake-only reproduziu trêsP2:
+A relógio final inválido ainda aprova TERMINATE e lote;
+B nova interrupção na limpeza de falha ordinária é engolida;
+C falha na fronteira de _retain substitui a interrupção original.
+Três probes concluíram19,05s; exit1 agregado pelos três findings. A primeira
+tentativa de relatório bateu no deny de runtime do fixture ao formatar uma
+falha; corrigido apenas o roteiro efêmero do revisor, sem relaxar a guarda.
+Baseline rejeitada preservada como dados em native-control-review-20261101.
+
+CLI71702 terminou exit0, só testes/notas. Fonte0dfcd0f4 permaneceu intacta;
+80casos,8failed/72passed/6,83s/exit1 medidos antes do fix. Testes vermelhos
+d325b907/42602bytes preservados em red-tests.b64/red-manifest.json. Relatório
+efêmero fechado evitou formatação de traceback que esbarra no deny de runtime;
+asserções, código dos testes e fixture de isolamento ficaram idênticos.
+Confirmado zero escritor antes de CLI82020, agora em andamento na mesma
+sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f, Opus5.5/esforço medium.
+CLI82020 terminou exit0;80próprios/5,80s passaram. Quatro probes/0,88s
+confirmaram os trêsP2 anteriores corrigidos, mas umP2 de reentrada: Signal
+durante held.json faz _held e _contain chamarem _retain duas vezes, repetindo
+o terminate antes de conferir recorded. Fonte31fd2ead/29605bytes preservada
+em after-abc-source.b64/manifest, ainda rejeitada. Zero escritor conferido.
+CLI91363 em andamento, só regressões/notas, runner novamente bloqueado.
+Medir vermelho da reentrada antes de liberar a correção. Não iniciar segunda
+chamada nem publicar parciais. Políticas do supervisor aceito não mudam.
+Backend10c9058f/hostdfcc4ed6/adaptereaebedd6/estado16/fontes consumidas fixos.
+Sem nova quota/reset observado, job ou outro escritor. Apenas fakes; sem
+CLI/consumidor, controle nativo/job/processo/DLL, runtime/config/binários,
+raiz operacional, Docker/PG/SQL/deploy. Native3s NOT_MEASURED e
+Gateway/B1/B2/D090gate2/C1/SQL/produção abertos. Registros seguintes históricos.
+
 ## Orquestrador privado dos controles — implementação em andamento
 
 2026-11-01. Adaptador revisado publicado e sincronizado em

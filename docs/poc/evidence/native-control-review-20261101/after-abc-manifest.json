@@ -1,0 +1,10 @@
+{
+  "kind": "MASKGW_NATIVE_CONTROL_REENTRY_REJECTED_V1",
+  "source_sha256": "31fd2ead52044e8d3fd557a041e64a0157bbbb0a0466f77c444604b2079e15c5",
+  "source_bytes": 29605,
+  "own_passed": 80,
+  "independent_probes": 4,
+  "remaining_findings": 1,
+  "terminate_calls": 2,
+  "native_execution": false
+}
