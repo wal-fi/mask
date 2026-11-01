@@ -4,6 +4,26 @@ Criado por solicitação do usuário em2026-10-30. Inclui o trabalho acumulado
 após4a5e556, preservando resultados históricos e tentativas reprovadas. É
 checkpoint de desenvolvimento incompleto da Fase9, não release de produção.
 
+## Núcleo Win32 privado revisado com fakes — 2026-11-01
+
+Claude2, único programador Opus5.5/esforço medium, implementou o backend
+`pg16_shell_admission_win32.py` (`10c9058f`) e testes (`ab279a10`). O assistente
+principal revisou e validou:105 próprios/1,24s, cinco cenários independentes
+CLEAN/0,16s;740 relacionados/17arquivos/293,99s, sem falhas/skips. Ruff/lint restrito,
+format347/mypy341 alvos311/314 limpos; runtime sóWindows3113. Primeira versão
+87passed/1failed mais cinco findings reproduzidos foi rejeitada; cópia pública
+dos bytes preservada no arquivo de revisão, sem execução nativa. Saídas
+indeterminadas não são propriedade, interrupção de criação fica HELD e quadro
+de PIDs curto não permite liberação. Ver SHELL-ADMISSION-WIN32-VALIDATION.
+
+Sem consumidor/CLI, kernel32/job/handle/processo nativo deste backend, controle
+ou raiz operacional. Próximo: chamador/fakes; controle/comando/proposta próprios
+antes de efeitos.3s NOT_MEASURED; Gateway/B1/B2/D090/C1/SQL/produção abertos.
+Desvio de leitura pyvenv.cfg registrado sem aprovação retroativa; conteúdo não
+usado como prova. Regras da CLI endurecidas e dois canários de deny conferidos,
+sem alegar sandbox de SO. Nenhum escritor ativo/quota/job novo; fontes aceitas
+e raízes consumidas intactas. Registros seguintes históricos.
+
 ## Sonda de admissão revisada com fakes — 2026-11-01
 
 Claude2 implementou `pg16_shell_admission_probe.py` (SHA `738ee1e3`) e testes

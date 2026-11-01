@@ -1,0 +1,13 @@
+{
+  "kind": "MASKGW_PUBLIC_REJECTED_SOURCE_SNAPSHOT_V1",
+  "encoding": "base64",
+  "artifact": "baseline-source.b64",
+  "decoded_sha256": "24b717e5f07e13e88d05690be8644a716bcf3af8de29c6c5cdb8f78e79545034",
+  "decoded_bytes": 28363,
+  "status": "REJECTED_REVIEW_BASELINE",
+  "do_not_execute": true,
+  "native_execution": false,
+  "observed_findings": 5,
+  "source_author": "Claude2 Opus5.5 medium",
+  "baseline_commit": "94219aa49936f9b107a65d0c5a6d77c2442e541d"
+}

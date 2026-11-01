@@ -1,4 +1,24 @@
-# Sonda de admissão revisada em fakes; nenhuma revisão pendente
+# Núcleo Win32 privado revisado e validado; nenhum escritor ativo
+
+Claude2 concluiu a implementação e as correções na sessão
+51ea0d85-05bb-4d24-ba9a-c9627c3f832f, sempre Opus5.5/esforço medium.
+CLIs41500/44739/21506 terminaram, última resposta end_turn; nenhum escritor
+ativo. Backend10c9058f/testesab279a10:105 próprios aprovados/1,24s e os mesmos
+cinco cenários independentes CLEAN/0,16s. Ruff/lint restrito, format347,
+mypy341 alvos311/314 limpos. Seleção relacionada17arquivos:740passed/293,99s,
+sem falhas/skips, exit0; fingerprints finais conferidos. Parecer aprovado
+somente neste componente com fakes, sem P1/P2 remanescentes.
+
+Primeira versão rejeitada e cinco findings reproduzidos preservados na
+SHELL-ADMISSION-WIN32-VALIDATION. Sem consumidor/CLI ou prova Win32 nativa;
+3s continua NOT_MEASURED. Próximo: chamador com fakes usando este SHA,
+sem root/comando/controle real antes de procedimento próprio revisado.
+Desvio pyvenv.cfg registrado e regras Read/Edit/Write endurecidas com canários;
+não reintroduzir Grep/Glob/Bash/MCP, leituras de runtime ou binários.
+Nenhuma quota/job novo/outro escritor. B1/B2/D090/C1/SQL/produção abertos.
+Fontes aceitas e raízes consumidas intactas. Registros seguintes históricos.
+
+# Registro anterior — sonda de admissão revisada em fakes
 
 Helper738ee1e3/testes5dd02d7b concluídos pelo único programador Claude2,
 claude-opus-5-5/esforço medium, sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f.
