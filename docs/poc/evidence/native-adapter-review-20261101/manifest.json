@@ -1,0 +1,23 @@
+{
+  "kind": "MASKGW_NATIVE_ADAPTER_REJECTED_REVIEW_V1",
+  "baseline_commit": "66dcaa6a352a98000972f66424c578ae7f7e8384",
+  "status": "REJECTED_REVIEW_BASELINE",
+  "native_execution": false,
+  "do_not_execute": true,
+  "own_passed": 26,
+  "independent_findings": 2,
+  "files": [
+    {
+      "artifact": "baseline-source.b64",
+      "path": "docs/poc/pg16_shell_native_control_win32.py",
+      "bytes": 14772,
+      "decoded_sha256": "e7ccc7597bb49e4fa4b691e2cbfc71a07505cc7fd61453e6a66d19a111b816c2"
+    },
+    {
+      "artifact": "baseline-tests.b64",
+      "path": "tests/test_pg16_shell_native_control_win32.py",
+      "bytes": 23044,
+      "decoded_sha256": "12d5926023c1e17a9703233aa69b4c31ab318f312dfdbf6fecd64e024db49280"
+    }
+  ]
+}

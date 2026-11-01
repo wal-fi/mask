@@ -1,4 +1,59 @@
-# Chamador privado revisado e validado — nenhum escritor ativo
+## Adaptador privado aninhado — revisão com fakes, 2026-11-01
+
+Claude2 foi o único programador, mesma sessão51ea0d85, Opus5.5/esforço medium.
+Fonte eaebedd6/testes46a82a6e:33próprios/0,93s e hook independente CLEAN/0,17s.
+Duas falhas P2 reproduzidas antes do fix foram corrigidas: aridade inválida
+delegada e interrupção no fechamento extra deixando RUNNING. Cinco regressões
+finais falham contra a fonte rejeitada preservada; duas já passavam.
+Ruff/lint restrito/format351/mypy343 alvos311/314 limpos, runtime sóWindows3113.
+892relacionados/19arquivos/273,79s, exit0, sem falhas/skips. Revisão aprovada
+somente neste componente privado simulado; fontes finais estáveis.
+
+Subclasse privada reutiliza _start aceito; OUTER observa e contém, INNER tem
+fechamento explícito separado. Auditoria finita e inválida em perda/overflow;
+close ordinário comprova quietude antes de soltar INNER. Sem orquestrador,
+CLI/consumidor, controle Win32 real, raiz operacional ou leitura explícita de
+binários/config de runtime; nenhum Docker/PG/SQL/serviço/deployment.
+Backend10c9058f/chamadordfcc4ed6/estado16campos/fontes consumidas intactos.
+Ver SHELL-NATIVE-CONTROL-WIN32-VALIDATION e desenho correspondente.
+Nenhum escritor ativo após CLI35435, nova quota ou tarefa. Próximo:
+orquestrador privado/fakes, com revisão própria antes de efeitos nativos.
+Native3s NOT_MEASURED, entry_gate NOT_EVALUATED; Gateway indisponível e
+B1/B2/D090gate2/C1/SQL/produção abertos. Registros seguintes históricos.
+
+# Registro anterior — adaptador privado em implementação
+
+Após66dcaa6 publicado e sincronizado, nenhum processo da sessão Claude2
+estava ativo. CLI93312 terminou exit0 em leitura apenas; proposta OUTER
+observador e INNER fechado, sem OpenProcess, aceita como direção de desenho.
+CLI41852 terminou exit0, desenho escrito. Revisão pediu três correções:
+usar despacho virtual _call em vez de copiar _start; close ordinário não
+pode derrubar INNER vivo antes da prova de quiescência; ledger finito com
+integridade/overflow fechados. CLI5462 terminou exit0 com desenho corrigido.
+Direção aceita sob delegação, com interrupção de controle na auditoria
+propagada antes de criar/resumir operação, sem falsa garantia de sinal inicial
+nos internals herdados. CLI3480 terminou exit0:26próprios/0,75s e estáticos
+iniciais passaram. Hook independente1passed/1error/0,34s reproduziu doisP2:
+JOB_LIST com8args delegado e interrupção no close deixando RUNNING.
+Baselinee7ccc759/testes12d59260 preservados como dados de revisão.
+Correção em andamento (primeiro envio falhou no parser antes do Claude2,
+reenviado com quoting corrigido), mesma sessão
+51ea0d85-05bb-4d24-ba9a-c9627c3f832f, Opus5.5/esforço medium.
+Única escrita autorizada: pg16_shell_native_control_win32.py, teste
+correspondente e SHELL-NATIVE-CONTROL-DESIGN.md. Só definições e fakes;
+orquestrador run(nonce), CLI, proposta e execução ainda fora deste incremento.
+Escopo atual: plano mínimo dos controles normal/terminate/último handle de
+job; minimizar duplicação por adaptação explícita e pinada, sem falsificar
+estado/contornar HELD. Sem comando, raiz operacional,
+config/binário real, API nativa, Docker/PG/SQL/serviço ou deployment.
+Chamador dfcc4ed6/backend10c9058f/estado16campos/fontes consumidas fixos.
+Revisão precisa distinguir handles próprios, membros observados e árvore
+completa; não manter handle de job enquanto declara testar o último close,
+não falsificar Owner.CLOSED nem contornar HELD. Aguardar resposta desta CLI;
+não iniciar segundo escritor ou outra execução da mesma sessão.
+Nenhuma nova quota/job observada. Registros seguintes históricos.
+
+# Registro anterior — chamador privado revisado e validado
 
 2026-11-01T19:25:00Z/16h25SãoPaulo: tarefa autorizada executou, LastTaskResult0
 e esta mensagem chegou à mesma conversa. Nenhum processo da sessão Claude2

@@ -40,6 +40,29 @@ de produção nem dispensa revisão, isolamento, masking, read-only ou sigilo.
 
 ## Escopo atual
 
+## Adaptador privado aninhado — revisão com fakes, 2026-11-01
+
+Claude2 foi o único programador, mesma sessão51ea0d85, Opus5.5/esforço medium.
+Fonte eaebedd6/testes46a82a6e:33próprios/0,93s e hook independente CLEAN/0,17s.
+Duas falhas P2 reproduzidas antes do fix foram corrigidas: aridade inválida
+delegada e interrupção no fechamento extra deixando RUNNING. Cinco regressões
+finais falham contra a fonte rejeitada preservada; duas já passavam.
+Ruff/lint restrito/format351/mypy343 alvos311/314 limpos, runtime sóWindows3113.
+892relacionados/19arquivos/273,79s, exit0, sem falhas/skips. Revisão aprovada
+somente neste componente privado simulado; fontes finais estáveis.
+
+Subclasse privada reutiliza _start aceito; OUTER observa e contém, INNER tem
+fechamento explícito separado. Auditoria finita e inválida em perda/overflow;
+close ordinário comprova quietude antes de soltar INNER. Sem orquestrador,
+CLI/consumidor, controle Win32 real, raiz operacional ou leitura explícita de
+binários/config de runtime; nenhum Docker/PG/SQL/serviço/deployment.
+Backend10c9058f/chamadordfcc4ed6/estado16campos/fontes consumidas intactos.
+Ver SHELL-NATIVE-CONTROL-WIN32-VALIDATION e desenho correspondente.
+Nenhum escritor ativo após CLI35435, nova quota ou tarefa. Próximo:
+orquestrador privado/fakes, com revisão própria antes de efeitos nativos.
+Native3s NOT_MEASURED, entry_gate NOT_EVALUATED; Gateway indisponível e
+B1/B2/D090gate2/C1/SQL/produção abertos. Registros seguintes históricos.
+
 ## Chamador privado revisado com fakes — 2026-11-01
 
 Claude2 foi o único programador, Opus5.5/esforço medium, mesma sessão51ea0d85.
