@@ -1,24 +1,25 @@
 # AI Data Masking Gateway
 
-## Preparador parcial; retomada agendada — 2026-10-31
+## Preparador do leitor PG16 revisado e validado — 2026-10-31
 
-Após a publicação de `9e4e37e`, Claude2 iniciou `pg16_shell_prepare.py` e
-atingiu a quota (CLI 82419, exit 1/API 429). O arquivo parcial tem 9.391 bytes,
-SHA `b0359405`; ainda faltam testes próprios, desenho e aprovação. Não há
-escritor ativo. Somente Claude2 programa, sempre Opus 5.5/esforço medium;
-o assistente principal revisa e testa. A sonda em memória confirmou 16 campos,
-6.959 bytes e 23 casos, FRESH/invokedFalse; não mede a admissão em 3 segundos.
-A entrada exige 16 campos, corrigindo os 17 da primeira instrução deste lote.
+Claude2 concluiu `pg16_shell_prepare.py` (SHA `8d0bf39e`) e seus testes
+(`ed027162`), sempre Opus 5.5/esforço medium. O assistente principal revisou:
+43 testes próprios/33,34 s, sete verificações independentes CLEAN/22,47 s,
+550 relacionados em 15 arquivos/264,07 s, sem falhas ou skips. Ruff e lint
+restrito do helper limpos; format 343 arquivos, mypy strict 339 arquivos nos
+alvos 3.11/3.14. Runtime somente Windows/Python 3.11.3. A falha inicial da
+fixture e a imprecisão sobre os pins estão preservadas na validação; ambas
+corrigidas, sem mudança no preparador para acomodar o teste.
 
-O limite informa liberação às 21h40 de São Paulo. A tarefa existente
-`Maskgw-Claude2-Resume-01a05804` foi reprogramada para uma única execução em
-2026-10-31T21:45:00-03:00. Readback: Ready, NextRunTime exato, IgnoreNew e
-RunLevel Limited, mesma conversa e argumentos conferidos. A mensagem exige
-conferir ausência de Claude2 ativo antes de retomar. Registro confirmado,
-execução futura ainda não observada; depende de máquina ligada, usuário
-conectado e aplicativo disponível. Ver SHELL-PREPARE-REVIEW e
-CLAUDE2-PENDING-REVIEW. Nenhuma raiz operacional, Docker, PG, SQL, worker ou
-serviço criado neste lote. Fontes aceitas e medição consumida `3eb3` intactas.
+Estado puro: 16 campos/6.959 bytes/23 casos, FRESH/invokedFalse. Proposta sem
+escrita/leitura do launcher; materialização exclusiva com recusa de reuso.
+Parecer aprovado no componente isolado, sem P1/P2 remanescentes. Ver
+SHELL-PREPARE-VALIDATION/DESIGN/REVIEW. Admissão nativa em 3 s continua
+NOT_MEASURED; a sonda ainda exige desenho/procedimento próprios, inclusive
+consumo durável antes da medição. Nenhuma raiz operacional ou Docker/PG/SQL/
+worker/serviço neste lote. Fontes aceitas e medição consumida `3eb3` intactas.
+Retomada das 21h45 comprovada, resultado 0; tarefa única desativada depois,
+sem próximo horário. Nenhum escritor/revisor ativo, quota ou job novo.
 Gateway indisponível; B1/B2/D090/C1/produção abertos. Registros abaixo históricos.
 
 ## Exportador dos 23 casos revisado e validado — 2026-10-31

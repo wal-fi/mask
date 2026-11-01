@@ -1,4 +1,21 @@
-# Preparador do leitor PG16 — revisão preliminar e retomada
+# Preparador do leitor PG16 — parecer final e histórico de retomada
+
+Fechado em2026-10-31 (São Paulo). O job das21h45 executou, LastTaskResult0,
+sem próximo horário; depois foi desativado. Nenhum escritor estava ativo
+antes da retomada. Claude2 manteve Opus5.5/medium e concluiu código, testes
+e desenho. O assistente principal executou os gates e a revisão independente.
+
+Resultado final:43passed/33,34s, hook independente7CLEAN/1passed/22,47s,
+550passed em15arquivos/264,07s, sem falhas/skips, todos processos exit0.
+Ruff/lint restrito do helper/format343/mypy339 alvos311/314 limpos.
+Parecer aprovado no escopo isolado; sem P1/P2 remanescentes. Fonte8d0bf39e
+e testesed027162 estão documentados integralmente em SHELL-PREPARE-VALIDATION.
+A falha inicial de fixture e a correção da descrição dos pins estão preservadas
+nesse relatório. Nenhuma raiz operacional ou efeito Docker/PG/SQL/worker novo.
+Gate3s continua NOT_MEASURED; procedimento da sonda é apenas direção futura.
+Gateway/B1/B2/D090/C1/produção continuam bloqueados.
+
+## Registro histórico — revisão preliminar e retomada
 
 Estado: implementação interrompida por quota em2026-10-31; não aprovada.
 Somente Claude2 programa, Opus5.5/esforço medium; assistente principal revisa

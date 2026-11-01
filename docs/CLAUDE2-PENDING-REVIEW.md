@@ -1,4 +1,28 @@
-# Preparador parcial; Claude2 em quota; retomada única registrada
+# Preparador revisado e validado; nenhuma revisão pendente
+
+Claude2 concluiu o preparador8d0bf39e/testesed027162 e o desenho na sessão
+51ea0d85-05bb-4d24-ba9a-c9627c3f832f, Opus5.5/esforço medium. CLI23244 e
+89461 terminaram exit0. O assistente principal revisou, sem programar o helper
+ou os testes:43passed/33,34s, hook independente7CLEAN/1passed/22,47s,
+550relacionados/15arquivos/264,07s, todos exit0, sem falhas/skips. Ruff, lint
+restrito do helper, format343 e mypy339 alvos311/314 limpos. Runtime sóWindows3113.
+Não há P1/P2 remanescente neste componente isolado.
+
+O agendamento de31/10 às21h45 foi observado:LastTaskResult0 e mensagem recebida
+na mesma conversa, sem escritor ativo antes da retomada. A tarefa foi
+desativada depois de completar, sem próximo horário. Nenhuma nova quota
+reportada, escritor ativo ou job novo. Código/testes estáveis após gates;
+relatórios/estado documental fechados pelo revisor. Ver SHELL-PREPARE-VALIDATION.
+
+Próximo: desenho/código/fakes de sonda da admissão nativa3s, sem execução ou
+raiz operacional antes de procedimento próprio revisado. Marcação posterior
+à medição não resolve queda antes da marca; o desenho futuro precisa consumo
+prévio independente. O gate3s permanece NOT_MEASURED; não confundir a
+admissão real com os testes de16campos/6959bytes/23casos e runtime simulado.
+Fontes/raízes consumidas intactas, sem Docker/PG/SQL/worker/serviço novo.
+Gateway/B1/B2/D090/C1/produção continuam bloqueados.
+
+# Registro anterior — preparador parcial e quota
 
 Estado em2026-10-31: último commit verificado/publicado9e4e37e. O único
 programador Claude2 (Opus5.5/esforço medium) gravou parcialmente
