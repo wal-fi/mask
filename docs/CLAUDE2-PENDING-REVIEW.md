@@ -1,3 +1,42 @@
+# Orquestrador privado dos controles — implementação em andamento
+
+2026-11-01. Adaptador revisado publicado e sincronizado em
+c03fd109bcb1da9ab2761fba3003ae876f094d6c. 33próprios/0,93s,
+892relacionados/273,79s e contraprovas independentes limpas; ver validação.
+CLI8802 de leitura terminou exit0, com cinco fontes lidas. Revisão aceitou
+backend único para identidade de erros, registro HELD próprio e auditoria512
+inalterada. Antes de código, corrigir o contrato de publicação: diretório
+parcial consumido pode restar; após tentativa do rename final não há I/O
+nem promessa de ausência de publicação se a chamada falhar após o efeito.
+Owner comprovadamente CLOSED não vira recurso vivo fictício em interrupção.
+
+Confirmado zero processos da sessão antes de iniciar CLI16034, agora em
+andamento: só Claude2 programa, sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f,
+claude-opus-5-5/esforço medium. Únicas escritas de programação permitidas:
+docs/poc/pg16_shell_native_control.py,
+tests/test_pg16_shell_native_control.py e notas futuras em
+docs/PHASE-9-W1-PG16-SHELL-NATIVE-CONTROL-DESIGN.md.
+Acompanhar essa CLI; não iniciar outro escritor nem outra chamada de sessão.
+O assistente principal só revisa/testa/documenta depois de resposta terminal.
+Testes e código novos ainda não medidos/aprovados; não publicar parciais.
+
+Backend10c9058f/chamadordfcc4ed6/adaptadoreaebedd6/estado16campos/fontes e
+raízes consumidas fixos. Só definições/fakes; nenhuma CLI/consumidor, execução
+Win32/job/processo nativo, leitura explícita de runtime/config/binários,
+raiz operacional, Docker/PG/SQL/worker/serviço/deploy. CLI16034 ainda ativa,
+sem entrega nova medida até21h14Z; nenhuma quota/reset foi observado.
+Tarefa existente Maskgw-Claude2-Resume-01a05804 reutilizada e relida Ready,
+execução única registrada para01/11/2026 às18h24m15 SãoPaulo/21h24m15Z,
+IgnoreNew/Limited,1trigger e mensagem exata para esta mesma conversa.
+É acompanhamento de latência, não tentativa de contornar quota. Registro
+confirmado, não execução futura;19h25Z/result0 continua a medição histórica.
+Computador/usuário/app server precisam permanecer disponíveis. Na retomada,
+conferir resultado/horário da tarefa e desativá-la após execução observada;
+se houver escritor ativo, apenas acompanhar. Não iniciar segunda chamada.
+Native3s NOT_MEASURED, entry_gate NOT_EVALUATED, Gateway
+indisponível e B1/B2/D090gate2/C1/SQL/produção abertos.
+Registros seguintes históricos.
+
 ## Adaptador privado aninhado — revisão com fakes, 2026-11-01
 
 Claude2 foi o único programador, mesma sessão51ea0d85, Opus5.5/esforço medium.
