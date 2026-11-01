@@ -4,6 +4,28 @@ Criado por solicitação do usuário em2026-10-30. Inclui o trabalho acumulado
 após4a5e556, preservando resultados históricos e tentativas reprovadas. É
 checkpoint de desenvolvimento incompleto da Fase9, não release de produção.
 
+## Sonda de admissão revisada com fakes — 2026-11-01
+
+Claude2 implementou `pg16_shell_admission_probe.py` (SHA `738ee1e3`) e testes
+(`5dd02d7b`), Opus 5.5/esforço medium; o assistente principal revisou/testou.
+85 testes próprios/20,13 s, sete verificações independentes CLEAN/0,60 s e
+635 relacionados em 16 arquivos/270,87 s, todos exit 0, sem falhas ou skips.
+Ruff/lint restrito do helper limpos, format 345 e mypy strict 340 arquivos nos
+alvos 3.11/3.14; runtime somente Windows/Python 3.11.3. Primeira rodada
+77passed/7failed/2errors e seis correções do desenho preservadas na validação.
+As falhas de harness foram corrigidas pelo Claude2 sem alterar o helper.
+
+Claim exclusivo antes da medição; relógio/limite float originais, categorias
+fechadas, marca e pendente verificados antes do rename final sem I/O posterior.
+Parecer aprovado no componente isolado, sem P1/P2 remanescentes. Ver
+SHELL-ADMISSION-DESIGN/VALIDATION. Sonda nativa, raiz operacional, executáveis/
+configuração reais e Docker/PG/SQL/worker/serviço não foram acionados neste lote.
+Gate 3 s continua NOT_MEASURED; próximo é procedimento nativo com registro
+prévio de invocação, supervisão/coleta e comando literal revisados antes de
+qualquer materialização/execução. Fontes aceitas e raízes consumidas intactas.
+Sem escritor/revisor ativo, nova quota ou job; retomada antiga concluída e
+desativada. Gateway indisponível; B1/B2/D090/C1/produção abertos. Histórico abaixo.
+
 ## Preparador do leitor PG16 revisado e validado — 2026-10-31
 
 Claude2 concluiu `pg16_shell_prepare.py` (SHA `8d0bf39e`) e seus testes

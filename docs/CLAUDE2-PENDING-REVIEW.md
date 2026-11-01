@@ -1,4 +1,29 @@
-# Preparador revisado e validado; nenhuma revisão pendente
+# Sonda de admissão revisada em fakes; nenhuma revisão pendente
+
+Helper738ee1e3/testes5dd02d7b concluídos pelo único programador Claude2,
+claude-opus-5-5/esforço medium, sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f.
+Desenho42540/revisão48032, implementação74011/correção de harness1808, todos
+exit0. Nenhum escritor ativo; o assistente principal só revisou e validou.
+85passed/20,13s, hook7CLEAN/1passed/0,60s, relacionados635passed/16arquivos/
+270,87s, sem falhas/skips, todos processos exit0. Ruff/lint restrito,
+format345/mypy340 alvos311/314 limpos; runtime sóWindows3113. Primeira rodada
+77passed/7failed/2errors preservada em SHELL-ADMISSION-VALIDATION.
+
+Parecer aprovado no componente/fakes, sem P1/P2 remanescentes. Não é admissão
+nativa medida:3s continua NOT_MEASURED. Nunca lançar esta sonda só porque
+o helper passou nos fakes. Próximo lote: procedimento nativo próprio, com
+registro durável de invocação antes do lançamento, comando/launcher literal
+verificados e supervisor limitado com coleta do processo. Só então preparar
+uma proposta de raiz/task/nonce para revisão antes de qualquer efeito real.
+Uma queda entre claim e marca pode deixar raiz FRESH; o caller não pode
+ignorar o claim nem repetir. Fsync não prova durabilidade de diretório após
+falta de energia no Windows. Self-hash é metadado, não autenticação.
+
+Sem raiz operacional, binários/config reais, Docker/PG/SQL/worker/serviço
+novo; sem quota/job/outro escritor. Fontes aceitas e raízes consumidas intactas.
+Gateway/B1/B2/D090/C1/produção abertos. Registros seguintes históricos.
+
+# Registro anterior — preparador revisado e validado
 
 Claude2 concluiu o preparador8d0bf39e/testesed027162 e o desenho na sessão
 51ea0d85-05bb-4d24-ba9a-c9627c3f832f, Opus5.5/esforço medium. CLI23244 e
