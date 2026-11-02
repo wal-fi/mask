@@ -1,0 +1,11 @@
+{
+  "kind": "MASKGW_NATIVE_ENTRY_RED_REGRESSIONS_V1",
+  "source_sha256": "a3620eba2ce9eb6bb486d3afdb8d17f82f36f2e72471a3ce284abf76175f3056",
+  "test_sha256": "32c411422b952b9ea7a23ed426b1c735beb6f1ad43f2c5a63c7d84cbf580a088",
+  "test_bytes": 33498,
+  "failed": 22,
+  "passed": 74,
+  "seconds": 0.84,
+  "exit_code": 1,
+  "native_execution": false
+}

@@ -1,5 +1,33 @@
 # Implementation Roadmap
 
+## Entrada privada dos controles — revisada com fakes, 2026-11-02
+
+Claude2 foi o único programador, sessão51ea0d85, Opus5.5/esforço medium.
+Entrada356d2291/testes1d65de06:96próprios/0,92s e três contraprovas finitas
+independentes CLEAN/0,24s. UmP1 e doisP2 corrigidos após22failed/74passed
+medidos antes do fix; baseline rejeitada e regressões preservadas como dados.
+1071relacionados/21arquivos/298,76s, exit0, sem falhas/skips. Ruff/lint
+restrito/format355/mypy345 alvos311/314 limpos; runtime sóWindows3.11.3.
+Parecer aprovado somente para a entrada privada simulada; nenhum gate nativo
+ou de produto foi fechado. Ver
+[desenho](PHASE-9-W1-PG16-SHELL-NATIVE-CONTROL-ENTRY-DESIGN.md) e
+[validação](PHASE-9-W1-PG16-SHELL-NATIVE-CONTROL-ENTRY-VALIDATION.md).
+
+Foreground conserva namespace e lista original; saída somente com registro
+original vazio comprovado. Retenção/incerteza estaciona sem timeout de saída,
+retry, recuperação ou abandono de posse. Nenhum main/runner real ou hold
+infinito executado; testes finitos e checks estruturais não provam vida de
+processo, entrega de sinais ou cleanup nativo. Nenhum handler real instalado.
+
+Runnerb4198fe1/adaptereaebedd6/backend10c9058f/hostdfcc4ed6/estado16 e fontes
+consumidas fixos. Sem leitura explícita de runtime/config/binários, comando/
+nonce/raiz operacional, controle Win32/job/processo real, Docker/PG/SQL ou
+deployment. Próximo: proposta de sonda stdlib de identidade, procedimento e
+comando exato revisados antes de efeitos nativos. Gateway indisponível;
+Native3s NOT_MEASURED, entry_gate NOT_EVALUATED e B1/B2/D090gate2/C1/SQL/
+produção abertos. Tarefa histórica Disabled/sem próximo horário; nenhuma
+nova quota/reset/tarefa ou outro escritor. Registros seguintes históricos.
+
 ## Orquestrador privado dos controles — revisado com fakes, 2026-11-01
 
 Claude2 foi o único programador, Opus5.5/esforço medium, mesma sessão51ea0d85.
