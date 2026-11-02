@@ -4,6 +4,37 @@ Criado por solicitação do usuário em2026-10-30. Inclui o trabalho acumulado
 após4a5e556, preservando resultados históricos e tentativas reprovadas. É
 checkpoint de desenvolvimento incompleto da Fase9, não release de produção.
 
+## Sonda de identidade — proposta revisada, ainda não executada, 2026-11-02
+
+Entrada privada publicada em9e88c13a0d6e57442157e2f37a03e0739294b7f3,
+sincronizada0/0 após push/fetch;96próprios e1071relacionados aprovados.
+CLI16614/10438 terminaram0, mesma sessão51ea0d85/Opus5.5/esforço medium.
+Primeiro comando rejeitado com10erros PowerShell; nenhuma sonda executada.
+Claude2 escreveu só SHELL-NATIVE-IDENTITY-PROPOSAL. Bloco corrigido: parser
+PowerShell0erros e PythonAST/ASCII aprovados,exit0, sem executar o corpo.
+Revisor reforçou estabilidade de ambos os PIDs; fontes Microsoft/CPython
+consultadas não atestam binário local, Job Objects ou limpeza nativa.
+
+Proposta aceita somente como procedimento prospectivo. Preflight e invocação
+exata devem ser reconferidos antes de efeito; nenhuma raiz/nonce/script
+operacional ou novo controle foi materializado. Nenhuma fonte fixa mudou.
+Native3s NOT_MEASURED/entry_gate NOT_EVALUATED; Gateway/B1/B2/D090gate2/C1/
+SQL/produção abertos. Nenhuma quota/reset/tarefa nova; tarefa histórica
+Disabled. Registros seguintes históricos.
+
+## Sonda de identidade — proposta documental em revisão, 2026-11-02
+
+Entrada privada publicada em9e88c13a0d6e57442157e2f37a03e0739294b7f3;
+HEAD/origin sincronizados0/0, árvore rastreada limpa após push/fetch.
+CLI16614 terminou0, só Read na mesma sessão51ea0d85/Opus5.5/medium.
+Sua proposta não foi executada: ParseInput do bloco PowerShell encontrou
+10erros, sem AST de comando Python. Root consultou fontes primárias da
+Microsoft/CPython; família de processos não atesta binários nem Job Objects.
+Nenhum escritor ativo antes de CLI10438, agora apenas documentando a revisão
+em SHELL-NATIVE-IDENTITY-PROPOSAL, sem código ou sonda real. Recolher terminal
+antes de ler resultado/abrir outra chamada. Nenhuma quota/reset/tarefa nova.
+Native3s NOT_MEASURED, entry_gate NOT_EVALUATED; Gateway e produção abertos.
+
 ## Entrada privada dos controles — revisada com fakes, 2026-11-02
 
 Claude2 foi o único programador, sessão51ea0d85, Opus5.5/esforço medium.
