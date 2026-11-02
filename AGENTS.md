@@ -40,6 +40,37 @@ de produção nem dispensa revisão, isolamento, masking, read-only ou sigilo.
 
 ## Escopo atual
 
+## Identidade amostral medida e procedimento revisto — 2026-11-02
+
+Basefeb4541 reconferida por fetch, árvore rastreada limpa e nenhum escritor
+da sessão ativo antes da sonda. Única execução do corpo revisado: dois yields,
+duas amostras CIM estáveis separadas24,4295613s; saída natural0, instâncias
+antigas ausentes no pós-saída54,7432318s desdeT0, incluindo orquestração.
+Rótulo final LIVENESS_SAMPLED_TRANSPORT_UNVERIFIED, confirmado na revisão
+Claude2 CLI92722: captura agregada não comprova bytes brutos/stderr separado.
+Sem replay; proposta original preservada como registro pré-execução.
+
+Claude2, mesma sessão51ea0d85/Opus5.5/esforço medium, escreveu somente
+SHELL-NATIVE-CONTROL-PROCEDURE (CLI72698/87209/4685 encerradas0).
+Repetição87209 foi erro de envio do revisor, corrigido com marcador explícito.
+Procedimento documental revisto; ParseInput0erros, template nunca invocado.
+Emenda prospectiva aceita sob delegação: eventos agregados só monitoram,
+aprovação exige terminal/CIM e conferência semântica de artefatos duráveis.
+Não muda o rótulo da sonda nem fecha gate de produto. Evidências em
+[identidade](docs/PHASE-9-W1-PG16-SHELL-NATIVE-IDENTITY-VALIDATION.md) e
+[procedimento](docs/PHASE-9-W1-PG16-SHELL-NATIVE-CONTROL-PROCEDURE.md).
+
+Próximo: verificador privado pequeno, com fakes/adversários e revisão.
+Ainda não implementado; não há nonce/raiz/proposta de execução nativa pronta.
+Entry/runner/adapter/backend/host fixos e estado16 intactos. Nenhum controle
+Win32 da entrada/runner, Docker/PG/SQL ou deployment neste lote; só a sonda
+stdlib benigna, cujo launcher pode ter efeitos implícitos não atestados.
+Tarefa histórica relida Disabled/sem próximo horário, última execução
+01/11 às21h24m15Z/result0. Nenhuma quota/reset/tarefa nova ou outro escritor.
+Native3s NOT_MEASURED/entry_gate NOT_EVALUATED; Gateway/B1/B2/D090gate2/C1/
+SQL/produção abertos. Destino final segue DockerOracle9.8 nesta máquina;
+este laboratório é Windows e não muda o destino. Registros seguintes históricos.
+
 ## Entrada privada dos controles — revisada com fakes, 2026-11-02
 
 Claude2 foi o único programador, sessão51ea0d85, Opus5.5/esforço medium.

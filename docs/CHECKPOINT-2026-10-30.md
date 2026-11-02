@@ -4,6 +4,62 @@ Criado por solicitação do usuário em2026-10-30. Inclui o trabalho acumulado
 após4a5e556, preservando resultados históricos e tentativas reprovadas. É
 checkpoint de desenvolvimento incompleto da Fase9, não release de produção.
 
+## Identidade amostral medida e procedimento revisto — 2026-11-02
+
+Basefeb4541 reconferida por fetch, árvore rastreada limpa e nenhum escritor
+da sessão ativo antes da sonda. Única execução do corpo revisado: dois yields,
+duas amostras CIM estáveis separadas24,4295613s; saída natural0, instâncias
+antigas ausentes no pós-saída54,7432318s desdeT0, incluindo orquestração.
+Rótulo final LIVENESS_SAMPLED_TRANSPORT_UNVERIFIED, confirmado na revisão
+Claude2 CLI92722: captura agregada não comprova bytes brutos/stderr separado.
+Sem replay; proposta original preservada como registro pré-execução.
+
+Claude2, mesma sessão51ea0d85/Opus5.5/esforço medium, escreveu somente
+SHELL-NATIVE-CONTROL-PROCEDURE (CLI72698/87209/4685 encerradas0).
+Repetição87209 foi erro de envio do revisor, corrigido com marcador explícito.
+Procedimento documental revisto; ParseInput0erros, template nunca invocado.
+Emenda prospectiva aceita sob delegação: eventos agregados só monitoram,
+aprovação exige terminal/CIM e conferência semântica de artefatos duráveis.
+Não muda o rótulo da sonda nem fecha gate de produto. Evidências em
+[identidade](PHASE-9-W1-PG16-SHELL-NATIVE-IDENTITY-VALIDATION.md) e
+[procedimento](PHASE-9-W1-PG16-SHELL-NATIVE-CONTROL-PROCEDURE.md).
+
+Próximo: verificador privado pequeno, com fakes/adversários e revisão.
+Ainda não implementado; não há nonce/raiz/proposta de execução nativa pronta.
+Entry/runner/adapter/backend/host fixos e estado16 intactos. Nenhum controle
+Win32 da entrada/runner, Docker/PG/SQL ou deployment neste lote; só a sonda
+stdlib benigna, cujo launcher pode ter efeitos implícitos não atestados.
+Tarefa histórica relida Disabled/sem próximo horário, última execução
+01/11 às21h24m15Z/result0. Nenhuma quota/reset/tarefa nova ou outro escritor.
+Native3s NOT_MEASURED/entry_gate NOT_EVALUATED; Gateway/B1/B2/D090gate2/C1/
+SQL/produção abertos. Destino final segue DockerOracle9.8 nesta máquina;
+este laboratório é Windows e não muda o destino. Registros seguintes históricos.
+
+## Sonda benigna revista — procedimento documental em andamento, 2026-11-02
+
+Basefeb4541/remote sincronizados, nenhum escritor da sessão ativo no preflight.
+Bloco da proposta revisado/ParseInput0erros; exec único com stdlib45s.
+Dois yields, duas amostras CIM separadas24,4295613s, ambas instâncias vivas com
+CreationDate estável e parentesco igual; saída natural0. Pós-saída confirmou
+ausência das duas instâncias antigas,54,7432318s desdeT0 incluindo orquestração.
+Sem controle Win32/entry/runner real, nonce/raiz operacional, Docker/PG/SQL.
+PIDs somente na memória local; validação sem IDs em
+SHELL-NATIVE-IDENTITY-VALIDATION.
+
+118ASCII é a representação do tool agregado, não bytes brutos nem canais
+stdout/stderr separados. Vida amostral conferida; PASS_SAMPLED estrito não
+comprovado. CLI92722 terminou0, só Read, e confirmou o rótulo
+LIVENESS_SAMPLED_TRANSPORT_UNVERIFIED. Nenhum rerun. CLI72698 terminou0 com
+SHELL-NATIVE-CONTROL-PROCEDURE; templateParseInput0erros/sem execução.
+Revisão encontrou correções de formas pré-ativas, schemas, whitelist11 e
+exigência de verificador. CLI87209 repetiu o pedido anterior por erro do
+revisor ao substituir prompt multilinha; só dois ajustes documentais.
+CLI4685 em andamento com marcador PROCEDURE_FIXES_V2 conferido, mesma sessão
+51ea0d85/Opus5.5/esforço medium, escrita só no procedimento. Recolher terminal
+antes de outra chamada. Native3s NOT_MEASURED/entry_gate NOT_EVALUATED;
+Gateway/B1/B2/D090gate2/C1/SQL/produção abertos. Sem quota/reset/tarefa nova.
+Registros seguintes históricos.
+
 ## Sonda de identidade — proposta revisada, ainda não executada, 2026-11-02
 
 Entrada privada publicada em9e88c13a0d6e57442157e2f37a03e0739294b7f3,
