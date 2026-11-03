@@ -1,0 +1,642 @@
+"""Evidence collector policy for the benign native controls. Import defines only.
+
+Fake-only policy: the production backend is unavailable (`_backend()` returns
+None), so collect() always answers INVALID/COLLECT_UNAVAILABLE in production
+and can never approve. A backend is a fixed six-operation object injected
+only through the private `_backend` seam by tests; that seam is not an
+adversarial security boundary and simulated handles prove nothing about
+real handle safety.
+
+When a backend exists, the policy walks a fixed chain of relative
+components from a trusted volume anchor, lists only its own evidence
+directories, reads a fixed inventory under fixed caps, closes every owned
+handle once and, only then, executes the captured verifier bytes whose
+SHA-256 equals the accepted pin. Trusted operator and quiescent namespace
+are assumed; there is no atomicity, origin, authentication, OS, CIM or
+cleanup guarantee.
+"""
+
+import dataclasses
+import hashlib
+import re
+
+VERIFY_SHA = "b3755d492ce147596a27dd9a36bc0ecf66686efd65ef60178915ab2d1d1f7a10"
+VERIFY_NAME = "pg16_shell_native_control_verify.py"
+HOME_CHAIN = ("Users", "w.filho")
+REPO_CHAIN = ("Desktop", "codes", "mask", "docs", "poc")
+TEMP_CHAIN = ("AppData", "Local", "Temp")
+PUBLIC_PREFIX = "pg16-native-control-"
+PRIVATE_PREFIX = "maskgw-pg16-native-control-v1-"
+NONCE_PATTERN = re.compile(r"[0-9a-f]{32}")
+PUBLIC_CAPS = {"summary.json": 16384, "transport.json": 4096}
+FILE_CAPS = {
+    "invocation.json": 4096,
+    "supervision.json": 4096,
+    "local-stdout.bin": 1024,
+    "snapshot.json": 4096,
+    "audit.json": 65536,
+}
+CASE_FILES = {
+    "case-1": ("invocation.json", "supervision.json", "local-stdout.bin"),
+    "case-2": ("invocation.json", "supervision.json", "local-stdout.bin"),
+    "case-3": (
+        "invocation.json",
+        "supervision.json",
+        "local-stdout.bin",
+        "snapshot.json",
+        "audit.json",
+    ),
+}
+CASE_PREFIXES = (("case-1",), ("case-1", "case-2"), ("case-1", "case-2", "case-3"))
+SOURCE_CAP = 65536
+TOTAL_CAP = 262144
+MAX_SLOTS = 64
+MAX_ENTRIES = 16
+MAX_STREAMS = 8
+DATA_STREAMS = ("::$DATA",)
+COLLECT_REASONS = frozenset(
+    (
+        "COLLECT_UNAVAILABLE",
+        "COLLECT_POISONED",
+        "COLLECT_ARGUMENT",
+        "COLLECT_OPEN",
+        "COLLECT_REPARSE",
+        "COLLECT_VOLUME",
+        "COLLECT_TYPE",
+        "COLLECT_LISTING",
+        "COLLECT_EXTRA",
+        "COLLECT_MISSING",
+        "COLLECT_IDENTITY",
+        "COLLECT_LINKS",
+        "COLLECT_STREAMS",
+        "COLLECT_DELETE_PENDING",
+        "COLLECT_CAP",
+        "COLLECT_READ",
+        "COLLECT_CHANGED",
+        "COLLECT_UNSUPPORTED",
+        "COLLECT_BACKEND",
+        "COLLECT_SOURCE",
+        "COLLECT_CUSTODY",
+        "COLLECT_CLEANUP",
+        "COLLECT_INTERNAL",
+    )
+)
+VERIFY_REASONS = frozenset(
+    (
+        "EXPECTED",
+        "INPUT",
+        "FILESET",
+        "CAP",
+        "SCHEMA",
+        "NONCE",
+        "PIN",
+        "BINDING",
+        "PREFIX",
+        "INVOCATION",
+        "SUPERVISION",
+        "STDOUT",
+        "SNAPSHOT",
+        "AUDIT",
+        "CONTRADICTION",
+        "INTERNAL",
+    )
+)
+REASONS = COLLECT_REASONS | VERIFY_REASONS | {"OK"}
+VERIFIED = ("VERIFIED_APPROVED", "VERIFIED_REJECTED")
+# Sticky: backends, ledgers and slots whose custody is uncertain or whose
+# ledger was never proven terminal. Retained for the life of the process;
+# while non-empty every call stops before any backend.
+_POISON = []
+# Active owners: each collection's state is registered here before its first
+# acquisition and removed only after its ledger is proven terminal (every
+# record CLOSED, or EMPTY with its slot still empty). An owner that is never
+# proven stays here (and in _POISON) and blocks later calls. Serialized
+# foreground use only; no thread-safety promise.
+_ACTIVE = []
+
+
+# -- immutable DTOs (closed repr: no tokens, names, ids or bytes) --
+
+
+@dataclasses.dataclass(frozen=True, repr=False)
+class Handle:
+    token: object
+
+    def __repr__(self) -> str:
+        return "Handle(<hidden>)"
+
+
+@dataclasses.dataclass(frozen=True, repr=False)
+class Info:
+    reparse: object
+    directory: object
+    delete_pending: object
+    volume: object
+    file_id: object
+    links: object
+    end_of_file: object
+    change_time: object
+    streams: object
+
+    def __repr__(self) -> str:
+        return "Info(<hidden>)"
+
+
+@dataclasses.dataclass(frozen=True, repr=False)
+class Entry:
+    name: object
+    directory: object
+    file_id: object
+
+    def __repr__(self) -> str:
+        return "Entry(<hidden>)"
+
+
+class Slot:
+    """Output slot owned by the policy before any backend open; the backend
+    writes a Handle into `value` before returning or raising."""
+
+    __slots__ = ("value",)
+
+    def __init__(self) -> None:
+        self.value = None
+
+    def __repr__(self) -> str:
+        return "Slot(<hidden>)"
+
+
+def _backend() -> object:
+    """Private seam. Production has no backend: collection is unavailable."""
+    return None
+
+
+class _Stop(Exception):
+    def __init__(self, reason: str) -> None:
+        super().__init__()
+        self.reason = reason
+
+
+def _stop(reason: str) -> None:
+    raise _Stop(reason) from None
+
+
+class _Record:
+    """One acquisition slot in the ledger, retained before the open."""
+
+    __slots__ = ("slot", "handle", "token", "status", "value")
+
+    def __init__(self, slot: Slot) -> None:
+        self.slot, self.handle, self.token, self.status, self.value = slot, None, None, "NEW", None
+
+
+class _State:
+    __slots__ = (
+        "backend",
+        "ledger",
+        "custody",
+        "uncertain",
+        "poisoned",
+        "volume",
+        "total",
+        "control",
+    )
+
+    def __init__(self, backend: object) -> None:
+        self.backend, self.ledger = backend, []
+        self.custody, self.uncertain, self.poisoned = False, False, False
+        self.volume, self.total, self.control = None, 0, None
+
+
+def _poison(state: _State) -> None:
+    if not state.poisoned:
+        state.poisoned = True
+        _POISON.append((state.backend, state))  # strong retention, never released
+
+
+def _terminal(state: _State) -> bool:
+    """Every record provably closed, or empty with its slot still empty."""
+    if state.custody or state.uncertain:
+        return False
+    for record in state.ledger:
+        if record.status == "CLOSED":
+            continue
+        if record.status == "EMPTY" and record.slot.value is None:
+            continue
+        return False  # NEW, CLOSING, OWNED, QUARANTINED, UNCERTAIN or late value
+    return True
+
+
+def _release(state: _State) -> bool:
+    """Releases the active owner only for a proven terminal ledger; otherwise
+    the owner stays registered and is also pinned in _POISON."""
+    if _terminal(state):
+        _ACTIVE[:] = [owner for owner in _ACTIVE if owner is not state]
+        return True
+    _poison(state)
+    return False
+
+
+# -- strict snapshots of backend results --
+
+
+def _int(value: object, low: int, high: int) -> bool:
+    return type(value) is int and low <= value < high
+
+
+def _snapshot_info(value: object) -> tuple:
+    """Every field read once and validated by exact type before any use."""
+    if type(value) is not Info:
+        _stop("COLLECT_BACKEND")
+    fields = (
+        value.reparse,
+        value.directory,
+        value.delete_pending,
+        value.volume,
+        value.file_id,
+        value.links,
+        value.end_of_file,
+        value.change_time,
+        value.streams,
+    )
+    reparse, directory, pending, volume, file_id, links, size, changed, streams = fields
+    valid = (
+        type(reparse) is bool
+        and type(directory) is bool
+        and type(pending) is bool
+        and _int(volume, 0, 1 << 64)
+        and type(file_id) is bytes
+        and len(file_id) == 16
+        and _int(links, 1, 1 << 32)
+        and _int(size, 0, 1 << 63)
+        and _int(changed, -(1 << 63), 1 << 63)
+        and type(streams) is tuple
+        and len(streams) <= MAX_STREAMS
+        and all(
+            type(name) is str and 0 < len(name) <= 64 and "\x00" not in name for name in streams
+        )
+    )
+    if not valid:
+        _stop("COLLECT_BACKEND")
+    return fields
+
+
+def _name_ok(name: object) -> bool:
+    if type(name) is not str or not 0 < len(name) <= 255:
+        return False
+    if any(char in name for char in ("\x00", "/", "\\", ":")):
+        return False
+    return len(name.encode("utf-16-le", "surrogatepass")) // 2 <= 255
+
+
+def _snapshot_listing(value: object) -> tuple:
+    if type(value) is not tuple or len(value) > MAX_ENTRIES:
+        _stop("COLLECT_BACKEND")
+    entries = []
+    for entry in value:
+        if type(entry) is not Entry:
+            _stop("COLLECT_BACKEND")
+        name, directory, file_id = entry.name, entry.directory, entry.file_id
+        if not (
+            _name_ok(name)
+            and type(directory) is bool
+            and type(file_id) is bytes
+            and len(file_id) == 16
+        ):
+            _stop("COLLECT_BACKEND")
+        entries.append((name, directory, file_id))
+    if len({name for name, _directory, _file_id in entries}) != len(entries):
+        _stop("COLLECT_BACKEND")
+    return tuple(sorted(entries))
+
+
+# -- custody ledger --
+
+
+def _adopt(state: _State, record: _Record) -> None:
+    """Reads the slot once; never raises, never closes anything."""
+    value = record.slot.value
+    if value is None:
+        record.status = "EMPTY"
+        return
+    token = None
+    if type(value) is Handle:
+        try:
+            token = value.token  # a known object may still have lost its field
+        except Exception:
+            token = None
+    if not _int(token, 1, 1 << 64):
+        record.status, record.value = "QUARANTINED", value
+        state.custody = True
+        _poison(state)
+        return
+    aliases = [
+        other
+        for other in state.ledger
+        if other is not record and other.token == token and other.status in ("OWNED", "QUARANTINED")
+    ]
+    record.token, record.value = token, value
+    if aliases:
+        for other in aliases:
+            other.status = "QUARANTINED"
+        record.status = "QUARANTINED"
+        state.custody = True
+        _poison(state)
+        return
+    record.handle, record.status = value, "OWNED"
+
+
+def _acquire(state: _State, opener: object) -> Handle:
+    if len(state.ledger) >= MAX_SLOTS:
+        _stop("COLLECT_CAP")
+    record = _Record(Slot())
+    state.ledger.append(record)  # owned before the native-effect seam is called
+    failed = False
+    try:
+        opener(record.slot)
+    except Exception:
+        failed = True
+    except BaseException:
+        _adopt(state, record)  # a late handle is never lost
+        raise
+    _adopt(state, record)
+    if state.custody:
+        _stop("COLLECT_CUSTODY")
+    if record.handle is None:
+        _stop("COLLECT_OPEN" if failed else "COLLECT_BACKEND")
+    if failed:
+        _stop("COLLECT_OPEN")
+    return record.handle
+
+
+def _cleanup(state: _State, control: object) -> object:
+    """Closes provably unique owned handles once, in reverse order. Returns
+    the control interruption to propagate (the first one wins)."""
+    for record in reversed(state.ledger):
+        if record.status != "OWNED":
+            continue
+        record.status = "CLOSING"
+        closed = False
+        try:
+            closed = state.backend.close(record.handle) is True
+        except Exception:
+            closed = False
+        except BaseException as error:
+            closed = False
+            if control is None:
+                control = error
+                state.control = error  # recorded for the outer finalization
+        record.status = "CLOSED" if closed else "UNCERTAIN"
+        if not closed:
+            state.uncertain = True
+            _poison(state)
+    return control
+
+
+# -- fixed walk --
+
+
+def _query(state: _State, handle: Handle) -> tuple:
+    failed, value = False, None
+    try:
+        value = state.backend.query(handle)
+    except Exception:
+        failed = True
+    if failed:
+        _stop("COLLECT_BACKEND")
+    return _snapshot_info(value)
+
+
+def _common(info: tuple, volume: object, directory: bool) -> None:
+    reparse, is_directory, pending, own_volume = info[0], info[1], info[2], info[3]
+    if reparse:
+        _stop("COLLECT_REPARSE")
+    if own_volume != volume:
+        _stop("COLLECT_VOLUME")
+    if is_directory is not directory:
+        _stop("COLLECT_TYPE")
+    if pending:
+        _stop("COLLECT_DELETE_PENDING")
+
+
+def _open_dir(state: _State, parent: Handle, name: str, entry: object = None) -> Handle:
+    def opener(slot: Slot) -> None:
+        state.backend.open_child(parent, name, "DIR", slot)
+
+    handle = _acquire(state, opener)
+    info = _query(state, handle)
+    _common(info, state.volume, True)
+    if info[8] != ():
+        _stop("COLLECT_STREAMS")
+    if entry is not None and info[4] != entry[2]:
+        _stop("COLLECT_IDENTITY")
+    return handle
+
+
+def _read_file(state: _State, parent: Handle, name: str, cap: int, entry: object) -> bytes:
+    def opener(slot: Slot) -> None:
+        state.backend.open_child(parent, name, "FILE", slot)
+
+    handle = _acquire(state, opener)
+    before = _query(state, handle)
+    _common(before, state.volume, False)
+    if before[5] != 1:
+        _stop("COLLECT_LINKS")
+    if before[8] != DATA_STREAMS:
+        _stop("COLLECT_STREAMS")
+    size = before[6]
+    if size > cap:
+        _stop("COLLECT_CAP")
+    if entry is not None:
+        if before[4] != entry[2]:
+            _stop("COLLECT_IDENTITY")
+        if state.total + size > TOTAL_CAP:
+            _stop("COLLECT_CAP")
+        state.total += size
+    failed, raw = False, None
+    try:
+        raw = state.backend.read(handle, cap + 1)
+    except Exception:
+        failed = True
+    if failed:
+        _stop("COLLECT_READ")
+    if type(raw) is not bytes:
+        _stop("COLLECT_BACKEND")
+    if len(raw) != size:
+        _stop("COLLECT_READ")
+    if _query(state, handle) != before:
+        _stop("COLLECT_CHANGED")
+    return raw
+
+
+def _list(state: _State, handle: Handle) -> tuple:
+    outcome, value = None, None
+    try:
+        value = state.backend.list_dir(handle, MAX_ENTRIES)
+    except NotImplementedError:
+        outcome = "COLLECT_UNSUPPORTED"
+    except Exception:
+        outcome = "COLLECT_LISTING"
+    if outcome is not None:
+        _stop(outcome)
+    return _snapshot_listing(value)
+
+
+def _expect(listing: tuple, wanted: dict) -> None:
+    present = {name: directory for name, directory, _file_id in listing}
+    for name, directory in present.items():
+        if name in wanted and directory is not wanted[name]:
+            _stop("COLLECT_TYPE")
+    if set(present) - set(wanted):
+        _stop("COLLECT_EXTRA")
+    if set(wanted) - set(present):
+        _stop("COLLECT_MISSING")
+
+
+def _cases(listing: tuple) -> tuple:
+    present = {name: directory for name, directory, _file_id in listing}
+    for name, directory in present.items():
+        if name in CASE_FILES and directory is not True:
+            _stop("COLLECT_TYPE")
+    if set(present) - set(CASE_FILES):
+        _stop("COLLECT_EXTRA")
+    names = tuple(sorted(present))
+    if names not in CASE_PREFIXES:
+        _stop("COLLECT_LISTING")
+    return names
+
+
+def _entry(listing: tuple, name: str) -> tuple:
+    return next(item for item in listing if item[0] == name)
+
+
+def _gather(state: _State, nonce: str) -> tuple:
+    anchor = _acquire(state, state.backend.open_anchor)
+    info = _query(state, anchor)
+    state.volume = info[3]
+    _common(info, state.volume, True)
+    if info[8] != ():
+        _stop("COLLECT_STREAMS")
+    home = anchor
+    for name in HOME_CHAIN:
+        home = _open_dir(state, home, name)
+    poc = home
+    for name in REPO_CHAIN:
+        poc = _open_dir(state, poc, name)
+    source = _read_file(state, poc, VERIFY_NAME, SOURCE_CAP, None)
+    evidence = _open_dir(state, poc, "evidence")
+    public = _open_dir(state, evidence, PUBLIC_PREFIX + nonce[:12])
+    public_listing = _list(state, public)
+    _expect(public_listing, {name: False for name in PUBLIC_CAPS})
+    raws = {
+        name: _read_file(state, public, name, cap, _entry(public_listing, name))
+        for name, cap in PUBLIC_CAPS.items()
+    }
+    temp = home
+    for name in TEMP_CHAIN:
+        temp = _open_dir(state, temp, name)
+    private = _open_dir(state, temp, PRIVATE_PREFIX + nonce)
+    private_listing = _list(state, private)
+    listings = [(public, public_listing), (private, private_listing)]
+    files = {}
+    for case in _cases(private_listing):
+        case_dir = _open_dir(state, private, case, _entry(private_listing, case))
+        case_listing = _list(state, case_dir)
+        _expect(case_listing, {leaf: False for leaf in CASE_FILES[case]})
+        for leaf in CASE_FILES[case]:
+            entry = _entry(case_listing, leaf)
+            files[case + "/" + leaf] = _read_file(state, case_dir, leaf, FILE_CAPS[leaf], entry)
+        listings.append((case_dir, case_listing))
+    for handle, listing in listings:
+        if _list(state, handle) != listing:
+            _stop("COLLECT_CHANGED")
+    return raws["summary.json"], raws["transport.json"], files, source
+
+
+# -- pinned verifier, only after every owned handle is closed --
+
+
+def _verify(captured: tuple, nonce: str, argv0: str) -> tuple:
+    summary_raw, transport_raw, files, source = captured
+    if hashlib.sha256(source).hexdigest() != VERIFY_SHA:
+        return ("INVALID", "COLLECT_SOURCE", None, None)
+    result, failed = None, False
+    try:
+        namespace = {"__name__": "_pg16_native_control_collect_verify"}
+        exec(compile(source, "<pinned-verifier>", "exec"), namespace)
+        expected = namespace["Expected"](nonce=nonce, argv0=argv0)
+        result = namespace["verify"](expected, summary_raw, transport_raw, files)
+    except Exception:
+        failed = True
+    if (
+        failed
+        or type(result) is not tuple
+        or len(result) != 2
+        or not all(type(item) is str for item in result)
+    ):
+        return ("INVALID", "COLLECT_INTERNAL", None, None)
+    label, reason = result
+    if label in VERIFIED and reason == "OK":
+        summary = hashlib.sha256(summary_raw).hexdigest()
+        return (label, reason, summary, hashlib.sha256(transport_raw).hexdigest())
+    if label == "INVALID" and reason in VERIFY_REASONS:
+        return ("INVALID", reason, None, None)
+    return ("INVALID", "COLLECT_INTERNAL", None, None)
+
+
+def collect(nonce: object, argv0: object) -> tuple:
+    """Closed (label, reason, summary_sha256, transport_sha256). Hashes only
+    with a VERIFIED label. Control interruptions propagate (the first wins)."""
+    if not (
+        type(nonce) is str
+        and NONCE_PATTERN.fullmatch(nonce) is not None
+        and type(argv0) is str
+        and 0 < len(argv0) <= 1024
+        and "\x00" not in argv0
+    ):
+        return ("INVALID", "COLLECT_ARGUMENT", None, None)
+    if _POISON or _ACTIVE:
+        return ("INVALID", "COLLECT_POISONED", None, None)
+    backend, failed = None, False
+    try:
+        backend = _backend()
+    except Exception:
+        failed = True
+    if failed:
+        return ("INVALID", "COLLECT_INTERNAL", None, None)
+    if backend is None:
+        return ("INVALID", "COLLECT_UNAVAILABLE", None, None)
+    state = _State(backend)
+    _ACTIVE.append(state)  # durable owner before the first acquisition
+    reason, captured, control, proven = None, None, None, False
+    try:
+        try:
+            captured = _gather(state, nonce)
+        except _Stop as stop:
+            reason = stop.reason
+        except Exception:
+            reason = "COLLECT_INTERNAL"
+        except BaseException as error:
+            control = error
+            state.control = error
+        control = _cleanup(state, control)
+        proven = _release(state)
+    except BaseException as late:
+        # Fail-closed finalization for any gap outside the protected backend
+        # calls: the owner stays registered and pinned, nothing is closed
+        # again, and the first recorded control interruption wins.
+        _poison(state)
+        first = state.control
+        if first is not None:
+            raise first
+        if isinstance(late, Exception):
+            return ("INVALID", "COLLECT_INTERNAL", None, None)
+        raise
+    if control is not None:
+        raise control
+    if state.custody:
+        return ("INVALID", "COLLECT_CUSTODY", None, None)
+    if state.uncertain or not proven:
+        return ("INVALID", "COLLECT_CLEANUP", None, None)
+    if reason is not None:
+        return ("INVALID", reason if reason in COLLECT_REASONS else "COLLECT_INTERNAL", None, None)
+    return _verify(captured, nonce, argv0)

@@ -1,0 +1,33 @@
+{
+  "independent": {
+    "exit": 0,
+    "prior_harness_failure": "StopIteration: old indentation locator; revised to stripped match, no module edit",
+    "probes": 4,
+    "retention_and_blocking": true,
+    "same_control": true
+  },
+  "kind": "FIXED_FAKE_POLICY_REVIEW",
+  "mypy": {
+    "errors": 1,
+    "files": 347,
+    "location": "tests/test_pg16_shell_native_control_collect.py:718",
+    "targets": [
+      "3.11",
+      "3.14"
+    ]
+  },
+  "own": {
+    "collected": 141,
+    "passed": 141,
+    "seconds": 9.133
+  },
+  "publication": "PENDING_MYPY_AND_CLAUDE2_QUOTA",
+  "related": {
+    "collected": 467,
+    "passed": 467,
+    "seconds": 12.304
+  },
+  "scope": "in-memory fakes, no native effects",
+  "source_sha256": "1972ec74d96f93d824dfe18da0e0288a7fc21b7f2997e28d5afe497b782c9f52",
+  "tests_sha256": "8a3f9ebd29bfdc9416f5f606de9632e49b207a1ba3a3701eaba5f3570d4bd7e8"
+}

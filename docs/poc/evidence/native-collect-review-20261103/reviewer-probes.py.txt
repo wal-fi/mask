@@ -1,0 +1,41 @@
+import runpy,sys,json,dataclasses
+from pathlib import Path
+from types import SimpleNamespace
+import pytest
+T=runpy.run_path('tests/test_pg16_shell_native_control_collect.py')
+S=Path('docs/poc/pg16_shell_native_control_verify.py').read_bytes()
+B=runpy.run_path('tests/test_pg16_shell_native_control_verify.py')
+def fresh():
+    m=runpy.run_path('docs/poc/pg16_shell_native_control_collect.py')
+    g=m['collect'].__globals__; p=pytest.MonkeyPatch()
+    lab=SimpleNamespace(glob=g,builder=B,source=S,monkeypatch=p)
+    return lab,T['prepare'](lab),p
+out=[]
+lab,c,p=fresh()
+def malformed(default,extra):
+    default(); object.__delattr__(extra.slot.value,'token')
+c.backend.hooks[('open','summary.json')]=malformed
+r=T['collect'](lab)
+out.append({'probe':'MALFORMED_FILLED_HANDLE','result':r[:2],'unclosed':len(c.backend.acquired)-len(c.backend.closed),'poisoned':bool(lab.glob['_POISON'])})
+p.undo()
+source=Path('docs/poc/pg16_shell_native_control_collect.py').read_text()
+lines=source.splitlines()
+targets=[
+ ('POST_GATHER_PRE_CLEANUP','collect','    control = _cleanup(state, control)'),
+ ('CLOSE_STATUS_GAP','_cleanup','        closed = False'),
+ ('OPEN_POST_RETURN_PRE_ADOPT','_acquire','    _adopt(state, record)')]
+for probe,func,match in targets:
+    lineno=next(i+1 for i,x in enumerate(lines) if x.strip()==match.strip())
+    lab,c,p=fresh(); signal=T['Signal'](probe); fired=[False]
+    def trace(frame,event,arg):
+        if event=='line' and frame.f_code.co_name==func and frame.f_lineno==lineno and not fired[0]:
+            fired[0]=True; raise signal
+        return trace
+    caught=None
+    try:
+        sys.settrace(trace); T['collect'](lab)
+    except BaseException as exc: caught=exc
+    finally: sys.settrace(None)
+    out.append({'probe':probe,'fired':fired[0],'same_control':caught is signal,'unclosed':len(c.backend.acquired)-len(c.backend.closed),'poisoned':bool(lab.glob['_POISON'])})
+    p.undo()
+print(json.dumps(out,sort_keys=True))

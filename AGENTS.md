@@ -40,6 +40,68 @@ de produção nem dispensa revisão, isolamento, masking, read-only ou sigilo.
 
 ## Escopo atual
 
+## Política de coleta com fakes revisada — 2026-11-03
+
+Claude2 foi o único programador, sessão `51ea0d85`, modelo
+`claude-opus-5-5`, esforço `medium`. Fonte `1972ec74` (20571 bytes)
+e testes finais `b6f165d1` (37978 bytes): **467 relacionados passaram**,
+incluindo os **141 próprios**, sem falhas/erros/skips (14,958 s).
+Ruff limpo, format348 conforme, mypy347src/tests nos alvos3.11/3.14
+limpo; execução de runtime somente Windows3.11.3, PoC fora do mypy.
+Ajuste final foi só a anotação do mapa da fixture e redação histórica.
+Revisão AST confirmou asserções, funções/decoradores e valores do mapa
+idênticos; fonte1972ec74 e todos os arquivos anteriores ficaram intactos.
+
+Finding de retenção de posse corrigido após **5 falhas/136 aprovações**
+vermelhas. Versão rejeitada, regressões e sondas preservadas como dados;
+resultados históricos, inclusive mypy reprovado antes do ajuste, mantidos
+na validação. Política aceita apenas no escopo simulado: backend padrão
+indisponível, sem binding ou coletor real. Retenção não comprova cleanup
+nativo; `_ACTIVE`/`_POISON` conservam posse incerta e impedem nova coleta.
+
+Retomada única executou03/11 às16h35Z/result0 após reset16h30Z; CLI43588
+terminou0 e não havia outro escritor. Tarefa histórica agora Disabled,
+sem próximo disparo; não há novo job/quota/reset presumido. Próximo
+incremento exige desenho/revisão próprios, sem efeito novo autorizado aqui.
+Nenhum Docker/PG/SQL, DLL/controle nativo, leitura runtime/config/binário,
+root/nonce/comando operacional ou deploy. Coreb375/entrada356d/runnerb419/
+adaptereaeb/backend10c9/hostdfcc e estado16 fixos. Native3s NOT_MEASURED,
+entry_gate NOT_EVALUATED e Gateway/B1/B2/D090gate2/C1/SQL/produção abertos.
+Destino final segue Docker Oracle Linux 9.8 nesta máquina.
+Registros seguintes são históricos.
+
+## Política de coleta com fakes — pendente de tipagem, 2026-11-03
+
+Base publicada `ef465b7`. Claude2 foi o único programador, na sessão
+`51ea0d85-05bb-4d24-ba9a-c9627c3f832f`, modelo `claude-opus-5-5`,
+esforço `medium`. Módulo local `1972ec74` (20571 bytes) e testes
+`8a3f9ebd` (37929 bytes): **141 próprios** e **467 relacionados** passaram;
+zero falhas, erros ou skips. O finding de retenção de posse foi corrigido
+após cinco regressões vermelhas; candidata rejeitada e RED preservados como
+dados. Ruff e format passaram; **mypy ainda reprova**, nos alvos 3.11 e 3.14,
+uma anotação da fixture `_bad_info` (linha 718, 347 arquivos).
+Não publicar este incremento antes de corrigir e repetir os gates.
+
+A última chamada Claude2 retornou API429 antes de editar: reset informado
+em **03/11/2026 às 13h30 de Brasília**. Nenhum escritor ativo na conferência
+posterior. A tarefa existente `Maskgw-Claude2-Resume-01a05804` foi
+reprogramada e relida `Ready`: disparo único às **13h35 de Brasília**
+(`2026-11-03T16:35:00Z`), `IgnoreNew`, privilégio `Limited` e mensagem
+exata conferida. O resultado 0 de 01/11 às 21h24m15Z é histórico; a nova
+retomada **ainda não executou**. Não iniciar outra sessão, conta ou modelo.
+
+Próximo ajuste pelo Claude2: tipar o mapa heterogêneo da fixture sem
+`ignore`/cast/skip ou mudança de asserções e tornar explícita a redação
+histórica no COLLECT-DESIGN. O módulo e os 141 casos funcionais permanecem
+fixos. Revisor repete testes/tipagem e só então considera publicação.
+O backend padrão continua indisponível: nenhum coletor real, DLL/controle
+nativo, runtime/config/binário, Docker/PG/SQL, raiz/nonce/comando operacional
+ou deploy neste lote. Estado16 e fontes anteriores preservados.
+Retenção não comprova cleanup nativo. Native3s NOT_MEASURED,
+entry_gate NOT_EVALUATED e Gateway/B1/B2/D090gate2/C1/SQL/produção abertos.
+Destino final continua Docker Oracle Linux 9.8 nesta máquina.
+Registros seguintes são históricos.
+
 ## Núcleo puro de verificação revisto — 2026-11-03
 
 Claude2 único programador, sessão51ea0d85/claude-opus-5-5/esforço medium.

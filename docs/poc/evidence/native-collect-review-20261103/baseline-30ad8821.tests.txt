@@ -1,0 +1,959 @@
+"""Fake-only tests for the evidence collector policy.
+
+docs/poc/pg16_shell_native_control_collect.py does not exist yet: until it
+does, these tests fail at setup (feature-absent baseline, not a product
+regression). Every handle and byte is simulated by an in-memory backend
+injected through the private _backend seam; consistency shown with these
+fakes is not real handle safety. Setup may read the pinned verifier source
+and reuse the hand-written bundle builder of the verifier tests; afterwards
+filesystem, process and native effects are blocked. Nothing here is native.
+"""
+
+import ast
+import builtins
+import ctypes
+import dataclasses
+import hashlib
+import os
+import runpy
+import subprocess
+import threading
+from pathlib import Path
+from types import SimpleNamespace
+from typing import Any
+
+import pytest
+
+REPO = Path(__file__).resolve().parents[1]
+MODULE = REPO / "docs/poc/pg16_shell_native_control_collect.py"
+VERIFY_SOURCE = REPO / "docs/poc/pg16_shell_native_control_verify.py"
+VERIFY_TESTS = REPO / "tests/test_pg16_shell_native_control_verify.py"
+VERIFY_SHA = "b3755d492ce147596a27dd9a36bc0ecf66686efd65ef60178915ab2d1d1f7a10"
+VERIFY_NAME = "pg16_shell_native_control_verify.py"
+NONCE = "0123456789abcdef0123456789abcdef"
+ARGV0 = "C:\\fictitious\\lab\\venv\\Scripts\\python.exe"
+PUBLIC_NAME = "pg16-native-control-" + NONCE[:12]
+PRIVATE_NAME = "maskgw-pg16-native-control-v1-" + NONCE
+REPO_CHAIN = ("Users", "w.filho", "Desktop", "codes", "mask", "docs", "poc")
+TEMP_CHAIN = ("Users", "w.filho", "AppData", "Local", "Temp")
+VOLUME = 0x1234
+COLLECT_REASONS = frozenset(
+    (
+        "COLLECT_UNAVAILABLE",
+        "COLLECT_POISONED",
+        "COLLECT_ARGUMENT",
+        "COLLECT_OPEN",
+        "COLLECT_REPARSE",
+        "COLLECT_VOLUME",
+        "COLLECT_TYPE",
+        "COLLECT_LISTING",
+        "COLLECT_EXTRA",
+        "COLLECT_MISSING",
+        "COLLECT_IDENTITY",
+        "COLLECT_LINKS",
+        "COLLECT_STREAMS",
+        "COLLECT_DELETE_PENDING",
+        "COLLECT_CAP",
+        "COLLECT_READ",
+        "COLLECT_CHANGED",
+        "COLLECT_UNSUPPORTED",
+        "COLLECT_BACKEND",
+        "COLLECT_SOURCE",
+        "COLLECT_CUSTODY",
+        "COLLECT_CLEANUP",
+        "COLLECT_INTERNAL",
+    )
+)
+VERIFY_REASONS = frozenset(
+    (
+        "EXPECTED",
+        "INPUT",
+        "FILESET",
+        "CAP",
+        "SCHEMA",
+        "NONCE",
+        "PIN",
+        "BINDING",
+        "PREFIX",
+        "INVOCATION",
+        "SUPERVISION",
+        "STDOUT",
+        "SNAPSHOT",
+        "AUDIT",
+        "CONTRADICTION",
+        "INTERNAL",
+    )
+)
+INFO_FIELDS = [
+    "reparse",
+    "directory",
+    "delete_pending",
+    "volume",
+    "file_id",
+    "links",
+    "end_of_file",
+    "change_time",
+    "streams",
+]
+ALLOWED_OPS = {"open", "query", "list", "read", "close"}
+
+
+class Signal(BaseException):
+    """A fictitious control interruption."""
+
+
+class SneakyStr(str):
+    pass
+
+
+COUNTER = [0]
+
+
+def node_id() -> bytes:
+    COUNTER[0] += 1
+    return b"\x5a" * 8 + COUNTER[0].to_bytes(8, "little")
+
+
+# -- simulated handle-based filesystem --
+
+
+class Node:
+    def __init__(self, name: str, kind: str, data: bytes = b"") -> None:
+        self.name, self.kind, self.data = name, kind, data
+        self.children: dict[str, Node] = {}
+        self.file_id = node_id()
+        self.overrides: dict[str, Any] = {}
+
+    def info(self, glob: Any) -> Any:
+        fields: dict[str, Any] = {
+            "reparse": False,
+            "directory": self.kind == "DIR",
+            "delete_pending": False,
+            "volume": VOLUME,
+            "file_id": self.file_id,
+            "links": 1,
+            "end_of_file": len(self.data) if self.kind == "FILE" else 0,
+            "change_time": 1000,
+            "streams": ("::$DATA",) if self.kind == "FILE" else (),
+        }
+        fields.update(self.overrides)
+        return glob["Info"](**fields)
+
+
+class FakeBackend:
+    """Exactly the six fixed operations; every call is recorded."""
+
+    def __init__(self, glob: Any, root: Node) -> None:
+        self.glob, self.root = glob, root
+        self.handles: dict[int, Node] = {}
+        self.token = 0x10000
+        self.ops: list[tuple[str, str]] = []
+        self.counts: dict[tuple[str, str], int] = {}
+        self.hooks: dict[Any, Any] = {}
+        self.acquired: list[int] = []
+        self.closed: list[int] = []
+
+    def _call(self, op: str, name: str, default: Any, extra: Any) -> Any:
+        self.ops.append((op, name))
+        key = (op, name)
+        count = self.counts[key] = self.counts.get(key, 0) + 1
+        hook = self.hooks.get((op, name, count), self.hooks.get(key))
+        return default() if hook is None else hook(default, extra)
+
+    def _fill(self, slot: Any, node: Node) -> None:
+        self.token += 1
+        self.handles[self.token] = node
+        self.acquired.append(self.token)
+        slot.value = self.glob["Handle"](self.token)
+
+    def _node(self, handle: Any) -> Node:
+        return self.handles[handle.token]
+
+    def open_anchor(self, slot: Any) -> Any:
+        extra = SimpleNamespace(slot=slot, node=self.root, backend=self)
+        return self._call("open", "<anchor>", lambda: self._fill(slot, self.root), extra)
+
+    def open_child(self, parent: Any, name: str, kind: str, slot: Any) -> Any:
+        node = self._node(parent).children.get(name)
+
+        def default() -> None:
+            if node is None or node.kind != kind:
+                raise FileNotFoundError("fictitious-missing")
+            self._fill(slot, node)
+
+        extra = SimpleNamespace(slot=slot, node=node, backend=self)
+        return self._call("open", name, default, extra)
+
+    def query(self, handle: Any) -> Any:
+        node = self._node(handle)
+        extra = SimpleNamespace(node=node, backend=self)
+        return self._call("query", node.name, lambda: node.info(self.glob), extra)
+
+    def list_dir(self, handle: Any, max_entries: int) -> Any:
+        assert type(max_entries) is int and max_entries == 16  # exact policy bound
+        node = self._node(handle)
+        entry = self.glob["Entry"]
+
+        def default() -> Any:
+            return tuple(
+                entry(name=name, directory=child.kind == "DIR", file_id=child.file_id)
+                for name, child in sorted(node.children.items())
+            )
+
+        return self._call("list", node.name, default, SimpleNamespace(node=node, backend=self))
+
+    def read(self, handle: Any, limit: int) -> Any:
+        node = self._node(handle)
+        extra = SimpleNamespace(node=node, backend=self)
+        return self._call("read", node.name, lambda: node.data[:limit], extra)
+
+    def close(self, handle: Any) -> Any:
+        self.closed.append(handle.token)
+        node = self.handles.get(handle.token)
+        name = node.name if node is not None else "<unknown>"
+        return self._call("close", name, lambda: True, SimpleNamespace(node=node, backend=self))
+
+
+def path(parent: Node, *names: str) -> Node:
+    node = parent
+    for name in names:
+        node = node.children.setdefault(name, Node(name, "DIR"))
+    return node
+
+
+def make_tree(bundle: Any, source: bytes) -> Node:
+    root = Node("<anchor>", "DIR")
+    poc = path(root, *REPO_CHAIN)
+    poc.children[VERIFY_NAME] = Node(VERIFY_NAME, "FILE", source)
+    public = path(poc, "evidence", PUBLIC_NAME)
+    public.children["summary.json"] = Node("summary.json", "FILE", bundle.summary_raw)
+    public.children["transport.json"] = Node("transport.json", "FILE", bundle.transport_raw)
+    private = path(root, *TEMP_CHAIN, PRIVATE_NAME)
+    for name, raw in bundle.private.items():
+        case, leaf = name.split("/")
+        path(private, case).children[leaf] = Node(leaf, "FILE", raw)
+    return root
+
+
+def named(root: Node, name: str) -> Node:
+    pending = [root]
+    while pending:
+        node = pending.pop(0)
+        if node.name == name:
+            return node
+        pending.extend(child for _key, child in sorted(node.children.items()))
+    raise AssertionError("fixture node not found")
+
+
+# -- fixture and helpers --
+
+
+def forbidden(*_args: Any, **_kwargs: Any) -> Any:
+    raise AssertionError("filesystem, process or native effect after setup")
+
+
+@pytest.fixture
+def lab(monkeypatch: Any) -> Any:
+    module = runpy.run_path(str(MODULE))
+    builder = runpy.run_path(str(VERIFY_TESTS))
+    source = VERIFY_SOURCE.read_bytes()
+    for owner, name in (
+        (os, "open"),
+        (os, "listdir"),
+        (os, "scandir"),
+        (os, "system"),
+        (Path, "open"),
+        (Path, "stat"),
+        (Path, "lstat"),
+        (subprocess, "Popen"),
+        (ctypes, "WinDLL"),
+        (threading.Thread, "start"),
+    ):
+        monkeypatch.setattr(owner, name, forbidden)
+    glob = module["collect"].__globals__
+    return SimpleNamespace(
+        module=module, glob=glob, builder=builder, source=source, monkeypatch=monkeypatch
+    )
+
+
+def prepare(lab: Any, scenario: str = "approved", source: Any = None) -> Any:
+    builder = lab.builder
+    bundle = builder["build"](builder[scenario]())
+    root = make_tree(bundle, lab.source if source is None else source)
+    backend = FakeBackend(lab.glob, root)
+    lab.monkeypatch.setitem(lab.glob, "_backend", lambda: backend)
+    return SimpleNamespace(bundle=bundle, root=root, backend=backend)
+
+
+def collect(lab: Any) -> Any:
+    return lab.glob["collect"](NONCE, ARGV0)
+
+
+def invalid(lab: Any, reason: str) -> None:
+    assert collect(lab) == ("INVALID", reason, None, None)
+
+
+def closed_once(backend: FakeBackend) -> bool:
+    """Every acquired token closed, and none closed twice."""
+    unique = len(set(backend.closed)) == len(backend.closed)
+    return unique and sorted(backend.closed) == sorted(backend.acquired)
+
+
+def hook_raise(error: BaseException) -> Any:
+    def hook(_default: Any, _extra: Any) -> Any:
+        raise error
+
+    return hook
+
+
+def hook_value(value: Any) -> Any:
+    def hook(_default: Any, _extra: Any) -> Any:
+        return value
+
+    return hook
+
+
+def hook_map(function: Any) -> Any:
+    def hook(default: Any, _extra: Any) -> Any:
+        return function(default())
+
+    return hook
+
+
+def fill_then(error: BaseException) -> Any:
+    def hook(default: Any, _extra: Any) -> Any:
+        default()
+        raise error
+
+    return hook
+
+
+# -- default path, arguments, purity --
+
+
+def test_shared_literals_match_the_verifier_builder(lab: Any) -> None:
+    assert lab.builder["NONCE"] == NONCE and lab.builder["ARGV0"] == ARGV0
+    assert hashlib.sha256(lab.source).hexdigest() == VERIFY_SHA
+
+
+def test_default_backend_is_unavailable_and_touches_nothing(monkeypatch: Any, capsys: Any) -> None:
+    module = runpy.run_path(str(MODULE))
+    for owner, name in ((builtins, "open"), (os, "open"), (Path, "open"), (ctypes, "WinDLL")):
+        monkeypatch.setattr(owner, name, forbidden)
+    assert module["collect"](NONCE, ARGV0) == ("INVALID", "COLLECT_UNAVAILABLE", None, None)
+    assert module["_POISON"] == []
+    captured = capsys.readouterr()
+    assert captured.out == "" and captured.err == ""
+
+
+@pytest.mark.parametrize(
+    ("nonce", "argv0"),
+    [
+        (NONCE.upper(), ARGV0),
+        (NONCE[:-1], ARGV0),
+        (7, ARGV0),
+        (SneakyStr(NONCE), ARGV0),
+        (NONCE, ""),
+        (NONCE, ARGV0 + "\x00"),
+        (NONCE, "x" * 1025),
+        (NONCE, 7),
+        (NONCE, SneakyStr(ARGV0)),
+    ],
+)
+def test_arguments_are_checked_before_the_backend(lab: Any, nonce: Any, argv0: Any) -> None:
+    calls: list[str] = []
+    lab.monkeypatch.setitem(lab.glob, "_backend", lambda: calls.append("backend"))
+    assert lab.glob["collect"](nonce, argv0) == ("INVALID", "COLLECT_ARGUMENT", None, None)
+    assert calls == []
+
+
+def test_reasons_and_dto_shapes_are_closed(lab: Any) -> None:
+    assert lab.glob["REASONS"] == COLLECT_REASONS | VERIFY_REASONS | {"OK"}
+    assert [field.name for field in dataclasses.fields(lab.glob["Info"])] == INFO_FIELDS
+    entry_fields = [field.name for field in dataclasses.fields(lab.glob["Entry"])]
+    assert entry_fields == ["name", "directory", "file_id"]
+    assert [f.name for f in dataclasses.fields(lab.glob["Handle"])] == ["token"]
+    handle = lab.glob["Handle"](54321)
+    with pytest.raises(AttributeError):
+        handle.token = 1
+    entry = lab.glob["Entry"](name="secret-entry", directory=False, file_id=b"\x77" * 16)
+    info = Node("secret-node", "FILE", b"secret-bytes").info(lab.glob)
+    slot = lab.glob["Slot"]()
+    assert slot.value is None
+    for text in (repr(handle), repr(entry), repr(info), repr(slot), str(entry), str(info)):
+        assert "54321" not in text and "secret" not in text and "77" not in text
+        assert str(VOLUME) not in text and "5a5a" not in text
+
+
+def test_module_source_is_pure() -> None:
+    tree = ast.parse(MODULE.read_bytes())
+    imported = {
+        alias.name.split(".")[0]
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Import)
+        for alias in node.names
+    }
+    imported |= {
+        (node.module or "").split(".")[0]
+        for node in ast.walk(tree)
+        if isinstance(node, ast.ImportFrom)
+    }
+    assert imported <= {"dataclasses", "hashlib", "re"}
+    names = [node.id for node in ast.walk(tree) if isinstance(node, ast.Name)]
+    assert not set(names) & {"open", "print", "input", "eval", "__import__", "globals"}
+    assert names.count("exec") <= 1
+    assert not any(
+        isinstance(node, ast.If) and "__main__" in ast.unparse(node.test) for node in ast.walk(tree)
+    )
+
+
+# -- coherent bundles and pass-through --
+
+
+@pytest.mark.parametrize(
+    ("scenario", "label"),
+    [
+        ("approved", "VERIFIED_APPROVED"),
+        ("rejected_at_1", "VERIFIED_REJECTED"),
+        ("rejected_at_2", "VERIFIED_REJECTED"),
+        ("failed_last_close", "VERIFIED_REJECTED"),
+    ],
+)
+def test_coherent_bundles(lab: Any, capsys: Any, scenario: str, label: str) -> None:
+    case = prepare(lab, scenario)
+    result = collect(lab)
+    summary = hashlib.sha256(case.bundle.summary_raw).hexdigest()
+    transport = hashlib.sha256(case.bundle.transport_raw).hexdigest()
+    assert result == (label, "OK", summary, transport)
+    assert type(result) is tuple and all(type(item) is str for item in result)
+    assert case.backend.closed == list(reversed(case.backend.acquired))
+    assert closed_once(case.backend) and lab.glob["_POISON"] == []
+    assert {op for op, _name in case.backend.ops} <= ALLOWED_OPS
+    captured = capsys.readouterr()
+    assert captured.out == "" and captured.err == ""
+
+
+def test_no_open_or_stat_during_a_full_collection(lab: Any) -> None:
+    case = prepare(lab)
+    with lab.monkeypatch.context() as guard:
+        for owner, name in ((builtins, "open"), (os, "stat"), (os, "lstat")):
+            guard.setattr(owner, name, forbidden)
+        result = collect(lab)
+    assert result[0] == "VERIFIED_APPROVED" and closed_once(case.backend)
+
+
+def test_verifier_invalid_passes_through(lab: Any) -> None:
+    case = prepare(lab)
+    node = named(case.root, "case-1").children["local-stdout.bin"]
+    node.data = node.data.replace(b"NORMAL", b"NORMAX")
+    invalid(lab, "BINDING")
+    assert closed_once(case.backend)
+
+
+# -- namespace shape --
+
+
+@pytest.mark.parametrize(
+    "name", ["Desktop", "Temp", PUBLIC_NAME, "summary.json", "case-1", "audit.json", VERIFY_NAME]
+)
+def test_reparse_anywhere_on_the_fixed_chain(lab: Any, name: str) -> None:
+    case = prepare(lab)
+    named(case.root, name).overrides["reparse"] = True
+    invalid(lab, "COLLECT_REPARSE")
+    assert closed_once(case.backend)
+
+
+@pytest.mark.parametrize("name", ["Temp", "summary.json", "case-2", "codes"])
+def test_volume_mismatch(lab: Any, name: str) -> None:
+    case = prepare(lab)
+    named(case.root, name).overrides["volume"] = VOLUME + 1
+    invalid(lab, "COLLECT_VOLUME")
+
+
+def _flip_entry_kind(target: str) -> Any:
+    def hook(default: Any, _extra: Any) -> Any:
+        result = []
+        for entry in default():
+            item = entry
+            if entry.name == target:
+                item = dataclasses.replace(entry, directory=not entry.directory)
+            result.append(item)
+        return tuple(result)
+
+    return hook
+
+
+@pytest.mark.parametrize("kind", ["dir-info", "file-info", "entry"])
+def test_type_mismatch(lab: Any, kind: str) -> None:
+    case = prepare(lab)
+    if kind == "dir-info":
+        named(case.root, "codes").overrides["directory"] = False
+    elif kind == "file-info":
+        named(case.root, "transport.json").overrides["directory"] = True
+    else:
+        case.backend.hooks[("list", PRIVATE_NAME)] = _flip_entry_kind("case-1")
+    invalid(lab, "COLLECT_TYPE")
+
+
+@pytest.mark.parametrize("kind", ["anchor", "ancestor", "private-root", "public-root"])
+def test_open_failures(lab: Any, kind: str) -> None:
+    case = prepare(lab)
+    if kind == "anchor":
+        case.backend.hooks[("open", "<anchor>")] = hook_raise(OSError("fictitious"))
+    elif kind == "ancestor":
+        del named(case.root, "w.filho").children["AppData"]
+    elif kind == "private-root":
+        del named(case.root, "Temp").children[PRIVATE_NAME]
+    else:
+        del named(case.root, "evidence").children[PUBLIC_NAME]
+    invalid(lab, "COLLECT_OPEN")
+    assert closed_once(case.backend)
+
+
+def test_missing_listed_file(lab: Any) -> None:
+    case = prepare(lab)
+    del named(case.root, "case-1").children["supervision.json"]
+    invalid(lab, "COLLECT_MISSING")
+
+
+@pytest.mark.parametrize(
+    ("parent", "child", "kind"),
+    [
+        (PUBLIC_NAME, "transport.json.next", "FILE"),
+        (PUBLIC_NAME, "desktop.ini", "FILE"),
+        ("case-1", "held.json", "FILE"),
+        (PRIVATE_NAME, "case-4", "DIR"),
+        (PRIVATE_NAME, "notes.txt", "FILE"),
+    ],
+)
+def test_extra_entries(lab: Any, parent: str, child: str, kind: str) -> None:
+    case = prepare(lab)
+    named(case.root, parent).children[child] = Node(child, kind, b"x" if kind == "FILE" else b"")
+    invalid(lab, "COLLECT_EXTRA")
+
+
+def test_case_variant_name_is_extra(lab: Any) -> None:
+    case = prepare(lab)
+    public = named(case.root, PUBLIC_NAME)
+    node = public.children.pop("summary.json")
+    node.name = "Summary.json"
+    public.children["Summary.json"] = node
+    invalid(lab, "COLLECT_EXTRA")
+
+
+@pytest.mark.parametrize("kind", ["gap", "empty"])
+def test_case_listing_shape(lab: Any, kind: str) -> None:
+    case = prepare(lab)
+    private = named(case.root, PRIVATE_NAME)
+    if kind == "gap":
+        del private.children["case-2"]
+    else:
+        private.children.clear()
+    invalid(lab, "COLLECT_LISTING")
+
+
+def _swap_id(target: str, keep_first_half: bool) -> Any:
+    def hook(default: Any, _extra: Any) -> Any:
+        result = []
+        for entry in default():
+            item = entry
+            if entry.name == target:
+                fid = entry.file_id
+                fid = fid[:8] + bytes(8) if keep_first_half else bytes(8) + fid[8:]
+                item = dataclasses.replace(entry, file_id=fid)
+            result.append(item)
+        return tuple(result)
+
+    return hook
+
+
+@pytest.mark.parametrize("keep_first_half", [True, False], ids=["high-differs", "low-differs"])
+def test_identity_is_the_full_128_bit_id(lab: Any, keep_first_half: bool) -> None:
+    case = prepare(lab)
+    case.backend.hooks[("list", PUBLIC_NAME)] = _swap_id("summary.json", keep_first_half)
+    invalid(lab, "COLLECT_IDENTITY")
+
+
+@pytest.mark.parametrize(
+    ("name", "field", "value", "reason"),
+    [
+        ("invocation.json", "links", 2, "COLLECT_LINKS"),
+        ("summary.json", "streams", ("::$DATA", "Zone.Identifier"), "COLLECT_STREAMS"),
+        ("summary.json", "streams", (), "COLLECT_STREAMS"),
+        ("audit.json", "delete_pending", True, "COLLECT_DELETE_PENDING"),
+        ("Local", "delete_pending", True, "COLLECT_DELETE_PENDING"),
+        ("case-2", "streams", ("x",), "COLLECT_STREAMS"),
+    ],
+)
+def test_object_rules(lab: Any, name: str, field: str, value: Any, reason: str) -> None:
+    case = prepare(lab)
+    named(case.root, name).overrides[field] = value
+    invalid(lab, reason)
+
+
+# -- caps and reads --
+
+
+@pytest.mark.parametrize(
+    ("name", "size"),
+    [
+        ("transport.json", 4097),
+        ("summary.json", 16385),
+        ("local-stdout.bin", 1025),
+        ("audit.json", 65537),
+        ("invocation.json", 4097),
+        (VERIFY_NAME, 65537),
+    ],
+)
+def test_caps_are_checked_before_reading(lab: Any, name: str, size: int) -> None:
+    case = prepare(lab)
+    named(case.root, name).overrides["end_of_file"] = size
+    invalid(lab, "COLLECT_CAP")
+    assert ("read", name) not in case.backend.ops
+
+
+@pytest.mark.parametrize(
+    ("hook", "reason"),
+    [
+        (hook_map(lambda raw: raw[:-1]), "COLLECT_READ"),
+        (hook_map(lambda raw: raw + b"x"), "COLLECT_READ"),
+        (hook_raise(OSError("fictitious")), "COLLECT_READ"),
+        (hook_map(bytearray), "COLLECT_BACKEND"),
+    ],
+    ids=["short", "long", "error", "bytearray"],
+)
+def test_read_results(lab: Any, hook: Any, reason: str) -> None:
+    case = prepare(lab)
+    case.backend.hooks[("read", "summary.json")] = hook
+    invalid(lab, reason)
+    assert closed_once(case.backend)
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("reparse", True),
+        ("directory", True),
+        ("delete_pending", True),
+        ("volume", VOLUME + 1),
+        ("file_id", bytes(16)),
+        ("links", 2),
+        ("end_of_file", 1),
+        ("change_time", 1001),
+        ("streams", ("::$DATA", "x")),
+    ],
+)
+def test_any_info_field_change_after_read(lab: Any, field: str, value: Any) -> None:
+    case = prepare(lab)
+
+    def changed(info: Any) -> Any:
+        return dataclasses.replace(info, **{field: value})
+
+    case.backend.hooks[("query", "summary.json", 2)] = hook_map(changed)
+    invalid(lab, "COLLECT_CHANGED")
+
+
+def _append_entry(glob: Any) -> Any:
+    def hook(default: Any, _extra: Any) -> Any:
+        extra_entry = glob["Entry"](name="late.json", directory=False, file_id=b"\x01" * 16)
+        return (*default(), extra_entry)
+
+    return hook
+
+
+def _drop_entry(target: str) -> Any:
+    return hook_map(lambda entries: tuple(entry for entry in entries if entry.name != target))
+
+
+@pytest.mark.parametrize("kind", ["appended", "removed"])
+def test_final_listing_must_be_identical(lab: Any, kind: str) -> None:
+    case = prepare(lab)
+    if kind == "appended":
+        case.backend.hooks[("list", "case-1", 2)] = _append_entry(lab.glob)
+    else:
+        case.backend.hooks[("list", PUBLIC_NAME, 2)] = _drop_entry("transport.json")
+    invalid(lab, "COLLECT_CHANGED")
+
+
+@pytest.mark.parametrize(
+    ("error", "reason"),
+    [(NotImplementedError(), "COLLECT_UNSUPPORTED"), (OSError("fictitious"), "COLLECT_LISTING")],
+)
+def test_listing_failures(lab: Any, error: BaseException, reason: str) -> None:
+    case = prepare(lab)
+    case.backend.hooks[("list", PUBLIC_NAME)] = hook_raise(error)
+    invalid(lab, reason)
+
+
+# -- malformed DTOs --
+
+
+def _bad_info(glob: Any, kind: str) -> Any:
+    good = Node("summary.json", "FILE", b"x").info(glob)
+    fields = {name: getattr(good, name) for name in INFO_FIELDS}
+    if kind == "object":
+        return object()
+    if kind == "subclass":
+        return type("Sub", (glob["Info"],), {})(**fields)
+    changes = {
+        "volume-bool": {"volume": True},
+        "volume-negative": {"volume": -1},
+        "volume-2**64": {"volume": 1 << 64},
+        "id-15": {"file_id": bytes(15)},
+        "id-bytearray": {"file_id": bytearray(16)},
+        "links-0": {"links": 0},
+        "links-2**32": {"links": 1 << 32},
+        "eof-negative": {"end_of_file": -1},
+        "eof-2**63": {"end_of_file": 1 << 63},
+        "time-high": {"change_time": 1 << 63},
+        "time-low": {"change_time": -(1 << 63) - 1},
+        "streams-list": {"streams": ["::$DATA"]},
+        "streams-9": {"streams": ("::$DATA",) * 9},
+        "streams-empty-name": {"streams": ("",)},
+        "streams-nul": {"streams": ("a\x00",)},
+        "streams-subclass": {"streams": (SneakyStr("::$DATA"),)},
+        "reparse-int": {"reparse": 0},
+    }[kind]
+    return glob["Info"](**{**fields, **changes})
+
+
+INFO_KINDS = [
+    "object",
+    "subclass",
+    "volume-bool",
+    "volume-negative",
+    "volume-2**64",
+    "id-15",
+    "id-bytearray",
+    "links-0",
+    "links-2**32",
+    "eof-negative",
+    "eof-2**63",
+    "time-high",
+    "time-low",
+    "streams-list",
+    "streams-9",
+    "streams-empty-name",
+    "streams-nul",
+    "streams-subclass",
+    "reparse-int",
+]
+
+
+@pytest.mark.parametrize("kind", INFO_KINDS)
+def test_malformed_info(lab: Any, kind: str) -> None:
+    case = prepare(lab)
+    case.backend.hooks[("query", "summary.json", 1)] = hook_value(_bad_info(lab.glob, kind))
+    invalid(lab, "COLLECT_BACKEND")
+    assert closed_once(case.backend)
+
+
+def _bad_listing(glob: Any, kind: str) -> Any:
+    entry = glob["Entry"]
+
+    def make(name: str = "summary.json", directory: Any = False, file_id: Any = bytes(16)) -> Any:
+        return entry(name=name, directory=directory, file_id=file_id)
+
+    return {
+        "list": [make()],
+        "element": (object(),),
+        "seventeen": tuple(make(name="e" + str(index)) for index in range(17)),
+        "slash": (make(name="a/b"),),
+        "backslash": (make(name="a\\b"),),
+        "colon": (make(name="a:b"),),
+        "empty": (make(name=""),),
+        "nul": (make(name="a\x00"),),
+        "long": (make(name="x" * 256),),
+        "utf16-long": (make(name="\U0001d11e" * 128),),
+        "duplicate": (make(), make()),
+        "id-17": (make(file_id=bytes(17)),),
+        "directory-int": (make(directory=1),),
+        "name-subclass": (make(name=SneakyStr("summary.json")),),
+        "subclass": (type("Sub", (entry,), {})(name="x", directory=False, file_id=bytes(16)),),
+    }[kind]
+
+
+LISTING_KINDS = [
+    "list",
+    "element",
+    "seventeen",
+    "slash",
+    "backslash",
+    "colon",
+    "empty",
+    "nul",
+    "long",
+    "utf16-long",
+    "duplicate",
+    "id-17",
+    "directory-int",
+    "name-subclass",
+    "subclass",
+]
+
+
+@pytest.mark.parametrize("kind", LISTING_KINDS)
+def test_malformed_listing(lab: Any, kind: str) -> None:
+    case = prepare(lab)
+    case.backend.hooks[("list", PUBLIC_NAME, 1)] = hook_value(_bad_listing(lab.glob, kind))
+    invalid(lab, "COLLECT_BACKEND")
+    assert closed_once(case.backend)
+
+
+def test_query_failure_is_a_backend_error(lab: Any) -> None:
+    case = prepare(lab)
+    case.backend.hooks[("query", "summary.json", 1)] = hook_raise(OSError("fictitious"))
+    invalid(lab, "COLLECT_BACKEND")
+
+
+# -- verifier source pin --
+
+
+@pytest.mark.parametrize("kind", ["appended", "truncated"])
+def test_verifier_source_pin(lab: Any, kind: str) -> None:
+    source = lab.source + b"\nraise SystemExit(3)\n" if kind == "appended" else lab.source[:-1]
+    case = prepare(lab, source=source)
+    invalid(lab, "COLLECT_SOURCE")  # never executed: no SystemExit
+    assert closed_once(case.backend)
+
+
+# -- custody ledger --
+
+
+def test_partial_open_handle_is_adopted_and_closed(lab: Any) -> None:
+    case = prepare(lab)
+    case.backend.hooks[("open", "summary.json")] = fill_then(OSError("fictitious"))
+    invalid(lab, "COLLECT_OPEN")
+    assert closed_once(case.backend) and lab.glob["_POISON"] == []
+
+
+def test_partial_open_under_control_interruption(lab: Any) -> None:
+    case = prepare(lab)
+    signal = Signal("open")
+    case.backend.hooks[("open", "summary.json")] = fill_then(signal)
+    with pytest.raises(Signal) as caught:
+        collect(lab)
+    assert caught.value is signal and closed_once(case.backend)
+
+
+def test_open_without_filling_the_slot(lab: Any) -> None:
+    case = prepare(lab)
+    case.backend.hooks[("open", "summary.json")] = hook_value(None)
+    invalid(lab, "COLLECT_BACKEND")
+    assert closed_once(case.backend) and lab.glob["_POISON"] == []
+
+
+def _alias(_default: Any, extra: Any) -> Any:
+    extra.slot.value = extra.backend.glob["Handle"](extra.backend.acquired[0])
+
+
+def test_alias_is_quarantined_and_poisons(lab: Any) -> None:
+    case = prepare(lab)
+    case.backend.hooks[("open", "summary.json")] = _alias
+    invalid(lab, "COLLECT_CUSTODY")
+    anchor = case.backend.acquired[0]
+    assert anchor not in case.backend.closed
+    expected = [token for token in reversed(case.backend.acquired) if token != anchor]
+    assert case.backend.closed == expected
+    assert lab.glob["_POISON"] != []
+    again = prepare(lab)
+    invalid(lab, "COLLECT_POISONED")
+    assert again.backend.ops == []
+
+
+@pytest.mark.parametrize("kind", ["int", "zero", "bool", "huge", "subclass", "str"])
+def test_malformed_slot_is_quarantined_and_poisons(lab: Any, kind: str) -> None:
+    case = prepare(lab)
+    handle = lab.glob["Handle"]
+    value = {
+        "int": 7,
+        "zero": handle(0),
+        "bool": handle(True),
+        "huge": handle(1 << 64),
+        "subclass": type("Sub", (handle,), {})(99),
+        "str": "handle",
+    }[kind]
+
+    def hook(_default: Any, extra: Any) -> Any:
+        extra.slot.value = value
+
+    case.backend.hooks[("open", "transport.json")] = hook
+    invalid(lab, "COLLECT_CUSTODY")
+    assert case.backend.closed == list(reversed(case.backend.acquired))
+    assert lab.glob["_POISON"] != []
+
+
+@pytest.mark.parametrize(
+    "hook",
+    [hook_value(False), hook_value(1), hook_value(None), hook_raise(OSError("fictitious"))],
+    ids=["false", "int", "none", "error"],
+)
+def test_uncertain_close_poisons_without_retry(lab: Any, hook: Any) -> None:
+    case = prepare(lab)
+    case.backend.hooks[("close", "summary.json")] = hook
+    invalid(lab, "COLLECT_CLEANUP")
+    assert closed_once(case.backend)
+    assert lab.glob["_POISON"] != []
+    again = prepare(lab)
+    invalid(lab, "COLLECT_POISONED")
+    assert again.backend.ops == []
+
+
+# -- control matrix --
+
+
+def test_interruption_during_read_closes_everything(lab: Any) -> None:
+    case = prepare(lab)
+    signal = Signal("read")
+    case.backend.hooks[("read", "audit.json")] = hook_raise(signal)
+    with pytest.raises(Signal) as caught:
+        collect(lab)
+    assert caught.value is signal
+    assert case.backend.closed == list(reversed(case.backend.acquired))
+    assert lab.glob["_POISON"] == []
+
+
+@pytest.mark.parametrize(
+    "second", [OSError("fictitious"), Signal("second")], ids=["error", "control"]
+)
+def test_first_interruption_wins_over_cleanup_failures(lab: Any, second: BaseException) -> None:
+    case = prepare(lab)
+    first = Signal("first")
+    case.backend.hooks[("read", "audit.json")] = hook_raise(first)
+    case.backend.hooks[("close", "summary.json")] = hook_raise(second)
+    with pytest.raises(Signal) as caught:
+        collect(lab)
+    assert caught.value is first
+    assert closed_once(case.backend) and lab.glob["_POISON"] != []
+
+
+def test_interruption_during_ordinary_cleanup_propagates(lab: Any) -> None:
+    case = prepare(lab)
+    signal = Signal("cleanup")
+    case.backend.hooks[("read", "audit.json")] = hook_raise(OSError("fictitious"))
+    case.backend.hooks[("close", "summary.json")] = hook_raise(signal)
+    with pytest.raises(Signal) as caught:
+        collect(lab)
+    assert caught.value is signal
+    assert closed_once(case.backend) and lab.glob["_POISON"] != []
+
+
+def test_interruption_during_successful_cleanup_propagates(lab: Any) -> None:
+    case = prepare(lab)
+    signal = Signal("cleanup")
+    case.backend.hooks[("close", "<anchor>")] = hook_raise(signal)
+    with pytest.raises(Signal) as caught:
+        collect(lab)
+    assert caught.value is signal
+    assert closed_once(case.backend) and lab.glob["_POISON"] != []
+
+
+@pytest.mark.parametrize("op", ["query", "list", "open"])
+def test_interruption_in_other_operations(lab: Any, op: str) -> None:
+    case = prepare(lab)
+    signal = Signal(op)
+    target = {"query": "transport.json", "list": PRIVATE_NAME, "open": "case-2"}[op]
+    case.backend.hooks[(op, target)] = hook_raise(signal)
+    with pytest.raises(Signal) as caught:
+        collect(lab)
+    assert caught.value is signal and closed_once(case.backend)

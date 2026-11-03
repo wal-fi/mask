@@ -1,0 +1,14 @@
+{
+  "collected": 141,
+  "errors": 0,
+  "exit": 1,
+  "failed": 5,
+  "kind": "RED_BEFORE_FIX",
+  "passed": 136,
+  "previous136_prefix_preserved": true,
+  "scope": "in-memory fault injection only",
+  "seconds": 5.085,
+  "source_sha256": "1037b2d08d11b744689011d6a73842025175e5a47ead15add74450248ab91eba",
+  "tests_bytes": 37929,
+  "tests_sha256": "8a3f9ebd29bfdc9416f5f606de9632e49b207a1ba3a3701eaba5f3570d4bd7e8"
+}

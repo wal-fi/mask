@@ -1,0 +1,55 @@
+{
+  "baseline": "ef465b7ef8bacccdc84ecb6567894489e30fce6c",
+  "date": "2026-11-03",
+  "files": [
+    {
+      "bytes": 18360,
+      "data_file": "rejected-1037b2d0.source.txt",
+      "sha256": "1037b2d08d11b744689011d6a73842025175e5a47ead15add74450248ab91eba",
+      "source": "docs/poc/pg16_shell_native_control_collect.py"
+    },
+    {
+      "bytes": 31835,
+      "data_file": "baseline-30ad8821.tests.txt",
+      "sha256": "30ad8821d96cb9f0d24b3e7c34b39434674361143b7b78670b2261130111bbc1",
+      "source": "tests/test_pg16_shell_native_control_collect.py"
+    }
+  ],
+  "finding": "OWNERSHIP_RETENTION_GAPS",
+  "kind": "REJECTED_FAKE_POLICY_REVIEW",
+  "own": {
+    "collected": 136,
+    "passed": 136,
+    "seconds": 5.184
+  },
+  "probes": [
+    {
+      "name": "MALFORMED_FILLED_HANDLE",
+      "poisoned": false,
+      "result": [
+        "INVALID",
+        "COLLECT_INTERNAL"
+      ],
+      "unclosed": 1
+    },
+    {
+      "name": "POST_GATHER_PRE_CLEANUP",
+      "poisoned": false,
+      "same_control": true,
+      "unclosed": 31
+    },
+    {
+      "name": "CLOSE_STATUS_GAP",
+      "poisoned": false,
+      "same_control": true,
+      "unclosed": 31
+    },
+    {
+      "name": "OPEN_POST_RETURN_PRE_ADOPT",
+      "poisoned": false,
+      "same_control": true,
+      "unclosed": 1
+    }
+  ],
+  "scope": "in-memory fake handles only; no native effects"
+}
