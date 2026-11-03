@@ -1,0 +1,21 @@
+{
+  "source_sha256": "109ab960d35be1a2ee93f71eb96baf146cc80a8574e159b6ea89daae75cb76c0",
+  "tests_sha256": "d6b15ac13c86b9c330ea574e36d2bb965573bad7d0d03d848483b4cd26eebe28",
+  "tests_bytes": 16379,
+  "red": {
+    "collected": 29,
+    "failed": 29,
+    "errors": 0,
+    "exception_types": {
+      "TypeError": 29
+    },
+    "seconds": 2.487,
+    "exit": 1
+  },
+  "static": {
+    "ruff_clean": true,
+    "format_conforming": true,
+    "mypy_test_clean": true
+  },
+  "previous_procedure_prefix_exact": true
+}

@@ -1,5 +1,10 @@
 # Composição pinada de coleta — validação com fakes
 
+Nota de continuidade,2026-11-03: a fonte109ab960 medida abaixo foi
+posteriormente estendida de modo aditivo pela fábrica privada37b098cf.
+Evidência em COLLECT-FACTORY-VALIDATION; medições históricas preservadas,
+sem promover fatos simulados a ativação nativa.
+
 Data: 2026-11-03, America/Sao_Paulo. Incremento privado sob delegação,
 sem aprovação individual inventada ou ativação nativa. Claude2 foi o único
 programador: sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f,

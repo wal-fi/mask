@@ -1,0 +1,14 @@
+import ctypes,json,runpy
+p='docs/poc/pg16_shell_native_control_collect_win32.py'
+a=runpy.run_path(p); b=runpy.run_path(p)
+kind_a=a['PROTOTYPES']['NtCreateFile'][1][2]
+kind_b=b['PROTOTYPES']['NtCreateFile'][1][2]
+obj=a['OBJECT_ATTRIBUTES']()
+kind_a.from_param(ctypes.byref(obj))
+rejected=False
+try:
+ kind_b.from_param(ctypes.byref(obj))
+except TypeError:
+ rejected=True
+assert rejected and a['OBJECT_ATTRIBUTES'] is not b['OBJECT_ATTRIBUTES']
+print(json.dumps({'same_namespace_parameter_accepted':True,'other_namespace_parameter_rejected':rejected,'native_api_called':False,'dll_loader_called':False},sort_keys=True))

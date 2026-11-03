@@ -1,0 +1,92 @@
+{
+  "source": {
+    "path": "docs/poc/pg16_shell_native_control_collect_pinned.py",
+    "sha256": "37b098cf604099a8aa9e64c4a3569ce06c6fe389188eba9a2b46478b04a8285e",
+    "bytes": 5373
+  },
+  "new_tests": {
+    "path": "tests/test_pg16_shell_native_control_collect_factory.py",
+    "sha256": "d6b15ac13c86b9c330ea574e36d2bb965573bad7d0d03d848483b4cd26eebe28",
+    "bytes": 16379
+  },
+  "legacy_tests": {
+    "sha256": "a3ebf78bb3f9169bc846be54c1a7c1816fd3c5388e63471b6789fe5114fa1c8a",
+    "frozen": true,
+    "cases": 63
+  },
+  "red": {
+    "collected": 29,
+    "failed": 29,
+    "errors": 0,
+    "seconds": 2.487,
+    "exit": 1,
+    "kind": "TypeError_missing_keyword_feature"
+  },
+  "own": {
+    "collected": 29,
+    "passed": 29,
+    "seconds": 2.802,
+    "exit": 0
+  },
+  "related": {
+    "collected": 748,
+    "passed": 748,
+    "seconds": 38.185,
+    "exit": 0
+  },
+  "static": {
+    "ruff_src_tests": true,
+    "poc_lint": [
+      "E9",
+      "F63",
+      "F7",
+      "F82"
+    ],
+    "format_files": 351,
+    "mypy_files": 350,
+    "mypy_targets": [
+      "3.11",
+      "3.14"
+    ]
+  },
+  "runtime": "Windows CPython3.11.3 only",
+  "independent": {
+    "ctypes_parameter_type_probe": "same_namespace_accepted_cross_namespace_refused_no_native_call",
+    "bridge": "same_namespace_NativeApi_delegated_to_Python_stub_only",
+    "keyword_only": "extra_positional_refused_before_exec_or_factory"
+  },
+  "preservation": {
+    "upstream_and_state16_unchanged": true,
+    "procedure_previous_prefix_bytes": 18054,
+    "procedure_previous_prefix_exact": true,
+    "definitions_changed": [
+      "_Attempt",
+      "_collect_pinned"
+    ]
+  },
+  "claude": {
+    "session": "51ea0d85-05bb-4d24-ba9a-c9627c3f832f",
+    "model": "claude-opus-5-5",
+    "effort": "medium",
+    "calls": [
+      {
+        "execution": 98605,
+        "terminal": 0,
+        "scope": "read-only proposal"
+      },
+      {
+        "execution": 6989,
+        "terminal": 0,
+        "scope": "tests, design, procedure section10"
+      },
+      {
+        "execution": 52999,
+        "terminal": 0,
+        "scope": "implementation, design, procedure section10"
+      }
+    ]
+  },
+  "native_api_called": false,
+  "native_loader_called": false,
+  "production_gates": "open"
+}

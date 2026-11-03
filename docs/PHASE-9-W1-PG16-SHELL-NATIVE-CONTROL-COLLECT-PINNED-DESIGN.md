@@ -1,5 +1,10 @@
 # Composição pinada do coletor — desenho
 
+Nota de continuidade,2026-11-03: este documento mede/descreve a revisão109ab960.
+A extensão aditiva posterior com fábrica está em COLLECT-FACTORY-DESIGN e
+COLLECT-FACTORY-VALIDATION (fonte37b098cf); fatos e resultados abaixo são
+históricos e permanecem intactos. Nenhuma ativação nativa.
+
 Data: 2026-11-03. Sob a delegação geral vigente e revisão do root; não é
 aprovação individual do usuário nem ativação nativa. Programador Claude2,
 sessão `51ea0d85-05bb-4d24-ba9a-c9627c3f832f`, `claude-opus-5-5`, esforço

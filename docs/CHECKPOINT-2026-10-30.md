@@ -4,6 +4,72 @@ Criado por solicitação do usuário em2026-10-30. Inclui o trabalho acumulado
 após4a5e556, preservando resultados históricos e tentativas reprovadas. É
 checkpoint de desenvolvimento incompleto da Fase9, não release de produção.
 
+## Fábrica privada de coleta revista com fakes — 2026-11-03
+
+Claude2 programou sozinho na sessão51ea0d85, claude-opus-5-5/effort medium;
+o assistente principal revisou e validou. Composição37b098cf/5373bytes,
+testesd6b15ac1/16379bytes: **29 próprios** em2,802s e **748 relacionados**
+em38,185s passaram, sem falhas/erros/skips; os63testesa3ebf78b ficaram
+intactos. Ruff/format351/mypy350src/tests nos alvos3.11/3.14 aprovados,
+runtime sóWindows3.11.3 e PoC fora do mypy.
+
+Delta aditivo só na composição: fábrica privada keyword-only recebe o
+namespace já pinado; referência e latch retidos antes da chamada. Caminho
+antigo preservado, sem proxy/limpeza duplicada/fallback ou fábrica nativa.
+RED29TypeError medido antes; revisão109 e testes vermelhos preservados como
+dados. Duas sondas finais e uma de tipos ctypes conferidas só em Python.
+Seções1–9 do procedimento preservadas exatamente; seção10 prospectiva.
+Todos os pins upstream e estado16 intactos; backend público indisponível.
+
+Zero escritor após CLI52999. Nenhuma nova cota/reset/job; tarefa histórica
+sem novo disparo. Próximo: chamador mínimo que retenha a coleta em primeiro
+plano e estacione com limpeza incerta, com desenho/testes/revisão antes de
+efeitos. Nenhuma DLL/API/controle real, runtime/config/binário explícito,
+Docker/PG/SQL/root/nonce/comando operacional ou deploy novo. Native3s
+NOT_MEASURED/entry_gate NOT_EVALUATED/identidade
+LIVENESS_SAMPLED_TRANSPORT_UNVERIFIED; Gateway/B1/B2/D090gate2/C1/SQL/
+produção abertos. Destino final: DockerOracleLinux9.8 nesta máquina.
+Evidência em COLLECT-FACTORY-VALIDATION; registros seguintes históricos.
+
+## Fábrica na composição — testes e procedimento em preparo, 2026-11-03
+
+HEAD/origin7af79b8,0/0 e árvore rastreada limpa conferidos no início.
+CLI98605 terminou0: plano só leitura; ainda se baseava em memória para
+fontes e dizia incorretamente que a sonda de identidade nunca fora feita.
+O histórico consumido de02/11 continua LIVENESS_SAMPLED_TRANSPORT_UNVERIFIED,
+sem rerun ou promoção. Root identificou a necessidade de criar a API na
+mesma cópia/classes do backend, não com structs de outra execução.
+
+Decisão técnica sob delegação: estender minimamente a composição109ab960
+com keyword-only api_factory, preservando os63testes anteriores byte a
+byte e todos os pins upstream/estado16. A versão109 será preservada como
+dados e no Git; sua revisão será explícita, sem novo wrapper/proxy ou
+limpeza duplicada. Primeiro só testes/desenho e PROCEDURE documental.
+
+Zero escritor antes da CLI6989, única sessão51ea0d85/claude-opus-5-5/
+effort medium, marcador COLLECT_FACTORY_V2_TESTS_DESIGN_FIRST ASCII em
+uma linha conferido. Recuperar terminal6989 antes de revisar ou iniciar
+outra chamada. Só três arquivos novos de testes/documentos autorizados;
+implementação intacta nessa rodada inicial. CLI6989 terminou0: testes
+d6b15ac1/16379bytes, RED29coletados/29falhasTypeError/0erros,2,487s;
+Ruff/format/mypy do teste limpos. O arquivo PROCEDURE já existia (o pedido
+o chamou de novo por engano); Claude2 releu e só acrescentou a seção10,
+prefixo anterior18054bytes preservado exatamente e arquivado pelo root.
+O teste63a3ebf78b e fonte109ab960 ficaram intactos até medir RED.
+Sonda Python de parâmetros confirmou que a classe ctypes da mesma cópia
+é aceita e de outra cópia é recusada; sem API nativa ou loader.
+CLI52999 implementa só o delta na composição, desenho e seção10; novos29
+e antigos63testes congelados. Zero escritor antes da chamada, marcador
+COLLECT_FACTORY_V3_IMPLEMENT_FROZEN29 conferido em uma linha. Recuperar
+esse terminal antes de revisar ou iniciar outra chamada, substituindo
+a espera6989 acima. Baseline109, procedimento e RED preservados como dados.
+Sem efeitos nativos, leitura explícita de
+runtime/config/binário, Docker/PG/SQL/root/nonce/comando operacional/deploy.
+Futuro chamador de coleta ainda deve reter os registries originais e
+estacionar se cleanup não provado; _LIVE do runner não cobre coleta.
+Nenhuma cota/reset/job novo, produção/gates abertos. Registros seguintes
+históricos.
+
 ## Composição pinada de coleta revista com fakes — 2026-11-03
 
 Claude2 programou na sessão51ea0d85, claude-opus-5-5/esforço medium;

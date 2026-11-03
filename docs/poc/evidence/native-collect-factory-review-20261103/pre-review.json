@@ -1,0 +1,12 @@
+{
+  "base_head": "7af79b88ca0720b38f2a39c794a9ee80298c8ef7",
+  "base_source_sha256": "109ab960d35be1a2ee93f71eb96baf146cc80a8574e159b6ea89daae75cb76c0",
+  "base_source_bytes": 4291,
+  "ctypes_parameter_identity_probe": {
+    "same_namespace_accepted": true,
+    "cross_namespace_rejected_TypeError": true,
+    "native_API_called": false,
+    "DLL_loader_called": false
+  },
+  "limits": "Python ctypes from_param object conversion only, no native calling convention or OS support measurement"
+}

@@ -313,3 +313,67 @@ Próximo incremento seguro: desenho detalhado e implementação revisada do
 verificador privado, com fixtures e adversários, antes da proposta/rodada
 nativa. Este documento não substitui esses gates nem autoriza lê-los como
 fechados. Nenhum programa, fonte consumida ou estado de16campos mudou.
+
+## 10. Estágios da coleta posterior — prospectivo, 2026-11-03
+
+Acréscimo documental (as seções 1–9 ficam como estão). Sob a delegação geral:
+ela cobre o trabalho rotineiro autônomo, mas as proibições explícitas e as
+permissões efetivas das ferramentas continuam valendo; não há aprovação
+individual inventada, e procedimento e comando nativos exatos exigem revisão
+posterior antes de qualquer efeito. Nenhuma raiz, nonce ou comando foi
+criado.
+
+Correção de um plano anterior do programador (CLI98605), que dizia que a
+sonda de identidade não fora feita: ela **foi executada uma vez em
+2026-11-02 e está consumida**, com rótulo final estrito
+LIVENESS_SAMPLED_TRANSPORT_UNVERIFIED (seção 1 e CHECKPOINT). Sem rerun nem
+promoção posterior do rótulo.
+
+Inventário pinado conhecido, além da seção 2: verificador `b3755d49…`
+(`docs/poc/pg16_shell_native_control_verify.py`); coletor
+`1972ec74d96f93d824dfe18da0e0288a7fc21b7f2997e28d5afe497b782c9f52` (20571
+bytes); backend de coleta
+`ccb3f74af75be04bbe685bc195c84d17e0457efe15732ed6cdbe9f9f057c3b3a` (22315
+bytes); composição pinada anterior `109ab960…` (4291 bytes), preservada
+como dado e no Git. Revisão aditiva atual:5373bytes,
+`37b098cf604099a8aa9e64c4a3569ce06c6fe389188eba9a2b46478b04a8285e`.
+Fábrica privada revista pelo root somente com fakes:29próprios e
+748relacionados aprovados; evidência em COLLECT-FACTORY-VALIDATION.
+Isso não cria nem chama uma fábrica nativa.
+
+Ordem, cada estágio com recusa ou PARK:
+
+1. **Autoridade e pré-checagem (seção 2)**, mais os pins acima conferidos
+   pelo root imediatamente antes. Falta ou divergência: nada roda.
+2. **Controles (seções 3–6)**: uma execução da entrada por nonce. `FINAL` 0 ou
+   1 com saída terminal e aceitação da seção 6 seguem; 2 encerra o lote; 4, 5,
+   `PARKED` ou UNKNOWN bloqueiam até revisão, sem coleta.
+3. **Captura das fontes da coleta**: leitura limitada, `lstat` regular sem
+   reparse, de composição, coletor e backend; cada um vira um único `bytes`,
+   o mesmo objeto do SHA e do `exec`, sem releitura nem import do checkout.
+   Divergência: recusa pura, antes de qualquer namespace.
+4. **Coleta**: um processo, uma chamada à composição, sem retry. A `api` real
+   viria de uma fábrica sobre o namespace pinado já executado; a chamada de
+   `_load_native` por ela é ativação nativa e exige revisão própria.
+5. **Decisão de saída**: só com quiescência comprovada sobre os **objetos
+   originais**, capturados por identidade: o `_ATTEMPTS` original com seu
+   único registro; `_ACTIVE` e `_POISON` originais vazios; `_retained` e
+   `_open` originais do backend vazios. Contêineres vazios substituídos, ou
+   igualdade `==` com um vazio, não provam nada. Qualquer outro estado: PARK
+   em primeiro plano, pegajoso, retendo esses objetos; sem limpeza, retry ou
+   saída.
+6. **Conferência**: rótulo e hashes da coleta confrontados com o `FINAL` e a
+   aceitação da seção 6; nada promove produção.
+
+O `_LIVE` da entrada cobre só os owners do orquestrador; **não** cobre os
+handles da coleta. O futuro chamador da coleta precisa da sua própria
+retenção pegajosa em primeiro plano dos objetos do item 5; nenhum código de
+chamador é escrito neste lote.
+
+Lacunas: chamador da coleta e uma fábrica nativa real (não criada);
+revisão privada com fakes não fecha os gates nativos; conversões do
+`_NativeApi` e ABI no CPython alvo; perfil da âncora (NTFS local, não marcado
+como mídia removível, não remoto, sem atestar hardware); suporte das classes
+e `NtClose` reais; janelas de console e término externo herdadas. Runtime
+atual só Windows CPython 3.11.3; destino final Docker Oracle Linux 9.8.
+Native 3 s NOT_MEASURED, entry_gate NOT_EVALUATED; gates de produção abertos.

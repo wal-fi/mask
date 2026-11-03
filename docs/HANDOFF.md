@@ -1,5 +1,32 @@
 # Handoff
 
+## Fábrica privada de coleta revista com fakes — 2026-11-03
+
+Claude2 programou sozinho na sessão51ea0d85, claude-opus-5-5/effort medium;
+o assistente principal revisou e validou. Composição37b098cf/5373bytes,
+testesd6b15ac1/16379bytes: **29 próprios** em2,802s e **748 relacionados**
+em38,185s passaram, sem falhas/erros/skips; os63testesa3ebf78b ficaram
+intactos. Ruff/format351/mypy350src/tests nos alvos3.11/3.14 aprovados,
+runtime sóWindows3.11.3 e PoC fora do mypy.
+
+Delta aditivo só na composição: fábrica privada keyword-only recebe o
+namespace já pinado; referência e latch retidos antes da chamada. Caminho
+antigo preservado, sem proxy/limpeza duplicada/fallback ou fábrica nativa.
+RED29TypeError medido antes; revisão109 e testes vermelhos preservados como
+dados. Duas sondas finais e uma de tipos ctypes conferidas só em Python.
+Seções1–9 do procedimento preservadas exatamente; seção10 prospectiva.
+Todos os pins upstream e estado16 intactos; backend público indisponível.
+
+Zero escritor após CLI52999. Nenhuma nova cota/reset/job; tarefa histórica
+sem novo disparo. Próximo: chamador mínimo que retenha a coleta em primeiro
+plano e estacione com limpeza incerta, com desenho/testes/revisão antes de
+efeitos. Nenhuma DLL/API/controle real, runtime/config/binário explícito,
+Docker/PG/SQL/root/nonce/comando operacional ou deploy novo. Native3s
+NOT_MEASURED/entry_gate NOT_EVALUATED/identidade
+LIVENESS_SAMPLED_TRANSPORT_UNVERIFIED; Gateway/B1/B2/D090gate2/C1/SQL/
+produção abertos. Destino final: DockerOracleLinux9.8 nesta máquina.
+Evidência em COLLECT-FACTORY-VALIDATION; registros seguintes históricos.
+
 ## Composição pinada de coleta revista com fakes — 2026-11-03
 
 Claude2 programou na sessão51ea0d85, claude-opus-5-5/esforço medium;

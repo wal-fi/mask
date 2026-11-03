@@ -27,21 +27,25 @@ _HEX = frozenset("0123456789abcdef")
 _SOURCE = ("INVALID", "COLLECT_SOURCE", None, None)
 _UNAVAILABLE = ("INVALID", "COLLECT_UNAVAILABLE", None, None)
 _POISONED = ("INVALID", "COLLECT_POISONED", None, None)
+_ARGUMENT = ("INVALID", "COLLECT_ARGUMENT", None, None)
 _INTERNAL = ("INVALID", "COLLECT_INTERNAL", None, None)
 # Sticky: the single attempt of this namespace, never removed or reset.
 _ATTEMPTS = []
 
 
 class _Attempt:
-    """Durable record: both private namespaces, the api and the backend."""
+    """Durable record: both private namespaces, the api, the optional private
+    api factory with its start latch, and the backend."""
 
-    __slots__ = ("collector", "native", "api", "backend")
+    __slots__ = ("collector", "native", "api", "backend", "factory", "factory_started")
 
-    def __init__(self, api: object) -> None:
+    def __init__(self, api: object, factory: object) -> None:
         self.collector = {"__name__": "_pg16_pinned_collector"}
         self.native = {"__name__": "_pg16_pinned_win32"}
         self.api = api
         self.backend = None
+        self.factory = factory
+        self.factory_started = False  # latched True before the call, never cleared
 
     def __repr__(self) -> str:
         return "Attempt(<hidden>)"
@@ -79,24 +83,42 @@ def _provider(record: _Attempt) -> object:
 
 
 def _collect_pinned(
-    collector_src: object, backend_src: object, api: object, nonce: object, argv0: object
+    collector_src: object,
+    backend_src: object,
+    api: object,
+    nonce: object,
+    argv0: object,
+    *,
+    api_factory: object = None,
 ) -> tuple:
-    """Closed (label, reason, summary_sha256, transport_sha256)."""
+    """Closed (label, reason, summary_sha256, transport_sha256).
+
+    `api_factory` is a private seam: when given (and `api` is None) it is
+    called once with the pinned backend namespace after its exec and returns
+    the api. It is not authenticated by the pins and may have arbitrary
+    effects; nothing here falls back to any loader."""
     if not (
         _pinned(collector_src, COLLECTOR_SIZE, COLLECTOR_SHA)
         and _pinned(backend_src, BACKEND_SIZE, BACKEND_SHA)
     ):
         return _SOURCE
-    if api is None:
+    if api_factory is not None and (api is not None or not callable(api_factory)):
+        return _ARGUMENT
+    if api is None and api_factory is None:
         return _UNAVAILABLE  # no fallback to any native loader
     if _ATTEMPTS:
         return _POISONED
-    record = _Attempt(api)
+    record = _Attempt(api, api_factory)
     _ATTEMPTS.append(record)  # published before the first exec, kept forever
     try:
         exec(compile(collector_src, "<pinned-collector>", "exec"), record.collector)
         exec(compile(backend_src, "<pinned-win32>", "exec"), record.native)
-        record.backend = record.native["_Win32Backend"](api, record.collector)
+        if api_factory is not None:
+            record.factory_started = True  # before the callback, never cleared
+            record.api = api_factory(record.native)  # the same executed namespace
+            if record.api is None:
+                return _UNAVAILABLE  # attempt consumed; no backend, no policy effect
+        record.backend = record.native["_Win32Backend"](record.api, record.collector)
         record.collector["_backend"] = _provider(record)  # private copy only
         return _closed(record.collector["collect"](nonce, argv0), record.collector)
     except Exception:
