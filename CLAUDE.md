@@ -1,5 +1,32 @@
 # AI Data Masking Gateway
 
+## Composição pinada de coleta revista com fakes — 2026-11-03
+
+Claude2 programou na sessão51ea0d85, claude-opus-5-5/esforço medium;
+o assistente principal revisou e validou. Fonte109ab960/4291bytes e
+testesa3ebf78b/21009bytes: **63 próprios** passaram em6,175s e
+**719 relacionados** em27,137s, zero falhas/erros/skips. Ruff src/tests e
+lint restrito do PoC limpos; format350 e mypy349src/tests nos alvos3.11/
+3.14 limpos; runtime só Windows3.11.3, PoC fora do mypy. Duas sondas
+independentes confirmaram reentrância recusada e controle tardio retido.
+
+Os dois pins são conferidos antes de qualquer execução dos bytes recebidos;
+a cópia reutiliza DTOs e ledgers originais, uma tentativa serial com registro
+retido. Seam privado só para fakes, sem autenticação hostil nem nova limpeza.
+Fontes anteriores/estado16 intactos, backend público continua indisponível.
+RED52 e RED63 de módulo ausente, correção do teste AST contraditório, falhas
+de estilo e correção da contagem AST do revisor preservados como dados.
+
+Zero Claude2 ativo após terminal49063. Tarefa histórica Disabled, sem
+próximo horário; nenhuma nova cota/reset/job ou segundo escritor. Próximo:
+procedimento externo de captura e pré-checagem concreta, com revisão antes
+de efeitos. Nenhum Docker/PG/SQL, DLL/API/controle real, leitura explícita
+de runtime/config/binário, root/nonce/comando operacional ou deploy novo.
+Native3s NOT_MEASURED, entry_gate NOT_EVALUATED, identidade
+LIVENESS_SAMPLED_TRANSPORT_UNVERIFIED; Gateway/B1/B2/D090gate2/C1/SQL/
+produção continuam abertos. Destino final: Docker Oracle Linux9.8 local.
+Evidência em COLLECT-PINNED-VALIDATION. Registros seguintes históricos.
+
 ## Backend Win32 de coleta revisto com fakes — 2026-11-03
 
 Claude2 programou na sessão `51ea0d85`, sempre `claude-opus-5-5`,

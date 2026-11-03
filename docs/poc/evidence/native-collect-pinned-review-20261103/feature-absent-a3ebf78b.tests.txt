@@ -1,0 +1,602 @@
+"""Fake-only tests for the source-pinned collector composition.
+
+docs/poc/pg16_shell_native_control_collect_pinned.py does not exist yet: until
+it does, these tests fail at setup (feature-absent baseline, not a product
+regression). Setup reads the frozen sources and loads the fake NT helpers of
+the Win32 tests and the bundle builder of the verifier tests; during each
+exercise filesystem, loader, process, thread and DLL effects are blocked by a
+scoped monkeypatch context. The injected api is a Python fake; nothing here is
+native, and the private seams are not an authentication boundary.
+"""
+
+import ast
+import builtins
+import contextlib
+import ctypes
+import hashlib
+import importlib
+import os
+import runpy
+import subprocess
+import sys
+import threading
+from collections.abc import Iterator
+from pathlib import Path
+from types import SimpleNamespace
+from typing import Any
+
+import pytest
+
+REPO = Path(__file__).resolve().parents[1]
+PINNED = REPO / "docs/poc/pg16_shell_native_control_collect_pinned.py"
+COLLECTOR = REPO / "docs/poc/pg16_shell_native_control_collect.py"
+WIN32 = REPO / "docs/poc/pg16_shell_native_control_collect_win32.py"
+WIN32_TESTS = REPO / "tests/test_pg16_shell_native_control_collect_win32.py"
+VERIFY_SOURCE = REPO / "docs/poc/pg16_shell_native_control_verify.py"
+VERIFY_TESTS = REPO / "tests/test_pg16_shell_native_control_verify.py"
+COLLECTOR_SHA = "1972ec74d96f93d824dfe18da0e0288a7fc21b7f2997e28d5afe497b782c9f52"
+COLLECTOR_SIZE = 20571
+BACKEND_SHA = "ccb3f74af75be04bbe685bc195c84d17e0457efe15732ed6cdbe9f9f057c3b3a"
+BACKEND_SIZE = 22315
+NONCE = "0123456789abcdef0123456789abcdef"
+ARGV0 = "C:\\fictitious\\lab\\venv\\Scripts\\python.exe"
+SENTINEL = "fictitious-secret-sentinel-5c1d"
+INTERNAL = ("INVALID", "COLLECT_INTERNAL", None, None)
+POISONED = ("INVALID", "COLLECT_POISONED", None, None)
+SOURCE = ("INVALID", "COLLECT_SOURCE", None, None)
+SAME: Any = object()
+
+
+class Signal(BaseException):
+    """A fictitious control interruption."""
+
+
+class SubBytes(bytes):
+    pass
+
+
+def sha(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def forbidden(*_args: Any, **_kwargs: Any) -> Any:
+    raise AssertionError("filesystem, loader, process or native effect during the exercise")
+
+
+BANS: tuple[tuple[Any, str], ...] = (
+    (builtins, "open"),
+    (os, "open"),
+    (os, "listdir"),
+    (os, "scandir"),
+    (os, "system"),
+    (Path, "open"),
+    (Path, "stat"),
+    (Path, "read_bytes"),
+    (subprocess, "Popen"),
+    (ctypes, "WinDLL"),
+    (ctypes, "CDLL"),
+    (threading.Thread, "start"),
+    (runpy, "run_path"),
+    (importlib, "import_module"),
+)
+
+
+@pytest.fixture
+def pin(monkeypatch: Any) -> SimpleNamespace:
+    module = runpy.run_path(str(PINNED))
+    helpers = runpy.run_path(str(WIN32_TESTS))
+    builder = runpy.run_path(str(VERIFY_TESTS))
+    original = runpy.run_path(str(COLLECTOR))
+    win32 = runpy.run_path(str(WIN32))
+    run = module["_collect_pinned"]
+    return SimpleNamespace(
+        run=run,
+        glob=run.__globals__,
+        helpers=helpers,
+        builder=builder,
+        collector_src=COLLECTOR.read_bytes(),
+        backend_src=WIN32.read_bytes(),
+        verifier=VERIFY_SOURCE.read_bytes(),
+        original=original["collect"].__globals__,
+        win32=win32["backend"].__globals__,
+        monkeypatch=monkeypatch,
+    )
+
+
+@contextlib.contextmanager
+def sealed(pin: SimpleNamespace) -> Iterator[Any]:
+    """Blocks effects for the exercise only; restored before pytest reports."""
+    with pin.monkeypatch.context() as patch:
+        for owner, name in BANS:
+            patch.setattr(owner, name, forbidden)
+        yield patch
+
+
+def no_exec(patch: Any) -> None:
+    patch.setattr(builtins, "exec", forbidden)
+    patch.setattr(builtins, "compile", forbidden)
+
+
+def world(pin: SimpleNamespace, scenario: str = "approved") -> SimpleNamespace:
+    bundle = pin.builder["build"](pin.builder[scenario]())
+    root = pin.helpers["make_tree"](bundle, pin.verifier)
+    fake = pin.helpers["FakeNt"](root)
+    return SimpleNamespace(bundle=bundle, root=root, nt=fake, api=fake.api())
+
+
+def call(
+    pin: SimpleNamespace, api: Any, collector: Any = SAME, backend: Any = SAME, nonce: Any = NONCE
+) -> Any:
+    first = pin.collector_src if collector is SAME else collector
+    second = pin.backend_src if backend is SAME else backend
+    return pin.run(first, second, api, nonce, ARGV0)
+
+
+def attempts(pin: SimpleNamespace) -> list[Any]:
+    value = pin.glob["_ATTEMPTS"]
+    assert type(value) is list
+    return value
+
+
+def poisoned_by(record: Any) -> bool:
+    return any(item[0] is record.backend for item in record.collector["_POISON"])
+
+
+def assert_consumed(pin: SimpleNamespace, fake: Any, record: Any) -> None:
+    """A later call is refused before any exec or api call; the original
+    record stays the only one."""
+    before = list(fake.calls)
+    with sealed(pin) as patch:
+        no_exec(patch)
+        assert call(pin, fake.api()) == POISONED
+    assert fake.calls == before
+    held = attempts(pin)
+    assert len(held) == 1 and held[0] is record
+
+
+def assert_originals_untouched(pin: SimpleNamespace) -> None:
+    assert pin.original["_backend"]() is None
+    assert pin.original["_POISON"] == [] and pin.original["_ACTIVE"] == []
+    assert pin.win32["backend"]() is None
+
+
+# -- pins and purity --
+
+
+def test_pins_match_the_frozen_sources(pin: SimpleNamespace) -> None:
+    for raw, digest, size in (
+        (pin.collector_src, COLLECTOR_SHA, COLLECTOR_SIZE),
+        (pin.backend_src, BACKEND_SHA, BACKEND_SIZE),
+    ):
+        assert sha(raw) == digest and len(raw) == size
+    collector_pin = (pin.glob["COLLECTOR_SHA"], pin.glob["COLLECTOR_SIZE"])
+    backend_pin = (pin.glob["BACKEND_SHA"], pin.glob["BACKEND_SIZE"])
+    assert collector_pin == (COLLECTOR_SHA, COLLECTOR_SIZE)
+    assert backend_pin == (BACKEND_SHA, BACKEND_SIZE)
+    assert attempts(pin) == []
+
+
+def test_module_source_is_private_and_pure() -> None:
+    tree = ast.parse(PINNED.read_bytes())
+    imported = {
+        alias.name.split(".")[0]
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Import)
+        for alias in node.names
+    }
+    imported |= {
+        (node.module or "").split(".")[0]
+        for node in ast.walk(tree)
+        if isinstance(node, ast.ImportFrom)
+    }
+    assert imported <= {"hashlib"}
+    names = [node.id for node in ast.walk(tree) if isinstance(node, ast.Name)]
+    attributes = [node.attr for node in ast.walk(tree) if isinstance(node, ast.Attribute)]
+    strings = [
+        node.value
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Constant) and isinstance(node.value, str)
+    ]
+    banned = {
+        "_load_native",
+        "WinDLL",
+        "windll",
+        "CDLL",
+        "ctypes",
+        "runpy",
+        "importlib",
+        "sys",
+        "os",
+        "subprocess",
+        "open",
+        "print",
+        "input",
+        "eval",
+        "__import__",
+        "globals",
+    }
+    assert not [word for word in names + attributes + strings if word in banned]
+    # the record attribute `backend` is required; only a public backend
+    # function or class is forbidden (also covered by the public check below)
+    defined = [
+        node.name for node in ast.walk(tree) if isinstance(node, (ast.FunctionDef, ast.ClassDef))
+    ]
+    assert "backend" not in defined
+    assert names.count("exec") <= 2 and names.count("compile") <= 2
+    assert not [text for text in strings if "docs/poc" in text or "\\" in text]
+    public = [
+        node.name
+        for node in tree.body
+        if isinstance(node, (ast.FunctionDef, ast.ClassDef)) and not node.name.startswith("_")
+    ]
+    assert public == []
+    assert not any(
+        isinstance(node, ast.If) and "__main__" in ast.unparse(node.test) for node in ast.walk(tree)
+    )
+
+
+# -- source validation before any exec --
+
+
+def tampered(raw: bytes, other: bytes, kind: str) -> Any:
+    variants: dict[str, Any] = {
+        "bytearray": bytearray(raw),
+        "memoryview": memoryview(raw),
+        "str": raw.decode("latin-1"),
+        "subclass": SubBytes(raw),
+        "none": None,
+        "short": raw[:-1],
+        "long": raw + b"\n",
+        "flipped": raw[:-1] + bytes([raw[-1] ^ 1]),
+        "swapped": other,  # the other pinned source in this position
+    }
+    return variants[kind]
+
+
+TAMPERS = [
+    "bytearray",
+    "memoryview",
+    "str",
+    "subclass",
+    "none",
+    "short",
+    "long",
+    "flipped",
+    "swapped",
+]
+
+
+@pytest.mark.parametrize("kind", TAMPERS)
+@pytest.mark.parametrize("which", ["collector", "backend"])
+def test_every_tamper_on_either_source_is_refused_before_exec(
+    pin: SimpleNamespace, which: str, kind: str
+) -> None:
+    w = world(pin)
+    if which == "collector":
+        bad = tampered(pin.collector_src, pin.backend_src, kind)
+        arguments = {"collector": bad}
+    else:
+        bad = tampered(pin.backend_src, pin.collector_src, kind)
+        arguments = {"backend": bad}
+    with sealed(pin) as patch:
+        no_exec(patch)
+        assert call(pin, w.api, **arguments) == SOURCE
+    assert attempts(pin) == [] and w.nt.calls == []
+    assert_originals_untouched(pin)
+
+
+def test_unavailable_api_runs_nothing_and_does_not_consume(pin: SimpleNamespace) -> None:
+    w = world(pin)
+    with sealed(pin) as patch:
+        no_exec(patch)
+        assert call(pin, None) == ("INVALID", "COLLECT_UNAVAILABLE", None, None)
+    assert attempts(pin) == []
+    with sealed(pin):
+        result = call(pin, w.api)
+    assert result[:2] == ("VERIFIED_APPROVED", "OK")
+    assert len(attempts(pin)) == 1
+
+
+# -- good bundles through the pinned copies --
+
+
+@pytest.mark.parametrize(
+    ("scenario", "label"),
+    [("approved", "VERIFIED_APPROVED"), ("rejected_at_1", "VERIFIED_REJECTED")],
+)
+def test_good_bundles_reuse_the_original_dtos_and_ledgers(
+    pin: SimpleNamespace, scenario: str, label: str
+) -> None:
+    w = world(pin, scenario)
+    compiled: list[Any] = []
+    real_compile = builtins.compile
+
+    def recording(source: Any, *args: Any, **kwargs: Any) -> Any:
+        compiled.append(source)
+        return real_compile(source, *args, **kwargs)
+
+    before = dict(sys.modules)
+    with sealed(pin) as patch:
+        patch.setattr(builtins, "compile", recording)
+        result = call(pin, w.api)
+    summary, transport = sha(w.bundle.summary_raw), sha(w.bundle.transport_raw)
+    assert result == (label, "OK", summary, transport)
+    assert compiled[0] is pin.collector_src and compiled[1] is pin.backend_src
+    (record,) = attempts(pin)
+    assert record.api is w.api
+    backend = record.backend
+    assert type(backend) is record.native["_Win32Backend"]
+    for attribute, name in (("_handle", "Handle"), ("_info", "Info"), ("_entry", "Entry")):
+        assert getattr(backend, attribute) is record.collector[name]
+    assert backend._slot is record.collector["Slot"]
+    assert record.collector["collect"].__globals__ is record.collector
+    assert record.collector["_backend"]() is backend
+    assert record.collector["_POISON"] == [] and record.collector["_ACTIVE"] == []
+    assert backend._retained == []
+    closed, created = w.nt.closed, w.nt.created
+    assert len(set(closed)) == len(closed) and sorted(closed) == sorted(created)
+    assert all(sys.modules[name] is module for name, module in before.items())
+    assert not [name for name in set(sys.modules) - set(before) if "pg16" in name]
+    assert_originals_untouched(pin)
+    assert sha(COLLECTOR.read_bytes()) == COLLECTOR_SHA and sha(WIN32.read_bytes()) == BACKEND_SHA
+    assert_consumed(pin, w.nt, record)
+
+
+def test_arguments_are_judged_once_by_the_pinned_policy(pin: SimpleNamespace) -> None:
+    w = world(pin)
+    with sealed(pin):
+        assert call(pin, w.api, nonce=NONCE.upper()) == ("INVALID", "COLLECT_ARGUMENT", None, None)
+    assert w.nt.calls == []
+    (record,) = attempts(pin)
+    assert_consumed(pin, w.nt, record)
+
+
+# -- durable record through failures and control --
+
+
+@pytest.mark.parametrize("at", [1, 2])
+def test_control_during_either_compile_keeps_the_prepublished_record(
+    pin: SimpleNamespace, at: int
+) -> None:
+    w = world(pin)
+    signal = Signal()
+    real_compile = builtins.compile
+    count = [0]
+
+    def interrupted(source: Any, *args: Any, **kwargs: Any) -> Any:
+        count[0] += 1
+        if count[0] == at:
+            raise signal
+        return real_compile(source, *args, **kwargs)
+
+    with sealed(pin) as patch:
+        patch.setattr(builtins, "compile", interrupted)
+        with pytest.raises(Signal) as caught:
+            call(pin, w.api)
+    assert caught.value is signal
+    signal.__traceback__ = None
+    del caught
+    (record,) = attempts(pin)
+    assert record.api is w.api and record.backend is None
+    assert type(record.collector) is dict and type(record.native) is dict
+    assert ("collect" in record.collector) is (at == 2)
+    assert "_Win32Backend" not in record.native
+    assert w.nt.calls == []
+    assert_consumed(pin, w.nt, record)
+
+
+class ControlApi:
+    """An api whose every operation lookup is interrupted by control."""
+
+    def __init__(self, signal: BaseException) -> None:
+        self.signal = signal
+
+    def __getattr__(self, _name: str) -> Any:
+        raise self.signal
+
+
+def test_control_before_backend_publication_keeps_the_record(pin: SimpleNamespace) -> None:
+    w = world(pin)
+    signal = Signal()
+    api = ControlApi(signal)
+    with sealed(pin), pytest.raises(Signal) as caught:
+        call(pin, api)
+    assert caught.value is signal
+    signal.__traceback__ = None
+    del caught
+    (record,) = attempts(pin)
+    assert record.api is api and record.backend is None
+    assert "_Win32Backend" in record.native and "collect" in record.collector
+    assert record.collector["_backend"]() is None  # copied seam not yet replaced
+    assert_consumed(pin, w.nt, record)
+
+
+def test_assembly_failure_is_closed_and_keeps_the_record(pin: SimpleNamespace) -> None:
+    w = world(pin)
+    api = SimpleNamespace(create=w.api.create)  # incomplete: the constructor refuses
+    with sealed(pin):
+        assert call(pin, api) == INTERNAL
+    (record,) = attempts(pin)
+    assert record.api is api and record.backend is None
+    assert record.collector["_backend"]() is None
+    assert w.nt.calls == []
+    assert_consumed(pin, w.nt, record)
+
+
+def test_uncertain_close_is_retained_never_forced_or_repeated(pin: SimpleNamespace) -> None:
+    w = world(pin)
+    w.nt.hooks[("close", "poc")] = pin.helpers["returns"](pin.helpers["INVALID_HANDLE"])
+    with sealed(pin):
+        assert call(pin, w.api) == ("INVALID", "COLLECT_CLEANUP", None, None)
+    (record,) = attempts(pin)
+    assert poisoned_by(record)
+    assert w.nt.calls.count(("close", "poc")) == 1
+    assert len(set(w.nt.closed)) == len(w.nt.closed) < len(w.nt.created)
+    assert_originals_untouched(pin)
+    assert_consumed(pin, w.nt, record)
+
+
+def test_control_during_collect_propagates_and_retains_the_ledgers(pin: SimpleNamespace) -> None:
+    w = world(pin)
+    signal = Signal()
+    w.nt.hooks[("create", "codes")] = pin.helpers["raise_before"](signal)
+    with sealed(pin), pytest.raises(Signal) as caught:
+        call(pin, w.api)
+    assert caught.value is signal
+    signal.__traceback__ = None
+    del caught
+    (record,) = attempts(pin)
+    assert record.backend is not None and poisoned_by(record)
+    assert len(record.collector["_ACTIVE"]) == 1
+    assert w.nt.closed == []
+    assert_consumed(pin, w.nt, record)
+
+
+def test_an_injected_secret_stays_out_of_the_result_and_output(
+    pin: SimpleNamespace, capsys: Any
+) -> None:
+    w = world(pin)
+    error = OSError(SENTINEL)
+    w.nt.hooks[("create", pin.helpers["ANCHOR"])] = pin.helpers["raise_before"](error)
+    with sealed(pin):
+        result = call(pin, w.api)
+    assert result == ("INVALID", "COLLECT_CUSTODY", None, None)
+    error.__traceback__ = None
+    (record,) = attempts(pin)
+    captured = capsys.readouterr()
+    for text in (repr(result), repr(record), captured.out, captured.err):
+        assert SENTINEL not in text
+    assert "0x" not in repr(record)
+    assert w.nt.created == [] and w.nt.closed == []
+
+
+# -- final output revalidation (private pin seam; proves nothing about trust) --
+
+
+def fake_collector(body: str) -> bytes:
+    lines = [
+        "class Handle:",
+        "    pass",
+        "class Info:",
+        "    pass",
+        "class Entry:",
+        "    pass",
+        "class Slot:",
+        "    pass",
+        'REASONS = frozenset(("COLLECT_CLEANUP", "SCHEMA", "OK"))',
+        "def _backend():",
+        "    return None",
+        "def collect(nonce, argv0):",
+        "    " + body,
+        "",
+    ]
+    return "\n".join(lines).encode()
+
+
+H = "0123456789abcdef" * 4
+OUTPUTS: list[tuple[Any, Any]] = [
+    (("VERIFIED_APPROVED", "OK", H, H[::-1]), ("VERIFIED_APPROVED", "OK", H, H[::-1])),
+    (("VERIFIED_REJECTED", "OK", H, H), ("VERIFIED_REJECTED", "OK", H, H)),
+    (("INVALID", "SCHEMA", None, None), ("INVALID", "SCHEMA", None, None)),
+    (("INVALID", "COLLECT_CLEANUP", None, None), ("INVALID", "COLLECT_CLEANUP", None, None)),
+    (["INVALID", "SCHEMA", None, None], INTERNAL),
+    (("INVALID", "SCHEMA", None), INTERNAL),
+    (("INVALID", "SCHEMA", None, None, None), INTERNAL),
+    (("APPROVED", "OK", H, H), INTERNAL),
+    (("VERIFIED_APPROVED", "SCHEMA", H, H), INTERNAL),
+    (("VERIFIED_APPROVED", "OK", H.upper(), H), INTERNAL),
+    (("VERIFIED_APPROVED", "OK", H[:-1], H), INTERNAL),
+    (("VERIFIED_APPROVED", "OK", "g" * 64, H), INTERNAL),
+    (("VERIFIED_APPROVED", "OK", H, None), INTERNAL),
+    (("VERIFIED_APPROVED", "OK", H.encode(), H), INTERNAL),
+    (("INVALID", "OK", None, None), INTERNAL),
+    (("INVALID", "NOT_A_REASON", None, None), INTERNAL),
+    (("INVALID", "SCHEMA", H, None), INTERNAL),
+    (("INVALID", "SCHEMA", None, H), INTERNAL),
+    ((None, "SCHEMA", None, None), INTERNAL),
+    ("INVALID", INTERNAL),
+]
+
+
+def use_fake_collector(pin: SimpleNamespace, source: bytes) -> None:
+    pin.monkeypatch.setitem(pin.glob, "COLLECTOR_SHA", sha(source))
+    pin.monkeypatch.setitem(pin.glob, "COLLECTOR_SIZE", len(source))
+
+
+@pytest.mark.parametrize(("value", "expected"), OUTPUTS)
+def test_final_output_is_revalidated(pin: SimpleNamespace, value: Any, expected: Any) -> None:
+    source = fake_collector("return " + repr(value))
+    use_fake_collector(pin, source)
+    w = world(pin)
+    with sealed(pin):
+        assert call(pin, w.api, collector=source) == expected
+    assert len(attempts(pin)) == 1
+
+
+def test_policy_exception_text_is_closed(pin: SimpleNamespace, capsys: Any) -> None:
+    source = fake_collector("raise ValueError(" + repr(SENTINEL) + ")")
+    use_fake_collector(pin, source)
+    w = world(pin)
+    with sealed(pin):
+        result = call(pin, w.api, collector=source)
+    assert result == INTERNAL
+    captured = capsys.readouterr()
+    assert SENTINEL not in captured.out and SENTINEL not in captured.err
+    assert SENTINEL not in repr(attempts(pin)[0])
+
+
+# -- V3 additions: exact types in the output, and the record before any exec --
+
+SUBCLASSES = "class S(str):\n    pass\nclass T(tuple):\n    pass\n"
+EXACT_TYPE_OUTPUTS = [
+    '(S("INVALID"), "SCHEMA", None, None)',
+    '("INVALID", S("SCHEMA"), None, None)',
+    f'("VERIFIED_APPROVED", S("OK"), {H!r}, {H!r})',
+    f'("VERIFIED_APPROVED", "OK", S({H!r}), {H!r})',
+    'T(("INVALID", "SCHEMA", None, None))',
+    '("INVALID", True, None, None)',
+    '("INVALID", 7, None, None)',
+    f'("VERIFIED_APPROVED", "OK", {H!r}, {H.upper()!r})',
+    f'("VERIFIED_APPROVED", "OK", {H!r}, {H[:-1]!r})',
+    f'("VERIFIED_REJECTED", "OK", {H!r}, {"g" * 64!r})',
+]
+
+
+@pytest.mark.parametrize("expression", EXACT_TYPE_OUTPUTS)
+def test_output_requires_exact_types_and_two_lawful_hashes(
+    pin: SimpleNamespace, expression: str
+) -> None:
+    source = SUBCLASSES.encode() + fake_collector("return " + expression)
+    use_fake_collector(pin, source)
+    w = world(pin)
+    with sealed(pin):
+        result = call(pin, w.api, collector=source)
+    assert result == INTERNAL
+    assert type(result) is tuple and all(type(item) in (str, type(None)) for item in result)
+
+
+def test_interruption_before_the_first_exec_already_retains_the_record(
+    pin: SimpleNamespace,
+) -> None:
+    w = world(pin)
+    signal = Signal()
+    received: list[Any] = []
+
+    def interrupted(_code: Any, namespace: Any = None, *_rest: Any) -> Any:
+        received.append(namespace)
+        raise signal
+
+    with sealed(pin) as patch:
+        patch.setattr(builtins, "exec", interrupted)
+        with pytest.raises(Signal) as caught:
+            call(pin, w.api)
+    assert caught.value is signal
+    signal.__traceback__ = None
+    del caught
+    (record,) = attempts(pin)
+    assert len(received) == 1 and received[0] is record.collector
+    assert type(record.collector) is dict and type(record.native) is dict
+    assert set(record.collector) <= {"__name__"} and set(record.native) <= {"__name__"}
+    assert record.api is w.api and record.backend is None
+    assert w.nt.calls == []
+    assert_consumed(pin, w.nt, record)

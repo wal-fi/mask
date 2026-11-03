@@ -1,0 +1,22 @@
+{
+  "source_sha256": "515b72434fc2de66cc08bc6c2ca31cf2b6355225176f2504e0db18f7eba88f4a",
+  "bytes": 18629,
+  "feature_absent": {
+    "collected": 52,
+    "errors": 51,
+    "failed": 1,
+    "exception_types": {
+      "FileNotFoundError": 52
+    },
+    "seconds": 0.926,
+    "exit": 1
+  },
+  "static": {
+    "ruff_errors": 3,
+    "format_conforming": false,
+    "mypy_one_file_clean": true
+  },
+  "contract_ast_collisions": [
+    "backend"
+  ]
+}

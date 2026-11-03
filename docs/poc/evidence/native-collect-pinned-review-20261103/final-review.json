@@ -1,0 +1,73 @@
+{
+  "source": {
+    "sha256": "109ab960d35be1a2ee93f71eb96baf146cc80a8574e159b6ea89daae75cb76c0",
+    "bytes": 4291
+  },
+  "tests": {
+    "sha256": "a3ebf78bb3f9169bc846be54c1a7c1816fd3c5388e63471b6789fe5114fa1c8a",
+    "bytes": 21009
+  },
+  "own": {
+    "collected": 63,
+    "passed": 63,
+    "seconds": 6.175,
+    "exit": 0
+  },
+  "related": {
+    "collected": 719,
+    "passed": 719,
+    "seconds": 27.137,
+    "exit": 0
+  },
+  "ruff": true,
+  "format": 350,
+  "mypy": {
+    "files": 349,
+    "targets": [
+      "3.11",
+      "3.14"
+    ]
+  },
+  "runtime": "Windows CPython3.11.3 only",
+  "native": "not measured",
+  "independent": {
+    "reentrancy": {
+      "refused": true,
+      "outerVerifiedApproved": true,
+      "attempts": 1,
+      "allFakeHandlesClosedOnce": true
+    },
+    "lateControl": {
+      "identityPreserved": true,
+      "recordRetained": true,
+      "noRepeatCleanup": true
+    }
+  },
+  "claude": {
+    "session": "51ea0d85-05bb-4d24-ba9a-c9627c3f832f",
+    "model": "claude-opus-5-5",
+    "effort": "medium",
+    "calls": [
+      {
+        "execution": 92065,
+        "terminal": 0,
+        "scope": "read-only plan"
+      },
+      {
+        "execution": 29253,
+        "terminal": 0,
+        "scope": "design+tests"
+      },
+      {
+        "execution": 49898,
+        "terminal": 0,
+        "scope": "test-contract/style fix"
+      },
+      {
+        "execution": 49063,
+        "terminal": 0,
+        "scope": "implementation+design, frozen tests"
+      }
+    ]
+  }
+}

@@ -4,6 +4,69 @@ Criado por solicitação do usuário em2026-10-30. Inclui o trabalho acumulado
 após4a5e556, preservando resultados históricos e tentativas reprovadas. É
 checkpoint de desenvolvimento incompleto da Fase9, não release de produção.
 
+## Composição pinada de coleta revista com fakes — 2026-11-03
+
+Claude2 programou na sessão51ea0d85, claude-opus-5-5/esforço medium;
+o assistente principal revisou e validou. Fonte109ab960/4291bytes e
+testesa3ebf78b/21009bytes: **63 próprios** passaram em6,175s e
+**719 relacionados** em27,137s, zero falhas/erros/skips. Ruff src/tests e
+lint restrito do PoC limpos; format350 e mypy349src/tests nos alvos3.11/
+3.14 limpos; runtime só Windows3.11.3, PoC fora do mypy. Duas sondas
+independentes confirmaram reentrância recusada e controle tardio retido.
+
+Os dois pins são conferidos antes de qualquer execução dos bytes recebidos;
+a cópia reutiliza DTOs e ledgers originais, uma tentativa serial com registro
+retido. Seam privado só para fakes, sem autenticação hostil nem nova limpeza.
+Fontes anteriores/estado16 intactos, backend público continua indisponível.
+RED52 e RED63 de módulo ausente, correção do teste AST contraditório, falhas
+de estilo e correção da contagem AST do revisor preservados como dados.
+
+Zero Claude2 ativo após terminal49063. Tarefa histórica Disabled, sem
+próximo horário; nenhuma nova cota/reset/job ou segundo escritor. Próximo:
+procedimento externo de captura e pré-checagem concreta, com revisão antes
+de efeitos. Nenhum Docker/PG/SQL, DLL/API/controle real, leitura explícita
+de runtime/config/binário, root/nonce/comando operacional ou deploy novo.
+Native3s NOT_MEASURED, entry_gate NOT_EVALUATED, identidade
+LIVENESS_SAMPLED_TRANSPORT_UNVERIFIED; Gateway/B1/B2/D090gate2/C1/SQL/
+produção continuam abertos. Destino final: Docker Oracle Linux9.8 local.
+Evidência em COLLECT-PINNED-VALIDATION. Registros seguintes históricos.
+
+## Composição pinada — testes antes do módulo, 2026-11-03
+
+Publicação anterior confirmada: HEAD/origin/master `2ef95a2`, 0/0,
+árvore rastreada limpa antes desta rodada. CLI92065 terminou0, plano só
+leitura; zero Claude2 ativo antes da CLI29253. Esta última escreve apenas
+o novo desenho COLLECT-PINNED e seus testes, na mesma sessão51ea0d85,
+claude-opus-5-5/esforço medium. Recuperar o terminal da execução29253 antes
+de revisar ou iniciar outra chamada. Marcador COLLECT_PINNED_V2_TESTS_FIRST
+e prompt ASCII em uma linha conferidos; nenhuma outra sessão/escritor.
+
+CLI29253 terminou0: teste515b7243/18629bytes, RED52/51erros+1falha,
+todosFileNotFoundError/0,926s; Ruff3/format1 reprovados, mypy1teste limpo.
+Root encontrou ban AST de backend incompatível com record.backend.
+CLI49898 terminou0: teste a3ebf78b/21009bytes, RED63/62erros+1falha,
+todosFileNotFoundError/0,907s; Ruff/format/mypy teste limpos. Baselines
+preservadas como dados. Auditoria AST do root esperava duas funções
+alteradas, mas eram três: a terceira só extrai as tuplas de pins para
+variáveis temporárias; equivalência das asserções foi conferida por AST.
+O prompt de implementação havia descrito duas prematuramente; este
+registro corrige essa contagem. Fontes antigas intactas.
+CLI49063 implementa só o módulo COLLECT-PINNED e o desenho; testes63
+congelados, zero escritor antes da chamada. Recuperar esse terminal
+antes de revisar ou iniciar outra chamada; substitui a espera29253 acima.
+Marcador COLLECT_PINNED_V4_IMPLEMENT_FROZEN63 conferido em uma linha.
+
+Composição proposta: bytes imutáveis recebidos, dois pins conferidos antes
+de qualquer exec, namespaces/DTOs/ledgers originais retidos, uma tentativa
+serial por cópia; API exclusivamente fake, sem fallback nativo. Fontes
+coletor1972ec74/backendccb3f74a e anteriores/estado16 congelados. O uso do
+seam privado na cópia é aceito somente para este laboratório de testes,
+sob delegação; não ativa backend real nem registra aprovação individual.
+Sem implementação ainda, leitura de runtime/config/binário, DLL/controle
+real, Docker/PG/SQL, root/nonce/comando operacional ou deploy. Nenhuma nova
+cota/reset/job; produção/gates continuam abertos. Registros seguintes
+são históricos.
+
 ## Backend Win32 de coleta revisto com fakes — 2026-11-03
 
 Claude2 programou na sessão `51ea0d85`, sempre `claude-opus-5-5`,

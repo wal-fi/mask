@@ -1,0 +1,41 @@
+import hashlib,json,pathlib,runpy
+import pytest
+h=runpy.run_path('tests/test_pg16_shell_native_control_collect_pinned.py')
+with pytest.MonkeyPatch.context() as mp:
+    pin=h['pin'].__wrapped__(mp)
+    world=h['world'](pin)
+    nested=[]
+    def reenter(default, extra):
+        nested.append(h['call'](pin,world.api))
+        return default()
+    world.nt.hooks[('create',pin.helpers['ANCHOR'])]=reenter
+    with h['sealed'](pin):
+        result=h['call'](pin,world.api)
+    assert result[:2]==('VERIFIED_APPROVED','OK')
+    assert nested==[h['POISONED']]
+    assert len(pin.glob['_ATTEMPTS'])==1
+    assert sorted(world.nt.created)==sorted(world.nt.closed)
+    assert len(set(world.nt.closed))==len(world.nt.closed)
+    first={'nested':nested,'outer':result[:2],'attempts':len(pin.glob['_ATTEMPTS']),'all_fake_handles_closed_once':True}
+with pytest.MonkeyPatch.context() as mp:
+    pin=h['pin'].__wrapped__(mp)
+    world=h['world'](pin)
+    signal=h['Signal']()
+    def late(*args):
+        raise signal
+    mp.setitem(pin.glob,'_closed',late)
+    with h['sealed'](pin):
+        try:
+            h['call'](pin,world.api)
+        except h['Signal'] as caught:
+            assert caught is signal
+        else:
+            raise AssertionError('control suppressed')
+    signal.__traceback__=None
+    record=pin.glob['_ATTEMPTS'][0]
+    assert record.backend is not None
+    assert not record.collector['_ACTIVE'] and not record.collector['_POISON']
+    assert sorted(world.nt.created)==sorted(world.nt.closed)
+    h['assert_consumed'](pin,world.nt,record)
+    second={'late_control_identity':True,'record_kept':True,'no_repeated_cleanup':True}
+print(json.dumps({'reentrancy':first,'control_after_policy':second},sort_keys=True))

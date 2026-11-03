@@ -1,0 +1,26 @@
+{
+  "bytes": 21009,
+  "sha256": "a3ebf78bb3f9169bc846be54c1a7c1816fd3c5388e63471b6789fe5114fa1c8a",
+  "old_ast_functions_changed": [
+    "test_pins_match_the_frozen_sources",
+    "test_module_source_is_private_and_pure",
+    "tampered"
+  ],
+  "pin_assertions_equivalent_after_temporary_inline": true,
+  "root_review_correction": "First audit expected two changed functions; actual third is pin assertions with equivalent temporary variables. Initial audit assertion failed, inspected and corrected before source review. Implementation request had prematurely described two; this record supersedes that claim.",
+  "feature_absent": {
+    "collected": 63,
+    "errors": 62,
+    "failed": 1,
+    "exception_types": {
+      "FileNotFoundError": 63
+    },
+    "seconds": 0.907,
+    "exit": 1
+  },
+  "static": {
+    "ruff_clean": true,
+    "format_conforming": true,
+    "mypy_one_file_clean": true
+  }
+}
