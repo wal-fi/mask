@@ -1,0 +1,13 @@
+{
+    "failed":  13,
+    "seconds":  2.853,
+    "previous_208_exact_prefix":  true,
+    "native_execution":  false,
+    "passed":  217,
+    "tests_sha256":  "808869aac6429d6738d6ee3976e63bdd1f8fdaf491f14385d529c4b173a6c14c",
+    "source_sha256":  "c833e4c86109f49275b88471bf4b40b88ab0f7ba28af46bb7ffba3547df7e69d",
+    "collected":  230,
+    "exit":  1,
+    "tests_bytes":  44944,
+    "status":  "RED_BEFORE_FIX"
+}

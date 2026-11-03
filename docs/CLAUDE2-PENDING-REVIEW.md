@@ -1,3 +1,70 @@
+## Núcleo puro de verificação revisto — 2026-11-03
+
+Claude2 único programador, sessão51ea0d85/claude-opus-5-5/esforço medium.
+Módulob3755d49/testes808869aa:230próprios/3,529s,13probes independentes CLEAN.
+UmP2 de domínio unsigned32 corrigido após13failed/217passed medidos antes
+do fix; baseline rejeitada e testes vermelhos preservados como dados.
+Matriz22arquivos:1301passed/384,25s,zero falhas/erros/skips. Ruff/lint/
+format347 limpos; mypy346src/tests alvos311/314 limpos, runtime sóWin3113.
+Mypy não inclui PoC. Base002c6a4 reconferida; fontes antigas e estado16 fixos.
+Ver [desenho](PHASE-9-W1-PG16-SHELL-NATIVE-CONTROL-VERIFY-DESIGN.md) e
+[validação](PHASE-9-W1-PG16-SHELL-NATIVE-CONTROL-VERIFY-VALIDATION.md).
+
+API pura recebe bytes limitados e Expected só nonce/argv0; snapshots locais
+evitam reler entradas mutáveis, pins/limites/envnames são fixos. Valida
+whitelist11/prefixos3/6/11, schemas/tipos/caps/hashes e semântica recalculada,
+incluindo seis campos do snapshot. Devolve só rótulos fechados; nada de
+filesystem, CLI, carga de código, processo ou DLL no núcleo.
+VERIFIED_APPROVED confere bytes fornecidos, sem autenticar produtor/origem
+do disco, OS/CIM, execução nativa ou cleanup. inner_closed segue self-report.
+
+Próximo: desenho/testes/revisão de coletor confiável, antes de preflight/
+proposta de rodada nativa. Não há root/nonce/comando operacional preparado.
+Nenhum controle Win32 real, leitura explícita de configuração/binário do
+runtime, Docker/PG/SQL ou deployment neste lote; só bytes sintéticos e fakes.
+Identity preservada LIVENESS_SAMPLED_TRANSPORT_UNVERIFIED; Native3s
+NOT_MEASURED/entry_gate NOT_EVALUATED e Gateway/B1/B2/D090gate2/C1/SQL/
+produção abertos. Destino final segue DockerOracle9.8 nesta máquina.
+Nenhum Claude2writer ativo ou quota/reset/tarefa nova; tarefa histórica
+relida Disabled, sem próximo horário, last01/11 às21h24m15Z/result0.
+Registros seguintes históricos.
+
+## Verificador de evidências — testes antes da implementação, 2026-11-03
+
+HEAD/origin002c6a4 reconferidos por fetch, árvore rastreada limpa; PENDING e
+CHECKPOINT lidos primeiro. Zero chamada da sessão/print antes de cada chamada.
+Claude2 CLI25013 terminou0 com plano só leitura; direção aceita pelo root:
+núcleo puro de bytes→rótulos fechados, sem coletor de filesystem neste lote.
+Collector confiável, fonte real/OS/CIM e preflight continuam requisitos separados.
+
+CLI33591 terminou0, só desenho/testes. Root leu os dois arquivos integralmente:
+204coletados,203erros de setup+1falha de fonte, todosFileNotFoundError/exit1
+com módulo ausente; ausência da nova funcionalidade, não regressão. Ruff5/
+format1 pendentes. Testeab35babf e desenhof64384ff medidos antes do código.
+CLI94056 terminou0; fontec833e4c8/testes4fe9fb07 com208casos próprios exit0,
+Ruff/lint limpos e format1pendente. Revisão independente reproduziu umP2:
+exit/counters fora da faixa32bits ainda classificados VERIFIED. Cinco probes
+iniciais:3CLEAN/2finding;mais8contadores reproduziram a classe. Fonte/teste
+preservados como dados em native-verify-review-20261103, não publicados.
+CLI30082 terminou0, só regressões/notas; fontec833 intacta e prefixo208
+preservado:230coletados,13failed/217passed,2,853s,exit1 antes do fix.
+Teste808869aa/44944bytes e RED preservados como dados. CLI66272 terminou0,
+só módulo/desenho; fonteb3755d49/24616bytes, teste intacto. Próprios230pass/
+3,529s;13probes independentes CLEAN. Ruff/lint/format347 limpos; mypy346
+src/tests alvos311/314 limpos (runtime sóWindows3113). Matriz22arquivos
+na sessão56643 em andamento; aguardar terminal antes de fechar. Nenhum
+Claude2writer ativo, collector/CLI/efeito nativo ou nova quota/reset.
+Ver VERIFY-VALIDATION.
+
+Pins/limites/envnames fixos no futuro núcleo; Expected só nonce/argv0,
+snapshot.valid recomputado dos6campos, hashes não substituem semântica.
+Sem bytes reais de rodada/operationalroot/nonce/comando, DLL/job/processo
+nativo, Docker/PG/SQL/deploy ou leitura de runtime/config/binários.
+Estado16 e fontes/raízes consumidas fixos. Nenhuma quota/reset/tarefa nova.
+Identity mantém LIVENESS_SAMPLED_TRANSPORT_UNVERIFIED; Native3s NOT_MEASURED,
+entry_gate NOT_EVALUATED e Gateway/B1/B2/D090gate2/C1/SQL/produção abertos.
+Registros seguintes históricos.
+
 ## Identidade amostral medida e procedimento revisto — 2026-11-02
 
 Basefeb4541 reconferida por fetch, árvore rastreada limpa e nenhum escritor

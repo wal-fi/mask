@@ -1,0 +1,20 @@
+{
+    "records":  [
+                    {
+                        "source":  "docs/poc/pg16_shell_native_control_verify.py",
+                        "artifact":  "baseline-source.b64",
+                        "bytes":  24292,
+                        "sha256":  "c833e4c86109f49275b88471bf4b40b88ab0f7ba28af46bb7ffba3547df7e69d"
+                    },
+                    {
+                        "source":  "tests/test_pg16_shell_native_control_verify.py",
+                        "artifact":  "baseline-tests.b64",
+                        "bytes":  41511,
+                        "sha256":  "4fe9fb0730992bd310c85d268960949a71c9ff26a420dd27e9a5ad65cd630058"
+                    }
+                ],
+    "status":  "REJECTED_REVIEW",
+    "native_execution":  false,
+    "do_not_execute":  true,
+    "finding":  "P2_DWORD_DOMAIN"
+}
