@@ -1,0 +1,30 @@
+import ast,runpy,pathlib,sys,json
+import pytest
+T=runpy.run_path('tests/test_pg16_shell_native_control_collect_win32.py')
+source=pathlib.Path('docs/poc/pg16_shell_native_control_collect_win32.py').read_text()
+out=[]
+with pytest.MonkeyPatch.context() as mp:
+    lab=T['lab'].__wrapped__(mp)
+    a=T['make'](lab); ha=T['anchor'](lab,a.backend)
+    b=T['make'](lab); b.nt.raw=0x900
+    hb=T['anchor'](lab,b.backend)
+    foreign=b.backend.close(ha)
+    out.append({'probe':'FOREIGN_DTO_SAME_TOKEN','same_token':ha.token==hb.token,'foreign_close_accepted':foreign,'own_handle_closed':b.nt.closed==b.nt.created})
+with pytest.MonkeyPatch.context() as mp:
+    lab=T['lab'].__wrapped__(mp); ctx=T['prepare'](lab)
+    code=ctx.backend.close.__func__.__code__
+    owner=next(n for n in ast.parse(source).body if isinstance(n,ast.ClassDef) and n.name=='_Win32Backend')
+    close=next(n for n in owner.body if isinstance(n,ast.FunctionDef) and n.name=='close')
+    target=next(n.lineno for n in ast.walk(close) if isinstance(n,ast.Assign) and ast.unparse(n)=='record = (raw,)')
+    fired=[False]
+    def trace(frame,event,arg):
+        if event=='line' and frame.f_code is code and frame.f_lineno==target and not fired[0]:
+            fired[0]=True
+            raise OSError('fictitious-close-gap')
+        return trace
+    old=sys.gettrace()
+    try:
+        sys.settrace(trace); result=T['collect'](lab)
+    finally:sys.settrace(old)
+    out.append({'probe':'CLOSE_POP_BEFORE_RETAIN','fired':fired[0],'result':result[:2],'created':len(ctx.nt.created),'closed':len(ctx.nt.closed),'native_fake_alive':len(ctx.nt.handles),'backend_owned':len(ctx.backend._open),'backend_retained':len(ctx.backend._retained),'policy_poisoned':bool(lab.glob['_POISON'])})
+print(json.dumps(out,sort_keys=True))

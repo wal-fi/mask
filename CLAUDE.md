@@ -1,5 +1,37 @@
 # AI Data Masking Gateway
 
+## Backend Win32 de coleta revisto com fakes — 2026-11-03
+
+Claude2 programou na sessão `51ea0d85`, sempre `claude-opus-5-5`,
+esforço `medium`; o assistente principal revisou e executou os gates.
+Fonte `ccb3f74a` (22315 bytes), testes `83c8f553` (68313 bytes):
+**189 próprios** passaram em 10,052 s e **656 relacionados** em 22,701 s,
+sem falhas, erros ou skips. Ruff em src/tests e lint restrito do PoC
+aprovados; 349 arquivos conformes no format; mypy em 348 arquivos src/tests,
+alvos 3.11/3.14, sem erros. Runtime somente Windows CPython 3.11.3;
+PoC fora do mypy. Duas sondas de posse e sete de delegação Python
+conferidas; nenhuma conversão de chamada nativa foi medida.
+
+Dois findings corrigidos após **12 falhas / 177 aprovações** antes do fix:
+DTO estrangeiro ou reconstruído com mesmo token era aceito, e fechamento
+removia a posse antes de reter o raw. Agora exige o objeto original emitido
+e registra o ticket antes de remover a posse. Retenção não é limpeza;
+interrupção anterior ao ticket mantém o raw em `_open`, e a política
+bloqueia nova coleta. Candidata rejeitada, RED e métricas preservados como
+dados. O erro de reenvio do prompt V2 na CLI70718 foi registrado e
+corrigido com marcador V4 validado antes da CLI55798.
+
+`backend()` e a fábrica do coletor continuam indisponíveis. Sem ligação
+real, carregamento explícito de DLL pelo módulo, API nativa real,
+Docker/PG/SQL, leitura de runtime/config/binário, root/nonce/comando
+operacional ou deploy. A tarefa histórica segue Disabled, sem próximo
+horário; nenhum reset de cota ou tarefa nova. Próximo: ligação por fontes
+pinadas e pré-checagem/procedimento, com revisão antes de efeitos.
+Fontes anteriores e estado16 fixos. Native3s NOT_MEASURED,
+entry_gate NOT_EVALUATED e Gateway/B1/B2/D090gate2/C1/SQL/produção abertos.
+Destino final segue Docker Oracle Linux 9.8 nesta máquina.
+Registros seguintes são históricos.
+
 ## Política de coleta com fakes revisada — 2026-11-03
 
 Claude2 foi o único programador, sessão `51ea0d85`, modelo

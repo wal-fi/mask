@@ -1,0 +1,61 @@
+{
+  "delegation_shapes": {
+    "dll_loader_invoked": false,
+    "native_conversion_not_measured": true,
+    "passed": 7,
+    "python_functions_only": true
+  },
+  "format_files": 349,
+  "independent_ownership": [
+    {
+      "foreign_close_accepted": false,
+      "name": "FOREIGN_DTO_SAME_TOKEN",
+      "own_handle_closed": false
+    },
+    {
+      "backend_owned": 1,
+      "backend_retained": 0,
+      "closed": 30,
+      "created": 31,
+      "fake_alive": 1,
+      "name": "CLOSE_POP_BEFORE_RETAIN",
+      "policy_poisoned": true
+    }
+  ],
+  "kind": "FIXED_FAKE_BACKEND_REVIEW",
+  "mypy_files": 348,
+  "mypy_includes_poc": false,
+  "mypy_targets": [
+    "3.11",
+    "3.14"
+  ],
+  "own": {
+    "collected": 189,
+    "passed": 189,
+    "seconds": 10.052
+  },
+  "poc_lint": "E9,F63,F7,F82",
+  "related": {
+    "collected": 656,
+    "passed": 656,
+    "seconds": 22.701
+  },
+  "review_scripts": [
+    {
+      "bytes": 1777,
+      "name": "ownership-probes.py.txt",
+      "sha256": "95a02cab49caff2c52644d31e2c54b45f72f36da563cb1d259855940226b4fff"
+    },
+    {
+      "bytes": 1795,
+      "name": "delegation-probes.py.txt",
+      "sha256": "9346057b1728cae825c9754fee0e855c312774cfa01933a900123444e181eea4"
+    }
+  ],
+  "ruff_src_tests": true,
+  "scope": "in-memory fakes and synthetic ctypes buffers only",
+  "source_bytes": 22315,
+  "source_sha256": "ccb3f74af75be04bbe685bc195c84d17e0457efe15732ed6cdbe9f9f057c3b3a",
+  "tests_bytes": 68313,
+  "tests_sha256": "83c8f5533a2f820d7ebc16e0c78104169ffb5c243830e50c920c895a8dcf9d92"
+}

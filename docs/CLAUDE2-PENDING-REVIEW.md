@@ -1,3 +1,79 @@
+## Backend Win32 de coleta revisto com fakes — 2026-11-03
+
+Claude2 programou na sessão `51ea0d85`, sempre `claude-opus-5-5`,
+esforço `medium`; o assistente principal revisou e executou os gates.
+Fonte `ccb3f74a` (22315 bytes), testes `83c8f553` (68313 bytes):
+**189 próprios** passaram em 10,052 s e **656 relacionados** em 22,701 s,
+sem falhas, erros ou skips. Ruff em src/tests e lint restrito do PoC
+aprovados; 349 arquivos conformes no format; mypy em 348 arquivos src/tests,
+alvos 3.11/3.14, sem erros. Runtime somente Windows CPython 3.11.3;
+PoC fora do mypy. Duas sondas de posse e sete de delegação Python
+conferidas; nenhuma conversão de chamada nativa foi medida.
+
+Dois findings corrigidos após **12 falhas / 177 aprovações** antes do fix:
+DTO estrangeiro ou reconstruído com mesmo token era aceito, e fechamento
+removia a posse antes de reter o raw. Agora exige o objeto original emitido
+e registra o ticket antes de remover a posse. Retenção não é limpeza;
+interrupção anterior ao ticket mantém o raw em `_open`, e a política
+bloqueia nova coleta. Candidata rejeitada, RED e métricas preservados como
+dados. O erro de reenvio do prompt V2 na CLI70718 foi registrado e
+corrigido com marcador V4 validado antes da CLI55798.
+
+`backend()` e a fábrica do coletor continuam indisponíveis. Sem ligação
+real, carregamento explícito de DLL pelo módulo, API nativa real,
+Docker/PG/SQL, leitura de runtime/config/binário, root/nonce/comando
+operacional ou deploy. A tarefa histórica segue Disabled, sem próximo
+horário; nenhum reset de cota ou tarefa nova. Próximo: ligação por fontes
+pinadas e pré-checagem/procedimento, com revisão antes de efeitos.
+Fontes anteriores e estado16 fixos. Native3s NOT_MEASURED,
+entry_gate NOT_EVALUATED e Gateway/B1/B2/D090gate2/C1/SQL/produção abertos.
+Destino final segue Docker Oracle Linux 9.8 nesta máquina.
+Registros seguintes são históricos.
+
+## Backend de coleta — desenho e testes antes do módulo, 2026-11-03
+
+Base publicada dbde802, HEAD/origin0/0 e árvore rastreada limpa; zero
+chamada Claude2 ativa antes da CLI49713, encerrada0 (plano só leitura).
+Mesma sessão51ea0d85, claude-opus-5-5/esforço medium. Root reproduziu
+lacuna do plano com1raw fake/ACTIVE0/POISON0: slot não publicado vira EMPTY
+no coletor congelado. Corrigido no contrato: marcador UNKNOWN antes do NT,
+rawcell/buffers retidos pelo backend; nenhum fechamento incerto/repetido.
+CLI38011 terminou0 com desenho e teste15fe2480/62740bytes. Root leu os
+1689linhas: baseline176coletados/174erros+2falhas, todosFileNotFoundError,
+1,238s/exit1; mypy do teste limpo. Ruff21B017/format1 pendentes.
+CLI70718 terminou0, mas repetiu o pedido V2 por erro do revisor ao substituir
+prompt multilinha (marcador V3 não enviado). Só ajuste local da fixture foi
+relatado; contrato OSError/format e regressão de saída ainda pendentes.
+CLI55798 terminou0 com V4 conferido em uma linha. Teste final7b5c113f/
+63332bytes: AST confirmou asserções/decoradores antigos preservados,
+exceções estreitadas e1teste de saída pública. RED177coletados/175erros+
+2falhas, todosFileNotFoundError,1,341s/exit1; Ruff/format/mypy teste limpos.
+Três arquivos de baseline/dados preservados em native-collect-win32-review-
+20261103. CLI38950 implementa só módulo win32/desenho; teste177 congelado,
+sem caller/binding real. Marcador V5/uma linha/escrita exata conferidos.
+CLI38950 terminou0: candidatafb453d57/21742bytes, teste7b5c intacto.
+ABI/pureza4pass1,279s; próprios177pass9,129s, lint/format limpos.
+Root reproduziu2findings: DTO estrangeiro de mesmo token fecha recurso do
+outro backend; interrupção após pop e antes de retenção deixa1fake vivo
+sem registro bruto (31criados/30fechados, open0/retained0, política poisoned).
+Fonte rejeitada e métricas preservadas como dados. CLI48667 terminou0;
+testes83c8f553/68313bytes, prefixo177preservado salvoimportsys: RED189
+coletados/177pass/12failed/0erros,11,623s/exit1 na fontefb453 intacta.
+Testes RED e relatório preservados; Ruff/format/mypy teste limpos.
+CLI12120 corrige só módulo/desenho;189testes congelados, sem wiring/efeito
+nativo. Recuperar terminal antes de revisar ou iniciar outra chamada.
+Marcador V7/uma linha/escrita exata conferidos, preflight0outros escritores.
+Fontes anteriores congeladas, nenhum efeito nativo autorizado neste lote.
+Desenho solicitado: backend mínimo com
+ABI/parsers limitados e seis operações, primeiro fakes e default indisponível;
+nenhum binding real será carregado/invocado neste lote. Sem editar fontes
+fixas1972/b375/356d/b419/eaeb/10c9/dfcc, testes existentes ou estado16.
+Revisor consulta documentação Microsoft; nenhum runtime/config/binário,
+DLL/job/process/control, Docker/PG/SQL, root/nonce/comando ou deploy novo.
+Tarefa consumida permanece Disabled; nenhuma quota/reset/tarefa nova.
+Native3s NOT_MEASURED, entry_gate NOT_EVALUATED e gates de produção abertos.
+Registros seguintes históricos.
+
 ## Política de coleta com fakes revisada — 2026-11-03
 
 Claude2 foi o único programador, sessão `51ea0d85`, modelo

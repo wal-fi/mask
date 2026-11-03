@@ -1,0 +1,14 @@
+{
+  "collected": 189,
+  "errors": 0,
+  "exit": 1,
+  "failed": 12,
+  "kind": "OWNERSHIP_RED_BEFORE_FIX",
+  "passed": 177,
+  "prefix177_preserved_except_import_sys": true,
+  "scope": "in-memory fake API and ctypes buffers; no actual native effects",
+  "seconds": 11.623,
+  "source_sha256": "fb453d577aefbfa1faa5cc9bb32f5cf68887c5f04031a4d953e3e2f4c3330b44",
+  "test_bytes": 68313,
+  "test_sha256": "83c8f5533a2f820d7ebc16e0c78104169ffb5c243830e50c920c895a8dcf9d92"
+}

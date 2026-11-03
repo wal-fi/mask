@@ -1,0 +1,41 @@
+{
+  "abi_phase": {
+    "collected": 4,
+    "exit": 0,
+    "passed": 4,
+    "seconds": 1.279
+  },
+  "kind": "REJECTED_FAKE_BACKEND_REVIEW",
+  "own": {
+    "collected": 177,
+    "exit": 0,
+    "passed": 177,
+    "seconds": 9.129
+  },
+  "probes": [
+    {
+      "foreign_close_accepted": true,
+      "name": "FOREIGN_DTO_SAME_TOKEN",
+      "own_handle_closed": true,
+      "same_token": true
+    },
+    {
+      "backend_owned": 0,
+      "backend_retained": 0,
+      "closed": 30,
+      "created": 31,
+      "fired": true,
+      "name": "CLOSE_POP_BEFORE_RETAIN",
+      "native_fake_alive": 1,
+      "policy_poisoned": true,
+      "result": [
+        "INVALID",
+        "COLLECT_CLEANUP"
+      ]
+    }
+  ],
+  "scope": "in-memory FakeNt, no real DLL, handle, job, process control or file read by backend",
+  "source_bytes": 21742,
+  "source_sha256": "fb453d577aefbfa1faa5cc9bb32f5cf68887c5f04031a4d953e3e2f4c3330b44",
+  "tests_sha256": "7b5c113ff86981712a06933ec2d6dc874e9a34b950b3994c17c68c55c8ab045f"
+}

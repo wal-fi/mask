@@ -1,0 +1,26 @@
+{
+  "assertion_review": "existing assertions and decorators preserved; exception expectations narrowed; one public-output regression added",
+  "baseline": "dbde802f3f8a686d13e8a1289ade591d373b6386",
+  "final_7b5c": {
+    "collected": 177,
+    "errors": 175,
+    "exception": "FileNotFoundError",
+    "exit": 1,
+    "failed": 2,
+    "seconds": 1.341
+  },
+  "initial_15fe": {
+    "collected": 176,
+    "errors": 174,
+    "exception": "FileNotFoundError",
+    "exit": 1,
+    "failed": 2,
+    "seconds": 1.238
+  },
+  "kind": "FEATURE_ABSENT_BEFORE_IMPLEMENTATION",
+  "orchestration": "70718 replayed V2 due reviewer multiline substitution bug; V4 marker verified before55798 corrected contract",
+  "scope": "only tests/design and synthetic buffers; no native effects",
+  "source": "ABSENT",
+  "tests_bytes": 63332,
+  "tests_sha256": "7b5c113ff86981712a06933ec2d6dc874e9a34b950b3994c17c68c55c8ab045f"
+}

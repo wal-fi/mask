@@ -1,0 +1,40 @@
+import runpy,ctypes,json
+g=runpy.run_path('docs/poc/pg16_shell_native_control_collect_win32.py')
+calls=[]
+def bound(name):
+    def f(*args):
+        calls.append((name,args))
+        return 42
+    return f
+api=g['_NativeApi']({name:bound(name) for name in g['PROTOTYPES']})
+cell=ctypes.c_void_p()
+attr=g['OBJECT_ATTRIBUTES']()
+iosb=g['IO_STATUS_BLOCK']()
+buf=ctypes.create_string_buffer(4096)
+off=ctypes.c_int64(7)
+def got(name,length):
+    n,args=calls.pop()
+    assert n==name and len(args)==length
+    return args
+assert api.create(cell,129,attr,iosb,1,1,0x200060)==42
+a=got('NtCreateFile',11)
+assert a[0]._obj is cell and a[1]==129 and a[2]._obj is attr and a[3]._obj is iosb
+assert a[4:] == (None,0,1,1,0x200060,None,0)
+assert api.query_info(17,0,buf,4096)==42
+a=got('GetFileInformationByHandleEx',4)
+assert a[:2]==(17,0) and a[2]._obj is buf and a[3]==4096
+for method,name,cl in [('query_file','NtQueryInformationFile',22),('query_volume','NtQueryVolumeInformationFile',5)]:
+    assert getattr(api,method)(17,iosb,buf,4096,cl)==42
+    a=got(name,5)
+    assert a[0]==17 and a[1]._obj is iosb and a[2]._obj is buf and a[3:]==(4096,cl)
+assert api.query_directory(17,iosb,buf,4096,60,False,True)==42
+a=got('NtQueryDirectoryFile',11)
+assert a[:4]==(17,None,None,None) and a[4]._obj is iosb and a[5]._obj is buf
+assert a[6:]==(4096,60,False,None,True)
+assert api.read(17,iosb,buf,123,off)==42
+a=got('NtReadFile',9)
+assert a[:4]==(17,None,None,None) and a[4]._obj is iosb and a[5]._obj is buf
+assert a[6]==123 and a[7]._obj is off and a[8] is None
+assert api.close(17)==42 and got('NtClose',1)==(17,)
+assert calls==[]
+print(json.dumps({'delegation_shapes_passed':7,'all_functions_were_python_fakes':True,'dll_loader_invoked':False,'native_argument_conversion_not_measured':True},sort_keys=True))
