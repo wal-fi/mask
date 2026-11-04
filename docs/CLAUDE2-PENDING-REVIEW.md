@@ -1,3 +1,50 @@
+## Pré-checagem revisada — contrato documental fechado, 2026-11-04
+
+CLI73076 e32988 terminaram0 e seus terminais foram recuperados antes de
+outra chamada. Claude2, sessão51ea0d85/claude-opus-5-5/medium, editou apenas
+CONTROL-PREFLIGHT.md. Root corrigiu a hipótese temporal: TERMINATE nominal
+aprovado espera DEADLINE60s; isso dá oportunidade de amostra, não teto de
+parede. Revisão fechou dependência circular: FINAL0/1+terminal coerente e
+ausência posterior são candidato; só depois uma coleta confirma os dados.
+Aprovação dos controles exige também vínculo CIM vivo original e coleta
+VERIFIED_APPROVED. Falta de amostra permite só diagnóstico, nunca PASS.
+Coleta rápida prova dados no escopo descrito, não identidade viva. Decisões
+prospectivas sob delegação geral, sem inventar aprovação individual.
+
+Root conferiu10fontes/SHA/tamanhos e parseou os2modelos PowerShell sem
+invocá-los:2/2sem erros. Nenhum código/teste/dependência mudou; suítes868/
+120da versão33b5e44 não repetidas por alteração exclusivamente documental.
+Zero Claude2 ativo reconferido; tarefa histórica Disabled, sem quota/reset/
+job novo. Marcador login:false sem texto de perfil não atesta runtime ou
+nativo. Ainda sem nonce/root/comando operacional nem API/DLL/job/controle
+nativo real, Docker/PG/SQL/deploy. Próximo: publicar este contrato e preparar
+proposta concreta, checagens exatas e invocação única revisada antes de efeitos.
+Native3sNOT_MEASURED/entry_gateNOT_EVALUATED; identidade antiga consumida
+LIVENESS_SAMPLED_TRANSPORT_UNVERIFIED. Gateway/B1/B2/D090gate2/C1/SQL/produção
+abertos. Destino DockerOracle9.8 local. Registros seguintes históricos.
+
+## Pré-checagem operacional — proposta documental em andamento, 2026-11-04
+
+HEAD/origin33b5e44,0/0, árvore rastreada limpa e zero Claude2 ativo
+conferidos antes da retomada. CLI44966 só leitura terminou0; a proposta
+alegava incorretamente término imediato de TERMINATE no READY. Root releu
+_ready/_lifecycle/_supervise: READY mantém reasonNone; TERMINATE aprovado
+aguarda DEADLINE de60s. Isso cria oportunidade nominal, sem garantir
+prazo de parede ou vínculo CIM. Aprovação dos controles continua exigindo
+CIM vivo; desfecho rápido sem amostra só diagnóstico, sem PASS de identidade.
+
+CLI73076 escreve somente novo CONTROL-PREFLIGHT.md; mesma sessão51ea0d85,
+claude-opus-5-5/medium, zero outro escritor antes, marcador
+NATIVE_PREFLIGHT_V2_DOCUMENT_ONLY conferido em uma linha. Recuperar terminal
+73076 antes de revisar ou nova chamada. Nenhum código/teste/fonte consumida
+foi alterado. Root confirmou os10SHA/tamanhos de fontes e um marcador de
+shell com login:false (saída só do marcador), sem perfil/loader/controle.
+Nada disso mede runtime/launcher/nativo. Sem nonce/root/comando operacional
+novo, DLL/API/job/process/control real, Docker/PG/SQL/deploy ou cota/job
+novo. Coleta rápida terá escopo de dados/terminal próprio, sem inferir
+identidade viva; proposta ainda precisa revisão antes de efeitos.
+Todos os gates de produto continuam abertos. Registros seguintes históricos.
+
 ## Chamador privado da coleta revisto com fakes — 2026-11-04
 
 Claude2 programou na sessão51ea0d85/claude-opus-5-5/medium; o assistente
