@@ -1,0 +1,357 @@
+"""Fake-only reproduction of the TREE/quiescence gap and tests for a narrow
+future reconciliation primitive, written before it exists.
+
+The consumed backend Owner (10c9058f) and the consumed caller's _supervise
+(dfcc4ed6) run unchanged in fresh namespaces against the existing fake
+kernel of tests/test_pg16_shell_admission_win32.py: no DLL, kernel object,
+process, thread, sleep or runtime/config/binary read. This characterizes the
+unchanged old behavior; it is not proof of the real run's root cause.
+
+docs/poc/pg16_shell_tree_reconcile.py does not exist yet. Until it does, the
+tests target legacy_reconcile below, the transparent stand-in for the current
+behavior (no reconciliation primitive: the owner stays retained), so the
+desired quiet-TREE postconditions fail on assertions while the legacy
+characterization and the normal negative control already pass.
+"""
+
+import ast
+import copy
+import ctypes
+import runpy
+import subprocess
+import threading
+import time
+from pathlib import Path
+from types import SimpleNamespace
+from typing import Any
+
+import pytest
+
+REPO = Path(__file__).resolve().parents[1]
+MODULE = REPO / "docs/poc/pg16_shell_tree_reconcile.py"
+BACKEND = REPO / "docs/poc/pg16_shell_admission_win32.py"
+HOST = REPO / "docs/poc/pg16_shell_admission_host.py"
+BACKEND_TESTS = REPO / "tests/test_pg16_shell_admission_win32.py"
+VERDICTS = ("REJECTED_CLOSED", "RETAIN", "NOT_APPLICABLE")
+NORMAL_OUTPUT = b"MASKGW-NATIVE-CONTROL-NORMAL\r\n"
+
+
+def legacy_reconcile(_owner: Any, _facts: Any) -> str:
+    """Frozen stand-in for the current behavior: nothing reconciles, the owner
+    is retained. Used only while the candidate module is absent."""
+    return "RETAIN"
+
+
+class Signal(BaseException):
+    """A fictitious control interruption."""
+
+
+class SneakyStr(str):
+    pass
+
+
+class Clock:
+    """Finite fake monotonic clock: each reading advances by a fixed step."""
+
+    def __init__(self, step: float = 0.25) -> None:
+        self.value, self.step, self.reads = 0.0, step, 0
+
+    def now(self) -> float:
+        self.reads += 1
+        self.value += self.step
+        return self.value
+
+
+def forbidden(*_args: Any, **_kwargs: Any) -> Any:
+    raise AssertionError("native, process, thread or sleep effect in a fake-only test")
+
+
+@pytest.fixture
+def lab(monkeypatch: Any) -> SimpleNamespace:
+    helpers = runpy.run_path(str(BACKEND_TESTS))
+    backend = runpy.run_path(str(BACKEND))
+    host = runpy.run_path(str(HOST))
+    reconcile = runpy.run_path(str(MODULE))["reconcile"] if MODULE.exists() else legacy_reconcile
+    kernel = helpers["Kernel"]()
+    namespace = backend["Owner"].setup.__globals__
+    monkeypatch.setitem(namespace, "_load_api", lambda: backend["_Api"](kernel, lambda: kernel.last))
+    monkeypatch.setitem(namespace, "sys", helpers["runtime"]())
+    sleeps: list[Any] = []
+    monkeypatch.setitem(host["_supervise"].__globals__, "_sleep", sleeps.append)
+    for owner, name in (
+        (ctypes, "WinDLL"),
+        (subprocess, "Popen"),
+        (threading.Thread, "start"),
+        (time, "sleep"),
+    ):
+        monkeypatch.setattr(owner, name, forbidden)
+    request = backend["Request"](
+        "C:\\launcher\\python.exe",
+        '"C:\\launcher\\python.exe" -I -B -c "print(1)"',
+        (("SystemRoot", "C:\\Windows"), ("TEMP", "C:\\Temp")),
+        "C:\\work",
+    )
+    return SimpleNamespace(
+        backend=backend,
+        host=host,
+        helpers=helpers,
+        kernel=kernel,
+        request=request,
+        sleeps=sleeps,
+        reconcile=reconcile,
+    )
+
+
+def supervised(lab: SimpleNamespace, total: int) -> tuple[Any, dict[str, Any]]:
+    """Real Owner: setup sees (1, 1); after the fake resume the tree reports
+    `total` processes ever, 0 active, the launcher signaled, normal output and
+    EOF, no members. Then the unchanged caller supervision runs once."""
+    owner = lab.backend["Owner"](lab.request)
+    owner.setup()
+    owner.start()
+    assert owner.state == "RUNNING" and lab.kernel.total == 1
+    lab.kernel.total = total
+    lab.kernel.alive = False
+    lab.kernel.pipe = bytearray(NORMAL_OUTPUT)
+    facts: dict[str, Any] = lab.host["_new_facts"]()
+    lab.host["_supervise"](owner, lab.backend["Win32Error"], Clock(), 0.0, facts)
+    return owner, facts
+
+
+def snapshot(facts: Any) -> Any:
+    return copy.deepcopy(facts)
+
+
+def counted(owner: Any) -> list[int]:
+    """Counts calls to the owner's own close, still delegating to it."""
+    calls: list[int] = []
+    original = owner.close
+
+    def close() -> Any:
+        calls.append(1)
+        return original()
+
+    owner.close = close
+    return calls
+
+
+# -- characterization of the unchanged consumed sources --
+
+
+def test_legacy_supervision_retains_a_quiet_over_counted_tree(lab: SimpleNamespace) -> None:
+    owner, facts = supervised(lab, 3)
+    assert facts["held"] == "CLEANUP" and facts["reason"] == "TREE_UNPROVEN"
+    assert facts["terminated"] is True and facts["signaled"] is True and facts["eof"] is True
+    assert bytes(facts["retained"]) == NORMAL_OUTPUT
+    assert owner.state == "RUNNING" and owner.ledger != {}
+    with pytest.raises(lab.backend["Win32Error"]) as caught:
+        owner.accounting()
+    assert caught.value.args == ("WIN32_TREE",)
+    assert lab.kernel.calls.count("TerminateJobObject") == 1
+    assert lab.kernel.double_closed == []
+
+
+def test_the_same_quiet_owner_closes_independently(lab: SimpleNamespace) -> None:
+    owner, _facts = supervised(lab, 3)
+    assert owner.close() is None
+    assert owner.state == "CLOSED" and owner.ledger == {}
+    assert lab.kernel.double_closed == []
+
+
+def test_a_total_of_two_supervises_and_closes_normally(lab: SimpleNamespace) -> None:
+    owner, facts = supervised(lab, 2)
+    assert facts["held"] is None and facts["reason"] is None
+    assert facts["exit_code"] == 0 and facts["total_processes"] == 2
+    assert owner.close() is None and owner.state == "CLOSED" and owner.ledger == {}
+
+
+# -- the desired narrow reconciliation (RED on the legacy stand-in) --
+
+
+def test_reconcile_closes_the_exact_legacy_quiet_tree(lab: SimpleNamespace) -> None:
+    owner, facts = supervised(lab, 3)
+    before = snapshot(facts)
+    retained = facts["retained"]
+    calls = counted(owner)
+    verdict = lab.reconcile(owner, facts)
+    assert type(verdict) is str and verdict == "REJECTED_CLOSED"
+    assert owner.state == "CLOSED" and owner.ledger == {}
+    assert calls == [1] and lab.kernel.double_closed == []
+    assert facts == before and facts["retained"] is retained
+    assert facts["reason"] == "TREE_UNPROVEN"  # the policy rejection is never undone
+
+
+def test_reconcile_never_closes_twice(lab: SimpleNamespace) -> None:
+    owner, facts = supervised(lab, 3)
+    calls = counted(owner)
+    assert lab.reconcile(owner, facts) == "REJECTED_CLOSED"
+    assert lab.reconcile(owner, facts) == "RETAIN"
+    assert calls == [1] and lab.kernel.double_closed == []
+
+
+INELIGIBLE: list[tuple[str, Any]] = [
+    ("held", "READ"),
+    ("held", None),
+    ("held", SneakyStr("CLEANUP")),
+    ("reason", None),
+    ("reason", "DEADLINE"),
+    ("reason", SneakyStr("TREE_UNPROVEN")),
+    ("terminated", False),
+    ("terminated", 1),
+    ("signaled", False),
+    ("signaled", "true"),
+    ("eof", False),
+    ("eof", None),
+]
+
+
+@pytest.mark.parametrize(("key", "value"), INELIGIBLE)
+def test_ineligible_facts_are_not_applicable_and_untouched(
+    lab: SimpleNamespace, key: str, value: Any
+) -> None:
+    owner, facts = supervised(lab, 3)
+    facts[key] = value
+    before = snapshot(facts)
+    calls = counted(owner)
+    assert lab.reconcile(owner, facts) == "NOT_APPLICABLE"
+    assert calls == [] and owner.state == "RUNNING" and facts == before
+
+
+@pytest.mark.parametrize("facts", [None, [], "CLEANUP", {"held": "CLEANUP"}])
+def test_malformed_facts_are_not_applicable(lab: SimpleNamespace, facts: Any) -> None:
+    owner, _legacy = supervised(lab, 3)
+    calls = counted(owner)
+    assert lab.reconcile(owner, facts) == "NOT_APPLICABLE"
+    assert calls == [] and owner.state == "RUNNING"
+
+
+@pytest.mark.parametrize("state", ["HELD", "READY", "CLOSED", SneakyStr("RUNNING"), None])
+def test_an_unknown_owner_state_is_retained_without_close(
+    lab: SimpleNamespace, state: Any
+) -> None:
+    owner, facts = supervised(lab, 3)
+    owner.state = state
+    calls = counted(owner)
+    assert lab.reconcile(owner, facts) == "RETAIN"
+    assert calls == [] and owner.state is state
+
+
+def not_quiet(lab: SimpleNamespace, case: str) -> None:
+    kernel = lab.kernel
+    if case == "active":
+        kernel.extra_active = 1
+    elif case == "member":
+        kernel.extra_members = (0x9001,)
+    elif case == "unsignaled":
+        kernel.alive = True
+    elif case == "accounting":
+        kernel.plan["QueryInformationJobObject"] = ("false", 5)
+    else:  # partial: thread and process close, then stdout_read fails
+        count = kernel.counts.get("CloseHandle", 0)
+        kernel.plan[("CloseHandle", count + 3)] = ("false", 6)
+
+
+@pytest.mark.parametrize("case", ["active", "member", "unsignaled", "accounting", "partial"])
+def test_a_close_that_cannot_prove_quiescence_is_retained(
+    lab: SimpleNamespace, case: str
+) -> None:
+    owner, facts = supervised(lab, 3)
+    before = snapshot(facts)
+    not_quiet(lab, case)
+    calls = counted(owner)
+    assert lab.reconcile(owner, facts) == "RETAIN"
+    assert calls == [1] and owner.state != "CLOSED" and owner.ledger != {}
+    assert facts == before and lab.kernel.double_closed == []
+
+
+def replaced_close(owner: Any, behavior: Any) -> list[int]:
+    calls: list[int] = []
+
+    def close() -> Any:
+        calls.append(1)
+        return behavior(owner)
+
+    owner.close = close
+    return calls
+
+
+def raise_value(_owner: Any) -> Any:
+    raise ValueError("secret-detail")
+
+
+def return_true(_owner: Any) -> Any:
+    return True
+
+
+def return_closed_label(_owner: Any) -> Any:
+    return "CLOSED"
+
+
+def silently_noop(_owner: Any) -> Any:
+    return None
+
+
+def sneaky_closed(owner: Any) -> Any:
+    owner.state = SneakyStr("CLOSED")
+    return None
+
+
+def closed_but_true(owner: Any) -> Any:
+    owner.state = "CLOSED"
+    return True
+
+
+@pytest.mark.parametrize(
+    "behavior",
+    [raise_value, return_true, return_closed_label, silently_noop, sneaky_closed, closed_but_true],
+)
+def test_malformed_close_outcomes_are_retained(lab: SimpleNamespace, behavior: Any) -> None:
+    owner, facts = supervised(lab, 3)
+    calls = replaced_close(owner, behavior)
+    verdict = lab.reconcile(owner, facts)
+    assert type(verdict) is str and verdict == "RETAIN" and calls == [1]
+
+
+def test_a_hostile_ordinary_exception_is_redacted(lab: SimpleNamespace) -> None:
+    owner, facts = supervised(lab, 3)
+    hostile = lab.helpers["HostileError"]
+
+    def raise_hostile(_owner: Any) -> Any:
+        raise hostile()
+
+    calls = replaced_close(owner, raise_hostile)
+    assert lab.reconcile(owner, facts) == "RETAIN" and calls == [1]
+
+
+def test_a_control_interruption_propagates_with_identity(lab: SimpleNamespace) -> None:
+    owner, facts = supervised(lab, 3)
+    signal = Signal()
+
+    def interrupted(_owner: Any) -> Any:
+        raise signal
+
+    calls = replaced_close(owner, interrupted)
+    with pytest.raises(Signal) as caught:
+        lab.reconcile(owner, facts)
+    assert caught.value is signal and calls == [1] and owner.state == "RUNNING"
+
+
+# -- the candidate module itself --
+
+
+def test_the_candidate_module_is_small_pure_and_narrow() -> None:
+    assert MODULE.exists(), "candidate primitive not implemented yet"
+    source = MODULE.read_bytes()
+    assert len(source.splitlines()) < 100
+    tree = ast.parse(source)
+    imported = [node for node in ast.walk(tree) if isinstance(node, (ast.Import, ast.ImportFrom))]
+    assert imported == []
+    names = {node.id for node in ast.walk(tree) if isinstance(node, ast.Name)}
+    assert not names & {"open", "print", "exec", "eval", "compile", "__import__", "_LIVE"}
+    attributes = {node.attr for node in ast.walk(tree) if isinstance(node, ast.Attribute)}
+    assert attributes <= {"close", "state", "get"}
+    module = runpy.run_path(str(MODULE))
+    assert module["VERDICTS"] == VERDICTS and callable(module["reconcile"])
+    assert not any(
+        isinstance(node, ast.If) and "__main__" in ast.unparse(node.test) for node in ast.walk(tree)
+    )

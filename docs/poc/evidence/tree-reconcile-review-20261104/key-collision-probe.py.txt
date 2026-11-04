@@ -1,0 +1,14 @@
+import pathlib,json
+ns={'__name__':'_tree_reconcile_review_probe'};p=pathlib.Path('docs/poc/pg16_shell_tree_reconcile.py');exec(compile(p.read_bytes(),str(p),'exec'),ns)
+class MarkerError(Exception):pass
+class Key:
+ def __hash__(self):return hash('held')
+ def __eq__(self,other):raise MarkerError()
+class Owner:
+ def __init__(self):self.state='RUNNING';self.calls=0
+ def close(self):self.calls+=1;self.state='CLOSED'
+o=Owner();f={Key():'CLEANUP','reason':'TREE_UNPROVEN','terminated':True,'signaled':True,'eof':True}
+raised=False
+try:ns['reconcile'](o,f)
+except MarkerError:raised=True
+print(json.dumps({'scope':'OUTSIDE_TRUSTED_KEY_CONTRACT','collision_equality_exception_propagates':raised,'owner_close_calls':o.calls},sort_keys=True))

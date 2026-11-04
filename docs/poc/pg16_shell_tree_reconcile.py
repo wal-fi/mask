@@ -1,0 +1,74 @@
+"""Private TREE/quiescence reconciliation primitive. Import defines only.
+
+reconcile(owner, facts) answers one narrow question for the exact legacy
+supervision outcome (held CLEANUP, reason TREE_UNPROVEN, terminated, signaled
+and eof all exactly True): does the owner's own close() prove it CLOSED? It
+calls that close at most once and returns a closed verdict:
+
+- REJECTED_CLOSED: close returned exactly None and the state then reads
+  exactly "CLOSED". The TREE rejection stands; this is never an approval.
+- RETAIN: the owner was not exactly "RUNNING", close failed, returned
+  anything else, or the final state is not exactly "CLOSED".
+- NOT_APPLICABLE: the facts are not exactly the legacy outcome; the owner is
+  not touched at all.
+
+Ordinary exceptions are never inspected (no text, args or context) and give
+RETAIN; control interruptions propagate unchanged. Facts are never mutated,
+the primitive never removes a registry entry itself and no limit or policy
+changes; the delegated owner.close, however, MAY release the owner's own
+handles. This is neither mathematically pure nor a native guarantee.
+
+owner.close is a deferred potential native effect: no current operational
+caller exists. A future reviewed caller must pass the original source-pinned owner,
+its bound method and ledger provenance, reserve its single attempt before the
+call, keep the TREE rejection whatever the verdict, release only a proven
+CLOSED owner and never close twice. This is not an authenticity check nor a
+recovery engine.
+"""
+
+VERDICTS = ("REJECTED_CLOSED", "RETAIN", "NOT_APPLICABLE")
+
+
+def _eligible(facts):
+    """Exact dict, every key an exact str (checked by plain iteration before
+    any lookup, so no foreign key hash or equality ever runs), and exact
+    legacy values; nothing else is read."""
+    if type(facts) is not dict:
+        return False
+    for key in facts:
+        if type(key) is not str:
+            return False
+    held, reason = facts.get("held"), facts.get("reason")
+    return (
+        type(held) is str
+        and held == "CLEANUP"
+        and type(reason) is str
+        and reason == "TREE_UNPROVEN"
+        and facts.get("terminated") is True
+        and facts.get("signaled") is True
+        and facts.get("eof") is True
+    )
+
+
+def _state_is(owner, expected):
+    """One protected read of owner.state; an ordinary failure is unknown."""
+    try:
+        state = owner.state
+    except Exception:
+        return False
+    return type(state) is str and state == expected
+
+
+def reconcile(owner, facts):
+    """Closed verdict from VERDICTS; at most one owner.close() call."""
+    if not _eligible(facts):
+        return "NOT_APPLICABLE"
+    if not _state_is(owner, "RUNNING"):
+        return "RETAIN"
+    try:
+        result = owner.close()
+    except Exception:
+        return "RETAIN"
+    if result is not None:
+        return "RETAIN"
+    return "REJECTED_CLOSED" if _state_is(owner, "CLOSED") else "RETAIN"

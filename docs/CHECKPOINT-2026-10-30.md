@@ -4,6 +4,153 @@ Criado por solicitação do usuário em2026-10-30. Inclui o trabalho acumulado
 após4a5e556, preservando resultados históricos e tentativas reprovadas. É
 checkpoint de desenvolvimento incompleto da Fase9, não release de produção.
 
+## Reconciliação TREE validada, com guarda de chaves — 2026-11-04
+
+Claude2 programou na sessão 51ea0d85, modelo claude-opus-5-5, esforço medium.
+Última chamada de código 93753 terminou 0; terminal recuperado. Root leu toda
+a fonte final bb1f1984 (2935 bytes/74 linhas) e verificou a alteração apenas
+em _eligible e sua docstring. Teste ad0742c0 (17763 bytes) congelado; prefixos
+anteriores preservados. 49/49 próprios em 2,242s e 592/592 relacionados em
+48,705s, zero falhas/erros/skips. Ruff/format2/mypy1teste 3.11/3.14 aprovados;
+PoC fora do mypy, sem execução Python3.14. Dez fontes aceitas/estado16 intactos.
+
+RED40 (8/32), RED46 (9/37), RED49 (46/3) e candidatas anteriores são dados
+preservados, não reexecuções operacionais. A sonda independente confirmou
+NOT_APPLICABLE, zero igualdade estrangeira e zero close na chave colidente.
+A iteração exige chaves str exatas antes de get; a política TREE continua
+rejeitada. REJECTED_CLOSED exige close normal None e estado CLOSED exato;
+fatos/registro não mudam, controle mantém identidade e incerteza retém.
+
+Nenhum chamador operacional foi implementado. Origem dos fatos/owner/método/
+ledger, reserva única, projeção da rejeição e pins da composição futura
+precisam revisão própria antes de integração/efeitos. Root corrigiu P3 de
+redação e reforçou domínio de chaves sob delegação, sem aprovação inventada.
+Validação e históricos em TREE-RECONCILE-VALIDATION/DESIGN e artefatos
+final-key-review.json (V7) e final-review.json (V4 histórico).
+
+Publicação restrita ao incremento verificado; estado Git deve ser conferido.
+Próximo: desenhar a nova composição,
+sem alterar fontes consumidas nem repetir entrada/nonce/raiz. Tentativa
+3f12dc584c29 permanece FAILED_ONLY_OPERATOR_ABORT. Nenhum novo controle
+nativo/DLL/job, Docker/PG/SQL, leitura privada/runtime/config/binário ou
+deploy/cota/reset/job neste lote. Gates de produto e produção continuam
+abertos; Gateway indisponível, destino Docker Oracle9.8 local. Histórico abaixo.
+
+## RED49 medido — guarda mínima em implementação, 2026-11-04
+
+CLI37974 terminou0. Root leu as3regressões novas:49coletados/46pass/3falhas
+(1MarkerError/2AssertionError), zeroerros/skips,2,580s. Só as3novas falham.
+Prefixo46AST idêntico e fonte43ea intacta duranteRED; Ruff/format/mypy1teste
+limpos. Testead0742c0/17763bytes congelado; RED49/teste e fonte43ea/probe
+foram preservados como dados. Fatos de origem confiável continuam válidos.
+
+CLI93753 implementa só guarda de chaves str exatas em _eligible antes de
+qualquer get, mais docstrings de domínio e DESIGN. Não tocar teste49 nem
+outros métodos/constantes/comportamentos. Recuperar terminal93753 antes de
+outro chamado; sessão51ea0d85/opus5.5/medium, zeroescritor antes.
+Root medirá49e592relacionados/estáticos depois;46/589anteriores permanecem
+históricos, não crédito de reforço ainda não medido. Fontes10/estado16,
+registro/política/caller operacional intactos; gates continuam abertos.
+Nenhum nativecontrol/DLL/job/process, Docker/PG/SQL, privado/runtime/config/
+binário, root/nonce/rodada/deploy/job/quota novo. Registros abaixo históricos.
+
+## Guarda de chaves dos fatos — regressões antes do ajuste, 2026-11-04
+
+CLI32708 revisão final terminou0: semP1/P2, P3 de redação e domínio de
+chaves. Root reproduziu o segundo com um dict exato contendo chaveobjeto
+hashcolidindo com held: igualdade estrangeira levantou erro antes do owner,
+close0. É fora do contrato atual de fatos confiáveis, não vulnerabilidade
+comprovada do produto/causa da rodada real. Sob delegação, root escolheu
+uma pequena guarda de chaves str exatas antes de qualquer get, sem framework.
+
+CLI37974 escreve SOMENTE teste/DESIGN: preserva46casos/AST e acrescenta3
+regressões de colisão hostil/igualdade com efeito/chave não-str. Fonte43ea
+permanece intacta até RED49, guardada como pre-keys43ea.source.txt. Recuperar
+terminal37974 antes de outro chamado; sessão51ea0d85/opus5.5/medium,
+zeroescritor antes. Não alterar fontes10/estado16, caller ou operação.
+
+Gates anteriores46/589 verdadeiros sobre43ea, não prova do reforço ainda
+não implementado. Novos resultados devem ser medidos depois, preservando
+históricos e testes. Nenhum nativeAPI/job/process/control, Docker/PG/SQL,
+privado/runtime/config/binário, root/nonce/rodada/deploy/quota/job novo.
+Produção indisponível, gates abertos. Registros seguintes históricos.
+
+## Reconciliação privada TREE/quiescência validada com fakes, 2026-11-04
+
+Claude2 CLI52640/86758 terminaram0; mesma sessão51ea0d85, opus5.5/medium.
+Root leu toda fonte:43eaefd7/2729bytes/69linhas, teste65696a29/15829bytes
+congelado.46/46próprios em2,133s na candidata58a3; após mudança só de docstring,
+AST executável igual e589/589relacionados em41,239s na fonte final, zero
+falhas/erros/skips. Ruff/format2/mypy1teste alvos311/314 limpos; PoC fora
+mypy, runtime sóvenvWindows3113. Dez fontes consumidas/estado16 intactos.
+
+RED40(8pass/32falhas) eRED46(9pass/37falhas), testes e fontepré-editorial
+preservados como dados. Caracterização do backend+supervisor legados em
+kernel fake confirma cenário lógico; não prova causa/contagens reais.
+Só contratoeligible+closeNone+estadoCLOSED exato pode REJECTED_CLOSED;
+erro/estado incerto retêm, controle propaga original. Facts/registro não
+mudam; método pode fecharhandlesdoowner, mas primitivo não remove registro
+nem aprova política. Caller futuro precisa origem/método/ledger e reserva
+antes do efeito. Módulo não integrado, sem CLI/caller operacional.
+
+Validação e limites em TREE-RECONCILE-VALIDATION/DESIGN. Próximo: revisão
+final somente leitura e publicação do incremento verificado; depois desenho
+de composição/caller novo com pins próprios, sem copiar/repetir rodada.
+Nada novo de nativeAPI/job/control, Docker/PG/SQL, runtime/config/binário/
+privado, root/nonce/rodada, deploy/quota/job. Tentativa3f12dc584c29 permanece
+FAILED_ONLY_OPERATOR_ABORT. Gateway/produção indisponíveis; gates abertos.
+Registros abaixo históricos.
+
+## Reprodução TREE confirmada com fakes — contrato refinado antes do módulo
+
+CLI78128 terminou0. Root leu teste/desenho completos: RED40 em1,939s,
+8pass/32falhas (31AssertionError+1pytestFailed), zeroerros/skips. Três
+caracterizações passaram: supervisor legado retém TREE quieto, close do
+MESMOowner fecha no kernel fake, total2 normal. Isso não identifica causa
+nem contagens da rodada real. Testee5f70b43/12237bytes e RED arquivados em
+tree-reconcile-review-20261104 como dados. Ruff apontou uma linha101colunas;
+format três ajustes, mypy1teste passou; nada ainda declarado gate completo.
+
+CLI43457 escreve só novo teste/desenho já criados: mantém40asserts/casos e
+fallback, corrige whitespace e acrescenta6regressões de dictsubclass,
+estado ilegível antes/depois de close, identidade de controles e EOFtardio.
+Módulo ainda ausente, refinamento antes de novo RED. Recuperar terminal43457
+antes de outro chamado; sessão51ea0d85/claude-opus-5-5/medium, zero escritor
+antes. Root aceitou remover error_type inútil: API reconcile(owner,facts).
+Caller futuro precisa provar origem/método/ledger e reservar tentativa; o
+primitivo não autentica owner, não libera registro nem aprova política.
+
+Root conferiu Microsoft Learn primárias sobre TotalProcesses cumulativo e
+ActiveProcessLimit concorrente; isso não relaxa política nem prova causa.
+Nenhum nativeAPI/job/process/control, runtime/config/binário, Docker/PG/SQL,
+root/nonce/rodada ou deploy novo. Fontes10/estado16 consumidos preservados.
+Produção/Gateway indisponíveis; gates continuam abertos. Histórico abaixo.
+
+## Reprodução TREE/quiescência — testes e contrato em preparo, 2026-11-04
+
+Base publicadaa040f884, HEAD/origin iguais, árvore rastreada limpa, zero
+Claude2/controlador e tarefaDisabled conferidos antes do lote. Tentativa
+real3f12dc584c29 consumida comoFAILED_ONLY_OPERATOR_ABORT, exec15007 já
+terminou-1 semFINAL; não reexecutar entrada/nonce/raiz nem ler privados.
+
+Claude2 CLI78128, mesma sessão51ea0d85/claude-opus-5-5/medium, escreve só
+novo tests/test_pg16_shell_tree_reconcile.py e TREE-RECONCILE-DESIGN.md.
+Recuperar terminal antes de outra chamada. Módulo novo ainda NÃO autorizado:
+primeiro reprodução finita com backend real em namespace novo e kernel
+inteiramente fake, supervisor/clock/sleep simulados. Carregar definições
+públicas para esses testes não é repetir uma tentativa operacional. Caso
+candidato: total cumulativo3/ativos0 pode manter TREE->CLEANUP embora close
+independente proveCLOSED no fake. Não comprova contagens/causa da rodada real.
+
+Contrato prospectivo mínimo de reconciliação privada, sem caller/CLI novo:
+jamais aprovar política; só distinguir rejeição+CLOSED de retenção, usando
+close existente uma vez e prova exata do estado. Não elevar limites nem
+mudar backend/host/adapter/entry/estado16 consumidos. Exceções de controle
+originais preservadas; desconhecido nunca libera. Testes RED antes do módulo,
+sem skip/xfail/asserts relaxadas. Nenhum nativeAPI/job/process/control real,
+Docker/PG/SQL/runtime/config/binário ou deploy neste lote. Gates de produto
+continuam abertos e Gateway/produção indisponíveis. Registros abaixo históricos.
+
 ## Rodada encerrada como falha — checkpoint revisto, 2026-11-04
 
 Tentativa3f12dc584c29 não aprovada. Exec15007 emitiu IDENTITY/PARKEDHELD1;

@@ -1,0 +1,12 @@
+import pathlib,json
+ns={'__name__':'_tree_key_fix_independent_probe'};p=pathlib.Path('docs/poc/pg16_shell_tree_reconcile.py');exec(compile(p.read_bytes(),str(p),'exec'),ns)
+class Key:
+ def __init__(self):self.comparisons=0
+ def __hash__(self):return hash('held')
+ def __eq__(self,other):self.comparisons+=1;raise AssertionError('unexpected equality')
+class Owner:
+ def __init__(self):self.state='RUNNING';self.calls=0
+ def close(self):self.calls+=1;self.state='CLOSED'
+k=Key();o=Owner();facts={k:'CLEANUP','reason':'TREE_UNPROVEN','terminated':True,'signaled':True,'eof':True}
+verdict=ns['reconcile'](o,facts);assert verdict=='NOT_APPLICABLE' and k.comparisons==0 and o.calls==0
+print(json.dumps({'verdict':verdict,'foreign_equality_calls':k.comparisons,'owner_close_calls':o.calls},sort_keys=True))
