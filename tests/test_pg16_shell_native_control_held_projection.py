@@ -1,0 +1,443 @@
+"""Synthetic tests for the HELD record projection, written before the module.
+
+docs/poc/pg16_shell_native_control_held_projection.py does not exist yet:
+until it does, every test fails at setup (feature-absent baseline, not a
+product regression). Only synthetic bytes are used: no private file, no
+evidence directory, no native API, runtime, config or binary is touched.
+The expected raw shape is derived from the consumed producer
+(`_held_raw` + `_fields` in the runner, `encoded` in the caller); the
+projection is a diagnostic only, never provenance, release or approval.
+"""
+
+import ast
+import builtins
+import json
+import os
+import runpy
+import subprocess
+from pathlib import Path
+from typing import Any
+
+import pytest
+
+REPO = Path(__file__).resolve().parents[1]
+MODULE = REPO / "docs/poc/pg16_shell_native_control_held_projection.py"
+KIND_IN = "MASKGW_PG16_NATIVE_CONTROL_HELD_V1"
+KIND_OUT = "MASKGW_PG16_HELD_PROJECTION_DIAGNOSTIC_V1"
+SYNTHETIC_MARKER = "fictitious-secret-7d41"
+REFUSED = {
+    "kind": KIND_OUT,
+    "outcome": "HELD_PROJECTION_REFUSED",
+    "error": "HELD_PROJECTION_INPUT",
+    "source_provenance": "UNATTESTED",
+    "native_release": "NOT_PROVEN",
+}
+SUCCESS_KEYS = {
+    "kind",
+    "outcome",
+    "case",
+    "held",
+    "owner_state",
+    "reason",
+    "terminated",
+    "signaled",
+    "eof",
+    "ready",
+    "source_provenance",
+    "native_release",
+}
+HELD_LABELS = (
+    "LAUNCH",
+    "CLOSE_INNER",
+    "CLOSE",
+    "READY",
+    "TERMINATE",
+    "CLEANUP",
+    "READ",
+    "WAIT",
+    "ACCOUNTING",
+    "MEMBERS",
+    "EXIT",
+)
+OWNER_STATES = (
+    "NEW",
+    "SETUP",
+    "SETUP_FAILED",
+    "READY",
+    "STARTING",
+    "LAUNCH_FAILED",
+    "RUNNING",
+    "HELD",
+    "CLOSED",
+)
+REJECTIONS = (
+    "LAUNCH_FAILED",
+    "CALLER_CLOCK",
+    "DEADLINE",
+    "OUTPUT_OVERFLOW",
+    "TREE_UNPROVEN",
+    "READY_MISSING",
+    "READY_MISMATCH",
+    "READY_EARLY_EXIT",
+    "SNAPSHOT_INVALID",
+    "CLOSE_INNER_FAILED",
+    "AUDIT_INVALID",
+    "FAILED_LAST_CLOSE",
+    "MISMATCH",
+)
+
+
+class SubBytes(bytes):
+    pass
+
+
+def record(**changes: Any) -> dict[str, Any]:
+    """A synthetic HELD record with exactly the producer's 17 keys."""
+    value: dict[str, Any] = {
+        "kind": KIND_IN,
+        "held": "READ",
+        "case": "NORMAL",
+        "owner_state": "HELD",
+        "reason": None,
+        "terminated": False,
+        "overflow": False,
+        "signaled": False,
+        "eof": False,
+        "exit_code": None,
+        "total_processes": None,
+        "turns": 3,
+        "ready": False,
+        "ready_turns": 0,
+        "retained_stdout_bytes": 0,
+        "seconds": None,
+        "audit": None,
+    }
+    value.update(changes)
+    return value
+
+
+def encoded(value: Any) -> bytes:
+    """The producer's canonical form plus the single LF it appends."""
+    text = json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False)
+    return text.encode("ascii") + b"\n"
+
+
+def expected(**changes: Any) -> dict[str, Any]:
+    value: dict[str, Any] = {
+        "kind": KIND_OUT,
+        "outcome": "HELD_PROJECTION_DIAGNOSTIC",
+        "case": "NORMAL",
+        "held": "READ",
+        "owner_state": "HELD",
+        "reason": None,
+        "terminated": False,
+        "signaled": False,
+        "eof": False,
+        "ready": False,
+        "source_provenance": "UNATTESTED",
+        "native_release": "NOT_PROVEN",
+    }
+    value.update(changes)
+    return value
+
+
+def forbidden(*_args: Any, **_kwargs: Any) -> Any:
+    raise AssertionError("filesystem, process or native effect in a pure projection")
+
+
+@pytest.fixture
+def project(monkeypatch: Any) -> Any:
+    module = runpy.run_path(str(MODULE))
+    for owner, name in (
+        (builtins, "open"),
+        (os, "open"),
+        (os, "stat"),
+        (os, "listdir"),
+        (os, "scandir"),
+        (Path, "open"),
+        (Path, "stat"),
+        (Path, "lstat"),
+        (Path, "read_bytes"),
+        (subprocess, "Popen"),
+    ):
+        monkeypatch.setattr(owner, name, forbidden)
+    return module["project"]
+
+
+# -- purity --
+
+
+def test_import_is_pure(monkeypatch: Any) -> None:
+    for owner, name in ((builtins, "open"), (os, "stat"), (Path, "resolve"), (subprocess, "Popen")):
+        monkeypatch.setattr(owner, name, forbidden)
+    module = runpy.run_path(str(MODULE))
+    assert callable(module["project"])
+
+
+def test_source_defines_only_and_imports_little() -> None:
+    tree = ast.parse(MODULE.read_bytes())
+    imported = {
+        alias.name.split(".")[0]
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Import)
+        for alias in node.names
+    }
+    imported |= {
+        (node.module or "").split(".")[0]
+        for node in ast.walk(tree)
+        if isinstance(node, ast.ImportFrom)
+    }
+    assert imported <= {"json", "math"}
+    names = {node.id for node in ast.walk(tree) if isinstance(node, ast.Name)}
+    banned = {"open", "print", "eval", "exec", "compile", "__import__", "input", "globals"}
+    assert not names & banned
+    for statement in tree.body:
+        assert isinstance(
+            statement, (ast.Import, ast.ImportFrom, ast.Assign, ast.FunctionDef, ast.Expr)
+        )
+        if isinstance(statement, ast.Expr):
+            assert isinstance(statement.value, ast.Constant)
+    assert not any(
+        isinstance(node, ast.If) and "__main__" in ast.unparse(node.test) for node in ast.walk(tree)
+    )
+
+
+# -- valid synthetic records of each case --
+
+
+def test_a_normal_held_record_projects_closed_labels(project: Any) -> None:
+    assert project(encoded(record())) == expected()
+
+
+def test_a_terminate_held_record_projects_closed_labels(project: Any) -> None:
+    raw = encoded(
+        record(
+            case="TERMINATE",
+            held="CLEANUP",
+            owner_state="RUNNING",
+            reason="DEADLINE",
+            terminated=True,
+            signaled=True,
+            exit_code=1,
+            total_processes=1,
+            turns=1201,
+            ready=True,
+            ready_turns=4,
+            retained_stdout_bytes=29,
+        )
+    )
+    assert project(raw) == expected(
+        case="TERMINATE",
+        held="CLEANUP",
+        owner_state="RUNNING",
+        reason="DEADLINE",
+        terminated=True,
+        signaled=True,
+        ready=True,
+    )
+
+
+def test_a_last_close_record_never_exposes_audit_entries(project: Any) -> None:
+    audit = {"partial": True, "valid": True, "entries": ["CreateProcessW", SYNTHETIC_MARKER]}
+    raw = encoded(record(case="LAST_CLOSE", held="CLOSE_INNER", owner_state="RUNNING", audit=audit))
+    result = project(raw)
+    assert result == expected(case="LAST_CLOSE", held="CLOSE_INNER", owner_state="RUNNING")
+    assert SYNTHETIC_MARKER not in repr(result) and "CreateProcessW" not in repr(result)
+
+
+@pytest.mark.parametrize("label", HELD_LABELS)
+def test_every_producer_held_label_is_accepted(project: Any, label: str) -> None:
+    assert project(encoded(record(held=label)))["held"] == label
+
+
+@pytest.mark.parametrize("state", [*OWNER_STATES, None])
+def test_every_backend_owner_state_or_null_is_accepted(project: Any, state: Any) -> None:
+    assert project(encoded(record(owner_state=state)))["owner_state"] == state
+
+
+@pytest.mark.parametrize("reason", [*REJECTIONS, None])
+def test_every_runner_rejection_or_null_is_accepted(project: Any, reason: Any) -> None:
+    assert project(encoded(record(reason=reason)))["reason"] == reason
+
+
+def test_the_result_is_a_fresh_exact_dict(project: Any) -> None:
+    first, second = project(encoded(record())), project(encoded(record()))
+    assert type(first) is dict and set(first) == SUCCESS_KEYS and first is not second
+    assert all(type(first[key]) is str for key in ("kind", "outcome", "case", "held"))
+
+
+# -- refusals: one closed input error, nothing echoed --
+
+
+def refused(project: Any, raw: Any) -> None:
+    result = project(raw)
+    assert result == REFUSED
+    assert SYNTHETIC_MARKER not in repr(result)
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        encoded(record()).decode("ascii"),
+        bytearray(encoded(record())),
+        memoryview(encoded(record())),
+        SubBytes(encoded(record())),
+        None,
+        7,
+    ],
+)
+def test_only_exact_bytes_are_accepted(project: Any, raw: Any) -> None:
+    refused(project, raw)
+
+
+@pytest.mark.parametrize(
+    "mutate",
+    [
+        "empty",
+        "no-lf",
+        "two-lf",
+        "crlf",
+        "space",
+        "unsorted",
+        "pretty",
+        "non-ascii",
+        "huge",
+        "list",
+    ],
+)
+def test_noncanonical_or_oversized_bytes_are_refused(project: Any, mutate: str) -> None:
+    good = encoded(record())
+    variants: dict[str, bytes] = {
+        "empty": b"",
+        "no-lf": good[:-1],
+        "two-lf": good + b"\n",
+        "crlf": good[:-1] + b"\r\n",
+        "space": good[:-1] + b" \n",
+        "unsorted": json.dumps(record(), separators=(",", ":")).encode() + b"\n",
+        "pretty": json.dumps(record(), sort_keys=True, indent=1).encode() + b"\n",
+        "non-ascii": good.replace(b'"READ"', '"RÉAD"'.encode()),
+        "huge": encoded(record(held="READ" + " " * 4096)),
+        "list": b"[]\n",
+    }
+    refused(project, variants[mutate])
+
+
+def sized(size: int) -> bytes:
+    """A canonical, producer-shaped LAST_CLOSE record of exactly `size` bytes."""
+    entries: list[str] = []
+
+    def build() -> bytes:
+        audit = {"partial": True, "valid": True, "entries": entries}
+        return encoded(record(case="LAST_CLOSE", owner_state="RUNNING", audit=audit))
+
+    while size - len(build()) > 67:
+        entries.append("a" * 60)  # each further entry adds 63 bytes
+    remaining = size - len(build())
+    if remaining:
+        entries.append("b" * (remaining - 3))  # comma and quotes add 3
+    raw = build()
+    assert len(raw) == size and len(entries) <= 512
+    assert all(0 < len(entry) <= 64 for entry in entries)
+    return raw
+
+
+def test_the_raw_cap_is_4096_bytes(project: Any) -> None:
+    accepted = project(sized(4096))
+    assert accepted == expected(case="LAST_CLOSE", owner_state="RUNNING")
+    # A producer-valid but larger LAST_CLOSE record is refused, never truncated.
+    refused(project, sized(4097))
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        encoded(record())[:-2] + b',"turns":4}\n',  # duplicate key
+        encoded(record()).replace(b'"turns":3', b'"turns":NaN'),
+        encoded(record()).replace(b'"turns":3', b'"turns":Infinity'),
+        encoded(record()).replace(b'"turns":3', b'"turns":1e400'),
+        encoded(record()).replace(b'"turns":3', b'"turns":' + b"9" * 5000),
+        b"[" * 2040 + b"]" * 2040 + b"\n",  # deep nesting within the cap
+    ],
+)
+def test_strict_json_errors_are_caught_and_closed(project: Any, raw: bytes) -> None:
+    refused(project, raw)
+
+
+def test_missing_or_extra_keys_are_refused(project: Any) -> None:
+    missing = record()
+    del missing["seconds"]
+    refused(project, encoded(missing))
+    refused(project, encoded(record(extra=SYNTHETIC_MARKER)))
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"kind": "MASKGW_PG16_NATIVE_CONTROL_SUPERVISION_V1"},
+        {"case": "OTHER"},
+        {"held": "INTERNAL"},  # producer-possible via _contain, outside this contract
+        {"held": "INTERRUPTED"},  # producer-possible via _contain, outside this contract
+        {"held": SYNTHETIC_MARKER},
+        {"owner_state": SYNTHETIC_MARKER},
+        {"owner_state": 7},
+        {"reason": SYNTHETIC_MARKER},
+        {"reason": "HELD"},
+        {"terminated": 1},
+        {"signaled": None},
+        {"eof": "false"},
+        {"overflow": 0},
+        {"ready": 1},
+        {"exit_code": True},
+        {"exit_code": -1},
+        {"exit_code": 1 << 32},
+        {"exit_code": 1.0},
+        {"total_processes": False},
+        {"total_processes": -1},
+        {"turns": None},
+        {"turns": True},
+        {"turns": -1},
+        {"turns": 2.5},
+        {"ready_turns": 201},
+        {"ready_turns": None},
+        {"retained_stdout_bytes": 1025},
+        {"retained_stdout_bytes": True},
+        {"seconds": 1.5},
+        {"seconds": 0},
+        {"audit": {"partial": True, "valid": True, "entries": []}},  # audit only on LAST_CLOSE
+    ],
+)
+def test_unknown_labels_and_wrong_types_are_refused(project: Any, changes: dict[str, Any]) -> None:
+    refused(project, encoded(record(**changes)))
+
+
+@pytest.mark.parametrize(
+    "audit",
+    [
+        None,
+        {"partial": False, "valid": True, "entries": []},
+        {"partial": True, "valid": 1, "entries": []},
+        {"partial": True, "valid": True, "entries": [7]},
+        {"partial": True, "valid": True, "entries": [""]},
+        {"partial": True, "valid": True, "entries": ["x" * 65]},
+        {"partial": True, "valid": True, "entries": "CreateProcessW"},
+        {"partial": True, "valid": True, "entries": [], "extra": SYNTHETIC_MARKER},
+        [SYNTHETIC_MARKER],
+    ],
+)
+def test_a_malformed_last_close_audit_is_refused(project: Any, audit: Any) -> None:
+    refused(project, encoded(record(case="LAST_CLOSE", audit=audit)))
+
+
+def test_an_oversized_audit_is_refused_without_reading_its_entries(project: Any) -> None:
+    entries = [SYNTHETIC_MARKER + str(index) for index in range(513)]
+    audit = {"partial": True, "valid": False, "entries": entries}
+    refused(project, encoded(record(case="LAST_CLOSE", audit=audit)))
+
+
+def test_projection_never_raises_on_hostile_inputs(project: Any) -> None:
+    class Hostile(bytes):
+        def __len__(self) -> int:
+            raise RuntimeError(SYNTHETIC_MARKER)
+
+    for value in (Hostile(b"x"), object(), b"\xff" * 10, b"{}\n"):
+        refused(project, value)

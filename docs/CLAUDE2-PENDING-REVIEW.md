@@ -1,3 +1,129 @@
+## Rodada encerrada como falha — checkpoint revisto, 2026-11-04
+
+Tentativa3f12dc584c29 não aprovada. Exec15007 emitiu IDENTITY/PARKEDHELD1;
+projeção única fechada reportou NORMAL/CLEANUP/RUNNING/TREE_UNPROVEN,
+terminated/signaled/eoftrue, readyfalse, UNATTESTED/NOT_PROVEN. Nenhum bruto
+exportado ou coleta principal iniciada. Projector9e3c52d4/testec7cd9fac:
+107próprios/975relacionados aprovados, Ruff/format2/mypy1test311/314 limpos.
+BaselineRED107FileNotFoundError e falhas estáticas iniciais preservadas.
+
+Após protocolo separado do Claude2 (26073/52796 terminais0), root sob
+delegação revisou/parseou preparação e aborto exatos. Guardas PS5.1/Desktop/
+CLR4, duas instâncias originais, CreationDate, nome/pai e hashUTF8 da linha
+de comando conferidos; linha bruta nunca exposta. Handle fixado antes de
+StartTime, um único Kill no mesmo objeto, sem reabrir por PID. Resultado
+FAILED_ONLY_OPERATOR_ABORT; WaitForExit/Dispose do observador concluídos.
+Exec15007 recuperado com terminal-1, sem FINAL: não é PASS. Às15:27:40Z
+as duas instâncias antigas ausentes e parentesco CIM em dois níveis0/0;
+não é prova de job quiescente ou cleanup. Nenhum outro processo foi alvo;
+sem sinal/EOF/retry/reuso de nonce. Brutos/fontes10/estado16 preservados.
+
+Revisão final26025 somente leitura terminou0; semP1/P2 e quatroP3 de tempo
+verbal corrigidos nos documentos, sem código/teste novo ou repetir gates.
+Próximo: reprodução fake de TREE/quiescência e variantes/pins
+novos antes de qualquer efeito futuro. Causa real/contagens do job ainda
+não comprovadas; não alterar fontes consumidas nem repetir rodada. Sem
+novo controlador/Docker/PG/SQL/deploy/quota/reset/job. Gateway/produção
+indisponíveis; destino DockerOracle9.8 local. Registros abaixo históricos,
+inclusive proibições anteriores ao protocolo separado de aborto revisado.
+
+## Rodada bloqueada e diagnóstico fechado — proposta de aborto em preparo, 2026-11-04
+
+Controlador15007 continua PARKED/HELD, sem FINAL/terminal; não repetir nem
+executar coleta principal/cleanup/EOF/sinais. Uma projeção local única foi
+feita após107próprios/975relacionados aprovados e revisão da QA87982/terminal0.
+Relato UNATTESTED/NOT_PROVEN: NORMAL/CLEANUP/RUNNING/TREE_UNPROVEN,
+terminated/signaled/eoftrue, readyfalse. A QA terminou0, não o controlador.
+Brutos/auditoria/números/PIDs/caminhos não exportados. Fonte9e3c52d4 e
+textoc7cd9fac/gates em HELD-DIAGNOSTIC e arquivo final-review.json fechado.
+
+CLI29101 somente fontes terminou0: há cenário lógico candidato em que
+política TREE baseada em total cumulativo impede verificar quiescência,
+mas isso não prova contagens nem causa da rodada real. Nenhuma reprodução
+fake ou correção desse cenário ainda implementada. Fontes10consumidas e
+estado16 intactos. User delegation vigente elimina pedir nova aprovação
+por interpretação histórica, mas qualquer aborto exige protocolo próprio
+revisado e permissões efetivas; nunca seria PASS nem cleanup comprovado.
+
+CLI26073 escreve somente novo CONTROL-ABORT-PROPOSAL.md, sem executar:
+leitura de AGENTS permitida, mesma sessão51ea0d85/claude-opus-5-5/medium,
+zeroescritor antes. Proposta deve fixar handle do próprio controlador antes
+de conferir StartTime e eventual Kill único no mesmo objeto, evitando
+reabertura por PID; fonte Microsoft consultada pelo root, runtime ainda
+não medido para esse protocolo. Placeholders, sem IDs/paths privados no
+Git, sem novo código Python/framework. Recuperar terminal26073 antes de
+outro chamado; revisar/parsear proposta e comando concreto antes de efeitos.
+Nenhum aborto realizado. Sem Docker/PG/SQL/deploy/quota/job; produção aberta.
+Registros seguintes históricos.
+
+## Filtro HELD revisto — gates e revisão da leitura pendentes, 2026-11-04
+
+CLI34802 e84834 terminaram0 e seus terminais foram recuperados. Novo
+projector puro9e3c52d4/5757bytes, teste c7cd9fac/13552bytes:107/107em1,257s,
+sem falhas/erros/skips. RED anterior107/105erros+2falhasFileNotFoundError
+em0,963s arquivado como ausência do recurso, não regressão. Ruff/format2/
+mypy1teste alvos3.11 e3.14 aprovados, runtime sóWindows3.11.3. AST do teste
+confere após só renomear marcador fictício SECRET para SYNTHETIC_MARKER e
+whitespace; nenhuma asserção/caso/fixture relaxada. Fontes10consumidas intactas.
+
+Seleção relacionada975 em execução67345; recuperar terminal antes de
+registrar verde. CLI87982 somente leitura revisa projector/contrato e QA
+exata futura: somente metadados case1..3 e no máximo um held.json até4096,
+sem listar/ler outros brutos. Ainda NÃO houve leitura real privada. Resultado
+será diagnóstico UNATTESTED/NOT_PROVEN; não é coleta nativa ou recuperação.
+Recuperar87982 antes de outra chamada ao Claude2. Mesma sessão51ea0d85,
+claude-opus-5-5/medium, zero escritor antes. Nativecontroller15007 continua
+PARKED/HELD, sem terminal; mesmas instâncias observadas até15:01:10Z.
+Não repetir/matar/sinalizar/fechar/EOF/coletar nem alterar fontes consumidas.
+Gates de produto/produção continuam abertos. Histórico abaixo.
+
+## Diagnóstico HELD — contrato e testes sintéticos em preparo, 2026-11-04
+
+Exec15007 permanece PARKED/HELD, sem FINAL/terminal; mesmas instâncias CIM
+confirmadas após a revisão. Coleta principal continua proibida. CLI50299
+somente fontes terminou0: rótulo não revela caso/API/causa, não prova vida
+do filho nem release. Nenhum bruto foi lido. Root escolheu sob delegação
+proposta separada de filtro puro fechado para dados não atestados, sem
+liberação ou alteração de gates, em vez de ler/mostrar registro bruto.
+
+CLI34802, mesma sessão51ea0d85/claude-opus-5-5/medium, escreve somente
+novo teste test_pg16_shell_native_control_held_projection.py e novo
+CONTROL-HELD-DIAGNOSTIC.md. Nenhum módulo ainda autorizado até RED;
+nenhuma leitura real do Temp/registro, API/DLL/job/controle novo, coleta,
+cleanup ou segundo escritor. Recuperar terminal34802 antes de outra chamada.
+Plano futuro estreito: no máximo um held.json por caminho exato e tamanho
+limitado, somente após revisão própria; saída só enums/booleanos fechados,
+UNATTESTED/NOT_PROVEN. Checagens de caminho não prometem origem ou imunidade
+TOCTOU. Fontes10consumidas/estado16/nonce permanecem congelados. Sessão15007
+não deve ser terminada, repetida ou receber controle/EOF. Registros abaixo
+são históricos; Gateway/produção e gates de produto continuam abertos.
+
+## Rodada benigna estacionada — manter o controlador, 2026-11-04
+
+Base publicadaefa25af; fontes10/estado16 intactos e agora consumidos para
+esta tentativa. Após revisão somente leitura do Claude2 CLI85904/terminal0,
+root conferiu Git limpo/sincronizado, hashes10/10,15ancestrais reais,
+ausência dos2caminhos e zero escritor/controlador; tarefa Disabled.
+Nonce12público3f12dc584c29; tentativa única no exec15007, iniciado14:44:19Z.
+Foram observados IDENTITY e depois PARKED/HELD/retained1, sem FINAL ou
+terminal até14:45:46Z. Duas amostras CIM vivas ligaram controlador/pai,
+CreationDate estável e comando esperado; amostra posterior confirmou as
+mesmas instâncias. PIDs e linhas de comando permanecem somente locais.
+
+NÃO repetir entrada/nonce/raiz, iniciar coleta, matar, enviar EOF/controle,
+fechar recursos ou editar fontes consumidas. Sem interface de recuperação.
+Continuar só monitoramento do mesmo exec/CIM; próxima análise pode ler
+somente fontes, sem novo efeito, para propor recuperação separada revisada.
+Nenhuma aprovação/cleanup é alegada; causa do HELD ainda indeterminada.
+Brutos não foram lidos/exportados. Native3sNOT_MEASURED e entry_gateNOT_
+EVALUATED; identidade antiga consumida não reclassificada. Gateway/B1/B2/
+D090gate2/C1/SQL/produção continuam abertos; nenhum Docker/PG/SQL/deploy.
+Primeira QA de ancestrais falhou antes de recursos por PSIsContainer na
+DirectoryInfo.Parent; corrigida só a QA, nonce não retornado descartado.
+Primeiro envio da revisão ao CLI foi recusado por aspas/unknown-option-I
+antes de sessão/API; reenviado após zeroescritor com mensagem ASCII corrigida,
+sem quota/reset/job/conta/modelo alternativo. Registros seguintes históricos.
+
 ## Pré-checagem revisada — contrato documental fechado, 2026-11-04
 
 CLI73076 e32988 terminaram0 e seus terminais foram recuperados antes de
