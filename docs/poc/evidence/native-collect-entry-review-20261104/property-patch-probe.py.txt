@@ -1,0 +1,12 @@
+import json,pytest,runpy
+ns=runpy.run_path('docs/poc/pg16_shell_native_control_collect_win32.py'); cls=ns['_Win32Backend']
+assert '_open' not in cls.__dict__
+failed=False
+with pytest.MonkeyPatch.context() as mp:
+ try:mp.setattr(cls,'_open',property(lambda self: None))
+ except AttributeError:failed=True
+ assert failed
+ mp.setattr(cls,'_open',property(lambda self: None),raising=False)
+ assert isinstance(cls.__dict__['_open'],property)
+assert '_open' not in cls.__dict__
+print(json.dumps({'default_patch_raises_AttributeError':failed,'explicit_new_attribute_patch_restored':True,'native_effects':False},sort_keys=True))

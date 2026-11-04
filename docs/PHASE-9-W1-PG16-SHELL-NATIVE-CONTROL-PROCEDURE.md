@@ -377,3 +377,42 @@ como mídia removível, não remoto, sem atestar hardware); suporte das classes
 e `NtClose` reais; janelas de console e término externo herdadas. Runtime
 atual só Windows CPython 3.11.3; destino final Docker Oracle Linux 9.8.
 Native 3 s NOT_MEASURED, entry_gate NOT_EVALUATED; gates de produção abertos.
+
+## 11. Chamador da coleta revisto com fakes — 2026-11-04
+
+Continuidade da seção10, sem alterar as seções1–10 históricas. Novo
+docs/poc/pg16_shell_native_control_collect_entry.py,26337bytes,
+SHA-256 3d309771f5b33151aaf8773bdc86fbca57a1d1777ea2620848133ad1129c9e4b.
+Programado pelo Claude2 na sessão/modelo/esforço fixos; revisão e gates do
+assistente principal sob delegação, sem aprovação individual inventada.
+120próprios/868relacionados aprovados com fakes; detalhes e RED em
+COLLECT-ENTRY-VALIDATION. Isso não é execução nativa ou autorização nova.
+
+O código define captura limitada de três fontes pinadas e fábrica nativa
+preguiçosa, mas esses helpers nunca foram invocados. main positivo,
+_drive e _hold só foram inspecionados por AST; as decisões/settle/cycle
+foram exercitadas em unidades finitas, sempre com API fake e leitores,
+sinais e identidade substituídos. Não há prova de vida infinita ou de
+suporte real de API/ABI/âncora/fechamento.
+
+A captura por fases conserva o namespace e _ATTEMPTS originais; na
+fábrica conserva registro/native_ns/coletor/_ACTIVE/_POISON, antes da
+carga; na primeira operação conserva backend/_open/_retained antes de
+delegar. Um guarda estrutural antecede cada delegação, inclusive close.
+Tipos/identidades desconhecidos ou inspeção interrompida ficam registrados
+como incerteza persistente; nenhum fechamento forçado ou retry. Saída só
+com decisão normalizada igual à decisão atual e prova terminal dos ledgers
+de recursos originais vazios. O namespace e _ATTEMPTS não precisam ficar
+vazios: _ATTEMPTS retém o registro da única tentativa.
+
+Uma mensagem FINAL anterior ao retorno não prova término: a rechecagem
+seguinte pode estacionar. Saída terminal do harness e artefatos vinculados
+continuam obrigatórios. _LIVE do runner continua separado da coleta.
+
+Próximo lote operacional ainda precisa de proposta concreta, pins de
+todas as fontes, estado de processos/ambiente, captura e comando exato
+revisados antes de efeitos. Nenhum root/nonce/comando de execução foi
+criado ou consumido por esta seção. Native3s NOT_MEASURED,
+entry_gate NOT_EVALUATED e identidade consumida
+LIVENESS_SAMPLED_TRANSPORT_UNVERIFIED permanecem; Gateway/B1/B2/D090gate2/
+C1/SQL/produção abertos. Destino final Docker OracleLinux9.8 nesta máquina.

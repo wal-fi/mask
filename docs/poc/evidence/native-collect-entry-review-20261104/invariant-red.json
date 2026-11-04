@@ -1,0 +1,28 @@
+{
+  "source_sha256": "da8992b961102040011ad36ba5f1cc6c3055a3a346f782348336863ce703e122",
+  "tests_sha256": "e9c258334871529104698b6246395acf587c95a605c1751b710a20889249c831",
+  "tests_bytes": 38207,
+  "red": {
+    "collected": 120,
+    "passed": 92,
+    "failed": 28,
+    "errors": 0,
+    "exception_types": {
+      "AssertionError": 26,
+      "Signal": 2
+    },
+    "seconds": 14.286,
+    "exit": 1
+  },
+  "old91": {
+    "passed": 91,
+    "harness_fixed": true,
+    "only_changed_old_definition": "direct sys stdout target"
+  },
+  "static": {
+    "ruff_exit": 0,
+    "format_exit": 0,
+    "mypy_exit": 1,
+    "mypy_missing_local_annotations": 2
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "source_sha256": "da8992b961102040011ad36ba5f1cc6c3055a3a346f782348336863ce703e122",
+  "bytes": 22966,
+  "own": {
+    "collected": 91,
+    "passed": 90,
+    "failed": 1,
+    "errors": 0,
+    "seconds": 11.039,
+    "exit": 1
+  },
+  "failed_test": "test_broken_output_changes_no_decision",
+  "failed_test_attribution": "harness dotted monkeypatch.setattr resolves import through importlib.import_module forbidden by sealed; AssertionError before product output path",
+  "static": {
+    "ruff_clean": true,
+    "poc_lint_clean": true,
+    "format_conforming": true,
+    "mypy_test_clean": true
+  },
+  "independent": {
+    "inspection_control": {
+      "escaped": true,
+      "later_exit_code": 0,
+      "parked": false,
+      "first_control_kept": true
+    },
+    "exit_shape": {
+      "malformed_exit0_accepted": true,
+      "reason": "NOT_OK",
+      "hashes": "not-a-sha"
+    },
+    "identity_drift": {
+      "native_delegations": 343,
+      "created": 31,
+      "closed": 31,
+      "final": "PARK_UNKNOWN_CUSTODY"
+    }
+  },
+  "scope": "fakes only; private contract findings, not measured external security exploit"
+}

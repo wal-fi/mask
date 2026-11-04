@@ -1,3 +1,116 @@
+## Chamador privado da coleta revisto com fakes — 2026-11-04
+
+Claude2 programou na sessão51ea0d85/claude-opus-5-5/medium; o assistente
+principal revisou e validou. Fonte3d309771/26337bytes, testes2e18c2b5/
+38239bytes: **120 próprios** em15,596s e **868 relacionados** em45,992s,
+zero falhas/erros/skips. Ruff/format352/mypy351src/tests nos alvos3.11/
+3.14 limpos; runtime Windows3.11.3, PoC fora do mypy.
+
+F1–F3 corrigidos após RED120/92pass/28falhas: inspeção incerta fica
+pegajosa, saída exige decisão normalizada atual, guarda estrutural precede
+cada delegação e retém os objetos originais. Sondas independentes confirmam
+PARK após controle, recusa de decisão inválida e só1delegação fake antes da
+parada por identidade trocada (1criado/0fechados, retido; não é cleanup).
+Históricos81/91, falhas de harness/format/mypy e candidata rejeitada
+preservados como dados. Todos os upstream/63/29testes/estado16 intactos.
+
+O leitor/fábrica preguiçosos existem como definições nunca invocadas;
+main positivo/driver/hold só por AST, sem teste de vida infinita. Fakes
+não medem API/ABI/NTFS/fechamento/sinais reais. Nenhum Docker/PG/SQL,
+runtime/config/binário explícito, DLL/API/job/process/control real,
+root/nonce/comando operacional ou deploy. Zero Claude2 ativo após66039;
+sem nova cota/reset/job, tarefa histórica Disabled/sem próximo disparo.
+Próximo: proposta concreta e pré-checagem da execução com fontes/pins/
+comando revisados antes de efeitos. Native3s NOT_MEASURED,
+entry_gate NOT_EVALUATED, identidade LIVENESS_SAMPLED_TRANSPORT_UNVERIFIED;
+Gateway/B1/B2/D090gate2/C1/SQL/produção abertos. Destino final Docker
+OracleLinux9.8 local. Evidência COLLECT-ENTRY-VALIDATION; históricos abaixo.
+
+## Chamador da coleta — contrato e testes em preparo, 2026-11-04
+
+HEAD/origin36227aa,0/0 e árvore rastreada limpa reconferidos. A chamada
+somente leitura47963, iniciada03/11, terminou0 e seu terminal foi recuperado
+em04/11 antes de qualquer outra chamada; zero Claude2 ativo confirmado.
+Proposta exige captura por fases e uma API observada de sete operações,
+antes da primeira delegação, sem usar _LIVE do runner como prova da coleta.
+Root localizou argv0: runner usa str(host.PYTHON), derivado de REPO e
+.venv/Scripts/python.exe; a derivação prospectiva não lê o binário.
+
+CLI97475 escreve só desenho COLLECT-ENTRY e novo teste, mesma sessão
+51ea0d85/claude-opus-5-5/medium. Marcador COLLECT_ENTRY_V2_CONTRACT_TESTS_FIRST
+ASCII em uma linha conferido; arquivos novos ausentes antes da chamada.
+Recuperar esse terminal antes de revisar ou iniciar outra chamada. Nenhum
+módulo novo ainda autorizado: primeiro testes/RED. CLI97475 terminou0;
+testef850633b/27130bytes:81coletados/79erros+2falhas, todosFileNotFoundError,
+3,258s/exit1, não regressão de produto; contagem82 preliminar corrigida.
+Ruff/mypy do teste limpos, uma assinatura fora do format. Baseline arquivada
+como dados em native-collect-entry-review-20261104. Sonda fake independente
+confirmou limite documentado de37: tuple fechada retém registro, mas não
+locals do callback quando falha comum é absorvida. O novo chamador deve
+reter exceção/traceback privados; não é finding no contrato anterior37.
+
+CLI48054 refina só teste/desenho: retenção da falha comum e primeiro
+controle antes de KEEP falível, gaps de captura e carga parcial desconhecida,
+mais atributo original ilegível. Zero escritor antes; marcador
+COLLECT_ENTRY_V3_TEST_CONTRACT_REFINEMENT conferido. Recuperar terminal48054
+antes de outra chamada, substituindo espera97475 acima. Implementação segue
+ausente até novo RED. CLI48054 terminou0: teste182ad729/31841bytes,
+91coletados/89erros+2falhas, todosFileNotFoundError,0,977s. AST dos81
+originais idêntico; Ruff/mypy limpos e uma assinatura ainda fora do format.
+Root reproduziu erro de setup: monkeypatch de _open no tipo do backend
+precisa raising=False porque o campo só existe na instância. CLI38460
+corrige só essa criação explícita da property e whitespace, mais registro
+no desenho; testes e módulo ainda não executados. Zero escritor antes,
+marcador COLLECT_ENTRY_V4_TEST_FIX_ONLY conferido. Recuperar terminal38460
+antes da próxima chamada; substitui espera48054. CLI38460 terminou0.
+Finalc868fef7/31927bytes:91coletados/89erros+2falhasFileNotFoundError,
+1,005s/exit1, Ruff/format/mypy do teste limpos. AST confirmou apenas o
+keyword raising=False no setup e whitespace, asserções preservadas.
+Testes congelados e baseline final arquivada antes de qualquer módulo.
+
+CLI8846 implementa só collect_entry.py e desenho, mesma sessão/modelo/
+medium, zero escritor antes. Marcador COLLECT_ENTRY_V5_IMPLEMENT_FROZEN91
+ASCII em uma linha conferido. Recuperar terminal8846 antes de revisão
+ou nova chamada; substitui espera38460. Definições prospectivas de leitor/
+fábrica preguiçosos permitidas apenas como código não invocado; nenhum
+main positivo/drive/hold/fábrica/sinal/controle real será executado pelos gates.
+CLI8846 terminou0: candidata da8992b9/22966bytes/678linhas lida inteira
+pelo root antes dos testes. Próprios91:90pass/1falha,11,039s; estáticos
+limpos. Falha atribuída ao harness: patch.setattr com string resolve
+importlib.import_module, proibido dentro do sealed, antes do código de
+saída. Deve usar módulo sys já importado e objeto direto, sem relaxar bans.
+
+Três sondas finitas reproduziram lacunas de contrato privado: inspeção
+levantando Signal escapava e segundo settle permitiaEXIT0 sempark; settle
+aceitavaEXIT0 comNOT_OK e hashes inválidos; troca de_ACTIVE após primeira
+delegação permitia343chamadas fake antes dePARKUNKNOWN. Não são exploits
+externos medidos. Candidata/probes/relatório preservados como dados.
+CLI71324 escreve só regressões e desenho, fonte da899 intacta até RED;
+zero escritor antes, marcador COLLECT_ENTRY_V6_REVIEW_REGRESSIONS_ONLY.
+Cobrir captura nativa original/identidades antes de cada delegação, forma
+completa da decisão e inspeções totais com controle original retido.
+Recuperar terminal71324 antes de nova chamada, substituindo espera8846.
+CLI71324 terminou0: teste e9c25833/38207bytes,120coletados/92pass/28falhas,
+0erros,14,286s/exit1 (26AssertionError,2Signal). Os91antigos agora passam;
+AST confirmou só alvo sys.stdout direto no harness e importsys. Ruff/format
+limpos; mypy exige anotação de dois fired locais, preservados como falha
+histórica. RED/candidata/probes arquivados antes da correção.
+
+CLI66039 corrige invariantes só no módulo/desenho e permite exclusivamente
+anotar esses dois fired:list[bool] no teste; asserções/casos/decoradores
+congelados. Zero escritor antes, marcador COLLECT_ENTRY_V7_INVARIANT_FIX
+conferido; recuperar terminal66039 antes de revisar ou nova chamada,
+substituindo espera71324. Sem efeitos reais, fontes anteriores fixas.
+Todos os upstream,
+63/29testes e estado16 fixos. Import futuro será lexical, sem resolver
+caminhos no import; captura/loader/sinais reais nunca executados neste lote.
+Decisão pré-fábrica deve demonstrar fase pura sem adotar containers tardios;
+qualquer custódia desconhecida depois da fronteira fica retida em PARK.
+Sem Docker/PG/SQL/runtime/config/binário explícito/DLL/API/job/process/
+controle real/root/nonce/comando operacional/deploy. Sem nova cota/reset/
+job ou segundo escritor; produção e gates continuam abertos. Registros
+seguintes históricos.
+
 ## Fábrica privada de coleta revista com fakes — 2026-11-03
 
 Claude2 programou sozinho na sessão51ea0d85, claude-opus-5-5/effort medium;

@@ -1,0 +1,731 @@
+"""Fake-only tests for the private collection entry, written before it exists.
+
+docs/poc/pg16_shell_native_control_collect_entry.py does not exist yet: until
+it does, every test fails at setup (feature-absent baseline, not a product
+regression). Setup reads the three pinned Python sources and loads the fake NT
+helpers and the bundle builder; during each exercise filesystem, loader,
+process, thread, signal and DLL effects are blocked by a scoped monkeypatch
+context. The native api helper is always a Python fake; main is exercised
+only on its pure S0/S1 refusals, and the sticky driver and hold are checked
+by AST only. Nothing here is native, and the seams are not an authentication
+boundary.
+"""
+
+import ast
+import builtins
+import contextlib
+import ctypes
+import hashlib
+import importlib
+import io
+import json
+import os
+import runpy
+import signal
+import subprocess
+import threading
+from collections.abc import Iterator
+from pathlib import Path
+from types import SimpleNamespace
+from typing import Any
+
+import pytest
+
+REPO = Path(__file__).resolve().parents[1]
+ENTRY = REPO / "docs/poc/pg16_shell_native_control_collect_entry.py"
+PINNED = REPO / "docs/poc/pg16_shell_native_control_collect_pinned.py"
+COLLECTOR = REPO / "docs/poc/pg16_shell_native_control_collect.py"
+WIN32 = REPO / "docs/poc/pg16_shell_native_control_collect_win32.py"
+WIN32_TESTS = REPO / "tests/test_pg16_shell_native_control_collect_win32.py"
+VERIFY_SOURCE = REPO / "docs/poc/pg16_shell_native_control_verify.py"
+VERIFY_TESTS = REPO / "tests/test_pg16_shell_native_control_verify.py"
+SOURCES = (
+    (
+        "docs/poc/pg16_shell_native_control_collect_pinned.py",
+        "37b098cf604099a8aa9e64c4a3569ce06c6fe389188eba9a2b46478b04a8285e",
+        5373,
+    ),
+    (
+        "docs/poc/pg16_shell_native_control_collect.py",
+        "1972ec74d96f93d824dfe18da0e0288a7fc21b7f2997e28d5afe497b782c9f52",
+        20571,
+    ),
+    (
+        "docs/poc/pg16_shell_native_control_collect_win32.py",
+        "ccb3f74af75be04bbe685bc195c84d17e0457efe15732ed6cdbe9f9f057c3b3a",
+        22315,
+    ),
+)
+KIND = "MASKGW_PG16_NATIVE_COLLECT_ENTRY_V1"
+EXIT_OUTCOMES = {0: "VERIFIED_APPROVED", 1: "VERIFIED_REJECTED", 2: "REFUSED", 5: "INTERRUPTED"}
+PARK_REASONS = ("RETAINED", "UNKNOWN_CUSTODY", "INTERRUPTED", "INTERNAL")
+NONCE = "0123456789abcdef0123456789abcdef"
+ARGV0 = "C:\\fictitious\\lab\\venv\\Scripts\\python.exe"
+PIDS = (4242, 4241)
+SENTINEL = "fictitious-secret-sentinel-9e2b"
+FINAL_KEYS = {
+    "kind",
+    "event",
+    "nonce12",
+    "controller_pid",
+    "code",
+    "outcome",
+    "reason",
+    "summary_sha256",
+    "transport_sha256",
+}
+PARKED_KEYS = {"kind", "event", "nonce12", "controller_pid", "reason"}
+IDENTITY_KEYS = {"kind", "event", "nonce12", "controller_pid", "parent_pid"}
+
+
+class Signal(BaseException):
+    """A fictitious control interruption."""
+
+
+class SneakyStr(str):
+    pass
+
+
+class SubList(list[Any]):
+    pass
+
+
+class SubDict(dict[Any, Any]):
+    pass
+
+
+def sha(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def forbidden(*_args: Any, **_kwargs: Any) -> Any:
+    raise AssertionError("filesystem, loader, process, signal or native effect in the exercise")
+
+
+BANS: tuple[tuple[Any, str], ...] = (
+    (builtins, "open"),
+    (os, "open"),
+    (os, "stat"),
+    (os, "listdir"),
+    (os, "scandir"),
+    (os, "system"),
+    (Path, "open"),
+    (Path, "stat"),
+    (Path, "lstat"),
+    (Path, "read_bytes"),
+    (Path, "resolve"),
+    (subprocess, "Popen"),
+    (ctypes, "WinDLL"),
+    (ctypes, "CDLL"),
+    (threading.Thread, "start"),
+    (runpy, "run_path"),
+    (importlib, "import_module"),
+    (signal, "signal"),
+)
+
+
+@pytest.fixture
+def lab(monkeypatch: Any) -> SimpleNamespace:
+    module = runpy.run_path(str(ENTRY))
+    helpers = runpy.run_path(str(WIN32_TESTS))
+    builder = runpy.run_path(str(VERIFY_TESTS))
+    sources = (PINNED.read_bytes(), COLLECTOR.read_bytes(), WIN32.read_bytes())
+    win32 = runpy.run_path(str(WIN32))
+    collector = runpy.run_path(str(COLLECTOR))
+    return SimpleNamespace(
+        glob=module["main"].__globals__,
+        helpers=helpers,
+        builder=builder,
+        sources=sources,
+        verifier=VERIFY_SOURCE.read_bytes(),
+        win32=win32["backend"].__globals__,
+        collector=collector["collect"].__globals__,
+        monkeypatch=monkeypatch,
+    )
+
+
+@contextlib.contextmanager
+def sealed(lab: SimpleNamespace) -> Iterator[Any]:
+    """Blocks effects for the exercise only; restored before pytest reports."""
+    with lab.monkeypatch.context() as patch:
+        for owner, name in BANS:
+            patch.setattr(owner, name, forbidden)
+        yield patch
+
+
+def world(lab: SimpleNamespace, scenario: str = "approved") -> SimpleNamespace:
+    bundle = lab.builder["build"](lab.builder[scenario]())
+    root = lab.helpers["make_tree"](bundle, lab.verifier)
+    fake = lab.helpers["FakeNt"](root)
+    return SimpleNamespace(bundle=bundle, root=root, nt=fake, api=fake.api())
+
+
+def seams(lab: SimpleNamespace, native: Any) -> SimpleNamespace:
+    """Replaces every effectful seam; the real source read and argv0 helpers
+    must never run in these tests."""
+    seen = SimpleNamespace(installed=[], native=[])
+
+    def install(signum: Any, _handler: Any) -> None:
+        seen.installed.append(signum)
+
+    def native_api(namespace: Any) -> Any:
+        seen.native.append(namespace)
+        return native(namespace)
+
+    for name, value in (
+        ("_pids", lambda: PIDS),
+        ("_install", install),
+        ("_native_api", native_api),
+        ("_read_sources", forbidden),
+        ("_argv0", forbidden),
+        ("_drive", forbidden),
+    ):
+        lab.monkeypatch.setitem(lab.glob, name, value)
+    return seen
+
+
+def returning(api: Any) -> Any:
+    def native(_namespace: Any) -> Any:
+        return api
+
+    return native
+
+
+def advance(lab: SimpleNamespace, native: Any) -> tuple[Any, Any, SimpleNamespace]:
+    seen = seams(lab, native)
+    progress = lab.glob["_progress"](NONCE, ARGV0)
+    with sealed(lab):
+        decision = lab.glob["_advance"](progress, lab.sources)
+    return progress, decision, seen
+
+
+def events(text: str) -> list[dict[str, Any]]:
+    return [json.loads(line) for line in text.splitlines()]
+
+
+def assert_park(lab: SimpleNamespace, progress: Any, decision: Any, reason: str) -> None:
+    assert decision == ("PARK", reason)
+    with sealed(lab):
+        assert lab.glob["settle"](decision, progress) == ("PARK", reason)
+    assert lab.glob["_STATE"]["parked"] is True
+
+
+# -- import, pins, static structure --
+
+
+def test_import_is_pure_and_lexical(monkeypatch: Any) -> None:
+    for owner, name in BANS:
+        if (owner, name) != (runpy, "run_path"):
+            monkeypatch.setattr(owner, name, forbidden)
+    module = runpy.run_path(str(ENTRY))
+    glob = module["main"].__globals__
+    assert glob["KEEP"] == []
+    assert glob["_STATE"] == {
+        "active": False,
+        "parked": False,
+        "announced": False,
+        "attempted": False,
+    }
+    assert glob["REPO"] == ENTRY.parents[2]
+
+
+def test_constants_are_the_reviewed_pins(lab: SimpleNamespace) -> None:
+    assert lab.glob["SOURCES"] == SOURCES
+    for raw, (_path, digest, size) in zip(lab.sources, SOURCES, strict=True):
+        assert sha(raw) == digest and len(raw) == size
+    assert lab.glob["KIND"] == KIND
+    assert lab.glob["EXIT_OUTCOMES"] == EXIT_OUTCOMES
+    assert lab.glob["PARK_REASONS"] == PARK_REASONS
+
+
+def functions(tree: ast.Module) -> dict[str, ast.FunctionDef]:
+    return {node.name: node for node in tree.body if isinstance(node, ast.FunctionDef)}
+
+
+def inside(node: ast.AST) -> set[int]:
+    return {id(child) for child in ast.walk(node)}
+
+
+def test_static_structure_is_sticky_and_effect_free() -> None:
+    tree = ast.parse(ENTRY.read_bytes())
+    imported = {
+        alias.name.split(".")[0]
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Import)
+        for alias in node.names
+    }
+    imported |= {
+        (node.module or "").split(".")[0]
+        for node in ast.walk(tree)
+        if isinstance(node, ast.ImportFrom)
+    }
+    assert imported <= {"hashlib", "json", "os", "pathlib", "re", "signal", "stat", "sys", "time"}
+    names = {node.id for node in ast.walk(tree) if isinstance(node, ast.Name)}
+    banned = {"ctypes", "subprocess", "threading", "traceback", "runpy", "importlib", "print"}
+    assert not names & banned
+    defs = functions(tree)
+    native = inside(defs["_native_api"])
+    strings = [node for node in ast.walk(tree) if isinstance(node, ast.Constant)]
+    assert all(id(node) in native for node in strings if node.value == "_load_native")
+    lazy = inside(defs["_argv0"]) | inside(defs["_read_sources"])
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Attribute) and node.attr == "resolve":
+            assert id(node) in lazy
+    hold = defs["_hold"]
+    assert not any(isinstance(node, (ast.Return, ast.Break)) for node in ast.walk(hold))
+    assert any(
+        isinstance(node, ast.While) and isinstance(node.test, ast.Constant) and node.test.value
+        for node in ast.walk(hold)
+    )
+    returns = [node for node in ast.walk(defs["_drive"]) if isinstance(node, ast.Return)]
+    assert len(returns) == 1
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign) and isinstance(node.targets[0], ast.Subscript):
+            target = node.targets[0]
+            key = target.slice
+            if isinstance(key, ast.Constant) and key.value in ("parked", "announced", "attempted"):
+                assert isinstance(node.value, ast.Constant) and node.value.value is True
+    calls = [node for node in ast.walk(tree) if isinstance(node, ast.Call)]
+    named = [node.func.id for node in calls if isinstance(node.func, ast.Name)]
+    assert named.count("_native_api") == 1  # the only call: inside the factory
+    mains = [
+        node
+        for node in tree.body
+        if isinstance(node, ast.If) and "__main__" in ast.unparse(node.test)
+    ]
+    assert len(mains) == 1
+
+
+# -- main: only the pure S0/S1 refusals --
+
+
+def refuse_main(lab: SimpleNamespace, argv: Any, capsys: Any) -> dict[str, Any]:
+    with sealed(lab):
+        assert lab.glob["main"](argv) == 2
+    captured = capsys.readouterr()
+    assert captured.err == ""
+    (event,) = events(captured.out)
+    assert set(event) == FINAL_KEYS and event["event"] == "FINAL"
+    assert event["code"] == 2 and event["outcome"] == "REFUSED"
+    assert event["summary_sha256"] is None and event["transport_sha256"] is None
+    assert lab.glob["KEEP"] == []
+    return event
+
+
+@pytest.mark.parametrize(
+    "argv",
+    [[], [NONCE, NONCE], [NONCE.upper()], [NONCE[:-1]], [SneakyStr(NONCE)], (NONCE,), [7]],
+)
+def test_bad_arguments_refuse_before_any_read(lab: SimpleNamespace, argv: Any, capsys: Any) -> None:
+    for name in ("_read_sources", "_argv0", "_drive", "_execute"):
+        lab.monkeypatch.setitem(lab.glob, name, forbidden)
+    event = refuse_main(lab, argv, capsys)
+    assert event["reason"] == "COLLECT_ENTRY_ARGV" and event["nonce12"] is None
+
+
+def tampered(raw: bytes, other: bytes, kind: str) -> Any:
+    variants: dict[str, Any] = {
+        "bytearray": bytearray(raw),
+        "none": None,
+        "short": raw[:-1],
+        "flipped": raw[:-1] + bytes([raw[-1] ^ 1]),
+        "swapped": other,
+    }
+    return variants[kind]
+
+
+@pytest.mark.parametrize("kind", ["bytearray", "none", "short", "flipped", "swapped"])
+@pytest.mark.parametrize("index", [0, 1, 2])
+def test_every_tampered_source_refuses_before_exec(
+    lab: SimpleNamespace, index: int, kind: str, capsys: Any
+) -> None:
+    sources = list(lab.sources)
+    sources[index] = tampered(sources[index], sources[(index + 1) % 3], kind)
+    supplied = tuple(sources)
+    lab.monkeypatch.setitem(lab.glob, "_read_sources", lambda: supplied)
+    for name in ("_argv0", "_drive", "_execute"):
+        lab.monkeypatch.setitem(lab.glob, name, forbidden)
+    event = refuse_main(lab, [NONCE], capsys)
+    assert event["reason"] == "COLLECT_ENTRY_SOURCE" and event["nonce12"] == NONCE[:12]
+
+
+@pytest.mark.parametrize("value", [None, [], ("a", "b"), "not-a-tuple"])
+def test_a_malformed_source_capture_refuses(
+    lab: SimpleNamespace, value: Any, capsys: Any
+) -> None:
+    lab.monkeypatch.setitem(lab.glob, "_read_sources", lambda: value)
+    for name in ("_argv0", "_drive", "_execute"):
+        lab.monkeypatch.setitem(lab.glob, name, forbidden)
+    assert refuse_main(lab, [NONCE], capsys)["reason"] == "COLLECT_ENTRY_SOURCE"
+
+
+@pytest.mark.parametrize("value", [None, "", SneakyStr(ARGV0), ARGV0.encode(), ARGV0 + "\x00"])
+def test_a_malformed_argv0_refuses(lab: SimpleNamespace, value: Any, capsys: Any) -> None:
+    lab.monkeypatch.setitem(lab.glob, "_read_sources", lambda: lab.sources)
+    lab.monkeypatch.setitem(lab.glob, "_argv0", lambda: value)
+    for name in ("_drive", "_execute"):
+        lab.monkeypatch.setitem(lab.glob, name, forbidden)
+    assert refuse_main(lab, [NONCE], capsys)["reason"] == "COLLECT_ENTRY_SOURCE"
+
+
+# -- one forward pass through the real pinned composition (finite units) --
+
+
+@pytest.mark.parametrize(("scenario", "code"), [("approved", 0), ("rejected_at_1", 1)])
+def test_verified_paths_capture_every_original_before_effects(
+    lab: SimpleNamespace, scenario: str, code: int, capsys: Any
+) -> None:
+    w = world(lab, scenario)
+    progress, decision, seen = advance(lab, returning(w.api))
+    summary, transport = sha(w.bundle.summary_raw), sha(w.bundle.transport_raw)
+    assert decision == ("EXIT", code, "OK", summary, transport)
+    keep = lab.glob["KEEP"]
+    namespace = progress["namespace"]
+    assert any(item is namespace for item in keep) and any(item is progress for item in keep)
+    attempts = progress["attempts"]
+    assert namespace["_ATTEMPTS"] is attempts and type(attempts) is list
+    record = progress["record"]
+    assert attempts == [record] and attempts[0] is record
+    assert progress["collector"] is record.collector
+    assert progress["active"] is record.collector["_ACTIVE"]
+    assert progress["poison"] is record.collector["_POISON"]
+    backend = progress["backend"]
+    assert backend is record.backend
+    assert progress["open"] is backend._open and progress["retained"] is backend._retained
+    assert seen.native == [record.native]
+    assert seen.installed == [signal.SIGINT, signal.SIGBREAK]
+    assert lab.glob["_STATE"]["active"] is False and lab.glob["_STATE"]["attempted"] is True
+    with sealed(lab):
+        assert lab.glob["settle"](decision, progress) == decision
+        lab.glob["_final"](progress, decision)
+    captured = capsys.readouterr()
+    identity, final = events(captured.out)
+    assert set(identity) == IDENTITY_KEYS and identity["event"] == "IDENTITY"
+    assert (identity["controller_pid"], identity["parent_pid"]) == PIDS
+    assert set(final) == FINAL_KEYS and final["code"] == code
+    assert final["outcome"] == EXIT_OUTCOMES[code] and final["reason"] == "OK"
+    assert (final["summary_sha256"], final["transport_sha256"]) == (summary, transport)
+    assert ARGV0 not in captured.out and "Users" not in captured.out and captured.err == ""
+
+
+def test_no_api_operation_runs_before_the_backend_capture(lab: SimpleNamespace) -> None:
+    w = world(lab)
+    states: list[tuple[bool, int]] = []
+    holder: list[Any] = []
+
+    def wrap(name: str) -> Any:
+        inner = getattr(w.api, name)
+
+        def operation(*args: Any) -> Any:
+            progress = holder[0]
+            states.append((progress["backend_captured"], len(progress["retained"])))
+            return inner(*args)
+
+        return operation
+
+    api = SimpleNamespace(**{name: wrap(name) for name in lab.helpers["API_OPERATIONS"]})
+    seen = seams(lab, returning(api))
+    progress = lab.glob["_progress"](NONCE, ARGV0)
+    holder.append(progress)
+    with sealed(lab):
+        decision = lab.glob["_advance"](progress, lab.sources)
+    assert decision[:3] == ("EXIT", 0, "OK") and len(seen.native) == 1
+    assert states and all(captured for captured, _size in states)
+    assert states[0][1] >= 1  # the first pending call was already retained, kept as is
+
+
+def test_an_invalid_but_closed_collection_exits_with_its_reason(lab: SimpleNamespace) -> None:
+    w = world(lab)
+    del lab.helpers["named"](w.root, "Desktop").children["codes"]
+    progress, decision, _seen = advance(lab, returning(w.api))
+    assert decision == ("EXIT", 2, "COLLECT_OPEN", None, None)
+    assert progress["active"] == [] and progress["poison"] == []
+
+
+def test_the_pass_runs_once_and_its_decision_is_kept(lab: SimpleNamespace) -> None:
+    w = world(lab)
+    progress, decision, seen = advance(lab, returning(w.api))
+    calls = list(w.nt.calls)
+    with sealed(lab):
+        assert lab.glob["_advance"](progress, lab.sources) is decision
+    assert w.nt.calls == calls and len(seen.native) == 1
+
+
+# -- the fixed seven-operation observation adapter --
+
+
+def test_the_adapter_constructor_lookup_delegates_nothing(lab: SimpleNamespace) -> None:
+    w = world(lab)
+    progress = lab.glob["_progress"](NONCE, ARGV0)
+    observed = lab.glob["_Observed"](progress, w.api)
+    with sealed(lab):
+        lab.win32["_Win32Backend"](observed, lab.collector)
+    assert w.nt.calls == []
+    assert progress["op_entered"] is False and progress["backend_captured"] is False
+
+
+def test_an_operation_without_a_capturable_backend_never_delegates(lab: SimpleNamespace) -> None:
+    w = world(lab)
+    progress = lab.glob["_progress"](NONCE, ARGV0)
+    observed = lab.glob["_Observed"](progress, w.api)
+    with sealed(lab), pytest.raises(OSError):
+        observed.close(0x404)
+    assert w.nt.calls == []
+    assert progress["op_entered"] is True and progress["backend_captured"] is False
+
+
+# -- uncertain or unknown custody parks --
+
+
+def test_uncertain_close_parks_as_retained(lab: SimpleNamespace) -> None:
+    w = world(lab)
+    w.nt.hooks[("close", "poc")] = lab.helpers["returns"](lab.helpers["INVALID_HANDLE"])
+    progress, decision, _seen = advance(lab, returning(w.api))
+    assert progress["poison"] != [] and progress["retained"] != []
+    assert_park(lab, progress, decision, "RETAINED")
+
+
+def test_control_during_collection_is_kept_first_and_parks(lab: SimpleNamespace) -> None:
+    w = world(lab)
+    signal_error = Signal()
+    w.nt.hooks[("create", "codes")] = lab.helpers["raise_before"](signal_error)
+    progress, decision, _seen = advance(lab, returning(w.api))
+    assert progress["control"] is signal_error
+    assert progress["outcome"][0] == "RAISED" and progress["outcome"][1] is signal_error
+    assert_park(lab, progress, decision, "RETAINED")
+    second = Signal()
+    lab.glob["_fault"](progress, second)
+    assert progress["control"] is signal_error
+
+
+def test_control_before_the_factory_exits_as_interrupted(lab: SimpleNamespace) -> None:
+    w = world(lab)
+    signal_error = Signal()
+    real_compile = builtins.compile
+    count = [0]
+
+    def interrupted(source: Any, *args: Any, **kwargs: Any) -> Any:
+        count[0] += 1
+        if count[0] == 2:  # the collector inside the composition, before the factory
+            raise signal_error
+        return real_compile(source, *args, **kwargs)
+
+    seen = seams(lab, returning(w.api))
+    progress = lab.glob["_progress"](NONCE, ARGV0)
+    with sealed(lab) as patch:
+        patch.setattr(builtins, "compile", interrupted)
+        decision = lab.glob["_advance"](progress, lab.sources)
+    assert decision == ("EXIT", 5, "INTERRUPTED", None, None)
+    assert progress["control"] is signal_error and progress["factory_entered"] is False
+    assert seen.native == [] and w.nt.calls == []
+
+
+@pytest.mark.parametrize("failure", ["signal", "error", "none"])
+def test_a_native_api_gap_parks_conservatively(lab: SimpleNamespace, failure: str) -> None:
+    w = world(lab)
+
+    def native(_namespace: Any) -> Any:
+        if failure == "signal":
+            raise Signal()
+        if failure == "error":
+            raise OSError(SENTINEL)
+        return None
+
+    progress, decision, seen = advance(lab, native)
+    assert len(seen.native) == 1 and progress["native_started"] is True
+    assert progress["record_captured"] is True and progress["backend_captured"] is False
+    assert w.nt.calls == []
+    assert_park(lab, progress, decision, "UNKNOWN_CUSTODY")
+
+
+def test_a_replaced_attempt_list_before_the_call_parks(lab: SimpleNamespace) -> None:
+    w = world(lab)
+    seen = seams(lab, returning(w.api))
+    progress = lab.glob["_progress"](NONCE, ARGV0)
+
+    def install(_signum: Any, _handler: Any) -> None:
+        progress["namespace"]["_ATTEMPTS"] = []  # a later empty is not the original
+
+    lab.monkeypatch.setitem(lab.glob, "_install", install)
+    with sealed(lab):
+        decision = lab.glob["_advance"](progress, lab.sources)
+    assert progress["factory_entered"] is True and progress["record_captured"] is False
+    assert seen.native == [] and w.nt.calls == []
+    assert_park(lab, progress, decision, "UNKNOWN_CUSTODY")
+
+
+def replace(progress: Any, change: str) -> None:
+    record, backend = progress["record"], progress["backend"]
+    if change == "active":
+        record.collector["_ACTIVE"] = []
+    elif change == "poison":
+        record.collector["_POISON"] = []
+    elif change == "open":
+        backend._open = {}
+    elif change == "retained":
+        backend._retained = []
+    elif change == "open-subclass":
+        backend._open = SubDict()
+        progress["open"] = backend._open
+    elif change == "retained-subclass":
+        backend._retained = SubList()
+        progress["retained"] = backend._retained
+    elif change == "collector":
+        record.collector = dict(record.collector)
+    elif change == "attempts":
+        progress["namespace"]["_ATTEMPTS"] = [record]
+    elif change == "extra-record":
+        progress["attempts"].append(record)
+    else:
+        record.backend = None
+
+
+CHANGES = [
+    "active",
+    "poison",
+    "open",
+    "retained",
+    "open-subclass",
+    "retained-subclass",
+    "collector",
+    "attempts",
+    "extra-record",
+    "backend",
+]
+
+
+@pytest.mark.parametrize("change", CHANGES)
+def test_replaced_or_hostile_originals_park(lab: SimpleNamespace, change: str) -> None:
+    w = world(lab)
+    progress, decision, _seen = advance(lab, returning(w.api))
+    assert decision[:3] == ("EXIT", 0, "OK")
+    replace(progress, change)
+    with sealed(lab):
+        assert lab.glob["decide"](progress) == ("PARK", "UNKNOWN_CUSTODY")
+        assert lab.glob["settle"](decision, progress) == ("PARK", "INTERNAL")
+    assert lab.glob["_STATE"]["parked"] is True
+
+
+# -- pre-attempt refusals --
+
+
+def test_a_load_failure_is_a_closed_refusal(lab: SimpleNamespace) -> None:
+    w = world(lab)
+    seams(lab, returning(w.api))
+
+    def failing(_raw: Any, _namespace: Any) -> None:
+        raise OSError(SENTINEL)
+
+    lab.monkeypatch.setitem(lab.glob, "_execute", failing)
+    progress = lab.glob["_progress"](NONCE, ARGV0)
+    with sealed(lab):
+        decision = lab.glob["_advance"](progress, lab.sources)
+    assert decision == ("EXIT", 2, "COLLECT_ENTRY_LOAD", None, None)
+    assert lab.glob["_STATE"]["attempted"] is False and w.nt.calls == []
+
+
+@pytest.mark.parametrize("pair", [None, (4242, 4242), (0, 1), (True, 2), (4242,), (1 << 32, 2)])
+def test_an_arm_failure_refuses_before_the_attempt(
+    lab: SimpleNamespace, pair: Any, capsys: Any
+) -> None:
+    w = world(lab)
+    seen = seams(lab, returning(w.api))
+    lab.monkeypatch.setitem(lab.glob, "_pids", lambda: pair)
+    progress = lab.glob["_progress"](NONCE, ARGV0)
+    with sealed(lab):
+        decision = lab.glob["_advance"](progress, lab.sources)
+    assert decision == ("EXIT", 2, "COLLECT_ENTRY_ARM", None, None)
+    assert seen.installed == [] and seen.native == [] and w.nt.calls == []
+    assert capsys.readouterr().out == ""
+
+
+# -- decision, settle, output --
+
+
+H = "0123456789abcdef" * 4
+
+
+@pytest.mark.parametrize(
+    "result",
+    [
+        ["VERIFIED_APPROVED", "OK", H, H],
+        ("VERIFIED_APPROVED", "OK", H, H, None),
+        ("VERIFIED_APPROVED", SneakyStr("OK"), H, H),
+        ("VERIFIED_APPROVED", "OK", H.upper(), H),
+        ("VERIFIED_REJECTED", "OK", H, H[:-1]),
+        ("VERIFIED_APPROVED", "OK", H, None),
+        ("INVALID", "OK", None, None),
+        ("INVALID", "NOT_A_REASON", None, None),
+        ("INVALID", "SCHEMA", H, None),
+        ("APPROVED", "OK", H, H),
+        None,
+    ],
+)
+def test_a_malformed_result_is_never_verified(lab: SimpleNamespace, result: Any) -> None:
+    w = world(lab)
+    progress, _decision, _seen = advance(lab, returning(w.api))
+    progress["outcome"] = ("RETURNED", result)
+    with sealed(lab):
+        assert lab.glob["decide"](progress) == ("EXIT", 2, "COLLECT_ENTRY_RESULT", None, None)
+
+
+def test_settle_is_sticky_and_announces_once(lab: SimpleNamespace, capsys: Any) -> None:
+    w = world(lab)
+    w.nt.hooks[("close", "poc")] = lab.helpers["returns"](lab.helpers["INVALID_HANDLE"])
+    progress, decision, _seen = advance(lab, returning(w.api))
+    capsys.readouterr()
+    with sealed(lab):
+        assert lab.glob["settle"](decision, progress) == ("PARK", "RETAINED")
+        exit_decision = ("EXIT", 0, "OK", H, H)
+        assert lab.glob["settle"](exit_decision, progress) == ("PARK", "INTERNAL")
+    (parked,) = events(capsys.readouterr().out)
+    assert set(parked) == PARKED_KEYS and parked["reason"] == "RETAINED"
+
+
+def test_an_injected_secret_never_reaches_the_output(lab: SimpleNamespace, capsys: Any) -> None:
+    w = world(lab)
+    error = OSError(SENTINEL)
+    w.nt.hooks[("create", lab.helpers["ANCHOR"])] = lab.helpers["raise_before"](error)
+    progress, decision, _seen = advance(lab, returning(w.api))
+    with sealed(lab):
+        verdict = lab.glob["settle"](decision, progress)
+    assert verdict[0] == "PARK"
+    error.__traceback__ = None
+    captured = capsys.readouterr()
+    assert SENTINEL not in captured.out and SENTINEL not in captured.err
+
+
+class Broken(io.StringIO):
+    def write(self, _text: str) -> int:
+        raise OSError("fictitious broken pipe")
+
+
+def test_broken_output_changes_no_decision(lab: SimpleNamespace) -> None:
+    w = world(lab)
+    w.nt.hooks[("close", "poc")] = lab.helpers["returns"](lab.helpers["INVALID_HANDLE"])
+    progress, decision, _seen = advance(lab, returning(w.api))
+    with sealed(lab) as patch:
+        patch.setattr("sys.stdout", Broken())
+        assert lab.glob["settle"](decision, progress) == ("PARK", "RETAINED")
+        lab.glob["_final"](progress, ("EXIT", 0, "OK", H, H))
+    assert lab.glob["_STATE"]["parked"] is True and lab.glob["_STATE"]["announced"] is True
+
+
+def test_the_console_handler_raises_only_while_active(lab: SimpleNamespace) -> None:
+    handler = lab.glob["_on_console"]
+    assert handler(signal.SIGINT, None) is None
+    lab.glob["_STATE"]["active"] = True
+    with pytest.raises(KeyboardInterrupt):
+        handler(signal.SIGINT, None)
+
+
+def test_cycle_swallows_everything_from_one_pause(lab: SimpleNamespace) -> None:
+    pauses: list[Any] = []
+
+    def pause(seconds: Any) -> None:
+        pauses.append(seconds)
+        raise Signal()
+
+    lab.monkeypatch.setitem(lab.glob, "_pause", pause)
+    assert lab.glob["cycle"]() is None
+    assert len(pauses) == 1

@@ -1,0 +1,36 @@
+import contextlib,io,json,pytest,runpy
+from types import SimpleNamespace
+h=runpy.run_path('tests/test_pg16_shell_native_control_collect_entry.py')
+out={}
+with contextlib.redirect_stdout(io.StringIO()):
+ with pytest.MonkeyPatch.context() as mp:
+  lab=h['lab'].__wrapped__(mp);w=h['world'](lab);p,d,_=h['advance'](lab,h['returning'](w.api))
+  first=h['Signal']();count=[0];opened=p['open']
+  def interrupted(self):
+   count[0]+=1
+   if count[0]==1:raise first
+   return opened
+  mp.setattr(type(p['backend']),'_open',property(interrupted),raising=False)
+  escaped=False
+  with h['sealed'](lab):
+   try:lab.glob['settle'](d,p)
+   except h['Signal'] as error:
+    escaped=True;lab.glob['_fault'](p,error)
+   later=lab.glob['settle'](d,p)
+  out['inspection_control']={'escaped':escaped,'later_decision':later[:3],'parked':lab.glob['_STATE']['parked'],'original_control_kept':p['control'] is first}
+ with pytest.MonkeyPatch.context() as mp:
+  lab=h['lab'].__wrapped__(mp);w=h['world'](lab);p,d,_=h['advance'](lab,h['returning'](w.api))
+  forged=('EXIT',0,'NOT_OK','not-a-sha','not-a-sha')
+  with h['sealed'](lab):v=lab.glob['settle'](forged,p)
+  out['exit_shape']={'malformed_accepted':v is forged,'decision':v}
+ with pytest.MonkeyPatch.context() as mp:
+  lab=h['lab'].__wrapped__(mp);w=h['world'](lab);holder=[];count=[0]
+  def create(*args):
+   value=w.api.create(*args);count[0]+=1
+   if count[0]==1:holder[0]['record'].collector['_ACTIVE']=[]
+   return value
+  api=SimpleNamespace(**{name:(create if name=='create' else getattr(w.api,name)) for name in lab.helpers['API_OPERATIONS']})
+  h['seams'](lab,h['returning'](api));p=lab.glob['_progress'](h['NONCE'],h['ARGV0']);holder.append(p)
+  with h['sealed'](lab):d=lab.glob['_advance'](p,lab.sources)
+  out['identity_drift']={'native_delegations':len(w.nt.calls),'decision':d,'created':len(w.nt.created),'closed':len(w.nt.closed)}
+print(json.dumps(out,sort_keys=True))

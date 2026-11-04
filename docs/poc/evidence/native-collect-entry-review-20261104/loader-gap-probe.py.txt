@@ -1,0 +1,16 @@
+import gc,json,pytest,runpy,weakref
+h=runpy.run_path('tests/test_pg16_shell_native_control_collect_factory.py')
+class Token: pass
+refs=[]
+with pytest.MonkeyPatch.context() as mp:
+ pin=h['pin'].__wrapped__(mp)
+ def factory(ns):
+  temporary=Token()
+  refs.append(weakref.ref(temporary))
+  raise OSError('fictitious loader failure')
+ with h['sealed'](pin):result=h['run'](pin,factory)
+ gc.collect()
+ assert result==('INVALID','COLLECT_INTERNAL',None,None)
+ assert refs[0]() is None
+ assert len(pin.glob['_ATTEMPTS'])==1
+print(json.dumps({'composition_closed_result':result,'attempt_record_retained':True,'callback_local_retained':False,'scope':'existing documented wrapper limit; caller needs private exception traceback retention; no native effects'},sort_keys=True))

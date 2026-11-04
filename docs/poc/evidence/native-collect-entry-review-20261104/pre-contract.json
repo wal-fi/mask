@@ -1,0 +1,20 @@
+{
+  "tests_sha256": "f850633bacb66341c5b2af6f7591f917a5120dfa432abd5f1472a5db70f3e413",
+  "tests_bytes": 27130,
+  "feature_absent": {
+    "collected": 81,
+    "errors": 79,
+    "failed": 2,
+    "exception_types": {
+      "FileNotFoundError": 81
+    },
+    "seconds": 3.258,
+    "exit": 1
+  },
+  "static": {
+    "ruff_exit": 0,
+    "format_exit": 1,
+    "mypy_one_test_exit": 0
+  },
+  "notes": "Programmer preliminary count82 corrected to81. Caller absent, not product regression. Loader exception-local retention is a caller gap, not defect in accepted composition37 documented limits."
+}

@@ -1,0 +1,13 @@
+import contextlib,io,json,pathlib,pytest,runpy
+h=runpy.run_path('tests/test_pg16_shell_native_control_collect_entry.py');result={}
+with pytest.MonkeyPatch.context() as mp:
+ lab=h['lab'].__wrapped__(mp)
+ with contextlib.redirect_stdout(io.StringIO()):
+  try:h['test_broken_output_changes_no_decision'](lab)
+  except BaseException as error:
+   frames=[];tb=error.__traceback__
+   while tb is not None:
+    f=tb.tb_frame;frames.append({'file':pathlib.PurePath(f.f_code.co_filename).name,'line':tb.tb_lineno,'function':f.f_code.co_name});tb=tb.tb_next
+   result={'error_type':type(error).__name__,'frames':frames,'state':dict(lab.glob['_STATE'])}
+  else:result={'passed':True}
+print(json.dumps(result,sort_keys=True))

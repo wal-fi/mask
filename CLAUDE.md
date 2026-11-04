@@ -1,5 +1,33 @@
 # AI Data Masking Gateway
 
+## Chamador privado da coleta revisto com fakes — 2026-11-04
+
+Claude2 programou na sessão51ea0d85/claude-opus-5-5/medium; o assistente
+principal revisou e validou. Fonte3d309771/26337bytes, testes2e18c2b5/
+38239bytes: **120 próprios** em15,596s e **868 relacionados** em45,992s,
+zero falhas/erros/skips. Ruff/format352/mypy351src/tests nos alvos3.11/
+3.14 limpos; runtime Windows3.11.3, PoC fora do mypy.
+
+F1–F3 corrigidos após RED120/92pass/28falhas: inspeção incerta fica
+pegajosa, saída exige decisão normalizada atual, guarda estrutural precede
+cada delegação e retém os objetos originais. Sondas independentes confirmam
+PARK após controle, recusa de decisão inválida e só1delegação fake antes da
+parada por identidade trocada (1criado/0fechados, retido; não é cleanup).
+Históricos81/91, falhas de harness/format/mypy e candidata rejeitada
+preservados como dados. Todos os upstream/63/29testes/estado16 intactos.
+
+O leitor/fábrica preguiçosos existem como definições nunca invocadas;
+main positivo/driver/hold só por AST, sem teste de vida infinita. Fakes
+não medem API/ABI/NTFS/fechamento/sinais reais. Nenhum Docker/PG/SQL,
+runtime/config/binário explícito, DLL/API/job/process/control real,
+root/nonce/comando operacional ou deploy. Zero Claude2 ativo após66039;
+sem nova cota/reset/job, tarefa histórica Disabled/sem próximo disparo.
+Próximo: proposta concreta e pré-checagem da execução com fontes/pins/
+comando revisados antes de efeitos. Native3s NOT_MEASURED,
+entry_gate NOT_EVALUATED, identidade LIVENESS_SAMPLED_TRANSPORT_UNVERIFIED;
+Gateway/B1/B2/D090gate2/C1/SQL/produção abertos. Destino final Docker
+OracleLinux9.8 local. Evidência COLLECT-ENTRY-VALIDATION; históricos abaixo.
+
 ## Fábrica privada de coleta revista com fakes — 2026-11-03
 
 Claude2 programou sozinho na sessão51ea0d85, claude-opus-5-5/effort medium;

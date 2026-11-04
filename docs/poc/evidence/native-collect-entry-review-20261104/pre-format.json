@@ -1,0 +1,21 @@
+{
+  "tests_sha256": "182ad729db1bd785debc25da9f51cf01a29dadd032a403fb862335ee10127f92",
+  "bytes": 31841,
+  "original81_definitions_AST_identical": true,
+  "feature_absent": {
+    "collected": 91,
+    "failed": 2,
+    "errors": 89,
+    "exception_types": {
+      "FileNotFoundError": 91
+    },
+    "seconds": 0.977,
+    "exit": 1
+  },
+  "static": {
+    "ruff_exit": 0,
+    "format_exit": 1,
+    "mypy_test_exit": 0
+  },
+  "harness_review": "New unreadable attribute test uses monkeypatch.setattr on nonexistent class _open; independently confirmed default raises AttributeError; requires raising=False to install property as intended."
+}

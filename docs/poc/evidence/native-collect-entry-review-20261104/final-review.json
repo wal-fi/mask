@@ -1,0 +1,126 @@
+{
+  "source": {
+    "path": "docs/poc/pg16_shell_native_control_collect_entry.py",
+    "sha256": "3d309771f5b33151aaf8773bdc86fbca57a1d1777ea2620848133ad1129c9e4b",
+    "bytes": 26337
+  },
+  "tests": {
+    "path": "tests/test_pg16_shell_native_control_collect_entry.py",
+    "sha256": "2e18c2b5ce22b953843115a55a2d0d33eb02925907610666969d94fab64454d2",
+    "bytes": 38239
+  },
+  "own": {
+    "collected": 120,
+    "passed": 120,
+    "seconds": 15.596,
+    "exit": 0
+  },
+  "related": {
+    "collected": 868,
+    "passed": 868,
+    "seconds": 45.992,
+    "exit": 0,
+    "paths": [
+      "tests/test_pg16_shell_native_control_collect_entry.py",
+      "tests/test_pg16_shell_native_control_collect_factory.py",
+      "tests/test_pg16_shell_native_control_collect_pinned.py",
+      "tests/test_pg16_shell_native_control_collect_win32.py",
+      "tests/test_pg16_shell_native_control_collect.py",
+      "tests/test_pg16_shell_native_control_verify.py",
+      "tests/test_pg16_shell_native_control_entry.py"
+    ]
+  },
+  "static": {
+    "ruff_src_tests": true,
+    "poc_lint": [
+      "E9",
+      "F63",
+      "F7",
+      "F82"
+    ],
+    "format_files": 352,
+    "mypy_files": 351,
+    "mypy_targets": [
+      "3.11",
+      "3.14"
+    ],
+    "poc_in_mypy": false
+  },
+  "red": {
+    "tests_sha256": "e9c258334871529104698b6246395acf587c95a605c1751b710a20889249c831",
+    "collected": 120,
+    "passed": 92,
+    "failed": 28,
+    "errors": 0,
+    "seconds": 14.286,
+    "exit": 1,
+    "final_delta": "two local fired:list[bool] annotations only; all assertions/decorators preserved"
+  },
+  "independent_after": {
+    "inspection_control": {
+      "escaped": false,
+      "parked": true,
+      "first_control_retained": true,
+      "later": "PARK_INTERNAL"
+    },
+    "exit_shape": {
+      "malformed_accepted": false,
+      "decision": "PARK_INTERNAL"
+    },
+    "identity_drift": {
+      "delegations": 1,
+      "created": 1,
+      "closed": 0,
+      "decision": "PARK_UNKNOWN_CUSTODY"
+    }
+  },
+  "runtime": "Windows CPython3.11.3; static targets are not runtime3.14",
+  "claude": {
+    "session": "51ea0d85-05bb-4d24-ba9a-c9627c3f832f",
+    "model": "claude-opus-5-5",
+    "effort": "medium",
+    "calls": [
+      {
+        "execution": 47963,
+        "terminal": 0,
+        "scope": "read-only Nov3, terminal recovered Nov4"
+      },
+      {
+        "execution": 97475,
+        "terminal": 0,
+        "scope": "initial design/tests"
+      },
+      {
+        "execution": 48054,
+        "terminal": 0,
+        "scope": "contract tests refinement"
+      },
+      {
+        "execution": 38460,
+        "terminal": 0,
+        "scope": "harness property/format fix"
+      },
+      {
+        "execution": 8846,
+        "terminal": 0,
+        "scope": "initial implementation"
+      },
+      {
+        "execution": 71324,
+        "terminal": 0,
+        "scope": "RED regressions+harness fix"
+      },
+      {
+        "execution": 66039,
+        "terminal": 0,
+        "scope": "invariant fixes+two typing annotations"
+      }
+    ]
+  },
+  "native_helper_invoked": false,
+  "real_sources_reader_invoked": false,
+  "positive_main_driver_hold_executed": false,
+  "quota_observed": false,
+  "new_resume_job": false,
+  "production_gates": "open"
+}

@@ -1,0 +1,20 @@
+{
+  "tests_sha256": "c868fef72d40317df099abe6ac66a956c0054055584bef563a2fb1e608a09878",
+  "bytes": 31927,
+  "feature_absent": {
+    "collected": 91,
+    "failed": 2,
+    "errors": 89,
+    "exception_types": {
+      "FileNotFoundError": 91
+    },
+    "seconds": 1.005,
+    "exit": 1
+  },
+  "static": {
+    "ruff_exit": 0,
+    "format_exit": 0,
+    "mypy_test_exit": 0
+  },
+  "only_semantic_delta_from182": "monkeypatch new property creation raising=False; all old assertions preserved"
+}
