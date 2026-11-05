@@ -4,6 +4,94 @@ Criado por solicitação do usuário em2026-10-30. Inclui o trabalho acumulado
 após4a5e556, preservando resultados históricos e tentativas reprovadas. É
 checkpoint de desenvolvimento incompleto da Fase9, não release de produção.
 
+## Composição privada V2 revista e validada — 2026-11-05
+
+Claude2 único programador, sessão51ea0d85/claude-opus-5-5/medium; última
+CLI5351 terminou0 e foi recuperada. Root revisou toda fonte e delta final.
+Fonte7bbf734c/14964bytes, teste40279844/30476bytes congelado:44/44 em3,824s
+e636/636 relacionados em56,863s, sem falhas/erros/skips. Ruff/format2/
+mypy1teste3.11/3.14 aprovados; PoC fora do mypy, runtimeWindows3.11.3.
+LEDGER substituído agora recusa por identidade em cada guarda, sem hold
+legado. Duas regressões falharam antes (RED44/42pass/2falhas); fonte580 e
+RED42 de ausência preservados como dados, não operação. Source10/helperbb/
+testad/estado16 e tentativa3f12dc584c29 consumida intactos.
+
+Nenhum caller/loader/entrada/CLI/root/nonce/comando operacional novo. Próximo
+lote seguro é desenho SOMENTE LEITURA do caller protegido e proveniência/
+schema V2; mesmo Claude2 após zero escritor, sem _case inseguro ou pins v1
+atestando execução nova. Nenhum nativo/Docker/PG/SQL/deploy ou leitura de
+privado/runtime/config/binário. Gates Native3s/entry_gate/B1/B2/D090gate2/
+C1/SQL/produção permanecem abertos, Gateway indisponível. OracleLinux9.8
+em Docker local continua destino aceito.
+
+Evidência LIFECYCLE-V2-VALIDATION e8 artefatos em lifecycle-v2-review-20261105.
+Autenticação401 histórica resolvida; não houve troca de conta, quota/reset
+ou job novo. Tarefa histórica Disabled; nenhum Claude2 ativo na medição
+final. Commit/publicação somente dos arquivos verificados, conferir Git
+antes do próximo lote. Registros abaixo são históricos.
+
+## Composição privada V2: implementação isolada em andamento — 2026-11-05
+
+CLI98872 terminou0; teste ad70c3b9/AST9f4955d9 congelado, RED42:3 passaram/
+39 erros de módulo ausente em3,137s. Ruff check e mypy estrito alvos3.11/3.14
+passaram; format exige só unir comprehension, AST deve ficar idêntica.
+Arquivo/red42.json e snapshot em evidence/lifecycle-v2-review-20261105.
+
+CLI68556 em andamento, mesma sessão51ea0d85/opus5.5/medium após guarda de
+escritor. Só módulo privado lifecycle_v2/desenho e formatação exata no teste;
+nenhum caller/loader/entrada/root/comando operacional. Recuperar terminal
+antes de nova chamada, depois revisar e medir gates. Source10/helperbb/
+estado16/attempt consumido fixos. Nenhum nativo/Docker/PG/SQL/deploy ou
+leitura privada/runtime/config/binário. Produção indisponível/gates abertos.
+HEAD/origin23b3de4; nada novo publicado ainda. Histórico abaixo.
+
+## Composição privada V2: testes e desenho em preparação — 2026-11-05
+
+CLI43370/7774 terminaram0 e foram revisadas. Teste58bce1f9:42 coletados,
+3 passaram/39 erros de setup por módulo ausente,3,267s; sem prova de correção.
+Baseline sintético legado passou no verify. Ruff encontrou três diagnósticos,
+gates seguintes ainda não executados. Zero escritor antes de CLI98872,
+mesma sessão51ea0d85/claude-opus-5-5/medium: só os dois novos arquivos de
+desenho/teste para corrigir lint e precisar contrato, sem módulo até RED
+congelado. Recuperar terminal98872 antes de outra chamada. HEAD/origin23b3de4;
+alterações atuais só documentação de retomada e esses dois novos arquivos.
+
+V2 exige reservas por caso, referências/ledger/registro originais e caminho
+de retenção sem callbacks legados inseguros. Caller futuro deve preservar
+esse contrato, sem _case mutável; fontes fixadas são pré-condição de origem,
+não autenticação por __globals__. LAST_CLOSE/TERMINATE mantêm precedência e
+inelegibilidade existentes. Verify completo em memória só prova lógica de
+schema, nunca proveniência real da nova composição. Fontes10/helperbb,
+estado16 e tentativa3f12dc584c29 consumida intactos. Nenhum efeito nativo/
+Docker/PG/SQL/loader/CLI/root/nonce/comando/deploy ou leitura privada/runtime/
+config/binário. Gates novos ainda não medidos; helper anterior49/592.
+Gateway/produção indisponíveis, B1/B2/D090gate2/C1 abertos. Histórico abaixo.
+
+## Autenticação restabelecida; composição em revisão de contrato — 2026-11-05
+
+HEAD/origin23b3de4, árvore rastreada limpa e zero escritor/controlador
+confirmados antes da retomada. Status de autenticação só em campos filtrados:
+loggedIn=true/claude.ai; sem conta/e-mail/token expostos. CLI57468 somente
+leitura terminou0 na sessão51ea0d85, claude-opus-5-5/medium: autenticação API
+restabelecida de fato. O bloqueio401 abaixo agora é histórico; nenhuma conta
+foi trocada. Tarefa histórica Disabled, sem novo job/quota/reset observado.
+
+Proposta inicial de lifecycle_v2 não foi implementada. Root identificou
+retenção insuficiente em _held após referência/estado forjado (a função pode
+liberar ownerCLOSED), reentrada sem reserva antes de setup e omissão da
+precedência AUDIT_INVALID/FAILED_LAST_CLOSE no LAST_CLOSE. Verificador v1
+compatível em forma não atesta a proveniência de nova composição operacional.
+
+CLI43370 refina SOMENTE LEITURA, mesma sessão/modelo/esforço, zero escritor
+antes. Recuperar terminal43370 antes de outra chamada. Deve ler fakeINNER e
+fechar contexto original, reservas e ramo de retenção sem callbacks inseguros;
+nenhum módulo/teste novo ainda autorizado. Não excluir LAST_CLOSE por falta
+de leitura, não relaxar helperbb/política/limites nem alegar recuperação de
+DEADLINE/CLEANUP fora do contrato TREE. Nenhum efeito nativo/loader/CLI/root/
+nonce/Docker/PG/SQL/deploy ou privado/runtime/config/binário lido.
+Fontes10/estado16 e tentativa3f12dc584c29 consumidos preservados. Código
+continua emcecd4a7, gates49/592 anteriores; produção indisponível. Histórico abaixo.
+
 ## Retomada bloqueada por autenticação Claude2 — 2026-11-05
 
 Checkpoint inicial confirmado: HEAD/origin cecd4a7588c9ad9f4f5697ad4bc8a5ef04887115,

@@ -1,0 +1,35 @@
+{
+  "green": {
+    "exception_types": {},
+    "exit": 0,
+    "failed": [],
+    "failed_count": 0,
+    "seconds": 3.811,
+    "stats": {
+      "collected": 42,
+      "passed": 42
+    }
+  },
+  "native_effects": false,
+  "probes": [
+    {
+      "ledger_drift_probe": {
+        "after_calls": 52,
+        "extra_fake_calls": 0,
+        "held_written": true,
+        "original_ledger_len": 4,
+        "original_ledger_len_after": 4,
+        "owner_registered": true,
+        "preconstructed_error": false
+      }
+    },
+    {
+      "closed_without_chain": true,
+      "module_sha256": "580392b2af67b2fb2ebfb583a718be1633f202e24d1ee217ac8eb2cafbae905c",
+      "phase_a_invalid_inputs": 3
+    }
+  ],
+  "source_sha256": "580392b2af67b2fb2ebfb583a718be1633f202e24d1ee217ac8eb2cafbae905c",
+  "stage": "INITIAL_GREEN42_WITH_LEDGER_GUARD_FINDING",
+  "tests_sha256": "614029d67f50dbfbe0a64b660c08662f73190ca82d9619471ae6b9fd8e9b4b49"
+}

@@ -1,3 +1,116 @@
+## Composição privada V2 revista e validada; próximo é desenho — 2026-11-05
+
+CLI68556/82223/5351 terminaram0 e foram recuperadas, sem segundo escritor.
+Claude2 foi o único programador, sessão51ea0d85/claude-opus-5-5/medium.
+Root leu toda a fonte e revisou o delta final: só um par de identidade do
+ledger em _intact. Fonte7bbf734c8b4a1fefe1617fc8c1cff2a5de0b33f8996eb98b0016233ab0b040cb
+(14964bytes/423linhas); teste4027984417a9dc811fb26859fd87acedb36b108a6b45d0090de681c0a8d065f8
+(30476bytes), byte a byte igual ao RED44. Original42 AST preservada.
+
+Gates finais:44/44 em3,824s;636/636 relacionados em56,863s, zero falhas,
+erros/skips. Ruff PoC E9/F63/F7/F82 e teste normal aprovados, format2,
+mypy1teste estrito alvos3.11/3.14 limpos; PoC fora do mypy, execução só
+WindowsCPython3.11.3. Sonda independente confirmou erro pré-construído e
+zero held.json/chamadas adicionais após ledger trocado, owner/ledger
+originais retidos;3 recusas faseA sem cadeia. Dez fontes congeladas e
+helperbb/testad intactos. Evidência LIFECYCLE-V2-VALIDATION e8 artefatos
+em evidence/lifecycle-v2-review-20261105, incluindo RED42/RED44 e580 histórico.
+
+Sem revisão de código pendente deste incremento. Próximo lote seguro:
+SOMENTE desenho em leitura do caller protegido e da proveniência/schema V2,
+na mesma sessão/modelo/esforço após confirmar zero escritor. O _case legado
+é inseguro para a recusa de integridade; não integrar a entrada consumida,
+não reutilizar pins v1 como atestado de uma composição real. Nenhum caller/
+loader/CLI/root/nonce/comando operacional novo autorizado por este registro.
+Tentativa3f12dc584c29 consumida e estado16 preservados; não reler privados.
+
+Nenhum nativo/Docker/PG/SQL/deploy ou runtime/config/binário lido; Gateway
+indisponível. Native3s NOT_MEASURED, entry_gate NOT_EVALUATED, identidade
+Nov2 LIVENESS_SAMPLED_TRANSPORT_UNVERIFIED, B1/B2/D090gate2/C1/SQL/produção
+abertos. Destino aceito Docker local OracleLinux9.8. Autenticação401 histórica
+resolvida por API concluída, sem conta trocada; nenhuma quota/reset/job
+novo. Tarefa histórica Disabled. Fechar commit/publicação somente destes
+arquivos verificados; confirmar Git antes de continuar. Histórico abaixo.
+
+## Composição privada V2: implementação isolada em andamento — 2026-11-05
+
+CLI98872 terminou0. RED final antes do módulo:42 coletados,3 passaram/39
+erros FileNotFoundError,3,137s. Testead70c3b9/AST9f4955d9 congelados em
+evidence/lifecycle-v2-review-20261105/red42*. Ruff check e mypy estrito nos
+alvos3.11/3.14 passaram; format pediu só unir uma comprehension. Única edição
+autorizada nesse teste é essa quebra de linha, AST inalterada.
+
+CLI68556 implementa apenas módulo privado lifecycle_v2 e notas do desenho,
+mesma sessão51ea0d85/claude-opus-5-5/medium, guarda CIM antes de iniciar.
+Recuperar terminal68556 antes de outra chamada/revisão final. Root não
+programa o módulo. Contexto fechado/retido em falha, reservas antes de
+efeitos simulados, ledger/registro originais e sem segundo close; helpers
+legados confiáveis têm alcance delimitado. Nenhum caller operacional novo.
+Sem nativo/Docker/PG/SQL/loader/CLI/root/nonce/comando/deploy, sem leitura
+privada/runtime/config/binário. Source10/helperbb/estado16/tentativa consumida
+fixos, Gateway indisponível e gates abertos. Não declarar verde antes dos
+gates sobre a implementação final. Histórico da preparação abaixo.
+
+## Composição privada V2: testes e desenho em preparação — 2026-11-05
+
+CLI43370 e CLI7774 terminaram0, terminais recuperados. Proposta/desenho e
+teste58bce1f9 revistos pelo root:42 coletados,3 passaram/39 erros de setup
+por módulo ausente (FileNotFoundError),3,267s. É baseline de funcionalidade
+ausente, não prova de correção. Lote sintético legado passou no verify.
+Colisão de armazenamento falso reproduzida separadamente; Claude2 corrigiu
+com numeração de cenários antes dessa medição final. Ruff recusou três
+diagnósticos (dois de seis argumentos e um parâmetro não usado); gates
+seguintes ainda não rodaram. Sem módulo autorizado antes de RED congelado.
+
+CIM confirmou zero Claude2 antes de CLI98872, mesma sessão51ea0d85,
+claude-opus-5-5/medium. Escopo só os dois arquivos novos: corrigir lint e
+precisar construção do erro, captura de método/clock e fechamento unstarted
+sem liberação por global mutável. Recuperar terminal98872 antes de outra
+chamada; não iniciar outro escritor. Desenho04291487 é histórico dessa
+rodada, não o estado final da implementação.
+
+Contrato exige contexto original por caso, reservas antes de setup/close,
+retenção de integridade sem _held/_contain/_release, liberação só da lista
+original e ledger original vazio com CLOSED provado. Método bound compara
+origem, não identidade efêmera. O caller futuro NÃO pode reutilizar o catch
+mutável de _case para esse caminho. Não é defesa contra Python arbitrário
+privilegiado: autenticidade permanece pré-condição de fontes fixadas.
+
+Testes só com Owner/NestedJobOwner e kernels falsos, inclusive LAST_CLOSE e
+verify completo sobre artefatos sintéticos. AUDIT_INVALID/FAILED_LAST_CLOSE
+mantêm precedência; DEADLINE/CLEANUP inelegível não ganha recuperação. Pins
+v1 em fixture não atestam composição v2 real. Novas flags são privadas do
+caso, não alteram estado16. Fontes10/helperbb e tentativa3f12dc584c29 fixos.
+Sem loader/CLI/root/nonce/comando operacional, nativo/Docker/PG/SQL/deploy,
+runtime/config/binário ou privado lido. Gateway indisponível; gates abertos.
+Últimos gates medidos continuam49/592 do helper, não da composição nova.
+As seções seguintes preservam o histórico.
+
+## Autenticação restabelecida; composição em revisão de contrato — 2026-11-05
+
+HEAD/origin23b3de4, árvore rastreada limpa e zero escritor/controlador
+confirmados antes da retomada. Status de autenticação só em campos filtrados:
+loggedIn=true/claude.ai; sem conta/e-mail/token expostos. CLI57468 somente
+leitura terminou0 na sessão51ea0d85, claude-opus-5-5/medium: autenticação API
+restabelecida de fato. O bloqueio401 abaixo agora é histórico; nenhuma conta
+foi trocada. Tarefa histórica Disabled, sem novo job/quota/reset observado.
+
+Proposta inicial de lifecycle_v2 não foi implementada. Root identificou
+retenção insuficiente em _held após referência/estado forjado (a função pode
+liberar ownerCLOSED), reentrada sem reserva antes de setup e omissão da
+precedência AUDIT_INVALID/FAILED_LAST_CLOSE no LAST_CLOSE. Verificador v1
+compatível em forma não atesta a proveniência de nova composição operacional.
+
+CLI43370 refina SOMENTE LEITURA, mesma sessão/modelo/esforço, zero escritor
+antes. Recuperar terminal43370 antes de outra chamada. Deve ler fakeINNER e
+fechar contexto original, reservas e ramo de retenção sem callbacks inseguros;
+nenhum módulo/teste novo ainda autorizado. Não excluir LAST_CLOSE por falta
+de leitura, não relaxar helperbb/política/limites nem alegar recuperação de
+DEADLINE/CLEANUP fora do contrato TREE. Nenhum efeito nativo/loader/CLI/root/
+nonce/Docker/PG/SQL/deploy ou privado/runtime/config/binário lido.
+Fontes10/estado16 e tentativa3f12dc584c29 consumidos preservados. Código
+continua emcecd4a7, gates49/592 anteriores; produção indisponível. Histórico abaixo.
+
 ## Retomada bloqueada por autenticação Claude2 — 2026-11-05
 
 Checkpoint inicial confirmado: HEAD/origin cecd4a7588c9ad9f4f5697ad4bc8a5ef04887115,

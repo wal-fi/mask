@@ -1,0 +1,30 @@
+{
+  "exception_types": {
+    "FileNotFoundError": 39
+  },
+  "exit": 1,
+  "failed": [
+    "tests/test_pg16_shell_native_control_lifecycle_v2.py::test_v2_matches_the_legacy_lifecycle[NORMAL-None]",
+    "tests/test_pg16_shell_native_control_lifecycle_v2.py::test_v2_matches_the_legacy_lifecycle[TERMINATE-None]",
+    "tests/test_pg16_shell_native_control_lifecycle_v2.py::test_v2_matches_the_legacy_lifecycle[LAST_CLOSE-None]",
+    "tests/test_pg16_shell_native_control_lifecycle_v2.py::test_v2_matches_the_legacy_lifecycle[NORMAL-setup_failed]",
+    "tests/test_pg16_shell_native_control_lifecycle_v2.py::test_v2_matches_the_legacy_lifecycle[TERMINATE-launch_failed]",
+    "tests/test_pg16_shell_native_control_lifecycle_v2.py::test_v2_matches_the_legacy_lifecycle[TERMINATE-ready_missing]",
+    "tests/test_pg16_shell_native_control_lifecycle_v2.py::test_v2_matches_the_legacy_lifecycle[LAST_CLOSE-snapshot_invalid]",
+    "tests/test_pg16_shell_native_control_lifecycle_v2.py::test_the_budget_refusal_matches_the_legacy_lifecycle"
+  ],
+  "failed_count": 39,
+  "interpretation": "39 setup errors from absent module; not behavioral correction proof",
+  "native_effects": false,
+  "seconds": 3.137,
+  "source10_unchanged": true,
+  "stage": "FEATURE_ABSENT_RED_BEFORE_MODULE",
+  "stats": {
+    "collected": 42,
+    "errors": 39,
+    "passed": 3
+  },
+  "test_ast_sha256": "9f4955d9d9091caf48c005e7a4ccbc193c7c19b148f5313c0a835e8d3a4fc30c",
+  "test_bytes": 28582,
+  "test_sha256": "ad70c3b9357e13abfe127b361efdca300765b90e03718e085f2f4c2f36e61d82"
+}

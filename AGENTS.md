@@ -40,6 +40,30 @@ de produção nem dispensa revisão, isolamento, masking, read-only ou sigilo.
 
 ## Escopo atual
 
+## Lifecycle privado V2 revisto com fakes — 2026-11-05
+
+Claude2 programou somente na sessão51ea0d85/claude-opus-5-5/medium; root
+revisou e mediu. Fonte7bbf734c/14964bytes, teste40279844/30476bytes:
+44próprios3,824s e636relacionados56,863s passaram sem falhas/erros/skips.
+Ruff/format2/mypy1teste nos alvos3.11/3.14 limpos; runtimeWindows3.11.3,
+PoC fora do mypy. Troca de ledger corrigida após RED44/42pass/2falhas;
+snapshot580392b2 e RED42 de módulo ausente preservados como dados.
+
+Só composição privada: referências/ledger/lista originais, reservas antes
+do ciclo e reconcile, fechamento único e rejeição TREE preservada. Não há
+caller/loader/CLI/entrada/root/nonce/comando operacional novo. `_case`
+legado não é seguro para esse contrato; próxima continuação é desenho
+somente leitura do caller protegido e proveniência V2, antes de código ou
+efeitos. Pins v1 em testes sintéticos não atestam uma rodada V2 real.
+Source10/helperbb/testad/estado16 e tentativa3f12dc584c29 consumida intactos.
+Sem DLL/job/process/control real, runtime/config/binário/privado explícito,
+Docker/PG/SQL/deploy, segundo escritor, nova quota/reset/job. CLI5351
+terminou0 e foi recuperada; autenticação401 histórica resolvida, sem conta
+trocada. Gateway indisponível; Native3s NOT_MEASURED, entry_gate
+NOT_EVALUATED, B1/B2/D090gate2/C1/SQL/produção abertos. Docker local Oracle
+Linux9.8 é destino aceito. Evidência LIFECYCLE-V2-VALIDATION e checkpoints.
+Registros abaixo são históricos.
+
 ## Chamador privado da coleta revisto com fakes — 2026-11-04
 
 Claude2 programou na sessão51ea0d85/claude-opus-5-5/medium; o assistente

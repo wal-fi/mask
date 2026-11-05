@@ -1,0 +1,423 @@
+"""Private lifecycle v2: the legacy case lifecycle plus one TREE reconcile.
+Import defines only.
+
+No __main__, no CLI, no loader and no caller: nothing here reads a source,
+starts a run or chooses a nonce. context(owner, case, legacy, reconcile)
+captures, before any effect, the ORIGINAL references of one case: the
+source-pinned runner globals (legacy), their RunError/CODES, hooks and
+registry list, the case facts/host/clock/error, the owner ledger and the
+bound setup/start/close/clock.now pairs (__self__, __func__). lifecycle(ctx)
+then runs the legacy flow once; an eligible quiet TREE (held CLEANUP, reason
+TREE_UNPROVEN, terminated/signaled/eof True) gets at most one reconcile call.
+
+- Only an exact "REJECTED_CLOSED" verdict, an exact CLOSED state, the
+  original ledger empty and the facts unchanged around reconcile clear
+  facts["held"] and release the owner from the ORIGINAL list. The TREE
+  reason, exit code and total stay as the supervisor left them.
+- A legitimate hold (guards intact, state not CLOSED) goes through the
+  captured legacy _held.
+- Any identity drift, malformed verdict, CLOSED without proof or unexpected
+  ordinary failure raises the preconstructed original held_error directly:
+  no _held/_contain/_release, no close, no write, owner kept registered.
+- Before the original error class is captured, refusals are the closed
+  module-local ContextRefused. Control interruptions propagate unchanged.
+
+Guards check identity and shape only. The originals being the source-pinned
+ones is a precondition, not authentication; the trusted legacy helpers
+(_held, _ready, _last_close, _supervise) are not defended against arbitrary
+malicious Python or reflection. Not a framework and not a native guarantee.
+"""
+
+from types import FunctionType, MethodType
+
+VERDICTS = ("REJECTED_CLOSED", "RETAIN", "NOT_APPLICABLE")
+CASES = ("NORMAL", "TERMINATE", "LAST_CLOSE")
+HOOKS = ("_held", "_ready", "_last_close", "_state")
+HOST_HOOKS = ("_attempt", "_supervise")
+METHODS = ("setup", "start", "close")
+FLAGS = ("lifecycle_reserved", "reconcile_reserved")
+SCALARS = (type(None), bool, int, str)
+
+
+class ContextRefused(Exception):
+    """Closed refusal used while no original error class is captured."""
+
+    def __init__(self):
+        super().__init__("CONTEXT_REFUSED")
+
+
+class _Context:
+    __slots__ = (
+        "owner",
+        "case",
+        "legacy",
+        "reconcile",
+        "run_error",
+        "codes",
+        "held_error",
+        "held",
+        "ready",
+        "last_close",
+        "state",
+        "registry",
+        "name",
+        "facts",
+        "retained",
+        "host",
+        "attempt",
+        "supervise",
+        "deadline",
+        "clock",
+        "error",
+        "start",
+        "ledger",
+        "methods",
+    )
+
+
+# -- exact shapes, no foreign hash/equality -----------------------------------------
+
+
+def _str_keys(mapping):
+    """Exact dict whose keys are all exact str, by iteration before any lookup."""
+    if type(mapping) is not dict:
+        return False
+    for key in mapping:
+        if type(key) is not str:
+            return False
+    return True
+
+
+def _is(value, expected):
+    return type(value) is str and value == expected
+
+
+def _lookup(cls, name):
+    """The class attribute found by the MRO, read without descriptors."""
+    for klass in cls.__mro__:
+        entry = vars(klass).get(name)
+        if entry is not None:
+            return entry
+    return None
+
+
+def _bound(method, target, function):
+    return type(method) is MethodType and method.__self__ is target and method.__func__ is function
+
+
+def _call(pair):
+    target, _name, function = pair
+    return MethodType(function, target)
+
+
+# -- context ---------------------------------------------------------------------------
+
+
+def _capture_error(legacy):
+    """Phase A: the original RunError/CODES and the preconstructed held_error."""
+    try:
+        if not _str_keys(legacy):
+            return None
+        run_error, codes = legacy.get("RunError"), legacy.get("CODES")
+        if type(run_error) is not type or not issubclass(run_error, Exception):
+            return None
+        init = vars(run_error).get("__init__")
+        if type(init) is not FunctionType or init.__globals__ is not legacy:
+            return None
+        if type(codes) is not frozenset:
+            return None
+        if not any(_is(code, "CONTROL_HELD") for code in codes):
+            return None
+        held = run_error("CONTROL_HELD")
+        if type(held) is not run_error:
+            return None
+        args = BaseException.args.__get__(held)
+        if not (type(args) is tuple and len(args) == 1 and _is(args[0], "CONTROL_HELD")):
+            return None
+    except Exception:
+        return None
+    return run_error, codes, held
+
+
+def _build(owner, case, legacy, reconcile, captured):
+    """Phase B: every original reference, or None; no owner method is called."""
+    hooks = tuple(legacy.get(name) for name in HOOKS)
+    if not all(type(hook) is FunctionType and hook.__globals__ is legacy for hook in hooks):
+        return None
+    registry = legacy.get("_LIVE")
+    if type(registry) is not list or not any(item is owner for item in registry):
+        return None
+    if not _str_keys(case):
+        return None
+    name, facts, host = case.get("name"), case.get("facts"), case.get("host")
+    if not (type(name) is str and name in CASES and _str_keys(facts) and _str_keys(host)):
+        return None
+    if not all(case.get(flag) is False for flag in FLAGS):
+        return None
+    clock, error, start = case.get("clock"), case.get("error"), case.get("start")
+    retained, deadline = facts.get("retained"), host.get("DEADLINE_SECONDS")
+    host_hooks = tuple(host.get(item) for item in HOST_HOOKS)
+    if not (
+        type(start) is float
+        and type(deadline) is float
+        and type(retained) is bytearray
+        and type(error) is type
+        and all(type(hook) is FunctionType and hook.__globals__ is host for hook in host_hooks)
+    ):
+        return None
+    ledger = owner.ledger
+    if not _str_keys(ledger):
+        return None
+    methods = tuple((owner, item, _lookup(type(owner), item)) for item in METHODS)
+    methods += ((clock, "now", _lookup(type(clock), "now")),)
+    for target, item, function in methods:
+        if type(function) is not FunctionType:
+            return None
+        if not _bound(getattr(target, item), target, function):
+            return None
+    ctx = _Context()
+    ctx.owner, ctx.case, ctx.legacy, ctx.reconcile = owner, case, legacy, reconcile
+    ctx.run_error, ctx.codes, ctx.held_error = captured
+    ctx.held, ctx.ready, ctx.last_close, ctx.state = hooks
+    ctx.registry, ctx.name, ctx.facts, ctx.retained = registry, name, facts, retained
+    ctx.host, (ctx.attempt, ctx.supervise), ctx.deadline = host, host_hooks, deadline
+    ctx.clock, ctx.error, ctx.start = clock, error, start
+    ctx.ledger, ctx.methods = ledger, methods
+    return ctx
+
+
+def context(owner, case, legacy, reconcile):
+    """Captured context, or a closed refusal; the owner stays where it is."""
+    captured = _capture_error(legacy)
+    if captured is None:
+        raise ContextRefused() from None
+    ctx, failed = None, False
+    try:
+        ctx = _build(owner, case, legacy, reconcile, captured)
+    except Exception:
+        failed = True
+    if failed or ctx is None:
+        raise captured[2] from None
+    return ctx
+
+
+# -- guards ------------------------------------------------------------------------------
+
+
+def _intact(ctx):
+    """Identity and shape of every captured reference; any ordinary failure is drift."""
+    try:
+        legacy, case, host, facts = ctx.legacy, ctx.case, ctx.host, ctx.facts
+        if not (_str_keys(legacy) and _str_keys(case) and _str_keys(host) and _str_keys(facts)):
+            return False
+        pairs = (
+            (legacy.get("_held"), ctx.held),
+            (legacy.get("_ready"), ctx.ready),
+            (legacy.get("_last_close"), ctx.last_close),
+            (legacy.get("_state"), ctx.state),
+            (legacy.get("_LIVE"), ctx.registry),
+            (legacy.get("RunError"), ctx.run_error),
+            (legacy.get("CODES"), ctx.codes),
+            (case.get("name"), ctx.name),
+            (case.get("facts"), facts),
+            (case.get("host"), host),
+            (case.get("clock"), ctx.clock),
+            (case.get("error"), ctx.error),
+            (host.get("_attempt"), ctx.attempt),
+            (host.get("_supervise"), ctx.supervise),
+            (facts.get("retained"), ctx.retained),
+            (ctx.owner.ledger, ctx.ledger),  # mutated in place, never replaced
+        )
+        if not all(current is original for current, original in pairs):
+            return False
+        if not any(item is ctx.owner for item in ctx.registry):
+            return False
+        for target, item, function in ctx.methods:
+            if not _bound(getattr(target, item), target, function):
+                return False
+    except Exception:
+        return False
+    return True
+
+
+def _check(ctx):
+    if not _intact(ctx):
+        raise ctx.held_error from None
+
+
+def _reserve(ctx, flag):
+    _check(ctx)
+    if ctx.case.get(flag) is not False:
+        raise ctx.held_error from None
+    ctx.case[flag] = True
+
+
+def _state(ctx):
+    """One read through the captured legacy _state, guarded on both sides."""
+    _check(ctx)
+    state = ctx.state(ctx.owner)
+    _check(ctx)
+    return state if type(state) is str else None
+
+
+def _release(ctx):
+    """Only the original list; callers have just proven CLOSED."""
+    registry = ctx.registry
+    registry[:] = [item for item in registry if item is not ctx.owner]
+
+
+def _held(ctx, label):
+    """Legitimate legacy hold: guards intact and not CLOSED. Never returns."""
+    if _state(ctx) == "CLOSED":
+        raise ctx.held_error from None  # CLOSED without proof: retained, never released
+    _check(ctx)
+    ctx.held(ctx.owner, ctx.case, label)
+    raise ctx.held_error from None
+
+
+def _unstarted(ctx, reason):
+    """No child: local close/check/release; the legacy helper releases via globals."""
+    ctx.facts["reason"] = reason
+    _check(ctx)
+    ctx.attempt(ctx.error, _call(ctx.methods[2]))
+    if _state(ctx) != "CLOSED":
+        _held(ctx, "LAUNCH")
+    _release(ctx)
+
+
+# -- TREE reconcile ----------------------------------------------------------------------
+
+
+def _eligible(facts):
+    return (
+        _str_keys(facts)
+        and _is(facts.get("held"), "CLEANUP")
+        and _is(facts.get("reason"), "TREE_UNPROVEN")
+        and facts.get("terminated") is True
+        and facts.get("signaled") is True
+        and facts.get("eof") is True
+    )
+
+
+def _snapshot(facts):
+    """Exact scalars by type and value; the bytearray by identity and bytes."""
+    items = []
+    for key in facts:
+        value = facts[key]
+        kind = type(value)
+        if kind is bytearray:
+            items.append((key, value, bytes(value)))
+        elif any(kind is scalar for scalar in SCALARS):
+            items.append((key, kind, value))
+        else:
+            return None
+    return items
+
+
+def _unchanged(before, after):
+    if before is None or after is None or len(before) != len(after):
+        return False
+    for left, right in zip(before, after, strict=True):
+        if left[0] != right[0] or left[1] is not right[1]:
+            return False
+        if type(left[2]) is not type(right[2]) or left[2] != right[2]:
+            return False
+    return True
+
+
+def _settle(ctx):
+    """facts["held"] is set: one reconcile for an eligible TREE, else legacy hold."""
+    facts = ctx.facts
+    if not _eligible(facts):
+        _held(ctx, facts["held"])
+    _reserve(ctx, "reconcile_reserved")
+    before = _snapshot(facts)
+    verdict = ctx.reconcile(ctx.owner, facts)
+    _check(ctx)
+    if type(verdict) is not str or verdict not in VERDICTS:
+        raise ctx.held_error from None
+    state = _state(ctx)
+    if not _unchanged(before, _snapshot(facts)):
+        raise ctx.held_error from None
+    if verdict != "REJECTED_CLOSED":
+        _held(ctx, facts["held"])  # RETAIN/NOT_APPLICABLE: a CLOSED is refused there
+    ledger = ctx.ledger
+    if state != "CLOSED" or ctx.owner.ledger is not ledger or len(ledger) != 0:
+        raise ctx.held_error from None
+    facts["held"] = None  # the TREE rejection, exit code and total stay as they are
+    _release(ctx)
+
+
+# -- lifecycle ---------------------------------------------------------------------------
+
+
+def _flow(ctx):
+    """The legacy _lifecycle order and codes, on the captured references only."""
+    owner, case, facts, error = ctx.owner, ctx.case, ctx.facts, ctx.error
+    setup, start, close, now = (_call(pair) for pair in ctx.methods)
+    _check(ctx)
+    code, _value = ctx.attempt(error, setup)
+    state = _state(ctx)
+    if code is not None and state == "SETUP_FAILED":
+        _unstarted(ctx, "LAUNCH_FAILED")
+        return
+    if code is not None or state != "READY":
+        _held(ctx, "LAUNCH")
+    moment = now()
+    if moment is None or moment - ctx.start >= ctx.deadline:
+        _unstarted(ctx, "CALLER_CLOCK" if moment is None else "DEADLINE")
+        return
+    _check(ctx)
+    code, _value = ctx.attempt(error, start)
+    state = _state(ctx)
+    if code is not None and state == "LAUNCH_FAILED":
+        _unstarted(ctx, "LAUNCH_FAILED")
+        return
+    if code is not None or state != "RUNNING":
+        _held(ctx, "LAUNCH")
+    if ctx.name != "NORMAL":
+        _check(ctx)
+        ctx.ready(owner, case)
+        _check(ctx)
+        if ctx.name == "LAST_CLOSE" and facts["held"] is None and facts["reason"] is None:
+            ctx.last_close(owner, case)
+            _check(ctx)
+    if facts["held"] is None:
+        since = case.get("since")
+        if type(since) is not float:
+            raise ctx.held_error from None
+        ctx.supervise(owner, error, ctx.clock, since, facts)
+        _check(ctx)
+    if facts["held"] is not None:
+        _settle(ctx)
+        return
+    ctx.attempt(error, close)
+    if _state(ctx) != "CLOSED":
+        _held(ctx, "CLOSE")
+    _release(ctx)
+
+
+def _legacy_hold(ctx, error):
+    """The CONTROL_HELD raised by the captured legacy _held itself."""
+    if type(error) is not ctx.run_error:
+        return False
+    args = BaseException.args.__get__(error)
+    return type(args) is tuple and len(args) == 1 and _is(args[0], "CONTROL_HELD")
+
+
+def lifecycle(ctx):
+    """One whole case, reserved before setup. Returns None once released;
+    otherwise a closed CONTROL_HELD; control interruptions propagate."""
+    if type(ctx) is not _Context:
+        raise ContextRefused() from None
+    held, failed = ctx.held_error, False
+    _reserve(ctx, "lifecycle_reserved")
+    try:
+        _flow(ctx)
+    except Exception as error:
+        if error is not held and not _legacy_hold(ctx, error):
+            failed = True  # unexpected: retained behind the original error, no chain
+        else:
+            raise
+    if failed:
+        raise held from None

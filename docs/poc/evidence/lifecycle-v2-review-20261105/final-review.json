@@ -1,0 +1,106 @@
+{
+  "effort": "medium",
+  "harness_notes": [
+    "Initial final-source literal comparison omitted the new inline comment; expected literal corrected after unified diff confirmed exactly one source line was added. No source or test changed for this harness correction."
+  ],
+  "independent_probes": [
+    {
+      "ledger_drift_probe": {
+        "after_calls": 52,
+        "extra_fake_calls": 0,
+        "held_written": false,
+        "original_ledger_len": 4,
+        "original_ledger_len_after": 4,
+        "owner_registered": true,
+        "preconstructed_error": true
+      }
+    },
+    {
+      "closed_without_chain": true,
+      "module_sha256": "7bbf734c8b4a1fefe1617fc8c1cff2a5de0b33f8996eb98b0016233ab0b040cb",
+      "phase_a_invalid_inputs": 3
+    }
+  ],
+  "model": "claude-opus-5-5",
+  "own": {
+    "exception_types": {},
+    "exit": 0,
+    "failed": [],
+    "failed_count": 0,
+    "seconds": 3.824,
+    "stats": {
+      "collected": 44,
+      "passed": 44
+    }
+  },
+  "programmer": "Claude2",
+  "related": {
+    "exception_types": {},
+    "exit": 0,
+    "failed": [],
+    "failed_count": 0,
+    "seconds": 56.863,
+    "stats": {
+      "collected": 636,
+      "passed": 636
+    }
+  },
+  "remaining": [
+    "source-pinned trusted collaborators are a precondition, not authenticity",
+    "no defense against arbitrary privileged Python/reflection or mutations inside trusted helpers",
+    "future protected caller and truthful v2 provenance/schema not implemented",
+    "EOF cache inherited, not fresh-read guarantee",
+    "real native controls, Native3s and production gates remain unmeasured/open"
+  ],
+  "review_findings": [
+    {
+      "before_source": "580392b2af67b2fb2ebfb583a718be1633f202e24d1ee217ac8eb2cafbae905c",
+      "closed": true,
+      "finding": "ledger field identity omitted from guard",
+      "fixed_by": "one identity pair in _intact",
+      "red": {
+        "collected": 44,
+        "failed": 2,
+        "passed": 42,
+        "seconds": 4.324
+      }
+    }
+  ],
+  "reviewer": "root",
+  "scope": {
+    "Docker": false,
+    "PostgreSQL": false,
+    "SQL": false,
+    "consumed_attempt_unchanged": true,
+    "fake_only": true,
+    "native_controls": false,
+    "operational_caller": false,
+    "production": false,
+    "source10_unchanged": true,
+    "state16_unchanged": true
+  },
+  "session_id": "51ea0d85-05bb-4d24-ba9a-c9627c3f832f",
+  "sources": {
+    "frozen_sources": 10,
+    "helper_and_old_test_unchanged": true,
+    "only_one_line_fix": true,
+    "source_bytes": 14964,
+    "source_lines": 423,
+    "source_sha256": "7bbf734c8b4a1fefe1617fc8c1cff2a5de0b33f8996eb98b0016233ab0b040cb",
+    "test_bytes": 30476,
+    "tests_sha256": "4027984417a9dc811fb26859fd87acedb36b108a6b45d0090de681c0a8d065f8"
+  },
+  "stage": "REVIEWED_FAKE_ONLY_LIFECYCLE_V2",
+  "statics": {
+    "format_files": 2,
+    "mypy_strict_files": 1,
+    "mypy_targets": [
+      "3.11",
+      "3.14"
+    ],
+    "poc_mypy": "excluded per existing project policy",
+    "poc_ruff": "E9,F63,F7,F82 passed",
+    "runtime": "Windows CPython 3.11.3",
+    "test_ruff": "passed"
+  }
+}

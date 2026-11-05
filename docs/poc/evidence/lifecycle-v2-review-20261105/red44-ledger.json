@@ -1,0 +1,25 @@
+{
+  "measurement": {
+    "exception_types": {
+      "AssertionError": 1,
+      "Failed": 1
+    },
+    "exit": 1,
+    "failed": [
+      "tests/test_pg16_shell_native_control_lifecycle_v2.py::test_a_ledger_replaced_before_the_lifecycle_is_refused",
+      "tests/test_pg16_shell_native_control_lifecycle_v2.py::test_a_ledger_replaced_during_reconcile_is_refused"
+    ],
+    "failed_count": 2,
+    "seconds": 4.324,
+    "stats": {
+      "collected": 44,
+      "failed": 2,
+      "passed": 42
+    }
+  },
+  "native_effects": false,
+  "original42_ast_unchanged": true,
+  "source_sha256": "580392b2af67b2fb2ebfb583a718be1633f202e24d1ee217ac8eb2cafbae905c",
+  "stage": "LEDGER_DRIFT_RED_BEFORE_FIX",
+  "tests_sha256": "4027984417a9dc811fb26859fd87acedb36b108a6b45d0090de681c0a8d065f8"
+}
