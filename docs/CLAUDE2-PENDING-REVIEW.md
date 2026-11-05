@@ -1,3 +1,29 @@
+## Retomada bloqueada por autenticação Claude2 — 2026-11-05
+
+Checkpoint inicial confirmado: HEAD/origin cecd4a7588c9ad9f4f5697ad4bc8a5ef04887115,
+árvore rastreada limpa. Zero Claude2 ou controlador nativo ativo; tarefa
+Maskgw-Claude2-Resume-01a05804 Disabled. A chamada somente leitura
+TREE_COMPOSE_V1, mesma sessão 51ea0d85/claude-opus-5-5/medium, retornou
+terminal api_error/HTTP401: OAuth access token expired. Não leu nem alterou
+arquivos pelo modelo; nenhuma implementação ou nova composição foi iniciada.
+
+A ajuda local confirmou `claude2 auth login --claudeai` para autenticação
+interativa da mesma conta. Só --help foi executado; login não foi iniciado,
+configuração/token/credencial não foi lido ou alterado diretamente e nenhum
+segredo foi mostrado. É necessário o usuário reautenticar a conta Claude2
+nesta máquina. Parar após registrar este bloqueio; não trocar conta/modelo,
+iniciar segundo escritor nem repetir por intervalo. Não é quota429 e não há
+reset conhecido: nenhum job de retentativa foi criado ou declarado.
+
+Após confirmação da autenticação: conferir ausência de escritor e retomar
+somente a sessão51ea0d85, opus5.5/medium, com o desenho em leitura da nova
+composição/caller. Manter fontes10/estado16 e a tentativa3f12dc584c29 consumidos,
+sem nova operação nativa/Docker/PG/SQL/root/nonce/deploy. Últimos gates de
+código permanecem49próprios/592relacionados; código/testes não mudaram nesta
+retomada e não foram repetidos. Só este checkpoint documental mudou.
+Gateway e produção continuam indisponíveis; gates de produto abertos.
+Histórico abaixo.
+
 ## Reconciliação TREE validada, com guarda de chaves — 2026-11-04
 
 Claude2 programou na sessão 51ea0d85, modelo claude-opus-5-5, esforço medium.
