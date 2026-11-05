@@ -40,6 +40,27 @@ de produção nem dispensa revisão, isolamento, masking, read-only ou sigilo.
 
 ## Escopo atual
 
+## Caller protegido V2 — implementado e revisto com fakes — 2026-11-05
+
+Claude2 único programador, sessão51ea0d85/claude-opus-5-5/medium; root reviu
+toda fonte e o delta final. CLI95368 terminou0, terminal recuperado e zero
+escritor confirmado. Fonte0fac3c7b/22627bytes, teste72dde65c/36085bytes:
+72próprios7,222s e708relacionados39,824s passaram sem falhas/erros/skips.
+Ruff/format2/mypy1teste3.11/3.14 aprovados; PoC fora do mypy, runtimeWindows
+3.11.3. RED71 de ausência e RED72/71pass/1falha preservados; guarda de chaves
+pós-finish antecipada após sonda que reproduziu __eq__ estrangeiro. Sonda
+final zero callbacks, ownerCLOSED/zero double-close, somente fakes.
+
+Slot/owner/contexto retidos, uma chamada, primeiro erro entregue/controle
+preservados, sem limpeza legada de fallback. Nenhum consumidor operacional
+ou produtor/entrada/batch/loader/publicador/collector novo. Source14 e
+estado16 intactos; attempt3f12dc584c29 consumido não reutilizado. Parte B só
+desenho, próximo lote SOMENTE leitura/revisão de ExpectedV2/confiança antes
+de testes/código. Sem nativo/Docker/PG/SQL/privado/runtime/config/binário/
+root/nonce/CLI/comando/deploy, segundo escritor ou quota/job. Gateway
+indisponível e gates abertos. Evidência CASE-V2-VALIDATION e checkpoints.
+Registros abaixo são históricos.
+
 ## Caller protegido V2 — desenho revisto para testes — 2026-11-05
 
 Claude2 escreveu CASE-V2-DESIGN, mesma sessão51ea0d85/opus5.5/medium;

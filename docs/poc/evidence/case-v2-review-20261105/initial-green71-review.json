@@ -1,0 +1,30 @@
+{
+  "measurement": {
+    "exception_types": {},
+    "exit": 0,
+    "failed": [],
+    "failed_count": 0,
+    "seconds": 7.382,
+    "stats": {
+      "collected": 71,
+      "passed": 71
+    }
+  },
+  "native_effects": false,
+  "probe": {
+    "double_close": 0,
+    "foreign_callbacks_before_refusal": [
+      "eq"
+    ],
+    "native_effects": false,
+    "outcome": "RETAINED_POST_FINISH_INVALID",
+    "owner_closed": true,
+    "source_sha256": "bdad4ad88d758bca3f9d70a11a2630e2059661cde16dbe2a83c6c63742552fbc"
+  },
+  "source_bytes": 22442,
+  "source_bytes_before_correction": 22422,
+  "source_bytes_correction": "22422 was a pre-terminal draft stat; archived bdad4ad8 source is22442 bytes. Metadata corrected from immutable snapshot, source unchanged.",
+  "source_lines": 693,
+  "stage": "INITIAL_GREEN71_REVIEW_WITH_FINISH_GUARD_FINDING",
+  "tests_sha256": "6d99606cf474987229d36d309e1976a96b9eb597554c1889f6b43ef2fa065cb0"
+}

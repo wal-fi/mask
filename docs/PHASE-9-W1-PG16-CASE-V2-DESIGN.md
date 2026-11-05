@@ -1,12 +1,16 @@
 # Fase 9 W1 — PG16 caller protegido de caso V2 (A) e proveniência V2 (B) — design
 
-Status: SOMENTE DESENHO, com as correções V3 e o esclarecimento de latch V4
-(PROTECTED_CALLER_V4_FINAL_LATCH_CLARIFICATION).
-Ainda não há módulo, teste ou artefato operacional.
+Status atual: Parte A implementada e revista somente com fakes;72/72
+próprios e708/708 relacionados passaram. Parte B permanece somente desenho.
+Fonte0fac3c7b/teste72dde65c e gates em CASE-V2-VALIDATION. Não há consumidor
+operacional, entrada/loader/batch/publicação ou atestado nativo novo.
+As seções de desenho e71 cenários abaixo preservam o contrato anterior à
+implementação; a regressão72 consta na validação e complementa a matriz.
 
-Revisão final do ROOT: Parte A fechada para escrever os testes e medir o
-RED, sob delegação. Os71 casos são uma matriz prevista, não testes já
-executados. A Parte B é desenho prospectivo e exige revisão própria antes
+Revisão do desenho pelo ROOT (histórico): Parte A fechada para escrever os
+testes e medir o RED, sob delegação. Os71 casos eram uma matriz prevista;
+a medição posterior é registrada na validação. A Parte B é desenho
+prospectivo e exige revisão própria antes
 de código; isso inclui a forma exata do ExpectedV2 e a cadeia externa de
 confiança. Clarificações editoriais do revisor abaixo preservam a API e
 as garantias, sem mudar código ou testes aceitos.
@@ -343,8 +347,12 @@ maliciosa no meio de um helper.
 | controle | `INTERRUPTED`, relançado |
 | retorno que não é exatamente `None` | `RETAINED_PROOF_FAILED` |
 
-10. **Prova de fechamento**, só depois de um retorno exatamente `None`. Se
-    faltar qualquer item → `RETAINED_PROOF_FAILED`, sem close nem release.
+10. **Prova de fechamento**, só depois de um retorno exatamente `None`.
+    Primeiro confere as identidades de §A5: deriva de referências devolve
+    `RETAINED_DRIFT`, como na matriz45–58. Depois confere os itens restantes;
+    prova ausente ou inválida devolve `RETAINED_PROOF_FAILED`, sem close nem
+    release. Owner presente quando deveria estar ausente é falha de prova,
+    não troca de identidade da lista.
     - Guarda §A5 com owner **ausente** da lista original.
     - `case["lifecycle_reserved"] is True`.
     - `type(case["reconcile_reserved"]) is bool`.
@@ -404,6 +412,10 @@ controle é travado e relançado.
     vez**;
   - `failure` e `control` guardam só o primeiro valor; `record` só é gravado
     em `READY_FOR_VALIDATION`.
+  - A primeira exceção comum é a entregue ao caller nessa fronteira. O
+    `_finish` legado sanitiza erros de escrita por `_persist`/`_step`: um
+    OSError interno vira RunError(CONTROL_PERSISTENCE) sem cadeia. O caller
+    retém a identidade desse erro entregue, sem recuperar o erro suprimido.
 - **Retornos de reentrada:** `REFUSED_SLOT`, `RETAINED_REUSED` e
   `RETAINED_NOT_PREPARED` são devolvidos e **nunca** substituem `outcome`,
   `failure`, `control` ou `record`.
@@ -550,7 +562,7 @@ exigido.
 
 | Papel | Caminho estático | Bytes / SHA de referência |
 |---|---|---|
-| `case_caller` | `docs/poc/pg16_shell_native_control_case_v2.py` | `<CASE_V2: NOT_YET_IMPLEMENTED>` |
+| `case_caller` | `docs/poc/pg16_shell_native_control_case_v2.py` | 22627 / `0fac3c7bd807e34c46e61a16c20bcda5c3a77b4ebed3c3404ff9250c4405a936` |
 | `lifecycle_v2` | `docs/poc/pg16_shell_native_control_lifecycle_v2.py` | 14964 / `7bbf734c8b4a1fefe1617fc8c1cff2a5de0b33f8996eb98b0016233ab0b040cb` |
 | `tree_reconcile` | `docs/poc/pg16_shell_tree_reconcile.py` | 2935 / `bb1f1984f5a144564a56e23fb5c4797dc0851651b608012ce229cc14d12a801b` |
 | `runner` | `docs/poc/pg16_shell_native_control.py` | 30055 / `b4198fe1606120e1e2df4fe9bff6a52fce4601a67074fdd7e922ef528341a496` |
@@ -589,8 +601,9 @@ ExpectedV2 (entrada do revisor) ──comparado com──> manifest.sources/laun
 - `ExpectedV2` é uma **tupla fixa** de 8 tuplas `(role, path, bytes, sha256)`
   com tipos exatos (`str`, `str`, `int`, `str`), mais o sha do launcher. É
   entrada do revisor e não fica embutido no caller.
-- Placeholders inexistentes, nunca medição: `<CASE_V2_SHA256>`,
-  `<V2_VERIFY_SHA256>` e `<LOADER_V2_SHA256>`, todos NOT_YET_IMPLEMENTED.
+- O caller agora tem SHA medido na tabela acima. Placeholders ainda
+  inexistentes, nunca medição: `<V2_VERIFY_SHA256>` e `<LOADER_V2_SHA256>`,
+  ambos NOT_YET_IMPLEMENTED.
 
 ## B4. Verificador V2 futuro (desenho)
 

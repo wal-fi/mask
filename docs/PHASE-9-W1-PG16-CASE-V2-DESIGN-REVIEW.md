@@ -1,5 +1,9 @@
 # Caller protegido V2 — revisão do desenho
 
+Este documento registra o lote documental089577b anterior ao código.
+O estado atual da Parte A e suas medições estão em CASE-V2-VALIDATION;
+as afirmações de módulo/teste inexistentes abaixo descrevem aquele marco.
+
 Data: 2026-11-05. Entrega exclusivamente documental, sob a delegação
 vigente. Claude2 escreveu o desenho na sessão
 `51ea0d85-05bb-4d24-ba9a-c9627c3f832f`, modelo `claude-opus-5-5`, esforço

@@ -1,3 +1,110 @@
+## Caller protegido V2 revisto e validado; próximo Parte B em leitura — 2026-11-05
+
+CLI60547/62161/95368 terminaram0 e foram recuperadas. Claude2 único
+programador, sessão51ea0d85/claude-opus-5-5/medium; root leu toda fonte e
+conferiu o delta final: só _finished e docstring mudaram após RED72.
+Fonte0fac3c7bd807e34c46e61a16c20bcda5c3a77b4ebed3c3404ff9250c4405a936/
+22627bytes/696linhas; teste72dde65cd0c4db08c3a864726bcb86b57af43ff1011299770a069253c30385cf/
+36085bytes/1016linhas byte a byte igual ao RED72. AST dos71 anteriores
+preservada. Zero escritor confirmado antes dos gates finais.
+
+72/72 em7,222s e708/708 relacionados em39,824s, zero falhas/erros/skips.
+Ruff PoC E9/F63/F7/F82 e teste normal, format2/mypy1teste estrito3.11/3.14
+aprovados; PoC fora do mypy, execução sóWindows3.11.3. Sonda final: recusa
+pós-finish sem hash/eq estrangeiro, ownerCLOSED e zero double-close. Source14
+conferido por hash/tamanho, estado16 não editado. Evidência CASE-V2-VALIDATION
+e case-v2-review-20261105 preservam RED71 de ausência, oráculos corrigidos,
+fontebdad4 e RED72/71pass/1falha antes do fix. Medida preliminar22422 de
+rascunho corrigida para22442 pelo snapshotbdad4, sem mudar bytes antigos.
+
+Novo caller existe só como componente privado. Produtor deve manter owner/
+lista originais antes do latch; sem _case/_contain/fallbackclose. PartB não
+implementada. Próximo lote seguro: SOMENTE leitura/revisão da Parte B para
+fechar forma exata ExpectedV2 e cadeia externa antes de testes/código; mesmo
+Claude2/sessão/modelo/esforço após verificar zero escritor, monitorar apenas
+se houver ativo. Caller agora possui hash medido na tabela de referências;
+wrapper/verifier/loader/publicador/collector/coordenador operacionais não
+existem e não podem ser presumidos por pins em fixture.
+
+Nenhum Native/Docker/PG/SQL/root/nonce/CLI/entrada/loader/comando/deploy ou
+privado/runtime/config/binário lido. Attempt3f12dc584c29 consumido e identidade
+Nov2 não reclassificados. Gateway indisponível; Native3s NOT_MEASURED,
+entry_gate NOT_EVALUATED, B1/B2/D090gate2/C1/SQL/produção abertos. Destino
+OracleLinux9.8 Docker local aceito. Nenhuma quota/reset/job ou conta/modelo
+trocado; tarefa histórica Disabled. Fechar publicação só dos arquivos
+verificados e conferir Git antes do próximo lote. Histórico abaixo.
+
+## Caller protegido V2: finding pós-finish em correção — 2026-11-05
+
+CLI60547 terminou0, terminal recuperado. Root leu fontebdad4ad8/22442bytes/
+693linhas inteira;71/71 passaram em7,382s com teste6d99606c congelado.
+PoC Ruff/format2 aprovados. Revisão independente reproduziu um acesso a
+case[reconcile_reserved] antes do guarda de chaves em _finished: chave
+estrangeira colidente teve __eq__ chamado antes de POST_FINISH_INVALID.
+Foi só fake, ownerCLOSED/zero double-close, sem Native.
+
+CLI62161 acrescentou regressão72 e terminou0. Root confirmou AST original71
+inalterada e mediu RED72:71 passaram/1 falhou em8,132s, exatamente caso72.
+Teste72dde65cd0c4db08c3a864726bcb86b57af43ff1011299770a069253c30385cf/
+36085bytes congelado; Ruff/format1 aprovados. Fonte anterior, sondas e
+RED71/72 arquivados em case-v2-review-20261105.
+
+CLI95368 corrige SOMENTE o módulo case_v2, mesma sessão51ea0d85/opus5.5/
+medium após guarda de escritor. Guarda deve preceder qualquer lookup
+dos mapas pós-finish; testes byte-identical obrigatórios. Só clarificação
+de docstring adicional: _held local é classificador, não limpeza legada.
+Recuperar terminal95368 antes de nova chamada/gates finais. Source14/
+estado16/attempt3f12dc584c29 consumido fixos; PartB só desenho. Nenhum
+Native/Docker/PG/SQL/root/nonce/CLI/entrada/loader/comando/deploy/privado/
+runtime/config/binário ou quota/job. Gateway indisponível. Histórico abaixo.
+
+## Caller protegido V2: RED congelado, módulo privado em implementação — 2026-11-05
+
+CLI35194/55884/95885 terminaram0, terminais recuperados. Root leu o teste
+inteiro e corrigiu oráculos: caso23 usa prefixo canônico para isolar classe;
+caso62 retém a identidade do erro entregue por _finish (RunError sanitizado,
+não OSError suprimido); clonagem de tupla preserva identidade distinta;
+checagens booleanas permanecem isFalse/isTrue após releitura para o mypy.
+Contrato precisou DRIFT antes de prova de fechamento, sem afrouxar limites.
+
+RED final:71 coletados únicos1..71,71 erros de setup por módulo ausente,
+6,947s; é ausência de funcionalidade, não prova comportamental. Teste
+6d99606cf474987229d36d309e1976a96b9eb597554c1889f6b43ef2fa065cb0/34563bytes
+congelado, AST40c1a95a; Ruff/format1/mypy1teste alvos3.11/3.14 aprovados.
+Baseline inicial5c3ba504 e RED final em case-v2-review-20261105.
+
+CLI60547 implementa SOMENTE docs/poc/pg16_shell_native_control_case_v2.py,
+mesma sessão51ea0d85/claude-opus-5-5/medium após guarda de escritor. Nenhuma
+edição nos testes congelados autorizada. Recuperar terminal60547 antes de
+nova chamada/revisão final; root mede os mesmos testes e relacionados.
+API/slot privado, sem criar owner/root/invocation/launcher ou _case/_contain
+de fallback. PartB continua só desenho. Source14/estado16/attempt3f12dc584c29
+consumido fixos. Nenhum Native/Docker/PG/SQL/CLI/entrada/loader/comando/
+deploy ou leitura privada/runtime/config/binário; Gateway indisponível,
+gates abertos, sem nova quota/reset/job. Histórico abaixo.
+
+## Caller protegido V2: testes em preparação — 2026-11-05
+
+Checkpoint inicial confirmado: HEAD/origin089577b, rastreados limpos, zero
+Claude2 ativo; tarefa histórica Disabled. CLI35194 escreve SOMENTE
+tests/test_pg16_shell_native_control_case_v2.py, mesma sessão51ea0d85/
+claude-opus-5-5/medium. Recuperar terminal35194 antes de outra chamada.
+Nenhum módulo ou outro escritor autorizado nesta chamada.
+
+Parte A do CASE-V2-DESIGN6bb57e88 é o contrato:71 cenários previstos,
+fixture de módulo ausente para coletar todos, sem skip/supressão/fallback
+que aceite ausência. Root vai ler os testes, medir e congelar o RED antes
+de implementar módulo. Reuso de lab.__wrapped__/runpy já sondado, usando
+Owner/NestedJobOwner e kernels falsos; contextos/controles originais retidos,
+sem _case/_contain/extra close. Invocação/case já preparados pelo produtor
+falso, sem criar root ou operação real.
+
+Source10/estado16/lifecycle7bbf/test402/helperbb/testad e tentativa consumida
+3f12dc584c29 intactos. Parte B só desenho futuro. Nenhum nativo/Docker/PG/
+SQL/loader/CLI/root/nonce/comando/deploy ou privado/runtime/config/binário
+lido; Gateway indisponível e gates abertos. Sem quota/reset/job novo.
+Registros abaixo são históricos.
+
 ## Caller protegido V2: desenho revisto; próximo lote só testes — 2026-11-05
 
 CLI61137/63082/28389/17499 terminaram0 e foram recuperadas. Claude2 escreveu

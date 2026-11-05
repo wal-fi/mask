@@ -1,0 +1,16 @@
+import runpy,json,pytest,hashlib
+from pathlib import Path
+suite=runpy.run_path('tests/test_pg16_shell_native_control_case_v2.py');api=runpy.run_path('docs/poc/pg16_shell_native_control_case_v2.py')['allocate'].__globals__
+with pytest.MonkeyPatch.context() as patch:
+    lab=suite['lab'].__wrapped__(patch);st=suite['staged'](lab,api,(1,'NORMAL'));seen=[]
+    class Key:
+        def __hash__(self):seen.append('hash');return hash('reconcile_reserved')
+        def __eq__(self,other):seen.append('eq');return type(other) is str and other=='reconcile_reserved'
+    key=Key()
+    def corrupt():
+        del st.case['reconcile_reserved'];st.case[key]=False;seen.clear()
+    suite['hook_writes'](lab,'supervision.json',corrupt)
+    assert suite['prepare'](lab,api,st)=='PREPARED'
+    label=suite['run'](api,st)
+    assert label=='RETAINED_POST_FINISH_INVALID'
+    print(json.dumps({'outcome':label,'foreign_callbacks_before_refusal':seen,'owner_closed':st.owner.state=='CLOSED','double_close':len(st.kernel.double_closed),'native_effects':False,'source_sha256':hashlib.sha256(Path('docs/poc/pg16_shell_native_control_case_v2.py').read_bytes()).hexdigest()}))

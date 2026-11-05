@@ -1,0 +1,30 @@
+{
+  "meaning": "71 collected setup errors from absent module, not behavioral correction proof",
+  "measurement": {
+    "exception_types": {
+      "FileNotFoundError": 71
+    },
+    "exit": 1,
+    "failed": [
+      "tests/test_pg16_shell_native_control_case_v2.py::test_01_three_cases_are_ready_and_core_verified",
+      "tests/test_pg16_shell_native_control_case_v2.py::test_02_quiet_normal_tree_is_rejected_and_core_verified",
+      "tests/test_pg16_shell_native_control_case_v2.py::test_03_last_close_tree_keeps_the_frozen_precedence",
+      "tests/test_pg16_shell_native_control_case_v2.py::test_04_setup_failure_is_ready_with_launch_failed",
+      "tests/test_pg16_shell_native_control_case_v2.py::test_05_states_follow_the_closed_sequence",
+      "tests/test_pg16_shell_native_control_case_v2.py::test_06_a_non_slot_is_refused_without_any_write"
+    ],
+    "failed_count": 71,
+    "seconds": 6.947,
+    "stats": {
+      "collected": 71,
+      "errors": 71,
+      "matrix_unique": 71
+    }
+  },
+  "native_effects": false,
+  "stage": "FINAL_FEATURE_ABSENT_RED_FROZEN_BEFORE_MODULE",
+  "statics": "Ruff check/format and mypy strict3.11/3.14 passed",
+  "tests_ast_sha256": "40c1a95aa3081ae3b5128a24a3a49211ff84acbac411112037a806da24dafb0c",
+  "tests_bytes": 34563,
+  "tests_sha256": "6d99606cf474987229d36d309e1976a96b9eb597554c1889f6b43ef2fa065cb0"
+}

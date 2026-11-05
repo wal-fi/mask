@@ -1,0 +1,1016 @@
+"""Fake-only tests for the private protected case caller V2, written first.
+
+docs/poc/pg16_shell_native_control_case_v2.py does not exist yet. The `cv2`
+fixture loads it, so every case below collects and fails at setup until the
+module exists. That is a feature-absent baseline, not behavioural evidence.
+
+Matrix: PHASE-9-W1-PG16-CASE-V2-DESIGN.md, Part A, cases 1..71. The accepted
+harness of the frozen lifecycle test (40279844) is reused through runpy and
+`lab.__wrapped__(monkeypatch)`:
+- real Owner/NestedJobOwner against fake kernels;
+- caller write_new/_monotonic/_sleep in memory;
+- real WinDLL, Popen, os.system, Thread.start and time.sleep forbidden.
+
+The tests play the trusted producer. They allocate the slot first, then
+build and register the owner in the ORIGINAL runner list (kept as
+`lab.original`), then build the case and its invocation with the existing
+fake helpers. Nothing touches a real root, nonce, command or filesystem.
+Old pins in the artifacts are synthetic schema wiring only. Fault seams are
+controlled fake injection, never OOM, native or authenticity measurements.
+"""
+
+import runpy
+from pathlib import Path
+from types import FunctionType, SimpleNamespace
+from typing import Any
+
+import pytest
+
+REPO = Path(__file__).resolve().parents[1]
+MODULE = REPO / "docs/poc/pg16_shell_native_control_case_v2.py"
+LIFECYCLE = REPO / "docs/poc/pg16_shell_native_control_lifecycle_v2.py"
+LIFECYCLE_TESTS = REPO / "tests/test_pg16_shell_native_control_lifecycle_v2.py"
+FROZEN: dict[str, Any] = runpy.run_path(str(LIFECYCLE_TESTS))
+CASES = ("NORMAL", "TERMINATE", "LAST_CLOSE")
+PREPARED = "PREPARED"
+REFUSED = "PREPARE_REFUSED"
+READY = "READY_FOR_VALIDATION"
+Plan = tuple[int, str]  # (case number, case name)
+
+
+class Signal(BaseException):
+    """A fictitious control interruption."""
+
+
+class SpySources:
+    """A foreign iterable: any iteration, length or index read is recorded."""
+
+    def __init__(self) -> None:
+        self.touched: list[str] = []
+
+    def __iter__(self) -> Any:
+        self.touched.append("iter")
+        return iter(())
+
+    def __len__(self) -> int:
+        self.touched.append("len")
+        return 3
+
+    def __getitem__(self, index: int) -> Any:
+        self.touched.append("getitem")
+        raise IndexError(index)
+
+
+class HostileKey:
+    """A non-str key that records every hash or equality call made on it."""
+
+    def __init__(self) -> None:
+        self.calls: list[str] = []
+
+    def __hash__(self) -> int:
+        self.calls.append("hash")
+        return hash("name")
+
+    def __eq__(self, other: object) -> bool:
+        self.calls.append("eq")
+        return False
+
+
+class SignalClock:
+    """A clock whose class defines `now`, but reading `now` interrupts."""
+
+    def __init__(self, signal: Signal) -> None:
+        self.signal = signal
+
+    def now(self) -> float:
+        return 0.0
+
+    def __getattribute__(self, name: str) -> Any:
+        if name == "now":
+            raise object.__getattribute__(self, "signal")
+        return object.__getattribute__(self, name)
+
+
+def foreign(*_args: Any, **_kwargs: Any) -> Any:
+    return None
+
+
+def done(*_args: Any) -> Any:
+    return "DONE"
+
+
+def type_error(*_args: Any) -> Any:
+    raise TypeError("fault")
+
+
+def rebound(function: Any, namespace: dict[str, Any]) -> Any:
+    """The same code with __globals__ set to namespace (controlled injection)."""
+    return FunctionType(
+        function.__code__, namespace, function.__name__, function.__defaults__, function.__closure__
+    )
+
+
+def fresh(value: Any) -> Any:
+    """An equal-looking replacement with a different identity."""
+    if type(value) is FunctionType:
+        return foreign
+    if type(value) is frozenset:
+        return frozenset(list(value))
+    if type(value) is tuple:
+        return (*value,)  # a new tuple object: tuple(value) would keep the identity
+    if type(value) is float:
+        return float(repr(value))
+    raise AssertionError(type(value))
+
+
+@pytest.fixture
+def lab(monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
+    base: SimpleNamespace = FROZEN["lab"].__wrapped__(monkeypatch)
+    base.lifecycle = runpy.run_path(str(LIFECYCLE))["lifecycle"].__globals__
+    base.original = base.registry  # the producer's own reference to the ORIGINAL list
+    base.monkeypatch = monkeypatch
+    return base
+
+
+@pytest.fixture
+def cv2() -> dict[str, Any]:
+    namespace: dict[str, Any] = runpy.run_path(str(MODULE))["allocate"].__globals__
+    return namespace
+
+
+# -- producer and caller helpers --
+
+
+def sources(lab: SimpleNamespace, reconcile: Any = None) -> tuple[Any, Any, Any]:
+    return (lab.runner, lab.lifecycle, lab.helper if reconcile is None else reconcile)
+
+
+def staged(
+    lab: SimpleNamespace,
+    cv2: dict[str, Any],
+    plan: Plan,
+    artifacts: dict[str, bytes] | None = None,
+    setup: Any = None,
+) -> SimpleNamespace:
+    """Producer: slot rooted first, then owner registered, then case/invocation."""
+    slot = cv2["allocate"]()
+    number, name = plan
+    owner, kernel = FROZEN["owner_for"](lab, name)
+    if setup is not None:
+        setup(kernel)
+    store: dict[str, bytes] = {} if artifacts is None else artifacts
+    case = FROZEN["case_for"](lab, name, number, store)
+    return SimpleNamespace(slot=slot, owner=owner, kernel=kernel, case=case, artifacts=store)
+
+
+def prepare(
+    lab: SimpleNamespace, cv2: dict[str, Any], st: SimpleNamespace, reconcile: Any = None
+) -> Any:
+    return cv2["prepare"](st.slot, sources(lab, reconcile), st.owner, st.case)
+
+
+def run(cv2: dict[str, Any], st: SimpleNamespace) -> Any:
+    return cv2["run"](st.slot, st.artifacts)
+
+
+def terminal(slot: Any) -> tuple[Any, Any, Any]:
+    """A fresh read of (state, outcome, run_reserved) after a call."""
+    return (slot.state, slot.outcome, slot.run_reserved)
+
+
+def rooted(cv2: dict[str, Any], slot: Any) -> bool:
+    return any(item is slot for item in cv2["KEEP"])
+
+
+def registered(lab: SimpleNamespace, owner: Any) -> bool:
+    return any(item is owner for item in lab.original)
+
+
+def untouched(lab: SimpleNamespace, before: list[Any]) -> bool:
+    current = lab.original
+    if len(current) != len(before):
+        return False
+    return all(a is b for a, b in zip(current, before, strict=True))
+
+
+def written(lab: SimpleNamespace, st: SimpleNamespace, name: str) -> bool:
+    return str(st.case["directory"] / name) in lab.store
+
+
+def retained(cv2: dict[str, Any], st: SimpleNamespace, outcome: str) -> None:
+    """The slot keeps the owner rooted and the first terminal outcome; no record."""
+    assert rooted(cv2, st.slot)
+    assert st.slot.owner is st.owner and st.slot.case is st.case
+    assert st.slot.outcome == outcome
+    assert st.slot.record is None
+
+
+def released(lab: SimpleNamespace, st: SimpleNamespace) -> None:
+    assert st.owner.state == "CLOSED" and not registered(lab, st.owner)
+    assert st.kernel.double_closed == []
+
+
+def after_reconcile(lab: SimpleNamespace, action: Any) -> Any:
+    def reconcile(owner: Any, facts: Any) -> Any:
+        verdict = lab.helper(owner, facts)
+        action()
+        return verdict
+
+    return reconcile
+
+
+def before_reconcile(lab: SimpleNamespace, action: Any) -> Any:
+    def reconcile(owner: Any, facts: Any) -> Any:
+        action()
+        return lab.helper(owner, facts)
+
+    return reconcile
+
+
+def hook_writes(lab: SimpleNamespace, trigger: str, action: Any) -> None:
+    """Replace write_new BEFORE prepare (so it is the captured identity)."""
+    original = lab.host["write_new"]
+
+    def write_new(path: Any, raw: bytes) -> None:
+        if str(path).endswith(trigger):
+            action()
+        original(path, raw)
+
+    lab.monkeypatch.setitem(lab.host, "write_new", write_new)
+
+
+# -- 1..5 positives and observed states --
+
+
+def test_01_three_cases_are_ready_and_core_verified(
+    lab: SimpleNamespace, cv2: dict[str, Any]
+) -> None:
+    artifacts: dict[str, bytes] = {}
+    records: list[Any] = []
+    for plan in enumerate(CASES, 1):
+        st = staged(lab, cv2, plan, artifacts)
+        assert prepare(lab, cv2, st) == PREPARED
+        assert run(cv2, st) == READY
+        assert st.slot.state == READY and st.slot.outcome == READY and rooted(cv2, st.slot)
+        assert st.slot.tree is False and type(st.slot.record) is dict
+        released(lab, st)
+        records.append(st.slot.record)
+    assert [item["outcome"] for item in records] == ["APPROVED"] * 3
+    assert len(artifacts) == 11
+    assert FROZEN["verified"](lab, records, artifacts) == ("VERIFIED_APPROVED", "OK")
+
+
+def test_02_quiet_normal_tree_is_rejected_and_core_verified(
+    lab: SimpleNamespace, cv2: dict[str, Any]
+) -> None:
+    st = staged(lab, cv2, (1, "NORMAL"), setup=FROZEN["tree"])
+    assert prepare(lab, cv2, st) == PREPARED
+    assert run(cv2, st) == READY
+    assert st.slot.tree is True
+    record = st.slot.record
+    assert record["outcome"] == "REJECTED" and record["rejection"] == "TREE_UNPROVEN"
+    released(lab, st)
+    assert FROZEN["verified"](lab, [record], st.artifacts) == ("VERIFIED_REJECTED", "OK")
+
+
+def test_03_last_close_tree_keeps_the_frozen_precedence(
+    lab: SimpleNamespace, cv2: dict[str, Any]
+) -> None:
+    artifacts: dict[str, bytes] = {}
+    records: list[Any] = []
+    for plan in ((1, "NORMAL"), (2, "TERMINATE")):
+        st = staged(lab, cv2, plan, artifacts)
+        assert prepare(lab, cv2, st) == PREPARED and run(cv2, st) == READY
+        records.append(st.slot.record)
+    last = staged(lab, cv2, (3, "LAST_CLOSE"), artifacts, FROZEN["tree"])
+    assert prepare(lab, cv2, last) == PREPARED
+    assert run(cv2, last) == READY
+    assert last.slot.tree is True
+    assert last.slot.record["outcome"] == "REJECTED"
+    assert last.slot.record["rejection"] == "FAILED_LAST_CLOSE"
+    released(lab, last)
+    records.append(last.slot.record)
+    assert FROZEN["verified"](lab, records, artifacts) == ("VERIFIED_REJECTED", "OK")
+
+
+def test_04_setup_failure_is_ready_with_launch_failed(
+    lab: SimpleNamespace, cv2: dict[str, Any]
+) -> None:
+    def setup_failed(kernel: Any) -> None:
+        kernel.plan["CreateJobObjectW"] = ("false", 5)
+
+    st = staged(lab, cv2, (1, "NORMAL"), setup=setup_failed)
+    assert prepare(lab, cv2, st) == PREPARED
+    assert run(cv2, st) == READY
+    assert st.slot.record["outcome"] == "REJECTED"
+    assert st.slot.record["rejection"] == "LAUNCH_FAILED"
+    assert st.slot.tree is False
+    released(lab, st)
+    assert FROZEN["verified"](lab, [st.slot.record], st.artifacts) == ("VERIFIED_REJECTED", "OK")
+
+
+def test_05_states_follow_the_closed_sequence(lab: SimpleNamespace, cv2: dict[str, Any]) -> None:
+    st = staged(lab, cv2, (1, "NORMAL"), setup=FROZEN["tree"])
+    slot = st.slot
+    assert rooted(cv2, slot) and slot.state == "EMPTY" and slot.outcome is None
+    assert slot.run_reserved is False
+    seen: list[Any] = []
+    hook_writes(lab, ".json", lambda: seen.append(slot.state))
+    plan = sources(lab, after_reconcile(lab, lambda: seen.append(slot.state)))
+    assert cv2["prepare"](slot, plan, st.owner, st.case) == PREPARED
+    prepared_state, prepared_outcome, prepared_reserved = terminal(slot)
+    assert prepared_state == PREPARED and prepared_outcome is None
+    assert prepared_reserved is False
+    assert slot.owner is st.owner and slot.case is st.case and slot.sources is plan
+    assert slot.registry is lab.original and slot.ledger is st.owner.ledger
+    assert run(cv2, st) == READY
+    assert seen == ["LIFECYCLE", "FINISH"]
+    final_state, final_outcome, final_reserved = terminal(slot)
+    assert final_state == READY and final_outcome == READY
+    assert final_reserved is True
+
+
+# -- 6..9 slot precondition, raw sources and prepare reentry --
+
+
+def test_06_a_non_slot_is_refused_without_any_write(
+    lab: SimpleNamespace, cv2: dict[str, Any]
+) -> None:
+    st = staged(lab, cv2, (1, "NORMAL"))
+    fake = SimpleNamespace(
+        state="EMPTY", owner=None, case=None, sources=None, outcome=None, run_reserved=False
+    )
+    before = dict(vars(fake))
+    assert cv2["prepare"](fake, sources(lab), st.owner, st.case) == "REFUSED_SLOT"
+    assert cv2["run"](fake, st.artifacts) == "REFUSED_SLOT"
+    assert vars(fake) == before and not rooted(cv2, fake)
+    assert rooted(cv2, st.slot) and st.slot.state == "EMPTY" and st.slot.owner is None
+    assert st.kernel.calls == [] and registered(lab, st.owner)
+
+
+def test_07_foreign_iterable_sources_are_never_iterated(
+    lab: SimpleNamespace, cv2: dict[str, Any]
+) -> None:
+    st = staged(lab, cv2, (1, "NORMAL"))
+    spy = SpySources()
+    before = list(lab.original)
+    assert cv2["prepare"](st.slot, spy, st.owner, st.case) == REFUSED
+    assert spy.touched == []
+    assert st.slot.sources is spy
+    retained(cv2, st, REFUSED)
+    assert st.kernel.calls == [] and untouched(lab, before) and registered(lab, st.owner)
+
+
+def test_08_short_sources_are_refused(lab: SimpleNamespace, cv2: dict[str, Any]) -> None:
+    st = staged(lab, cv2, (1, "NORMAL"))
+    short = (lab.runner, lab.lifecycle)
+    before = list(lab.original)
+    assert cv2["prepare"](st.slot, short, st.owner, st.case) == REFUSED
+    assert st.slot.sources is short
+    retained(cv2, st, REFUSED)
+    assert st.kernel.calls == [] and untouched(lab, before)
+
+
+def test_09_a_second_prepare_keeps_the_first(lab: SimpleNamespace, cv2: dict[str, Any]) -> None:
+    st = staged(lab, cv2, (1, "NORMAL"))
+    first = sources(lab)
+    assert cv2["prepare"](st.slot, first, st.owner, st.case) == PREPARED
+    other = staged(lab, cv2, (2, "NORMAL"))
+    assert cv2["prepare"](st.slot, sources(lab), other.owner, other.case) == "REFUSED_SLOT"
+    assert st.slot.state == PREPARED and st.slot.outcome is None
+    assert st.slot.owner is st.owner and st.slot.case is st.case and st.slot.sources is first
+    assert other.slot.state == "EMPTY" and rooted(cv2, other.slot)
+    assert st.kernel.calls == [] and other.kernel.calls == []
+
+
+# -- 10..24 malformed case and owner shapes --
+
+
+def drop_key(_lab: SimpleNamespace, st: SimpleNamespace) -> list[str] | None:
+    del st.case["seconds"]
+    return None
+
+
+def extra_key(_lab: SimpleNamespace, st: SimpleNamespace) -> list[str] | None:
+    st.case["extra"] = None
+    return None
+
+
+def hostile_key(_lab: SimpleNamespace, st: SimpleNamespace) -> list[str] | None:
+    key = HostileKey()
+    raw: Any = st.case
+    raw[key] = None
+    key.calls.clear()  # insertion itself hashed/compared; the caller must not
+    return key.calls
+
+
+def int_start(_lab: SimpleNamespace, st: SimpleNamespace) -> list[str] | None:
+    st.case["start"] = st.case["since"] = int(st.case["start"])
+    return None
+
+
+def inf_start(_lab: SimpleNamespace, st: SimpleNamespace) -> list[str] | None:
+    st.case["start"] = st.case["since"] = float("inf")
+    return None
+
+
+def since_differs(_lab: SimpleNamespace, st: SimpleNamespace) -> list[str] | None:
+    st.case["since"] = st.case["start"] + 1.0
+    return None
+
+
+def flag_true(_lab: SimpleNamespace, st: SimpleNamespace) -> list[str] | None:
+    st.case["lifecycle_reserved"] = True
+    return None
+
+
+def ready_true(_lab: SimpleNamespace, st: SimpleNamespace) -> list[str] | None:
+    st.case["ready"] = True
+    return None
+
+
+def facts_extra(_lab: SimpleNamespace, st: SimpleNamespace) -> list[str] | None:
+    st.case["facts"]["extra"] = None
+    return None
+
+
+def retained_bytes(_lab: SimpleNamespace, st: SimpleNamespace) -> list[str] | None:
+    st.case["facts"]["retained"].extend(b"x")
+    return None
+
+
+def read_limit(_lab: SimpleNamespace, st: SimpleNamespace) -> list[str] | None:
+    st.case["read_limit"] = 4095
+    return None
+
+
+def audit_limit(_lab: SimpleNamespace, st: SimpleNamespace) -> list[str] | None:
+    st.case["audit_limit"] = 513
+    return None
+
+
+def prefix_differs(_lab: SimpleNamespace, st: SimpleNamespace) -> list[str] | None:
+    st.case["prefix"] = "case-2/"
+    return None
+
+
+def plain_last_close(lab: SimpleNamespace, st: SimpleNamespace) -> list[str] | None:
+    owner = lab.backend["Owner"](lab.request)
+    lab.original.append(owner)  # producer registers its own owner first
+    st.owner = owner
+    return None
+
+
+def owner_not_new(_lab: SimpleNamespace, st: SimpleNamespace) -> list[str] | None:
+    st.owner.state = "READY"
+    return None
+
+
+MALFORMED: list[Any] = [
+    pytest.param("NORMAL", drop_key, id="10-missing-key"),
+    pytest.param("NORMAL", extra_key, id="11-extra-key"),
+    pytest.param("NORMAL", hostile_key, id="12-non-str-key"),
+    pytest.param("NORMAL", int_start, id="13-int-start"),
+    pytest.param("NORMAL", inf_start, id="14-inf-start"),
+    pytest.param("NORMAL", since_differs, id="15-since-differs"),
+    pytest.param("NORMAL", flag_true, id="16-flag-true"),
+    pytest.param("NORMAL", ready_true, id="17-ready-true"),
+    pytest.param("NORMAL", facts_extra, id="18-facts-extra"),
+    pytest.param("NORMAL", retained_bytes, id="19-retained-not-empty"),
+    pytest.param("NORMAL", read_limit, id="20-read-limit-4095"),
+    pytest.param("NORMAL", audit_limit, id="21-audit-limit-513"),
+    pytest.param("NORMAL", prefix_differs, id="22-prefix-name"),
+    pytest.param("LAST_CLOSE", plain_last_close, id="23-last-close-plain-owner"),
+    pytest.param("NORMAL", owner_not_new, id="24-owner-not-new"),
+]
+
+
+@pytest.mark.parametrize(("name", "mutate"), MALFORMED)
+def test_10_24_malformed_case_is_refused_before_effects(
+    lab: SimpleNamespace, cv2: dict[str, Any], name: str, mutate: Any
+) -> None:
+    st = staged(lab, cv2, (CASES.index(name) + 1, name))  # canonical number/prefix
+    probe = mutate(lab, st)
+    before = list(lab.original)
+    assert prepare(lab, cv2, st) == REFUSED
+    retained(cv2, st, REFUSED)
+    assert st.slot.registry is None or st.slot.registry is lab.original
+    assert st.kernel.calls == [] and untouched(lab, before) and registered(lab, st.owner)
+    assert probe is None or probe == []
+
+
+# -- 25..29 malformed sources and registry --
+
+
+def legacy_copy(lab: SimpleNamespace, _st: SimpleNamespace) -> tuple[Any, Any, Any]:
+    return (dict(lab.runner), lab.lifecycle, lab.helper)
+
+
+def lifecycle_copy(lab: SimpleNamespace, _st: SimpleNamespace) -> tuple[Any, Any, Any]:
+    return (lab.runner, dict(lab.lifecycle), lab.helper)
+
+
+def host_copy(lab: SimpleNamespace, st: SimpleNamespace) -> tuple[Any, Any, Any]:
+    st.case["host"] = dict(lab.host)
+    return sources(lab)
+
+
+def owner_absent(lab: SimpleNamespace, st: SimpleNamespace) -> tuple[Any, Any, Any]:
+    lab.original.remove(st.owner)  # the producer still holds st.owner itself
+    return sources(lab)
+
+
+def live_not_list(lab: SimpleNamespace, _st: SimpleNamespace) -> tuple[Any, Any, Any]:
+    lab.monkeypatch.setitem(lab.runner, "_LIVE", tuple(lab.original))
+    return sources(lab)
+
+
+SOURCES: list[Any] = [
+    pytest.param(legacy_copy, id="25-legacy-copy"),
+    pytest.param(lifecycle_copy, id="26-lifecycle-copy"),
+    pytest.param(host_copy, id="27-host-copy"),
+    pytest.param(owner_absent, id="28-owner-absent"),
+    pytest.param(live_not_list, id="29-live-not-list"),
+]
+
+
+@pytest.mark.parametrize("variant", SOURCES)
+def test_25_29_malformed_sources_never_touch_the_list(
+    lab: SimpleNamespace, cv2: dict[str, Any], variant: Any
+) -> None:
+    st = staged(lab, cv2, (1, "NORMAL"))
+    plan = variant(lab, st)
+    before = list(lab.original)
+    present = registered(lab, st.owner)
+    assert cv2["prepare"](st.slot, plan, st.owner, st.case) == REFUSED
+    retained(cv2, st, REFUSED)
+    assert st.slot.registry is None or st.slot.registry is lab.original
+    assert untouched(lab, before) and registered(lab, st.owner) is present
+    assert st.kernel.calls == []
+
+
+# -- 30..35 swaps after prepare --
+
+
+def swap_finish(lab: SimpleNamespace, _st: SimpleNamespace) -> None:
+    lab.monkeypatch.setitem(lab.runner, "_finish", foreign)
+
+
+def swap_live(lab: SimpleNamespace, _st: SimpleNamespace) -> None:
+    lab.monkeypatch.setitem(lab.runner, "_LIVE", [])
+
+
+def swap_facts(_lab: SimpleNamespace, st: SimpleNamespace) -> None:
+    st.case["facts"] = dict(st.case["facts"])
+
+
+def swap_host(_lab: SimpleNamespace, st: SimpleNamespace) -> None:
+    st.case["host"] = dict(st.case["host"])
+
+
+def swap_context(lab: SimpleNamespace, _st: SimpleNamespace) -> None:
+    lab.monkeypatch.setitem(lab.lifecycle, "context", foreign)
+
+
+def swap_ledger(_lab: SimpleNamespace, st: SimpleNamespace) -> None:
+    st.owner.ledger = {}
+
+
+SWAPS: list[Any] = [
+    pytest.param(swap_finish, id="30-legacy-finish"),
+    pytest.param(swap_live, id="31-legacy-live"),
+    pytest.param(swap_facts, id="32-case-facts"),
+    pytest.param(swap_host, id="33-case-host"),
+    pytest.param(swap_context, id="34-lifecycle-context"),
+    pytest.param(swap_ledger, id="35-owner-ledger"),
+]
+
+
+@pytest.mark.parametrize("swap", SWAPS)
+def test_30_35_swaps_after_prepare_are_drift(
+    lab: SimpleNamespace, cv2: dict[str, Any], swap: Any
+) -> None:
+    st = staged(lab, cv2, (1, "NORMAL"))
+    assert prepare(lab, cv2, st) == PREPARED
+    swap(lab, st)
+    assert run(cv2, st) == "RETAINED_DRIFT"
+    retained(cv2, st, "RETAINED_DRIFT")
+    assert st.slot.ctx is None and st.case["lifecycle_reserved"] is False
+    assert st.slot.registry is lab.original and registered(lab, st.owner)
+    assert st.kernel.calls == []
+
+
+# -- 36..37 invalid ctx returned before the lifecycle --
+
+
+def test_36_a_foreign_ctx_object_is_retained_and_refused(
+    lab: SimpleNamespace, cv2: dict[str, Any]
+) -> None:
+    marker = object()
+
+    def fake(*_args: Any) -> Any:
+        return marker
+
+    lab.monkeypatch.setitem(lab.lifecycle, "context", rebound(fake, lab.lifecycle))
+    st = staged(lab, cv2, (1, "NORMAL"))
+    assert prepare(lab, cv2, st) == PREPARED
+    assert run(cv2, st) == "RETAINED_CONTEXT_INVALID"
+    retained(cv2, st, "RETAINED_CONTEXT_INVALID")
+    assert st.slot.ctx is marker and st.slot.state != "CONTEXT"
+    assert st.case["lifecycle_reserved"] is False
+    assert st.kernel.calls == [] and registered(lab, st.owner)
+
+
+def test_37_a_genuine_ctx_for_another_owner_is_refused(
+    lab: SimpleNamespace, cv2: dict[str, Any]
+) -> None:
+    real = lab.lifecycle["context"]
+    other = staged(lab, cv2, (2, "TERMINATE"))  # second registered owner and its own case
+    built: list[Any] = []
+
+    def fake(*_args: Any) -> Any:
+        ctx = real(other.owner, other.case, lab.runner, lab.helper)
+        built.append(ctx)
+        return ctx
+
+    lab.monkeypatch.setitem(lab.lifecycle, "context", rebound(fake, lab.lifecycle))
+    st = staged(lab, cv2, (1, "NORMAL"))
+    assert prepare(lab, cv2, st) == PREPARED
+    assert run(cv2, st) == "RETAINED_CONTEXT_INVALID"
+    retained(cv2, st, "RETAINED_CONTEXT_INVALID")
+    assert len(built) == 1 and type(built[0]) is lab.lifecycle["_Context"]
+    assert built[0].owner is other.owner
+    assert st.slot.ctx is built[0] and st.slot.state != "CONTEXT"
+    assert st.case["lifecycle_reserved"] is False and other.case["lifecycle_reserved"] is False
+    assert st.kernel.calls == [] and other.kernel.calls == []
+    assert registered(lab, st.owner) and registered(lab, other.owner)
+
+
+# -- 38..41 controlled fault injection at the context seams --
+
+
+SEAMS: list[Any] = [
+    pytest.param("_capture_error", foreign, "RETAINED_CONTEXT_REFUSED", id="38-phase-a"),
+    pytest.param("_build", foreign, "RETAINED_CONTEXT_HELD", id="39-phase-b-none"),
+    pytest.param("_build", type_error, "RETAINED_CONTEXT_HELD", id="40-phase-b-error"),
+]
+
+
+@pytest.mark.parametrize(("seam", "fault", "label"), SEAMS)
+def test_38_40_context_faults_keep_the_owner(
+    lab: SimpleNamespace, cv2: dict[str, Any], seam: str, fault: Any, label: str
+) -> None:
+    lab.monkeypatch.setitem(lab.lifecycle, seam, fault)
+    st = staged(lab, cv2, (1, "NORMAL"))
+    assert prepare(lab, cv2, st) == PREPARED
+    assert run(cv2, st) == label
+    retained(cv2, st, label)
+    assert st.slot.ctx is None and st.kernel.calls == [] and registered(lab, st.owner)
+
+
+def test_41_a_control_in_the_context_keeps_its_identity(
+    lab: SimpleNamespace, cv2: dict[str, Any]
+) -> None:
+    signal = Signal()
+
+    def interrupt(*_args: Any) -> Any:
+        raise signal
+
+    lab.monkeypatch.setitem(lab.lifecycle, "_build", interrupt)
+    st = staged(lab, cv2, (1, "NORMAL"))
+    assert prepare(lab, cv2, st) == PREPARED
+    with pytest.raises(Signal) as caught:
+        run(cv2, st)
+    assert caught.value is signal and st.slot.control is signal
+    retained(cv2, st, "INTERRUPTED")
+    assert st.slot.ctx is None and st.kernel.calls == [] and registered(lab, st.owner)
+
+
+# -- 42..44 normal returns without proof --
+
+
+def empty_flow(lab: SimpleNamespace) -> None:
+    lab.monkeypatch.setitem(lab.lifecycle, "_flow", foreign)
+
+
+def non_none(lab: SimpleNamespace) -> None:
+    lab.monkeypatch.setitem(lab.lifecycle, "lifecycle", rebound(done, lab.lifecycle))
+
+
+def no_release(lab: SimpleNamespace) -> None:
+    lab.monkeypatch.setitem(lab.lifecycle, "_release", foreign)
+
+
+RETURNS: list[Any] = [
+    pytest.param(empty_flow, "NEW", id="42-none-without-proof"),
+    pytest.param(non_none, "NEW", id="43-non-none"),
+    pytest.param(no_release, "CLOSED", id="44-closed-not-released"),
+]
+
+
+@pytest.mark.parametrize(("install", "state"), RETURNS)
+def test_42_44_normal_return_without_proof_is_retained(
+    lab: SimpleNamespace, cv2: dict[str, Any], install: Any, state: str
+) -> None:
+    install(lab)
+    st = staged(lab, cv2, (1, "NORMAL"))
+    assert prepare(lab, cv2, st) == PREPARED
+    assert run(cv2, st) == "RETAINED_PROOF_FAILED"
+    retained(cv2, st, "RETAINED_PROOF_FAILED")
+    assert st.owner.state == state and registered(lab, st.owner)
+    assert st.kernel.double_closed == [] and not written(lab, st, "supervision.json")
+
+
+# -- 45..58 transitive finish references drifting before the finish --
+
+
+FINISH_REFS: list[Any] = [
+    pytest.param("runner", "_verdict", id="45-verdict"),
+    pytest.param("runner", "_capture", id="46-capture"),
+    pytest.param("runner", "_persist", id="47-persist"),
+    pytest.param("runner", "_step", id="48-step"),
+    pytest.param("runner", "_check", id="49-check"),
+    pytest.param("runner", "_fields", id="50-fields"),
+    pytest.param("runner", "_framing", id="51-framing"),
+    pytest.param("runner", "_int", id="52-int"),
+    pytest.param("runner", "REJECTIONS", id="53-rejections"),
+    pytest.param("runner", "TERMINATE_NAMES", id="54-terminate-names"),
+    pytest.param("host", "write_new", id="55-write-new"),
+    pytest.param("host", "encoded", id="56-encoded"),
+    pytest.param("host", "DEADLINE_SECONDS", id="57-deadline"),
+    pytest.param("host", "_monotonic", id="58-monotonic"),
+]
+
+
+@pytest.mark.parametrize(("where", "name"), FINISH_REFS)
+def test_45_58_transitive_drift_is_refused_before_finish(
+    lab: SimpleNamespace, cv2: dict[str, Any], where: str, name: str
+) -> None:
+    namespace = lab.runner if where == "runner" else lab.host
+    st = staged(lab, cv2, (1, "NORMAL"), setup=FROZEN["tree"])
+
+    def drift() -> None:
+        lab.monkeypatch.setitem(namespace, name, fresh(namespace[name]))
+
+    assert prepare(lab, cv2, st, after_reconcile(lab, drift)) == PREPARED
+    assert run(cv2, st) == "RETAINED_DRIFT"
+    retained(cv2, st, "RETAINED_DRIFT")
+    assert not written(lab, st, "supervision.json")
+    released(lab, st)  # the lifecycle itself had proven and released the owner
+
+
+# -- 59..62 drift and IO failure during the finish --
+
+
+DURING: list[Any] = [
+    pytest.param("_verdict", id="59-verdict"),
+    pytest.param("_LIVE", id="60-legacy-live"),
+    pytest.param("reconcile_reserved", id="61-reconcile-flag"),
+]
+
+
+@pytest.mark.parametrize("target", DURING)
+def test_59_61_drift_during_finish_is_invalid(
+    lab: SimpleNamespace, cv2: dict[str, Any], target: str
+) -> None:
+    st = staged(lab, cv2, (1, "NORMAL"))
+
+    def drift() -> None:
+        if target == "_verdict":
+            lab.monkeypatch.setitem(lab.runner, "_verdict", foreign)
+        elif target == "_LIVE":
+            lab.monkeypatch.setitem(lab.runner, "_LIVE", [])
+        else:
+            st.case["reconcile_reserved"] = True
+
+    hook_writes(lab, "supervision.json", drift)
+    assert prepare(lab, cv2, st) == PREPARED
+    assert run(cv2, st) == "RETAINED_POST_FINISH_INVALID"
+    retained(cv2, st, "RETAINED_POST_FINISH_INVALID")
+    assert st.slot.tree is False
+    released(lab, st)
+
+
+def test_62_finish_io_failure_keeps_the_slot_without_cleanup(
+    lab: SimpleNamespace, cv2: dict[str, Any]
+) -> None:
+    st = staged(lab, cv2, (1, "NORMAL"))
+    error = OSError("fictitious write failure")
+    calls: list[int] = []
+    delivered: list[BaseException] = []
+    real = lab.runner["_finish"]
+
+    def fail() -> None:
+        calls.append(len(st.kernel.calls))
+        raise error
+
+    def finish(*args: Any) -> Any:
+        """Observes the error the trusted _finish delivers, then re-raises it."""
+        try:
+            return real(*args)
+        except BaseException as caught:
+            delivered.append(caught)
+            raise
+
+    hook_writes(lab, "supervision.json", fail)
+    lab.monkeypatch.setitem(lab.runner, "_finish", rebound(finish, lab.runner))
+    assert prepare(lab, cv2, st) == PREPARED
+    assert run(cv2, st) == "RETAINED_FINISH_FAILED"
+    retained(cv2, st, "RETAINED_FINISH_FAILED")
+    # _persist -> _step suppresses the OSError and delivers the original RunError.
+    assert len(delivered) == 1 and st.slot.failure is delivered[0]
+    first = delivered[0]
+    assert type(first) is lab.RunError and first.args == ("CONTROL_PERSISTENCE",)
+    assert first.__cause__ is None and first.__context__ is None
+    assert first is not error
+    released(lab, st)
+    assert not written(lab, st, "held.json")
+    assert calls == [len(st.kernel.calls)]  # nothing native after the lifecycle
+
+
+# -- 63..64 lifecycle refusals --
+
+
+def test_63_integrity_refusal_is_retained_without_legacy_hold(
+    lab: SimpleNamespace, cv2: dict[str, Any]
+) -> None:
+    st = staged(lab, cv2, (1, "NORMAL"), setup=FROZEN["tree"])
+
+    def forged(owner: Any, _facts: Any) -> Any:
+        owner.state = "CLOSED"
+        return "RETAIN"
+
+    assert prepare(lab, cv2, st, forged) == PREPARED
+    assert run(cv2, st) == "RETAINED_INTEGRITY"
+    retained(cv2, st, "RETAINED_INTEGRITY")
+    assert st.slot.failure is st.slot.ctx.held_error
+    assert registered(lab, st.owner) and not written(lab, st, "held.json")
+    assert st.kernel.double_closed == []
+
+
+def test_64_legitimate_hold_is_retained_with_the_legacy_record(
+    lab: SimpleNamespace, cv2: dict[str, Any]
+) -> None:
+    st = staged(lab, cv2, (1, "NORMAL"), setup=FROZEN["tree"])
+
+    def foreign_member() -> None:
+        st.kernel.extra["job"] = (0x9001,)
+
+    assert prepare(lab, cv2, st, before_reconcile(lab, foreign_member)) == PREPARED
+    assert run(cv2, st) == "RETAINED_HELD"
+    retained(cv2, st, "RETAINED_HELD")
+    assert st.owner.state != "CLOSED" and registered(lab, st.owner)
+    assert written(lab, st, "held.json") and st.kernel.double_closed == []
+
+
+# -- 65..69 control interruptions keep identity and the first latch --
+
+
+def test_65_a_control_during_prepare_is_latched(lab: SimpleNamespace, cv2: dict[str, Any]) -> None:
+    signal = Signal()
+    st = staged(lab, cv2, (1, "NORMAL"))
+    st.case["clock"] = SignalClock(signal)
+    before = list(lab.original)
+    with pytest.raises(Signal) as caught:
+        prepare(lab, cv2, st)
+    assert caught.value is signal and st.slot.control is signal
+    retained(cv2, st, "INTERRUPTED")
+    assert st.kernel.calls == [] and untouched(lab, before) and registered(lab, st.owner)
+
+
+def interrupt_setup(lab: SimpleNamespace, st: SimpleNamespace, signal: Signal) -> Any:
+    st.kernel.raise_at[("CreateJobObjectW", 1)] = signal
+    return lab.helper
+
+
+def interrupt_close(lab: SimpleNamespace, st: SimpleNamespace, signal: Signal) -> Any:
+    FROZEN["tree"](st.kernel)
+
+    def arm() -> None:
+        count = st.kernel.counts.get("CloseHandle", 0)
+        st.kernel.raise_at[("CloseHandle", count + 1)] = signal
+
+    return before_reconcile(lab, arm)
+
+
+def interrupt_first_now(lab: SimpleNamespace, st: SimpleNamespace, signal: Signal) -> Any:
+    FROZEN["tree"](st.kernel)
+    original = lab.host["_monotonic"]
+    armed = [False]
+
+    def monotonic() -> Any:
+        if armed[0]:
+            raise signal
+        return original()
+
+    def arm() -> None:
+        armed[0] = True
+
+    lab.monkeypatch.setitem(lab.host, "_monotonic", monotonic)
+    return after_reconcile(lab, arm)
+
+
+def interrupt_last_write(lab: SimpleNamespace, _st: SimpleNamespace, signal: Signal) -> Any:
+    def stop() -> None:
+        raise signal
+
+    hook_writes(lab, "local-stdout.bin", stop)
+    return lab.helper
+
+
+CONTROLS: list[Any] = [
+    pytest.param(interrupt_setup, False, id="66-kernel-setup"),
+    pytest.param(interrupt_close, False, id="67-reconcile-close"),
+    pytest.param(interrupt_first_now, True, id="68-finish-first-now"),
+    pytest.param(interrupt_last_write, True, id="69-finish-last-write"),
+]
+
+
+@pytest.mark.parametrize(("arm", "proven"), CONTROLS)
+def test_66_69_controls_during_run_are_latched_once(
+    lab: SimpleNamespace, cv2: dict[str, Any], arm: Any, proven: bool
+) -> None:
+    signal = Signal()
+    st = staged(lab, cv2, (1, "NORMAL"))
+    reconcile = arm(lab, st, signal)
+    assert prepare(lab, cv2, st, reconcile) == PREPARED
+    with pytest.raises(Signal) as caught:
+        run(cv2, st)
+    assert caught.value is signal and st.slot.control is signal
+    retained(cv2, st, "INTERRUPTED")
+    assert registered(lab, st.owner) is not proven
+    assert st.kernel.double_closed == []
+    calls = list(st.kernel.calls)
+    assert run(cv2, st) == "RETAINED_REUSED"  # sticky: the first latch stays
+    assert st.slot.control is signal and st.slot.outcome == "INTERRUPTED"
+    assert st.kernel.calls == calls
+
+
+# -- 70..71 one run, prepare/run reentry --
+
+
+def test_70_a_second_run_changes_nothing(lab: SimpleNamespace, cv2: dict[str, Any]) -> None:
+    st = staged(lab, cv2, (1, "NORMAL"))
+    assert prepare(lab, cv2, st) == PREPARED and run(cv2, st) == READY
+    record, calls = st.slot.record, list(st.kernel.calls)
+    assert run(cv2, st) == "RETAINED_REUSED"
+    assert st.slot.outcome == READY and st.slot.record is record
+    assert st.kernel.calls == calls and rooted(cv2, st.slot)
+
+
+def test_71_run_on_a_refused_slot_is_not_prepared(
+    lab: SimpleNamespace, cv2: dict[str, Any]
+) -> None:
+    st = staged(lab, cv2, (1, "NORMAL"))
+    st.case["read_limit"] = 4095
+    assert prepare(lab, cv2, st) == REFUSED
+    assert run(cv2, st) == "RETAINED_NOT_PREPARED"
+    assert st.slot.run_reserved is False
+    assert cv2["prepare"](st.slot, sources(lab), st.owner, st.case) == "REFUSED_SLOT"
+    retained(cv2, st, REFUSED)
+    assert st.kernel.calls == [] and registered(lab, st.owner)
+
+
+# -- 72 regression: exact str key domain before any lookup after the finish --
+
+
+class CollidingKey:
+    """Hashes like a canonical key and claims equality with it; records calls."""
+
+    def __init__(self, target: str) -> None:
+        self.target = target
+        self.calls: list[str] = []
+
+    def __hash__(self) -> int:
+        self.calls.append("hash")
+        return hash(self.target)
+
+    def __eq__(self, other: object) -> bool:
+        self.calls.append("eq")
+        return other == self.target
+
+
+def test_72_a_colliding_key_during_finish_is_refused_before_lookup(
+    lab: SimpleNamespace, cv2: dict[str, Any]
+) -> None:
+    st = staged(lab, cv2, (1, "NORMAL"))
+    key = CollidingKey("reconcile_reserved")
+    calls: list[int] = []
+
+    def corrupt() -> None:
+        calls.append(len(st.kernel.calls))
+        del st.case["reconcile_reserved"]
+        raw: Any = st.case
+        raw[key] = False
+        key.calls.clear()  # insertion itself hashed; the caller must not
+
+    hook_writes(lab, "supervision.json", corrupt)
+    assert prepare(lab, cv2, st) == PREPARED
+    assert run(cv2, st) == "RETAINED_POST_FINISH_INVALID"
+    retained(cv2, st, "RETAINED_POST_FINISH_INVALID")
+    assert key.calls == []
+    assert type(st.slot.ctx) is lab.lifecycle["_Context"] and st.slot.ctx.owner is st.owner
+    assert st.slot.tree is False and st.slot.failure is None
+    released(lab, st)
+    assert not written(lab, st, "held.json")
+    assert calls == [len(st.kernel.calls)]  # nothing native after the lifecycle

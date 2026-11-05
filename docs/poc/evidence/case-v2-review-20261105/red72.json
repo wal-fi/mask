@@ -1,0 +1,25 @@
+{
+  "measurement": {
+    "exception_types": {
+      "AssertionError": 1
+    },
+    "exit": 1,
+    "failed": [
+      "tests/test_pg16_shell_native_control_case_v2.py::test_72_a_colliding_key_during_finish_is_refused_before_lookup"
+    ],
+    "failed_count": 1,
+    "seconds": 8.132,
+    "stats": {
+      "collected": 72,
+      "failed": 1,
+      "matrix_unique": 72,
+      "passed": 71
+    }
+  },
+  "native_effects": false,
+  "original71_ast_unchanged": true,
+  "source_sha256": "bdad4ad88d758bca3f9d70a11a2630e2059661cde16dbe2a83c6c63742552fbc",
+  "stage": "FINISH_KEY_DOMAIN_RED_BEFORE_FIX",
+  "tests_bytes": 36085,
+  "tests_sha256": "72dde65cd0c4db08c3a864726bcb86b57af43ff1011299770a069253c30385cf"
+}

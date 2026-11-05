@@ -1,0 +1,31 @@
+{
+  "findings": [
+    "C414 tuple clone must remain distinct, use unpack clone rather than tuple(value).",
+    "Case23 must use canonical case3/LAST_CLOSE prefix before mutating owner class.",
+    "Case62 must assert first exception delivered by trusted _finish: RunError CONTROL_PERSISTENCE, not swallowed OSError; preserve delivered identity via observer.",
+    "Mypy state re-read requires fresh attribute read after mutation; keep exact assertions."
+  ],
+  "measurement": {
+    "exception_types": {
+      "FileNotFoundError": 71
+    },
+    "exit": 1,
+    "failed": [
+      "tests/test_pg16_shell_native_control_case_v2.py::test_01_three_cases_are_ready_and_core_verified",
+      "tests/test_pg16_shell_native_control_case_v2.py::test_02_quiet_normal_tree_is_rejected_and_core_verified",
+      "tests/test_pg16_shell_native_control_case_v2.py::test_03_last_close_tree_keeps_the_frozen_precedence",
+      "tests/test_pg16_shell_native_control_case_v2.py::test_04_setup_failure_is_ready_with_launch_failed",
+      "tests/test_pg16_shell_native_control_case_v2.py::test_05_states_follow_the_closed_sequence",
+      "tests/test_pg16_shell_native_control_case_v2.py::test_06_a_non_slot_is_refused_without_any_write"
+    ],
+    "failed_count": 71,
+    "seconds": 6.751,
+    "stats": {
+      "collected": 71,
+      "errors": 71
+    }
+  },
+  "native_effects": false,
+  "stage": "INITIAL_TEST_REVIEW_FEATURE_ABSENT_NOT_FINAL_FREEZE",
+  "tests_sha256": "5c3ba504996a73219184940fda50b098d6a268aee11e5ee05e18bbdec5a45966"
+}

@@ -1,0 +1,112 @@
+{
+  "date": "2026-11-05",
+  "effort": "medium",
+  "independent_probe": {
+    "double_close": 0,
+    "foreign_callbacks_before_refusal": [],
+    "native_effects": false,
+    "outcome": "RETAINED_POST_FINISH_INVALID",
+    "owner_closed": true,
+    "source_sha256": "0fac3c7bd807e34c46e61a16c20bcda5c3a77b4ebed3c3404ff9250c4405a936"
+  },
+  "last_code_execution": 95368,
+  "last_code_terminal": 0,
+  "model": "claude-opus-5-5",
+  "own": {
+    "exception_types": {},
+    "exit": 0,
+    "failed": [],
+    "failed_count": 0,
+    "seconds": 7.222,
+    "stats": {
+      "collected": 72,
+      "matrix_unique": 72,
+      "passed": 72
+    }
+  },
+  "programmer": "Claude2",
+  "related": {
+    "exception_types": {},
+    "exit": 0,
+    "failed": [],
+    "failed_count": 0,
+    "seconds": 39.824,
+    "stats": {
+      "collected": 708,
+      "passed": 708
+    }
+  },
+  "remaining": [
+    "Trusted producer retains original owner/list before initial latch.",
+    "No absolute atomicity/OOM or privileged Python containment promise.",
+    "Future coordinator/parked controller/entry, truthful provenance B, publisher and collector remain unimplemented.",
+    "Native3s NOT_MEASURED, entry_gate NOT_EVALUATED and production gates open; Gateway unavailable."
+  ],
+  "review": {
+    "final_ast_other_than_finished_and_module_docstring_unchanged": true,
+    "findings_closed": [
+      {
+        "after_foreign_callbacks": [],
+        "before_probe_foreign_callbacks": [
+          "eq"
+        ],
+        "before_source": "bdad4ad88d758bca3f9d70a11a2630e2059661cde16dbe2a83c6c63742552fbc",
+        "finding": "post-finish key lookup before exact key-domain guard",
+        "red72": {
+          "failed": 1,
+          "passed": 71,
+          "seconds": 8.132
+        }
+      }
+    ],
+    "oracle_corrections_before_freeze": [
+      "Canonical prefix isolates plain Owner in LAST_CLOSE negative test.",
+      "Exception identity is first delivered by trusted finish; original IO error suppressed by _step.",
+      "Tuple clone remains equal but distinct despite lint.",
+      "Mutable state re-read preserves exact isFalse/isTrue."
+    ],
+    "source_read_in_full": true
+  },
+  "reviewer": "root",
+  "scope": {
+    "Docker": false,
+    "PostgreSQL": false,
+    "SQL": false,
+    "deployment": false,
+    "native_effects": false,
+    "new_operational_root_nonce_command": false,
+    "old_attempt_consumed_unchanged": true,
+    "operational_consumer": false,
+    "part_b_implemented": false,
+    "state16_unchanged": true,
+    "upstream14_unchanged": true
+  },
+  "session_id": "51ea0d85-05bb-4d24-ba9a-c9627c3f832f",
+  "source": {
+    "bytes": 22627,
+    "lines": 696,
+    "path": "docs/poc/pg16_shell_native_control_case_v2.py",
+    "sha256": "0fac3c7bd807e34c46e61a16c20bcda5c3a77b4ebed3c3404ff9250c4405a936"
+  },
+  "stage": "PRIVATE_CASE_CALLER_REVIEWED_FAKE_ONLY",
+  "statics": {
+    "format_files": 2,
+    "mypy_strict_files": 1,
+    "mypy_targets": [
+      "3.11",
+      "3.14"
+    ],
+    "poc_mypy": "excluded per existing policy",
+    "poc_ruff": "E9,F63,F7,F82 passed",
+    "runtime": "Windows CPython 3.11.3",
+    "test_ruff": "normal repository rules passed"
+  },
+  "tests": {
+    "bytes": 36085,
+    "frozen_before_source_fix": true,
+    "lines": 1016,
+    "original71_ast_unchanged": true,
+    "path": "tests/test_pg16_shell_native_control_case_v2.py",
+    "sha256": "72dde65cd0c4db08c3a864726bcb86b57af43ff1011299770a069253c30385cf"
+  }
+}

@@ -4,6 +4,72 @@ Criado por solicitação do usuário em2026-10-30. Inclui o trabalho acumulado
 após4a5e556, preservando resultados históricos e tentativas reprovadas. É
 checkpoint de desenvolvimento incompleto da Fase9, não release de produção.
 
+## Caller protegido V2 — implementado e revisto com fakes — 2026-11-05
+
+CLI95368 terminou0 e foi recuperada; zero escritor confirmado. Mesmo único
+Claude2/sessão51ea0d85/opus5.5/medium; root leu toda fonte e delta final.
+Fonte0fac3c7b/22627bytes, teste72dde65c/36085bytes congelado:72/72 em7,222s
+e708/708 relacionados em39,824s, sem falhas/erros/skips. Ruff/format2/
+mypy1teste3.11/3.14 aprovados; PoC fora do mypy, runtimeWindows3.11.3.
+Guarda antes de lookup pós-finish após RED72/71pass/1falha; sonda final
+zero hash/eq estrangeiro, ownerCLOSED/zero double-close. Source14 e estado16
+intactos. Dados em case-v2-review-20261105 e CASE-V2-VALIDATION;22422bytes
+de rascunho corrigidos para22442 no snapshotbdad4 sem mudar a fonte antiga.
+
+Componente apenas privado, sem produtor/entrada/batch/loader/publicador/
+collector operacional. PartB só desenho; próximo lote SOMENTE leitura/revisão
+ExpectedV2/confiança externa antes de testes/código. Mesmo Claude2 depois de
+zero escritor, monitorar só se ativo. Attempt3f12dc584c29 consumido preservado,
+identidadeNov2 não reclassificada. Nenhum Native/Docker/PG/SQL/root/nonce/
+CLI/comando/deploy/privado/runtime/config/binário ou novo job/quota. Gateway
+indisponível, Native3s/entry_gate/B1/B2/D090gate2/C1/SQL/produção abertos.
+OracleLinux9.8 em Docker local continua destino aceito. Fechar commit e
+publicação verificados, conferir Git antes de continuar. Histórico abaixo.
+
+## Caller protegido V2: regressão72 congelada, correção em andamento — 2026-11-05
+
+CLI60547/62161 terminaram0. Fontebdad4ad8 passou71/71 em7,382s, mas root
+reproduziu __eq__ estrangeiro antes de validar chaves em _finished. Nova
+regressão72 manteve AST anterior e falhou antes do fix:RED72/71pass/1falha,
+8,132s. Teste72dde65c/36085bytes congelado, Ruff/format1 aprovados; dados
+e fonte anterior em case-v2-review-20261105, fakes apenas.
+
+CLI95368 corrige só módulo privado, mesmo Claude2/sessão51ea0d85/opus5.5/
+medium; recuperar terminal antes de outra chamada. Guarda antes de lookup,
+testes intocáveis. Sem outro escritor, novos efeitos, PartB, source14 ou
+estado16 alterados. Attempt3f12dc584c29 consumido preservado, nenhum
+Native/privado/runtime/config/binário/Docker/PG/SQL/root/nonce/CLI/entrada/
+loader/comando/deploy ou quota/job. Gateway indisponível; histórico abaixo.
+
+## Caller protegido V2: RED medido e congelado — 2026-11-05
+
+CLI35194/55884/95885 terminaram0. Teste6d99606c/34563bytes, AST40c1a95a,
+congelado após revisão de oráculos/booleans; RED71 únicos:71 erros de setup
+por módulo ausente em6,947s, sem alegar correção. Ruff/format1/mypy1teste
+3.11/3.14 aprovados; dados em case-v2-review-20261105.
+
+CLI60547 implementa só módulo privado case_v2, mesmo Claude2/sessão51ea0d85/
+opus5.5/medium após guarda; testes byte-identical obrigatórios. Recuperar
+terminal antes de outra chamada, depois revisar e medir. API slot sem
+owner/root/invocation/launcher criado, sem limpeza legada de fallback.
+PartB só desenho, source14/estado16/attempt consumido fixos, nenhum efeito
+Native/Docker/PG/SQL/root/nonce/CLI/entrada/loader/comando/deploy/privado/
+runtime/config/binário. HEAD de partida089577b; rastreados atuais incluem
+checkpoints e duas clarificações do contrato. Sem nova quota/job, Gateway
+indisponível e gates abertos. Histórico abaixo.
+
+## Caller protegido V2: testes em preparação — 2026-11-05
+
+HEAD/origin089577b e zero escritor confirmados antes de CLI35194. Mesmo
+Claude2/sessão51ea0d85/opus5.5/medium, escrita só no teste novo de casoV2,
+sem módulo. Recuperar terminal35194 antes de nova chamada. Parte A desenho
+6bb57e88/71cenários previstos, sem medição nova ainda; root mede/congela RED
+e revisa antes de autorizar código. Sonda do harness existente preservada.
+Source10/estado16/lifecycle7bbf/test402/helperbb/testad/attempt3f12dc584c29
+consumido intactos. Sem Native/Docker/PG/SQL/root/nonce/entrada/loader/CLI/
+comando/deploy/privado/runtime/config/binário ou novo job/quota. Tarefa
+histórica Disabled; Gateway indisponível e gates abertos. Histórico abaixo.
+
 ## Caller protegido V2: desenho revisto para testes — 2026-11-05
 
 CLI17499 terminou0 e foi recuperada; zero Claude2 confirmado. Mesmo único

@@ -1,0 +1,20 @@
+import runpy,json,pytest
+suite=runpy.run_path('tests/test_pg16_shell_native_control_case_v2.py')
+with pytest.MonkeyPatch.context() as patch:
+    lab=suite['lab'].__wrapped__(patch)
+    owner,kernel=suite['FROZEN']['owner_for'](lab,'NORMAL')
+    artifacts={};case=suite['FROZEN']['case_for'](lab,'NORMAL',1,artifacts)
+    ctx=lab.lifecycle['context'](owner,case,lab.runner,lab.helper);lab.lifecycle['lifecycle'](ctx)
+    original=lab.host['write_new'];failure=OSError('fictitious write failure')
+    def fail(path,raw):
+        if str(path).endswith('supervision.json'):raise failure
+        return original(path,raw)
+    lab.host['write_new']=fail
+    caught=None
+    try:lab.runner['_finish'](owner,case,artifacts)
+    except lab.RunError as error:
+        assert error.args==('CONTROL_PERSISTENCE',)
+        caught={'delivered_is_original_ioerror':error is failure,'delivered_class':'RunError','code':error.args[0],'no_chain':error.__cause__ is None and error.__context__ is None}
+    assert caught is not None
+    names=lab.runner['TERMINATE_NAMES'];copy=(*names,);assert copy==names and copy is not names
+    print(json.dumps({'trusted_finish_boundary':caught,'tuple_unpack_clone_distinct':True,'native_effects':False}))

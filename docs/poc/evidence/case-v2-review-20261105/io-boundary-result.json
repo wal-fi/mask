@@ -1,0 +1,11 @@
+{
+  "native_effects": false,
+  "new_case_caller_measured": false,
+  "trusted_finish_boundary": {
+    "code": "CONTROL_PERSISTENCE",
+    "delivered_class": "RunError",
+    "delivered_is_original_ioerror": false,
+    "no_chain": true
+  },
+  "tuple_unpack_clone_distinct": true
+}
