@@ -40,6 +40,28 @@ de produção nem dispensa revisão, isolamento, masking, read-only ou sigilo.
 
 ## Escopo atual
 
+## Parte B: contrato revisto em leitura; testes ainda ausentes — 2026-11-05
+
+Retomada das20h05 São Paulo executou0, mensagem recebida, sem próxima
+ocorrência ou novo job. CLI64019/81666/27053/93433 terminaram0, terminais
+recuperados, somente Read; mesmo Claude2/sessão51ea0d85/opus5.5/medium e
+zero escritor confirmado. Partida HEAD/originc293175, rastreados limpos.
+
+Contrato prospectivo em PROVENANCE-V2-CONTRACT-REVIEW, sob delegação, sem
+aprovação individual inventada. Fecha ExpectedV2/core binding/pins/clone/
+limites/ordem/recusas e separa dados de policy PREFIX_FILES(int1/2/3).
+CASE-V2-DESIGN aponta a revisão; integração externa ainda inexistente.
+16arquivos por hash/tamanho intactos, source10/estado16 fixos, A72/708
+históricos, nenhuma suíte nova. B módulo e testes ainda ausentes.
+
+Próximo lote seguro não iniciado: apenas testes B pelo mesmo Claude2,
+root revisa/mede/congela RED antes do módulo. Ler checkpoints/conferir Git/
+zero escritor, monitorar apenas se ativo; recuperar terminal antes de outra
+chamada. Esta retomada ficou só leitura, nenhum Native/Docker/PG/SQL/
+privado/runtime/config/binário/root/nonce/entrada/loader/CLI/comando
+operacional/deploy. Attempt consumido preservado; Gateway indisponível e
+gates abertos. Nenhuma execução/autenticidade nova atestada. Histórico abaixo.
+
 ## Parte B: leitura interrompida por quota; retomada registrada — 2026-11-05
 
 Partida HEAD/originb76f598, rastreados limpos. CLI31241 terminou exit1/API429

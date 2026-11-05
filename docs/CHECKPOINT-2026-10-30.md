@@ -4,6 +4,35 @@ Criado por solicitação do usuário em2026-10-30. Inclui o trabalho acumulado
 após4a5e556, preservando resultados históricos e tentativas reprovadas. É
 checkpoint de desenvolvimento incompleto da Fase9, não release de produção.
 
+## Parte B: contrato revisto em leitura, sem implementação — 2026-11-05
+
+Tarefa das20h05/23:05UTC executou0 e entregou a retomada nesta conversa;
+sem próxima ocorrência ou novo job. CLI64019/81666/27053/93433 terminaram0
+na mesma sessão51ea0d85/claude-opus-5-5/medium com Read somente. Terminais
+recuperados e zero escritor confirmado; nenhum reset exato da quota medido.
+Partida HEAD/originc293175, rastreados limpos. Nenhum código/teste mudou.
+
+Contrato em PROVENANCE-V2-CONTRACT-REVIEW, refinando B3/B4/B6 de CASE-V2-DESIGN,
+schemasB2 intactos. API futura4args, expected_v2 tuple2(rows8,launcher),
+evidence tuple5; core explícito, dois campos capturados antes de callbacks,
+clone Expected, pins coerentes, guardas, resultados/ordem exatos. Policy
+PREFIX_FILES mantém int1/2/3, sem regra genérica de dados str aplicada ali.
+Metadados ausentes dão PREFIX antes de lookup/hash. Integração externa,
+loader/collector/publicador e autenticidade de execução continuam abertos.
+
+Integridade16 arquivos código/testes conferida; source10/estado16/fontes
+aceitas intactos. B módulo/testes ainda ausentes. Sem novas suítes:72/708
+são gates anteriores de A. Inventário textual86nomes+9margem<=95, maior18,
+não é execução do core. Revisão sob delegação, não aprovação individual.
+
+Próximo lote não iniciado: somente testes B pelo mesmo Claude2; root revisa
+e mede/congela RED antes do módulo. Conferir Git/zero escritor e ferramentas
+restritas ao lote; ativo implica só monitorar; recuperar terminal antes de
+nova chamada. Esta retomada permaneceu somente leitura. Sem Native/Docker/
+PG/SQL/privado/runtime/config/binário/root/nonce/entrada/loader/CLI/comando
+operacional/deploy. Attempt consumido e identidadeNov2 preservados.
+Gateway indisponível, Native3s/entry_gate e gates de produção abertos.
+
 ## Parte B: quota semanal e retomada confirmada — 2026-11-05
 
 Partida HEAD/origin/master b76f598, rastreados limpos. CLI31241 terminou

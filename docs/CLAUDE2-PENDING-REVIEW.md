@@ -1,3 +1,42 @@
+## Parte B: revisão de leitura concluída, ainda sem testes/código — 2026-11-05
+
+Retomada agendada recebida nesta conversa às20h05 São Paulo/23:05UTC.
+Tarefa Maskgw-Claude2-Resume-01a05804 executou com LastTaskResult0 e sem
+próxima ocorrência; nenhum novo job. Leituras CLI64019/81666/27053/93433
+terminaram0, terminais recuperados. Mesma sessão51ea0d85/claude-opus-5-5/
+medium, somente Read; zero escritor confirmado antes e depois. Não se mede
+o instante do reset da quota, apenas respostas sem429 após o horário.
+Partida HEAD/originc293175, rastreados limpos; arquivos pessoais preservados.
+
+Contrato prospectivo revisto sob delegação em
+PHASE-9-W1-PG16-PROVENANCE-V2-CONTRACT-REVIEW.md, sem inventar aprovação
+individual. R1–R12 de leitura fecharam pins coerentes com o core, snapshot
+de nonce/argv0 e clone, binding limitado/guardas, saídas exatas, caps,
+prioridades e a distinção dados/política (PREFIX_FILES tem chaves int).
+API futura verify_v2(core, expected_v2, expected_core, evidence); rows8 e
+launcher numa tuple exata2; evidence tuple5. Metadados só têm hash conferido
+depois da prova de cobertura. Não há promessa de autenticar execução.
+
+Conferidos16 arquivos de código/teste por hash/tamanho; source10/estado16/
+lifecycle/helper/caller intactos. Inventário textual86nomes+9margem<=95,
+maior18, fundamenta namespace128/chave64; não houve exec do core. Novos
+módulo e teste B ausentes. Nenhuma suíte nova;72/708 são gates anteriores
+de A, não desta leitura. CASE-V2-DESIGN aponta a revisão que substitui
+as partes preliminares da API/ordem/matriz B, schemas B2 preservados.
+
+Próximo incremento seguro, ainda não iniciado: Claude2 escreve SOMENTE
+testes de B contra esse contrato, antes do módulo; root revisa oráculos,
+mede o RED e congela os bytes antes de implementação. Conferir Git e zero
+escritor antes de retomar somente sessão51ea0d85/opus5.5/medium com ferramentas
+restritas ao lote; se ativo, monitorar apenas. Recuperar terminal antes de
+nova chamada. Esta retomada autorizou somente leitura e não iniciou testes.
+
+Nenhum Native/Docker/PG/SQL/privado/runtime/config/binário/root/nonce/entrada/
+loader/CLI/comando operacional/deploy; attempt3f12dc584c29 consumido e
+identidadeNov2 não reclassificados. Gateway indisponível, Native3s
+NOT_MEASURED/entry_gate NOT_EVALUATED e gates de produção abertos.
+Publicar apenas os documentos revistos; histórico preservado abaixo.
+
 ## Parte B pausada por quota; retomada única confirmada — 2026-11-05
 
 Checkpoint de partida: HEAD/origin/master b76f598, rastreados limpos.

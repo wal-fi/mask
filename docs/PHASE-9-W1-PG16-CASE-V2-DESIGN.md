@@ -504,6 +504,13 @@ continua obrigatório depois.
 
 # Parte B — proveniência V2 (somente desenho; nada implementado)
 
+**Revisão posterior, 2026-11-05:** o contrato prospectivo para o próximo RED
+está em [PROVENANCE-V2-CONTRACT-REVIEW](PHASE-9-W1-PG16-PROVENANCE-V2-CONTRACT-REVIEW.md).
+Essa revisão substitui a forma de ExpectedV2, a API, os motivos, a ordem de
+verificação e a matriz preliminares de B3/B4/B6 abaixo. Schemas dos artefatos
+e papéis/caminhos de B2 permanecem. Texto abaixo preservado como rascunho de
+origem, sem alegação de implementação ou execução dos novos testes.
+
 ## B1. Por que o core verify sozinho não basta
 
 - O core verify exige `PINS` fixos (host, adapter, backend, launcher), sem
