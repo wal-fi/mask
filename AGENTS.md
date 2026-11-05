@@ -40,6 +40,26 @@ de produção nem dispensa revisão, isolamento, masking, read-only ou sigilo.
 
 ## Escopo atual
 
+## Parte B: leitura interrompida por quota; retomada registrada — 2026-11-05
+
+Partida HEAD/originb76f598, rastreados limpos. CLI31241 terminou exit1/API429
+com limite semanal e liberação exibida às20h São Paulo; terminal recuperado,
+sem proposta técnica ou alteração funcional. Sem reset observado ou retry.
+Zero escritor confirmado. Mesma tarefa Maskgw-Claude2-Resume-01a05804
+reagendada e relida Ready para2026-11-05T20:05:00-03:00/23:05UTC, uma vez,
+Limited/IgnoreNew, ação queue nesta conversa01a05804 conferida. Agendamento
+não comprova entrega ou quota; exige máquina ligada/logon interativo/app.
+
+Ler primeiro os dois checkpoints. Conferir Git/horário/zero escritor antes
+de retomar somente sessão51ea0d85/claude-opus-5-5/medium; ativo implica só
+monitorar. Próximo lote SOMENTE Read restrito da Parte B: fechar ExpectedV2
+exato, binding explícito do núcleo já carregado e snapshots/ordem, antes
+de testes/código. A permanece validada72/708; B não implementada. Source10/
+estado16/fontes aceitas fixos. Sem Native/Docker/PG/SQL/privado/runtime/
+config/binário/root/nonce/entrada/loader/CLI/comando operacional/deploy,
+outra conta/modelo/escritor ou quota workaround. Gateway indisponível,
+Native3s/entry_gate e gates de produção abertos. Histórico abaixo.
+
 ## Caller protegido V2 — implementado e revisto com fakes — 2026-11-05
 
 Claude2 único programador, sessão51ea0d85/claude-opus-5-5/medium; root reviu

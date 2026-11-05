@@ -4,6 +4,34 @@ Criado por solicitação do usuário em2026-10-30. Inclui o trabalho acumulado
 após4a5e556, preservando resultados históricos e tentativas reprovadas. É
 checkpoint de desenvolvimento incompleto da Fase9, não release de produção.
 
+## Parte B: quota semanal e retomada confirmada — 2026-11-05
+
+Partida HEAD/origin/master b76f598, rastreados limpos. CLI31241 terminou
+exit 1 / API 429 antes de retornar a proposta de leitura da Parte B.
+Terminal recuperado: limite semanal, liberação exibida às 20h de São Paulo;
+nenhum reset observado, nova tentativa ou alteração funcional. Mesmo único
+Claude2, sessão51ea0d85/claude-opus-5-5/medium; zero escritor confirmado.
+
+Tarefa Maskgw-Claude2-Resume-01a05804 registrada e relida como Ready para
+2026-11-05T20:05:00-03:00 / 23:05 UTC, um trigger, Limited/IgnoreNew.
+Ação exata queue para esta conversa01a05804 conferida; não chama Claude2
+diretamente. Logon interativo requer máquina ligada e aplicativo aberto.
+Agendamento confirmado não significa execução, entrega ou quota liberada.
+
+Próximo: ler CLAUDE2-PENDING-REVIEW e este checkpoint; conferir Git/horário/
+zero escritor; se ativo, monitorar apenas. Retomar somente sessão51ea0d85,
+modelo opus5.5/medium e Read restrito para fechar ExpectedV2 imutável,
+binding explícito do núcleo confiável já carregado e snapshots/ordem de
+validação da Parte B. Ainda sem proposta retornada, testes ou código B.
+Recuperar terminal antes de outra chamada; respeitar novo reset se houver
+quota, sem outra conta/modelo/escritor ou repetição em laço.
+
+A mantém 72/72 e708/708 publicados; source10/estado16/fontes aceitas fixos.
+Sem Native/Docker/PG/SQL/privado/runtime/config/binário/root/nonce/entrada/
+loader/CLI/comando operacional/deploy. Attempt consumido e identidade Nov2
+preservados. Gateway indisponível; Native3s/entry_gate/B1/B2/D090gate2/C1/
+SQL/produção abertos. Histórico abaixo.
+
 ## Caller protegido V2 — implementado e revisto com fakes — 2026-11-05
 
 CLI95368 terminou0 e foi recuperada; zero escritor confirmado. Mesmo único

@@ -1,3 +1,41 @@
+## Parte B pausada por quota; retomada única confirmada — 2026-11-05
+
+Checkpoint de partida: HEAD/origin/master b76f598, rastreados limpos.
+CLI31241, na sessão 51ea0d85-05bb-4d24-ba9a-c9627c3f832f, terminou com
+exit 1 / API 429 / rate_limit. O terminal foi recuperado: limite semanal,
+com liberação exibida como 20h (America/Sao_Paulo). A chamada era somente
+de leitura; não retornou proposta técnica e não alterou arquivos. Nenhum
+reset foi observado e não houve nova tentativa, troca de conta ou modelo.
+Claude2 continua o único programador, claude-opus-5-5, esforço medium.
+
+Às 16:45 UTC, a inspeção confirmou zero escritores Claude ativos e a tarefa
+histórica Disabled. A mesma tarefa Maskgw-Claude2-Resume-01a05804 foi
+reagendada uma única vez para 2026-11-05T20:05:00-03:00 (23:05 UTC).
+Registro relido e confirmado: Ready, um trigger, RunLevel Limited,
+MultipleInstances IgnoreNew, ação e diretório exatos conferidos. A ação
+somente enfileira a mensagem nesta conversa Codex
+01a05804-2c07-71f2-bfef-7e3c90c06476; não executa Claude2 diretamente.
+O registro não comprova entrega futura, liberação da quota ou conclusão.
+A tarefa usa logon interativo; manter a máquina ligada e o aplicativo aberto.
+
+Próximo lote: SOMENTE leitura/revisão da Parte B em CASE-V2-DESIGN, para
+fechar a forma imutável exata de ExpectedV2, o acesso explícito ao núcleo
+já carregado por uma cadeia confiável externa e a ordem dos snapshots e
+limites antes de testes/código. A interface ainda não está fechada; não
+presumir que CLI31241 a aprovou. Ler estes checkpoints e conferir Git,
+horário e zero escritor antes de retomar SOMENTE a mesma sessão/modelo/
+esforço, com Read restrito. Se houver escritor ativo, apenas monitorar;
+recuperar o terminal antes de nova chamada. Se persistir a quota, registrar
+o novo resultado e respeitar a liberação informada, sem repetição em laço.
+
+Partes A e B mantêm seus estados anteriores: A privada validada (72 próprios,
+708 relacionados); B não implementada. Source10/estado16 e fontes aceitas
+permanecem fixos. Nenhum Native/Docker/PG/SQL, leitura privada/runtime/
+config/binário, root/nonce/entrada/loader/CLI/comando operacional ou deploy.
+Attempt3f12dc584c29 consumido e identidade Nov2 não reclassificados. Gateway
+indisponível; Native3s NOT_MEASURED, entry_gate NOT_EVALUATED e gates de
+produção continuam abertos. Registro anterior preservado abaixo.
+
 ## Caller protegido V2 revisto e validado; próximo Parte B em leitura — 2026-11-05
 
 CLI60547/62161/95368 terminaram0 e foram recuperadas. Claude2 único
