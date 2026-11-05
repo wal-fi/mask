@@ -1,3 +1,101 @@
+## Caller protegido V2: desenho revisto; próximo lote só testes — 2026-11-05
+
+CLI61137/63082/28389/17499 terminaram0 e foram recuperadas. Claude2 escreveu
+o desenho, sessão51ea0d85/claude-opus-5-5/medium; root leu toda a proposta,
+corrigiu o contrato por revisão e fez clarificações editoriais, sem código.
+Zero escritor confirmado. HEAD de partida9dade5b, publicação só documental.
+
+CASE-V2-DESIGN: Parte A revista para testes primeiro,71 casos previstos
+(NÃO medidos), depois RED congelado e somente então módulo. API allocate,
+prepare(slot,sources,owner,case), run(slot,artifacts). Slot guarda referências
+cruas dentro da proteção e ctx retornado antes de inspecionar vínculos;
+sem _case/_contain/fallbackclose. Produtor retém owner/lista originais até
+o latch. Resultado READY_FOR_VALIDATION não libera saída ou publicação.
+Parte B é desenho prospectivo, precisa revisão própria antes de código
+(inclui forma exata ExpectedV2 e cadeia externa). Nenhum caller/teste novo.
+
+Root conferiu14 fontes/testes congelados e7 referências conhecidas de B.
+Constantes4096/512 confirmadas. Matriz numerada1..71 sem lacuna/duplicação.
+Sonda apenas do harness existente passou:3 casos falsos,11 artefatos em
+memória, ownersCLOSED sem double-close, core VERIFIED_APPROVED/OK; WinDLL/
+Popen/system/Thread.start/sleep proibidos. Isso não mede o novo caller.
+Não repetiu suíte integral/44/636, estáticos, frontend ou packaging sem
+alteração funcional. Evidência CASE-V2-DESIGN-REVIEW e case-v2-design-review-
+20261105 com proposta inicial/findings/sonda; fonte14 e estado16 intactos.
+
+Próximo passo autorizado sob delegação: Claude2 escreve SOMENTE
+tests/test_pg16_shell_native_control_case_v2.py seguindo Parte A, preserva
+os testes antigos; root mede e congela RED antes de qualquer módulo novo.
+Usar mesma sessão/modelo/esforço, conferir zero escritor antes da chamada;
+se houver ativo, monitorar e recuperar terminal antes de seguir. Nenhum
+Native/root/nonce/comando/entrada/loader/CLI/Docker/PG/SQL/deploy ou leitura
+privada/runtime/config/binário. Tentativa3f12dc584c29 consumida e identidade
+Nov2 não reclassificadas. Gateway indisponível; Native3s NOT_MEASURED,
+entry_gate NOT_EVALUATED, B1/B2/D090gate2/C1/SQL/produção abertos. Destino
+Docker local OracleLinux9.8 aceito. Sem nova quota/reset/job ou conta/modelo
+trocado; tarefa histórica Disabled. Conferir Git antes do próximo lote.
+Registros abaixo são históricos.
+
+## Caller protegido V2: desenho em correção após revisão — 2026-11-05
+
+CLI63082 terminou0. Root leu o CASE-V2-DESIGN inteiro (bb3ff468/29082bytes)
+e arquivou a primeira proposta como dado em case-v2-design-review-20261105.
+Oito pontos de contrato pediram precisão: retenção crua antes de unpack de
+sources, outcome terminal versus recusa de reentrada, limites exatos,
+validação dos vínculos do ctx antes de lifecycle, launcher no schema,
+snapshots/caps/nonce de B, alcance da injeção de falha e regras de parse.
+API allocate + prepare(slot, sources, owner, case) aceita como direção sob
+delegação e revisão, não aprovação individual do usuário.
+
+CLI28389 corrige SÓ o desenho, mesma sessão51ea0d85/opus5.5/medium após
+guarda de escritor. Recuperar terminal28389 antes de outra chamada; nenhum
+Python/teste autorizado ainda. Source10/estado16/lifecycle7bbf/test402 e
+helperbb/testad intactos. Sem nova medição de testes, efeitos nativos,
+root/nonce/CLI/comando/loader, privado/runtime/config/binário, Docker/PG/
+SQL/deploy ou quota/job. Gateway e produção indisponíveis; histórico abaixo.
+
+## Caller protegido V2: documento de desenho em preparação — 2026-11-05
+
+CLI61137 terminou0 e foi revisada. Proposta reduzida pelo root: prepare de
+owner/case já construídos e registro original já conhecido; run do caso
+com retenção explícita e finalização, sem duplicar _case/FS/launcher/fábrica.
+Contexto parcial e erro/controle ficam no slot antes de propagar; retorno
+finito não é permissão de saída do controlador nem publicação.
+
+CLI63082 escreve SOMENTE PHASE-9-W1-PG16-CASE-V2-DESIGN.md, mesma sessão
+51ea0d85/claude-opus-5-5/medium após guarda de zero escritor. Recuperar
+terminal63082 antes de nova chamada. Root pediu captura dos globais reais,
+guardas transitivas de _finish, snapshot estreito dos metadados e prova
+antes/depois da finalização. Envelope externo futuro deve ligar os bytes
+reais aos pins esperados sem auto-hash, schema antigo alterado ou escrita
+após rename terminal; não atesta execução sem loader confiável futuro.
+
+Nenhum Python/teste novo autorizado. Fonte7bbf/test402, helperbb/testad,
+source10/estado16 e tentativa consumida intactos. Nenhuma operação nativa,
+root/nonce/comando/loader/CLI, Docker/PG/SQL/deploy ou leitura privada/
+runtime/config/binário. Gates de produto continuam abertos; histórico abaixo.
+
+## Caller protegido V2: desenho somente leitura em andamento — 2026-11-05
+
+Checkpoint retomado: HEAD/origin9dade5b, árvore rastreada limpa antes destas
+notas; zero Claude2 ativo e tarefa histórica Disabled confirmados. CLI61137
+estuda somente o desenho, mesma sessão51ea0d85/claude-opus-5-5/medium,
+ferramentas só Read. Recuperar terminal61137 antes de outra chamada. Nenhum
+novo módulo/teste/desenho persistido autorizado nesta chamada.
+
+Escopo da análise: menor caller privado com slot/posse retidos antes de
+efeitos delegados, inclusive falha de context/finalização/publicação e
+controle, sem _case/_contain mutáveis. Examinar proveniência V2 fechada e
+acíclica que reutilize o verificador semântico congelado; declaração de
+hash em fixture não atesta execução. Não duplicar backend/lifecycle/core.
+Root revisa o plano antes de autorizar testes/código. Source10/estado16,
+helperbb/testad e lifecycle7bbf/test402 intactos. Tentativa3f12dc584c29
+consumida: não reutilizar root/nonce, reler privados ou reinterpretar saída.
+
+Nenhum novo loader/CLI/entrada/root/nonce/comando operacional, nativo,
+runtime/config/binário, Docker/PG/SQL/deploy, segundo escritor ou quota/job.
+Gateway indisponível, gates de produção abertos. Histórico abaixo.
+
 ## Composição privada V2 revista e validada; próximo é desenho — 2026-11-05
 
 CLI68556/82223/5351 terminaram0 e foram recuperadas, sem segundo escritor.

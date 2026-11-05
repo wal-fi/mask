@@ -1,0 +1,12 @@
+{
+  "fake_cases": 3,
+  "memory_artifacts": 11,
+  "native_effects": false,
+  "new_case_caller_measured": false,
+  "owners_released": true,
+  "stage": "EXISTING_HARNESS_REUSE_ONLY",
+  "verifier": [
+    "VERIFIED_APPROVED",
+    "OK"
+  ]
+}

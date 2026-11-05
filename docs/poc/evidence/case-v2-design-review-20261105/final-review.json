@@ -1,0 +1,101 @@
+{
+  "claude_terminals": [
+    {
+      "execution": 61137,
+      "exit": 0,
+      "recovered": true
+    },
+    {
+      "execution": 63082,
+      "exit": 0,
+      "recovered": true
+    },
+    {
+      "execution": 28389,
+      "exit": 0,
+      "recovered": true
+    },
+    {
+      "execution": 17499,
+      "exit": 0,
+      "recovered": true
+    }
+  ],
+  "date": "2026-11-05",
+  "effort": "medium",
+  "harness_reuse": {
+    "fake_cases": 3,
+    "memory_artifacts": 11,
+    "native_effects": false,
+    "new_case_caller_measured": false,
+    "owners_released": true,
+    "stage": "EXISTING_HARNESS_REUSE_ONLY",
+    "verifier": [
+      "VERIFIED_APPROVED",
+      "OK"
+    ]
+  },
+  "integrity": {
+    "code_changes": false,
+    "design_bytes": 38980,
+    "design_lines": 715,
+    "design_sha256": "6bb57e88802ebbc413ef1c52e5f720d7077597e67987f2fc1e59c2abe46b6048",
+    "frozen_sources_and_tests": 14,
+    "matched_source_role_references": 7,
+    "new_module_exists": false,
+    "new_test_exists": false,
+    "planned_test_ids": 71
+  },
+  "model": "claude-opus-5-5",
+  "next_safe_step": "Same Claude2 session/model/effort writes only tests/test_pg16_shell_native_control_case_v2.py; root measures and freezes RED before module. Check no active writer first.",
+  "programmer": "Claude2",
+  "remaining": [
+    "Producer/coordinator retains original owner and registry before prepare latch.",
+    "ExpectedV2 exact form and external trust chain require Part B review before code.",
+    "No proof of native API or real execution; old consumed attempt cannot be reused/reclassified.",
+    "Gateway unavailable; Native3s, entry_gate, B1/B2/D090gate2/C1/SQL/production open."
+  ],
+  "review": {
+    "decision": "Part A ready for tests first and reviewed RED; Part B prospective and needs separate review before implementation.",
+    "final_latch_findings": [
+      "Raw reference capture moved inside protected prepare body; producer holds existing owner/list before first latch.",
+      "Returned raw context rooted in slot.ctx before any type or binding inspection."
+    ],
+    "initial_design_sha256": "bb3ff46859282a38a14db665af09cd29eab4f7e1820ef77ad7921f5385e34c00",
+    "initial_findings": [
+      "Prepare unpacks unvalidated sources before protected handling and lacks a rooted raw-sources field.",
+      "Terminal outcome and reentry-return semantics were ambiguous; exact-False reservation required.",
+      "Read/audit limits used relaxed ranges instead of accepted exact values; float validity needed precision.",
+      "Context binding validation was after lifecycle instead of before delegation.",
+      "Manifest exact key list omitted launcher; metadata latch coherence not explicit.",
+      "Envelope input snapshots, caps and nonce bindings needed exact contract.",
+      "Phase-A errors were described as unreachable; fake seam injection does not measure OOM.",
+      "Numeric/canonical parser rules and selected-source versus execution-closure scope needed precision."
+    ],
+    "root_document_clarifications": [
+      "Tests are written before RED and module after RED.",
+      "Only valid allocated slots and actually captured registries are subject to the corresponding harness identity assertions.",
+      "Existing harness reuse probe is distinguished from unimplemented new caller."
+    ]
+  },
+  "reviewer": "root",
+  "scope": {
+    "Docker": false,
+    "PostgreSQL": false,
+    "SQL": false,
+    "deployment": false,
+    "full_suite_repeated": false,
+    "native_effects": false,
+    "new_caller_module": false,
+    "new_caller_tests": false,
+    "new_operational_root_nonce_command": false,
+    "old_attempt_unchanged": true,
+    "planned_test_cases": 71,
+    "planned_test_cases_are_not_results": true,
+    "source10_unchanged": true,
+    "state16_unchanged": true,
+    "static_or_frontend_gates_repeated": false
+  },
+  "session_id": "51ea0d85-05bb-4d24-ba9a-c9627c3f832f",
+  "stage": "DESIGN_REVIEW_ONLY_NO_NEW_CALLER_IMPLEMENTED"
+}

@@ -40,6 +40,26 @@ de produção nem dispensa revisão, isolamento, masking, read-only ou sigilo.
 
 ## Escopo atual
 
+## Caller protegido V2 — desenho revisto para testes — 2026-11-05
+
+Claude2 escreveu CASE-V2-DESIGN, mesma sessão51ea0d85/opus5.5/medium;
+root reviu o contrato e suas referências. CLI17499 terminou0, terminal
+recuperado e zero escritor confirmado. Parte A fechada para escrever
+testes e medir/congelar RED antes do módulo;71 casos são previstos, não
+execuções. Slot pré-alocado guarda owner/case/contexto antes de falhas,
+sem _case/_contain/close de fallback. Parte B permanece desenho prospectivo
+e precisa revisão própria antes de código, incluindo ExpectedV2/confiança.
+
+Nenhum caller/teste novo, fonte congelada ou estado16 alterado. Sonda de
+reuso do harness existente:3 fakes/11artefatos em memória, core aprovado;
+não mede caller novo.14 fontes/testes e7 referências conhecidas conferidas.
+Sem nativo/Docker/PG/SQL/runtime/config/binário/privado/root/nonce/CLI/
+comando/deploy ou nova quota/job; tentativa3f12dc584c29 consumida intacta.
+Gateway indisponível; Native3s/entry_gate/B1/B2/D090gate2/C1/SQL/produção
+abertos. Próximo lote seguro: SOMENTE testes de A, mesmo Claude2 após zero
+escritor; root mede RED antes de autorizar módulo. Evidência CASE-V2-DESIGN-
+REVIEW e checkpoints. Registros seguintes são históricos.
+
 ## Lifecycle privado V2 revisto com fakes — 2026-11-05
 
 Claude2 programou somente na sessão51ea0d85/claude-opus-5-5/medium; root

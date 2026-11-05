@@ -4,6 +4,72 @@ Criado por solicitação do usuário em2026-10-30. Inclui o trabalho acumulado
 após4a5e556, preservando resultados históricos e tentativas reprovadas. É
 checkpoint de desenvolvimento incompleto da Fase9, não release de produção.
 
+## Caller protegido V2: desenho revisto para testes — 2026-11-05
+
+CLI17499 terminou0 e foi recuperada; zero Claude2 confirmado. Mesmo único
+programador51ea0d85/opus5.5/medium, root reviu todo desenho e fechou
+clarificações editoriais. Parte A pronta para testes primeiro,71 cenários
+previstos, nenhum implementado/medido. Slot pré-alocado retém referências
+antes de validação e contexto antes de inspeção; não usa _case/_contain
+ou novo close de fallback. Parte B prospectiva exige revisão própria antes
+de código. Não existe caller/teste novo ou operação nativa neste lote.
+
+Sonda do harness aceito:3 fakes/11 artefatos em memória/core aprovado e
+ownersCLOSED sem double-close; não mede novo caller.14 fontes/testes e7
+referências de origem conferidas, matriz1..71 coerente. Sem repetir suítes
+ou estáticos de código inalterado. CASE-V2-DESIGN-REVIEW e dados em
+case-v2-design-review-20261105 preservam revisão/limites; partidaHEAD9dade5b.
+
+Próximo lote: SOMENTE tests/test_pg16_shell_native_control_case_v2.py pelo
+mesmo Claude2 após conferir zero escritor; root mede/congela RED antes do
+módulo. Source10/lifecycle7bbf/test402/helperbb/testad/estado16 e tentativa
+3f12dc584c29 consumida intactos; não reler privados ou reinterpretar saída.
+Sem Native/CLI/loader/root/nonce/comando/runtime/config/binário/Docker/PG/
+SQL/deploy, novo job/quota ou conta/modelo trocado; tarefa histórica Disabled.
+Gateway indisponível; Native3s/entry_gate/B1/B2/D090gate2/C1/SQL/produção
+abertos. Destino OracleLinux9.8 Docker local mantido. Conferir Git antes
+de continuar; histórico abaixo.
+
+## Caller protegido V2: revisão do desenho em andamento — 2026-11-05
+
+CLI63082 terminou0 e root leu todo desenho bb3ff468/29082bytes. Snapshot e
+oito findings de contrato arquivados em case-v2-design-review-20261105.
+CLI28389 corrige SOMENTE CASE-V2-DESIGN, mesma sessão51ea0d85/opus5.5/medium
+após guarda de escritor; recuperar terminal antes de seguir. Sem código/
+teste novo, fonte congelada alterada ou gate novo medido. Allocate/slot
+pré-alocado é direção aceita sob delegação, não aprovação individual.
+Correções incluem registro antes de unpack, limites4096/512, prova de ctx
+antes de lifecycle e schema/caps externos coerentes. Sem nativo/privado/
+runtime/config/binário/root/nonce/comando/loader/CLI/Docker/PG/SQL/deploy/
+quota/job. Gateway indisponível e gates abertos. Histórico abaixo.
+
+## Caller protegido V2: desenho em preparação — 2026-11-05
+
+CLI61137 terminou0 e foi revisada. CLI63082 escreve só CASE-V2-DESIGN,
+mesma sessão51ea0d85/opus5.5/medium, sem outro escritor; recuperar terminal
+antes de seguir. API estreita recebe owner/case já preparados e registro
+original; não duplica _case/fábrica/FS/launcher. Slot retém contexto/controle,
+guardas transitivas protegem finalização, READY não autoriza publicação.
+Proveniência futura externa/acíclica não pode autoatestar execução nem
+escrever após commit terminal. Nenhum código/teste novo ou efeito; fontes,
+estado16 e tentativa3f12dc584c29 consumida fixos. Sem privado/runtime/
+config/binário/nativo/Docker/PG/SQL/root/nonce/CLI/comando/deploy/job/quota.
+HEAD/origin9dade5b, só documentos de retomada alterados até a gravação do
+desenho. Gateway indisponível, gates abertos. Histórico abaixo.
+
+## Caller protegido V2: análise em andamento — 2026-11-05
+
+HEAD/origin9dade5b, rastreados limpos e zero escritor confirmados antes de
+CLI61137; tarefa histórica Disabled. Mesmo Claude2/sessão51ea0d85/opus5.5/
+medium, só Read: propor slot de posse/caller privado e proveniência V2,
+sem código ou efeitos. Recuperar terminal61137 e revisar antes de outra
+chamada. Fonte7bbf/test402 e seus44/636 gates anteriores preservados;
+nenhum teste novo medido ainda. Source10/helperbb/testad/estado16 e tentativa
+3f12dc584c29 consumida intactos. Sem privado/runtime/config/binário lido,
+nativo/Docker/PG/SQL/root/nonce/comando/CLI/deploy ou novo job/quota.
+Gateway/produção indisponíveis; B1/B2/D090gate2/C1/SQL e provas nativas
+continuam abertos. Histórico abaixo.
+
 ## Composição privada V2 revista e validada — 2026-11-05
 
 Claude2 único programador, sessão51ea0d85/claude-opus-5-5/medium; última

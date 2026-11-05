@@ -1,0 +1,540 @@
+# Fase 9 W1 — PG16 caller protegido de caso V2 (A) e proveniência V2 (B) — design
+
+Status: SOMENTE DESENHO (PROTECTED_CALLER_V2_DESIGN_ONLY). Não há módulo,
+teste ou artefato operacional. Escrito pelo Claude2 na sessão
+`51ea0d85-05bb-4d24-ba9a-c9627c3f832f` (`claude-opus-5-5`, esforço `medium`),
+sob a delegação geral vigente (AGENTS.md, "Delegação vigente — 2026-10-20").
+Nenhuma decisão aqui é aprovação individual. O ROOT revisa este contrato;
+depois congela o RED dos testes de A antes de qualquer implementação.
+
+Medições: o documento só cita números do ROOT. Lifecycle `7bbf734c…`: 44/44
+próprios e 636/636 relacionados (LIFECYCLE-V2-VALIDATION). Nada novo foi
+medido.
+
+Base lida neste lote:
+- `docs/poc/pg16_shell_native_control_lifecycle_v2.py` (`7bbf734c…`, 423
+  linhas, inteira);
+- `PHASE-9-W1-PG16-LIFECYCLE-V2-VALIDATION.md` (inteira);
+- `PHASE-9-W1-PG16-LIFECYCLE-V2-DESIGN.md` (§1–3).
+
+Base lida antes nesta sessão:
+- runner `b4198fe1…` (inteiro): `_case`, `_finish`, `_persist`, `_step`,
+  `_check`, `_verdict`, `_fields`, `_framing`, `_int`, `_capture`,
+  `_publish`, `_run`;
+- host `dfcc4ed6…` (inteiro);
+- backend `10c9058f…` (linhas 355–916);
+- entry consumida (inteira);
+- core verify `b3755d49…` (inteiro);
+- collector `1972ec74…` (linhas 1–60);
+- testes do adapter (`Kernel`, `runtime`, fixture).
+
+Limites permanentes:
+- Source10, state16, helper `bb1f1984…`, teste `ad0742c0…`, lifecycle
+  `7bbf734c…` e teste `40279844…` ficam congelados.
+- A tentativa 3f12dc584c29 continua FAILED_ONLY_OPERATOR_ABORT, sem releitura
+  privada nem reuso.
+- Native3s NOT_MEASURED, entry_gate NOT_EVALUATED e identidade Nov2
+  LIVENESS_SAMPLED_TRANSPORT_UNVERIFIED.
+- Gateway, B1, B2, D090gate2, C1, SQL e produção abertos.
+
+---
+
+# Parte A — caller protegido de um caso
+
+## A1. Escopo e não-escopo
+
+Módulo futuro: `docs/poc/pg16_shell_native_control_case_v2.py`. Teste
+futuro: `tests/test_pg16_shell_native_control_case_v2.py`. Ambos só depois do
+RED.
+
+**O que A faz:** recebe um owner e um case **já construídos e registrados por
+um produtor confiável**. Captura as referências originais num slot fixo,
+executa o lifecycle V2 aceito uma única vez, prova o fechamento, chama o
+`_finish` legado capturado e faz checagens novas depois do finish.
+
+**O que A não faz:**
+- não cria diretório, raiz, nonce, comando ou launcher;
+- não escreve `invocation.json`;
+- não constrói owner, não lê fonte, não carrega namespace e não publica;
+- não tem loop infinito de estacionamento.
+
+Essas operações ficam com um coordenador futuro com estado pré-alocado e
+revisão própria. A não copia nenhuma parte de `_case`.
+
+**Obrigações de prova do produtor (fora de A, citadas, não medidas aqui):**
+- `Owner.__init__` do backend é puro ("Pure: no validation that can lose
+  ownership, no DLL, no handle", backend `10c9058f…`, `Owner.__init__`).
+- A pureza da construção do `NestedJobOwner` é afirmada pelo teste aceito do
+  adapter, `test_import_and_construction_are_pure`.
+- A não chama nenhum construtor e não alega pureza de factory não medida.
+- O produtor deve:
+  1. registrar o owner na `_LIVE` ORIGINAL **antes** de `prepare`;
+  2. persistir `case-N/invocation.json` em `artifacts` antes de `run`;
+  3. montar o case no formato exato de §A4.
+
+## A2. Fontes: namespaces reais, não cópias
+
+`sources = (legacy, lifecycle, reconcile)`:
+
+| Elemento | Deve ser | Prova de identidade exigida |
+|---|---|---|
+| `legacy` | os globais reais do runner `b4198fe1…` | `type(legacy) is dict`, chaves `str` exatas e `legacy["_finish"].__globals__ is legacy`; o mesmo vale para todo hook legado capturado (§A5) |
+| `lifecycle` | os globais reais do módulo `7bbf734c…` | `lifecycle["context"].__globals__ is lifecycle`, `lifecycle["lifecycle"].__globals__ is lifecycle`; `ContextRefused` e `_Context` são classes (`type(x) is type`) |
+| `reconcile` | o helper `bb1f1984…`, ou um espião de teste | `type(reconcile) is FunctionType`; capturado por identidade |
+
+- O `host` não é parâmetro. Ele é capturado de `case["host"]`, com
+  `host["_supervise"].__globals__ is host` e
+  `host["_attempt"].__globals__ is host`.
+- Não há `loaded` como parâmetro: `case["error"]` já é a `Win32Error` que o
+  produtor tirou do `loaded` original.
+- `runpy.run_path` devolve uma **cópia** dos globais, que não é o namespace
+  vivo. Por isso, testes e produtor usam sempre `função.__globals__`. Um
+  mapping cópia não satisfaz `__globals__ is legacy` e é recusado.
+- Essas são checagens de identidade e forma. A autenticidade dos bytes
+  continua sendo precondição de um loader futuro.
+
+**Correção da proposta anterior.** A entry consumida retém o namespace em
+`KEEP` **antes** do exec, mas só captura a `_LIVE` original **depois** do exec
+e antes do invoke (`_advance` → `_capture`). O coordenador futuro seguirá
+essa ordem. A não reimplementa nada disso; recebe um `legacy` já executado.
+
+## A3. KEEP e slot pré-alocado
+
+- O módulo define `KEEP = []`: referências fortes, nunca removidas.
+- `allocate()` é pura. Cria um `_Slot` com `__slots__` fixos, todos os campos
+  em `None` ou `False` e `state = "EMPTY"`, faz `KEEP.append(slot)` e devolve
+  o slot.
+- O coordenador futuro captura `KEEP` e o slot **antes** de construir o owner.
+
+**Desvio pedido explicitamente:** a assinatura é
+`prepare(slot, sources, owner, case)`, não `prepare(sources, owner, case)`. Um
+`prepare` que alocasse o próprio slot teria uma janela falível (alocação ou
+`append`) antes de prender o owner, e uma interrupção ali devolveria nada ao
+chamador. Com o slot pré-alocado e enraizado em `KEEP`, a primeira instrução
+de `prepare` já grava as referências.
+
+**Campos do `_Slot`** (lista fechada):
+- referências: `state`, `owner`, `case`, `legacy`, `lifecycle`, `reconcile`,
+  `host`, `registry`, `clock`, `facts`, `ledger`;
+- capturas: `refs`, `meta`, `ctx`;
+- controle da execução: `run_reserved`, `tree`, `outcome`, `failure`,
+  `control`, `record`, `artifacts`.
+
+**Estado inicial e latches:**
+- O slot já nasce em `KEEP`.
+- `failure` e `control` guardam apenas a **primeira** exceção comum e o
+  **primeiro** controle (sticky). Depois de gravados, não são substituídos.
+- `outcome` só é gravado uma vez, no fim de cada chamada.
+
+## A4. `prepare(slot, sources, owner, case)`
+
+1. Exige `type(slot) is _Slot`, `slot.state == "EMPTY"` e
+   `slot.owner is None`. Senão devolve `"REFUSED_SLOT"` sem tocar em nada.
+2. **Grava primeiro, valida depois:** `slot.owner`, `slot.case` e
+   `slot.legacy, slot.lifecycle, slot.reconcile` recebem as referências
+   cruas, antes de qualquer leitura falível. Só então
+   `slot.state = "PREPARING"`.
+3. Valida tudo dentro de `try/except Exception`. Uma falha ordinária vira
+   `PREPARE_REFUSED` com `failure` gravado. Um controle é gravado em
+   `slot.control`, `outcome = "INTERRUPTED"`, e relançado como o mesmo
+   objeto.
+4. **Lista:** `registry = legacy["_LIVE"]` precisa ser `list` exata contendo
+   `owner` por identidade.
+   - Se não for, a lista **não é tocada** (nenhum append, nenhuma remoção) e
+     o resultado é `PREPARE_REFUSED`.
+   - O owner pré-existente continua retido pelo slot e pela lista em que o
+     produtor o colocou.
+   - `PREPARE_REFUSED` **nunca** significa "sem recursos": este call não teve
+     efeitos, mas o owner existe e seu estado é desconhecido, então é tratado
+     como retido.
+5. **Formato do owner:**
+   - `owner.state` é exatamente `"NEW"`, e `owner.ledger` é `dict` exato e
+     vazio;
+   - `close_inner` resolvido pela MRO é `FunctionType` se e só se o nome é
+     `LAST_CLOSE`.
+6. **Formato exato do case:** `_str_keys` primeiro, depois as chaves exatas
+   abaixo, nem mais nem menos (20).
+
+| Chave | Valor exigido no prepare |
+|---|---|
+| `name` | `str` em CASES |
+| `directory` | `type(d) is type(pathlib.Path())`; `str(d)` com até 512 caracteres; `d.name == "case-N"` |
+| `prefix` | `str` exatamente `"case-N/"`, com N em 1..3 e `CASES[N-1] == name` |
+| `host` | `dict` exato (§A2) |
+| `error` | `type(error) is type` e subclasse de `Exception` |
+| `read_limit`, `audit_limit` | `int` exato, iguais a `backend MAX_READ` e `adapter AUDIT_LIMIT`, recebidos pelo produtor; A só confere o tipo e `0 < x ≤ 65536` |
+| `facts` | `dict` exato com as 10 chaves de `_new_facts`, valores iniciais exatos (`None`/`False`/`0`) e `retained` como `bytearray` vazio |
+| `ready`, `inner_closed`, `contained`, `recorded` | exatamente `False` |
+| `ready_turns` | `int` 0 |
+| `snapshot`, `seconds` | `None` |
+| `clock` | objeto cujo `now` é o par bound (`__self__`, `__func__`) da classe |
+| `start`, `since` | `float` exatos, com `since == start` |
+| `lifecycle_reserved`, `reconcile_reserved` | exatamente `False` |
+
+7. **Snapshot imutável** `slot.meta`: uma tupla de escalares exatos
+   `(name, N, prefix, str(directory), read_limit, audit_limit, start)`, mais
+   a tupla ordenada das 20 chaves.
+   - Não é deep-copy de objetos arbitrários.
+   - As estruturas originais (`case`, `facts`, `retained`, `ledger`) são
+     mutadas legitimamente pelo lifecycle e pelo finish; ficam separadas,
+     por identidade, em `slot.case/facts/ledger`.
+8. **Captura transitiva** `slot.refs` (§A5).
+9. Sucesso: `slot.registry`, `slot.host`, `slot.clock`, `slot.facts` e
+   `slot.ledger` gravados, e `state = "PREPARED"`. `prepare` devolve
+   `"PREPARED"` ou o rótulo de recusa. Não levanta exceções comuns.
+
+## A5. Referências transitivas capturadas
+
+Capturadas por identidade e reconferidas antes do contexto, antes do finish e
+depois do finish.
+
+| Origem | Nomes | Regra |
+|---|---|---|
+| `legacy` | `_finish`, `_capture`, `_verdict`, `_persist`, `_step`, `_check`, `_fields`, `_framing`, `_int`, `_state` | `FunctionType` com `__globals__ is legacy` |
+| `legacy` | `RunError`; `CODES`, `REJECTIONS` (`frozenset`); `TERMINATE_NAMES`, `CASE_KEYS` (`tuple`); `NORMAL_LINE`, `READY_LINE` (`str`); `_LIVE` | identidade e tipo exato |
+| `host` | `_attempt`, `_supervise` | `FunctionType` com `__globals__ is host` |
+| `host` | `write_new`, `encoded`, `_monotonic` | `FunctionType`, só identidade |
+| `host` | `DEADLINE_SECONDS` | `float`, identidade |
+| `case` | `facts`, `host`, `clock`, `error`, `name` | identidade |
+| clock | `now` | par (`__self__`, `__func__`) |
+| owner | `ledger` | identidade |
+| `lifecycle` | `context`, `lifecycle`, `ContextRefused`, `_Context` | identidade |
+
+`write_new`, `encoded` e `_monotonic` são seams que o produtor ou os testes
+podem ter substituído (em memória), por isso a regra é só identidade, sem
+exigir `__globals__`.
+
+Este é o mesmo limite confiável do lifecycle: detecta substituição visível
+dessas referências **antes e depois** das chamadas. Não defende código
+arbitrário nem mutação maliciosa dentro de um helper.
+
+## A6. `run(slot, artifacts)`
+
+Executa uma vez e devolve um rótulo fechado.
+
+1. `type(slot) is not _Slot` → `"REFUSED_SLOT"`.
+2. `slot.run_reserved is True` → `"RETAINED_REUSED"`. Nada muda e o primeiro
+   resultado é preservado.
+3. **Reserva:** `slot.run_reserved = True` antes de qualquer callback. Daqui
+   em diante não há retry nem segundo close.
+4. Exige `slot.state == "PREPARED"`; senão `RETAINED_NOT_PREPARED`.
+5. **Artifacts:** `dict` exato, chaves `str` exatas no `WHITELIST` do core
+   verify, valores `bytes` dentro de `FILE_CAPS`, no máximo 11 entradas.
+   - Precisa conter `prefix + "invocation.json"`.
+   - Não pode conter outros arquivos deste prefixo.
+   - Snapshot: tupla de `(chave, objeto bytes)`.
+   - Falhou → `RETAINED_ARTIFACTS`.
+6. **Guarda pré-contexto** (§A5, meta e lista com o owner presente) →
+   `RETAINED_DRIFT`.
+7. `ctx = context(owner, case, legacy, reconcile)`, chamando o `context`
+   capturado:
+
+| Exceção | Rótulo |
+|---|---|
+| tipo exato `ContextRefused` capturado | `RETAINED_CONTEXT_REFUSED` (fase A) |
+| tipo exato `RunError` capturado, args `("CONTROL_HELD",)` | `RETAINED_CONTEXT_HELD` (fase B: `None`, exceção comum ou forma) |
+| outra `Exception` | `RETAINED_INTERNAL` |
+| controle | `INTERRUPTED`, relançado |
+
+   `slot.ctx = ctx` e `state = "CONTEXT"`.
+8. `state = "LIFECYCLE"`; `result = lifecycle(ctx)`:
+
+| Desfecho | Rótulo |
+|---|---|
+| `held_error` do ctx (identidade) | `RETAINED_INTEGRITY` |
+| `RunError` capturado com CONTROL_HELD, outra instância | `RETAINED_HELD` (hold legítimo do legado) |
+| outra `Exception` | `RETAINED_INTERNAL` |
+| controle | `INTERRUPTED`, relançado |
+| retorno diferente de `None` (`is not None`) | `RETAINED_PROOF_FAILED` |
+
+9. **Prova de fechamento** depois de um retorno exatamente `None`. Tudo é
+   obrigatório; se faltar algo → `RETAINED_PROOF_FAILED`, sem close e sem
+   release.
+   - `type(ctx) is _Context` capturado.
+   - `case["lifecycle_reserved"] is True`.
+   - Guardas de §A5 intactas.
+   - `legacy["_LIVE"] is slot.registry` e o owner **ausente** dela.
+   - `_state(owner)` capturado devolve exatamente `"CLOSED"`.
+   - `owner.ledger is slot.ledger` e `len == 0`.
+   - `facts["held"] is None` e `facts["retained"] is` o `bytearray` capturado.
+   - `ctx.facts is slot.facts` e `ctx.registry is slot.registry`.
+
+   Passou → `state = "RELEASED_PROVEN"`.
+10. **Latch TREE antes do finish:**
+    `slot.tree = case["reconcile_reserved"] is True`.
+11. **Guarda pré-finish** (§A5 inteira) → `RETAINED_DRIFT`. Depois
+    `state = "FINISH"` e `record = _finish(owner, case, artifacts)` pelo
+    `_finish` capturado.
+    - `Exception` → `RETAINED_FINISH_FAILED`.
+    - Controle → `INTERRUPTED`, relançado.
+    - Nunca há `_contain`, `_release`, `_held` ou close de fallback.
+    - O owner já estava provado CLOSED e liberado, mas o slot continua retido
+      e o rótulo não é publicável.
+12. **Checagens novas pós-finish** → senão `RETAINED_POST_FINISH_INVALID`:
+    - §A5 intacta;
+    - prova do passo 9 repetida, exceto `held`, que continua `None`;
+    - `meta` igual;
+    - artifacts antigos inalterados por identidade;
+    - novas chaves exatamente `supervision.json` e `local-stdout.bin`, mais
+      `snapshot.json` e `audit.json` só em LAST_CLOSE;
+    - **record:** `dict` exato com `CASE_KEYS` exatos e `case == name`;
+      outcome em `APPROVED`/`REJECTED`; `APPROVED` se e só se
+      `rejection is None`; `ready is None` só em NORMAL; os 4 campos de
+      LAST_CLOSE são `None` fora de LAST_CLOSE.
+    - **TREE:** se `slot.tree`, então outcome é `REJECTED` e a rejeição está
+      em `{"TREE_UNPROVEN"}` para NORMAL/TERMINATE ou em
+      `{"AUDIT_INVALID", "FAILED_LAST_CLOSE", "TREE_UNPROVEN"}` para
+      LAST_CLOSE. A precedência exata é recalculada só pelo core verify
+      congelado (B e testes); A não duplica `_recompute`.
+13. Passou: `slot.record = record`, `state = "READY_FOR_VALIDATION"`.
+
+A própria lógica de `run` roda dentro de `try`: falha comum →
+`RETAINED_INTERNAL`.
+
+## A7. Estados e rótulos fechados
+
+`state` (transições só em frente):
+`EMPTY → PREPARING → PREPARED → RUN_RESERVED → CONTEXT → LIFECYCLE →
+RELEASED_PROVEN → FINISH → READY_FOR_VALIDATION`, ou um estado terminal
+igual ao rótulo.
+
+Rótulos (`slot.outcome` e retorno):
+
+| Rótulo | Significado |
+|---|---|
+| `PREPARED` | só preparação; nenhuma permissão |
+| `REFUSED_SLOT` | objeto não é slot, ou slot já usado; nada tocado |
+| `PREPARE_REFUSED` | owner pré-existente retido; não é "sem recursos" |
+| `RETAINED_REUSED`, `RETAINED_NOT_PREPARED`, `RETAINED_ARTIFACTS`, `RETAINED_DRIFT` | sem chamada ao lifecycle, ou interrompido antes do finish |
+| `RETAINED_CONTEXT_REFUSED`, `RETAINED_CONTEXT_HELD` | contexto falhou; owner retido |
+| `RETAINED_INTEGRITY`, `RETAINED_HELD`, `RETAINED_INTERNAL`, `RETAINED_PROOF_FAILED` | resultado do lifecycle não provado |
+| `RETAINED_FINISH_FAILED`, `RETAINED_POST_FINISH_INVALID` | owner provado, mas o record não é confiável |
+| `INTERRUPTED` | controle gravado em `slot.control` e relançado como o mesmo objeto |
+| `READY_FOR_VALIDATION` | o record existe e pode ir para validação posterior |
+
+**Nenhum rótulo é permissão de saída do controlador nem de publicação.**
+`READY_FOR_VALIDATION` não autoriza publicar. O tempo de vida estacionado e a
+decisão de saída pertencem ao coordenador futuro, separado e revisado.
+
+## A8. Testes de A (finitos, RED antes do módulo)
+
+O teste novo reutiliza, via `runpy`, as funções simples do teste congelado
+`40279844…`: `lab_kernel_class`, `owner_for`, `case_for`, `published`,
+`verified`. Também reaproveita localmente a montagem do fixture `lab`, sem
+alterar aquele arquivo.
+
+Regras do harness:
+- `Owner` e `NestedJobOwner` reais com kernels falsos;
+- `write_new`/`_monotonic`/`_sleep` em memória;
+- WinDLL, Popen, `os.system`, `Thread.start` e `time.sleep` proibidos;
+- `legacy = run.__globals__` e `lifecycle = lifecycle.__globals__`;
+- todo teste confere `slot in KEEP` e que `slot.registry` é a lista original.
+
+| # | Grupo | Casos | Expectativa |
+|---|---|---|---|
+| 1 | Positivo, lote | NORMAL, TERMINATE e LAST_CLOSE com allocate/prepare/run; lote montado pelo teste | 3 × `READY_FOR_VALIDATION`; core verify `VERIFIED_APPROVED` |
+| 2 | Positivo, TREE NORMAL | quiet TREE | `READY_FOR_VALIDATION`, `slot.tree` True, record REJECTED/TREE_UNPROVEN, `VERIFIED_REJECTED` |
+| 3 | Positivo, TREE LAST_CLOSE | NORMAL e TERMINATE aprovados, depois TREE | FAILED_LAST_CLOSE, `VERIFIED_REJECTED` |
+| 4 | Positivo, falha precoce | setup falho | `READY_FOR_VALIDATION`, REJECTED/LAUNCH_FAILED |
+| 5 | Estados | sequência observada e `KEEP` antes de prepare | exatamente a ordem de §A7 |
+| 6–15 | Case/schema malformado (10) | chave faltando; chave extra; `start` int; flag True; `ready` True; facts com chave extra; `retained` não vazio; prefix/nome divergente; LAST_CLOSE com `Owner` simples; owner state ≠ NEW | `PREPARE_REFUSED`, zero chamadas ao kernel, owner na lista original, lista intacta |
+| 16–19 | Fontes malformadas (4) | `legacy` como cópia de `runpy`; `lifecycle` como cópia; host como cópia; owner ausente de `_LIVE` | `PREPARE_REFUSED`, lista não tocada |
+| 20 | `_LIVE` não-lista | `legacy["_LIVE"]` trocado antes de prepare | `PREPARE_REFUSED`, nenhum append |
+| 21–26 | Troca após prepare (6) | `legacy["_finish"]`, `legacy["_LIVE"]`, `case["facts"]`, `case["host"]`, `lifecycle["context"]`, `owner.ledger` | `RETAINED_DRIFT`, zero chamadas ao kernel |
+| 27–40 | Deriva transitiva antes do finish (14), feita no callback de reconcile de um TREE quiet | `_verdict`, `_capture`, `_persist`, `_step`, `_check`, `_fields`, `_framing`, `_int`, `REJECTIONS`, `TERMINATE_NAMES`, `write_new`, `encoded`, `DEADLINE_SECONDS`, `_monotonic` | `RETAINED_DRIFT` pré-finish, sem `supervision.json` |
+| 41–42 | Deriva durante o finish (2), via `write_new` falso | troca de `_verdict`; troca de `legacy["_LIVE"]` | `RETAINED_POST_FINISH_INVALID` |
+| 43 | Finish IO | `write_new` levanta em `supervision.json` | `RETAINED_FINISH_FAILED`; owner CLOSED e ausente da lista; sem `held.json`; `double_closed == []`; zero chamadas ao kernel após o lifecycle |
+| 44–47 | Contexto (4), com internos do lifecycle trocados antes de prepare | `_capture_error` devolve `None` (fase A); `_build` devolve `None`; `_build` levanta `TypeError`; `_build` levanta `Signal` | `RETAINED_CONTEXT_REFUSED`; `RETAINED_CONTEXT_HELD` ×2; `INTERRUPTED` com o mesmo objeto; owner retido |
+| 48–50 | Retornos falsos (3) | `_flow` vazio (retorno `None` sem prova); `lifecycle` não-`None` instalado via `FunctionType(código, lifecycle)` antes de prepare; `_release` do lifecycle virando no-op | `RETAINED_PROOF_FAILED`; no terceiro, owner CLOSED ainda na lista e sem segundo close |
+| 51 | Integridade | reconcile forjado (CLOSED + RETAIN) | `RETAINED_INTEGRITY`, sem `held.json` |
+| 52 | Hold legítimo | TREE incerto (membro estrangeiro) | `RETAINED_HELD`, `held.json` legado presente |
+| 53–56 | Controle (4) | `Signal` no setup do kernel; no close do reconcile; no primeiro `now` do finish (`_monotonic` falso); no último `write_new` do finish | `INTERRUPTED`, `slot.control` é o mesmo objeto, relançado, slot em `KEEP` |
+| 57 | Execução única | segundo `run` | `RETAINED_REUSED`; zero chamadas ao kernel; `outcome` e `record` inalterados |
+| 58 | `prepare` duplo | `prepare` em slot já preparado | `REFUSED_SLOT`; slot intacto |
+
+Total previsto: 58 casos finitos, sem skip, xfail, supressão ou cast.
+
+**Limite conhecido:** um record incoerente **sem** deriva não é alcançável
+com o código congelado. A checagem do passo 12 é defensiva e só é exercida
+pelos casos de deriva (41).
+
+---
+
+# Parte B — proveniência V2 (somente desenho; nada implementado)
+
+## B1. Por que o core verify sozinho não basta
+
+- O core verify exige `PINS` fixos (host, adapter, backend, launcher), sem
+  runner, lifecycle, helper ou caller.
+- Ele exige `SUMMARY_KEYS`/`TRANSPORT_KEYS` exatos e rejeita qualquer arquivo
+  privado fora do `WHITELIST` (FILESET).
+
+Os pins que ele confere continuam verdadeiros numa execução V2, porque são as
+mesmas fontes congeladas. Ainda assim, ele não identifica a composição.
+
+A solução é reutilizar o core verify **inteiro e congelado** para a
+semântica, mais um envelope externo fechado.
+
+## B2. Artefatos novos, fora do mapa `private` do core
+
+| Artefato | Kind (identificador proposto, inexistente) | Limite |
+|---|---|---|
+| `v2-manifest.json` | `MASKGW_PG16_NATIVE_CONTROL_V2_MANIFEST_V1` | 4096 bytes |
+| `case-N/v2-case.json`, para cada caso **executado** | `MASKGW_PG16_NATIVE_CONTROL_V2_CASE_V1` | 1024 bytes cada |
+
+Formato: JSON canônico estrito, igual ao `_parse` do core (ASCII, LF final,
+sem duplicatas, sem NaN).
+
+**`v2-case.json`**, chaves exatas:
+- `kind`;
+- `number` (int 1..3) e `case` (nome);
+- `slot_outcome` (exatamente `"READY_FOR_VALIDATION"`);
+- `lifecycle_reserved` (`true`);
+- `reconcile_reserved` e `tree_latched` (bool);
+- `owner_released` (`true`).
+
+Casos não executados não têm metadado.
+
+**`v2-manifest.json`**, chaves exatas:
+- `kind` e `nonce` (32 hex);
+- `executed` (int 1..3, igual ao prefixo do core);
+- `summary` e `transport`: cada um `{name, bytes, sha256}` dos bytes reais.
+  Os privados ficam ligados transitivamente pelo transport e pelo `_bind`
+  do core;
+- `cases`: lista de `executed` itens `{number, name, bytes, sha256}` dos
+  `v2-case.json`;
+- `sources`: lista de 8 itens `{role, path, bytes, sha256}`, com os papéis
+  exatos e nesta ordem:
+
+| Papel | Caminho | Bytes / SHA |
+|---|---|---|
+| `case_caller` | `docs/poc/pg16_shell_native_control_case_v2.py` | `<NOT_YET_IMPLEMENTED>` |
+| `lifecycle_v2` | `docs/poc/pg16_shell_native_control_lifecycle_v2.py` | 14964 / `7bbf734c8b4a1fefe1617fc8c1cff2a5de0b33f8996eb98b0016233ab0b040cb` |
+| `tree_reconcile` | `docs/poc/pg16_shell_tree_reconcile.py` | 2935 / `bb1f1984f5a144564a56e23fb5c4797dc0851651b608012ce229cc14d12a801b` |
+| `runner` | `docs/poc/pg16_shell_native_control.py` | 30055 / `b4198fe1606120e1e2df4fe9bff6a52fce4601a67074fdd7e922ef528341a496` |
+| `adapter` | `docs/poc/pg16_shell_native_control_win32.py` | 15373 / `eaebedd6ac36602ba30cb51a4c30a2a93737f1127c23cdc4ebb8ae8cf9246407` |
+| `backend` | `docs/poc/pg16_shell_admission_win32.py` | 31948 / `10c9058f0d6071e86c7b4c8b2566c1ae4c9f78aeba9d92c50687ae6481f22726` |
+| `host` | `docs/poc/pg16_shell_admission_host.py` | 33234 / `dfcc4ed6be3ea8ab47b7a38ca8a9d4bfa00b3c75cda41c365be3dd5b1aa3dac7` |
+| `core_verify` | `docs/poc/pg16_shell_native_control_verify.py` | 24616 / `b3755d492ce147596a27dd9a36bc0ecf66686efd65ef60178915ab2d1d1f7a10` |
+
+- `launcher`: `{sha256}` apenas, valor de referência
+  `bfff517165ad6d1f3bf02d1782eaf7588fb7c20cd78d1c81788c4444e7bc5d82`
+  (constante `PYTHON_SHA` do host / `PINS` do core).
+  - O tamanho do binário é desconhecido neste lote e fica **omitido do
+    schema**, sem inventar valor e sem ler o binário.
+  - Um produtor futuro que capture o tamanho exige revisão de schema (V2).
+
+Os tamanhos da tabela vêm de notas aceitas do ROOT. O manifest não os aceita
+como medição: o loader futuro os mede dos bytes que ele mesmo executa.
+
+## B3. Dependências acíclicas e pins de posse do revisor
+
+```
+core_verify (congelado) ──pinado por constante──> verificador V2 futuro
+helper, lifecycle, runner, adapter, backend, host ──lidos/hasheados/executados──> loader futuro
+case_caller ──lido/hasheado/executado──> loader futuro
+loader futuro ──escreve hashes dos MESMOS bytes executados──> v2-manifest.json
+v2-case.json, summary, transport ──sha──> v2-manifest.json
+ExpectedV2 (entrada do revisor) ──comparado com──> manifest.sources
+```
+
+- O caller **não** calcula nem declara o próprio hash, e não referencia o
+  manifest.
+- `ExpectedV2` é uma entrada do revisor: os 8 papéis com
+  `(path, bytes, sha256)` mais o launcher. Não fica embutido em nenhuma
+  fonte do caller.
+- Identificadores ainda inexistentes, só placeholders:
+  - `<CASE_V2_SHA256: NOT_YET_IMPLEMENTED>`;
+  - `<V2_VERIFY_SHA256: NOT_YET_IMPLEMENTED>`;
+  - `<LOADER_V2_SHA256: NOT_YET_IMPLEMENTED>`.
+  Nunca valem como medição.
+
+## B4. Verificador V2 futuro (desenho)
+
+`verify_v2(expected_v2, expected_core, manifest_raw, summary_raw,
+transport_raw, private, metadata)` devolve um par fechado:
+
+| Resultado | Quando |
+|---|---|
+| `("V2_VERIFIED_APPROVED", "OK")` | core `VERIFIED_APPROVED` + envelope válido |
+| `("V2_VERIFIED_REJECTED", "OK")` | core `VERIFIED_REJECTED` + envelope válido; **nunca** convertido em inválido nem em aprovação de produção |
+| `("V2_INVALID", motivo)` | motivo em `EXPECTED`, `INPUT`, `CAP`, `SCHEMA`, `NONCE`, `PIN`, `BINDING`, `PREFIX`, `METADATA`, `CORE_INVALID`, `INTERNAL` |
+
+Ordem:
+1. limites;
+2. parse estrito do manifest;
+3. pins comparados com `ExpectedV2`;
+4. ligação de summary, transport e metadados por sha e tamanho;
+5. `executed` igual ao prefixo;
+6. cada `v2-case.json`: coerência com o record do summary (tree latched ⇒
+   REJECTED);
+7. o core verify congelado, executado a partir dos bytes pinados como o
+   collector faz, sobre `summary`, `transport` e `private` **sem** os
+   arquivos V2.
+
+Controles propagam.
+
+**Alcance:**
+- Prova que as declarações batem com bytes esperados e que a semântica do
+  lote é coerente.
+- **Não** prova que esse código executou. Isso depende de um loader futuro
+  confiável que hashe e execute **os mesmos bytes capturados**. Um
+  autorrelato sem autenticação nunca é rebatizado de "execução real".
+- Sem assinatura e sem identidade viva/CIM. A precondição do produtor e
+  collector confiáveis continua explícita.
+
+## B5. Publicação, collector e entry futuros
+
+- **Nada de `_publish` legado seguido de um manifest escrito depois do rename
+  final.** O publicador futuro monta **todos** os bytes (summary, transport,
+  privados, `v2-case.json` e manifest) antes de **um** commit terminal.
+  Nenhum publicador existe agora.
+- O collector antigo tem inventário fixo (`CASE_FILES`/`CASE_PREFIXES`) e não
+  consome os arquivos V2. Será preciso um collector V2 novo, com revisão
+  própria. Não há seam existente para isso.
+- A entry consumida não é reutilizada. Uma entry ou coordenador V2 é futura e
+  separada.
+- State16 e source10 não mudam.
+- Evidência v1 (incluindo 3f12dc584c29) nunca é embrulhada como V2: sem
+  manifest com nonce novo produzido pelo loader V2, o resultado é
+  `V2_INVALID`.
+
+## B6. Testes futuros de B (só desenho)
+
+- **Positivos:** um caminho `V2_VERIFIED_APPROVED` e um caminho
+  `V2_VERIFIED_REJECTED` (TREE).
+- **Negativos:**
+  - manifest acima de 4096 bytes e metadado acima de 1024;
+  - chave extra ou faltando;
+  - papel fora de ordem;
+  - pin trocado em cada papel (8);
+  - launcher trocado;
+  - sha do transport ou do summary trocado;
+  - `executed` divergente;
+  - metadado ausente, extra ou com tree incoerente;
+  - arquivo V2 colocado dentro de `private` (core FILESET → `CORE_INVALID`);
+  - nonce divergente;
+  - `ExpectedV2` malformado;
+  - controle propagado.
+- Todos com bytes sintéticos e o core verify real.
+
+---
+
+# Bloqueios e lacunas antes de implementar A
+
+1. **Coordenador e produtor futuros.** Construção do owner, registro na
+   `_LIVE` original, invocation, diretório, ordem de captura de `KEEP` e
+   estacionamento são obrigações deles. A só retém e reporta.
+2. **Fase A do contexto.** Com as guardas de A, ela é inalcançável a partir
+   de `legacy`; os testes 44–47 a exercitam trocando internos do lifecycle,
+   dentro do limite confiável já aceito.
+3. **Record incoerente sem deriva:** não alcançável (§A8).
+4. **Latch sob `MemoryError`:** sem defesa, mesmo limite da entry.
+5. **Proveniência de execução real (B):** depende de loader, publicador e
+   collector V2 inexistentes. Nada aqui atesta execução.
+
+Nenhum bloqueio impede escrever os testes de A. A suposição de que reutilizar
+via `runpy` as funções do teste `40279844…` funciona sem fixture precisa ser
+confirmada no RED.
+
+Código gerado por IA: exige revisão humana e de segurança antes do merge.

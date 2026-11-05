@@ -1,0 +1,15 @@
+from pathlib import Path
+import runpy,json,pytest,hashlib
+path=Path('tests/test_pg16_shell_native_control_lifecycle_v2.py')
+assert hashlib.sha256(path.read_bytes()).hexdigest()=='4027984417a9dc811fb26859fd87acedb36b108a6b45d0090de681c0a8d065f8'
+suite=runpy.run_path(str(path));accepted=runpy.run_path('docs/poc/pg16_shell_native_control_lifecycle_v2.py');live=accepted['lifecycle'].__globals__
+with pytest.MonkeyPatch.context() as patch:
+    lab=suite['lab'].__wrapped__(patch)
+    artifacts={};records=[]
+    for number,name in enumerate(suite['CASES'],1):
+        item=suite['run_case'](lab,(number,name),artifacts,suite['v2_driver'](lab,live))
+        assert item.owner.state=='CLOSED' and item.owner.ledger=={} and item.kernel.double_closed==[]
+        records.append(item.record)
+    label=suite['verified'](lab,records,artifacts)
+    assert label==('VERIFIED_APPROVED','OK') and lab.registry==[]
+    print(json.dumps({'stage':'EXISTING_HARNESS_REUSE_ONLY','fake_cases':len(records),'verifier':label,'owners_released':True,'memory_artifacts':len(artifacts),'native_effects':False,'new_case_caller_measured':False}))

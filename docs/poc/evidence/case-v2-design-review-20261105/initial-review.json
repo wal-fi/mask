@@ -1,0 +1,18 @@
+{
+  "design_bytes": 29082,
+  "design_sha256": "bb3ff46859282a38a14db665af09cd29eab4f7e1820ef77ad7921f5385e34c00",
+  "findings": [
+    "Prepare unpacks unvalidated sources before protected handling and lacks a rooted raw-sources field.",
+    "Terminal outcome and reentry-return semantics were ambiguous; exact-False reservation required.",
+    "Read/audit limits used relaxed ranges instead of accepted exact values; float validity needed precision.",
+    "Context binding validation was after lifecycle instead of before delegation.",
+    "Manifest exact key list omitted launcher; metadata latch coherence not explicit.",
+    "Envelope input snapshots, caps and nonce bindings needed exact contract.",
+    "Phase-A errors were described as unreachable; fake seam injection does not measure OOM.",
+    "Numeric/canonical parser rules and selected-source versus execution-closure scope needed precision."
+  ],
+  "native_effects": false,
+  "no_code_or_tests_changed": true,
+  "no_new_test_measurement": true,
+  "stage": "INITIAL_DESIGN_REVIEW_CHANGES_REQUIRED"
+}
