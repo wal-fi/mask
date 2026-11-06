@@ -6,11 +6,12 @@ com Read, sessão `51ea0d85-05bb-4d24-ba9a-c9627c3f832f`, modelo
 `claude-opus-5-5`, esforço `medium`. CLI63376/6054/25247/41850 terminaram0,
 com terminais recuperados antes da chamada seguinte e sem segundo escritor.
 
-**Estado:** desenho prospectivo fechado para orientar os testes RED do próximo
-incremento. `docs/poc/pg16_shell_native_control_bundle_v2.py` e seu teste ainda
-não existem. Este lote não cria loader, entry, coordenador, collector,
-publicador ou consumidor operacional. As obrigações desses componentes são
-premissas explícitas e trabalho posterior.
+**Estado:** desenho aplicado ao componente privado e teste, revistos com fakes
+em [BUNDLE-V2-VALIDATION](PHASE-9-W1-PG16-BUNDLE-V2-VALIDATION.md).
+O desenho original foi fechado antes dos testes; as afirmações abaixo sobre
+testes futuros descrevem essa ordem histórica. Este lote não cria loader,
+entry, coordenador, collector, publicador ou consumidor operacional. As
+obrigações desses componentes são premissas explícitas e trabalho posterior.
 
 ## Base conferida e mudanças da revisão
 
@@ -136,6 +137,16 @@ nome/objeto bytes; estado/desfecho/reserva/latches; identidades originais de
 cada slot e ctx; meta; flags de metadado do case; snapshot completo do record;
 owner CLOSED; ledger original vazio. O alcance do case é essas flags/meta e
 as referências de case guardadas por A, não imutabilidade profunda do case.
+
+Precisão registrada na revisão de implementação, sob delegação: tamanho de
+namespace significa o tamanho original capturado, não apenas permanecer
+abaixo do teto. Os 34 entries precisam continuar apontando aos mesmos valores
+nos cinco mapas conhecidos, e os dez campos diretos de `_Refs` conservam
+suas identidades. Metadados escalares do case e sua referência de diretório
+são capturados antes dos callbacks; a guarda não chama `_meta` novamente.
+Não se exige congelar valores de chaves não vinculadas do namespace quando
+seu tamanho e a forma permanecem iguais. Classes/descritores e a premissa de
+origem continuam os mesmos; isso não autentica alterações anteriores coerentes.
 
 Facts: todos os dez campos, não apenas held e tamanho do buffer. Reason é
 None ou enum FACT_REASONS; held é None; terminated/overflow/signaled/eof são

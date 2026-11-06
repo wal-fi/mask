@@ -1,0 +1,83 @@
+{
+  "source": {
+    "path": "docs/poc/pg16_shell_native_control_bundle_v2.py",
+    "sha256": "91c20df4670cda5450aa02795627b719bf30309ae8cb2447d426e86b298f4687",
+    "bytes": 28551,
+    "lines": 831
+  },
+  "test": {
+    "path": "tests/test_pg16_shell_native_control_bundle_v2.py",
+    "sha256": "dd329afec13e3a66302136ad0421df91f20353bcd2a54e5483abe6330cc6ccda",
+    "bytes": 51189,
+    "lines": 1477
+  },
+  "own": {
+    "chunk_id": "d3e7fc",
+    "wall_time_seconds": 2.5724425,
+    "exit_code": 0,
+    "original_token_count": 44,
+    "output": "{\"exception_types\": {}, \"exit\": 0, \"failed\": [], \"failed_count\": 0, \"seconds\": 16.075, \"stats\": {\"collected\": 186, \"passed\": 186, \"unique_nodeids\": 186, \"xfail_marked\": 0}}\r\n"
+  },
+  "related": {
+    "chunk_id": "c1f1bc",
+    "wall_time_seconds": 0.0000213,
+    "exit_code": 0,
+    "original_token_count": 45,
+    "output": "{\"exception_types\": {}, \"exit\": 0, \"failed\": [], \"failed_count\": 0, \"seconds\": 43.671, \"stats\": {\"collected\": 1352, \"passed\": 1352, \"unique_nodeids\": 1352, \"xfail_marked\": 0}}\r\n"
+  },
+  "related_paths": [
+    "tests/test_pg16_shell_native_control_bundle_v2.py",
+    "tests/test_pg16_shell_native_control_provenance_v2.py",
+    "tests/test_pg16_shell_native_control_verify.py",
+    "tests/test_pg16_shell_native_control_case_v2.py",
+    "tests/test_pg16_shell_native_control_lifecycle_v2.py",
+    "tests/test_pg16_shell_tree_reconcile.py",
+    "tests/test_pg16_shell_admission_win32.py",
+    "tests/test_pg16_shell_admission_host.py",
+    "tests/test_pg16_shell_native_control_win32.py",
+    "tests/test_pg16_shell_native_control.py",
+    "tests/test_pg16_shell_native_control_entry.py",
+    "tests/test_pg16_shell_native_control_held_projection.py"
+  ],
+  "statics": {
+    "status": "fulfilled",
+    "value": {
+      "chunk_id": "962890",
+      "wall_time_seconds": 3.5239349,
+      "exit_code": 0,
+      "original_token_count": 38,
+      "output": "All checks passed!\nAll checks passed!\n2 files already formatted\nSuccess: no issues found in 1 source file\r\nSuccess: no issues found in 1 source file\r\n"
+    }
+  },
+  "integrity": {
+    "status": "fulfilled",
+    "value": {
+      "chunk_id": "001f2b",
+      "wall_time_seconds": 0.8499098,
+      "exit_code": 0,
+      "original_token_count": 84,
+      "output": "{\"added_definitions\": [\"_lengths\"], \"changed_definitions\": [\"_Row\", \"_State\", \"_group\", \"_row_stable\", \"_shape\", \"_stable\"], \"frozen_test_equal\": true, \"mismatch\": [], \"module\": {\"bytes\": 28551, \"lines\": 831, \"sha256\": \"91c20df4670cda5450aa02795627b719bf30309ae8cb2447d426e86b298f4687\"}, \"runtime\": \"3.11.3\", \"source18_checked\": 18}\r\n"
+    }
+  },
+  "independent_probes": {
+    "status": "fulfilled",
+    "value": {
+      "chunk_id": "72ae44",
+      "wall_time_seconds": 3.0832805,
+      "exit_code": 0,
+      "original_token_count": 132,
+      "output": "[{\"mutation\": \"namespace_count\", \"reason\": \"DRIFT\", \"result\": \"BUNDLE_REFUSED\"}, {\"mutation\": \"case_name\", \"reason\": \"DRIFT\", \"result\": \"BUNDLE_REFUSED\"}, {\"mutation\": \"case_clock\", \"reason\": \"DRIFT\", \"result\": \"BUNDLE_REFUSED\"}, {\"mutation\": \"legacy_function\", \"reason\": \"DRIFT\", \"result\": \"BUNDLE_REFUSED\"}, {\"mutation\": \"refs_state\", \"reason\": \"DRIFT\", \"result\": \"BUNDLE_REFUSED\"}]\r\n[{\"meta_start\": \"nan\", \"reason\": \"SHAPE\", \"result\": \"BUNDLE_REFUSED\"}, {\"meta_start\": \"inf\", \"reason\": \"SHAPE\", \"result\": \"BUNDLE_REFUSED\"}]\r\n"
+    }
+  },
+  "terminal_recovered": [
+    24991,
+    76876,
+    58764,
+    87249,
+    23150,
+    40014,
+    20622
+  ],
+  "runtime": "Windows CPython 3.11.3; 3.14 static target only",
+  "scope": "Private fake-only component; not operational evidence; all product gates remain open."
+}

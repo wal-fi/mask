@@ -1,0 +1,20 @@
+{
+  "qa": {
+    "chunk_id": "d891bd",
+    "wall_time_seconds": 1.2230679,
+    "exit_code": 1,
+    "original_token_count": 377,
+    "output": "{\"exception_types\": {\"FileNotFoundError\": 143}, \"exit\": 1, \"failed\": [\"tests/test_pg16_shell_native_control_bundle_v2.py::test_positive_profiles_match_oracle_and_real_b[approved]\", \"tests/test_pg16_shell_native_control_bundle_v2.py::test_positive_profiles_match_oracle_and_real_b[normal_tree]\", \"tests/test_pg16_shell_native_control_bundle_v2.py::test_positive_profiles_match_oracle_and_real_b[terminate_rejected]\", \"tests/test_pg16_shell_native_control_bundle_v2.py::test_positive_profiles_match_oracle_and_real_b[last_close_tree]\", \"tests/test_pg16_shell_native_control_bundle_v2.py::test_positive_profiles_match_oracle_and_real_b[rejected_without_latch]\", \"tests/test_pg16_shell_native_control_bundle_v2.py::test_positive_reentry_refusal_keeps_primary_ready\", \"tests/test_pg16_shell_native_control_bundle_v2.py::test_positive_repeated_build_is_deterministic_and_isolated\", \"tests/test_pg16_shell_native_control_bundle_v2.py::test_positive_wrong_measured_pin_is_left_to_b\", \"tests/test_pg16_shell_native_control_bundle_v2.py::test_group_refusals[group-list]\", \"tests/test_pg16_shell_native_control_bundle_v2.py::test_group_refusals[group-seven-items]\", \"tests/test_pg16_shell_native_control_bundle_v2.py::test_group_refusals[caller-runpy-style-copy]\", \"tests/test_pg16_shell_native_control_bundle_v2.py::test_group_refusals[caller-foreign-namespace]\"], \"failed_count\": 143, \"seconds\": 16.003, \"stats\": {\"collected\": 151, \"errors\": 140, \"failed\": 3, \"passed\": 8, \"unique_nodeids\": 151, \"xfail_marked\": 0}}\r\n"
+  },
+  "statics": {
+    "status": "fulfilled",
+    "value": {
+      "chunk_id": "f72069",
+      "wall_time_seconds": 4.3535616,
+      "exit_code": 0,
+      "original_token_count": 147,
+      "output": "All checks passed!\nunformatted: File would be reformatted\n  --> tests\\test_pg16_shell_native_control_bundle_v2.py:47:39\n   |\n46 | VERIFIER = REPO / \"docs/poc/pg16_shell_native_control_verify.py\"\n   - CASE: dict[str, Any] = runpy.run_path(\n   -     str(REPO / \"tests/test_pg16_shell_native_control_case_v2.py\")\n   - )\n47 + CASE: dict[str, Any] = runpy.run_path(str(REPO / \"tests/test_pg16_shell_native_control_case_v2.py\"))\n48 | PROV: dict[str, Any] = runpy.run_path(\n   |\n\n1 file would be reformatted\nSuccess: no issues found in 1 source file\r\nSuccess: no issues found in 1 source file\r\n"
+    }
+  },
+  "test_sha": "ae87ab3c921ee8226c3f25ae88e2ca583121df96cdb2caabd91c1d8f6ec61774"
+}

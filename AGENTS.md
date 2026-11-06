@@ -40,6 +40,72 @@ de produção nem dispensa revisão, isolamento, masking, read-only ou sigilo.
 
 ## Escopo atual
 
+## Ponte A→B: componente privado revisto e validado — 2026-11-06
+
+Claude2 único programador/sessão51ea0d85/claude-opus-5-5/medium. CLI20622
+terminou0, terminal recuperado e zero escritor confirmado. Root leu fonte
+inicial e delta final:91c20df4/28551bytes/831linhas; teste dd329afe/51189bytes/
+1477linhas congelado.186 próprios16,075s e1352 relacionados43,671s passaram,
+sem falhas/erros/skips/xfail. Ruff/format2/mypy1teste3.11/3.14 limpos; PoC
+fora do mypy, runtimeWindows3.11.3.18 upstream por hash/tamanho intactos.
+
+Guardas de contagens originais,34 vínculos/10 campos de refs e metadados de
+todos os slots corrigidas após RED186/153pass/33falhas. Domínios de meta
+finito/read4096/audit512 antecipados. Sondas finais recusam DRIFT/SHAPE.
+Baseline146/151, green151 rejeitado e RED182/186 preservados como dados em
+bundle-v2-review-20261106; detalhes em BUNDLE-V2-VALIDATION. Só candidato a B
+completa; sem prova de origem/frescor/SO/quietude ou consumidor operacional.
+
+Próximo lote SOMENTE leitura/desenho de produtor/coordenador, mesmas origens
+antes dos efeitos e mesmos bytes na validação completa, com proposta antes de
+código/efeitos. Conferir Git/zero escritor, mesma sessão/modelo/medium; ativo
+só monitorar, recuperar terminal antes de outra chamada. Source20/estado16/
+attempt consumido fixos; sem Native/Docker/PG/SQL/privado/runtime/config/
+binário/root/nonce/entrada/loader/collector/publicador/comando/deploy ou novo
+job/quota. Gateway indisponível e gates de produto continuam abertos.
+Registros abaixo históricos.
+
+## Ponte A→B: RED186 congelado, correção privada em andamento — 2026-11-06
+
+CLI23150/40014 recuperadas0. Root reviu acréscimos e AST151/182 intacta.
+Teste dd329afe/51189bytes/1477linhas congelado:186 coletados,153pass/33falhas
+em16,791s, Ruff/format/mypy3.11/3.14 limpos. Fonte6129 fixa durante RED.
+CLI20622 corrige só bundle_v2.py, mesma sessão51ea0d85/claude-opus-5-5/medium,
+após zero escritor. Recuperar terminal antes de nova chamada/gates; ativo
+só monitorar. Testes/Source18/estado16 fixos; root revê e mede antes de
+publicar, nenhum efeito Native/operacional ou gate de produto fechado.
+Registros abaixo históricos.
+
+## Ponte A→B: regressões após finding de deriva — 2026-11-06
+
+CLI87249 recuperada0 e zero escritor confirmado. Root leu6129bb32/26821bytes/
+788linhas;151pass18,507s/Ruff/format limpos. Teste84edd937 intacto. Sondas
+independentes reproduziram READY indevido para cinco mutações tardias de
+namespace/case/referências; fonte rejeitada e dados preservados. CLI23150
+escreve apenas regressões aditivas, mesma sessão51ea0d85/opus5.5/medium.
+Fonte6129 fixa até root rever AST151/oráculos e medir RED; recuperar terminal
+antes de nova chamada, ativo só monitorar. Sem efeitos Native/operacionais;
+Source18/estado16/gates abertos intactos. Registros abaixo históricos.
+
+## Ponte A→B: RED151 congelado, módulo privado em andamento — 2026-11-06
+
+CLI24991/76876/58764 terminaram0, recuperadas antes da próxima chamada;
+zero escritor confirmado. Root reviu teste/deltas. Teste84edd937/43807bytes/
+1267linhas congelado:151 coletados,8 sanidades passam,140 erros+3 falhas
+de ausência,143 FileNotFoundError em15,933s. Ruff/format/mypy3.11/3.14
+limpos, runtime sóWindows3.11.3; ausência não prova comportamento. Dados
+em evidence/bundle-v2-review-20261106 preservam baselines/RED reais.
+
+CLI87249 implementa só docs/poc/pg16_shell_native_control_bundle_v2.py,
+mesmo único Claude2/sessão51ea0d85/claude-opus-5-5/medium; teste congelado,
+Source18/estado16/fontes aceitas/attempt consumido fixos. Revisor/futuras
+retomadas recuperam terminal antes de revisão/gates/outra chamada; ativo
+implica somente monitorar. Worker atual termina apenas esse módulo privado
+autorizado sob delegação. Root lê fonte e mede antes de publicar. Nenhum
+consumidor operacional/Native/Docker/PG/SQL/runtime/config/binário/privado/
+root/nonce/entrada/loader/collector/publicador/comando/deploy ou job/quota.
+Gateway indisponível, gates de produto abertos. Registros abaixo históricos.
+
 ## Ponte A→B: desenho revisto, builder ainda ausente — 2026-11-06
 
 Somente Read, mesmo Claude2/sessão51ea0d85/claude-opus-5-5/medium;

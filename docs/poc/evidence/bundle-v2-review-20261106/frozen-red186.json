@@ -1,0 +1,36 @@
+{
+  "terminalRecovered": [
+    23150,
+    40014
+  ],
+  "red": {
+    "chunk_id": "7eafec",
+    "wall_time_seconds": 0.0000229,
+    "exit_code": 1,
+    "original_token_count": 454,
+    "output": "{\"exception_types\": {\"AssertionError\": 33}, \"exit\": 1, \"failed\": [\"tests/test_pg16_shell_native_control_bundle_v2.py::test_late_helper_mutating_earlier_bound_state_is_drift[late-caller-key-added]\", \"tests/test_pg16_shell_native_control_bundle_v2.py::test_late_helper_mutating_earlier_bound_state_is_drift[late-legacy-key-added]\", \"tests/test_pg16_shell_native_control_bundle_v2.py::test_late_helper_mutating_earlier_bound_state_is_drift[late-lifecycle-key-added]\", \"tests/test_pg16_shell_native_control_bundle_v2.py::test_late_helper_mutating_earlier_bound_state_is_drift[late-host-key-added]\", \"tests/test_pg16_shell_native_control_bundle_v2.py::test_late_helper_mutating_earlier_bound_state_is_drift[late-caller-unbound-key-dropped]\", \"tests/test_pg16_shell_native_control_bundle_v2.py::test_late_helper_mutating_earlier_bound_state_is_drift[late-legacy-unbound-key-dropped]\", \"tests/test_pg16_shell_native_control_bundle_v2.py::test_late_helper_mutating_earlier_bound_state_is_drift[late-lifecycle-unbound-key-dropped]\", \"tests/test_pg16_shell_native_control_bundle_v2.py::test_late_helper_mutating_earlier_bound_state_is_drift[late-host-unbound-key-dropped]\", \"tests/test_pg16_shell_native_control_bundle_v2.py::test_late_helper_mutating_earlier_bound_state_is_drift[late-refs-now]\", \"tests/test_pg16_shell_native_control_bundle_v2.py::test_late_helper_mutating_earlier_bound_state_is_drift[late-refs-run-error]\", \"tests/test_pg16_shell_native_control_bundle_v2.py::test_late_helper_mutating_earlier_bound_state_is_drift[late-refs-refused]\", \"tests/test_pg16_shell_native_control_bundle_v2.py::test_late_helper_mutating_earlier_bound_state_is_drift[late-refs-context]\"], \"failed_count\": 33, \"seconds\": 16.791, \"stats\": {\"collected\": 186, \"failed\": 33, \"passed\": 153, \"unique_nodeids\": 186, \"xfail_marked\": 0}}\r\n"
+  },
+  "ast": {
+    "status": "fulfilled",
+    "value": {
+      "chunk_id": "54e1c6",
+      "wall_time_seconds": 0.9516584,
+      "exit_code": 0,
+      "original_token_count": 489,
+      "output": "1438: \r\n1439: \r\n1440: # -- regressions: mandatory meta/case scalar domains of the A profile --\r\n1441: #\r\n1442: # meta and the case scalar change COHERENTLY before the call (the same float\r\n1443: # object for NaN/Inf), so A's own `_intact` still accepts the slot; the builder\r\n1444: # must refuse the out-of-profile domain itself, before any helper.\r\n1445: \r\n1446: \r\n1447: def meta_domain(index: int, key: str, value: Any) -> Any:\r\n1448:     def mutate(b: Any) -> None:\r\n1449:         slot = b.slots[0]\r\n1450:         meta = list(slot.meta)\r\n1451:         meta[index] = value\r\n1452:         slot.meta = tuple(meta)\r\n1453:         slot.case[key] = value\r\n1454: \r\n1455:     return mutate\r\n1456: \r\n1457: \r\n1458: META_DOMAINS: list[Any] = [\r\n1459:     pytest.param(meta_domain(6, \"start\", math.nan), id=\"meta-start-nan\"),\r\n1460:     pytest.param(meta_domain(6, \"start\", math.inf), id=\"meta-start-inf\"),\r\n1461:     pytest.param(meta_domain(4, \"read_limit\", 4095), id=\"meta-read-limit-4095\"),\r\n1462:     pytest.param(meta_domain(5, \"audit_limit\", 511), id=\"meta-audit-limit-511\"),\r\n1463: ]\r\n1464: \r\n1465: \r\n1466: @pytest.mark.parametrize(\"mutate\", META_DOMAINS)\r\n1467: def test_meta_profile_domains_are_shape_before_helpers(\r\n1468:     lab: SimpleNamespace, cv2: Namespace, builder: Namespace, mutate: Any\r\n1469: ) -> None:\r\n1470:     b = batch(lab, cv2, PLANS[\"approved\"])\r\n1471:     mutate(b)\r\n1472:     assert cv2[\"_intact\"](b.slots[0]) is True  # coherent: A's own guard still accepts it\r\n1473:     calls = [spy(b, name, through) for name in HELPERS]\r\n1474:     latched = [(slot.failure, slot.control) for slot in b.slots]\r\n1475:     refused(call(builder, b), \"SHAPE\")\r\n1476:     assert calls == [[], [], []]\r\n1477:     assert [(slot.failure, slot.control) for slot in b.slots] == latched\r\n{\"old182_ast_prefix_unchanged\": true, \"new_statements\": 3, \"sha256\": \"dd329afec13e3a66302136ad0421df91f20353bcd2a54e5483abe6330cc6ccda\", \"bytes\": 51189, \"lines\": 1477}\r\n"
+    }
+  },
+  "statics": {
+    "status": "fulfilled",
+    "value": {
+      "chunk_id": "ae3d3d",
+      "wall_time_seconds": 3.0841448,
+      "exit_code": 0,
+      "original_token_count": 33,
+      "output": "All checks passed!\n1 file already formatted\nSuccess: no issues found in 1 source file\r\nSuccess: no issues found in 1 source file\r\n"
+    }
+  },
+  "sourceFixed": "6129bb3257fa7c0f5d71646349da187b9a8838d7765d1b6f1f0d129defbcf182",
+  "runtime": "Windows CPython 3.11.3",
+  "notOperational": true
+}

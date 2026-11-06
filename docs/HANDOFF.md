@@ -1,5 +1,30 @@
 # Handoff
 
+## Ponte A→B: componente privado revisto e validado — 2026-11-06
+
+Claude2 único programador/sessão51ea0d85/claude-opus-5-5/medium. CLI20622
+terminou0, terminal recuperado e zero escritor confirmado. Root leu fonte
+inicial e delta final:91c20df4/28551bytes/831linhas; teste dd329afe/51189bytes/
+1477linhas congelado.186 próprios16,075s e1352 relacionados43,671s passaram,
+sem falhas/erros/skips/xfail. Ruff/format2/mypy1teste3.11/3.14 limpos; PoC
+fora do mypy, runtimeWindows3.11.3.18 upstream por hash/tamanho intactos.
+
+Guardas de contagens originais,34 vínculos/10 campos de refs e metadados de
+todos os slots corrigidas após RED186/153pass/33falhas. Domínios de meta
+finito/read4096/audit512 antecipados. Sondas finais recusam DRIFT/SHAPE.
+Baseline146/151, green151 rejeitado e RED182/186 preservados como dados em
+bundle-v2-review-20261106; detalhes em BUNDLE-V2-VALIDATION. Só candidato a B
+completa; sem prova de origem/frescor/SO/quietude ou consumidor operacional.
+
+Próximo lote SOMENTE leitura/desenho de produtor/coordenador, mesmas origens
+antes dos efeitos e mesmos bytes na validação completa, com proposta antes de
+código/efeitos. Conferir Git/zero escritor, mesma sessão/modelo/medium; ativo
+só monitorar, recuperar terminal antes de outra chamada. Source20/estado16/
+attempt consumido fixos; sem Native/Docker/PG/SQL/privado/runtime/config/
+binário/root/nonce/entrada/loader/collector/publicador/comando/deploy ou novo
+job/quota. Gateway indisponível e gates de produto continuam abertos.
+Registros abaixo históricos.
+
 ## Chamador privado da coleta revisto com fakes — 2026-11-04
 
 Claude2 programou na sessão51ea0d85/claude-opus-5-5/medium; o assistente

@@ -1,3 +1,121 @@
+## Ponte A→B: componente privado revisto e validado — 2026-11-06
+
+Claude2 único programador/sessão51ea0d85/claude-opus-5-5/medium. CLI20622
+terminou0, terminal recuperado e zero escritor confirmado. Root leu fonte
+inicial e delta final:91c20df4/28551bytes/831linhas; teste dd329afe/51189bytes/
+1477linhas congelado.186 próprios16,075s e1352 relacionados43,671s passaram,
+sem falhas/erros/skips/xfail. Ruff/format2/mypy1teste3.11/3.14 limpos; PoC
+fora do mypy, runtimeWindows3.11.3.18 upstream por hash/tamanho intactos.
+
+Guardas de contagens originais,34 vínculos/10 campos de refs e metadados de
+todos os slots corrigidas após RED186/153pass/33falhas. Domínios de meta
+finito/read4096/audit512 antecipados. Sondas finais recusam DRIFT/SHAPE.
+Baseline146/151, green151 rejeitado e RED182/186 preservados como dados em
+bundle-v2-review-20261106; detalhes em BUNDLE-V2-VALIDATION. Só candidato a B
+completa; sem prova de origem/frescor/SO/quietude ou consumidor operacional.
+
+Próximo lote SOMENTE leitura/desenho de produtor/coordenador, mesmas origens
+antes dos efeitos e mesmos bytes na validação completa, com proposta antes de
+código/efeitos. Conferir Git/zero escritor, mesma sessão/modelo/medium; ativo
+só monitorar, recuperar terminal antes de outra chamada. Source20/estado16/
+attempt consumido fixos; sem Native/Docker/PG/SQL/privado/runtime/config/
+binário/root/nonce/entrada/loader/collector/publicador/comando/deploy ou novo
+job/quota. Gateway indisponível e gates de produto continuam abertos.
+Registros abaixo históricos.
+
+## Ponte A→B: RED186 congelado, correção da fonte em andamento — 2026-11-06
+
+CLI23150/40014 recuperadas0, zero escritor antes de CLI20622. Root leu todo
+o acréscimo, AST151/182 prefixada intacta. Teste dd329afe/51189bytes/1477linhas
+congelado:186 coletados,153pass/33falhas em16,791s, zero erros/skips/xfail.
+Ruff/format/mypy3.11/3.14 limpos. Fonte6129 rejeitada permaneceu intacta
+durante RED. Baselines e regressões preservados como dados.
+
+CLI20622 corrige SOMENTE bundle_v2.py, mesmo único Claude2/sessão51ea0d85/
+opus5.5/medium. Guarda global deve conferir contagens originais de namespace,
+entries/10 referências diretas/metadados de todos os slots, sem callbacks
+extras; meta finito/read4096/audit512 no preflight. Teste dd329afe e Source18/
+estado16 fixos. Recuperar terminal20622 antes de outra chamada/gates; ativo
+só monitorar. Root lê delta e mede antes de aprovar/publicar. Nenhum efeito
+Native/operacional ou gate de produto fechado; histórico abaixo.
+
+## Ponte A→B: RED182 medido, quatro regressões de domínio em andamento — 2026-11-06
+
+CLI23150 recuperada0. Root leu acréscimo e provou AST151 intacta. Teste
+7aaaa9bf/49682bytes/1437linhas:182 coletados,153pass/29falhas em26,673s;
+dois controles de refs já passam. Ruff/format/mypy3.11/3.14 limpos. Source6129
+fixa, não aprovada. Root reproduziu também NaN/Inf no start e read4095/audit511
+coerentes no meta/case aceitos como READY, contrariando o domínio do perfil.
+CLI40014 adiciona só quatro testes ao mesmo arquivo, mesma sessão/modelo/
+medium. Recuperar terminal40014 antes de outra chamada, ativo só monitorar.
+Root mede/congela RED186 antes de autorizar fix da fonte; Source18/estado16
+fixos, nenhum efeito Native/operacional ou gate fechado. Histórico abaixo.
+
+## Ponte A→B: green151 insuficiente, regressões de deriva em andamento — 2026-11-06
+
+CLI87249 terminou0, recuperada, zero escritor confirmado. Root leu fonte
+6129bb32/26821bytes/788linhas;151/151 passaram18,507s e Ruff/format limpos,
+teste84edd937 intacto. Cinco sondas tardias reproduziram BUNDLE_READY indevido:
+namespace aumentado, case.name/clock e referência legacy/refs.state trocados.
+Fonte/sondas/green inicial preservados como dados; componente não aprovado.
+CLI23150 adiciona só regressões ao teste na mesma sessão/modelo/medium;
+fonte6129 fixa até RED medido. Recuperar terminal23150 antes de outra chamada;
+se ativo, só monitorar. Root revê oráculos/AST151 e mede RED antes do fix.
+Sem efeitos Native/operacionais, source18/estado16 preservados; histórico abaixo.
+
+## Ponte A→B: RED151 congelado; módulo privado em andamento — 2026-11-06
+
+CLI24991/76876/58764 terminaram0, recuperadas antes da chamada seguinte.
+Root leu teste inicial inteiro e deltas; zero escritor confirmado. Teste
+84edd937/43807bytes/1267linhas congelado:151 coletados,8 sanidades passam,
+140 erros de setup e3 falhas, todos143 FileNotFoundError,15,933s. Ruff,
+format e mypy estrito3.11/3.14 aprovados. RED de ausência não é evidência
+comportamental. Baselines/relatórios em evidence/bundle-v2-review-20261106;
+arquivo pré-format reconstruído e provado pelo hash ae87ab3c, AST idêntica.
+
+CLI87249 implementa SOMENTE docs/poc/pg16_shell_native_control_bundle_v2.py,
+mesmo Claude2/sessão51ea0d85/claude-opus-5-5/medium. Teste congelado e
+Source18/estado16 intactos. Revisor/retomadas: recuperar terminal87249 antes
+de revisão/gates/outra chamada; ativo implica só monitorar. Worker atual
+termina apenas o módulo privado autorizado sob delegação. Nenhum consumidor
+ou efeito operacional/Native/Docker/PG/SQL/runtime/config/binário/privado/
+root/nonce/entrada/loader/collector/publicador/comando/deploy ou novo job/quota.
+Root lê fonte e mede gates antes de publicação; Gateway/gates abertos.
+
+## Ponte A→B: revisão dos testes, módulo ainda ausente — 2026-11-06
+
+CLI24991 terminou0 e terminal recuperado; zero escritor confirmado depois.
+Root leu o teste inteiro afd2b067/40757bytes/1158linhas. RED inicial146:
+7 sanidades independentes passaram,137 erros de setup e2 falhas, todos os
+139 por FileNotFoundError do módulo ausente,16,226s. Não é evidência
+comportamental do builder. Ruff6/format1/mypy3 reprovaram; histórico e
+bytes preservados em evidence/bundle-v2-review-20261106.
+
+CLI76876 corrige SOMENTE esse teste, mesma sessão/modelo/medium, depois de
+zero escritor. Corrigir tipos/estilo e seam da guarda final independente
+do estilo de import; acrescentar sanidades dos helpers/recusas de forma.
+Revisor e futuras retomadas: recuperar terminal76876 antes de outra chamada;
+ativo implica só monitorar. Worker atual termina apenas o teste autorizado.
+Módulo continua ausente; root revê o delta e congela RED antes do módulo.
+Source18/estado16 e proibições operacionais preservados; histórico abaixo.
+
+## Ponte A→B: testes em preparação, aguardar terminal — 2026-11-06
+
+Partida HEAD/origin14c7ce4, rastreados limpos e zero escritor confirmado.
+CLI24991 em andamento, mesma sessão51ea0d85/claude-opus-5-5/medium, escreve
+SOMENTE tests/test_pg16_shell_native_control_bundle_v2.py. Módulo deve
+continuar ausente. Este aviso dirige-se ao revisor e a futuras retomadas:
+o worker desta chamada já foi autorizado a terminar apenas esse arquivo.
+Recuperar terminal24991 antes de revisão/gates/outra chamada; se ativo,
+monitorar, nunca iniciar segundo escritor. Root revisa os testes, mede
+sanidades independentes e congela RED antes de implementação.
+
+Contrato BUNDLE-V2-DESIGN-REVIEW é a fonte da API/perfil. Source18/estado16/
+A/B/fontes aceitas e tentativa consumida fixos. Nenhuma nova medição ou
+testes verdes declarados; sem efeitos Native/operacionais/Docker/PG/SQL/
+runtime/config/binário/privado/root/nonce/entrada/loader/collector/publicador/
+comando/deploy ou novo job/quota. Histórico abaixo.
+
 ## Ponte A→B: desenho revisto em leitura, sem novo código — 2026-11-06
 
 Partida HEAD/origin d88823f, rastreados limpos e zero Claude2 ativo. Somente

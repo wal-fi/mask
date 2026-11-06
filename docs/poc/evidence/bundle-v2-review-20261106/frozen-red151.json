@@ -1,0 +1,131 @@
+{
+  "terminalRecovered": [
+    24991,
+    76876,
+    58764
+  ],
+  "frozenPins": {
+    "status": "fulfilled",
+    "value": {
+      "chunk_id": "b59b3b",
+      "wall_time_seconds": 0.7865974,
+      "exit_code": 0,
+      "original_token_count": 72,
+      "output": "{\"frozen_sha256\": \"84edd937c0e0fa63ecada074cd6abf27940b96ad0db4e0e74d9147c21394accf\", \"bytes\": 43807, \"lines\": 1267, \"before_format_sha256\": \"ae87ab3c921ee8226c3f25ae88e2ca583121df96cdb2caabd91c1d8f6ec61774\", \"ast_equal\": true, \"archive_reconstructed_previous_bytes_hash_proven\": true}\r\n"
+    }
+  },
+  "red": {
+    "chunk_id": "5a6b9d",
+    "wall_time_seconds": 0.0000191,
+    "exit_code": 1,
+    "original_token_count": 377,
+    "output": "{\"exception_types\": {\"FileNotFoundError\": 143}, \"exit\": 1, \"failed\": [\"tests/test_pg16_shell_native_control_bundle_v2.py::test_positive_profiles_match_oracle_and_real_b[approved]\", \"tests/test_pg16_shell_native_control_bundle_v2.py::test_positive_profiles_match_oracle_and_real_b[normal_tree]\", \"tests/test_pg16_shell_native_control_bundle_v2.py::test_positive_profiles_match_oracle_and_real_b[terminate_rejected]\", \"tests/test_pg16_shell_native_control_bundle_v2.py::test_positive_profiles_match_oracle_and_real_b[last_close_tree]\", \"tests/test_pg16_shell_native_control_bundle_v2.py::test_positive_profiles_match_oracle_and_real_b[rejected_without_latch]\", \"tests/test_pg16_shell_native_control_bundle_v2.py::test_positive_reentry_refusal_keeps_primary_ready\", \"tests/test_pg16_shell_native_control_bundle_v2.py::test_positive_repeated_build_is_deterministic_and_isolated\", \"tests/test_pg16_shell_native_control_bundle_v2.py::test_positive_wrong_measured_pin_is_left_to_b\", \"tests/test_pg16_shell_native_control_bundle_v2.py::test_group_refusals[group-list]\", \"tests/test_pg16_shell_native_control_bundle_v2.py::test_group_refusals[group-seven-items]\", \"tests/test_pg16_shell_native_control_bundle_v2.py::test_group_refusals[caller-runpy-style-copy]\", \"tests/test_pg16_shell_native_control_bundle_v2.py::test_group_refusals[caller-foreign-namespace]\"], \"failed_count\": 143, \"seconds\": 15.933, \"stats\": {\"collected\": 151, \"errors\": 140, \"failed\": 3, \"passed\": 8, \"unique_nodeids\": 151, \"xfail_marked\": 0}}\r\n"
+  },
+  "statics": {
+    "status": "fulfilled",
+    "value": {
+      "chunk_id": "f42f44",
+      "wall_time_seconds": 3.1467211,
+      "exit_code": 0,
+      "original_token_count": 33,
+      "output": "All checks passed!\n1 file already formatted\nSuccess: no issues found in 1 source file\r\nSuccess: no issues found in 1 source file\r\n"
+    }
+  },
+  "source18": [
+    [
+      "docs/poc/pg16_shell_native_control_entry.py",
+      "356d22914c21c7fefb195b9471b12591cd7120deb152524104ff3b4559fbf0c6",
+      15580
+    ],
+    [
+      "docs/poc/pg16_shell_native_control.py",
+      "b4198fe1606120e1e2df4fe9bff6a52fce4601a67074fdd7e922ef528341a496",
+      30055
+    ],
+    [
+      "docs/poc/pg16_shell_native_control_win32.py",
+      "eaebedd6ac36602ba30cb51a4c30a2a93737f1127c23cdc4ebb8ae8cf9246407",
+      15373
+    ],
+    [
+      "docs/poc/pg16_shell_admission_win32.py",
+      "10c9058f0d6071e86c7b4c8b2566c1ae4c9f78aeba9d92c50687ae6481f22726",
+      31948
+    ],
+    [
+      "docs/poc/pg16_shell_admission_host.py",
+      "dfcc4ed6be3ea8ab47b7a38ca8a9d4bfa00b3c75cda41c365be3dd5b1aa3dac7",
+      33234
+    ],
+    [
+      "docs/poc/pg16_shell_native_control_verify.py",
+      "b3755d492ce147596a27dd9a36bc0ecf66686efd65ef60178915ab2d1d1f7a10",
+      24616
+    ],
+    [
+      "docs/poc/pg16_shell_native_control_collect.py",
+      "1972ec74d96f93d824dfe18da0e0288a7fc21b7f2997e28d5afe497b782c9f52",
+      20571
+    ],
+    [
+      "docs/poc/pg16_shell_native_control_collect_win32.py",
+      "ccb3f74af75be04bbe685bc195c84d17e0457efe15732ed6cdbe9f9f057c3b3a",
+      22315
+    ],
+    [
+      "docs/poc/pg16_shell_native_control_collect_pinned.py",
+      "37b098cf604099a8aa9e64c4a3569ce06c6fe389188eba9a2b46478b04a8285e",
+      5373
+    ],
+    [
+      "docs/poc/pg16_shell_native_control_collect_entry.py",
+      "3d309771f5b33151aaf8773bdc86fbca57a1d1777ea2620848133ad1129c9e4b",
+      26337
+    ],
+    [
+      "docs/poc/pg16_shell_native_control_lifecycle_v2.py",
+      "7bbf734c8b4a1fefe1617fc8c1cff2a5de0b33f8996eb98b0016233ab0b040cb",
+      14964
+    ],
+    [
+      "tests/test_pg16_shell_native_control_lifecycle_v2.py",
+      "4027984417a9dc811fb26859fd87acedb36b108a6b45d0090de681c0a8d065f8",
+      30476
+    ],
+    [
+      "docs/poc/pg16_shell_tree_reconcile.py",
+      "bb1f1984f5a144564a56e23fb5c4797dc0851651b608012ce229cc14d12a801b",
+      2935
+    ],
+    [
+      "tests/test_pg16_shell_tree_reconcile.py",
+      "ad0742c02abe3544b9b4c5607df88563d1c0bf6458f278050cc0829adefe3a04",
+      17763
+    ],
+    [
+      "docs/poc/pg16_shell_native_control_case_v2.py",
+      "0fac3c7bd807e34c46e61a16c20bcda5c3a77b4ebed3c3404ff9250c4405a936",
+      22627
+    ],
+    [
+      "tests/test_pg16_shell_native_control_case_v2.py",
+      "72dde65cd0c4db08c3a864726bcb86b57af43ff1011299770a069253c30385cf",
+      36085
+    ],
+    [
+      "docs/poc/pg16_shell_native_control_provenance_v2.py",
+      "eac9709115ddbb70dc89ea1c59b734ffec556cfbf6d1ff25b0eb859116761827",
+      21359
+    ],
+    [
+      "tests/test_pg16_shell_native_control_provenance_v2.py",
+      "692b4d4ea7414e419036bf3264cc8059ec367ade2c7ad074b49327bc518f8f57",
+      62796
+    ]
+  ],
+  "limitations": [
+    "Feature absence RED is not behavioral verification.",
+    "Runtime Windows Python 3.11.3; Python 3.14 only static target.",
+    "Pre-format archive reconstructed from the sole whitespace change and proved by the measured SHA-256; no source rewrite."
+  ]
+}

@@ -4,6 +4,82 @@ Criado por solicitação do usuário em2026-10-30. Inclui o trabalho acumulado
 após4a5e556, preservando resultados históricos e tentativas reprovadas. É
 checkpoint de desenvolvimento incompleto da Fase9, não release de produção.
 
+## Ponte A→B: componente privado revisto e validado — 2026-11-06
+
+Claude2 único programador/sessão51ea0d85/claude-opus-5-5/medium. CLI20622
+terminou0, terminal recuperado e zero escritor confirmado. Root leu fonte
+inicial e delta final:91c20df4/28551bytes/831linhas; teste dd329afe/51189bytes/
+1477linhas congelado.186 próprios16,075s e1352 relacionados43,671s passaram,
+sem falhas/erros/skips/xfail. Ruff/format2/mypy1teste3.11/3.14 limpos; PoC
+fora do mypy, runtimeWindows3.11.3.18 upstream por hash/tamanho intactos.
+
+Guardas de contagens originais,34 vínculos/10 campos de refs e metadados de
+todos os slots corrigidas após RED186/153pass/33falhas. Domínios de meta
+finito/read4096/audit512 antecipados. Sondas finais recusam DRIFT/SHAPE.
+Baseline146/151, green151 rejeitado e RED182/186 preservados como dados em
+bundle-v2-review-20261106; detalhes em BUNDLE-V2-VALIDATION. Só candidato a B
+completa; sem prova de origem/frescor/SO/quietude ou consumidor operacional.
+
+Próximo lote SOMENTE leitura/desenho de produtor/coordenador, mesmas origens
+antes dos efeitos e mesmos bytes na validação completa, com proposta antes de
+código/efeitos. Conferir Git/zero escritor, mesma sessão/modelo/medium; ativo
+só monitorar, recuperar terminal antes de outra chamada. Source20/estado16/
+attempt consumido fixos; sem Native/Docker/PG/SQL/privado/runtime/config/
+binário/root/nonce/entrada/loader/collector/publicador/comando/deploy ou novo
+job/quota. Gateway indisponível e gates de produto continuam abertos.
+Registros abaixo históricos.
+
+## Ponte A→B: RED186 congelado, fix privado em andamento — 2026-11-06
+
+CLI23150/40014 recuperadas0; AST151/182 prefixada intacta. Teste dd329afe/
+51189bytes/1477linhas:186 coletados,153pass/33falhas em16,791s; Ruff/format/
+mypy3.11/3.14 limpos. Fonte6129 fixa durante RED. Zero escritor antes de
+CLI20622, que corrige somente bundle_v2.py na mesma sessão/opus5.5/medium.
+Recuperar terminal antes de outra chamada, ativo só monitorar. Root lê
+delta e mede antes de publicar; teste/source18/estado16 e gates abertos fixos.
+
+## Ponte A→B: regressões de deriva em andamento — 2026-11-06
+
+CLI87249 recuperada0; root leu6129bb32/26821bytes/788linhas e mediu151pass/
+18,507s, Ruff/format limpos. Cinco sondas independentes reproduziram READY
+indevido após mudança tardia de namespace/case/vínculos capturados. Fonte e
+dados preservados, componente não aprovado. CLI23150 escreve só regressões
+aditivas, mesmo Claude2/sessão/modelo/medium, fonte6129 fixa até RED. Recuperar
+terminal antes de outra chamada; se ativo, monitorar só. Nenhum efeito nativo
+ou operacional, source18/estado16 e gates abertos preservados.
+
+## Ponte A→B: RED151 congelado, módulo privado em andamento — 2026-11-06
+
+CLI24991/76876/58764 recuperadas0 e zero escritor antes de CLI87249.
+Teste84edd937/43807bytes/1267linhas congelado:151 coletados,8 sanidades
+passam,140 erros+3 falhas de ausência,143 FileNotFoundError,15,933s. Ruff/
+format/mypy3.11/3.14 limpos; runtimeWindows3.11.3, não runtime3.14. RED e
+baseline reprovada preservados como dados; ausência não comprova comportamento.
+CLI87249 escreve só bundle_v2.py na mesma sessão51ea0d85/opus5.5/medium.
+Recuperar terminal antes de outra chamada; ativo só monitorar. Root lê e
+mede gates antes de publicar. Testes/Source18/estado16 fixos, nenhum efeito
+Native/operacional ou consumidor; Gateway e gates continuam abertos.
+
+## Ponte A→B: teste em revisão, nenhum módulo — 2026-11-06
+
+CLI24991 terminou0, recuperada, zero escritor confirmado. Root leu afd2b067/
+40757bytes/1158linhas; RED146 em16,226s:7 sanidades passaram,137 erros+2
+falhas de ausência,139 FileNotFoundError. Ruff6/format1/mypy3 reprovados.
+Bytes/relatórios históricos preservados como dados. CLI76876 corrige só
+o novo teste, mesma sessão51ea0d85/opus5.5/medium. Recuperar terminal antes
+de nova chamada; se ativo, só monitorar. Módulo ausente até revisão/RED
+congelado pelo root. Nenhuma execução operacional/Native ou gate promovido.
+
+## Ponte A→B: teste novo em preparação — 2026-11-06
+
+HEAD/origin14c7ce4, zero escritor antes de CLI24991. Mesmo Claude2/sessão
+51ea0d85/opus5.5/medium escreve só test_pg16_shell_native_control_bundle_v2.py.
+Aviso para revisor/retomadas: recuperar terminal24991 antes de outra chamada;
+se ativo, monitorar apenas. Worker atual termina somente o teste autorizado.
+Módulo ainda não autorizado; root lê oráculos, mede sanidades/RED e congela
+bytes antes de implementação. Source18/estado16/A/B fixos, nenhum efeito
+Native/operacional ou nova medição. Histórico abaixo.
+
 ## Ponte A→B: contrato de desenho revisto — 2026-11-06
 
 Partida HEAD/origin d88823f, rastreados limpos. CLI63376/6054/25247/41850

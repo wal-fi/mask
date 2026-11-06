@@ -1,0 +1,30 @@
+{
+  "initialGreen": {
+    "chunk_id": "eb59a4",
+    "wall_time_seconds": 0.0000225,
+    "exit_code": 0,
+    "original_token_count": 44,
+    "output": "{\"exception_types\": {}, \"exit\": 0, \"failed\": [], \"failed_count\": 0, \"seconds\": 18.507, \"stats\": {\"collected\": 151, \"passed\": 151, \"unique_nodeids\": 151, \"xfail_marked\": 0}}\r\n"
+  },
+  "static": {
+    "status": "fulfilled",
+    "value": {
+      "chunk_id": "dc2326",
+      "wall_time_seconds": 1.7724303,
+      "exit_code": 0,
+      "original_token_count": 11,
+      "output": "All checks passed!\n1 file already formatted\n"
+    }
+  },
+  "probes": {
+    "status": "fulfilled",
+    "value": {
+      "chunk_id": "1acc12",
+      "wall_time_seconds": 1.6979316,
+      "exit_code": 0,
+      "original_token_count": 99,
+      "output": "[{\"mutation\": \"namespace_count\", \"reason\": \"CANDIDATE\", \"result\": \"BUNDLE_READY\"}, {\"mutation\": \"case_name\", \"reason\": \"CANDIDATE\", \"result\": \"BUNDLE_READY\"}, {\"mutation\": \"case_clock\", \"reason\": \"CANDIDATE\", \"result\": \"BUNDLE_READY\"}, {\"mutation\": \"legacy_function\", \"reason\": \"CANDIDATE\", \"result\": \"BUNDLE_READY\"}, {\"mutation\": \"refs_state\", \"reason\": \"CANDIDATE\", \"result\": \"BUNDLE_READY\"}]\r\n"
+    }
+  },
+  "probeScript": "import json,runpy,pathlib,pytest\nT=runpy.run_path(\"tests/test_pg16_shell_native_control_bundle_v2.py\")\nout=[]\nfor name in (\"namespace_count\",\"case_name\",\"case_clock\",\"legacy_function\",\"refs_state\"):\n with pytest.MonkeyPatch.context() as mp:\n  lab=T[\"lab\"].__wrapped__(mp);cv=T[\"cv2\"].__wrapped__();b=T[\"batch\"](lab,cv,T[\"PLANS\"][\"approved\"])\n  target=runpy.run_path(str(T[\"MODULE\"]))[\"bundle\"]\n  def action(real,values):\n   if values[0] is b.slots[2]:\n    if name==\"namespace_count\":b.cv2[\"_unbound_extra\"]=None\n    elif name==\"case_name\":b.slots[0].case[\"name\"]=\"TERMINATE\"\n    elif name==\"case_clock\":b.slots[0].case[\"clock\"]=object()\n    elif name==\"legacy_function\":\n     entry=b.slots[0].refs.entries[0];entry[0][entry[1]]=object()\n    else:b.slots[0].refs.state=lambda _owner:\"CLOSED\"\n   return real(*values)\n  T[\"spy\"](b,\"_record\",action)\n  result=target(*T[\"args\"](b))\n  out.append({\"mutation\":name,\"result\":result[0],\"reason\":result[1] if result[0]==\"BUNDLE_REFUSED\" else \"CANDIDATE\"})\nprint(json.dumps(out,sort_keys=True))\n"
+}
