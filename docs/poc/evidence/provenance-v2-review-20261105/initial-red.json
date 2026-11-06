@@ -1,0 +1,53 @@
+{
+  "phase": "initial-feature-absent",
+  "date_local": "2026-11-05",
+  "test_path": "tests/test_pg16_shell_native_control_provenance_v2.py",
+  "test_sha256": "b94c8c0aacda1e5e92f1131e01b67326bf624c55c9b0e189852c3c8b6b71697c",
+  "test_bytes": 52408,
+  "claude_execution": 94926,
+  "terminal": 0,
+  "module_absent": true,
+  "sanity_independent_of_new_module": true,
+  "behavior_not_proven": true,
+  "report": {
+    "exception_types": {
+      "FileNotFoundError": 187
+    },
+    "exit": 1,
+    "failed": [
+      "tests/test_pg16_shell_native_control_provenance_v2.py::test_positive_labels[approved]",
+      "tests/test_pg16_shell_native_control_provenance_v2.py::test_positive_labels[normal_tree]",
+      "tests/test_pg16_shell_native_control_provenance_v2.py::test_positive_labels[terminate_rejected]",
+      "tests/test_pg16_shell_native_control_provenance_v2.py::test_positive_labels[last_close_tree]",
+      "tests/test_pg16_shell_native_control_provenance_v2.py::test_positive_labels[rejected_without_latch]",
+      "tests/test_pg16_shell_native_control_provenance_v2.py::test_positive_full_verify_runs_once_on_a_fresh_expected",
+      "tests/test_pg16_shell_native_control_provenance_v2.py::test_positive_original_maps_mutated_during_parse_use_snapshots",
+      "tests/test_pg16_shell_native_control_provenance_v2.py::test_core_binding_refusals[core-mappingproxy]"
+    ],
+    "failed_count": 187,
+    "seconds": 2.036,
+    "stats": {
+      "collected": 207,
+      "errors": 186,
+      "failed": 1,
+      "passed": 20,
+      "unique_nodeids": 207,
+      "xfail_marked": 0
+    }
+  },
+  "statics": {
+    "ruff": "passed",
+    "format": "passed",
+    "mypy_strict_targets": [
+      "3.11",
+      "3.14"
+    ],
+    "mypy_executed_runtime_claim": false
+  },
+  "review_findings": [
+    "namespace Collider insertion overwrites existing verify key; must preserve actual foreign key",
+    "unknown private/metadata names exceed count and mask whitelist validation",
+    "parser foreign-key output has wrong count and masks key guard",
+    "constructor controls, drift, wrong returned class and foreign field key missing"
+  ]
+}

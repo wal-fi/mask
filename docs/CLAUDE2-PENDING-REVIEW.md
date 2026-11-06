@@ -1,3 +1,115 @@
+## Parte B: componente privado implementado, revisto e validado — 2026-11-05
+
+CLI24791 terminou0 e foi recuperada. Mesmo único Claude2/sessão51ea0d85/
+claude-opus-5-5/medium; root leu toda fonte inicial e o delta final. Fonte
+eac9709115ddbb70dc89ea1c59b734ffec556cfbf6d1ff25b0eb859116761827/21359bytes/
+622linhas; teste692b4d4ea7414e419036bf3264cc8059ec367ade2c7ad074b49327bc518f8f57/
+62796bytes/1848linhas, byte a byte igual ao RED228 congelado.
+
+228/228 em5,593s e1166/1166 relacionados em48,060s passaram, sem falhas/
+erros/skips/xfail. Ruff PoC E9/F63/F7/F82 e teste normal, format2 e mypy1teste
+estrito3.11/3.14 passaram; PoC fora do mypy, runtimeWindows3.11.3. Integridade
+de16 arquivos upstream conferida; estado16 intacto. Sonda independente
+agora registra zero entrada em _str_keys para private12/metadata4 recusados.
+AST confirma delta só _object/_snapshot/_outcomes e duas constantes de forma.
+
+Baseline207/RED221 de ausência, green221 inicial, finding e RED228/222pass/
+6falhas preservados em evidence/provenance-v2-review-20261105. Históricos
+não reescritos como sucesso. Detalhes em PROVENANCE-V2-VALIDATION. O componente
+liga declarações aos bytes esperados e reaproveita o core inteiro uma vez;
+não atesta execução/autenticidade, origem/frescor ou produção. Policy mutável
+no próprio lugar e namespace inicial malicioso continuam fora da premissa.
+
+Próximo lote seguro: SOMENTE leitura/desenho do mapeamento slot A→metadado B
+e das obrigações do produtor/coordenador (posse, origem/frescor, mesmos bytes,
+publicação terminal). Sem código operacional, entrada/loader/collector/
+publicador/root/nonce/comando ainda. Conferir Git e zero escritor antes de
+retomar apenas sessão51ea0d85/opus5.5/medium; ativo implica monitorar só;
+recuperar terminal antes de outra chamada. Publicar apenas este resultado
+verificado e confirmar sincronização antes de novo lote.
+
+Source10/estado16/lifecycle/helper/caller e attempt3f12dc584c29 consumido
+preservados; identidadeNov2 não promovida. Nenhum Native/Docker/PG/SQL,
+leitura privada/runtime/config/binário ou deploy. Gateway indisponível;
+Native3s NOT_MEASURED/entry_gate NOT_EVALUATED, B1/B2/D090gate2/C1/SQL/produção
+abertos. Nenhum novo job/quota/troca de modelo/conta. Histórico abaixo.
+
+## Parte B: RED de contagem congelado, fix do módulo em andamento — 2026-11-05
+
+CLI38943 terminou0 e foi recuperada. Teste692b4d4e/62796bytes/1848linhas:
+228 únicos,222passam/6falham em6,366s, exatamente as novas regressões;
+AST dos221 anteriores intacta. Ruff/format/mypy1teste3.11/3.14 aprovados.
+Mais um teste positivo garante que a sonda observacional registra chamadas
+reais. Arquivos em count-red-tests.py.txt e count-red.json; fonte565045b7
+intacta até o RED. Teste692b4d4e agora congelado, sem edição autorizada.
+
+CLI24791 corrige SOMENTE o módulo, mesma sessão51ea0d85/opus5.5/medium.
+Contagem deve preceder varredura em _object/_snapshot/_outcomes, mantendo
+callbacks/algoritmo/policy intocados. Recuperar terminal24791 antes de
+revisão/gates/outra chamada; se ativo, monitorar somente. Sem novo efeito
+Native/operacional e nenhuma publicação ainda. Histórico abaixo.
+
+## Parte B: primeira versão verde, regressões de contagem em preparação — 2026-11-05
+
+CLI18093 terminou0 e foi recuperada. Root leu as601linhas do módulo565045b7/
+20786bytes inteiro;221/221 passaram em5,711s com teste e340 congelado.
+Ruff PoC/format aprovados. Ainda não é fechamento: root reproduziu pelo
+verify_v2, com sonda observacional de _str_keys, inspeção de chaves antes
+do teto em private12 e metadata4. Ambos retornam INPUT, mas percorrem o
+mapa que deveria ser recusado pela contagem antes dessa inspeção. Mesmo
+invariante falta em _object e nos mapas do summary pós-core.
+
+Fonte anterior e medição em pre-count-guard.source.py.txt e
+first-green-review.json. CLI38943 adiciona SOMENTE seis regressões no teste,
+preservando AST/assertions dos221 e fonte565045b7; mesma sessão/modelo/medium.
+Recuperar terminal38943 antes de outra chamada/revisão; ativo implica só
+monitorar. Root medirá RED antes de autorizar fix do módulo. Nenhum Native/
+Docker/PG/SQL ou efeito operacional; código upstream/state16 intocáveis.
+
+## Parte B: módulo privado em implementação, terminal pendente — 2026-11-05
+
+CLI18093 está em andamento na mesma sessão51ea0d85/claude-opus-5-5/medium,
+com escrita autorizada SOMENTE em docs/poc/pg16_shell_native_control_provenance_v2.py.
+Guarda confirmou zero escritor e teste congelado e3406a60 antes da chamada.
+Recuperar o terminal18093 antes de revisar/gates/nova chamada; se ativo,
+monitorar apenas, nunca iniciar segundo escritor. Os testes221 estão
+congelados e não podem ser editados para acomodar a implementação.
+Source10/estado16/upstream fixos. Ainda não há green nem revisão do módulo.
+
+## Parte B: testes revistos e RED congelado; próximo módulo privado — 2026-11-05
+
+Partida HEAD/origin6a06825, rastreados limpos, zero escritor confirmado.
+Claude2 único programador, sessão51ea0d85/claude-opus-5-5/medium.
+CLI94926/94652 terminaram0 e seus terminais foram recuperados. Root leu
+os1747linhas do teste final e o delta dos ajustes de oráculo. Só o novo
+tests/test_pg16_shell_native_control_provenance_v2.py foi escrito pelo Claude2.
+
+Baseline inicial b94c8c0a/52408bytes:207 únicos,20sanidades passaram,
+186erros+1falha, todos187 FileNotFoundError por módulo ausente,2,036s.
+Root corrigiu oráculos pela mesma sessão: chave estrangeira realmente
+presente, nomes inválidos sem mascarar por contagem, parser com contagem
+válida, strings estrangeiras aninhadas, clone e controles no construtor,
+limite de importação. Sem supressão/skip/xfail ou relaxamento de asserções.
+
+RED final e3406a6022ee2307203af8bd246c20e75c4c5e8dddc1421fd8e05ac10a895f3a/
+59592bytes/1747linhas:221 únicos,20passaram,198erros+3falhas, todos201
+FileNotFoundError por ausência,1,965s, nenhum xfail. É ausência de feature,
+não prova comportamental. Sanidades/fixtures AST3c431b50 intactas; core
+real verificou os cinco cenários sintéticos. Ruff/format/mypy estrito1teste
+alvos3.11/3.14 passaram, runtimeWindows3.11.3. Bytes e relatórios inicial e
+final preservados em evidence/provenance-v2-review-20261105 como dados.
+
+Sob delegação, próximo incremento: mesmo Claude2 implementa SOMENTE
+docs/poc/pg16_shell_native_control_provenance_v2.py contra contrato revisto,
+sem alterar teste e340, source10/estado16/lifecycle/helper/caller. Conferir
+zero escritor e Git; se ativo, só monitorar. Recuperar terminal antes de
+nova chamada. Root fará revisão integral e gates sobre os testes congelados
+antes de publicar. Nenhum consumidor/entry/loader/collector/publicador
+operacional, Native/Docker/PG/SQL ou leitura privada/runtime/config/binário.
+Attempt consumido e identidadeNov2 intactos; Gateway indisponível e gates
+de produção abertos. Não publicar uma implementação ainda não revisada.
+Histórico abaixo.
+
 ## Parte B: revisão de leitura concluída, ainda sem testes/código — 2026-11-05
 
 Retomada agendada recebida nesta conversa às20h05 São Paulo/23:05UTC.

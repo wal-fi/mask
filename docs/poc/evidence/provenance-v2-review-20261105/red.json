@@ -1,0 +1,64 @@
+{
+  "phase": "reviewed-feature-absent-red",
+  "date_local": "2026-11-05",
+  "test_path": "tests/test_pg16_shell_native_control_provenance_v2.py",
+  "test_sha256": "e3406a6022ee2307203af8bd246c20e75c4c5e8dddc1421fd8e05ac10a895f3a",
+  "test_bytes": 59592,
+  "claude_execution": 94652,
+  "terminal": 0,
+  "module_absent": true,
+  "sanity_independent_of_new_module": true,
+  "behavior_not_proven": true,
+  "report": {
+    "exception_types": {
+      "FileNotFoundError": 201
+    },
+    "exit": 1,
+    "failed": [
+      "tests/test_pg16_shell_native_control_provenance_v2.py::test_positive_labels[approved]",
+      "tests/test_pg16_shell_native_control_provenance_v2.py::test_positive_labels[normal_tree]",
+      "tests/test_pg16_shell_native_control_provenance_v2.py::test_positive_labels[terminate_rejected]",
+      "tests/test_pg16_shell_native_control_provenance_v2.py::test_positive_labels[last_close_tree]",
+      "tests/test_pg16_shell_native_control_provenance_v2.py::test_positive_labels[rejected_without_latch]",
+      "tests/test_pg16_shell_native_control_provenance_v2.py::test_positive_full_verify_runs_once_on_a_fresh_expected",
+      "tests/test_pg16_shell_native_control_provenance_v2.py::test_positive_original_maps_mutated_during_parse_use_snapshots",
+      "tests/test_pg16_shell_native_control_provenance_v2.py::test_core_binding_refusals[core-mappingproxy]"
+    ],
+    "failed_count": 201,
+    "seconds": 1.965,
+    "stats": {
+      "collected": 221,
+      "errors": 198,
+      "failed": 3,
+      "passed": 20,
+      "unique_nodeids": 221,
+      "xfail_marked": 0
+    }
+  },
+  "statics": {
+    "ruff": "passed",
+    "format": "passed",
+    "mypy_strict_targets": [
+      "3.11",
+      "3.14"
+    ],
+    "runtime": "Windows CPython 3.11.3"
+  },
+  "sanity_and_fixture_ast": {
+    "ast_sha256": "3c431b509f20572ad179106badbcb2cc0d9350fe6d9d91b8d08356142e522977",
+    "bytes": 59592,
+    "lines": 1747,
+    "module_absent": true,
+    "sanity_and_fixture_ast_unchanged": true,
+    "test_sha256": "e3406a6022ee2307203af8bd246c20e75c4c5e8dddc1421fd8e05ac10a895f3a"
+  },
+  "review_findings_corrected_before_freeze": [
+    "foreign key actually stored with original count",
+    "whitelist invalid-name tests no longer masked by count",
+    "parser foreign keys preserve schema count",
+    "nested string equality traps per phase",
+    "fresh wrong class and foreign fields",
+    "constructor drift/errors/controls",
+    "module-body import IO boundary plus AST scope"
+  ]
+}

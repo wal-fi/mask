@@ -1,0 +1,1848 @@
+"""Fake-only tests for the provenance V2 envelope, written before the module.
+
+docs/poc/pg16_shell_native_control_provenance_v2.py does not exist yet. The
+`v2` fixture loads it lazily, so every wrapper case collects and fails at
+setup until the module exists: a feature-absent baseline, never behavioural
+evidence. Contract: PHASE-9-W1-PG16-PROVENANCE-V2-CONTRACT-REVIEW.md (R1-R12),
+artifact schemas from CASE-V2-DESIGN B2.
+
+The `test_sanity_*` cases do NOT use the module. They check fixtures and
+oracles against the REAL frozen core (live globals of runpy's executed
+verify) before any wrapper case can be trusted: APPROVED and REJECTED
+batches with prefixes 1/2/3, namespace bounds, class shapes, constants and
+the reviewer-owned source rows against the public repository files.
+
+Evidence is synthetic: the frozen lifecycle harness (40279844) drives real
+Owner/NestedJobOwner against fake kernels through the accepted lifecycle V2,
+with memory writes and fake clocks; real WinDLL, Popen, os.system,
+Thread.start and time.sleep are forbidden. No root, nonce, command, loader,
+collector or native effect. Old pins are synthetic schema wiring only. Fake
+core callbacks are explicit FunctionType(code, live core globals) seams for
+counters, drift, errors and controls. A malicious initial namespace with
+compatible shapes, or in-place policy edits, are OUTSIDE the premise: no
+case pretends that identity guards detect them.
+"""
+
+import ast
+import builtins
+import ctypes
+import hashlib
+import io
+import json
+import os
+import runpy
+import subprocess
+import threading
+import time
+from pathlib import Path
+from types import FunctionType, MappingProxyType, SimpleNamespace
+from typing import Any
+
+import pytest
+
+REPO = Path(__file__).resolve().parents[1]
+MODULE = REPO / "docs/poc/pg16_shell_native_control_provenance_v2.py"
+VERIFIER = REPO / "docs/poc/pg16_shell_native_control_verify.py"
+LIFECYCLE = REPO / "docs/poc/pg16_shell_native_control_lifecycle_v2.py"
+LIFECYCLE_TESTS = REPO / "tests/test_pg16_shell_native_control_lifecycle_v2.py"
+FROZEN: dict[str, Any] = runpy.run_path(str(LIFECYCLE_TESTS))
+NONCE: str = FROZEN["NONCE"]
+ARGV0: str = FROZEN["ARGV0"]
+Namespace = dict[str, Any]
+Scenarios = dict[str, SimpleNamespace]
+CASES = ("NORMAL", "TERMINATE", "LAST_CLOSE")
+MANIFEST_KIND = "MASKGW_PG16_NATIVE_CONTROL_V2_MANIFEST_V1"
+CASE_KIND = "MASKGW_PG16_NATIVE_CONTROL_V2_CASE_V1"
+ROWS: tuple[tuple[str, str, int, str], ...] = (
+    (
+        "case_caller",
+        "docs/poc/pg16_shell_native_control_case_v2.py",
+        22627,
+        "0fac3c7bd807e34c46e61a16c20bcda5c3a77b4ebed3c3404ff9250c4405a936",
+    ),
+    (
+        "lifecycle_v2",
+        "docs/poc/pg16_shell_native_control_lifecycle_v2.py",
+        14964,
+        "7bbf734c8b4a1fefe1617fc8c1cff2a5de0b33f8996eb98b0016233ab0b040cb",
+    ),
+    (
+        "tree_reconcile",
+        "docs/poc/pg16_shell_tree_reconcile.py",
+        2935,
+        "bb1f1984f5a144564a56e23fb5c4797dc0851651b608012ce229cc14d12a801b",
+    ),
+    (
+        "runner",
+        "docs/poc/pg16_shell_native_control.py",
+        30055,
+        "b4198fe1606120e1e2df4fe9bff6a52fce4601a67074fdd7e922ef528341a496",
+    ),
+    (
+        "adapter",
+        "docs/poc/pg16_shell_native_control_win32.py",
+        15373,
+        "eaebedd6ac36602ba30cb51a4c30a2a93737f1127c23cdc4ebb8ae8cf9246407",
+    ),
+    (
+        "backend",
+        "docs/poc/pg16_shell_admission_win32.py",
+        31948,
+        "10c9058f0d6071e86c7b4c8b2566c1ae4c9f78aeba9d92c50687ae6481f22726",
+    ),
+    (
+        "host",
+        "docs/poc/pg16_shell_admission_host.py",
+        33234,
+        "dfcc4ed6be3ea8ab47b7a38ca8a9d4bfa00b3c75cda41c365be3dd5b1aa3dac7",
+    ),
+    (
+        "core_verify",
+        "docs/poc/pg16_shell_native_control_verify.py",
+        24616,
+        "b3755d492ce147596a27dd9a36bc0ecf66686efd65ef60178915ab2d1d1f7a10",
+    ),
+)
+LAUNCHER = "bfff517165ad6d1f3bf02d1782eaf7588fb7c20cd78d1c81788c4444e7bc5d82"
+POLICY = (ROWS, LAUNCHER)
+FROZEN_PINS = (
+    ("host_sha256", ROWS[6][3]),
+    ("adapter_sha256", ROWS[4][3]),
+    ("backend_sha256", ROWS[5][3]),
+    ("launcher_sha256", LAUNCHER),
+)
+CORE_REASONS = frozenset(
+    (
+        "EXPECTED",
+        "INPUT",
+        "FILESET",
+        "CAP",
+        "SCHEMA",
+        "NONCE",
+        "PIN",
+        "BINDING",
+        "PREFIX",
+        "INVOCATION",
+        "SUPERVISION",
+        "STDOUT",
+        "SNAPSHOT",
+        "AUDIT",
+        "CONTRADICTION",
+        "INTERNAL",
+    )
+)
+INVALID_ATTRS = frozenset(
+    (
+        "__module__",
+        "__init__",
+        "__doc__",
+        "__dict__",
+        "__weakref__",
+        "__firstlineno__",
+        "__static_attributes__",
+    )
+)
+APPROVED = ("V2_VERIFIED_APPROVED", "OK")
+REJECTED = ("V2_VERIFIED_REJECTED", "OK")
+OTHER_SHA = "0" * 64
+PLACEHOLDER = "<CASE_V2: NOT_YET_IMPLEMENTED>"
+# name -> ((number, case, setup), ...); setup names a frozen lifecycle helper.
+PLANS: dict[str, tuple[tuple[int, str, str | None], ...]] = {
+    "approved": ((1, "NORMAL", None), (2, "TERMINATE", None), (3, "LAST_CLOSE", None)),
+    "normal_tree": ((1, "NORMAL", "tree"),),
+    "terminate_rejected": ((1, "NORMAL", None), (2, "TERMINATE", "ready_missing")),
+    "last_close_tree": ((1, "NORMAL", None), (2, "TERMINATE", None), (3, "LAST_CLOSE", "tree")),
+    "rejected_without_latch": ((1, "NORMAL", "setup_failed"),),
+}
+CORE_RESULTS = {
+    name: ("VERIFIED_APPROVED" if name == "approved" else "VERIFIED_REJECTED", "OK")
+    for name in PLANS
+}
+LAST_REJECTION = {
+    "approved": None,
+    "normal_tree": "TREE_UNPROVEN",
+    "terminate_rejected": "READY_MISSING",
+    "last_close_tree": "FAILED_LAST_CLOSE",
+    "rejected_without_latch": "LAUNCH_FAILED",
+}
+TREES = {
+    "approved": (False, False, False),
+    "normal_tree": (True,),
+    "terminate_rejected": (False, False),
+    "last_close_tree": (False, False, True),
+    "rejected_without_latch": (False,),
+}
+V2_RESULTS = {name: APPROVED if name == "approved" else REJECTED for name in PLANS}
+SPY_CALLS: list[str] = []
+RETURNED: list[Any] = []
+
+
+class Signal(BaseException):
+    """A fictitious control interruption."""
+
+
+class SneakyStr(str):
+    pass
+
+
+class SneakyBytes(bytes):
+    pass
+
+
+class SpyStr(str):
+    """A str subclass that records every equality call."""
+
+    def __eq__(self, other: object) -> bool:
+        SPY_CALLS.append("eq")
+        return str.__eq__(self, other)
+
+    def __hash__(self) -> int:
+        return str.__hash__(self)
+
+
+class Collider:
+    """A non-str key that hashes like `target` and claims equality with it."""
+
+    def __init__(self, target: str) -> None:
+        self.target = target
+        self.calls: list[str] = []
+
+    def __hash__(self) -> int:
+        self.calls.append("hash")
+        return hash(self.target)
+
+    def __eq__(self, other: object) -> bool:
+        self.calls.append("eq")
+        return other == self.target
+
+
+class CoreDict(dict[str, Any]):
+    pass
+
+
+class ForeignMeta(type):
+    pass
+
+
+class ThreeFields:
+    def __init__(self, nonce: str, argv0: str) -> None:
+        self.nonce, self.argv0, self.extra = nonce, argv0, None
+
+
+class CopiedFields:
+    def __init__(self, nonce: str, argv0: str) -> None:
+        self.nonce, self.argv0 = nonce[:1] + nonce[1:], argv0[:1] + argv0[1:]
+
+
+class RenamedFields:
+    def __init__(self, nonce: str, argv0: str) -> None:
+        self.nonce, self.argv = nonce, argv0
+
+
+class Elsewhere:
+    pass
+
+
+class WrongClass:
+    """Constructor stand-in whose __new__ returns an object of another class."""
+
+    def __new__(cls, nonce: str, argv0: str) -> Any:
+        other = Elsewhere()
+        vars(other).update({"nonce": nonce, "argv0": argv0})
+        return other
+
+
+FRESH_KEYS: list[Any] = []
+
+
+class ForeignKeyFields:
+    """Constructor stand-in leaving two entries, one under a foreign key."""
+
+    def __init__(self, nonce: str, argv0: str) -> None:
+        self.nonce = nonce
+        key = Collider("argv0")
+        fields: Any = vars(self)
+        fields[key] = argv0
+        assert len(fields) == 2 and any(item is key for item in fields)
+        key.calls.clear()
+        FRESH_KEYS.append(key)
+
+
+class Hooks:
+    """Deliberate evidence edits: before/after the metadata descriptors, on the
+    manifest object, or on the final manifest bytes."""
+
+    def __init__(
+        self, before: Any = None, edit: Any = None, raw: Any = None, after: Any = None
+    ) -> None:
+        self.before, self.edit, self.raw, self.after = before, edit, raw, after
+
+
+def foreign(*_args: Any, **_kwargs: Any) -> Any:
+    return None
+
+
+def forbidden(*_args: Any, **_kwargs: Any) -> Any:
+    raise AssertionError("file, process, thread, sleep or native effect")
+
+
+def rebound(function: Any, namespace: dict[str, Any]) -> Any:
+    """Same code and closure with __globals__ set to namespace (explicit seam)."""
+    return FunctionType(
+        function.__code__, namespace, function.__name__, function.__defaults__, function.__closure__
+    )
+
+
+def sha(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def canonical(value: Any) -> bytes:
+    text = json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False)
+    return text.encode("ascii") + b"\n"
+
+
+def descriptor(name: str, raw: bytes) -> dict[str, Any]:
+    return {"name": name, "bytes": len(raw), "sha256": sha(raw)}
+
+
+def meta_name(number: int) -> str:
+    return "case-" + str(number) + "/v2-case.json"
+
+
+def case_meta(number: int, tree: bool) -> dict[str, Any]:
+    return {
+        "kind": CASE_KIND,
+        "number": number,
+        "case": CASES[number - 1],
+        "slot_outcome": "READY_FOR_VALIDATION",
+        "lifecycle_reserved": True,
+        "reconcile_reserved": tree,
+        "tree_latched": tree,
+        "owner_released": True,
+    }
+
+
+# -- synthetic evidence (built once per session through the frozen harness) --
+
+
+def make_scenario(patch: pytest.MonkeyPatch, plans: tuple[Any, ...]) -> SimpleNamespace:
+    lab = FROZEN["lab"].__wrapped__(patch)  # fresh namespaces, memory store and bans
+    lifecycle = runpy.run_path(str(LIFECYCLE))
+    artifacts: dict[str, bytes] = {}
+    records: list[Any] = []
+    trees: list[bool] = []
+    for number, name, setup in plans:
+        drive = FROZEN["v2_driver"](lab, lifecycle)
+        prepare = None if setup is None else FROZEN[setup]
+        result = FROZEN["run_case"](lab, (number, name), artifacts, drive, prepare)
+        records.append(result.record)
+        trees.append(result.case["reconcile_reserved"])
+    summary, transport, files = FROZEN["published"](lab, records, artifacts)
+    return SimpleNamespace(
+        summary=summary,
+        transport=transport,
+        private=tuple(sorted(files.items())),
+        trees=tuple(trees),
+        outcomes=tuple((item["outcome"], item["rejection"]) for item in records),
+    )
+
+
+@pytest.fixture(scope="session")
+def scenarios() -> Scenarios:
+    built: Scenarios = {}
+    for name, plans in PLANS.items():
+        with pytest.MonkeyPatch.context() as patch:
+            built[name] = make_scenario(patch, plans)
+    return built
+
+
+@pytest.fixture
+def core() -> Namespace:
+    namespace: Namespace = runpy.run_path(str(VERIFIER))["verify"].__globals__
+    return namespace
+
+
+@pytest.fixture
+def v2() -> Namespace:
+    namespace: Namespace = runpy.run_path(str(MODULE))["verify_v2"].__globals__
+    return namespace
+
+
+def draft(scenario: SimpleNamespace) -> SimpleNamespace:
+    k = len(scenario.trees)
+    return SimpleNamespace(
+        summary=scenario.summary,
+        transport=scenario.transport,
+        private=dict(scenario.private),
+        k=k,
+        meta={meta_name(n): case_meta(n, scenario.trees[n - 1]) for n in range(1, k + 1)},
+        rows=ROWS,
+        launcher=LAUNCHER,
+        nonce=NONCE,
+    )
+
+
+def manifest_for(d: SimpleNamespace, metadata: dict[str, bytes]) -> dict[str, Any]:
+    cases: list[dict[str, Any]] = []
+    for n in range(1, d.k + 1):
+        raw = metadata.get(meta_name(n))
+        if raw is not None:
+            case = descriptor(meta_name(n), raw)
+            case["number"] = n
+            cases.append(case)
+    return {
+        "kind": MANIFEST_KIND,
+        "nonce": d.nonce,
+        "executed": d.k,
+        "summary": descriptor("summary.json", d.summary),
+        "transport": descriptor("transport.json", d.transport),
+        "cases": cases,
+        "sources": [
+            {"role": role, "path": path, "bytes": size, "sha256": digest}
+            for role, path, size, digest in d.rows
+        ],
+        "launcher": {"sha256": d.launcher},
+    }
+
+
+def build(d: SimpleNamespace, hooks: Hooks | None = None) -> tuple[Any, ...]:
+    h = Hooks() if hooks is None else hooks
+    metadata = {name: canonical(obj) for name, obj in d.meta.items()}
+    if h.before is not None:
+        h.before(metadata)
+    manifest = manifest_for(d, metadata)
+    if h.edit is not None:
+        h.edit(manifest)
+    raw = canonical(manifest)
+    if h.raw is not None:
+        raw = h.raw(raw)
+    if h.after is not None:
+        h.after(metadata)
+    return (raw, d.summary, d.transport, dict(d.private), metadata)
+
+
+def approved(scenarios: Scenarios, hooks: Hooks | None = None) -> tuple[Any, ...]:
+    return build(draft(scenarios["approved"]), hooks)
+
+
+def expected_for(core: Namespace) -> Any:
+    return core["Expected"](nonce=NONCE, argv0=ARGV0)
+
+
+def call(
+    v2: Namespace,
+    core: Any,
+    evidence: Any,
+    policy: Any = POLICY,
+    expected: Any = None,
+) -> Any:
+    target = expected_for(core) if expected is None else expected
+    return v2["verify_v2"](core, policy, target, evidence)
+
+
+def closed(result: Any, expected: tuple[str, str]) -> None:
+    assert type(result) is tuple and len(result) == 2
+    assert type(result[0]) is str and type(result[1]) is str
+    assert result == expected
+
+
+def invalid(reason: str) -> tuple[str, str]:
+    return ("V2_INVALID", reason)
+
+
+def rebind_summary(d: SimpleNamespace, edit: Any) -> None:
+    """Edits the summary payload and re-binds the transport descriptor only."""
+    summary = json.loads(d.summary)
+    edit(summary)
+    raw = canonical(summary)
+    transport = json.loads(d.transport)
+    transport["summary"]["bytes"], transport["summary"]["sha256"] = len(raw), sha(raw)
+    d.summary, d.transport = raw, canonical(transport)
+
+
+def install_parse(core: Namespace, target: bytes, occurrence: int, action: Any) -> None:
+    """Replace _parse with a seam that acts on the n-th parse of `target`."""
+    real = core["_parse"]
+    seen = [0]
+
+    def fake(raw: Any) -> Any:
+        if type(raw) is bytes and raw == target:
+            seen[0] += 1
+            if seen[0] == occurrence:
+                return action(real, raw)
+        return real(raw)
+
+    core["_parse"] = rebound(fake, core)
+
+
+def install_verify(core: Namespace, action: Any) -> list[Any]:
+    """Replace verify with a counting seam; action(real, args) gives the result."""
+    real = core["verify"]
+    calls: list[Any] = []
+
+    def fake(*args: Any) -> Any:
+        calls.append(args)
+        return action(real, args)
+
+    core["verify"] = rebound(fake, core)
+    return calls
+
+
+def passthrough(real: Any, args: Any) -> Any:
+    return real(*args)
+
+
+def parse_target(evidence: tuple[Any, ...], phase: str) -> tuple[bytes, int]:
+    if phase == "manifest":
+        return evidence[0], 1
+    if phase == "metadata":
+        return evidence[4][meta_name(1)], 1
+    return evidence[1], 2  # the core parses the summary once before the wrapper
+
+
+# -- sanity of fixtures and oracles against the REAL core (no new module) --
+
+
+@pytest.mark.parametrize("name", list(PLANS))
+def test_sanity_real_core_verifies_each_fixture(
+    scenarios: Scenarios, core: Namespace, name: str
+) -> None:
+    scenario = scenarios[name]
+    private = dict(scenario.private)
+    result = core["verify"](expected_for(core), scenario.summary, scenario.transport, private)
+    assert result == CORE_RESULTS[name]
+    assert scenario.trees == TREES[name]
+    assert scenario.outcomes[-1][1] == LAST_REJECTION[name]
+    if name == "approved":
+        assert all(outcome == ("APPROVED", None) for outcome in scenario.outcomes)
+    assert len({key.split("/")[0] for key in private}) == len(TREES[name])
+
+
+def test_sanity_real_core_namespace_and_class_shapes(core: Namespace) -> None:
+    assert type(core) is dict and len(core) <= 128
+    assert all(type(key) is str and 1 <= len(key) <= 64 for key in core)
+    for name in ("verify", "_verify", "_capture", "_parse"):
+        assert type(core[name]) is FunctionType and core[name].__globals__ is core
+    expected, failure = core["Expected"], core["_Invalid"]
+    assert type(expected) is type and type(failure) is type
+    assert failure.__mro__ == (failure, Exception, BaseException, object)
+    init = vars(failure)["__init__"]
+    assert type(init) is FunctionType and init.__globals__ is core
+    assert set(vars(failure)) <= INVALID_ATTRS
+    for name in ("LITERALS", "LINES", "KINDS", "PREFIX_FILES", "FILE_CAPS"):
+        assert type(core[name]) is dict
+    assert type(core["WHITELIST"]) is frozenset and type(core["REASONS"]) is frozenset
+    assert type(core["LIMITS"]) is tuple
+    assert set(core["PREFIX_FILES"]) == {1, 2, 3}  # genuine int keys
+    assert all(type(key) is int for key in core["PREFIX_FILES"])
+    assert core["PINS"] == FROZEN_PINS
+
+
+def test_sanity_constants_and_bound_arithmetic(core: Namespace) -> None:
+    caps = core["FILE_CAPS"]
+    assert core["REASONS"] == CORE_REASONS and len(core["WHITELIST"]) == 11
+    assert (core["SUMMARY_CAP"], core["TRANSPORT_CAP"], core["TOTAL_CAP"]) == (16384, 4096, 262144)
+    assert caps == {
+        "invocation.json": 4096,
+        "supervision.json": 4096,
+        "local-stdout.bin": 1024,
+        "snapshot.json": 4096,
+        "audit.json": 65536,
+    }
+    private = sum(caps[name.split("/", 1)[1]] for name in core["WHITELIST"])
+    inner = private + 16384 + 4096
+    outer = inner + 4096 + 3 * 1024
+    assert (private, inner, outer) == (97280, 117760, 124928)
+    assert inner < 262144 and outer < 269312  # no isolated aggregate CAP witness exists
+
+
+@pytest.mark.parametrize("row", ROWS, ids=[row[0] for row in ROWS])
+def test_sanity_reviewer_rows_match_public_sources(row: tuple[str, str, int, str]) -> None:
+    raw = (REPO / row[1]).read_bytes()
+    assert len(raw) == row[2] and sha(raw) == row[3]
+
+
+@pytest.mark.parametrize("name", list(PLANS))
+def test_sanity_builder_is_canonical_and_within_caps(
+    scenarios: Scenarios, core: Namespace, name: str
+) -> None:
+    evidence = build(draft(scenarios[name]))
+    manifest, metadata = evidence[0], evidence[4]
+    assert len(manifest) <= 4096 and all(len(raw) <= 1024 for raw in metadata.values())
+    assert canonical(core["_parse"](manifest)) == manifest
+    assert all(canonical(core["_parse"](raw)) == raw for raw in metadata.values())
+    assert sorted(metadata) == [meta_name(n) for n in range(1, len(TREES[name]) + 1)]
+
+
+# -- positives through the wrapper --
+
+
+@pytest.mark.parametrize("name", list(PLANS))
+def test_positive_labels(v2: Namespace, scenarios: Scenarios, core: Namespace, name: str) -> None:
+    closed(call(v2, core, build(draft(scenarios[name]))), V2_RESULTS[name])
+
+
+def test_positive_full_verify_runs_once_on_a_fresh_expected(
+    v2: Namespace, scenarios: Scenarios, core: Namespace
+) -> None:
+    evidence = approved(scenarios)
+    original = expected_for(core)
+    before = (dict(vars(original)), dict(evidence[3]), dict(evidence[4]))
+    calls = install_verify(core, passthrough)
+    closed(call(v2, core, evidence, expected=original), APPROVED)
+    assert len(calls) == 1
+    fresh, private = calls[0][0], calls[0][3]
+    assert type(fresh) is core["Expected"] and fresh is not original
+    assert vars(fresh)["nonce"] is vars(original)["nonce"]
+    assert vars(fresh)["argv0"] is vars(original)["argv0"]
+    assert private is not evidence[3] and private == evidence[3]
+    assert (vars(original), evidence[3], evidence[4]) == before  # inputs untouched
+
+
+def test_positive_original_maps_mutated_during_parse_use_snapshots(
+    v2: Namespace, scenarios: Scenarios, core: Namespace
+) -> None:
+    evidence = approved(scenarios)
+    original = expected_for(core)
+    nonce = vars(original)["nonce"]
+
+    def tamper(real: Any, raw: bytes) -> Any:
+        evidence[3]["case-1/extra.json"] = b"x"
+        del evidence[4][meta_name(1)]
+        vars(original)["nonce"] = "f" * 32
+        return real(raw)
+
+    install_parse(core, evidence[0], 1, tamper)
+    calls = install_verify(core, passthrough)
+    closed(call(v2, core, evidence, expected=original), APPROVED)
+    assert len(calls) == 1
+    assert "case-1/extra.json" not in calls[0][3]
+    assert vars(calls[0][0])["nonce"] is nonce
+
+
+# -- CORE_BINDING: wrong type / cross-namespace at the initial binding --
+
+
+def mapping_proxy(core: Namespace) -> tuple[Any, Any]:
+    return MappingProxyType(core), None
+
+
+def dict_subclass(core: Namespace) -> tuple[Any, Any]:
+    return CoreDict(core), None
+
+
+def runpy_copy(core: Namespace) -> tuple[Any, Any]:
+    return dict(core), None
+
+
+def too_many_keys(core: Namespace) -> tuple[Any, Any]:
+    for index in range(129 - len(core)):
+        core["_pad_" + str(index)] = None
+    return core, None
+
+
+def long_key(core: Namespace) -> tuple[Any, Any]:
+    core["k" * 65] = None
+    return core, None
+
+
+def colliding_key(core: Namespace) -> tuple[Any, Any]:
+    key = Collider("verify")
+    raw: Any = core
+    count = len(raw)
+    value = raw.pop("verify")
+    raw[key] = value  # the foreign key replaces the canonical one, same count
+    assert len(raw) == count and any(item is key for item in raw)
+    key.calls.clear()
+    return core, key.calls
+
+
+def replaced(name: str) -> Any:
+    def mutate(core: Namespace) -> tuple[Any, Any]:
+        core[name] = foreign
+        return core, None
+
+    return mutate
+
+
+def expected_not_type(core: Namespace) -> tuple[Any, Any]:
+    core["Expected"] = object()
+    return core, None
+
+
+def invalid_class(make: Any) -> Any:
+    def mutate(core: Namespace) -> tuple[Any, Any]:
+        core["_Invalid"] = make(vars(core["_Invalid"])["__init__"])
+        return core, None
+
+    return mutate
+
+
+def with_hook(init: Any) -> Any:
+    return type("_Invalid", (Exception,), {"__init__": init, "__eq__": foreign})
+
+
+def with_metaclass(init: Any) -> Any:
+    return ForeignMeta("_Invalid", (Exception,), {"__init__": init})
+
+
+def with_wrong_mro(init: Any) -> Any:
+    return type("_Invalid", (ValueError,), {"__init__": init})
+
+
+def with_foreign_init(init: Any) -> Any:
+    return type("_Invalid", (Exception,), {"__init__": rebound(init, {})})
+
+
+def policy_value(name: str, make: Any) -> Any:
+    def mutate(core: Namespace) -> tuple[Any, Any]:
+        core[name] = make(core[name])
+        return core, None
+
+    return mutate
+
+
+def pins_diverge(value: Any) -> Any:
+    return (*value[:3], ("launcher_sha256", OTHER_SHA))
+
+
+def items_tuple(value: Any) -> Any:
+    return tuple(value.items())
+
+
+BINDINGS: list[Any] = [
+    pytest.param(mapping_proxy, id="core-mappingproxy"),
+    pytest.param(dict_subclass, id="core-dict-subclass"),
+    pytest.param(runpy_copy, id="core-runpy-style-copy"),
+    pytest.param(too_many_keys, id="core-129-keys"),
+    pytest.param(long_key, id="core-65-char-key"),
+    pytest.param(colliding_key, id="core-colliding-foreign-key"),
+    pytest.param(replaced("verify"), id="verify-foreign"),
+    pytest.param(replaced("_verify"), id="_verify-foreign"),
+    pytest.param(replaced("_capture"), id="_capture-foreign"),
+    pytest.param(replaced("_parse"), id="_parse-foreign"),
+    pytest.param(expected_not_type, id="expected-not-a-type"),
+    pytest.param(invalid_class(with_hook), id="invalid-extra-hook"),
+    pytest.param(invalid_class(with_metaclass), id="invalid-foreign-metaclass"),
+    pytest.param(invalid_class(with_wrong_mro), id="invalid-wrong-mro"),
+    pytest.param(invalid_class(with_foreign_init), id="invalid-foreign-init-globals"),
+    pytest.param(policy_value("PINS", pins_diverge), id="pins-diverge"),
+    pytest.param(policy_value("PINS", list), id="pins-list"),
+    pytest.param(policy_value("LITERALS", items_tuple), id="literals-type"),
+    pytest.param(policy_value("PREFIX_FILES", tuple), id="prefix-files-type"),
+    pytest.param(policy_value("WHITELIST", set), id="whitelist-set"),
+    pytest.param(policy_value("REASONS", set), id="reasons-set"),
+    pytest.param(policy_value("LIMITS", list), id="limits-list"),
+]
+
+
+@pytest.mark.parametrize("mutate", BINDINGS)
+def test_core_binding_refusals(
+    v2: Namespace, scenarios: Scenarios, core: Namespace, mutate: Any
+) -> None:
+    expected = expected_for(core)
+    evidence = approved(scenarios)
+    target, probe = mutate(core)
+    closed(call(v2, target, evidence, expected=expected), invalid("CORE_BINDING"))
+    assert probe is None or probe == []
+
+
+def test_core_binding_accepts_genuine_int_prefix_keys(
+    v2: Namespace, scenarios: Scenarios, core: Namespace
+) -> None:
+    keys = tuple(core["PREFIX_FILES"])
+    closed(call(v2, core, build(draft(scenarios["terminate_rejected"]))), REJECTED)
+    assert tuple(core["PREFIX_FILES"]) == keys and all(type(key) is int for key in keys)
+
+
+def test_outside_premise_in_place_policy_edit_is_not_binding(
+    v2: Namespace, scenarios: Scenarios, core: Namespace
+) -> None:
+    """Characterization of the documented limit, not a guarantee."""
+    core["LITERALS"]["NORMAL"] = "print('other')"
+    closed(call(v2, core, approved(scenarios)), invalid("CORE_INVALID"))
+
+
+# -- EXPECTED: incoherent or malformed reviewer policy and Expected snapshot --
+
+
+def row_edit(index: int, field: int, value: Any) -> tuple[Any, ...]:
+    row = list(ROWS[index])
+    row[field] = value
+    return (*ROWS[:index], tuple(row), *ROWS[index + 1 :])
+
+
+SHAPES: list[Any] = [
+    pytest.param([ROWS, LAUNCHER], id="policy-list"),
+    pytest.param((ROWS, LAUNCHER, None), id="policy-three-items"),
+    pytest.param((ROWS[:7], LAUNCHER), id="rows-seven"),
+    pytest.param((list(ROWS), LAUNCHER), id="rows-list"),
+    pytest.param(((*ROWS[:7], list(ROWS[7])), LAUNCHER), id="row-list"),
+    pytest.param(((*ROWS[:7], ROWS[7][:3]), LAUNCHER), id="row-three-fields"),
+    pytest.param(((ROWS[1], ROWS[0], *ROWS[2:]), LAUNCHER), id="role-order"),
+    pytest.param((row_edit(2, 1, "docs/poc/other.py"), LAUNCHER), id="static-path"),
+    pytest.param((row_edit(0, 2, True), LAUNCHER), id="size-bool"),
+    pytest.param((row_edit(0, 2, 0), LAUNCHER), id="size-zero"),
+    pytest.param((row_edit(0, 2, 65537), LAUNCHER), id="size-65537"),
+    pytest.param((row_edit(0, 2, 22627.0), LAUNCHER), id="size-float"),
+    pytest.param((row_edit(1, 3, ROWS[1][3].upper()), LAUNCHER), id="sha-uppercase"),
+    pytest.param((row_edit(0, 3, PLACEHOLDER), LAUNCHER), id="sha-placeholder"),
+    pytest.param((row_edit(1, 3, SneakyStr(ROWS[1][3])), LAUNCHER), id="sha-str-subclass"),
+    pytest.param((ROWS, LAUNCHER.encode()), id="launcher-bytes"),
+]
+
+
+@pytest.mark.parametrize("policy", SHAPES)
+def test_expected_policy_shape_refusals(
+    v2: Namespace, scenarios: Scenarios, core: Namespace, policy: Any
+) -> None:
+    closed(call(v2, core, approved(scenarios), policy), invalid("EXPECTED"))
+
+
+INCOHERENT: list[Any] = [
+    pytest.param("launcher", id="launcher-not-frozen-pin"),
+    pytest.param(4, id="adapter-not-frozen-pin"),
+    pytest.param(5, id="backend-not-frozen-pin"),
+    pytest.param(6, id="host-not-frozen-pin"),
+    pytest.param(7, id="core-verify-not-b375"),
+]
+
+
+@pytest.mark.parametrize("where", INCOHERENT)
+def test_expected_incoherent_policy_even_if_manifest_follows(
+    v2: Namespace, scenarios: Scenarios, core: Namespace, where: Any
+) -> None:
+    d = draft(scenarios["approved"])
+    if where == "launcher":
+        d.launcher = OTHER_SHA
+    else:
+        d.rows = row_edit(where, 3, OTHER_SHA)
+    closed(call(v2, core, build(d), (d.rows, d.launcher)), invalid("EXPECTED"))
+
+
+def field_extra(fields: dict[str, Any]) -> list[str] | None:
+    fields["extra"] = "x"
+    return None
+
+
+def field_missing(fields: dict[str, Any]) -> list[str] | None:
+    del fields["argv0"]
+    return None
+
+
+def field_collider(fields: dict[str, Any]) -> list[str] | None:
+    key = Collider("nonce")
+    value = fields.pop("nonce")
+    raw: Any = fields
+    raw[key] = value
+    assert len(raw) == 2 and any(item is key for item in raw)
+    key.calls.clear()
+    return key.calls
+
+
+def field_value(name: str, value: Any) -> Any:
+    def mutate(fields: dict[str, Any]) -> list[str] | None:
+        fields[name] = value
+        return None
+
+    return mutate
+
+
+FIELDS: list[Any] = [
+    pytest.param(field_extra, id="expected-extra-field"),
+    pytest.param(field_missing, id="expected-missing-field"),
+    pytest.param(field_collider, id="expected-colliding-key"),
+    pytest.param(field_value("nonce", NONCE.upper()), id="nonce-uppercase"),
+    pytest.param(field_value("nonce", NONCE[:31]), id="nonce-short"),
+    pytest.param(field_value("nonce", SneakyStr(NONCE)), id="nonce-str-subclass"),
+    pytest.param(field_value("argv0", ""), id="argv0-empty"),
+    pytest.param(field_value("argv0", "x" * 1025), id="argv0-1025"),
+    pytest.param(field_value("argv0", "a\x00b"), id="argv0-nul"),
+    pytest.param(field_value("argv0", SneakyStr(ARGV0)), id="argv0-str-subclass"),
+]
+
+
+@pytest.mark.parametrize("mutate", FIELDS)
+def test_expected_field_snapshot_refusals(
+    v2: Namespace, scenarios: Scenarios, core: Namespace, mutate: Any
+) -> None:
+    expected = expected_for(core)
+    probe = mutate(vars(expected))
+    calls = install_verify(core, passthrough)
+    closed(call(v2, core, approved(scenarios), expected=expected), invalid("EXPECTED"))
+    assert calls == [] and (probe is None or probe == [])
+
+
+def test_expected_instance_of_another_class(
+    v2: Namespace, scenarios: Scenarios, core: Namespace
+) -> None:
+    other = SimpleNamespace(nonce=NONCE, argv0=ARGV0)
+    closed(call(v2, core, approved(scenarios), expected=other), invalid("EXPECTED"))
+
+
+# -- INPUT: exact external types, names and foreign keys --
+
+
+def evidence_list(e: tuple[Any, ...]) -> tuple[Any, Any]:
+    return list(e), None
+
+
+def evidence_short(e: tuple[Any, ...]) -> tuple[Any, Any]:
+    return e[:4], None
+
+
+def item(index: int, value: Any) -> Any:
+    def mutate(e: tuple[Any, ...]) -> tuple[Any, Any]:
+        return (*e[:index], value(e[index]), *e[index + 1 :]), None
+
+    return mutate
+
+
+def map_entry(index: int, key: Any, value: Any) -> Any:
+    def mutate(e: tuple[Any, ...]) -> tuple[Any, Any]:
+        e[index][key] = value
+        return e, None
+
+    return mutate
+
+
+def map_collider(index: int, target: str) -> Any:
+    def mutate(e: tuple[Any, ...]) -> tuple[Any, Any]:
+        key = Collider(target)
+        raw: Any = e[index]
+        count = len(raw)
+        value = raw.pop(target)
+        raw[key] = value
+        assert len(raw) == count and any(item is key for item in raw)
+        key.calls.clear()
+        return e, key.calls
+
+    return mutate
+
+
+def private_value_bytearray(e: tuple[Any, ...]) -> tuple[Any, Any]:
+    e[3]["case-1/invocation.json"] = bytearray(e[3]["case-1/invocation.json"])
+    return e, None
+
+
+def meta_value_str(e: tuple[Any, ...]) -> tuple[Any, Any]:
+    e[4][meta_name(1)] = e[4][meta_name(1)].decode("ascii")
+    return e, None
+
+
+def renamed_entry(index: int, old: str, new: str) -> Any:
+    """Replace one valid name by another name at the same entry count."""
+
+    def mutate(e: tuple[Any, ...]) -> tuple[Any, Any]:
+        mapping = e[index]
+        count = len(mapping)
+        mapping[new] = mapping.pop(old)
+        assert len(mapping) == count
+        return e, None
+
+    return mutate
+
+
+def subclassed(value: Any) -> Any:
+    return CoreDict(value)
+
+
+def sneaky(raw: bytes) -> Any:
+    return SneakyBytes(raw)
+
+
+INPUTS: list[Any] = [
+    pytest.param(evidence_list, id="evidence-list"),
+    pytest.param(evidence_short, id="evidence-four-items"),
+    pytest.param(item(0, bytearray), id="manifest-bytearray"),
+    pytest.param(item(1, sneaky), id="summary-bytes-subclass"),
+    pytest.param(item(2, bytearray), id="transport-bytearray"),
+    pytest.param(item(3, subclassed), id="private-dict-subclass"),
+    pytest.param(item(4, subclassed), id="metadata-dict-subclass"),
+    pytest.param(map_collider(3, "case-1/invocation.json"), id="private-colliding-key"),
+    pytest.param(map_collider(4, "case-1/v2-case.json"), id="metadata-colliding-key"),
+    pytest.param(private_value_bytearray, id="private-value-bytearray"),
+    pytest.param(meta_value_str, id="metadata-value-str"),
+    pytest.param(
+        renamed_entry(3, "case-1/invocation.json", "case-1/unknown.json"),
+        id="private-unknown-name",
+    ),
+    pytest.param(
+        renamed_entry(3, "case-1/invocation.json", "case-1/v2-case.json"),
+        id="v2-file-inside-private",
+    ),
+    pytest.param(
+        renamed_entry(4, meta_name(1), "case-4/v2-case.json"),
+        id="metadata-unknown-name",
+    ),
+    pytest.param(map_entry(3, "case-1/extra.json", b"{}\n"), id="private-12-entries"),
+    pytest.param(map_entry(4, "case-4/v2-case.json", b"{}\n"), id="metadata-4-entries"),
+]
+
+
+@pytest.mark.parametrize("mutate", INPUTS)
+def test_input_refusals(v2: Namespace, scenarios: Scenarios, core: Namespace, mutate: Any) -> None:
+    evidence, probe = mutate(approved(scenarios))
+    calls = install_verify(core, passthrough)
+    closed(call(v2, core, evidence), invalid("INPUT"))
+    assert calls == [] and (probe is None or probe == [])
+
+
+# -- CAP: only reachable individual limits --
+
+
+def grown(size: int) -> Any:
+    def make(raw: bytes) -> bytes:
+        return raw + b" " * (size - len(raw))
+
+    return make
+
+
+CAPS: list[Any] = [
+    pytest.param(item(1, grown(16385)), id="summary-16385"),
+    pytest.param(item(2, grown(4097)), id="transport-4097"),
+    pytest.param(item(0, grown(4097)), id="manifest-4097"),
+    pytest.param(map_entry(3, "case-1/invocation.json", b" " * 4097), id="invocation-4097"),
+    pytest.param(map_entry(3, "case-3/audit.json", b" " * 65537), id="audit-65537"),
+    pytest.param(map_entry(4, meta_name(1), b" " * 1025), id="metadata-1025"),
+]
+
+
+@pytest.mark.parametrize("mutate", CAPS)
+def test_cap_refusals(v2: Namespace, scenarios: Scenarios, core: Namespace, mutate: Any) -> None:
+    evidence, _probe = mutate(approved(scenarios))
+    calls = install_verify(core, passthrough)
+    closed(call(v2, core, evidence), invalid("CAP"))
+    assert calls == []
+
+
+# -- SCHEMA: canonical manifest bytes and exact manifest schema --
+
+
+def replace_once(old: bytes, new: bytes) -> Any:
+    def transform(raw: bytes) -> bytes:
+        assert old in raw
+        return raw.replace(old, new, 1)
+
+    return transform
+
+
+def crlf(raw: bytes) -> bytes:
+    return raw[:-1] + b"\r\n"
+
+
+def no_final_lf(raw: bytes) -> bytes:
+    return raw[:-1]
+
+
+def empty(_raw: bytes) -> bytes:
+    return b""
+
+
+RAW_SCHEMA: list[Any] = [
+    pytest.param(replace_once(b'{"cases":', b'{"cases":0,"cases":'), id="duplicate-key"),
+    pytest.param(replace_once(b'"executed":3', b'"executed":NaN'), id="nan"),
+    pytest.param(replace_once(b'"executed":3', b'"executed":Infinity'), id="infinity"),
+    pytest.param(crlf, id="crlf-terminator"),
+    pytest.param(no_final_lf, id="no-final-lf"),
+    pytest.param(replace_once(b',"executed"', b',\n"executed"'), id="inner-lf"),
+    pytest.param(replace_once(b',"executed"', b', "executed"'), id="non-canonical-space"),
+    pytest.param(replace_once(b'"executed":3', b'"executed":123456789012'), id="large-integer"),
+    pytest.param(replace_once(b'"executed":3', b'"executed":3.0'), id="float-executed"),
+    pytest.param(replace_once(b'"kind":"', b'"kind":"\xc3\xa9'), id="non-ascii"),
+    pytest.param(empty, id="manifest-absent-v1-evidence"),
+]
+
+
+@pytest.mark.parametrize("transform", RAW_SCHEMA)
+def test_schema_canonical_manifest_refusals(
+    v2: Namespace, scenarios: Scenarios, core: Namespace, transform: Any
+) -> None:
+    closed(call(v2, core, approved(scenarios, Hooks(raw=transform))), invalid("SCHEMA"))
+
+
+def deep(manifest: dict[str, Any]) -> None:
+    value: Any = 0
+    for _level in range(33):
+        value = [value]
+    manifest["deep"] = value
+
+
+def drop(key: str) -> Any:
+    def edit(manifest: dict[str, Any]) -> None:
+        del manifest[key]
+
+    return edit
+
+
+def put(path: tuple[Any, ...], value: Any) -> Any:
+    def edit(manifest: dict[str, Any]) -> None:
+        target: Any = manifest
+        for step in path[:-1]:
+            target = target[step]
+        target[path[-1]] = value
+
+    return edit
+
+
+def pop_list(key: str) -> Any:
+    def edit(manifest: dict[str, Any]) -> None:
+        manifest[key].pop()
+
+    return edit
+
+
+EDIT_SCHEMA: list[Any] = [
+    pytest.param(deep, id="depth-33"),
+    pytest.param(put(("extra",), None), id="extra-key"),
+    pytest.param(drop("launcher"), id="missing-key"),
+    pytest.param(put(("kind",), "OTHER_KIND"), id="kind"),
+    pytest.param(put(("executed",), True), id="executed-bool"),
+    pytest.param(put(("executed",), "3"), id="executed-str"),
+    pytest.param(put(("sources", 0, "extra"), None), id="source-extra-key"),
+    pytest.param(pop_list("sources"), id="sources-seven"),
+    pytest.param(put(("cases", 0, "extra"), None), id="case-descriptor-extra-key"),
+    pytest.param(put(("summary", "extra"), None), id="summary-descriptor-extra-key"),
+    pytest.param(put(("launcher", "bytes"), 1), id="launcher-extra-key"),
+    pytest.param(put(("summary", "bytes"), True), id="summary-bytes-bool"),
+]
+
+
+@pytest.mark.parametrize("edit", EDIT_SCHEMA)
+def test_schema_manifest_object_refusals(
+    v2: Namespace, scenarios: Scenarios, core: Namespace, edit: Any
+) -> None:
+    closed(call(v2, core, approved(scenarios, Hooks(edit=edit))), invalid("SCHEMA"))
+
+
+# -- NONCE, PIN and BINDING --
+
+
+def test_nonce_mismatch(v2: Namespace, scenarios: Scenarios, core: Namespace) -> None:
+    evidence = approved(scenarios, Hooks(edit=put(("nonce",), "f" * 32)))
+    closed(call(v2, core, evidence), invalid("NONCE"))
+
+
+def swap_sources(manifest: dict[str, Any]) -> None:
+    sources = manifest["sources"]
+    sources[0], sources[1] = sources[1], sources[0]
+
+
+PINS: list[Any] = [
+    *[
+        pytest.param(put(("sources", index, "sha256"), OTHER_SHA), id="pin-" + row[0])
+        for index, row in enumerate(ROWS)
+    ],
+    pytest.param(put(("sources", 0, "bytes"), ROWS[0][2] + 1), id="pin-bytes"),
+    pytest.param(put(("sources", 2, "path"), "docs/poc/other.py"), id="pin-path"),
+    pytest.param(swap_sources, id="pin-role-order"),
+    pytest.param(put(("launcher", "sha256"), OTHER_SHA), id="pin-launcher"),
+]
+
+
+@pytest.mark.parametrize("edit", PINS)
+def test_pin_refusals(v2: Namespace, scenarios: Scenarios, core: Namespace, edit: Any) -> None:
+    closed(call(v2, core, approved(scenarios, Hooks(edit=edit))), invalid("PIN"))
+
+
+def wrong_meta_bytes(metadata: dict[str, bytes]) -> None:
+    obj = json.loads(metadata[meta_name(1)])
+    obj["owner_released"] = False
+    metadata[meta_name(1)] = canonical(obj)
+
+
+BINDING_EDITS: list[Any] = [
+    pytest.param(Hooks(edit=put(("summary", "sha256"), OTHER_SHA)), id="summary-sha"),
+    pytest.param(Hooks(edit=put(("summary", "bytes"), 1)), id="summary-bytes"),
+    pytest.param(Hooks(edit=put(("summary", "name"), "summary.txt")), id="summary-name"),
+    pytest.param(Hooks(edit=put(("transport", "sha256"), OTHER_SHA)), id="transport-sha"),
+    pytest.param(Hooks(edit=put(("transport", "name"), "transport.txt")), id="transport-name"),
+    pytest.param(Hooks(after=wrong_meta_bytes), id="metadata-present-wrong-sha"),
+    pytest.param(Hooks(edit=put(("cases", 0, "bytes"), 1)), id="metadata-descriptor-bytes"),
+]
+
+
+@pytest.mark.parametrize("hooks", BINDING_EDITS)
+def test_binding_refusals(
+    v2: Namespace, scenarios: Scenarios, core: Namespace, hooks: Hooks
+) -> None:
+    calls = install_verify(core, passthrough)
+    closed(call(v2, core, approved(scenarios, hooks)), invalid("BINDING"))
+    assert calls == []
+
+
+# -- PREFIX: presence and coverage before any metadata lookup --
+
+
+def delete_meta(number: int) -> Any:
+    def after(metadata: dict[str, bytes]) -> None:
+        del metadata[meta_name(number)]
+
+    return after
+
+
+def drop_case_two_private(d: SimpleNamespace) -> None:
+    for name in [name for name in d.private if name.startswith("case-2/")]:
+        del d.private[name]
+
+
+def future_metadata(d: SimpleNamespace) -> None:
+    d.meta[meta_name(3)] = case_meta(3, False)
+
+
+def swap_cases(manifest: dict[str, Any]) -> None:
+    cases = manifest["cases"]
+    cases[0], cases[1] = cases[1], cases[0]
+
+
+MISSING_AND_WRONG = Hooks(edit=put(("cases", 1, "sha256"), OTHER_SHA), after=delete_meta(2))
+PREFIXES: list[Any] = [
+    pytest.param(("approved", None, Hooks(edit=put(("executed",), 2))), id="executed-differs"),
+    pytest.param(("approved", drop_case_two_private, Hooks()), id="private-prefix-gap"),
+    pytest.param(("approved", None, Hooks(after=delete_meta(2))), id="metadata-missing"),
+    pytest.param(("approved", None, MISSING_AND_WRONG), id="metadata-missing-and-wrong-sha"),
+    pytest.param(("terminate_rejected", future_metadata, Hooks()), id="future-metadata-case-3"),
+    pytest.param(("approved", None, Hooks(edit=swap_cases)), id="cases-order"),
+    pytest.param(
+        ("approved", None, Hooks(edit=put(("cases", 0, "number"), True))),
+        id="case-number-bool",
+    ),
+    pytest.param(
+        ("approved", None, Hooks(edit=put(("cases", 0, "number"), 2))),
+        id="case-number-wrong",
+    ),
+    pytest.param(
+        ("approved", None, Hooks(edit=put(("cases", 0, "name"), meta_name(2)))),
+        id="case-name",
+    ),
+    pytest.param(("approved", None, Hooks(edit=pop_list("cases"))), id="cases-short"),
+]
+
+
+@pytest.mark.parametrize("spec", PREFIXES)
+def test_prefix_refusals(v2: Namespace, scenarios: Scenarios, core: Namespace, spec: Any) -> None:
+    name, prepare, hooks = spec
+    d = draft(scenarios[name])
+    if prepare is not None:
+        prepare(d)
+    calls = install_verify(core, passthrough)
+    closed(call(v2, core, build(d, hooks)), invalid("PREFIX"))
+    assert calls == []
+
+
+def test_priority_summary_binding_before_missing_metadata(
+    v2: Namespace, scenarios: Scenarios, core: Namespace
+) -> None:
+    hooks = Hooks(edit=put(("summary", "sha256"), OTHER_SHA), after=delete_meta(1))
+    closed(call(v2, core, approved(scenarios, hooks)), invalid("BINDING"))
+
+
+def test_priority_expected_before_input(
+    v2: Namespace, scenarios: Scenarios, core: Namespace
+) -> None:
+    evidence = list(approved(scenarios))
+    closed(call(v2, core, evidence, (ROWS[:7], LAUNCHER)), invalid("EXPECTED"))
+
+
+def test_priority_pin_before_binding(v2: Namespace, scenarios: Scenarios, core: Namespace) -> None:
+    def edit(manifest: dict[str, Any]) -> None:
+        manifest["launcher"]["sha256"] = OTHER_SHA
+        manifest["summary"]["sha256"] = OTHER_SHA
+
+    closed(call(v2, core, approved(scenarios, Hooks(edit=edit))), invalid("PIN"))
+
+
+# -- METADATA: parse, exact schema and the one-way tree relation --
+
+
+def meta_edit(key: str, value: Any) -> Any:
+    def prepare(d: SimpleNamespace) -> None:
+        d.meta[meta_name(1)][key] = value
+
+    return prepare
+
+
+def meta_drop(key: str) -> Any:
+    def prepare(d: SimpleNamespace) -> None:
+        del d.meta[meta_name(1)][key]
+
+    return prepare
+
+
+def meta_spaced(metadata: dict[str, bytes]) -> None:
+    obj = json.loads(metadata[meta_name(1)])
+    metadata[meta_name(1)] = json.dumps(obj, sort_keys=True).encode("ascii") + b"\n"
+
+
+def tree_on_approved(d: SimpleNamespace) -> None:
+    d.meta[meta_name(1)]["reconcile_reserved"] = True
+    d.meta[meta_name(1)]["tree_latched"] = True
+
+
+METADATA: list[Any] = [
+    pytest.param(None, Hooks(before=meta_spaced), id="metadata-non-canonical"),
+    pytest.param(meta_edit("kind", "OTHER"), Hooks(), id="metadata-kind"),
+    pytest.param(meta_edit("extra", None), Hooks(), id="metadata-extra-key"),
+    pytest.param(meta_drop("owner_released"), Hooks(), id="metadata-missing-key"),
+    pytest.param(meta_edit("number", True), Hooks(), id="metadata-number-bool"),
+    pytest.param(meta_edit("number", 2), Hooks(), id="metadata-number-mismatch"),
+    pytest.param(meta_edit("case", "TERMINATE"), Hooks(), id="metadata-case-mismatch"),
+    pytest.param(meta_edit("slot_outcome", "PREPARED"), Hooks(), id="metadata-slot-outcome"),
+    pytest.param(meta_edit("lifecycle_reserved", False), Hooks(), id="metadata-lifecycle-false"),
+    pytest.param(meta_edit("owner_released", False), Hooks(), id="metadata-owner-not-released"),
+    pytest.param(meta_edit("tree_latched", 1), Hooks(), id="metadata-tree-int"),
+    pytest.param(meta_edit("reconcile_reserved", True), Hooks(), id="metadata-reconcile-differs"),
+    pytest.param(tree_on_approved, Hooks(), id="metadata-tree-on-approved-record"),
+]
+
+
+@pytest.mark.parametrize(("prepare", "hooks"), METADATA)
+def test_metadata_refusals(
+    v2: Namespace, scenarios: Scenarios, core: Namespace, prepare: Any, hooks: Hooks
+) -> None:
+    d = draft(scenarios["approved"])
+    if prepare is not None:
+        prepare(d)
+    closed(call(v2, core, build(d, hooks)), invalid("METADATA"))
+
+
+def test_metadata_rejection_without_latch_is_valid(
+    v2: Namespace, scenarios: Scenarios, core: Namespace
+) -> None:
+    d = draft(scenarios["rejected_without_latch"])
+    assert d.meta[meta_name(1)]["tree_latched"] is False
+    closed(call(v2, core, build(d)), REJECTED)
+
+
+# -- CORE_INVALID and core output classification --
+
+
+def test_core_contradiction_is_core_invalid(
+    v2: Namespace, scenarios: Scenarios, core: Namespace
+) -> None:
+    d = draft(scenarios["normal_tree"])
+
+    def edit(summary: dict[str, Any]) -> None:
+        summary["cases"][0]["rejection"] = "MISMATCH"
+
+    rebind_summary(d, edit)
+    closed(call(v2, core, build(d)), invalid("CORE_INVALID"))
+
+
+def constant(value: Any) -> Any:
+    def action(_real: Any, _args: Any) -> Any:
+        return value
+
+    return action
+
+
+OUTPUTS: list[Any] = [
+    pytest.param(["VERIFIED_APPROVED", "OK"], "INTERNAL", id="output-list"),
+    pytest.param(("VERIFIED_APPROVED", "OK", None), "INTERNAL", id="output-three"),
+    pytest.param((SpyStr("VERIFIED_APPROVED"), "OK"), "INTERNAL", id="output-str-subclass"),
+    pytest.param(("INVALID", "UNKNOWN"), "INTERNAL", id="output-unknown-reason"),
+    pytest.param(("VERIFIED_APPROVED", "NOPE"), "INTERNAL", id="output-unknown-pair"),
+    pytest.param(("INVALID", "FILESET"), "CORE_INVALID", id="output-valid-core-reason"),
+]
+
+
+@pytest.mark.parametrize(("value", "reason"), OUTPUTS)
+def test_core_output_classification(
+    v2: Namespace, scenarios: Scenarios, core: Namespace, value: Any, reason: str
+) -> None:
+    SPY_CALLS.clear()
+    calls = install_verify(core, constant(value))
+    closed(call(v2, core, approved(scenarios)), invalid(reason))
+    assert len(calls) == 1 and SPY_CALLS == []
+
+
+# -- callback return shapes per phase --
+
+
+def returning(value: Any) -> Any:
+    def action(_real: Any, _raw: bytes) -> Any:
+        return value
+
+    return action
+
+
+def foreign_key_object(real: Any, raw: bytes) -> Any:
+    """The real parsed object with `kind` re-keyed by a foreign key, same count."""
+    obj: dict[Any, Any] = real(raw)
+    count = len(obj)
+    key = Collider("kind")
+    obj[key] = obj.pop("kind")
+    assert len(obj) == count and any(item is key for item in obj)
+    key.calls.clear()
+    RETURNED.append(key)
+    return obj
+
+
+def subclass_object(real: Any, raw: bytes) -> Any:
+    return CoreDict(real(raw))
+
+
+PARSE_SHAPES: list[Any] = [
+    pytest.param(("manifest", returning([]), "SCHEMA"), id="manifest-list"),
+    pytest.param(("manifest", subclass_object, "SCHEMA"), id="manifest-dict-subclass"),
+    pytest.param(("manifest", foreign_key_object, "SCHEMA"), id="manifest-foreign-key"),
+    pytest.param(("metadata", returning([]), "METADATA"), id="metadata-list"),
+    pytest.param(("metadata", foreign_key_object, "METADATA"), id="metadata-foreign-key"),
+    pytest.param(("summary", returning([]), "INTERNAL"), id="post-core-summary-list"),
+    pytest.param(("summary", foreign_key_object, "INTERNAL"), id="post-core-summary-foreign-key"),
+]
+
+
+@pytest.mark.parametrize("spec", PARSE_SHAPES)
+def test_parse_return_shapes_per_phase(
+    v2: Namespace, scenarios: Scenarios, core: Namespace, spec: Any
+) -> None:
+    phase, action, reason = spec
+    RETURNED.clear()
+    evidence = approved(scenarios)
+    target, occurrence = parse_target(evidence, phase)
+    install_parse(core, target, occurrence, action)
+    closed(call(v2, core, evidence), invalid(reason))
+    assert all(key.calls == [] for key in RETURNED)
+
+
+def spy_manifest_kind(real: Any, raw: bytes) -> Any:
+    obj = real(raw)
+    obj["kind"] = SpyStr(obj["kind"])
+    return obj
+
+
+def spy_slot_outcome(real: Any, raw: bytes) -> Any:
+    obj = real(raw)
+    obj["slot_outcome"] = SpyStr(obj["slot_outcome"])
+    return obj
+
+
+def spy_case_outcome(real: Any, raw: bytes) -> Any:
+    obj = real(raw)
+    obj["cases"][0]["outcome"] = SpyStr(obj["cases"][0]["outcome"])
+    return obj
+
+
+NESTED: list[Any] = [
+    pytest.param(("manifest", spy_manifest_kind, "SCHEMA"), id="manifest-kind-str-subclass"),
+    pytest.param(("metadata", spy_slot_outcome, "METADATA"), id="metadata-slot-str-subclass"),
+    pytest.param(("summary", spy_case_outcome, "INTERNAL"), id="post-core-outcome-str-subclass"),
+]
+
+
+@pytest.mark.parametrize("spec", NESTED)
+def test_nested_foreign_strings_per_phase(
+    v2: Namespace, scenarios: Scenarios, core: Namespace, spec: Any
+) -> None:
+    phase, action, reason = spec
+    SPY_CALLS.clear()
+    evidence = approved(scenarios)
+    target, occurrence = parse_target(evidence, phase)
+    install_parse(core, target, occurrence, action)
+    closed(call(v2, core, evidence), invalid(reason))
+    assert SPY_CALLS == []
+
+
+def original_with(cls: Any) -> Any:
+    obj = object.__new__(cls)
+    vars(obj).update({"nonce": NONCE, "argv0": ARGV0})
+    return obj
+
+
+FRESH: list[Any] = [
+    pytest.param(ThreeFields, id="fresh-three-fields"),
+    pytest.param(CopiedFields, id="fresh-copied-values"),
+    pytest.param(RenamedFields, id="fresh-renamed-field"),
+    pytest.param(WrongClass, id="fresh-wrong-class-new"),
+    pytest.param(ForeignKeyFields, id="fresh-foreign-key"),
+]
+
+
+@pytest.mark.parametrize("cls", FRESH)
+def test_fresh_expected_shape_is_internal(
+    v2: Namespace, scenarios: Scenarios, core: Namespace, cls: Any
+) -> None:
+    FRESH_KEYS.clear()
+    core["Expected"] = cls  # constructor stand-in installed before the call
+    calls = install_verify(core, passthrough)
+    result = call(v2, core, approved(scenarios), expected=original_with(cls))
+    closed(result, invalid("INTERNAL"))
+    assert calls == [] and all(key.calls == [] for key in FRESH_KEYS)
+
+
+def constructor(core: Namespace, drift: bool, fault: BaseException | None) -> Any:
+    """A builtin-metatype stand-in whose __init__ sets valid fields, then may
+    change a bound core reference and/or raise; installed before the call."""
+
+    def init(self: Any, nonce: str, argv0: str) -> None:
+        self.nonce, self.argv0 = nonce, argv0
+        if drift:
+            core["_capture"] = foreign
+        if fault is not None:
+            raise fault
+
+    return type("Expected", (), {"__init__": init})
+
+
+CONSTRUCTOR_FAULTS: list[Any] = [
+    pytest.param((False, True, "INTERNAL"), id="constructor-value-error"),
+    pytest.param((True, False, "CORE_BINDING"), id="constructor-drift"),
+    pytest.param((True, True, "CORE_BINDING"), id="constructor-drift-and-value-error"),
+]
+
+
+@pytest.mark.parametrize("spec", CONSTRUCTOR_FAULTS)
+def test_constructor_callback_faults(
+    v2: Namespace, scenarios: Scenarios, core: Namespace, spec: Any
+) -> None:
+    drift, error, reason = spec
+    cls = constructor(core, drift, ValueError("fault") if error else None)
+    core["Expected"] = cls
+    calls = install_verify(core, passthrough)
+    result = call(v2, core, approved(scenarios), expected=original_with(cls))
+    closed(result, invalid(reason))
+    assert calls == []
+
+
+CONSTRUCTOR_CONTROLS: list[Any] = [
+    pytest.param(False, id="control-constructor"),
+    pytest.param(True, id="control-constructor-drift"),
+]
+
+
+@pytest.mark.parametrize("drift", CONSTRUCTOR_CONTROLS)
+def test_controls_in_constructor_keep_identity(
+    v2: Namespace, scenarios: Scenarios, core: Namespace, drift: bool
+) -> None:
+    signal = Signal()
+    cls = constructor(core, drift, signal)
+    core["Expected"] = cls
+    calls = install_verify(core, passthrough)
+    evidence = approved(scenarios)
+    original = original_with(cls)
+    with pytest.raises(Signal) as caught:
+        call(v2, core, evidence, expected=original)
+    assert caught.value is signal and calls == []
+
+
+# -- guards around each callback: drift wins, controls keep identity --
+
+
+def drift_then(core: Namespace, outcome: Any) -> Any:
+    def action(real: Any, raw: Any) -> Any:
+        core["_capture"] = foreign
+        return outcome(real, raw)
+
+    return action
+
+
+def call_real(real: Any, raw: Any) -> Any:
+    return real(raw)
+
+
+def raise_invalid(core: Namespace) -> Any:
+    failure = core["_Invalid"]
+
+    def outcome(_real: Any, _raw: Any) -> Any:
+        raise failure("SCHEMA")
+
+    return outcome
+
+
+def raise_value(_real: Any, _raw: Any) -> Any:
+    raise ValueError("fault")
+
+
+@pytest.mark.parametrize("phase", ["manifest", "metadata", "summary"])
+def test_drift_during_parse_is_core_binding(
+    v2: Namespace, scenarios: Scenarios, core: Namespace, phase: str
+) -> None:
+    evidence = approved(scenarios)
+    target, occurrence = parse_target(evidence, phase)
+    install_parse(core, target, occurrence, drift_then(core, call_real))
+    closed(call(v2, core, evidence), invalid("CORE_BINDING"))
+
+
+def test_drift_with_invalid_is_core_binding(
+    v2: Namespace, scenarios: Scenarios, core: Namespace
+) -> None:
+    evidence = approved(scenarios)
+    install_parse(core, evidence[0], 1, drift_then(core, raise_invalid(core)))
+    closed(call(v2, core, evidence), invalid("CORE_BINDING"))
+
+
+def drift_verify(core: Namespace, outcome: Any) -> Any:
+    def action(real: Any, args: Any) -> Any:
+        core["_parse"] = foreign
+        return outcome(real, args)
+
+    return action
+
+
+VERIFY_DRIFTS: list[Any] = [
+    pytest.param(passthrough, id="verify-returns"),
+    pytest.param(raise_value, id="verify-raises"),
+]
+
+
+@pytest.mark.parametrize("outcome", VERIFY_DRIFTS)
+def test_drift_during_verify_is_core_binding(
+    v2: Namespace, scenarios: Scenarios, core: Namespace, outcome: Any
+) -> None:
+    install_verify(core, drift_verify(core, outcome))
+    closed(call(v2, core, approved(scenarios)), invalid("CORE_BINDING"))
+
+
+@pytest.mark.parametrize("phase", ["manifest", "metadata", "summary"])
+def test_ordinary_parse_errors_are_internal(
+    v2: Namespace, scenarios: Scenarios, core: Namespace, phase: str
+) -> None:
+    evidence = approved(scenarios)
+    target, occurrence = parse_target(evidence, phase)
+    install_parse(core, target, occurrence, raise_value)
+    closed(call(v2, core, evidence), invalid("INTERNAL"))
+
+
+def test_post_core_parser_invalid_is_internal(
+    v2: Namespace, scenarios: Scenarios, core: Namespace
+) -> None:
+    evidence = approved(scenarios)
+    install_parse(core, evidence[1], 2, raise_invalid(core))
+    closed(call(v2, core, evidence), invalid("INTERNAL"))
+
+
+def test_verify_raising_is_internal(v2: Namespace, scenarios: Scenarios, core: Namespace) -> None:
+    calls = install_verify(core, raise_value)
+    closed(call(v2, core, approved(scenarios)), invalid("INTERNAL"))
+    assert len(calls) == 1
+
+
+PARSE_CONTROLS: list[Any] = [
+    pytest.param(("manifest", True), id="control-manifest-with-drift"),
+    pytest.param(("metadata", False), id="control-metadata"),
+    pytest.param(("summary", True), id="control-post-core-with-drift"),
+]
+
+
+@pytest.mark.parametrize("spec", PARSE_CONTROLS)
+def test_controls_in_parse_keep_identity(
+    v2: Namespace, scenarios: Scenarios, core: Namespace, spec: Any
+) -> None:
+    phase, drift = spec
+    signal = Signal()
+    evidence = approved(scenarios)
+
+    def stop(_real: Any, _raw: Any) -> Any:
+        raise signal
+
+    target, occurrence = parse_target(evidence, phase)
+    install_parse(core, target, occurrence, drift_then(core, stop) if drift else stop)
+    with pytest.raises(Signal) as caught:
+        call(v2, core, evidence)
+    assert caught.value is signal
+
+
+@pytest.mark.parametrize("drift", [False, True], ids=["control-verify", "control-verify-drift"])
+def test_controls_in_verify_keep_identity(
+    v2: Namespace, scenarios: Scenarios, core: Namespace, drift: bool
+) -> None:
+    signal = Signal()
+
+    def stop(_real: Any, _args: Any) -> Any:
+        raise signal
+
+    install_verify(core, drift_verify(core, stop) if drift else stop)
+    evidence = approved(scenarios)
+    with pytest.raises(Signal) as caught:
+        call(v2, core, evidence)
+    assert caught.value is signal
+
+
+# -- import and call purity --
+
+
+BANNED_IMPORTS = frozenset(
+    (
+        "builtins",
+        "ctypes",
+        "importlib",
+        "io",
+        "multiprocessing",
+        "os",
+        "pathlib",
+        "runpy",
+        "shutil",
+        "socket",
+        "subprocess",
+        "threading",
+    )
+)
+BANNED_NAMES = frozenset(("__import__", "compile", "eval", "exec", "open"))
+TOP_LEVEL = (ast.Import, ast.ImportFrom, ast.FunctionDef, ast.ClassDef, ast.Assign, ast.AnnAssign)
+
+
+def test_module_body_is_definition_only() -> None:
+    """Static boundary proof of the module body; not a proof of every IO path."""
+    tree = ast.parse(MODULE.read_bytes())
+    body = tree.body
+    assert body and isinstance(body[0], ast.Expr) and isinstance(body[0].value, ast.Constant)
+    assert all(isinstance(node, TOP_LEVEL) for node in body[1:])
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            assert not {alias.name.split(".")[0] for alias in node.names} & BANNED_IMPORTS
+        if isinstance(node, ast.ImportFrom):
+            assert (node.module or "").split(".")[0] not in BANNED_IMPORTS
+        if isinstance(node, ast.Name):
+            assert node.id not in BANNED_NAMES
+
+
+def test_module_body_runs_with_file_apis_trapped(monkeypatch: pytest.MonkeyPatch) -> None:
+    """runpy reads its own source through io.open_code; the executed module body
+    then runs with the public file APIs trapped."""
+    for owner, name in (
+        (builtins, "open"),
+        (io, "open"),
+        (Path, "open"),
+        (Path, "read_bytes"),
+        (Path, "read_text"),
+        (os, "open"),
+        (ctypes, "WinDLL"),
+        (subprocess, "Popen"),
+        (os, "system"),
+        (threading.Thread, "start"),
+        (time, "sleep"),
+    ):
+        monkeypatch.setattr(owner, name, forbidden)
+    namespace: Namespace = runpy.run_path(str(MODULE))["verify_v2"].__globals__
+    assert type(namespace["verify_v2"]) is FunctionType
+
+
+def test_import_and_call_have_no_file_process_or_native_effect(
+    monkeypatch: pytest.MonkeyPatch, scenarios: Scenarios, core: Namespace
+) -> None:
+    evidence = approved(scenarios)
+    expected = expected_for(core)
+    for owner, name in (
+        (ctypes, "WinDLL"),
+        (subprocess, "Popen"),
+        (os, "system"),
+        (threading.Thread, "start"),
+        (time, "sleep"),
+    ):
+        monkeypatch.setattr(owner, name, forbidden)
+    namespace: Namespace = runpy.run_path(str(MODULE))["verify_v2"].__globals__
+    assert type(namespace["verify_v2"]) is FunctionType
+    with pytest.MonkeyPatch.context() as patch:
+        for target, attribute in (
+            (builtins, "open"),
+            (io, "open"),
+            (Path, "open"),
+            (Path, "read_bytes"),
+            (os, "open"),
+        ):
+            patch.setattr(target, attribute, forbidden)
+        result = namespace["verify_v2"](core, POLICY, expected, evidence)
+    closed(result, APPROVED)
+
+
+# -- bounded work: exact counts before any key scan (whitebox observational seam) --
+#
+# The module's own `_str_keys` helper is wrapped only to OBSERVE which maps reach
+# the key scanner; the real predicate still decides every call. Exact dicts cannot
+# instrument their own iteration, so this checks the bounded-work order (count
+# before scan), not code authenticity.
+
+
+def watch_scans(v2: Namespace) -> list[Any]:
+    real = v2["_str_keys"]
+    scanned: list[Any] = []
+
+    def scan(mapping: Any) -> Any:
+        scanned.append(mapping)
+        return real(mapping)
+
+    v2["_str_keys"] = scan
+    return scanned
+
+
+def never_scanned(scanned: list[Any], marked: Any) -> bool:
+    return not any(item is marked for item in scanned)
+
+
+def test_scan_seam_observes_real_calls(
+    v2: Namespace, scenarios: Scenarios, core: Namespace
+) -> None:
+    scanned = watch_scans(v2)
+    closed(call(v2, core, approved(scenarios)), APPROVED)
+    assert scanned
+
+
+EXTERNAL_COUNTS: list[Any] = [
+    pytest.param((3, "case-1/extra.json"), id="private-12-not-scanned"),
+    pytest.param((4, "case-4/v2-case.json"), id="metadata-4-not-scanned"),
+]
+
+
+@pytest.mark.parametrize("spec", EXTERNAL_COUNTS)
+def test_overcount_external_maps_are_not_scanned(
+    v2: Namespace, scenarios: Scenarios, core: Namespace, spec: Any
+) -> None:
+    index, key = spec
+    evidence = approved(scenarios)
+    marked = evidence[index]
+    marked[key] = b"{}\n"
+    assert len(marked) == (12 if index == 3 else 4)
+    scanned = watch_scans(v2)
+    closed(call(v2, core, evidence), invalid("INPUT"))
+    assert never_scanned(scanned, marked)
+
+
+MARKED: list[Any] = []
+
+
+def extra_root(count: int) -> Any:
+    def action(real: Any, raw: bytes) -> Any:
+        clone = dict(real(raw))
+        assert len(clone) == count  # genuine parsed object, before the fault
+        clone["extra"] = None
+        MARKED.append(clone)
+        return clone
+
+    return action
+
+
+def extra_case_record(real: Any, raw: bytes) -> Any:
+    summary = real(raw)
+    record = dict(summary["cases"][0])
+    assert len(summary) == 10 and len(record) == 13  # genuine shapes, before the fault
+    record["extra"] = None
+    summary["cases"][0] = record
+    MARKED.append(record)
+    return summary
+
+
+OVERCOUNT_PARSES: list[Any] = [
+    pytest.param(("manifest", extra_root(8), "SCHEMA"), id="manifest-plus-one-not-scanned"),
+    pytest.param(("metadata", extra_root(8), "METADATA"), id="metadata-plus-one-not-scanned"),
+    pytest.param(("summary", extra_root(10), "INTERNAL"), id="summary-plus-one-not-scanned"),
+    pytest.param(
+        ("summary", extra_case_record, "INTERNAL"),
+        id="case-record-plus-one-not-scanned",
+    ),
+]
+
+
+@pytest.mark.parametrize("spec", OVERCOUNT_PARSES)
+def test_overcount_parsed_objects_are_not_scanned(
+    v2: Namespace, scenarios: Scenarios, core: Namespace, spec: Any
+) -> None:
+    phase, action, reason = spec
+    MARKED.clear()
+    evidence = approved(scenarios)
+    target, occurrence = parse_target(evidence, phase)
+    install_parse(core, target, occurrence, action)
+    scanned = watch_scans(v2)
+    closed(call(v2, core, evidence), invalid(reason))
+    assert len(MARKED) == 1 and never_scanned(scanned, MARKED[0])

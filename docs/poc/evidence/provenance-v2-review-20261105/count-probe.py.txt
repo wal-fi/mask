@@ -1,0 +1,19 @@
+import json,runpy
+test=runpy.run_path("tests/test_pg16_shell_native_control_provenance_v2.py")
+module=runpy.run_path("docs/poc/pg16_shell_native_control_provenance_v2.py")["verify_v2"].__globals__
+core=runpy.run_path("docs/poc/pg16_shell_native_control_verify.py")["verify"].__globals__
+original=module["_str_keys"]
+reports=[]
+for label,index,count in (("private-over-count",3,12),("metadata-over-count",4,4)):
+    oversized={"x"+str(n):b"x" for n in range(count)}
+    seen=[]
+    def observe(value):
+        if value is oversized: seen.append("key-inspection")
+        return original(value)
+    module["_str_keys"]=observe
+    evidence=[b"",b"",b"",{},{}]
+    evidence[index]=oversized
+    result=module["verify_v2"](core,test["POLICY"],test["expected_for"](core),tuple(evidence))
+    reports.append({"case":label,"result":result,"oversized_map_key_inspections":len(seen),"expected_inspections":0})
+module["_str_keys"]=original
+print(json.dumps({"findings_reproduced":all(r["oversized_map_key_inspections"]>0 for r in reports),"cases":reports},sort_keys=True))

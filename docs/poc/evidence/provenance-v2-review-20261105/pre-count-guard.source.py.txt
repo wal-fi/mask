@@ -1,0 +1,601 @@
+"""Private provenance V2 envelope validator. Import defines only.
+
+No __main__, no CLI, no loader, no collector and no publisher. Nothing here
+reads a file, loads or executes source, starts a process or prints.
+verify_v2(core, expected_v2, expected_core, evidence) binds declarations only:
+
+- core: the real globals of the frozen core verifier (b3755d49), already
+  loaded by a trusted external chain into a fresh, private, stable namespace;
+- expected_v2: reviewer-owned policy (rows of the 8 selected sources, launcher
+  sha), coherent with the frozen core PINS;
+- expected_core: an instance of that namespace's Expected;
+- evidence: (manifest, summary, transport, private, metadata).
+
+The frozen core verify runs exactly once, on a fresh Expected built from the
+two captured strings and on a snapshot of the private map (no V2 files). The
+result is a closed pair of exact str: V2_VERIFIED_APPROVED/OK,
+V2_VERIFIED_REJECTED/OK or V2_INVALID/<reason>. REJECTED is never relabelled
+and nothing here is a production approval.
+
+Identity guards around every callback detect wrong types, cross-namespace
+objects and replacements during a call. They do NOT authenticate code: a
+malicious initial namespace with compatible shapes, in-place edits of policy
+map contents, the Expected constructor and its __dict__ descriptor are the
+trusted loader's premise, outside this boundary. The 8 rows are selected
+declarations, not the complete executed code; origin, freshness and real
+execution belong to the external chain.
+"""
+
+import hashlib
+from types import FunctionType
+
+ROLES = (
+    "case_caller",
+    "lifecycle_v2",
+    "tree_reconcile",
+    "runner",
+    "adapter",
+    "backend",
+    "host",
+    "core_verify",
+)
+PATHS = (
+    "docs/poc/pg16_shell_native_control_case_v2.py",
+    "docs/poc/pg16_shell_native_control_lifecycle_v2.py",
+    "docs/poc/pg16_shell_tree_reconcile.py",
+    "docs/poc/pg16_shell_native_control.py",
+    "docs/poc/pg16_shell_native_control_win32.py",
+    "docs/poc/pg16_shell_admission_win32.py",
+    "docs/poc/pg16_shell_admission_host.py",
+    "docs/poc/pg16_shell_native_control_verify.py",
+)
+HOST_SHA = "dfcc4ed6be3ea8ab47b7a38ca8a9d4bfa00b3c75cda41c365be3dd5b1aa3dac7"
+ADAPTER_SHA = "eaebedd6ac36602ba30cb51a4c30a2a93737f1127c23cdc4ebb8ae8cf9246407"
+BACKEND_SHA = "10c9058f0d6071e86c7b4c8b2566c1ae4c9f78aeba9d92c50687ae6481f22726"
+LAUNCHER_SHA = "bfff517165ad6d1f3bf02d1782eaf7588fb7c20cd78d1c81788c4444e7bc5d82"
+CORE_VERIFY_SHA = "b3755d492ce147596a27dd9a36bc0ecf66686efd65ef60178915ab2d1d1f7a10"
+FROZEN_PINS = (
+    ("host_sha256", HOST_SHA),
+    ("adapter_sha256", ADAPTER_SHA),
+    ("backend_sha256", BACKEND_SHA),
+    ("launcher_sha256", LAUNCHER_SHA),
+)
+COHERENT = ((4, ADAPTER_SHA), (5, BACKEND_SHA), (6, HOST_SHA), (7, CORE_VERIFY_SHA))
+CORE_REASONS = frozenset(
+    (
+        "EXPECTED",
+        "INPUT",
+        "FILESET",
+        "CAP",
+        "SCHEMA",
+        "NONCE",
+        "PIN",
+        "BINDING",
+        "PREFIX",
+        "INVOCATION",
+        "SUPERVISION",
+        "STDOUT",
+        "SNAPSHOT",
+        "AUDIT",
+        "CONTRADICTION",
+        "INTERNAL",
+    )
+)
+CASES = ("NORMAL", "TERMINATE", "LAST_CLOSE")
+FILE_CAPS = {
+    "invocation.json": 4096,
+    "supervision.json": 4096,
+    "local-stdout.bin": 1024,
+    "snapshot.json": 4096,
+    "audit.json": 65536,
+}
+CASE_FILES = (
+    ("invocation.json", "supervision.json", "local-stdout.bin"),
+    ("invocation.json", "supervision.json", "local-stdout.bin"),
+    ("invocation.json", "supervision.json", "local-stdout.bin", "snapshot.json", "audit.json"),
+)
+WHITELIST = frozenset(
+    "case-" + str(number) + "/" + leaf
+    for number, leaves in enumerate(CASE_FILES, 1)
+    for leaf in leaves
+)
+META_NAMES = ("case-1/v2-case.json", "case-2/v2-case.json", "case-3/v2-case.json")
+MAX_PRIVATE = 11  # the whitelist size; the core's MAX_PRIVATE 64 is unchanged
+MAX_METADATA = 3
+SUMMARY_CAP = 16384
+TRANSPORT_CAP = 4096
+MANIFEST_CAP = 4096
+METADATA_CAP = 1024
+INNER_CAP = 262144
+OUTER_CAP = 269312
+SOURCE_CAP = 65536
+NAMESPACE_KEYS = 128
+NAMESPACE_KEY_CHARS = 64
+ARGV0_CHARS = 1024
+HEX = frozenset("0123456789abcdef")
+MANIFEST_KIND = "MASKGW_PG16_NATIVE_CONTROL_V2_MANIFEST_V1"
+CASE_KIND = "MASKGW_PG16_NATIVE_CONTROL_V2_CASE_V1"
+MANIFEST_KEYS = (
+    "kind",
+    "nonce",
+    "executed",
+    "summary",
+    "transport",
+    "cases",
+    "sources",
+    "launcher",
+)
+DESCRIPTOR_KEYS = ("name", "bytes", "sha256")
+CASE_DESCRIPTOR_KEYS = ("name", "bytes", "sha256", "number")
+SOURCE_KEYS = ("role", "path", "bytes", "sha256")
+METADATA_KEYS = (
+    "kind",
+    "number",
+    "case",
+    "slot_outcome",
+    "lifecycle_reserved",
+    "reconcile_reserved",
+    "tree_latched",
+    "owner_released",
+)
+FUNCTIONS = ("verify", "_verify", "_capture", "_parse")
+POLICY_TYPES = (
+    ("LITERALS", dict),
+    ("LINES", dict),
+    ("KINDS", dict),
+    ("PREFIX_FILES", dict),
+    ("FILE_CAPS", dict),
+    ("WHITELIST", frozenset),
+    ("REASONS", frozenset),
+    ("LIMITS", tuple),
+    ("PINS", tuple),
+)
+INVALID_ATTRS = frozenset(
+    (
+        "__module__",
+        "__init__",
+        "__doc__",
+        "__dict__",
+        "__weakref__",
+        "__firstlineno__",
+        "__static_attributes__",
+    )
+)
+SUMMARY_OUTCOMES = ("APPROVED", "REJECTED", "NOT_RUN")
+
+
+class _Refuse(Exception):
+    def __init__(self, reason):
+        super().__init__()
+        self.reason = reason
+
+
+class _Binding:
+    """The bound core objects and their identities, captured once."""
+
+    __slots__ = ("pairs", "verify", "parse", "expected", "invalid")
+
+
+def _require(condition, reason):
+    if condition is not True:
+        raise _Refuse(reason) from None
+
+
+# -- exact shapes, no foreign hash/equality ------------------------------------------------
+
+
+def _str_keys(mapping):
+    """Exact dict whose keys are all exact str, by iteration before any lookup."""
+    if type(mapping) is not dict:
+        return False
+    for key in mapping:
+        if type(key) is not str:
+            return False
+    return True
+
+
+def _object(value, keys):
+    """Exact dict with exactly `keys` (exact str), checked before any lookup."""
+    if not _str_keys(value) or len(value) != len(keys):
+        return False
+    return all(key in value for key in keys)
+
+
+def _hex64(value):
+    if type(value) is not str or len(value) != 64:
+        return False
+    return all(char in HEX for char in value)
+
+
+def _sha(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+
+# -- 1. core binding ------------------------------------------------------------------------
+
+
+def _namespace(core):
+    if type(core) is not dict or len(core) > NAMESPACE_KEYS:
+        return False
+    for key in core:
+        if type(key) is not str or not 0 < len(key) <= NAMESPACE_KEY_CHARS:
+            return False
+    return True
+
+
+def _invalid_class(invalid, core):
+    if type(invalid) is not type:
+        return False
+    mro = invalid.__mro__
+    if not (
+        type(mro) is tuple
+        and len(mro) == 4
+        and mro[0] is invalid
+        and mro[1] is Exception
+        and mro[2] is BaseException
+        and mro[3] is object
+    ):
+        return False
+    attrs = vars(invalid)
+    for key in attrs:
+        if type(key) is not str or key not in INVALID_ATTRS:
+            return False
+    init = attrs.get("__init__")
+    return type(init) is FunctionType and init.__globals__ is core
+
+
+def _pins(value):
+    if type(value) is not tuple or len(value) != len(FROZEN_PINS):
+        return False
+    for pair in value:
+        if type(pair) is not tuple or len(pair) != 2:
+            return False
+        if type(pair[0]) is not str or type(pair[1]) is not str:
+            return False
+    return value == FROZEN_PINS
+
+
+def _bind(core):
+    """Initial binding: bounded namespace, handwritten functions with these
+    globals, class shapes, policy top-level types and the immutable PINS."""
+    _require(_namespace(core), "CORE_BINDING")
+    pairs = []
+    for name in FUNCTIONS:
+        value = core.get(name)
+        _require(type(value) is FunctionType and value.__globals__ is core, "CORE_BINDING")
+        pairs.append((name, value))
+    expected, invalid = core.get("Expected"), core.get("_Invalid")
+    _require(type(expected) is type and _invalid_class(invalid, core), "CORE_BINDING")
+    pairs.extend((("Expected", expected), ("_Invalid", invalid)))
+    for name, kind in POLICY_TYPES:
+        value = core.get(name)
+        _require(type(value) is kind, "CORE_BINDING")
+        pairs.append((name, value))
+    _require(_pins(core.get("PINS")), "CORE_BINDING")
+    binding = _Binding()
+    binding.pairs = tuple(pairs)
+    binding.verify, binding.parse = core["verify"], core["_parse"]
+    binding.expected, binding.invalid = expected, invalid
+    return binding
+
+
+def _intact(core, binding):
+    """Bounded namespace again, then the captured identities."""
+    if not _namespace(core):
+        return False
+    return all(core.get(name) is value for name, value in binding.pairs)
+
+
+def _guarded(core, binding, thunk):
+    """Pre-guard, callback (ordinary failure captured), post-guard first.
+    Controls propagate immediately, unchanged, without a post-guard."""
+    _require(_intact(core, binding), "CORE_BINDING")
+    failure, value = None, None
+    try:
+        value = thunk()
+    except Exception as error:
+        failure = error
+    _require(_intact(core, binding), "CORE_BINDING")
+    return failure, value
+
+
+def _parsed(core, binding, raw, reason):
+    parse = binding.parse
+
+    def thunk():
+        return parse(raw)
+
+    failure, value = _guarded(core, binding, thunk)
+    if failure is not None:
+        _require(False, reason if type(failure) is binding.invalid else "INTERNAL")
+    return value
+
+
+# -- 2. expected policy and Expected snapshot -------------------------------------------------
+
+
+def _policy(expected_v2):
+    _require(type(expected_v2) is tuple and len(expected_v2) == 2, "EXPECTED")
+    rows, launcher = expected_v2[0], expected_v2[1]
+    _require(type(rows) is tuple and len(rows) == len(ROLES), "EXPECTED")
+    for index in range(len(ROLES)):
+        row = rows[index]
+        _require(type(row) is tuple and len(row) == 4, "EXPECTED")
+        role, path, size, digest = row[0], row[1], row[2], row[3]
+        _require(
+            type(role) is str
+            and role == ROLES[index]
+            and type(path) is str
+            and path == PATHS[index]
+            and type(size) is int
+            and 0 < size <= SOURCE_CAP
+            and _hex64(digest),
+            "EXPECTED",
+        )
+    _require(_hex64(launcher) and launcher == LAUNCHER_SHA, "EXPECTED")
+    for index, digest in COHERENT:
+        _require(rows[index][3] == digest, "EXPECTED")
+    return rows, launcher
+
+
+def _fields(fields):
+    """(nonce, argv0) from an exact two-entry dict with exact str keys, or None."""
+    if type(fields) is not dict or len(fields) != 2:
+        return None
+    for key in fields:
+        if type(key) is not str:
+            return None
+    return fields.get("nonce"), fields.get("argv0")
+
+
+def _captured(binding, expected_core):
+    _require(type(expected_core) is binding.expected, "EXPECTED")
+    pair = _fields(vars(expected_core))
+    _require(pair is not None, "EXPECTED")
+    nonce, argv0 = pair
+    _require(
+        type(nonce) is str
+        and len(nonce) == 32
+        and all(char in HEX for char in nonce)
+        and type(argv0) is str
+        and 0 < len(argv0) <= ARGV0_CHARS
+        and "\x00" not in argv0,
+        "EXPECTED",
+    )
+    return nonce, argv0
+
+
+# -- 3-4. evidence snapshot and caps ----------------------------------------------------------
+
+
+def _snapshot(evidence):
+    _require(type(evidence) is tuple and len(evidence) == 5, "INPUT")
+    manifest, summary, transport = evidence[0], evidence[1], evidence[2]
+    private, metadata = evidence[3], evidence[4]
+    _require(
+        type(manifest) is bytes and type(summary) is bytes and type(transport) is bytes,
+        "INPUT",
+    )
+    _require(_str_keys(private) and len(private) <= MAX_PRIVATE, "INPUT")
+    _require(_str_keys(metadata) and len(metadata) <= MAX_METADATA, "INPUT")
+    files, extras = {}, {}
+    for key in private:
+        value = private[key]
+        _require(key in WHITELIST and type(value) is bytes, "INPUT")
+        files[key] = value
+    for key in metadata:
+        value = metadata[key]
+        _require(key in META_NAMES and type(value) is bytes, "INPUT")
+        extras[key] = value
+    return manifest, summary, transport, files, extras
+
+
+def _caps(manifest, summary, transport, files, extras):
+    _require(len(summary) <= SUMMARY_CAP and len(transport) <= TRANSPORT_CAP, "CAP")
+    _require(len(manifest) <= MANIFEST_CAP, "CAP")
+    inner = len(summary) + len(transport)
+    for key in files:
+        size = len(files[key])
+        _require(size <= FILE_CAPS[key.split("/", 1)[1]], "CAP")
+        inner += size
+    outer = inner + len(manifest)
+    for key in extras:
+        size = len(extras[key])
+        _require(size <= METADATA_CAP, "CAP")
+        outer += size
+    _require(inner <= INNER_CAP and outer <= OUTER_CAP, "CAP")
+
+
+# -- 5. manifest schema -----------------------------------------------------------------------
+
+
+def _descriptor(value, keys):
+    return (
+        _object(value, keys)
+        and type(value["name"]) is str
+        and type(value["bytes"]) is int
+        and type(value["sha256"]) is str
+    )
+
+
+def _manifest_schema(manifest):
+    _require(_object(manifest, MANIFEST_KEYS), "SCHEMA")
+    kind, nonce, executed = manifest["kind"], manifest["nonce"], manifest["executed"]
+    _require(type(kind) is str and kind == MANIFEST_KIND, "SCHEMA")
+    _require(type(nonce) is str and type(executed) is int, "SCHEMA")
+    _require(_descriptor(manifest["summary"], DESCRIPTOR_KEYS), "SCHEMA")
+    _require(_descriptor(manifest["transport"], DESCRIPTOR_KEYS), "SCHEMA")
+    cases, sources, launcher = manifest["cases"], manifest["sources"], manifest["launcher"]
+    _require(type(cases) is list and len(cases) <= MAX_METADATA, "SCHEMA")
+    for item in cases:
+        _require(_descriptor(item, CASE_DESCRIPTOR_KEYS), "SCHEMA")
+    _require(type(sources) is list and len(sources) == len(ROLES), "SCHEMA")
+    for item in sources:
+        _require(
+            _object(item, SOURCE_KEYS)
+            and type(item["role"]) is str
+            and type(item["path"]) is str
+            and type(item["bytes"]) is int
+            and type(item["sha256"]) is str,
+            "SCHEMA",
+        )
+    _require(_object(launcher, ("sha256",)) and type(launcher["sha256"]) is str, "SCHEMA")
+
+
+# -- 7-10. pins, bindings, prefix -------------------------------------------------------------
+
+
+def _pinned(manifest, rows, launcher):
+    sources = manifest["sources"]
+    for index in range(len(ROLES)):
+        item, row = sources[index], rows[index]
+        _require(
+            item["role"] == row[0]
+            and item["path"] == row[1]
+            and item["bytes"] == row[2]
+            and item["sha256"] == row[3],
+            "PIN",
+        )
+    _require(manifest["launcher"]["sha256"] == launcher, "PIN")
+
+
+def _bound(item, name, raw):
+    return item["name"] == name and item["bytes"] == len(raw) and item["sha256"] == _sha(raw)
+
+
+def _prefix(manifest, files, extras):
+    """k from the private names only (preliminary); exact metadata coverage and
+    case descriptors before any metadata lookup or hash."""
+    prefixes = {key.split("/", 1)[0] for key in files}
+    k = 0
+    for number in range(1, len(CASES) + 1):
+        if prefixes == {"case-" + str(n) for n in range(1, number + 1)}:
+            k = number
+    _require(k > 0 and manifest["executed"] == k, "PREFIX")
+    _require(set(extras) == set(META_NAMES[:k]), "PREFIX")
+    cases = manifest["cases"]
+    _require(len(cases) == k, "PREFIX")
+    for index in range(k):
+        item = cases[index]
+        number = item["number"]
+        _require(
+            type(number) is int and number == index + 1 and item["name"] == META_NAMES[index],
+            "PREFIX",
+        )
+    return k
+
+
+def _metadata(value, number):
+    """Exact B2 case metadata; returns the latched tree flag."""
+    _require(_object(value, METADATA_KEYS), "METADATA")
+    kind, case, slot = value["kind"], value["case"], value["slot_outcome"]
+    _require(type(kind) is str and kind == CASE_KIND, "METADATA")
+    _require(type(value["number"]) is int and value["number"] == number, "METADATA")
+    _require(type(case) is str and case == CASES[number - 1], "METADATA")
+    _require(type(slot) is str and slot == "READY_FOR_VALIDATION", "METADATA")
+    _require(value["lifecycle_reserved"] is True and value["owner_released"] is True, "METADATA")
+    reconcile, tree = value["reconcile_reserved"], value["tree_latched"]
+    _require(type(reconcile) is bool and type(tree) is bool and reconcile is tree, "METADATA")
+    return tree
+
+
+# -- 12-14. fresh Expected, full core, validated summary -------------------------------------
+
+
+def _fresh(core, binding, nonce, argv0):
+    expected = binding.expected
+
+    def thunk():
+        return expected(nonce=nonce, argv0=argv0)
+
+    failure, fresh = _guarded(core, binding, thunk)
+    _require(failure is None and type(fresh) is expected, "INTERNAL")
+    pair = _fields(vars(fresh))
+    _require(pair is not None and pair[0] is nonce and pair[1] is argv0, "INTERNAL")
+    return fresh
+
+
+def _core(core, binding, fresh, summary, transport, files):
+    verify = binding.verify
+
+    def thunk():
+        return verify(fresh, summary, transport, files)
+
+    failure, result = _guarded(core, binding, thunk)
+    _require(failure is None, "INTERNAL")
+    _require(type(result) is tuple and len(result) == 2, "INTERNAL")
+    label, reason = result[0], result[1]
+    _require(type(label) is str and type(reason) is str, "INTERNAL")
+    if label == "VERIFIED_APPROVED" and reason == "OK":
+        return "V2_VERIFIED_APPROVED"
+    if label == "VERIFIED_REJECTED" and reason == "OK":
+        return "V2_VERIFIED_REJECTED"
+    _require(not (label == "INVALID" and reason in CORE_REASONS), "CORE_INVALID")
+    raise _Refuse("INTERNAL") from None
+
+
+def _outcomes(summary):
+    """Case outcomes of the already validated summary; anomalies are INTERNAL."""
+    _require(_str_keys(summary) and "cases" in summary, "INTERNAL")
+    cases = summary["cases"]
+    _require(type(cases) is list and len(cases) == len(CASES), "INTERNAL")
+    outcomes = []
+    for case in cases:
+        _require(_str_keys(case) and "outcome" in case, "INTERNAL")
+        outcome = case["outcome"]
+        _require(type(outcome) is str and outcome in SUMMARY_OUTCOMES, "INTERNAL")
+        outcomes.append(outcome)
+    return outcomes
+
+
+def _executed(outcomes):
+    for index in range(len(outcomes)):
+        if outcomes[index] != "APPROVED":
+            _require(outcomes[index] == "REJECTED", "INTERNAL")
+            return index + 1
+    return len(outcomes)
+
+
+# -- entry ------------------------------------------------------------------------------------
+
+
+def _run(core, expected_v2, expected_core, evidence):
+    binding = _bind(core)
+    rows, launcher = _policy(expected_v2)
+    nonce, argv0 = _captured(binding, expected_core)
+    manifest_raw, summary_raw, transport_raw, files, extras = _snapshot(evidence)
+    _caps(manifest_raw, summary_raw, transport_raw, files, extras)
+    manifest = _parsed(core, binding, manifest_raw, "SCHEMA")
+    _manifest_schema(manifest)
+    _require(manifest["nonce"] == nonce, "NONCE")
+    _pinned(manifest, rows, launcher)
+    _require(_bound(manifest["summary"], "summary.json", summary_raw), "BINDING")
+    _require(_bound(manifest["transport"], "transport.json", transport_raw), "BINDING")
+    k = _prefix(manifest, files, extras)
+    for index in range(k):
+        name = META_NAMES[index]
+        _require(_bound(manifest["cases"][index], name, extras[name]), "BINDING")
+    trees = []
+    for index in range(k):
+        value = _parsed(core, binding, extras[META_NAMES[index]], "METADATA")
+        trees.append(_metadata(value, index + 1))
+    fresh = _fresh(core, binding, nonce, argv0)
+    label = _core(core, binding, fresh, summary_raw, transport_raw, files)
+    outcomes = _outcomes(_parsed(core, binding, summary_raw, "INTERNAL"))
+    _require(_executed(outcomes) == k, "INTERNAL")
+    for index in range(k):
+        _require(not trees[index] or outcomes[index] == "REJECTED", "METADATA")
+    return (label, "OK")
+
+
+def verify_v2(core, expected_v2, expected_core, evidence):
+    """Closed (label, reason) of exact str. Control interruptions (BaseException
+    that is not Exception) propagate as the same object."""
+    reason = "INTERNAL"
+    try:
+        return _run(core, expected_v2, expected_core, evidence)
+    except _Refuse as refusal:
+        reason = refusal.reason
+    except Exception:
+        reason = "INTERNAL"
+    return ("V2_INVALID", reason)

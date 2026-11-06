@@ -1,5 +1,23 @@
 # Proveniência V2 — revisão do contrato, sem implementação
 
+Estado posterior: o componente privado foi implementado e revisto com
+228/228 próprios e1166/1166 relacionados aprovados. Bytes, REDs, finding de
+contagem e limitações em [PROVENANCE-V2-VALIDATION](PHASE-9-W1-PG16-PROVENANCE-V2-VALIDATION.md).
+Esta página preserva a revisão anterior à implementação, conforme o título;
+não é evidência de integração ou de execução real.
+
+Atualização posterior, 2026-11-05: os testes foram escritos/revistos e o RED
+congelado em e3406a60/59592bytes,221casos:20sanidades passaram e201 casos
+encontraram ausência do módulo. Relatórios em
+`poc/evidence/provenance-v2-review-20261105/`; próximos passos nos checkpoints.
+O relato abaixo continua sendo a revisão de desenho anterior ao código.
+
+Clarificação de fase para os testes: valores de papel/caminho de source
+divergentes dão PIN, depois de tipos/chaves válidos; sete fontes dão SCHEMA.
+Domínio number/name de descritores cases é conferido em PREFIX (passo9),
+incluindo number bool. Nome divergente de summary/transport dá BINDING
+(passo8). Tipos/chaves dos demais schemas permanecem nas fases declaradas.
+
 Data: 2026-11-05. Decisões de desenho tomadas sob a delegação vigente,
 revistas pelo assistente principal; não são aprovação individual do usuário.
 O Claude2 respondeu somente com Read, na sessão

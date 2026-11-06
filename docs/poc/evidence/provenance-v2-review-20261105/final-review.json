@@ -1,0 +1,115 @@
+{
+  "date_local": "2026-11-05",
+  "source": {
+    "path": "docs/poc/pg16_shell_native_control_provenance_v2.py",
+    "sha256": "eac9709115ddbb70dc89ea1c59b734ffec556cfbf6d1ff25b0eb859116761827",
+    "bytes": 21359,
+    "lines": 622
+  },
+  "test": {
+    "path": "tests/test_pg16_shell_native_control_provenance_v2.py",
+    "sha256": "692b4d4ea7414e419036bf3264cc8059ec367ade2c7ad074b49327bc518f8f57",
+    "bytes": 62796,
+    "lines": 1848,
+    "exact_count_red_bytes": true,
+    "prior221_ast_unchanged": true
+  },
+  "claude_executions": [
+    94926,
+    94652,
+    18093,
+    38943,
+    24791
+  ],
+  "all_terminals_recovered": true,
+  "session": "51ea0d85-05bb-4d24-ba9a-c9627c3f832f",
+  "model": "claude-opus-5-5",
+  "effort": "medium",
+  "own": {
+    "exception_types": {},
+    "exit": 0,
+    "failed": [],
+    "failed_count": 0,
+    "seconds": 5.593,
+    "stats": {
+      "collected": 228,
+      "passed": 228,
+      "unique_nodeids": 228,
+      "xfail_marked": 0
+    }
+  },
+  "related": {
+    "exception_types": {},
+    "exit": 0,
+    "failed": [],
+    "failed_count": 0,
+    "seconds": 48.06,
+    "stats": {
+      "collected": 1166,
+      "passed": 1166,
+      "unique_nodeids": 1166,
+      "xfail_marked": 0
+    }
+  },
+  "related_files": [
+    "tests/test_pg16_shell_native_control_provenance_v2.py",
+    "tests/test_pg16_shell_native_control_verify.py",
+    "tests/test_pg16_shell_native_control_case_v2.py",
+    "tests/test_pg16_shell_native_control_lifecycle_v2.py",
+    "tests/test_pg16_shell_tree_reconcile.py",
+    "tests/test_pg16_shell_admission_win32.py",
+    "tests/test_pg16_shell_admission_host.py",
+    "tests/test_pg16_shell_native_control_win32.py",
+    "tests/test_pg16_shell_native_control.py",
+    "tests/test_pg16_shell_native_control_entry.py",
+    "tests/test_pg16_shell_native_control_held_projection.py"
+  ],
+  "count_probe": {
+    "cases": [
+      {
+        "case": "private-over-count",
+        "expected_inspections": 0,
+        "oversized_map_key_inspections": 0,
+        "result": [
+          "V2_INVALID",
+          "INPUT"
+        ]
+      },
+      {
+        "case": "metadata-over-count",
+        "expected_inspections": 0,
+        "oversized_map_key_inspections": 0,
+        "result": [
+          "V2_INVALID",
+          "INPUT"
+        ]
+      }
+    ],
+    "findings_reproduced": false
+  },
+  "ast_check": {
+    "outside_three_functions_and_two_shape_constants_unchanged": true,
+    "source_bytes": 21359,
+    "source_lines": 622,
+    "source_sha256": "eac9709115ddbb70dc89ea1c59b734ffec556cfbf6d1ff25b0eb859116761827",
+    "test_exactly_count_red_bytes": true
+  },
+  "statics": {
+    "poc_ruff": "E9,F63,F7,F82 passed",
+    "test_ruff": "normal repository selection passed",
+    "format": "2 files conforming",
+    "mypy_strict_test_targets": [
+      "3.11",
+      "3.14"
+    ],
+    "poc_outside_mypy": true,
+    "runtime": "Windows CPython3.11.3"
+  },
+  "upstream_files_hash_and_size_verified": 16,
+  "state16_unchanged": true,
+  "native_effects": false,
+  "operational_consumer": false,
+  "real_execution_attested": false,
+  "gateway_available": false,
+  "production_ready": false
+}

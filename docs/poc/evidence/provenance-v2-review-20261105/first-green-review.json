@@ -1,0 +1,45 @@
+{
+  "phase": "first-module-green-and-independent-review",
+  "source_sha256": "565045b77084adff55bdcb2f20952dd7d753f3196e17667c621292e22f320116",
+  "source_bytes": 20786,
+  "source_lines": 601,
+  "frozen_test_sha256": "e3406a6022ee2307203af8bd246c20e75c4c5e8dddc1421fd8e05ac10a895f3a",
+  "first_green": {
+    "exception_types": {},
+    "exit": 0,
+    "failed": [],
+    "failed_count": 0,
+    "seconds": 5.711,
+    "stats": {
+      "collected": 221,
+      "passed": 221,
+      "unique_nodeids": 221,
+      "xfail_marked": 0
+    }
+  },
+  "count_probe": {
+    "cases": [
+      {
+        "case": "private-over-count",
+        "expected_inspections": 0,
+        "oversized_map_key_inspections": 1,
+        "result": [
+          "V2_INVALID",
+          "INPUT"
+        ]
+      },
+      {
+        "case": "metadata-over-count",
+        "expected_inspections": 0,
+        "oversized_map_key_inspections": 1,
+        "result": [
+          "V2_INVALID",
+          "INPUT"
+        ]
+      }
+    ],
+    "findings_reproduced": true
+  },
+  "native_effects": false,
+  "review_complete": false
+}

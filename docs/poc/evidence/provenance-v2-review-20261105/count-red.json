@@ -1,0 +1,43 @@
+{
+  "phase": "count-guard-regression-red",
+  "source_sha256": "565045b77084adff55bdcb2f20952dd7d753f3196e17667c621292e22f320116",
+  "test_sha256": "692b4d4ea7414e419036bf3264cc8059ec367ade2c7ad074b49327bc518f8f57",
+  "test_bytes": 62796,
+  "test_lines": 1848,
+  "prior221_ast_unchanged": true,
+  "additional_seam_sanity": 1,
+  "behavioral_regressions": 6,
+  "report": {
+    "exception_types": {
+      "AssertionError": 6
+    },
+    "exit": 1,
+    "failed": [
+      "tests/test_pg16_shell_native_control_provenance_v2.py::test_overcount_external_maps_are_not_scanned[private-12-not-scanned]",
+      "tests/test_pg16_shell_native_control_provenance_v2.py::test_overcount_external_maps_are_not_scanned[metadata-4-not-scanned]",
+      "tests/test_pg16_shell_native_control_provenance_v2.py::test_overcount_parsed_objects_are_not_scanned[manifest-plus-one-not-scanned]",
+      "tests/test_pg16_shell_native_control_provenance_v2.py::test_overcount_parsed_objects_are_not_scanned[metadata-plus-one-not-scanned]",
+      "tests/test_pg16_shell_native_control_provenance_v2.py::test_overcount_parsed_objects_are_not_scanned[summary-plus-one-not-scanned]",
+      "tests/test_pg16_shell_native_control_provenance_v2.py::test_overcount_parsed_objects_are_not_scanned[case-record-plus-one-not-scanned]"
+    ],
+    "failed_count": 6,
+    "seconds": 6.366,
+    "stats": {
+      "collected": 228,
+      "failed": 6,
+      "passed": 222,
+      "unique_nodeids": 228,
+      "xfail_marked": 0
+    }
+  },
+  "statics": {
+    "ruff": "passed",
+    "format": "passed",
+    "mypy_strict_targets": [
+      "3.11",
+      "3.14"
+    ],
+    "runtime": "Windows CPython3.11.3"
+  },
+  "no_native_effects": true
+}

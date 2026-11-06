@@ -1,9 +1,11 @@
 # Fase 9 W1 — PG16 caller protegido de caso V2 (A) e proveniência V2 (B) — design
 
 Status atual: Parte A implementada e revista somente com fakes;72/72
-próprios e708/708 relacionados passaram. Parte B permanece somente desenho.
-Fonte0fac3c7b/teste72dde65c e gates em CASE-V2-VALIDATION. Não há consumidor
-operacional, entrada/loader/batch/publicação ou atestado nativo novo.
+próprios e708/708 relacionados passaram. O componente privado da Parte B
+foi implementado/revisto:228/228 próprios e1166/1166 relacionados passaram,
+conforme PROVENANCE-V2-VALIDATION. Fonte0fac3c7b/teste72dde65c e gates de A
+em CASE-V2-VALIDATION. Não há consumidor operacional, entrada/loader/batch/
+publicação ou atestado nativo novo.
 As seções de desenho e71 cenários abaixo preservam o contrato anterior à
 implementação; a regressão72 consta na validação e complementa a matriz.
 
@@ -502,14 +504,16 @@ continua obrigatório depois.
 
 ---
 
-# Parte B — proveniência V2 (somente desenho; nada implementado)
+# Parte B — desenho de proveniência V2 anterior à implementação (histórico)
 
-**Revisão posterior, 2026-11-05:** o contrato prospectivo para o próximo RED
+**Revisão posterior, 2026-11-05:** o contrato usado para o RED e a implementação
 está em [PROVENANCE-V2-CONTRACT-REVIEW](PHASE-9-W1-PG16-PROVENANCE-V2-CONTRACT-REVIEW.md).
 Essa revisão substitui a forma de ExpectedV2, a API, os motivos, a ordem de
 verificação e a matriz preliminares de B3/B4/B6 abaixo. Schemas dos artefatos
 e papéis/caminhos de B2 permanecem. Texto abaixo preservado como rascunho de
-origem, sem alegação de implementação ou execução dos novos testes.
+origem. A implementação privada e os testes medidos estão em
+[PROVENANCE-V2-VALIDATION](PHASE-9-W1-PG16-PROVENANCE-V2-VALIDATION.md),
+sem integração operacional nova.
 
 ## B1. Por que o core verify sozinho não basta
 

@@ -40,6 +40,45 @@ de produção nem dispensa revisão, isolamento, masking, read-only ou sigilo.
 
 ## Escopo atual
 
+## Parte B: componente privado verde e revisto — 2026-11-05
+
+Claude2 único programador/sessão51ea0d85/claude-opus-5-5/medium; CLI24791
+terminou0, terminal recuperado. Root leu fonte inicial e delta final:
+eac97091/21359bytes/622linhas, teste692b4d4e/62796bytes/1848linhas congelado.
+228próprios5,593s/1166relacionados48,060s passaram sem falhas/erros/skips.
+Ruff/format2/mypy1teste3.11/3.14 limpos, PoC fora do mypy, runtimeWindows
+3.11.3.16upstream por hash/tamanho intactos. Finding de contagem corrigido
+após RED228/222pass/6falhas; sonda final0inspeções sobre mapas acima do teto.
+Dados/históricos e PROVENANCE-V2-VALIDATION preservam a sequência real.
+
+Componente só privado, sem consumidor/atestado operacional. Próximo lote
+SOMENTE leitura/desenho slotA→metadadoB e obrigações de produtor/coordenador;
+mesma sessão/modelo/medium após conferir Git/zero escritor. Se ativo,
+monitorar somente; recuperar terminal antes de outra chamada. Sem entrada/
+loader/collector/publicador/root/nonce/comando, Native/Docker/PG/SQL,
+privado/runtime/config/binário/deploy ou novo job/quota. Source10/estado16/
+fontes aceitas/attempt consumido fixos; Gateway indisponível e gates abertos.
+Publicar só os resultados verificados; registros abaixo são históricos.
+
+## Parte B: testes/RED congelados, módulo privado como próximo lote — 2026-11-05
+
+Claude2 único programador, sessão51ea0d85/opus5.5/medium, CLI94926/94652
+terminaram0 e foram recuperadas. Root reviu todos os testes e oráculos.
+RED final221:20sanidades passam,198erros+3falhas por201 FileNotFoundError,
+1,965s; não é evidência comportamental. Cinco cenários no core real passaram.
+Teste e3406a60/59592bytes/1747linhas congelado; ASTsanidades/fixtures intacta,
+Ruff/format/mypy1teste3.11/3.14 limpos, runtimeWindows3.11.3. Baseline207 e
+RED221 preservados como dados em provenance-v2-review-20261105.
+
+Próximo incremento sob delegação: somente módulo provenance_v2 (caminho
+exato nos checkpoints) pelo mesmo Claude2; teste congelado e source10/
+estado16/lifecycle/helper/caller intocáveis. Conferir Git/zero escritor,
+monitorar apenas se ativo, recuperar terminal antes de outra chamada;
+root lê fonte e mede gates antes de publicar. Nenhum consumidor operacional
+ou Native/Docker/PG/SQL/privado/runtime/config/binário/root/nonce/entry/
+loader/CLI/comando/deploy; Gateway indisponível e gates abertos.
+Histórico abaixo.
+
 ## Parte B: contrato revisto em leitura; testes ainda ausentes — 2026-11-05
 
 Retomada das20h05 São Paulo executou0, mensagem recebida, sem próxima

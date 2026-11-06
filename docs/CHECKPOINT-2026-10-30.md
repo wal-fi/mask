@@ -4,6 +4,76 @@ Criado por solicitação do usuário em2026-10-30. Inclui o trabalho acumulado
 após4a5e556, preservando resultados históricos e tentativas reprovadas. É
 checkpoint de desenvolvimento incompleto da Fase9, não release de produção.
 
+## Parte B: módulo privado revisto e validado — 2026-11-05
+
+CLI24791 terminou0, terminal recuperado; mesmo único Claude2/sessão51ea0d85/
+opus5.5/medium. Fonte final eac97091/21359bytes/622linhas; teste692b4d4e/
+62796bytes/1848linhas igual ao RED228. Root leu fonte e delta; AST fora de
+três funções/duas constantes inalterada.228/228 em5,593s,1166/1166 relacionados
+em48,060s, zero falhas/erros/skips/xfail. Ruff/format2/mypy1teste3.11/3.14
+aprovados, runtimeWindows3.11.3; PoC fora do mypy.16upstream intactos.
+
+Sonda final private12/meta4 sem varredura antes do teto. RED inicial207 e
+revisto221 de ausência, green221 e RED228/222pass/6falhas preservados nos
+dados; validação PROVENANCE-V2-VALIDATION. Sem consumidor ou prova operacional.
+Próximo lote SOMENTE leitura do mapeamento slotA→metadadoB e obrigações de
+produtor/coordenador; sem root/nonce/entrada/loader/collector/publicador/
+comando ou novos efeitos. Conferir Git/zero escritor, mesma sessão/modelo/
+esforço, monitorar apenas se ativo; recuperar terminal antes de nova chamada.
+
+Source10/estado16/fontes aceitas/attempt consumido e identidadeNov2 intactos.
+Nenhum Native/Docker/PG/SQL/privado/runtime/config/binário/deploy ou novo job/
+quota. Gateway indisponível e gates de produção abertos. Fechar publicação
+do resultado verificado e conferir Git; histórico abaixo.
+
+## Parte B: RED228 congelado e fix em andamento — 2026-11-05
+
+CLI38943 terminou0; root reviu acréscimo e AST221 intacta. RED228 em6,366s:
+222pass/6falhas nas regressões de contagem, fonte565045b7 inalterada.
+Teste692b4d4e/62796bytes/1848linhas congelado, Ruff/format/mypy3.11/3.14
+aprovados. CLI24791 corrige só módulo na mesma sessão51ea0d85/opus5.5/
+medium. Recuperar terminal antes de outra chamada/gates; ativo só monitorar.
+Sem efeitos Native/operacionais ou publicação; dados RED preservados.
+
+## Parte B: green221 inicial e finding de contagem — 2026-11-05
+
+CLI18093 terminou0. Root leu fonte565045b7/20786bytes/601linhas;221passaram
+em5,711s, teste e340 intacto, Ruff/format PoC aprovados. Sonda pública
+reproduziu _str_keys chamado sobre private12/metadata4 antes do teto. Fonte
+e resultado preservados; _object/_outcomes compartilham o invariante faltante.
+CLI38943 escreve só seis regressões, mesma sessão51ea0d85/opus5.5/medium,
+sem fonte alterada ou asserts221 enfraquecidos. Recuperar terminal antes
+de nova chamada; ativo implica monitorar. Root mede RED antes do fix.
+Sem efeitos Native/Docker/PG/SQL/operacionais, state16/upstream fixos.
+
+## Parte B: implementação privada em andamento — 2026-11-05
+
+CLI18093 ativa, mesma sessão51ea0d85/claude-opus-5-5/medium, apenas módulo
+docs/poc/pg16_shell_native_control_provenance_v2.py. Recuperar terminal antes
+de revisão/gates/outra chamada; ativo implica monitorar, sem segundo escritor.
+Teste221 e3406a60 congelado; código aceito/source10/state16 intocáveis.
+Nenhuma validação verde do novo módulo declarada. Histórico abaixo.
+
+## Parte B: RED revisto e congelado — 2026-11-05
+
+CLI94926/94652 terminaram0, terminais recuperados; só teste B novo escrito
+pelo mesmo Claude2/sessão51ea0d85/opus5.5/medium. Root leu o teste e delta,
+conferiu oráculos e mediu: inicial207=20pass+186erros+1falha(187ausências),
+2,036s; final221=20pass+198erros+3falhas(201ausências),1,965s, todos
+FileNotFoundError do módulo ausente, sem xfail. Ausência não é comprovação
+de comportamento. Cinco cenários sintéticos passaram pelo core real.
+
+Teste e3406a60/59592bytes/1747linhas congelado, AST das sanidades/fixtures
+3c431b50 intacta. Ruff/format/mypy1teste3.11/3.14 passaram; runtimeWindows
+3.11.3. Arquivos inicial/final e relatórios em provenance-v2-review-20261105.
+Contrato revisto permanece fonte da API/ordem. Novo incremento sob delegação:
+SOMENTE módulo privado pelo mesmo Claude2, testes e upstream intocáveis.
+Conferir Git/zero escritor; ativo implica monitorar. Recuperar terminal
+antes de outra chamada e revisar/gates antes de publicação. Partida6a06825;
+checkpoints/dados/teste locais são as únicas novidades até essa medição.
+Nenhum efeito operacional/Native/Docker/PG/SQL/privado/runtime/config/binário;
+state16/attempt consumido preservados. Gateway indisponível, gates abertos.
+
 ## Parte B: contrato revisto em leitura, sem implementação — 2026-11-05
 
 Tarefa das20h05/23:05UTC executou0 e entregou a retomada nesta conversa;
