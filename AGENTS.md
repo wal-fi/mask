@@ -40,6 +40,26 @@ de produção nem dispensa revisão, isolamento, masking, read-only ou sigilo.
 
 ## Escopo atual
 
+## Ponte A→B: desenho revisto, builder ainda ausente — 2026-11-06
+
+Somente Read, mesmo Claude2/sessão51ea0d85/claude-opus-5-5/medium;
+CLI63376/6054/25247/41850 terminaram0 e foram recuperadas. Zero escritor
+confirmado. Contrato em BUNDLE-V2-DESIGN-REVIEW, sob delegação/revisão sem
+aprovação individual inventada. Group8 original antes dos efeitos, KEEP
+serial até3, registry vazio antes de helper, snapshots globais/facts10 e
+limites antes de encode. Não inventar before para _finished; BUNDLE_READY
+somente candidato a B completa, não licença de publicação/saída/liberação.
+
+18fontes/testes por hash/tamanho intactos, source10/estado16/A/B fixos.
+Nenhuma suíte ou código novo neste lote. Builder/testes ausentes; próximo
+incremento seguro é somente teste bundle pelo mesmo Claude2, oráculos e
+RED revistos/congelados antes do módulo. Conferir Git/zero escritor, só
+monitorar se ativo e recuperar terminal antes de outra chamada. Sem Native/
+Docker/PG/SQL/privado/runtime/config/binário/root/nonce/entrada/loader/
+collector/publicador/CLI/comando/deploy ou novo job/quota. Gateway e gates
+de produção abertos, attempt consumido/identidadeNov2 intactos.
+Históricos abaixo.
+
 ## Parte B: componente privado verde e revisto — 2026-11-05
 
 Claude2 único programador/sessão51ea0d85/claude-opus-5-5/medium; CLI24791

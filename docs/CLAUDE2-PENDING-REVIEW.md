@@ -1,3 +1,42 @@
+## Ponte A→B: desenho revisto em leitura, sem novo código — 2026-11-06
+
+Partida HEAD/origin d88823f, rastreados limpos e zero Claude2 ativo. Somente
+Read na mesma sessão51ea0d85/claude-opus-5-5/medium; CLI63376/6054/25247/41850
+terminaram0, terminais recuperados antes da próxima chamada. Zero escritor
+confirmado no final. Nenhuma alteração de fonte/teste ou nova execução.
+
+Contrato consolidado em PHASE-9-W1-PG16-BUNDLE-V2-DESIGN-REVIEW.md, sob
+delegação e revisão, sem inventar aprovação individual. API futura
+bundle(group, slots, measured, nonce), group tuple8 com referências originais
+anteriores aos efeitos. Namespace novo por lote, KEEP exato até3 slots,
+registry/ledger vazios antes dos helpers; não reconstruir _finished.before.
+Metadados vêm de snapshots do slot, não de flags de sucesso do chamador.
+
+Guarda global antes/depois de cada um dos até9 helpers e antes do retorno;
+facts10 incluem bytes retidos, não só comprimento. Contagens/tipos antes de
+chaves/callbacks/encode, domínios limitados e limites conservadores fechados.
+Grupo/forma primeiro, RELEASE inicial versus DRIFT posterior; controles
+preservam identidade, builder não modifica posse/latches. BUNDLE_READY é
+candidato e exige B completa, sem autorização de publicação/saída.
+
+18fontes/testes conferidos por hash/tamanho; source10/estado16/A/B e demais
+fontes aceitas intactos. Inventário de nomes e limites por aritmética são
+estáticos, não medições de runtime. Builder e teste ainda ausentes. Gates
+A72/708 e B228/1166 são históricos, não repetidos neste lote documental.
+
+Próximo incremento seguro: mesmo Claude2 escreve SOMENTE
+tests/test_pg16_shell_native_control_bundle_v2.py contra este contrato,
+antes do módulo. Root revisa oráculos, verifica sanidades independentes e
+mede/congela RED antes de qualquer implementação. Conferir Git/zero escritor,
+monitorar só se ativo, recuperar terminal antes de nova chamada. Esta
+retomada ficou SOMENTE leitura/desenho, não iniciou esse próximo lote.
+
+Nenhum novo Native/Docker/PG/SQL/privado/runtime/config/binário/root/nonce/
+entrada/loader/collector/publicador/CLI/comando/deploy ou job/quota. Attempt
+consumido e identidadeNov2 preservados. Gateway indisponível; Native3s/
+entry_gate/B1/B2/D090gate2/C1/SQL/produção abertos. Destino Oracle9.8 Docker
+local aceito. Publicar só a revisão documental verificada; histórico abaixo.
+
 ## Parte B: componente privado implementado, revisto e validado — 2026-11-05
 
 CLI24791 terminou0 e foi recuperada. Mesmo único Claude2/sessão51ea0d85/

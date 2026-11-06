@@ -121,13 +121,19 @@ e tentativas consumidas preservados, sem reclassificação.
 
 ## Próxima integração
 
-Primeiro revisar o mapeamento do slot real de A para cada metadado B e as
-obrigações do produtor/coordenador: manter posse, construir todos os bytes
+Revisão posterior em 2026-11-06:
+[BUNDLE-V2-DESIGN-REVIEW](PHASE-9-W1-PG16-BUNDLE-V2-DESIGN-REVIEW.md)
+fechou o contrato prospectivo da ponte A→B. Builder e testes ainda ausentes;
+o próximo incremento é testar/medir RED antes de implementação. Este lote
+documental não repetiu nem mudou os resultados acima.
+
+O contrato revisado cobre o mapeamento do slot real de A para cada metadado B
+e as obrigações do produtor/coordenador: manter posse, construir todos os bytes
 antes da publicação terminal, controlar origem/frescor e executar os mesmos
 bytes pinados. Loader/collector/publicador V2 e consumidor operacional não
-existem; exigem incrementos próprios revistos. O próximo lote seguro é esse
-desenho em leitura, sem materializar root/nonce/entrada/comando ou repetir
-attempt3f12dc584c29. Não alterar source10/state16/fontes aceitas.
+existem; exigem incrementos próprios revistos. O próximo lote seguro é testar
+o builder e medir o RED antes do módulo, sem materializar root/nonce/entrada/
+comando ou repetir attempt3f12dc584c29. Não alterar source10/state16/fontes aceitas.
 
 Gateway indisponível. Native3s NOT_MEASURED, entry_gate NOT_EVALUATED,
 B1/B2/D090gate2/C1/SQL/produção continuam abertos. Identidade Nov2 e evidência

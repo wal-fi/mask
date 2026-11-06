@@ -4,6 +4,28 @@ Criado por solicitação do usuário em2026-10-30. Inclui o trabalho acumulado
 após4a5e556, preservando resultados históricos e tentativas reprovadas. É
 checkpoint de desenvolvimento incompleto da Fase9, não release de produção.
 
+## Ponte A→B: contrato de desenho revisto — 2026-11-06
+
+Partida HEAD/origin d88823f, rastreados limpos. CLI63376/6054/25247/41850
+terminaram0, recuperados, Read somente na mesma sessão51ea0d85/opus5.5/
+medium; zero escritor confirmado. Sem fonte/teste novo ou testes executados.
+Contrato em BUNDLE-V2-DESIGN-REVIEW: group8 anterior aos efeitos, slots1..3,
+KEEP serial completo, snapshots/guardas globais, liberação lógica fresca,
+record/facts limitados antes de encode, metadados derivados e B obrigatória.
+
+Revisão sob delegação, não aprovação individual.18fontes/testes por hash/
+tamanho intactos; estado16 preservado. Contagens de namespace e limites de
+serialização são estáticos, não medição. A72/708 e B228/1166 não repetidos.
+Builder e teste permanecem ausentes. Não chama _finished com before inventado
+nem altera posse; origem/frescor/SO pertencem à integração futura.
+
+Próximo lote não iniciado: somente teste do bundle pelo mesmo Claude2; root
+revê oráculos/sanidades e mede/congela RED antes do módulo. Ler checkpoints/
+contrato, conferir Git/zero escritor, monitorar se ativo, recuperar terminal
+antes de nova chamada. Sem Native/Docker/PG/SQL/privado/runtime/config/binário/
+root/nonce/entrada/loader/collector/publicador/CLI/comando/deploy ou novo job/
+quota. Attempt consumido/identidadeNov2 intactos; Gateway/gates abertos.
+
 ## Parte B: módulo privado revisto e validado — 2026-11-05
 
 CLI24791 terminou0, terminal recuperado; mesmo único Claude2/sessão51ea0d85/
