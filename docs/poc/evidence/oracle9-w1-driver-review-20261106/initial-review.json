@@ -1,0 +1,88 @@
+{
+  "programmer_terminal": {
+    "chunk_id": "23811a",
+    "wall_time_seconds": 0.0000253,
+    "exit_code": 0,
+    "original_token_count": 1375,
+    "output": "{\r\n    \"session_id\":  \"51ea0d85-05bb-4d24-ba9a-c9627c3f832f\",\r\n    \"is_error\":  false,\r\n    \"result\":  \"Escrevi só `tests/test_oracle9_w1_driver.py`. O módulo `deploy/oracle9_w1_driver.py` continua ausente, não editei nenhum outro arquivo e não rodei nada; nenhum resultado aqui é medido.\\n\\n**API proposta no cabeçalho do teste:**\\n- **Constantes:** `PURE_PATH`, `PURE_SHA` (4c155d76…), `PURE_BYTES` (22453), `GUARD_AS_BYTES` (384 MiB), `FRAME_LIMIT`, `SINK_CAP` (F − 76), `SINK_CHUNK`, os sete valores do ledger e os prazos: `IDLE_MARGIN_S` 2, `GO_CAP_S`/`ACK_CAP_S` 20, `FATAL_ACK_CAP_S` 90, `INIT_CAP_S` 10.\\n- **`DriverRefusal`:** só a categoria em `args`, sem cause nem context.\\n- **`load_pure(reader)`:** chama `reader.read(PURE_PATH, PURE_BYTES + 1)` uma única vez. Exige `bytes` exatos com o tamanho e o SHA fixados e só então executa esses bytes como módulo privado. Path, hash e tamanho não são parâmetros.\\n- **`Ports(reader, guard, clock, link, ids, factory, pair, threads)` e `run(ports)`:** a ordem é owner, depois `guard.protect(role=, address_limit_bytes=)`, depois `load_pure`.\\n- **`DriverResult`:** `outcome` (GUARD_FAILED, ABORTED, RETAINED ou T6_UNKILLED), `verdicts` com 25 entradas e `owner`, este só em RETAINED.\\n- **`Owner`:** `session_token`, `session`, `endpoints`, `handles`, `unknown`.\\n- **Funções puras:**\\n  - `sink_drain(read, *, expected_bytes, expected_sha256, cap, chunk, deadline, clock)` devolve status e contagem;\\n  - `CallState` tem `activate`/`deactivate`/`apply`;\\n  - `watch_once(read, *, expected_seq, deadline, decode, call_state, request_stop)` devolve uma observação.\\n- **Portas** com assinaturas exatas, todas no cabeçalho. A thread é criada por `create` e só começa com `start` (são passos separados). O writer expõe `channel(*, stop)`, então o prazo entra pelo stop do canal; não inventei argumento de prazo em `send_result_to`.\\n\\n**Cobertura (~67 testes planejados):**\\n- **6 sanidades que não carregam o driver:**\\n  - o pin do arquivo puro publicado;\\n  - o LAB_INIT sintético válido no decoder puro, com corpos e hashes calculados de forma independente;\\n  - a aritmética do ledger (483/29 MiB, pin, CAPACITY);\\n  - a aritmética do idle (ACK 20 s + GO 20 s passa de 28 s);\\n  - o checker de eventos recusando bool no lugar de int e campos livres;\\n  - os 50 frames do host.\\n- **3 de pureza:** AST sem `main` nem imports físicos; import do driver sem efeito e sem carregar o puro; constantes.\\n- **D1-1:** caminho bom do loader, mais 7 recusas antes da execução (provadas por um sentinela em `builtins`), mais LOAD dentro do `run`.\\n- **D1-2:** a ordem, e guard falho sem nenhuma leitura ou escrita.\\n- **Caminho completo com STOP e NOSTOP, sob armadilhas de efeito real:**\\n  - sequência exata dos 55 eventos;\\n  - 6 sessões, 23 chamadas a `query`, 13 envios, 50 frames com seq de 1 a 50;\\n  - T5 FAIL, `failed ⊇ {24}`, resultado T6_UNKILLED;\\n  - SessionKey, perfis, limites e snapshots conferidos contra o `capture` puro.\\n- **T3, T6 e ledger:** isenção de T3, janela de vida de T6 (28000 ms), prazo de 90 s no ACK depois do fatal, frame depois do ARMED recusado, e ledger no ARMED de T6.\\n- **Watcher:** frame errado em 5 variantes, STOP tardio, ordem create → start → ARMED → join, join falho dá RETAINED, start falho dá RETAINED.\\n- **`sink_drain` (8 casos):** OK, divergência de hash, corpo curto, overrun com parada imediata e sentinela, NO_EOF, IO, chunk acima do limite, prazo.\\n- **Sink dentro do `run`:** divergência dá ABORT sem próxima query e com fechamento depois do join; envio tardio é parado pela janela; join falho retém endpoints e sessão; start falho é retido antes de qualquer envio; par com efeito desconhecido vai para `unknown`.\\n- **Sessões:** factory falha dá `retain` sem `close`; `open` com estado NEW dá `retain`; `open` em HELD tem exatamente um `close`; `close` HELD é retido; id duplicado é recusado.\\n- **Idle:** ACK seguido de GO não reinicia a janela; o prazo do GO é `t_query + 27`.\\n- **Locks:** o lock do ledger nunca fica preso durante chamadas de porta; `CallState` só aplica o stop quando ativo; `watch_once` em 7 casos.\\n- **D1-18:** refusal da máquina, EOF e `DriverResult` congelado e redigido.\\n\\n**Escolhas de especificação minhas, para revisão:**\\n- O conteúdo exato de cada RESULT: T1 é FATAL/CONNECTION/ALREADY_RELEASED; T2–T4 são FATAL/JOB; T5 é PENDING.\\n- Os motivos de ABORT: EXPECTATION, OUTPUT, JOIN, SINK, WATCHER, SESSION e IDLE_WINDOW.\\n- Uma divergência gera só ABORT, sem linha RESULT do caso.\\n- Depois de um gatilho de retenção, o driver não faz mais nenhum efeito (não fecha a sessão).\\n- Em T6_UNKILLED, a sessão de T6 é fechada (RELEASED) e o owner fica None.\\n- A SessionKey é validada antes do `reserve_session`.\\n- `status.base_bytes` vale 130 MiB, porque o código soma o `shared_bytes`.\\n\\n**Limites honestos:**\\n- O D1 não prova concorrência nem tempo de vida. O STOP \\\"durante\\\" a query é um `run_now` roteirizado dentro da query fake.\\n- Os fakes não foram executados e podem ter erros.\\n- A fixture de armadilhas troca `os.urandom` e `Thread.start` globalmente durante o teste.\\n- Pode haver ajuste do formatter no dicionário de lambdas e em linhas perto de 100 colunas.\\n- Não há nenhuma prova de masking, PG ou limpeza física.\\n\\nParo aqui, aguardando a revisão do root.\",\r\n    \"terminal_reason\":  \"completed\",\r\n    \"api_error_status\":  null,\r\n    \"exit\":  0\r\n}\r\n"
+  },
+  "qa": [
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "red",
+        "result": {
+          "chunk_id": "c99803",
+          "wall_time_seconds": 2.4677019,
+          "exit_code": 1,
+          "original_token_count": 750,
+          "output": "{\"exception_types\": {\"FileNotFoundError\": 61}, \"exit\": 1, \"failed\": [\"tests/test_oracle9_w1_driver.py::test_driver_source_has_no_entry_point_or_physical_imports\", \"tests/test_oracle9_w1_driver.py::test_driver_import_has_no_effect_and_does_not_load_pure\", \"tests/test_oracle9_w1_driver.py::test_constants_are_the_reviewed_prospective_values\", \"tests/test_oracle9_w1_driver.py::test_d1_1_loader_executes_exact_pinned_bytes\", \"tests/test_oracle9_w1_driver.py::test_d1_1_loader_refuses_before_execution[same-size-wrong-hash]\", \"tests/test_oracle9_w1_driver.py::test_d1_1_loader_refuses_before_execution[short]\", \"tests/test_oracle9_w1_driver.py::test_d1_1_loader_refuses_before_execution[over-by-one]\", \"tests/test_oracle9_w1_driver.py::test_d1_1_loader_refuses_before_execution[reader-overflow]\", \"tests/test_oracle9_w1_driver.py::test_d1_1_loader_refuses_before_execution[empty]\", \"tests/test_oracle9_w1_driver.py::test_d1_1_loader_refuses_before_execution[bytearray]\", \"tests/test_oracle9_w1_driver.py::test_d1_1_loader_refuses_before_execution[read-error]\", \"tests/test_oracle9_w1_driver.py::test_d1_1_run_load_failure_aborts_after_guard_without_init\", \"tests/test_oracle9_w1_driver.py::test_d1_2_order_guard_then_pinned_load_then_guard_event_then_init\", \"tests/test_oracle9_w1_driver.py::test_d1_2_guard_failure_reads_and_writes_nothing\", \"tests/test_oracle9_w1_driver.py::test_d1_3_full_walk_is_finite_and_never_global_pass[stop]\", \"tests/test_oracle9_w1_driver.py::test_d1_3_full_walk_is_finite_and_never_global_pass[nostop]\", \"tests/test_oracle9_w1_driver.py::test_d1_3_sessions_keys_profiles_and_snapshots_are_trusted_values\", \"tests/test_oracle9_w1_driver.py::test_d1_14_t3_exempt_and_t6_live_window_then_clean_unkilled_end\", \"tests/test_oracle9_w1_driver.py::test_d1_14_frame_after_t6_armed_is_never_accepted\", \"tests/test_oracle9_w1_driver.py::test_d1_17_ledger_values_at_t6_and_g1_draining\", \"tests/test_oracle9_w1_driver.py::test_d1_5_watcher_wrong_frame_never_stops_and_aborts[seq-47]\", \"tests/test_oracle9_w1_driver.py::test_d1_5_watcher_wrong_frame_never_stops_and_aborts[replay-45]\", \"tests/test_oracle9_w1_driver.py::test_d1_5_watcher_wrong_frame_never_stops_and_aborts[case-22]\", \"tests/test_oracle9_w1_driver.py::test_d1_5_watcher_wrong_frame_never_stops_and_aborts[go-kind]\", \"tests/test_oracle9_w1_driver.py::test_d1_5_watcher_wrong_frame_never_stops_and_aborts[malformed]\", \"tests/test_oracle9_w1_driver.py::test_d1_5_late_stop_is_fail_and_run_continues\", \"tests/test_oracle9_w1_driver.py::test_d1_5_watcher_registered_before_start_and_armed_published_after\", \"tests/test_oracle9_w1_driver.py::test_d1_6_watcher_join_failure_retains_owner_without_commit\", \"tests/test_oracle9_w1_driver.py::test_d1_9_watcher_start_failure_retains_handle_and_skips_query\", \"tests/test_oracle9_w1_driver.py::test_d1_7_sink_drain_is_bounded_and_stops_at_cap[ok]\"], \"failed_count\": 61, \"seconds\": 1.541, \"stats\": {\"collected\": 67, \"failed\": 61, \"passed\": 6, \"unique_nodeids\": 67, \"xfail_marked\": 0}}\r\n"
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "ruff",
+        "result": {
+          "chunk_id": "a1f3af",
+          "wall_time_seconds": 0.6393787,
+          "exit_code": 0,
+          "original_token_count": 5,
+          "output": "All checks passed!\n"
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "format",
+        "result": {
+          "chunk_id": "fb832d",
+          "wall_time_seconds": 0.7775535,
+          "exit_code": 0,
+          "original_token_count": 7,
+          "output": "1 file already formatted\n"
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "mypy311",
+        "result": {
+          "chunk_id": "b52267",
+          "wall_time_seconds": 1.8842225,
+          "exit_code": 0,
+          "original_token_count": 11,
+          "output": "Success: no issues found in 1 source file\r\n"
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "mypy314",
+        "result": {
+          "chunk_id": "5c7d9a",
+          "wall_time_seconds": 1.9105596999999999,
+          "exit_code": 0,
+          "original_token_count": 11,
+          "output": "Success: no issues found in 1 source file\r\n"
+        }
+      }
+    }
+  ],
+  "independent_oracle_probes": {
+    "watcher_frame_is_consumed_before_failed_join": true,
+    "invalid_guard_bool_fields_accepted": true,
+    "invalid_armed_seq_float_accepted": true,
+    "driver_module_loaded": false
+  },
+  "findings": [
+    "Expected45 transport reads on join failure contradicts fake watcher running during query:46 is correct; wire read is distinct from machine commit.",
+    "GUARD and ARMED event checker accepts non-exact numeric fields.",
+    "Need adversarial ResultSummary rows/truncated, ErrorReply category/can_continue and partial-start exception coverage before freeze."
+  ],
+  "frozen_upstream": "pure4c155d76/test084d62cd/source20/app124/state16"
+}

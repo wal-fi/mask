@@ -1,0 +1,82 @@
+{
+  "test_sha256": "0e9a8cc1d35f69e6ca03a14f8a910af5491df6dffadb32a432defeb445099371",
+  "bytes": 73046,
+  "lines": 1929,
+  "source_fixed": "d310c3261bf7522ac9e0ee776e5cf8be1683b8a2c50f289b4b92eb409f5e665a",
+  "terminal": {
+    "chunk_id": "a4ed6f",
+    "wall_time_seconds": 0.0000398,
+    "exit_code": 0,
+    "original_token_count": 808,
+    "output": "{\r\n    \"session_id\":  \"51ea0d85-05bb-4d24-ba9a-c9627c3f832f\",\r\n    \"is_error\":  false,\r\n    \"result\":  \"Acrescentei só regressões e botões de fake opcionais em `tests/test_oracle9_w1_driver.py`. O driver `d310c326` não foi tocado e não rodei nada; os números abaixo são planejados, não medidos.\\n\\n**Botões novos nos fakes** (cada um só age quando o script o define, então os 89 casos existentes não mudam):\\n- `facts`: o guard devolve o `GuardFacts` informado.\\n- `init_late`: `read_init` devolve o PACKET válido, mas move o relógio para `deadline + atraso`.\\n- `late_frames`: `read_control` devolve o frame válido indicado, mas move o relógio para `deadline + atraso`.\\n- `late_join`: o `join` positivo do handle nomeado roda o alvo e depois move o relógio para `deadline + atraso`.\\n\\n**Casos planejados, cerca de 25 novos (total ≈ 114):**\\n- **Prazos depois do retorno**, com atraso 0.0 (no prazo, que conta como vencido) e 0.5 (depois):\\n  - **Sink com EOF tardio** (2): corpo válido antes do prazo e EOF depois. Exige TIMEOUT, nunca OK, com contagem 7.\\n  - **INIT tardio** (2): exige `ABORT{case 0, INIT, TIMEOUT}`, sem INIT_OK nem READY, sem chamada à factory, sem query.\\n  - **Primeiro GO tardio** (2): exige um único READY, `ABORT{case 1, CASE, TIMEOUT}`, nenhuma query e o fechamento da sessão P.\\n  - **STOP do watcher tardio com chamada ativa** (2): exige nenhum `request_stop`, nenhum RESULT PASS de T4 e nenhuma query depois da de T4. Aceita ABORTED, ou RETAINED com owner presente.\\n  - **Join positivo tardio do sink e do watcher** (4): nenhum RESULT PASS do caso; no sink, as queries param em `[0]`, e no watcher, na de T4. O verdict do caso não é PASS. Aceita ABORTED, ou RETAINED com owner.\\n- **Tipos exatos do `ResultSummary`** (5):\\n  - uma sanidade sem o driver, confirmando que o `LAB_INIT` coerente com `rows=1` no job 2 é válido para o decoder puro;\\n  - recusas com ABORT EXPECTATION no caso 2, sem nenhuma linha RESULT do caso 2 e com as queries em `[0, 0]`, para: `rows` 3.0, `rows` True contra o esperado 1, e `truncated` 0;\\n  - um controle positivo com `rows=1` inteiro, em que o job 2 passa com `rows` do tipo `int`.\\n- **Perfil do guard** (8): papel WORKER, `pid` True, `pid` 2, limite de 256 MiB, `dumpable` 1, `core` (0, 1), `pdeathsig` 9, e a combinação WORKER + `pid` True + `dumpable` 1. Todos exigem GUARD_FAILED, o log só com a chamada ao guard, nenhuma linha escrita, nenhum token, nenhuma sessão, owner None e verdicts todos NOT_RUN. Só verifiquei invariantes que a `WorkerSession` e o guard de controlador já exigem; não testei `parent_pid` nem threads.\\n\\n**Limites honestos:**\\n- A escolha de TIMEOUT como motivo no INIT e no GO tardios é minha; o fence pode legitimamente gerar outro motivo, e aí o teste precisaria de ajuste revisado.\\n- O caso de `truncated` 0 provavelmente já passa com o driver atual, porque ele compara com `is`. Fica como guarda, não como RED.\\n- Para o watcher tardio e o join tardio, aceito ABORTED ou RETAINED, como você pediu; não fixei o motivo do ABORT.\\n- Algumas linhas ficam perto de 100 colunas, calculadas à mão.\",\r\n    \"terminal_reason\":  \"completed\",\r\n    \"api_error_status\":  null,\r\n    \"exit\":  0\r\n}\r\n"
+  },
+  "qa": [
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "red",
+        "result": {
+          "chunk_id": "7d7bf1",
+          "wall_time_seconds": 3.4731642,
+          "exit_code": 1,
+          "original_token_count": 677,
+          "output": "{\"exception_types\": {\"AssertionError\": 22}, \"exit\": 1, \"failed\": [\"tests/test_oracle9_w1_driver.py::test_r1_sink_eof_returned_after_deadline_is_timeout_never_ok[at-deadline]\", \"tests/test_oracle9_w1_driver.py::test_r1_sink_eof_returned_after_deadline_is_timeout_never_ok[past-deadline]\", \"tests/test_oracle9_w1_driver.py::test_r1_init_returned_after_deadline_aborts_before_factory[at-deadline]\", \"tests/test_oracle9_w1_driver.py::test_r1_init_returned_after_deadline_aborts_before_factory[past-deadline]\", \"tests/test_oracle9_w1_driver.py::test_r1_first_go_returned_after_deadline_aborts_without_query[at-deadline]\", \"tests/test_oracle9_w1_driver.py::test_r1_first_go_returned_after_deadline_aborts_without_query[past-deadline]\", \"tests/test_oracle9_w1_driver.py::test_r1_watcher_stop_returned_after_deadline_never_stops_or_passes[at-deadline]\", \"tests/test_oracle9_w1_driver.py::test_r1_watcher_stop_returned_after_deadline_never_stops_or_passes[past-deadline]\", \"tests/test_oracle9_w1_driver.py::test_r1_positive_join_after_budget_publishes_no_pass[sink-at-deadline]\", \"tests/test_oracle9_w1_driver.py::test_r1_positive_join_after_budget_publishes_no_pass[sink-past-deadline]\", \"tests/test_oracle9_w1_driver.py::test_r1_positive_join_after_budget_publishes_no_pass[watcher-at-deadline]\", \"tests/test_oracle9_w1_driver.py::test_r1_positive_join_after_budget_publishes_no_pass[watcher-past-deadline]\", \"tests/test_oracle9_w1_driver.py::test_r2_inexact_summary_types_abort_before_result_metadata[rows-float]\", \"tests/test_oracle9_w1_driver.py::test_r2_inexact_summary_types_abort_before_result_metadata[rows-bool-equal-one]\", \"tests/test_oracle9_w1_driver.py::test_r3_guard_facts_outside_controller_profile_fail_before_any_read[role-worker]\", \"tests/test_oracle9_w1_driver.py::test_r3_guard_facts_outside_controller_profile_fail_before_any_read[pid-bool]\", \"tests/test_oracle9_w1_driver.py::test_r3_guard_facts_outside_controller_profile_fail_before_any_read[pid-two]\", \"tests/test_oracle9_w1_driver.py::test_r3_guard_facts_outside_controller_profile_fail_before_any_read[address-256]\", \"tests/test_oracle9_w1_driver.py::test_r3_guard_facts_outside_controller_profile_fail_before_any_read[dumpable-one]\", \"tests/test_oracle9_w1_driver.py::test_r3_guard_facts_outside_controller_profile_fail_before_any_read[core-nonzero]\", \"tests/test_oracle9_w1_driver.py::test_r3_guard_facts_outside_controller_profile_fail_before_any_read[pdeathsig-nine]\", \"tests/test_oracle9_w1_driver.py::test_r3_guard_facts_outside_controller_profile_fail_before_any_read[worker-pidbool-dump]\"], \"failed_count\": 22, \"seconds\": 2.458, \"stats\": {\"collected\": 114, \"failed\": 22, \"passed\": 92, \"unique_nodeids\": 114, \"xfail_marked\": 0}}\r\n"
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "ruff",
+        "result": {
+          "chunk_id": "969b87",
+          "wall_time_seconds": 0.62061,
+          "exit_code": 0,
+          "original_token_count": 5,
+          "output": "All checks passed!\n"
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "format",
+        "result": {
+          "chunk_id": "20ed9f",
+          "wall_time_seconds": 0.7527598,
+          "exit_code": 0,
+          "original_token_count": 7,
+          "output": "1 file already formatted\n"
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "mypy311",
+        "result": {
+          "chunk_id": "a74a73",
+          "wall_time_seconds": 1.762258,
+          "exit_code": 0,
+          "original_token_count": 11,
+          "output": "Success: no issues found in 1 source file\r\n"
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "mypy314",
+        "result": {
+          "chunk_id": "a6fd80",
+          "wall_time_seconds": 1.8208468,
+          "exit_code": 0,
+          "original_token_count": 11,
+          "output": "Success: no issues found in 1 source file\r\n"
+        }
+      }
+    }
+  ],
+  "root_review": "Complete additive delta read. Original89 test functions AST unchanged. Negative oracles cover post-return deadlines for INIT/GO/STOP/EOF/join, exact summary row types and controller guard facts before input. Planned counts replaced by actual114:92pass22fail in2.458s. Ruff/format/mypy311/314 clean. Scope remains deterministic fake ports only.",
+  "scope": "No native/socket/thread/process/guard application/Docker/PG/SQL/deployment. Fix source only after this RED; all upstream/pure/state unchanged."
+}

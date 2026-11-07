@@ -1,0 +1,994 @@
+"""W1 Oracle laboratory driver, D1: definitions only over trusted deterministic ports.
+
+DRIVER-DESIGN v3 plus DRIVER-DESIGN-REVIEW. No entry point and no physical
+binding: every effect (guard, host link, clock, ids, session factory, pairs and
+threads) goes through the supplied ``Ports``. This module creates no socket,
+thread or process, applies no Linux guard and reads no file by itself. Ordinary
+Lock objects coordinate the public ledger and the T4 call state only.
+
+The pinned pure prefix is trusted SOURCE code: ``load_pure`` reads it once
+through the reader port, checks exact size and SHA-256 and executes those same
+bytes in a private module. A finite RETAINED result keeps a strong ``Owner``;
+the physical hold that must stop an operational exit is a D2 concern.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import math
+import sys
+import threading
+import types
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any, Final
+
+from maskgw.pgwire.result_frame import ResultLimits
+from maskgw.pgwire.result_receiver import ResultSummary
+from maskgw.runtime.budget import BudgetLedger, BudgetLimits, DatasourceCapacity, ReleaseOutcome
+from maskgw.runtime.linux_guard import GuardFacts, ProcessRole
+from maskgw.runtime.worker_protocol import ErrorReply, SessionKey
+from maskgw.runtime.worker_session import (
+    SessionFailure,
+    SessionState,
+    WorkerProfile,
+    WorkerSessionError,
+)
+
+MIB: Final = 1024 * 1024
+PURE_PATH: Final = "/opt/maskgw/lab/oracle9_w1_controller.py"
+PURE_SHA: Final = "4c155d76208f113852f95fec4c57253eef480c610aa390423fa6f82baf1f7bc7"
+PURE_BYTES: Final = 22453
+GUARD_AS_BYTES: Final = 384 * MIB
+FRAME_LIMIT: Final = 16 * MIB
+SINK_CAP: Final = FRAME_LIMIT - 76
+SINK_CHUNK: Final = 65536
+TOTAL_BYTES: Final = 512 * MIB
+BASE_BYTES: Final = 128 * MIB
+HEADROOM_BYTES: Final = 64 * MIB
+SHARED_BYTES: Final = MIB
+WORKER_BYTES: Final = 256 * MIB
+PARENT_BYTES: Final = 2 * FRAME_LIMIT + MIB
+OUTPUT_OVERHEAD_BYTES: Final = MIB
+IDLE_MARGIN_S: Final = 2.0
+GO_CAP_S: Final = 20.0
+ACK_CAP_S: Final = 20.0
+FATAL_ACK_CAP_S: Final = 90.0
+INIT_CAP_S: Final = 10.0
+SEND_CAP_S: Final = 30.0
+JOIN_EXTRA_S: Final = 3.0
+JOB_EXTRA_S: Final = 10.0
+LOCK_S: Final = 3.0
+
+_PURE_MODULE: Final = "_maskgw_w1_lab_pure"
+_MAX_ROWS: Final = 1000
+_CASES: Final = 25
+_JOBS: Final = 19
+_T1, _T2, _T3, _T4, _T5, _T6 = 20, 21, 22, 23, 24, 25
+_STOP: Final = 2
+_IDLE_MS: Final = 30000
+_T3_IDLE_MS: Final = 1000
+_TIMEOUT_MS: Final = {1: 1000, 2: 30000}
+_TRUNCATED_JOBS: Final = frozenset({9})
+_T1_REASONS: Final = frozenset({"CONNECTION", "INTERNAL"})
+_LIVE_MIN_MS: Final = 1000
+_LIVE_MAX_MS: Final = 30000
+_SETTLED: Final = (ReleaseOutcome.RELEASED, ReleaseOutcome.ALREADY_RELEASED)
+_PAIR: Final = 2
+
+
+def _exact_int(value: object, low: int, high: int) -> bool:
+    return type(value) is int and low <= value <= high
+
+
+def _controller_profile(facts: object) -> bool:
+    """Exact controller profile required by the owner, checked before any read."""
+    if type(facts) is not GuardFacts:
+        return False
+    core = facts.core
+    return (
+        facts.role is ProcessRole.CONTROLLER
+        and _exact_int(facts.pid, 1, 1)
+        and _exact_int(facts.address_limit_bytes, GUARD_AS_BYTES, GUARD_AS_BYTES)
+        and _exact_int(facts.dumpable, 0, 0)
+        and _exact_int(facts.parent_death_signal, 0, 0)
+        and type(core) is tuple
+        and len(core) == _PAIR
+        and all(_exact_int(value, 0, 0) for value in core)
+    )
+
+
+class DriverRefusal(Exception):
+    """Closed category only; never input values, original exceptions or chains."""
+
+    def __init__(self, category: str) -> None:
+        super().__init__(category)
+        self.category = category
+
+
+@dataclass(frozen=True, slots=True)
+class Ports:
+    reader: Any
+    guard: Any
+    clock: Any
+    link: Any
+    ids: Any
+    factory: Any
+    pair: Any
+    threads: Any
+
+
+class Owner:
+    """Strong references to every reservation, allocation and uncertain slot."""
+
+    def __init__(self) -> None:
+        self._session_token: Any = None
+        self._session: Any = None
+        self._endpoints: list[Any] = []
+        self._handles: list[Any] = []
+        self._unknown: list[str] = []
+        self._retained: list[Any] = []  # ledger, lock and generation tokens
+
+    @property
+    def session_token(self) -> Any:
+        return self._session_token
+
+    @property
+    def session(self) -> Any:
+        return self._session
+
+    @property
+    def endpoints(self) -> tuple[Any, ...]:
+        return tuple(self._endpoints)
+
+    @property
+    def handles(self) -> tuple[Any, ...]:
+        return tuple(self._handles)
+
+    @property
+    def unknown(self) -> tuple[str, ...]:
+        return tuple(self._unknown)
+
+    def __repr__(self) -> str:
+        return "Owner(<private>)"
+
+
+@dataclass(frozen=True, slots=True, repr=False)
+class DriverResult:
+    outcome: str
+    verdicts: tuple[str, ...]
+    owner: Owner | None
+
+    def __repr__(self) -> str:
+        return f"DriverResult(outcome={self.outcome}, <redacted>)"
+
+
+@dataclass(frozen=True, slots=True)
+class SinkResult:
+    status: str
+    count: int
+
+
+@dataclass(frozen=True, slots=True, repr=False)
+class Observation:
+    raw: bytes | None
+    kind: int | None
+    stop_applied: bool
+
+    def __repr__(self) -> str:
+        return "Observation(<private>)"
+
+
+class CallState:
+    """T4 call flag under its own short lock; never held across blocking work."""
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._active = False
+
+    def activate(self) -> None:
+        with self._lock:
+            self._active = True
+
+    def deactivate(self) -> None:
+        with self._lock:
+            self._active = False
+
+    def apply(self, action: Callable[[], object]) -> bool:
+        with self._lock:
+            if not self._active:
+                return False
+            action()
+            return True
+
+
+# ---------------------------------------------------------------- pinned loader
+
+
+def _pinned_bytes(reader: Any) -> bytes | None:
+    try:
+        raw = reader.read(PURE_PATH, PURE_BYTES + 1)
+    except Exception:  # converted to one closed refusal by the caller
+        return None
+    if type(raw) is not bytes or len(raw) != PURE_BYTES:
+        return None
+    if hashlib.sha256(raw).hexdigest() != PURE_SHA:
+        return None
+    return raw
+
+
+def _execute(raw: bytes) -> types.ModuleType | None:
+    module = types.ModuleType(_PURE_MODULE)
+    module.__file__ = PURE_PATH
+    sys.modules[_PURE_MODULE] = module  # dataclasses resolve their module here
+    try:
+        exec(compile(raw, PURE_PATH, "exec"), module.__dict__)
+    except Exception:  # converted to one closed refusal by the caller
+        sys.modules.pop(_PURE_MODULE, None)
+        return None
+    return module
+
+
+def load_pure(reader: Any) -> types.ModuleType:
+    """Read the fixed path once, check exact size and SHA, execute THOSE bytes."""
+    raw = _pinned_bytes(reader)
+    module = None if raw is None else _execute(raw)
+    if module is None:
+        raise DriverRefusal("LOAD")
+    return module
+
+
+# ---------------------------------------------------------------- pure helpers
+
+
+def sink_drain(
+    read: Callable[..., Any],
+    *,
+    expected_bytes: int,
+    expected_sha256: str,
+    cap: int,
+    chunk: int,
+    deadline: float,
+    clock: Any,
+) -> SinkResult:
+    """Bounded EOF sink: fixed chunks, absolute deadline, immediate overrun stop."""
+    digest = hashlib.sha256()
+    count = 0
+    while True:
+        if clock.monotonic() >= deadline:
+            return SinkResult("TIMEOUT", count)
+        limit = min(chunk, cap + 1 - count)
+        status: str | None = None
+        data: Any = None
+        try:
+            data = read(limit, deadline=deadline)
+        except TimeoutError:
+            status = "NO_EOF"
+        except Exception:
+            status = "IO"
+        if status is not None:
+            return SinkResult(status, count)
+        # Post-return fence: anything observed AT or after the deadline is expired;
+        # it is counted (bounded by the requested limit) but never hashed or approved.
+        expired = clock.monotonic() >= deadline
+        if data is None:
+            if expired:
+                return SinkResult("TIMEOUT", count)
+            matched = count == expected_bytes and digest.hexdigest() == expected_sha256
+            return SinkResult("OK" if matched else "MISMATCH", count)
+        if type(data) is not bytes or not 0 < len(data) <= limit:
+            return SinkResult("IO", count)
+        if expired:
+            return SinkResult("TIMEOUT", min(count + len(data), cap + 1))
+        count += len(data)
+        if count > cap:
+            return SinkResult("OVERRUN", cap + 1)
+        digest.update(data)
+
+
+def watch_once(
+    read: Callable[..., Any],
+    *,
+    expected_seq: int,
+    deadline: float,
+    decode: Callable[[bytes], Any],
+    call_state: CallState,
+    request_stop: Callable[[], object],
+) -> Observation:
+    """Read exactly one frame; stop only for STOP/case23/exact seq while active."""
+    raw: Any = None
+    try:
+        raw = read(deadline=deadline)
+    except Exception:
+        raw = None
+    if type(raw) is not bytes:
+        return Observation(None, None, False)
+    control: Any = None
+    try:
+        control = decode(raw)
+    except Exception:
+        control = None
+    if control is None:
+        return Observation(raw, None, False)
+    applied = False
+    if control.kind == _STOP and control.case == _T4 and control.seq == expected_seq:
+        applied = call_state.apply(request_stop)
+    return Observation(raw, control.kind, applied)
+
+
+# ---------------------------------------------------------------- orchestration
+
+
+class _Abort(Exception):
+    """Internal control flow only; never escapes run()."""
+
+    def __init__(self, case: int, phase: str, reason: str, *, retain: bool = False) -> None:
+        super().__init__(reason)
+        self.case, self.phase, self.reason, self.retain = case, phase, reason, retain
+
+
+def _canonical(event: dict[str, object]) -> bytes:
+    return json.dumps(
+        event, sort_keys=True, separators=(",", ":"), ensure_ascii=True, allow_nan=False
+    ).encode("ascii")
+
+
+def _result_event(
+    case: int,
+    seq: int,
+    *,
+    verdict: str,
+    kind: str,
+    reason: str | None = None,
+    release: str | None = None,
+    rows: int | None = None,
+    truncated: bool | None = None,
+    size: int | None = None,
+    sink: str | None = None,
+    stop_applied: bool | None = None,
+) -> dict[str, object]:
+    return {
+        "bytes": size,
+        "case": case,
+        "e": "RESULT",
+        "kind": kind,
+        "next_seq": seq,
+        "reason": reason,
+        "release": release,
+        "rows": rows,
+        "sink": sink,
+        "stop_applied": stop_applied,
+        "truncated": truncated,
+        "verdict": verdict,
+    }
+
+
+class _Driver:
+    def __init__(self, ports: Ports, owner: Owner, guard: GuardFacts) -> None:
+        self.ports, self.owner, self.guard = ports, owner, guard
+        self.clock = ports.clock
+        self.verdicts = ["NOT_RUN"] * _CASES
+        self.case = 0
+        self.ids: set[bytes] = set()
+        self.pure: Any = None
+        self.init: Any = None
+        self.machine: Any = None
+        self.snapshots: dict[int, bytes] = {}
+        self.ledger: Any = None
+        self.lock: Any = None
+        self.generations: dict[int, Any] = {}
+
+    # ------------------------------------------------------------ plumbing
+
+    def emit(self, event: dict[str, object]) -> None:
+        line = _canonical(event)
+        written = False
+        try:
+            written = self.ports.link.write(line) is True
+        except Exception:
+            written = False
+        if not written:
+            raise _Abort(self.case, "CASE", "OUTPUT", retain=True)
+
+    def machine_call(self, action: Callable[[], Any]) -> Any:
+        category: str | None = None
+        result: Any = None
+        try:
+            result = action()
+        except Exception as error:
+            value = getattr(error, "category", None)
+            category = value if type(value) is str else "PHASE"
+        if category is not None:
+            raise _Abort(self.case, "CASE", category)
+        return result
+
+    def ledger_call(self, action: Callable[[], Any], *, retain: bool) -> Any:
+        if not self.lock.acquire(timeout=LOCK_S):
+            raise _Abort(self.case, "LEDGER", "LEDGER", retain=True)
+        failed = False
+        result: Any = None
+        try:
+            result = action()
+        except Exception:
+            failed = True
+        finally:
+            self.lock.release()
+        if failed:
+            raise _Abort(self.case, "LEDGER", "LEDGER", retain=retain)
+        return result
+
+    def read_frame(self, cap_s: float, window: float | None) -> bytes:
+        now = self.clock.monotonic()
+        cap = now + cap_s
+        deadline = cap if window is None else min(cap, window - 1.0)
+        if deadline <= now:
+            raise _Abort(self.case, "CASE", "IDLE_WINDOW")
+        raw: Any = None
+        try:
+            raw = self.ports.link.read_control(deadline=deadline)
+        except Exception:
+            raw = None
+        expired = self.clock.monotonic() >= deadline  # post-return fence, non-inclusive
+        if type(raw) is bytes and not expired:
+            return raw
+        if not expired:
+            reason = "EOF"
+        elif window is not None and deadline < cap:
+            reason = "IDLE_WINDOW"
+        else:
+            reason = "TIMEOUT"
+        raise _Abort(self.case, "CASE", reason)
+
+    def ready(self, case: int) -> None:
+        self.case = case
+        seq = self.machine_call(lambda: self.machine.emit("READY", case))
+        self.emit({"case": case, "e": "READY", "next_seq": seq})
+
+    def accept(self, cap_s: float, window: float | None) -> None:
+        raw = self.read_frame(cap_s, window)
+        self.machine_call(lambda: self.machine.accept(raw))
+
+    def result(self, cap_s: float, window: float | None, **fields: Any) -> None:
+        case = self.case
+        seq = self.machine_call(lambda: self.machine.emit("RESULT", case))
+        self.emit(_result_event(case, seq, **fields))
+        self.verdicts[case - 1] = fields["verdict"]
+        self.accept(cap_s, window)
+
+    # ------------------------------------------------------------ start
+
+    def start(self) -> None:
+        try:
+            self.pure = load_pure(self.ports.reader)
+        except DriverRefusal:
+            self.pure = None
+        if self.pure is None:
+            raise _Abort(0, "LOAD", "LOAD")
+        guard = self.guard
+        self.emit(
+            {
+                "as": guard.address_limit_bytes,
+                "dumpable": guard.dumpable,
+                "e": "GUARD",
+                "pdeathsig": guard.parent_death_signal,
+                "pid": guard.pid,
+            }
+        )
+        self.read_init()
+        self.capture()
+        self.open_ledger()
+        self.machine = self.pure.ControlMachine()
+        self.emit({"e": "INIT_OK"})
+
+    def read_init(self) -> None:
+        deadline = self.clock.monotonic() + INIT_CAP_S
+        raw: Any = None
+        try:
+            raw = self.ports.link.read_init(deadline=deadline)
+        except Exception:
+            raw = None
+        expired = self.clock.monotonic() >= deadline  # post-return fence, non-inclusive
+        if type(raw) is not bytes or expired:
+            raise _Abort(0, "INIT", "TIMEOUT" if expired else "EOF")
+        failed = False
+        try:
+            self.init = self.pure.decode_init(raw)
+        except Exception:
+            failed = True
+        if failed:
+            raise _Abort(0, "INIT", "INIT")
+
+    def capture(self) -> None:
+        failed = False
+        try:
+            self.snapshots = {gen: self.pure.capture(self.init, gen) for gen in (1, 2)}
+        except Exception:
+            failed = True
+        if failed:
+            raise _Abort(0, "CAPTURE", "CAPTURE")
+
+    def open_ledger(self) -> None:
+        failed = False
+        try:
+            limits = BudgetLimits(TOTAL_BYTES, BASE_BYTES, HEADROOM_BYTES, 4, 1, 1, 1, 2, 1)
+            self.ledger = BudgetLedger(limits, (DatasourceCapacity(1, 1),))
+        except Exception:
+            failed = True
+        if failed:
+            raise _Abort(0, "LEDGER", "LEDGER")
+        self.lock = threading.Lock()
+        self.owner._retained += [self.ledger, self.lock]
+        self.generations[1] = self.publish(None)
+
+    def publish(self, replacing: Any) -> Any:
+        ledger = self.ledger
+        token = self.ledger_call(
+            lambda: ledger.reserve_candidate(0, shared_bytes=SHARED_BYTES), retain=False
+        )
+        self.owner._retained.append(token)
+        self.ledger_call(lambda: ledger.publish(token, replacing=replacing), retain=True)
+        return token
+
+    # ------------------------------------------------------------ sessions
+
+    def open_session(self, case: int, generation: int, idle_ms: int) -> tuple[Any, float]:
+        self.case = case
+        session_id: Any = None
+        try:
+            session_id = self.ports.ids.session_id()
+        except Exception:
+            session_id = None
+        if type(session_id) is not bytes or len(session_id) != 16 or session_id in self.ids:
+            raise _Abort(case, "CASE", "SESSION")
+        self.ids.add(session_id)
+        key = SessionKey(
+            session_id,
+            bytes.fromhex(self.pure.DATASOURCE_ID[4:]),
+            generation,
+            self.pure.RECORD_REVISION,
+        )
+        profile = WorkerProfile(
+            WORKER_BYTES, idle_ms, _TIMEOUT_MS[generation], OUTPUT_OVERHEAD_BYTES
+        )
+        limits = ResultLimits(max_rows=_MAX_ROWS, max_frame_bytes=FRAME_LIMIT)
+        ledger, gen_token = self.ledger, self.generations[generation]
+        token = self.ledger_call(
+            lambda: ledger.reserve_session(
+                gen_token, worker_bytes=WORKER_BYTES, parent_bytes=PARENT_BYTES
+            ),
+            retain=False,
+        )
+        self.owner._session_token = token
+        session: Any = None
+        try:
+            session = self.ports.factory.create(
+                ledger,
+                token,
+                lock=self.lock,
+                key=key,
+                limits=limits,
+                profile=profile,
+                guard=self.guard,
+            )
+        except Exception:
+            session = None
+        if session is None:
+            self.retain_token(token)
+            raise _Abort(case, "CASE", "SESSION", retain=True)
+        self.owner._session = session
+        started = self.clock.monotonic()
+        failed = False
+        try:
+            session.open(self.snapshots[generation])
+        except Exception:
+            failed = True
+        if failed:
+            self.open_failed(case, session, token)
+        return session, started
+
+    def retain_token(self, token: Any) -> None:
+        ledger = self.ledger
+        self.ledger_call(lambda: ledger.retain(token), retain=True)
+
+    def open_failed(self, case: int, session: Any, token: Any) -> None:
+        state = session.state
+        if state is SessionState.NEW:  # never adopted: no close, credits retained
+            self.retain_token(token)
+            raise _Abort(case, "CASE", "SESSION", retain=True)
+        if state is SessionState.HELD:
+            self.close_session(case, "CASE")
+        elif state is not SessionState.CLOSED:
+            raise _Abort(case, "CASE", "SESSION", retain=True)
+        self.owner._session = None
+        self.owner._session_token = None
+        raise _Abort(case, "CASE", "SESSION")
+
+    def close_session(self, case: int, phase: str) -> str:
+        session = self.owner._session
+        outcome: Any = None
+        try:
+            outcome = session.close()
+        except Exception:
+            outcome = None
+        if not any(outcome is settled for settled in _SETTLED):
+            raise _Abort(case, phase, "SESSION", retain=True)
+        self.owner._session = None
+        self.owner._session_token = None
+        return str(outcome.value)
+
+    # ------------------------------------------------------------ owned threads
+
+    def owned_thread(self, target: Callable[[], object], name: str, reason: str) -> Any:
+        handle: Any = None
+        try:
+            handle = self.ports.threads.create(target, name=name)
+        except Exception:
+            handle = None
+        if handle is None:
+            self.owner._unknown.append(name)
+            raise _Abort(self.case, "CASE", reason, retain=True)
+        self.owner._handles.append(handle)  # registered BEFORE start
+        started = False
+        try:
+            started = handle.start() is True
+        except Exception:
+            started = False
+        if not started:
+            raise _Abort(self.case, "CASE", reason, retain=True)
+        return handle
+
+    def joined(self, handle: Any, deadline: float) -> bool:
+        """Negative join retains everything; positive join returns whether in budget.
+
+        A positive join proves the thread ended, so its handle is released; one
+        observed AT or after the deadline must never lead to a commit or PASS.
+        """
+        ok = False
+        try:
+            ok = handle.join(deadline=deadline) is True
+        except Exception:
+            ok = False
+        if not ok:
+            raise _Abort(self.case, "CASE", "JOIN", retain=True)
+        in_budget = self.clock.monotonic() < deadline
+        self.owner._handles.remove(handle)
+        return in_budget
+
+    # ------------------------------------------------------------ result delivery
+
+    def deliver(self, session: Any, expected: Any, window: float) -> tuple[Any, SinkResult]:
+        pair: Any = None
+        try:
+            pair = self.ports.pair.create()
+        except Exception:
+            pair = None
+        if type(pair) is not tuple or len(pair) != _PAIR:
+            self.owner._unknown.append("pair")
+            raise _Abort(self.case, "CASE", "SINK", retain=True)
+        writer, reader = pair
+        self.owner._endpoints += [writer, reader]
+        now = self.clock.monotonic()
+        send_end = min(now + SEND_CAP_S, window - 1.0)
+        sink_end = min(now + SEND_CAP_S + JOIN_EXTRA_S, window - 1.0)
+        box: list[SinkResult] = []
+        clock = self.clock
+
+        def drain() -> None:
+            box.append(
+                sink_drain(
+                    reader.read,
+                    expected_bytes=expected.bytes,
+                    expected_sha256=expected.sha256,
+                    cap=SINK_CAP,
+                    chunk=SINK_CHUNK,
+                    deadline=sink_end,
+                    clock=clock,
+                )
+            )
+
+        handle = self.owned_thread(drain, "sink", "SINK")
+        summary: Any = None
+        sent = False
+        try:
+            channel = writer.channel(stop=lambda: clock.monotonic() >= send_end)
+            summary = session.send_result_to(channel)
+            sent = True
+        except Exception:
+            sent = False
+        shut = False
+        try:
+            writer.shutdown_write()
+            shut = True
+        except Exception:
+            shut = False
+        if not shut:
+            raise _Abort(self.case, "CASE", "SINK", retain=True)
+        in_budget = self.joined(handle, sink_end)
+        self.close_endpoints(writer, reader)
+        if not sent:
+            raise _Abort(self.case, "CASE", "OUTPUT")
+        if not in_budget:
+            raise _Abort(self.case, "CASE", "JOIN")
+        if not box:
+            raise _Abort(self.case, "CASE", "SINK")
+        return summary, box[0]
+
+    def close_endpoints(self, *endpoints: Any) -> None:
+        for endpoint in endpoints:
+            closed = False
+            try:
+                endpoint.close()
+                closed = True
+            except Exception:
+                closed = False
+            if not closed:
+                raise _Abort(self.case, "CASE", "SINK", retain=True)
+            self.owner._endpoints.remove(endpoint)
+
+    # ------------------------------------------------------------ cases
+
+    def query(self, session: Any, sql: bytes) -> tuple[Any, Any]:
+        reply: Any = None
+        error: Any = None
+        try:
+            reply = session.query(sql)
+        except Exception as caught:
+            error = caught
+        return reply, error
+
+    def persistent(self) -> None:
+        session, started = self.open_session(1, 1, _IDLE_MS)
+        window = started + _IDLE_MS / 1000 - IDLE_MARGIN_S
+        canary = self.init.raw_canaries[0]
+        for job in range(1, _JOBS + 1):
+            self.ready(job)
+            self.accept(GO_CAP_S, window)
+            sql = self.pure.job_sql(job, canary).encode("ascii")
+            started = self.clock.monotonic()
+            window = started + _IDLE_MS / 1000 - IDLE_MARGIN_S
+            reply, error = self.query(session, sql)
+            if error is not None:
+                raise _Abort(job, "CASE", "SESSION")
+            expected = self.init.expected[job - 1]
+            if expected.kind == "ERROR":
+                self.expect_error(reply, expected)
+                self.result(ACK_CAP_S, window, verdict="PASS", kind="ERROR", reason=expected.reason)
+                continue
+            if reply is not None:
+                raise _Abort(job, "CASE", "EXPECTATION")
+            summary, sink = self.deliver(session, expected, window)
+            self.expect_result(job, expected, summary, sink)
+            self.result(
+                ACK_CAP_S,
+                window,
+                verdict="PASS",
+                kind="RESULT",
+                rows=summary.rows,
+                truncated=summary.truncated,
+                size=sink.count,
+                sink=sink.status,
+            )
+        self.close_session(_JOBS, "CLEANUP")
+
+    def expect_error(self, reply: Any, expected: Any) -> None:
+        valid = (
+            type(reply) is ErrorReply
+            and reply.category.name == expected.reason
+            and reply.can_continue is True
+        )
+        if not valid:
+            raise _Abort(self.case, "CASE", "EXPECTATION")
+
+    def expect_result(self, job: int, expected: Any, summary: Any, sink: SinkResult) -> None:
+        if sink.status == "MISMATCH":
+            raise _Abort(job, "CASE", "EXPECTATION")
+        if sink.status != "OK" or sink.count != expected.bytes:
+            raise _Abort(job, "CASE", "SINK")
+        # Exact public types BEFORE any serialization: no float, no bool-as-int.
+        valid = (
+            type(summary) is ResultSummary
+            and _exact_int(summary.rows, 0, _MAX_ROWS)
+            and _exact_int(expected.rows, 0, _MAX_ROWS)
+            and summary.rows == expected.rows
+            and type(summary.truncated) is bool
+            and summary.truncated is (job in _TRUNCATED_JOBS)
+        )
+        if not valid:
+            raise _Abort(job, "CASE", "EXPECTATION")
+
+    def fatal_reason(self, case: int, reply: Any, error: Any) -> str:
+        if case == _T1:
+            valid = (
+                error is None
+                and type(reply) is ErrorReply
+                and reply.can_continue is False
+                and reply.category.name in _T1_REASONS
+            )
+            reason = reply.category.name if valid else ""
+        else:
+            valid = (
+                reply is None
+                and type(error) is WorkerSessionError
+                and error.category is SessionFailure.JOB
+            )
+            reason = "JOB"
+        if not valid:
+            raise _Abort(case, "CASE", "EXPECTATION")
+        return str(reason)
+
+    def terminal(self, case: int) -> None:
+        idle_ms = _T3_IDLE_MS if case == _T3 else _IDLE_MS
+        session, started = self.open_session(case, 1, idle_ms)
+        window = None if case == _T3 else started + idle_ms / 1000 - IDLE_MARGIN_S
+        self.ready(case)
+        self.accept(GO_CAP_S, window)
+        if case == _T3:  # deliberately expired child idle; exempt from the window
+            self.clock.sleep_until(self.clock.monotonic() + idle_ms / 1000 + 1.0)
+        reply, error = self.query(session, b"SELECT 1")
+        reason = self.fatal_reason(case, reply, error)
+        release = self.close_session(case, "CLEANUP")
+        self.result(
+            FATAL_ACK_CAP_S, None, verdict="PASS", kind="FATAL", reason=reason, release=release
+        )
+
+    def t4(self) -> None:
+        self.case = _T4
+        self.generations[2] = self.publish(self.generations[1])
+        session, started = self.open_session(_T4, 2, _IDLE_MS)
+        window = started + _IDLE_MS / 1000 - IDLE_MARGIN_S
+        self.ready(_T4)
+        self.accept(GO_CAP_S, window)
+        seq = self.machine_call(lambda: self.machine.emit("ARMED", _T4))  # internal first
+        self.machine_call(self.machine.handoff)
+        state = CallState()
+        deadline = self.clock.monotonic() + _TIMEOUT_MS[2] / 1000 + JOB_EXTRA_S + JOIN_EXTRA_S
+        box: list[Observation] = []
+        link, decode, clock = self.ports.link, self.pure.decode_control, self.clock
+
+        def fenced(*, deadline: float) -> Any:
+            raw = link.read_control(deadline=deadline)
+            return None if clock.monotonic() >= deadline else raw  # expired frame is no frame
+
+        def watch() -> None:
+            box.append(
+                watch_once(
+                    fenced,
+                    expected_seq=seq,
+                    deadline=deadline,
+                    decode=decode,
+                    call_state=state,
+                    request_stop=session.request_stop,
+                )
+            )
+
+        handle = self.owned_thread(watch, "watcher", "WATCHER")
+        self.emit({"case": _T4, "e": "ARMED", "live_window_ms": None, "next_seq": seq})
+        state.activate()
+        try:
+            reply, error = self.query(session, self.pure.HEAVY_SQL.encode("ascii"))
+        finally:
+            state.deactivate()
+        if not self.joined(handle, deadline):
+            raise _Abort(_T4, "CASE", "JOIN")  # late join: no commit, no PASS
+        observation = box[0] if box else None
+        raw = None if observation is None else observation.raw
+        self.machine_call(lambda: self.machine.join(raw))
+        applied = observation is not None and observation.stop_applied is True
+        reason = self.fatal_reason(_T4, reply, error)
+        release = self.close_session(_T4, "CLEANUP")
+        self.result(
+            FATAL_ACK_CAP_S,
+            None,
+            verdict="PASS" if applied else "FAIL",
+            kind="FATAL",
+            reason=reason,
+            release=release,
+            stop_applied=applied,
+        )
+
+    def t5(self) -> None:
+        self.ready(_T5)
+        self.accept(GO_CAP_S, None)
+        self.result(ACK_CAP_S, None, verdict="FAIL", kind="PENDING", reason="T5_PENDING")
+
+    def summary(self) -> None:
+        summary = self.machine_call(self.machine.summary)
+        failed = {index + 1 for index, verdict in enumerate(self.verdicts) if verdict == "FAIL"}
+        failed |= set(summary.failed_cases)
+        cases = sorted(case for case in failed if 1 <= case <= _T5)
+        self.emit({"e": "SUMMARY", "failed": cases, "global_pass": False, "prefix_cases": 24})
+
+    def t6(self) -> DriverResult:
+        _, started = self.open_session(_T6, 2, _IDLE_MS)
+        window = started + _IDLE_MS / 1000 - IDLE_MARGIN_S
+        self.ready(_T6)
+        self.accept(GO_CAP_S, window)
+        seq = self.machine_call(lambda: self.machine.emit("ARMED", _T6))
+        live = math.floor((window - self.clock.monotonic()) * 1000)
+        if not _LIVE_MIN_MS <= live <= _LIVE_MAX_MS:
+            raise _Abort(_T6, "CASE", "IDLE_WINDOW")
+        self.emit({"case": _T6, "e": "ARMED", "live_window_ms": live, "next_seq": seq})
+        raw: Any = None
+        try:
+            raw = self.ports.link.read_control(deadline=window)
+        except Exception:
+            raw = None
+        if type(raw) is bytes:
+            self.machine_call(lambda: self.machine.accept(raw))  # always refused after ARMED
+            raise _Abort(_T6, "CASE", "PHASE")
+        if self.clock.monotonic() < window:
+            raise _Abort(_T6, "CASE", "EOF")
+        self.verdicts[_T6 - 1] = "FAIL"
+        self.close_session(_T6, "CLEANUP")  # not killed in the live window: T6 fails
+        self.final("T6_UNKILLED")
+        return DriverResult("T6_UNKILLED", tuple(self.verdicts), None)
+
+    # ------------------------------------------------------------ terminal paths
+
+    def final(self, outcome: str) -> None:
+        try:
+            self.ports.link.write(_canonical({"e": "TERMINAL", "outcome": outcome}))
+        except Exception:
+            return
+
+    def uncertain(self) -> bool:
+        owner = self.owner
+        return bool(owner._handles or owner._endpoints or owner._unknown)
+
+    def abort(self, stop: _Abort) -> DriverResult:
+        if 1 <= stop.case <= _CASES:
+            self.verdicts[stop.case - 1] = "FAIL"
+        retained = stop.retain or self.uncertain()
+        if not retained and self.owner._session is not None:
+            if self.owner._session.state is SessionState.NEW:
+                retained = True
+            else:
+                try:
+                    self.close_session(stop.case, "CLEANUP")
+                except _Abort:
+                    retained = True
+        event = {
+            "case": stop.case,
+            "e": "ABORT",
+            "phase": stop.phase,
+            "reason": stop.reason,
+            "retained": retained,
+        }
+        try:
+            self.ports.link.write(_canonical(event))
+        except Exception:
+            retained = True
+        outcome = "RETAINED" if retained else "ABORTED"
+        self.final(outcome)
+        return DriverResult(outcome, tuple(self.verdicts), self.owner if retained else None)
+
+    def execute(self) -> DriverResult:
+        try:
+            self.start()
+            self.persistent()
+            for case in (_T1, _T2, _T3):
+                self.terminal(case)
+            self.t4()
+            self.t5()
+            self.summary()
+            return self.t6()
+        except _Abort as stop:
+            return self.abort(stop)
+
+
+def run(ports: Ports) -> DriverResult:
+    """Owner, then guard, then the pinned loader; finite result, never raises."""
+    owner = Owner()
+    facts: Any = None
+    try:
+        facts = ports.guard.protect(role=ProcessRole.CONTROLLER, address_limit_bytes=GUARD_AS_BYTES)
+    except Exception:
+        facts = None
+    if not _controller_profile(facts):  # misbound/foreign profile: no load, read or write
+        return DriverResult("GUARD_FAILED", ("NOT_RUN",) * _CASES, None)
+    driver = _Driver(ports, owner, facts)
+    try:
+        return driver.execute()
+    except Exception:  # unexpected defect: keep every reference, no further effect
+        return DriverResult("RETAINED", tuple(driver.verdicts), owner)

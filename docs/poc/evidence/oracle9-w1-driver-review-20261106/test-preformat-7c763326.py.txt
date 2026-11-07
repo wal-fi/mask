@@ -1,0 +1,1696 @@
+"""D1 driver core with deterministic trusted fake ports; RED-first, no physical effect.
+
+Contract for the FUTURE ``deploy/oracle9_w1_driver.py`` (DRIVER-DESIGN v3 plus
+DRIVER-DESIGN-REVIEW precisions). The module stays absent until the root reviews
+these oracles; feature tests then fail with FileNotFoundError, while every
+``test_sanity_*`` check never loads it. No real socket, thread, subprocess,
+Linux guard, DLL, network, PostgreSQL or SQL execution. D1 proves neither
+thread/lifetime behavior nor masking, PG or physical cleanup. The trusted
+session fake models only the public adopt-on-open, reply, auto-cleanup and
+close contract over the real ledger; it does NOT simulate ResultReceiver
+allocation, output pin or worker lifetime, so a separate integration with the
+real WorkerSession remains mandatory before any of that is claimed.
+
+Minimal stable API of the future module (``runpy`` namespace):
+
+- Constants: ``PURE_PATH`` "/opt/maskgw/lab/oracle9_w1_controller.py",
+  ``PURE_SHA`` (4c155d76...), ``PURE_BYTES`` 22453, ``GUARD_AS_BYTES`` 384 MiB,
+  ``FRAME_LIMIT`` 16 MiB, ``SINK_CAP`` F-76, ``SINK_CHUNK`` 65536,
+  ``TOTAL_BYTES``/``BASE_BYTES``/``HEADROOM_BYTES``/``SHARED_BYTES``/
+  ``WORKER_BYTES``/``PARENT_BYTES``/``OUTPUT_OVERHEAD_BYTES``,
+  ``IDLE_MARGIN_S`` 2.0, ``GO_CAP_S``/``ACK_CAP_S`` 20.0, ``FATAL_ACK_CAP_S``
+  90.0, ``INIT_CAP_S`` 10.0.
+- ``DriverRefusal(category)``: closed, ``args == (category,)``, no cause/context.
+- ``load_pure(reader) -> types.ModuleType``: calls
+  ``reader.read(PURE_PATH, PURE_BYTES + 1)`` once, requires exact ``bytes`` of
+  size PURE_BYTES and PURE_SHA, then executes THOSE bytes as a private module
+  (``__file__ == PURE_PATH``) registered in ``sys.modules``. Any other input:
+  ``DriverRefusal("LOAD")`` BEFORE execution. No path/hash/size parameter.
+- ``Ports(reader, guard, clock, link, ids, factory, pair, threads)`` and
+  ``run(ports) -> DriverResult``: owner first, then
+  ``guard.protect(role=ProcessRole.CONTROLLER, address_limit_bytes=GUARD_AS_BYTES)``,
+  then ``load_pure(ports.reader)``; never raises for port failures.
+- ``DriverResult``: frozen, redacted repr; ``outcome`` in GUARD_FAILED/ABORTED/
+  RETAINED/T6_UNKILLED; ``verdicts`` tuple of 25 PASS/FAIL/NOT_RUN;
+  ``owner`` strong ``Owner`` only for RETAINED, else None.
+- ``Owner`` read-only: ``session_token``, ``session``, ``endpoints`` (tuple),
+  ``handles`` (tuple), ``unknown`` (tuple of slot names).
+- ``sink_drain(read, *, expected_bytes, expected_sha256, cap, chunk, deadline,
+  clock) -> SinkResult(status, count)``; status OK/MISMATCH/OVERRUN/NO_EOF/IO/
+  TIMEOUT; count capped at ``cap + 1``.
+- ``CallState()``: ``activate()``, ``deactivate()``, ``apply(action) -> bool``.
+- ``watch_once(read, *, expected_seq, deadline, decode, call_state,
+  request_stop) -> Observation(raw, kind, stop_applied)``.
+
+Trusted port signatures (internal contracts, not a sandbox for hostile code):
+
+- reader.read(path: str, limit: int) -> bytes
+- guard.protect(*, role: ProcessRole, address_limit_bytes: int) -> GuardFacts
+- clock.monotonic() -> float; clock.sleep_until(when: float) -> None
+- link.read_init(*, deadline: float) -> bytes | None
+- link.read_control(*, deadline: float) -> bytes | None  (None: EOF or expiry)
+- link.write(line: bytes) -> bool  (canonical JSON, no newline)
+- ids.session_id() -> bytes
+- factory.create(ledger, token, *, lock, key, limits, profile, guard) -> session
+  with open(snapshot: bytes), query(sql: bytes) -> ErrorReply | None,
+  send_result_to(channel) -> ResultSummary, close() -> ReleaseOutcome,
+  request_stop(), and attribute ``state`` (SessionState).
+- pair.create() -> (writer, reader); writer.channel(*, stop) -> channel,
+  writer.shutdown_write(), writer.close(); reader.read(limit, *, deadline)
+  -> bytes | None, reader.close(); channel.send_all(data: bytes).
+- threads.create(target, *, name) -> handle (registered, NOT started);
+  handle.start() -> bool; handle.join(*, deadline: float) -> bool.
+"""
+
+from __future__ import annotations
+
+import ast
+import builtins
+import functools
+import hashlib
+import json
+import os
+import runpy
+import socket
+import struct
+import subprocess
+import sys
+import threading
+from collections.abc import Callable, Collection
+from pathlib import Path
+from typing import Any, NoReturn
+
+import pytest
+
+from maskgw.pgwire.result_frame import ResultLimits
+from maskgw.pgwire.result_receiver import ResultSummary
+from maskgw.runtime import linux_guard
+from maskgw.runtime import worker_session as session_module
+from maskgw.runtime.budget import (
+    BudgetError,
+    BudgetLedger,
+    BudgetLimits,
+    CleanupConfirmation,
+    DatasourceCapacity,
+    ReleaseOutcome,
+    ReservationKind,
+    ReservationState,
+)
+from maskgw.runtime.linux_guard import GuardFacts, GuardFailure, ProcessGuardError, ProcessRole
+from maskgw.runtime.snapshot import SnapshotIdentity, recompile_snapshot
+from maskgw.runtime.worker_protocol import ErrorReply, SessionKey, WireFailure
+from maskgw.runtime.worker_session import (
+    SessionFailure,
+    SessionState,
+    WorkerProfile,
+    WorkerSessionError,
+)
+
+REPO = Path(__file__).resolve().parents[1]
+SOURCE = REPO / "deploy/oracle9_w1_driver.py"
+PURE_FILE = REPO / "deploy/oracle9_w1_controller.py"
+PURE_PATH = "/opt/maskgw/lab/oracle9_w1_controller.py"
+PURE_SHA = "4c155d76208f113852f95fec4c57253eef480c610aa390423fa6f82baf1f7bc7"
+PURE_SIZE = 22453
+PURE_SOURCE = PURE_FILE.read_bytes()
+PURE = runpy.run_path(str(PURE_FILE))  # published frozen pure prefix, oracle collaborator
+
+MIB = 1024 * 1024
+FRAME_LIMIT = 16 * MIB
+SINK_CAP = FRAME_LIMIT - 76
+INIT_HEADER = struct.Struct(">4sI")
+CONTROL = struct.Struct(">4sBBHII")
+GO, STOP, NOSTOP, ACK = 1, 2, 3, 4
+T1, T2, T3, T4, T5, T6 = 20, 21, 22, 23, 24, 25
+START = 1000.0
+
+IP = "10.0.0.7"
+PORT = 5432
+READONLY_HEX = "0123456789abcdef" * 3
+HMAC_KEY = "fedcba9876543210" * 4
+CANARY = "canary-alpha-Q"
+DATASOURCE_BYTES = bytes.fromhex("0" * 31 + "1")
+ERRORS = {11: "LIMIT", 13: "QUERY", 14: "QUERY", 15: "QUERY", 16: "TIMEOUT", 18: "TYPE"}
+HEAVY = (
+    "SELECT count(*) FROM generate_series(1,100000) AS a CROSS JOIN generate_series(1,100000) AS b"
+)
+SQL = {
+    1: "SELECT id, active FROM maskgw_lab.t ORDER BY id",
+    2: "SELECT cpf FROM maskgw_lab.t ORDER BY id",
+    3: "SELECT cpf AS tipo_cpf, tipo_cpf AS cpf FROM maskgw_lab.t WHERE id=1",
+    4: "SELECT substr(cpf,1,3) AS same, email AS same, active, id FROM maskgw_lab.t ORDER BY id",
+    5: "SELECT cpf FROM maskgw_lab.t WHERE id=1 UNION ALL SELECT cpf FROM maskgw_lab.t WHERE id=2",
+    6: "WITH c AS (SELECT cpf AS x FROM maskgw_lab.t) SELECT x FROM c",
+    7: "SELECT x FROM (SELECT email AS x FROM maskgw_lab.t) AS s",
+    8: "SELECT numeric_secret FROM maskgw_lab.t ORDER BY id",
+    9: "SELECT g FROM generate_series(1,1001) AS g",
+    10: "SELECT repeat('x',1048576) AS v FROM generate_series(1,15) AS g",
+    11: "SELECT repeat('x',1048576) AS v FROM generate_series(1,17) AS g",
+    12: "SELECT 1",
+    13: "SELECT 'canary-alpha-Q'::integer",
+    14: "DELETE FROM maskgw_lab.t",
+    15: "SELECT pg_read_file('postgresql.conf')",
+    16: HEAVY,
+    17: "SELECT 2",
+    18: "SELECT amount FROM maskgw_lab.t WHERE id=1",
+    19: "SELECT 3",
+}
+GUARD_FACTS = GuardFacts(ProcessRole.CONTROLLER, 1, 0, 384 * MIB, 91 * MIB, 0, 0, (0, 0))
+GUARD_FIELDS: dict[str, int] = {"as": 384 * MIB, "dumpable": 0, "pdeathsig": 0, "pid": 1}
+GUARD_EVENT: dict[str, object] = {"e": "GUARD", **GUARD_FIELDS}
+
+
+def canonical(value: object) -> bytes:
+    return json.dumps(
+        value, sort_keys=True, separators=(",", ":"), ensure_ascii=True, allow_nan=False
+    ).encode("ascii")
+
+
+def body_for(job: int) -> bytes:
+    """Small synthetic D-113 BODY stand-in; not masking, PG or encoder evidence."""
+    return f"SYNTHETIC-D113-BODY-{job:02d};".encode("ascii") * (job + 2)
+
+
+def rows_for(job: int) -> int:
+    return 1000 if job == 9 else 3
+
+
+RESULT_JOBS = tuple(job for job in range(1, 20) if job not in ERRORS)
+BODY_SHAS = tuple(hashlib.sha256(body_for(job)).hexdigest() for job in RESULT_JOBS)
+
+
+def expected_records() -> list[dict[str, Any]]:
+    records: list[dict[str, Any]] = []
+    for job in range(1, 20):
+        if job in ERRORS:
+            records.append(
+                {
+                    "bytes": None,
+                    "job": job,
+                    "kind": "ERROR",
+                    "reason": ERRORS[job],
+                    "rows": None,
+                    "sha256": None,
+                }
+            )
+        else:
+            records.append(
+                {
+                    "bytes": len(body_for(job)),
+                    "job": job,
+                    "kind": "RESULT",
+                    "reason": None,
+                    "rows": rows_for(job),
+                    "sha256": hashlib.sha256(body_for(job)).hexdigest(),
+                }
+            )
+    return records
+
+
+INIT_BODY = canonical(
+    {
+        "expected": expected_records(),
+        "hmac_key": HMAC_KEY,
+        "kind": "MASKGW_W1_LAB_INIT_V1",
+        "raw_canaries": [CANARY],
+        "readonly_password": READONLY_HEX,
+        "target": {"database": "maskgw_lab", "ip": IP, "port": PORT, "username": "maskgw_reader"},
+        "version": 1,
+    }
+)
+PACKET = INIT_HEADER.pack(b"MGI1", len(INIT_BODY)) + INIT_BODY
+LEAKS = (READONLY_HEX, HMAC_KEY, CANARY, *BODY_SHAS, "SYNTHETIC-D113")
+
+
+def frame(kind: int, case: int, seq: int) -> bytes:
+    return CONTROL.pack(b"MGL1", 1, kind, case, seq, 0)
+
+
+@functools.cache
+def driver() -> dict[str, Any]:
+    return runpy.run_path(str(SOURCE))
+
+
+def assert_closed(error: BaseException, category: str) -> None:
+    assert error.args == (category,)
+    assert error.__cause__ is None
+    assert error.__context__ is None
+    for leak in LEAKS:
+        assert leak not in str(error) + repr(error)
+
+
+# ---------------------------------------------------------------- closed events
+
+KEYS = {
+    "GUARD": {"e", "as", "dumpable", "pdeathsig", "pid"},
+    "INIT_OK": {"e"},
+    "READY": {"e", "case", "next_seq"},
+    "ARMED": {"e", "case", "next_seq", "live_window_ms"},
+    "RESULT": {
+        "e",
+        "case",
+        "next_seq",
+        "verdict",
+        "kind",
+        "rows",
+        "truncated",
+        "bytes",
+        "sink",
+        "reason",
+        "release",
+        "stop_applied",
+    },
+    "SUMMARY": {"e", "failed", "global_pass", "prefix_cases"},
+    "ABORT": {"e", "case", "phase", "reason", "retained"},
+    "TERMINAL": {"e", "outcome"},
+}
+SINKS = {"OK", "MISMATCH", "OVERRUN", "NO_EOF", "IO", "TIMEOUT"}
+RESULT_REASONS = {
+    *(item.name for item in WireFailure),
+    "OPEN",
+    "JOB",
+    "OUTPUT",
+    "CLEANUP",
+    "STATE",
+    "IDLE_WINDOW",
+    "EXPECTATION",
+    "STOP_LATE",
+    "T5_PENDING",
+}
+ABORT_REASONS = {
+    "INIT",
+    "CONTROL",
+    "PHASE",
+    "SQL",
+    "CAPTURE",
+    "DESTINATION",
+    "EOF",
+    "TIMEOUT",
+    "IDLE_WINDOW",
+    "SESSION",
+    "SINK",
+    "WATCHER",
+    "LEDGER",
+    "LOAD",
+    "EXPECTATION",
+    "JOIN",
+    "OUTPUT",
+}
+
+
+def exact_int(value: object, low: int, high: int) -> bool:
+    """Exact int only: bool and float (even integral) are refused."""
+    return type(value) is int and low <= value <= high
+
+
+def exact_text(value: object, allowed: Collection[str]) -> bool:
+    """Exact str checked BEFORE membership, so lists/dicts never raise TypeError."""
+    return type(value) is str and value in allowed
+
+
+def optional(value: object, check: Callable[[object], bool]) -> bool:
+    return value is None or check(value)
+
+
+def check_result(event: dict[str, Any]) -> bool:
+    return (
+        exact_int(event["case"], 1, 24)
+        and exact_int(event["next_seq"], 2, 49)
+        and exact_text(event["verdict"], ("PASS", "FAIL"))
+        and exact_text(event["kind"], ("RESULT", "ERROR", "FATAL", "PENDING"))
+        and optional(event["rows"], lambda v: exact_int(v, 0, 1000))
+        and optional(event["truncated"], lambda v: type(v) is bool)
+        and optional(event["bytes"], lambda v: exact_int(v, 0, SINK_CAP + 1))
+        and optional(event["sink"], lambda v: exact_text(v, SINKS))
+        and optional(event["reason"], lambda v: exact_text(v, RESULT_REASONS))
+        and optional(event["release"], lambda v: exact_text(v, RELEASES))
+        and optional(event["stop_applied"], lambda v: type(v) is bool)
+    )
+
+
+def check_guard(event: dict[str, Any]) -> bool:
+    return all(exact_int(event[name], value, value) for name, value in GUARD_FIELDS.items())
+
+
+def check_armed(event: dict[str, Any]) -> bool:
+    case, seq, window = event["case"], event["next_seq"], event["live_window_ms"]
+    if exact_int(case, T4, T4):
+        return exact_int(seq, 46, 46) and window is None
+    return exact_int(case, T6, T6) and exact_int(seq, 51, 51) and exact_int(window, 1000, 30000)
+
+
+def check_summary(event: dict[str, Any]) -> bool:
+    failed = event["failed"]
+    return (
+        type(failed) is list
+        and all(exact_int(case, 1, 24) for case in failed)
+        and failed == sorted(set(failed))
+        and T5 in failed
+        and event["global_pass"] is False
+        and exact_int(event["prefix_cases"], 24, 24)
+    )
+
+
+def check_abort(event: dict[str, Any]) -> bool:
+    return (
+        exact_int(event["case"], 0, 25)
+        and exact_text(event["phase"], ABORT_PHASES)
+        and exact_text(event["reason"], ABORT_REASONS)
+        and type(event["retained"]) is bool
+    )
+
+
+RELEASES = ("RELEASED", "ALREADY_RELEASED", "HELD")
+ABORT_PHASES = ("LOAD", "INIT", "CAPTURE", "LEDGER", "CASE", "CLEANUP")
+CHECKS: dict[str, Callable[[dict[str, Any]], bool]] = {
+    "GUARD": check_guard,
+    "INIT_OK": lambda _e: True,
+    "READY": lambda e: exact_int(e["case"], 1, 25) and exact_int(e["next_seq"], 1, 50),
+    "ARMED": check_armed,
+    "RESULT": check_result,
+    "SUMMARY": check_summary,
+    "ABORT": check_abort,
+    "TERMINAL": lambda e: exact_text(e["outcome"], ("ABORTED", "RETAINED", "T6_UNKILLED")),
+}
+
+
+def events_of(lines: list[bytes]) -> list[dict[str, Any]]:
+    assert len(lines) <= 56
+    result: list[dict[str, Any]] = []
+    for line in lines:
+        assert type(line) is bytes
+        assert 0 < len(line) <= 512
+        assert b"\n" not in line
+        for leak in LEAKS:
+            assert leak.encode() not in line
+        event = json.loads(line)
+        assert canonical(event) == line
+        assert type(event) is dict
+        assert exact_text(event.get("e"), tuple(KEYS))
+        assert set(event) == KEYS[event["e"]]
+        assert CHECKS[event["e"]](event)
+        result.append(event)
+    return result
+
+
+# ---------------------------------------------------------------- fake ports
+
+
+class Clock:
+    def __init__(self) -> None:
+        self.now = START
+        self.sleeps: list[float] = []
+
+    def monotonic(self) -> float:
+        return self.now
+
+    def sleep_until(self, when: float) -> None:
+        self.sleeps.append(when)
+        self.now = max(self.now, when)
+
+
+class PureReader:
+    def __init__(self, world: World) -> None:
+        self.world = world
+
+    def read(self, path: str, limit: int) -> Any:
+        self.world.log.append(("read_pure", path, limit))
+        data = self.world.script.get("pure", PURE_SOURCE)
+        if isinstance(data, BaseException):
+            raise data
+        return data
+
+
+class Guard:
+    def __init__(self, world: World) -> None:
+        self.world = world
+
+    def protect(self, *, role: object, address_limit_bytes: int) -> GuardFacts:
+        self.world.log.append(("guard", role, address_limit_bytes))
+        if self.world.script.get("guard_fail"):
+            raise ProcessGuardError(GuardFailure.PROFILE)
+        return GUARD_FACTS
+
+
+class Ids:
+    def __init__(self, world: World) -> None:
+        self.world = world
+        self.count = 0
+
+    def session_id(self) -> bytes:
+        self.count += 1
+        self.world.log.append(("id", self.count))
+        if self.world.script.get("duplicate_id") and self.count > 1:
+            return bytes([1]) * 16
+        return bytes([self.count]) * 16
+
+
+class Link:
+    def __init__(self, world: World) -> None:
+        self.world = world
+        self.lines: list[bytes] = []
+        self.pending: list[tuple[bytes, float]] = []
+        self.hold = False
+        self.last: tuple[str, int] = ("", 0)
+        self.reads: list[tuple[tuple[str, int], float, float]] = []
+
+    def write(self, line: bytes) -> bool:
+        self.world.unlocked("write")
+        self.lines.append(line)
+        event = json.loads(line)
+        self.last = (event["e"], event.get("case", 0))
+        self.world.log.append(("write", event["e"], event.get("case", 0)))
+        if event["e"] == "ARMED" and event["case"] == T6 and self.world.ledger is not None:
+            self.world.armed_status = self.world.ledger.status
+        self.react(event)
+        return True
+
+    def react(self, event: dict[str, Any]) -> None:
+        kind, case = event["e"], event.get("case", 0)
+        seq = event.get("next_seq", 0)
+        script = self.world.script
+        if kind == "READY":
+            self.queue(GO, case, seq, script.get("go_delay", {}).get(case, 0.0))
+        elif kind == "RESULT":
+            self.queue(ACK, case, seq, script.get("ack_delay", {}).get(case, 0.0))
+        elif kind == "ARMED" and case == T4:
+            self.queue(script.get("t4", STOP), T4, seq, 0.0)
+        elif kind == "ARMED" and case == T6:
+            if script.get("after_armed"):
+                self.pending.append((frame(ACK, T6, 50), 0.0))
+            else:
+                self.hold = True
+
+    def queue(self, kind: int, case: int, seq: int, delay: float) -> None:
+        if (kind, case) in self.world.script.get("eof", ()):
+            return
+        raw = self.world.script.get("frames", {}).get((kind, case), frame(kind, case, seq))
+        self.pending.append((raw, delay))
+
+    def read_init(self, *, deadline: float) -> bytes | None:
+        self.world.unlocked("read_init")
+        self.world.log.append(("read_init", deadline))
+        result: bytes | None = self.world.script.get("init", PACKET)
+        return result
+
+    def read_control(self, *, deadline: float) -> bytes | None:
+        self.world.unlocked("read_control")
+        clock = self.world.clock
+        self.reads.append((self.last, deadline, clock.now))
+        self.world.log.append(("read_control", self.last))
+        if not self.pending:
+            if self.hold:
+                clock.now = max(clock.now, deadline)
+            return None
+        raw, delay = self.pending[0]
+        if clock.now + delay > deadline:
+            clock.now = max(clock.now, deadline)
+            return None
+        self.pending.pop(0)
+        clock.now += delay
+        self.world.frames.append(raw)
+        return raw
+
+
+class Pipe:
+    def __init__(self) -> None:
+        self.data = bytearray()
+        self.shut = False
+        self.position = 0
+
+
+class Channel:
+    def __init__(self, world: World, pipe: Pipe, stop: Callable[[], bool]) -> None:
+        self.world, self.pipe, self.stop = world, pipe, stop
+
+    def send_all(self, data: bytes) -> None:
+        if self.stop() is not False:
+            self.world.log.append(("send_stopped", len(data)))
+            raise OSError("STOPPED")
+        self.pipe.data.extend(data)
+
+
+class Writer:
+    def __init__(self, world: World, pipe: Pipe) -> None:
+        self.world, self.pipe = world, pipe
+        self.closed = False
+
+    def channel(self, *, stop: Callable[[], bool]) -> Channel:
+        self.world.log.append(("channel", stop() is False))
+        return Channel(self.world, self.pipe, stop)
+
+    def shutdown_write(self) -> None:
+        self.world.log.append(("shutdown_write", len(self.pipe.data)))
+        self.pipe.shut = True
+
+    def close(self) -> None:
+        self.world.log.append(("close_writer", self.closed))
+        self.closed = True
+
+
+class ReaderEnd:
+    def __init__(self, world: World, pipe: Pipe) -> None:
+        self.world, self.pipe = world, pipe
+        self.closed = False
+
+    def read(self, limit: int, *, deadline: float) -> bytes | None:
+        self.world.log.append(("sink_read", limit, deadline))
+        pipe = self.pipe
+        if pipe.position < len(pipe.data):
+            chunk = bytes(pipe.data[pipe.position : pipe.position + limit])
+            pipe.position += len(chunk)
+            return chunk
+        if pipe.shut:
+            return None
+        raise TimeoutError
+
+    def close(self) -> None:
+        self.world.log.append(("close_reader", self.closed))
+        self.closed = True
+
+
+class Pair:
+    def __init__(self, world: World) -> None:
+        self.world = world
+        self.count = 0
+
+    def create(self) -> tuple[Writer, ReaderEnd]:
+        self.count += 1
+        self.world.log.append(("pair", self.count))
+        if self.world.script.get("pair_fail") == self.count:
+            raise OSError("PAIR_EFFECT_UNKNOWN")
+        pipe = Pipe()
+        writer, reader = Writer(self.world, pipe), ReaderEnd(self.world, pipe)
+        self.world.endpoints += [writer, reader]
+        return writer, reader
+
+
+class Handle:
+    def __init__(self, world: World, target: Callable[[], object], name: str) -> None:
+        self.world, self.target, self.name = world, target, name
+        self.started = False
+        self.ran = False
+
+    def start(self) -> bool:
+        self.world.unlocked("start")
+        self.world.log.append(("start", self.name))
+        if self.world.script.get("start_fail") == self.name:
+            return False
+        self.started = True
+        if self.world.script.get("start_raise") == self.name:
+            raise OSError("PARTIAL_START")  # already started: effect is real but unconfirmed
+        return True
+
+    def run_now(self) -> None:
+        if self.started and not self.ran:
+            self.ran = True
+            self.target()
+
+    def join(self, *, deadline: float) -> bool:
+        self.world.unlocked("join")
+        self.world.log.append(("join", self.name, deadline))
+        if self.world.script.get("join_fail") == self.name:
+            return False
+        self.run_now()
+        return True
+
+
+class Threads:
+    def __init__(self, world: World) -> None:
+        self.world = world
+
+    def create(self, target: Callable[[], object], *, name: str) -> Handle:
+        self.world.log.append(("create_thread", name))
+        handle = Handle(self.world, target, name)
+        self.world.handles.append(handle)
+        return handle
+
+
+class FakeSession:
+    """Trusted stand-in of the public WorkerSession contract over the REAL ledger."""
+
+    def __init__(self, world: World, index: int, token: Any, params: dict[str, Any]) -> None:
+        self.world, self.index, self.token = world, index, token
+        self.ledger, self.lock = params["ledger"], params["lock"]
+        self.key = params["key"]
+        self.state = SessionState.NEW
+        self.jobs = 0
+        self.snapshot = b""
+        self.opened_at = 0.0
+
+    def violation(self, text: str) -> None:
+        self.world.violations.append(f"{self.index}:{text}")
+
+    def open(self, snapshot: bytes) -> None:
+        self.world.unlocked("open")
+        self.world.log.append(("open", self.index))
+        if self.state is not SessionState.NEW:
+            self.violation("double-open")
+        self.snapshot, self.opened_at = snapshot, self.world.clock.now
+        mode = self.world.script.get("open_mode", {}).get(self.index)
+        if mode == "new":
+            raise WorkerSessionError(SessionFailure.OPEN)
+        with self.lock:
+            self.ledger.adopt_session(self.token)
+        if mode == "held":
+            self.cleanup(complete=False)
+            raise WorkerSessionError(SessionFailure.OPEN)
+        self.state = SessionState.READY
+
+    def cleanup(self, *, complete: bool) -> ReleaseOutcome:
+        with self.lock:
+            self.ledger.begin_drain(self.token)
+            outcome: ReleaseOutcome = self.ledger.release(
+                self.token,
+                CleanupConfirmation(
+                    processes=True, threads=True, pipes=True, handles=True, output=complete
+                ),
+            )
+        released = outcome is ReleaseOutcome.RELEASED
+        self.state = SessionState.CLOSED if released else SessionState.HELD
+        return outcome
+
+    def query(self, sql: bytes) -> ErrorReply | None:
+        self.world.unlocked("query")
+        if self.state is not SessionState.READY or type(sql) is not bytes:
+            self.violation("query-state")
+        self.jobs += 1
+        self.world.queries.append((self.index, sql, self.world.clock.now))
+        if self.index == 0:
+            return self.persistent(sql)
+        if self.index == 1:
+            self.cleanup(complete=True)
+            return ErrorReply(self.key, 1, WireFailure.CONNECTION, False)
+        if self.index == 4:
+            self.heavy(sql)
+        self.cleanup(complete=True)
+        raise WorkerSessionError(SessionFailure.JOB)
+
+    def persistent(self, sql: bytes) -> ErrorReply | None:
+        job = self.jobs
+        if sql != SQL[job].encode("ascii"):
+            self.violation(f"sql-{job}")
+        override = self.world.script.get("error_override", {}).get(job)
+        if override is not None:
+            category, continuing = override
+            if not continuing:
+                self.cleanup(complete=True)  # public WorkerSession auto-cleanup on fatal reply
+            return ErrorReply(self.key, job, category, continuing)
+        if job in ERRORS:
+            return ErrorReply(self.key, job, WireFailure[ERRORS[job]], True)
+        self.state = SessionState.RESULT
+        return None
+
+    def heavy(self, sql: bytes) -> None:
+        if sql != HEAVY.encode("ascii"):
+            self.violation("heavy-sql")
+        if self.world.script.get("t4_timing", "during") == "during":
+            for handle in self.world.handles:
+                if handle.name == "watcher":
+                    handle.run_now()
+
+    def send_result_to(self, channel: Channel) -> ResultSummary:
+        self.world.unlocked("send")
+        job = self.jobs
+        self.world.sends.append(job)
+        if self.state is not SessionState.RESULT:
+            self.violation("send-state")
+        body = body_for(job)
+        if self.world.script.get("corrupt_job") == job:
+            body = body[:-1] + b"#"
+        if self.world.script.get("late_send_job") == job:
+            self.world.clock.now += 100.0
+        failed = False
+        try:
+            for part in (body[: len(body) // 2], body[len(body) // 2 :]):
+                channel.send_all(part)
+        except OSError:
+            failed = True
+        if failed:
+            self.cleanup(complete=True)
+            raise WorkerSessionError(SessionFailure.OUTPUT)
+        self.state = SessionState.READY
+        default = (rows_for(job), job == 9)
+        rows, truncated = self.world.script.get("summary_override", {}).get(job, default)
+        return ResultSummary(1, rows, truncated)
+
+    def close(self) -> ReleaseOutcome:
+        self.world.unlocked("close")
+        self.world.log.append(("close", self.index))
+        if self.state is SessionState.NEW:
+            self.violation("close-new")
+        if self.state is SessionState.CLOSED:
+            outcome = ReleaseOutcome.ALREADY_RELEASED
+        else:
+            outcome = self.cleanup(complete=self.index not in self.world.script.get("close_held", ()))
+        self.world.releases.append(outcome)
+        return outcome
+
+    def request_stop(self) -> None:
+        self.world.stops.append(self.index)
+
+
+class Factory:
+    def __init__(self, world: World) -> None:
+        self.world = world
+
+    def create(self, *args: Any, **kwargs: Any) -> FakeSession:
+        world = self.world
+        world.unlocked("create")
+        index = len(world.tokens)
+        world.log.append(("create", index))
+        if len(args) != 2 or set(kwargs) != {"lock", "key", "limits", "profile", "guard"}:
+            world.violations.append("create-signature")
+        ledger, token = args
+        world.ledger, world.lock = ledger, kwargs["lock"]
+        world.tokens.append(token)
+        world.keys.append(kwargs["key"])
+        world.profiles.append(kwargs["profile"])
+        world.limits.append(kwargs["limits"])
+        if kwargs["guard"] is not GUARD_FACTS:
+            world.violations.append("guard-identity")
+        if index in world.script.get("create_fail", ()):
+            raise WorkerSessionError(SessionFailure.STATE)
+        session = FakeSession(world, index, token, {"ledger": ledger, **kwargs})
+        world.sessions.append(session)
+        return session
+
+
+class World:
+    def __init__(self, **script: Any) -> None:
+        self.script = script
+        self.clock = Clock()
+        self.log: list[tuple[Any, ...]] = []
+        self.violations: list[str] = []
+        self.ledger: Any = None
+        self.lock: Any = None
+        self.armed_status: Any = None
+        self.tokens: list[Any] = []
+        self.keys: list[Any] = []
+        self.profiles: list[Any] = []
+        self.limits: list[Any] = []
+        self.sessions: list[FakeSession] = []
+        self.queries: list[tuple[int, bytes, float]] = []
+        self.sends: list[int] = []
+        self.stops: list[int] = []
+        self.releases: list[ReleaseOutcome] = []
+        self.handles: list[Handle] = []
+        self.endpoints: list[Any] = []
+        self.frames: list[bytes] = []
+        self.link = Link(self)
+
+    def unlocked(self, where: str) -> None:
+        if self.lock is not None and self.lock.locked():
+            self.violations.append("ledger-lock-held:" + where)
+
+    def run(self) -> Any:
+        module = driver()
+        ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+        return module["run"](ports)
+
+    def events(self) -> list[dict[str, Any]]:
+        return events_of(self.link.lines)
+
+    def entries(self) -> list[Any]:
+        return [row for row in self.ledger.status.entries if row is not None]
+
+
+@pytest.fixture
+def forbidden(monkeypatch: pytest.MonkeyPatch) -> list[str]:
+    """Real effect paths are traps; public modules were imported above first."""
+    calls: list[str] = []
+
+    def trap(name: str) -> Callable[..., NoReturn]:
+        def blocked(*_args: object, **_kwargs: object) -> NoReturn:
+            calls.append(name)
+            raise AssertionError(name)
+
+        return blocked
+
+    monkeypatch.setattr(socket, "socketpair", trap("socketpair"))
+    monkeypatch.setattr(socket, "create_connection", trap("create_connection"))
+    monkeypatch.setattr(subprocess, "Popen", trap("Popen"))
+    monkeypatch.setattr(threading.Thread, "start", trap("Thread.start"))
+    monkeypatch.setattr(linux_guard, "protect_process", trap("protect_process"))
+    monkeypatch.setattr(os, "urandom", trap("urandom"))
+    monkeypatch.setattr(session_module.WorkerSession, "__init__", trap("WorkerSession"))
+    return calls
+
+
+# ---------------------------------------------------------------- independent sanities
+
+
+def test_sanity_published_pure_prefix_matches_pin() -> None:
+    assert len(PURE_SOURCE) == PURE_SIZE
+    assert hashlib.sha256(PURE_SOURCE).hexdigest() == PURE_SHA
+
+
+def test_sanity_synthetic_init_is_valid_for_pure_decoder() -> None:
+    init = PURE["decode_init"](PACKET)
+    assert init.raw_canaries == (CANARY,)
+    assert PURE["job_sql"](13, CANARY) == SQL[13]
+    for job in range(1, 20):
+        assert PURE["job_sql"](job, CANARY) == SQL[job]
+    for record, job in zip(init.expected, range(1, 20), strict=True):
+        if job in ERRORS:
+            assert (record.kind, record.reason) == ("ERROR", ERRORS[job])
+        else:
+            body = body_for(job)
+            assert (record.bytes, record.sha256) == (len(body), hashlib.sha256(body).hexdigest())
+            assert record.rows == rows_for(job)
+    assert len(set(BODY_SHAS)) == len(RESULT_JOBS)
+
+
+def test_sanity_logical_ledger_arithmetic_via_public_api() -> None:
+    limits = BudgetLimits(512 * MIB, 128 * MIB, 64 * MIB, 4, 1, 1, 1, 2, 1)
+    ledger = BudgetLedger(limits, (DatasourceCapacity(1, 1),))
+    first = ledger.reserve_candidate(0, shared_bytes=MIB)
+    ledger.publish(first)
+    second = ledger.reserve_candidate(0, shared_bytes=MIB)
+    ledger.publish(second, replacing=first)
+    session = ledger.reserve_session(second, worker_bytes=256 * MIB, parent_bytes=33 * MIB)
+    ledger.adopt_session(session)
+    ledger.begin_output(session, frame_bytes=FRAME_LIMIT, overhead_bytes=MIB)
+    status = ledger.status
+    assert (status.reserved_bytes, status.available_bytes) == (483 * MIB, 29 * MIB)
+    with pytest.raises(BudgetError):
+        ledger.reserve_session(second, worker_bytes=256 * MIB, parent_bytes=33 * MIB)
+
+
+def test_sanity_aggregate_idle_window_arithmetic() -> None:
+    query_start = START
+    deadline = query_start + 30.0 - 2.0
+    assert query_start + 20.0 + 20.0 > deadline  # ACK cap + GO cap can exceed the idle bound
+    assert min(query_start + 15.0 + 20.0, deadline - 1.0) == query_start + 27.0
+    assert SINK_CAP == 16777140
+
+
+def test_sanity_event_checker_rejects_bool_ints_and_free_strings() -> None:
+    good = canonical({"case": 1, "e": "READY", "next_seq": 1})
+    assert events_of([good])[0]["case"] == 1
+    for bad in (
+        {"case": True, "e": "READY", "next_seq": 1},
+        {"case": 1, "e": "READY", "next_seq": 51},
+        {"case": 1, "e": "READY", "next_seq": 1, "detail": "x"},
+        {"case": 25, "e": "ARMED", "live_window_ms": 999, "next_seq": 51},
+        {"e": "SUMMARY", "failed": [], "global_pass": False, "prefix_cases": 24},
+        {"e": "SUMMARY", "failed": [24], "global_pass": True, "prefix_cases": 24},
+    ):
+        with pytest.raises((AssertionError, KeyError)):
+            events_of([canonical(bad)])
+
+
+ARMED_T4 = {"case": T4, "e": "ARMED", "live_window_ms": None, "next_seq": 46}
+ARMED_T6 = {"case": T6, "e": "ARMED", "live_window_ms": 28000, "next_seq": 51}
+
+
+def test_sanity_event_checker_accepts_exact_valid_events() -> None:
+    lines = [canonical(GUARD_EVENT), canonical(ARMED_T4), canonical(ARMED_T6)]
+    assert events_of(lines) == [GUARD_EVENT, ARMED_T4, ARMED_T6]
+
+
+@pytest.mark.parametrize(
+    ("base", "field", "value"),
+    [
+        pytest.param(GUARD_EVENT, "pid", True, id="guard-pid-bool"),
+        pytest.param(GUARD_EVENT, "pid", 1.0, id="guard-pid-float"),
+        pytest.param(GUARD_EVENT, "as", float(384 * MIB), id="guard-as-float"),
+        pytest.param(GUARD_EVENT, "dumpable", False, id="guard-dumpable-bool"),
+        pytest.param(GUARD_EVENT, "dumpable", 0.0, id="guard-dumpable-float"),
+        pytest.param(GUARD_EVENT, "pdeathsig", False, id="guard-pdeathsig-bool"),
+        pytest.param(GUARD_EVENT, "pdeathsig", 0.0, id="guard-pdeathsig-float"),
+        pytest.param(ARMED_T4, "next_seq", 46.0, id="armed23-seq-float"),
+        pytest.param(ARMED_T4, "case", 23.0, id="armed23-case-float"),
+        pytest.param(ARMED_T6, "next_seq", 51.0, id="armed25-seq-float"),
+        pytest.param(ARMED_T6, "live_window_ms", 28000.0, id="armed25-window-float"),
+        pytest.param(ARMED_T6, "live_window_ms", True, id="armed25-window-bool"),
+        pytest.param({"e": "TERMINAL", "outcome": "ABORTED"}, "outcome", ["ABORTED"], id="list"),
+        pytest.param({"e": "TERMINAL", "outcome": "ABORTED"}, "outcome", {"a": 1}, id="dict"),
+        pytest.param({"e": "TERMINAL", "outcome": "ABORTED"}, "e", ["TERMINAL"], id="name-list"),
+    ],
+)
+def test_sanity_event_checker_refuses_inexact_scalars(
+    base: dict[str, object], field: str, value: object
+) -> None:
+    with pytest.raises(AssertionError):
+        events_of([canonical({**base, field: value})])
+
+
+def test_sanity_host_plan_has_fifty_frames_through_t6_go() -> None:
+    seqs: list[int] = []
+    seq = 1
+    for case in range(1, 25):
+        seqs.append(seq)  # GO
+        seq += 1
+        if case == T4:
+            assert seq == 46
+            seqs.append(seq)  # watcher STOP/NOSTOP
+            seq += 1
+        seqs.append(seq)  # ACK
+        seq += 1
+    seqs.append(seq)  # GO T6
+    assert seqs == list(range(1, 51))
+    assert seq + 1 == 51
+
+
+# ---------------------------------------------------------------- module purity
+
+
+FORBIDDEN_IMPORTS = frozenset(
+    {
+        "asyncio",
+        "ctypes",
+        "multiprocessing",
+        "os",
+        "psycopg",
+        "select",
+        "signal",
+        "socket",
+        "subprocess",
+    }
+)
+
+
+def test_driver_source_has_no_entry_point_or_physical_imports() -> None:
+    tree = ast.parse(SOURCE.read_text("utf-8"))
+    imports: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            imports.update(alias.name.split(".")[0] for alias in node.names)
+        elif isinstance(node, ast.ImportFrom):
+            imports.add((node.module or "").split(".")[0])
+        elif isinstance(node, ast.Name):
+            assert node.id != "__name__"
+        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            assert node.name != "main"
+    assert not imports & FORBIDDEN_IMPORTS
+
+
+def test_driver_import_has_no_effect_and_does_not_load_pure(forbidden: list[str]) -> None:
+    before = set(sys.modules)
+    namespace = runpy.run_path(str(SOURCE))
+    assert forbidden == []
+    assert callable(namespace["run"])
+    assert not any(
+        getattr(sys.modules[name], "__file__", None) == PURE_PATH
+        for name in set(sys.modules) - before
+    )
+
+
+def test_constants_are_the_reviewed_prospective_values() -> None:
+    m = driver()
+    assert (m["PURE_PATH"], m["PURE_SHA"], m["PURE_BYTES"]) == (PURE_PATH, PURE_SHA, PURE_SIZE)
+    assert m["GUARD_AS_BYTES"] == 384 * MIB
+    assert (m["FRAME_LIMIT"], m["SINK_CAP"], m["SINK_CHUNK"]) == (FRAME_LIMIT, SINK_CAP, 65536)
+    budget = (
+        m["TOTAL_BYTES"],
+        m["BASE_BYTES"],
+        m["HEADROOM_BYTES"],
+        m["SHARED_BYTES"],
+        m["WORKER_BYTES"],
+        m["PARENT_BYTES"],
+        m["OUTPUT_OVERHEAD_BYTES"],
+    )
+    assert budget == (512 * MIB, 128 * MIB, 64 * MIB, MIB, 256 * MIB, 33 * MIB, MIB)
+    caps = (m["IDLE_MARGIN_S"], m["GO_CAP_S"], m["ACK_CAP_S"], m["FATAL_ACK_CAP_S"])
+    assert caps == (2.0, 20.0, 20.0, 90.0)
+    assert m["INIT_CAP_S"] == 10.0
+
+
+# ---------------------------------------------------------------- D1-1 loader
+
+
+def test_d1_1_loader_executes_exact_pinned_bytes() -> None:
+    world = World()
+    module = driver()["load_pure"](PureReader(world))
+    assert world.log == [("read_pure", PURE_PATH, PURE_SIZE + 1)]
+    assert module.__file__ == PURE_PATH
+    assert sys.modules[module.__name__] is module
+    assert module.HEAVY_SQL == HEAVY
+    assert module.decode_init(PACKET).raw_canaries == (CANARY,)
+
+
+def probe_bytes(size: int) -> bytes:
+    code = b"import builtins\nbuiltins.maskgw_w1_probe_executed = True\n"
+    return code + b"#" * (size - len(code))
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        pytest.param(probe_bytes(PURE_SIZE), id="same-size-wrong-hash"),
+        pytest.param(probe_bytes(PURE_SIZE - 1), id="short"),
+        pytest.param(probe_bytes(PURE_SIZE + 1), id="over-by-one"),
+        pytest.param(probe_bytes(PURE_SIZE + 4096), id="reader-overflow"),
+        pytest.param(b"", id="empty"),
+        pytest.param(bytearray(PURE_SOURCE), id="bytearray"),
+        pytest.param(OSError("READ_FAILED"), id="read-error"),
+    ],
+)
+def test_d1_1_loader_refuses_before_execution(
+    monkeypatch: pytest.MonkeyPatch, data: object
+) -> None:
+    monkeypatch.delattr(builtins, "maskgw_w1_probe_executed", raising=False)
+    world = World(pure=data)
+    with pytest.raises(driver()["DriverRefusal"]) as info:
+        driver()["load_pure"](PureReader(world))
+    assert_closed(info.value, "LOAD")
+    assert not hasattr(builtins, "maskgw_w1_probe_executed")
+
+
+def test_d1_1_run_load_failure_aborts_after_guard_without_init(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delattr(builtins, "maskgw_w1_probe_executed", raising=False)
+    world = World(pure=probe_bytes(PURE_SIZE))
+    result = world.run()
+    assert result.outcome == "ABORTED"
+    assert result.owner is None
+    assert [entry[0] for entry in world.log[:2]] == ["guard", "read_pure"]
+    assert not any(entry[0] == "read_init" for entry in world.log)
+    assert world.events() == [
+        {"case": 0, "e": "ABORT", "phase": "LOAD", "reason": "LOAD", "retained": False},
+        {"e": "TERMINAL", "outcome": "ABORTED"},
+    ]
+    assert result.verdicts == ("NOT_RUN",) * 25
+    assert not hasattr(builtins, "maskgw_w1_probe_executed")
+
+
+# ---------------------------------------------------------------- D1-2 order
+
+
+def test_d1_2_order_guard_then_pinned_load_then_guard_event_then_init() -> None:
+    world = World(eof={(GO, 1)})
+    world.run()
+    names = [entry[0] for entry in world.log]
+    assert names[:4] == ["guard", "read_pure", "write", "read_init"]
+    assert world.log[0] == ("guard", ProcessRole.CONTROLLER, 384 * MIB)
+    assert world.log[2] == ("write", "GUARD", 0)
+    assert world.link.lines[0] == canonical(GUARD_EVENT)
+
+
+def test_d1_2_guard_failure_reads_and_writes_nothing() -> None:
+    world = World(guard_fail=True)
+    result = world.run()
+    assert result.outcome == "GUARD_FAILED"
+    assert result.owner is None
+    assert result.verdicts == ("NOT_RUN",) * 25
+    assert world.log == [("guard", ProcessRole.CONTROLLER, 384 * MIB)]
+    assert world.link.lines == []
+
+
+# ---------------------------------------------------------------- D1-3/4/14/16/17 full walk
+
+
+def result_event(case: int, seq: int, t4: int) -> dict[str, Any]:
+    event: dict[str, Any] = {
+        "bytes": None,
+        "case": case,
+        "e": "RESULT",
+        "kind": "FATAL",
+        "next_seq": seq,
+        "reason": "JOB",
+        "release": "ALREADY_RELEASED",
+        "rows": None,
+        "sink": None,
+        "stop_applied": None,
+        "truncated": None,
+        "verdict": "PASS",
+    }
+    if case in ERRORS:
+        event.update(kind="ERROR", reason=ERRORS[case], release=None)
+    elif case <= 19:
+        event.update(
+            bytes=len(body_for(case)),
+            kind="RESULT",
+            reason=None,
+            release=None,
+            rows=rows_for(case),
+            sink="OK",
+            truncated=case == 9,
+        )
+    elif case == T1:
+        event.update(reason="CONNECTION")
+    elif case == T4:
+        event.update(stop_applied=t4 == STOP, verdict="PASS" if t4 == STOP else "FAIL")
+    elif case == T5:
+        event.update(kind="PENDING", reason="T5_PENDING", release=None, verdict="FAIL")
+    return event
+
+
+def expected_walk(t4: int) -> list[dict[str, Any]]:
+    events: list[dict[str, Any]] = [GUARD_EVENT, {"e": "INIT_OK"}]
+    seq = 1
+    for case in range(1, 25):
+        events.append({"case": case, "e": "READY", "next_seq": seq})
+        seq += 1
+        if case == T4:
+            events.append({"case": T4, "e": "ARMED", "live_window_ms": None, "next_seq": seq})
+            seq += 1
+        events.append(result_event(case, seq, t4))
+        seq += 1
+    failed = [T5] if t4 == STOP else [T4, T5]
+    events.append({"e": "SUMMARY", "failed": failed, "global_pass": False, "prefix_cases": 24})
+    events.append({"case": T6, "e": "READY", "next_seq": seq})
+    events.append({"case": T6, "e": "ARMED", "live_window_ms": 28000, "next_seq": 51})
+    events.append({"e": "TERMINAL", "outcome": "T6_UNKILLED"})
+    return events
+
+
+@pytest.mark.parametrize("t4", [STOP, NOSTOP], ids=["stop", "nostop"])
+def test_d1_3_full_walk_is_finite_and_never_global_pass(forbidden: list[str], t4: int) -> None:
+    world = World(t4=t4)
+    result = world.run()
+    assert world.events() == expected_walk(t4)
+    assert result.outcome == "T6_UNKILLED"
+    assert result.owner is None
+    verdicts = ["PASS"] * 25
+    verdicts[T5 - 1] = verdicts[T6 - 1] = "FAIL"
+    if t4 == NOSTOP:
+        verdicts[T4 - 1] = "FAIL"
+    assert result.verdicts == tuple(verdicts)
+    assert len(world.sessions) == 6
+    assert [index for index, _, _ in world.queries] == [0] * 19 + [1, 2, 3, 4]
+    assert world.sends == list(RESULT_JOBS)
+    assert len(world.frames) == 50
+    assert [CONTROL.unpack(raw)[4] for raw in world.frames] == list(range(1, 51))
+    assert world.stops == ([4] if t4 == STOP else [])
+    assert [handle.name for handle in world.handles] == ["sink"] * 13 + ["watcher"]
+    assert world.violations == []
+    assert forbidden == []
+    for leak in LEAKS:
+        assert leak not in repr(result)
+
+
+def test_d1_3_sessions_keys_profiles_and_snapshots_are_trusted_values() -> None:
+    world = World()
+    world.run()
+    init = PURE["decode_init"](PACKET)
+    generations = [1, 1, 1, 1, 2, 2]
+    assert len({key.session_id for key in world.keys}) == 6
+    for key, generation, session in zip(world.keys, generations, world.sessions, strict=True):
+        assert type(key) is SessionKey
+        assert len(key.session_id) == 16
+        assert (key.datasource_id, key.generation, key.record_revision) == (
+            DATASOURCE_BYTES,
+            generation,
+            1,
+        )
+        assert session.snapshot == PURE["capture"](init, generation)
+        ident = SnapshotIdentity("dso_" + DATASOURCE_BYTES.hex(), generation, 1)
+        assert recompile_snapshot(session.snapshot, expected=ident).config.database.max_rows == 1000
+    idle = [30000, 30000, 30000, 1000, 30000, 30000]
+    timeouts = [1000, 1000, 1000, 1000, 30000, 30000]
+    for profile, idle_ms, timeout in zip(world.profiles, idle, timeouts, strict=True):
+        assert profile == WorkerProfile(256 * MIB, idle_ms, timeout, MIB)
+    assert all(
+        limits == ResultLimits(max_rows=1000, max_frame_bytes=FRAME_LIMIT)
+        for limits in world.limits
+    )
+
+
+def test_d1_14_t3_exempt_and_t6_live_window_then_clean_unkilled_end() -> None:
+    world = World()
+    world.run()
+    assert world.clock.sleeps == [START + 2.0]  # T3: idle 1 s + 1 s, deliberately expired
+    reads = {last: deadline for last, deadline, _ in world.link.reads}
+    assert reads[("READY", T3)] == START + 20.0  # GO cap only, no expired T3 window
+    assert reads[("RESULT", T1)] == START + 90.0  # fatal ACK cap without idle window
+    t6_open = world.sessions[5].opened_at
+    assert reads[("ARMED", T6)] == t6_open + 28.0
+    assert world.log[-2:] == [("close", 5), ("write", "TERMINAL", 0)]
+    assert world.ledger.status.sessions == 0
+
+
+def test_d1_14_frame_after_t6_armed_is_never_accepted() -> None:
+    world = World(after_armed=True)
+    result = world.run()
+    assert result.outcome == "ABORTED"
+    assert world.events()[-2:] == [
+        {"case": T6, "e": "ABORT", "phase": "CASE", "reason": "PHASE", "retained": False},
+        {"e": "TERMINAL", "outcome": "ABORTED"},
+    ]
+    assert result.verdicts[T6 - 1] == "FAIL"
+
+
+def test_d1_17_ledger_values_at_t6_and_g1_draining() -> None:
+    world = World()
+    world.run()
+    status = world.armed_status
+    assert (status.reserved_bytes, status.available_bytes) == (483 * MIB, 29 * MIB)
+    assert (status.base_bytes, status.headroom_bytes) == (130 * MIB, 64 * MIB)
+    generations = [row.state for row in world.entries() if row.kind is ReservationKind.GENERATION]
+    assert generations == [ReservationState.DRAINING, ReservationState.LIVE]
+
+
+# ---------------------------------------------------------------- D1-5/6/9 watcher
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        pytest.param(frame(STOP, T4, 47), id="seq-47"),
+        pytest.param(frame(STOP, T4, 45), id="replay-45"),
+        pytest.param(frame(STOP, 22, 46), id="case-22"),
+        pytest.param(frame(GO, T4, 46), id="go-kind"),
+        pytest.param(b"\x00" * 16, id="malformed"),
+    ],
+)
+def test_d1_5_watcher_wrong_frame_never_stops_and_aborts(raw: bytes) -> None:
+    world = World(frames={(STOP, T4): raw})
+    result = world.run()
+    assert world.stops == []
+    assert result.outcome == "ABORTED"
+    abort = world.events()[-2]
+    assert (abort["case"], abort["e"], abort["retained"]) == (T4, "ABORT", False)
+    assert abort["reason"] in ("PHASE", "CONTROL")
+
+
+def test_d1_5_late_stop_is_fail_and_run_continues() -> None:
+    world = World(t4_timing="join")
+    result = world.run()
+    assert world.stops == []
+    events = world.events()
+    t4_result = next(e for e in events if e["e"] == "RESULT" and e["case"] == T4)
+    assert (t4_result["stop_applied"], t4_result["verdict"]) == (False, "FAIL")
+    assert next(e for e in events if e["e"] == "SUMMARY")["failed"] == [T4, T5]
+    assert result.outcome == "T6_UNKILLED"
+
+
+def test_d1_5_watcher_registered_before_start_and_armed_published_after() -> None:
+    world = World()
+    world.run()
+    names = [entry[:2] for entry in world.log]
+    created = names.index(("create_thread", "watcher"))
+    started = names.index(("start", "watcher"))
+    published = names.index(("write", "ARMED"))
+    assert created < started < published < names.index(("join", "watcher"))
+
+
+def test_d1_6_watcher_join_failure_retains_owner_without_commit() -> None:
+    world = World(join_fail="watcher")
+    result = world.run()
+    assert result.outcome == "RETAINED"
+    watcher = world.handles[-1]
+    assert watcher.name == "watcher"
+    assert watcher in result.owner.handles
+    assert result.owner.session is world.sessions[4]
+    # The fake watcher already read STOP on the wire during the call (46 wire
+    # reads); a wire read is NOT a machine commit, and the failed join must stop
+    # every later host read, ACK 47 and further query.
+    assert len(world.frames) == 46
+    assert CONTROL.unpack(world.frames[-1])[2:5] == (STOP, T4, 46)
+    assert world.link.reads[-1][0] == ("ARMED", T4)
+    assert [index for index, _, _ in world.queries] == [0] * 19 + [1, 2, 3, 4]
+    assert not any(entry[:2] == ("write", "RESULT") and entry[2] == T4 for entry in world.log)
+    assert world.events()[-2:] == [
+        {"case": T4, "e": "ABORT", "phase": "CASE", "reason": "JOIN", "retained": True},
+        {"e": "TERMINAL", "outcome": "RETAINED"},
+    ]
+
+
+def test_d1_9_watcher_start_failure_retains_handle_and_skips_query() -> None:
+    world = World(start_fail="watcher")
+    result = world.run()
+    assert result.outcome == "RETAINED"
+    assert world.handles[-1] in result.owner.handles
+    assert [index for index, _, _ in world.queries] == [0] * 19 + [1, 2, 3]
+    assert world.events()[-2]["reason"] == "WATCHER"
+
+
+# ---------------------------------------------------------------- D1-7 sink_drain
+
+
+class Scripted:
+    def __init__(self, clock: Clock, steps: list[object]) -> None:
+        self.clock, self.steps = clock, steps
+        self.limits: list[int] = []
+
+    def read(self, limit: int, *, deadline: float) -> bytes | None:
+        self.limits.append(limit)
+        step = self.steps.pop(0) if self.steps else None
+        if isinstance(step, BaseException):
+            raise step
+        if isinstance(step, float):
+            self.clock.now = max(self.clock.now, deadline) + step
+            return b"x"
+        if step == "fill":
+            return b"y" * limit
+        if step is None or isinstance(step, bytes):
+            return step
+        return b"z" * (limit + 1)
+
+
+@pytest.mark.parametrize(
+    ("steps", "expected", "status", "count", "reads"),
+    [
+        pytest.param([b"abcd", b"efg", None], b"abcdefg", "OK", 7, [4, 4, 2], id="ok"),
+        pytest.param([b"abcd", b"efX", None], b"abcdefg", "MISMATCH", 7, [4, 4, 2], id="hash"),
+        pytest.param([b"abcd", None], b"abcdefg", "MISMATCH", 4, [4, 4], id="short"),
+        pytest.param(["fill"] * 9, b"abcdefg", "OVERRUN", 9, [4, 4, 1], id="overrun"),
+        pytest.param([b"abcd", TimeoutError()], b"abcdefg", "NO_EOF", 4, [4, 4], id="no-eof"),
+        pytest.param([OSError()], b"abcdefg", "IO", 0, [4], id="io"),
+        pytest.param(["oversize"], b"abcdefg", "IO", 0, [4], id="oversize-chunk"),
+        pytest.param([1.0, b"never"], b"abcdefg", "TIMEOUT", 1, [4], id="deadline"),
+    ],
+)
+def test_d1_7_sink_drain_is_bounded_and_stops_at_cap(
+    steps: list[object], expected: bytes, status: str, count: int, reads: list[int]
+) -> None:
+    clock = Clock()
+    source = Scripted(clock, list(steps))
+    result = driver()["sink_drain"](
+        source.read,
+        expected_bytes=len(expected),
+        expected_sha256=hashlib.sha256(expected).hexdigest(),
+        cap=8,
+        chunk=4,
+        deadline=START + 5.0,
+        clock=clock,
+    )
+    assert (result.status, result.count) == (status, count)
+    assert source.limits == reads
+
+
+# ---------------------------------------------------------------- D1-8/9/10 sink in run
+
+
+def test_d1_8_body_mismatch_aborts_without_next_query_after_join() -> None:
+    world = World(corrupt_job=2)
+    result = world.run()
+    assert result.outcome == "ABORTED"
+    assert [index for index, _, _ in world.queries] == [0, 0]
+    names = [entry[0] for entry in world.log]
+    second_join = [i for i, name in enumerate(names) if name == "join"][1]
+    assert names.index("close_writer", second_join) > second_join
+    assert names.index("close_reader", second_join) > second_join
+    assert world.events()[-2:] == [
+        {"case": 2, "e": "ABORT", "phase": "CASE", "reason": "EXPECTATION", "retained": False},
+        {"e": "TERMINAL", "outcome": "ABORTED"},
+    ]
+    assert result.verdicts[:3] == ("PASS", "FAIL", "NOT_RUN")
+    assert ("close", 0) in world.log
+
+
+@pytest.mark.parametrize(
+    "override",
+    [pytest.param((4, False), id="rows"), pytest.param((3, True), id="truncated")],
+)
+def test_d1_8_summary_mismatch_aborts_after_verified_join(override: tuple[int, bool]) -> None:
+    world = World(summary_override={2: override})
+    result = world.run()
+    assert result.outcome == "ABORTED"
+    assert [index for index, _, _ in world.queries] == [0, 0]
+    names = [entry[0] for entry in world.log]
+    second_join = [i for i, name in enumerate(names) if name == "join"][1]
+    assert names.index("close_writer", second_join) > second_join
+    assert names.index("close_reader", second_join) > second_join
+    assert world.events()[-2:] == [
+        {"case": 2, "e": "ABORT", "phase": "CASE", "reason": "EXPECTATION", "retained": False},
+        {"e": "TERMINAL", "outcome": "ABORTED"},
+    ]
+    assert result.verdicts[:3] == ("PASS", "FAIL", "NOT_RUN")
+
+
+@pytest.mark.parametrize(
+    ("reply", "release"),
+    [
+        pytest.param((WireFailure.QUERY, True), "RELEASED", id="wrong-category"),
+        pytest.param((WireFailure.LIMIT, False), "ALREADY_RELEASED", id="fatal-reply"),
+    ],
+)
+def test_d1_8_unexpected_error_reply_aborts_without_next_query(
+    reply: tuple[WireFailure, bool], release: str
+) -> None:
+    world = World(error_override={11: reply})
+    result = world.run()
+    assert result.outcome == "ABORTED"
+    assert [index for index, _, _ in world.queries] == [0] * 11
+    assert world.sessions[0].state is SessionState.CLOSED
+    closes = [entry for entry in world.log if entry[0] == "close"]
+    assert closes == [("close", 0)]
+    assert world.releases == [ReleaseOutcome(release)]
+    assert world.events()[-2:] == [
+        {"case": 11, "e": "ABORT", "phase": "CASE", "reason": "EXPECTATION", "retained": False},
+        {"e": "TERMINAL", "outcome": "ABORTED"},
+    ]
+    assert result.verdicts[10:12] == ("FAIL", "NOT_RUN")
+    assert world.violations == []
+
+
+def test_d1_8_late_send_is_stopped_by_composed_window() -> None:
+    world = World(late_send_job=1)
+    result = world.run()
+    assert ("channel", True) in world.log  # stop() is False when the channel is created
+    assert ("send_stopped", len(body_for(1)) // 2) in world.log
+    assert [index for index, _, _ in world.queries] == [0]
+    assert world.events()[-2]["reason"] == "OUTPUT"
+    assert result.outcome == "ABORTED"
+
+
+def test_d1_8_sink_join_failure_retains_endpoints_and_session() -> None:
+    world = World(join_fail="sink")
+    result = world.run()
+    assert result.outcome == "RETAINED"
+    owner = result.owner
+    assert world.handles[0] in owner.handles
+    assert all(endpoint in owner.endpoints for endpoint in world.endpoints[:2])
+    assert not any(endpoint.closed for endpoint in world.endpoints)
+    assert owner.session is world.sessions[0]
+    assert ("close", 0) not in world.log
+    assert world.events()[-2]["reason"] == "JOIN"
+
+
+def test_d1_9_sink_start_failure_retains_handle_before_any_send() -> None:
+    world = World(start_fail="sink")
+    result = world.run()
+    assert result.outcome == "RETAINED"
+    assert world.handles[0] in result.owner.handles
+    assert world.sends == []
+    assert world.events()[-2]["reason"] == "SINK"
+
+
+def test_d1_9_sink_partial_start_exception_retains_started_handle() -> None:
+    world = World(start_raise="sink")
+    result = world.run()
+    assert result.outcome == "RETAINED"
+    handle = world.handles[0]
+    assert handle.name == "sink"
+    assert handle.started is True
+    assert any(item is handle for item in result.owner.handles)
+    assert all(endpoint in result.owner.endpoints for endpoint in world.endpoints[:2])
+    assert world.sends == []
+    assert [index for index, _, _ in world.queries] == [0]
+    assert world.events()[-2]["reason"] == "SINK"
+
+
+def test_d1_9_watcher_partial_start_exception_retains_started_handle() -> None:
+    world = World(start_raise="watcher")
+    result = world.run()
+    assert result.outcome == "RETAINED"
+    handle = world.handles[-1]
+    assert handle.name == "watcher"
+    assert handle.started is True
+    assert handle.ran is False
+    assert any(item is handle for item in result.owner.handles)
+    assert result.owner.session is world.sessions[4]
+    assert [index for index, _, _ in world.queries] == [0] * 19 + [1, 2, 3]
+    assert len(world.frames) == 45
+    assert world.events()[-2]["reason"] == "WATCHER"
+
+
+def test_d1_10_pair_creation_unknown_effect_is_retained() -> None:
+    world = World(pair_fail=1)
+    result = world.run()
+    assert result.outcome == "RETAINED"
+    assert result.owner.unknown == ("pair",)
+    assert world.sends == []
+    assert world.events()[-2]["reason"] == "SINK"
+
+
+# ---------------------------------------------------------------- D1-11/12 sessions
+
+
+def session_rows(world: World) -> list[Any]:
+    return [row for row in world.entries() if row.kind is ReservationKind.SESSION]
+
+
+def test_d1_11_factory_failure_retains_token_without_close() -> None:
+    world = World(create_fail=(0,))
+    result = world.run()
+    assert result.outcome == "RETAINED"
+    assert result.owner.session_token is world.tokens[0]
+    assert [row.state for row in session_rows(world)] == [ReservationState.HELD]
+    assert not any(entry[0] in ("open", "close") for entry in world.log)
+    assert world.events()[-2:] == [
+        {"case": 1, "e": "ABORT", "phase": "CASE", "reason": "SESSION", "retained": True},
+        {"e": "TERMINAL", "outcome": "RETAINED"},
+    ]
+
+
+def test_d1_11_open_failure_before_adoption_retains_and_never_closes() -> None:
+    world = World(open_mode={0: "new"})
+    result = world.run()
+    assert result.outcome == "RETAINED"
+    assert result.owner.session is world.sessions[0]
+    assert [row.state for row in session_rows(world)] == [ReservationState.HELD]
+    assert ("close", 0) not in world.log
+    assert world.violations == []
+
+
+@pytest.mark.parametrize(
+    ("close_held", "outcome"),
+    [((), "ABORTED"), ((0,), "RETAINED")],
+    ids=["second-cleanup-released", "still-held"],
+)
+def test_d1_11_open_failure_after_adoption_uses_one_session_close(
+    close_held: tuple[int, ...], outcome: str
+) -> None:
+    world = World(open_mode={0: "held"}, close_held=close_held)
+    result = world.run()
+    assert result.outcome == outcome
+    assert [entry for entry in world.log if entry[0] == "close"] == [("close", 0)]
+    assert world.violations == []
+
+
+def test_d1_12_held_close_retains_and_reserves_nothing_more() -> None:
+    world = World(close_held=(0,))
+    result = world.run()
+    assert result.outcome == "RETAINED"
+    assert len(world.tokens) == 1
+    assert [row.state for row in session_rows(world)] == [ReservationState.HELD]
+    assert world.events()[-2:] == [
+        {"case": 19, "e": "ABORT", "phase": "CLEANUP", "reason": "SESSION", "retained": True},
+        {"e": "TERMINAL", "outcome": "RETAINED"},
+    ]
+
+
+def test_d1_12_duplicate_session_id_is_refused_before_factory() -> None:
+    world = World(duplicate_id=True)
+    result = world.run()
+    assert result.outcome == "ABORTED"
+    assert len(world.tokens) == 1
+    assert world.events()[-2]["reason"] == "SESSION"
+
+
+# ---------------------------------------------------------------- D1-13 idle window
+
+
+def test_d1_13_ack_then_go_never_reset_the_aggregate_window() -> None:
+    world = World(ack_delay={1: 15.0}, go_delay={2: 15.0})
+    result = world.run()
+    query_at = world.queries[0][2]
+    reads = {last: deadline for last, deadline, _ in world.link.reads}
+    assert reads[("RESULT", 1)] == query_at + 20.0
+    assert reads[("READY", 2)] == query_at + 27.0  # capped by pre-call window, not reset
+    assert [index for index, _, _ in world.queries] == [0]
+    assert world.events()[-2:] == [
+        {"case": 2, "e": "ABORT", "phase": "CASE", "reason": "IDLE_WINDOW", "retained": False},
+        {"e": "TERMINAL", "outcome": "ABORTED"},
+    ]
+    assert result.outcome == "ABORTED"
+
+
+# ---------------------------------------------------------------- D1-15 locks and call state
+
+
+def test_d1_15_ledger_lock_never_held_across_port_calls() -> None:
+    world = World()
+    world.run()
+    assert type(world.lock) is type(threading.Lock())
+    assert not world.lock.locked()
+    assert world.violations == []
+
+
+def test_d1_15_call_state_applies_stop_only_while_active() -> None:
+    state = driver()["CallState"]()
+    calls: list[str] = []
+    assert state.apply(lambda: calls.append("stop")) is False
+    state.activate()
+    assert state.apply(lambda: calls.append("stop")) is True
+    state.deactivate()
+    assert state.apply(lambda: calls.append("stop")) is False
+    assert calls == ["stop"]
+
+
+@pytest.mark.parametrize(
+    ("raw", "active", "kind", "applied"),
+    [
+        pytest.param(frame(STOP, T4, 46), True, STOP, True, id="stop-in-time"),
+        pytest.param(frame(STOP, T4, 46), False, STOP, False, id="stop-late"),
+        pytest.param(frame(NOSTOP, T4, 46), True, NOSTOP, False, id="nostop"),
+        pytest.param(frame(STOP, T4, 47), True, STOP, False, id="seq-47"),
+        pytest.param(frame(STOP, 22, 46), True, STOP, False, id="case-22"),
+        pytest.param(b"\x00" * 16, True, None, False, id="malformed"),
+        pytest.param(None, True, None, False, id="eof"),
+    ],
+)
+def test_d1_5_watch_once_checks_kind_case_and_exact_seq(
+    raw: bytes | None, active: bool, kind: int | None, applied: bool
+) -> None:
+    m = driver()
+    state = m["CallState"]()
+    if active:
+        state.activate()
+    stops: list[int] = []
+    reads: list[float] = []
+
+    def read(*, deadline: float) -> bytes | None:
+        reads.append(deadline)
+        return raw
+
+    observation = m["watch_once"](
+        read,
+        expected_seq=46,
+        deadline=START + 43.0,
+        decode=PURE["decode_control"],
+        call_state=state,
+        request_stop=lambda: stops.append(1),
+    )
+    assert reads == [START + 43.0]
+    assert (observation.raw, observation.kind, observation.stop_applied) == (raw, kind, applied)
+    assert stops == ([1] if applied else [])
+
+
+# ---------------------------------------------------------------- D1-18 refusal and EOF
+
+
+def test_d1_18_machine_refusal_aborts_cleans_session_and_reads_nothing_more() -> None:
+    world = World(frames={(GO, 1): frame(GO, 1, 2)})
+    result = world.run()
+    assert result.outcome == "ABORTED"
+    assert len(world.link.reads) == 1
+    assert world.queries == []
+    assert ("close", 0) in world.log
+    assert world.events()[-2:] == [
+        {"case": 1, "e": "ABORT", "phase": "CASE", "reason": "PHASE", "retained": False},
+        {"e": "TERMINAL", "outcome": "ABORTED"},
+    ]
+    assert result.verdicts == ("FAIL",) + ("NOT_RUN",) * 24
+
+
+def test_d1_18_host_eof_aborts_without_further_query() -> None:
+    world = World(eof={(GO, 3)})
+    result = world.run()
+    assert result.outcome == "ABORTED"
+    assert [index for index, _, _ in world.queries] == [0, 0]
+    assert world.events()[-2]["reason"] == "EOF"
+    assert world.link.reads[-1][0] == ("READY", 3)
+
+
+def test_d1_18_driver_result_is_frozen_and_redacted() -> None:
+    world = World(eof={(GO, 1)})
+    result = world.run()
+    with pytest.raises(AttributeError):
+        result.outcome = "PASS"
+    for leak in LEAKS:
+        assert leak not in repr(result)

@@ -1,0 +1,176 @@
+{
+  "terminal": {
+    "chunk_id": "3f4c8e",
+    "wall_time_seconds": 1.1490459,
+    "exit_code": 0,
+    "original_token_count": 818,
+    "output": "{\r\n    \"session_id\":  \"51ea0d85-05bb-4d24-ba9a-c9627c3f832f\",\r\n    \"is_error\":  false,\r\n    \"result\":  \"Corrigi só `deploy/oracle9_w1_driver.py`. O teste congelado `0e9a8cc1` não foi tocado e não rodei nada; nenhum resultado de QA é medido.\\n\\n**Invariantes alterados:**\\n1. **Perfil do guard antes de qualquer leitura.** O novo `_controller_profile` exige `GuardFacts` exato com papel CONTROLLER, `pid` inteiro exato 1, `address_limit_bytes` exatamente 384 MiB, `dumpable` 0, `parent_death_signal` 0 e `core` igual à tupla `(0, 0)` de inteiros exatos. Se falhar, `run` devolve GUARD_FAILED antes do loader, de qualquer leitura ou escrita e da factory. Não verifico `parent_pid` nem threads.\\n2. **Cerca depois do retorno, com prazo não inclusivo (no prazo já é vencido):**\\n   - **INIT:** bytes válidos observados no prazo ou depois dão `ABORT{0, INIT, TIMEOUT}` antes do decode, da captura e do ledger.\\n   - **GO/ACK (`read_frame`):** frame observado no prazo ou depois não é aceito. O motivo é IDLE_WINDOW se o prazo veio da janela agregada e TIMEOUT se veio do teto da fase. A janela continua ancorada no tempo de antes da chamada e não é reiniciada.\\n   - **Sink (`sink_drain`):** EOF observado no prazo ou depois dá TIMEOUT, nunca OK nem MISMATCH. Dado vencido dá TIMEOUT com contagem `min(count + len, cap + 1)` e não entra no hash; isso preserva a contagem 1 do caso existente.\\n   - **Watcher:** em T4, a leitura passa por um wrapper `fenced` que devolve None quando o relógio já passou do prazo. Então frame vencido não pede stop, e a API pública do `watch_once` não mudou.\\n3. **Join:** agora devolve se o join positivo ocorreu dentro do prazo.\\n   - Join negativo continua dando RETAINED com JOIN.\\n   - Join positivo comprova o fim da thread, então o handle sai do owner e os endpoints podem ser fechados. Mas, se foi observado no prazo ou depois, nunca há commit nem PASS: o resultado é ABORT JOIN.\\n   - No sink, a falha de envio tem precedência (OUTPUT) sobre o join tardio, o que preserva o caso congelado de envio tardio. Em T4, o join tardio aborta antes de `machine.join`.\\n4. **`ResultSummary`:** antes de serializar, exige `rows` e as `rows` esperadas como int exato entre 0 e 1000, iguais entre si, e `truncated` do tipo `bool`, idêntico ao esperado (só o job 9). Float, bool no lugar de int e 0 no lugar de False dão ABORT EXPECTATION antes de qualquer linha RESULT.\\n\\nO restante do comportamento-base ficou igual: registro no owner antes do efeito, regras do lock do ledger, stop e janela, T5_PENDING, T6_UNKILLED, categorias fechadas e eventos. Não há leitura de atributos do fake nem caminho específico de teste.\\n\\n**Limites honestos:**\\n- O fato de o join positivo tardio levar a ABORTED, e não a RETAINED, é uma escolha minha. Apoia-se em o join positivo provar que a thread terminou, e o teste congelado aceita os dois.\\n- No watcher tardio, o frame foi lido no fio e descartado pela cerca. Depois disso o driver aborta por JOIN, porque o relógio já passou do prazo do join; o motivo não é PHASE.\\n- Não executei nada. A conformidade com os 114 casos e com o formatter está conferida só por leitura.\",\r\n    \"terminal_reason\":  \"completed\",\r\n    \"api_error_status\":  null,\r\n    \"exit\":  0\r\n}\r\n"
+  },
+  "targeted": [
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "own",
+        "result": {
+          "chunk_id": "e5aa7e",
+          "wall_time_seconds": 2.6389657,
+          "exit_code": 0,
+          "original_token_count": 44,
+          "output": "{\"exception_types\": {}, \"exit\": 0, \"failed\": [], \"failed_count\": 0, \"seconds\": 1.959, \"stats\": {\"collected\": 114, \"passed\": 114, \"unique_nodeids\": 114, \"xfail_marked\": 0}}\r\n"
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "ruff",
+        "result": {
+          "chunk_id": "e2e46c",
+          "wall_time_seconds": 0.4396347,
+          "exit_code": 0,
+          "original_token_count": 5,
+          "output": "All checks passed!\n"
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "source_lint",
+        "result": {
+          "chunk_id": "bda5b3",
+          "wall_time_seconds": 0.629197,
+          "exit_code": 0,
+          "original_token_count": 5,
+          "output": "All checks passed!\n"
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "format",
+        "result": {
+          "chunk_id": "712340",
+          "wall_time_seconds": 0.7393033,
+          "exit_code": 0,
+          "original_token_count": 7,
+          "output": "2 files already formatted\n"
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "mypy311",
+        "result": {
+          "chunk_id": "dee3ed",
+          "wall_time_seconds": 1.3835963,
+          "exit_code": 0,
+          "original_token_count": 11,
+          "output": "Success: no issues found in 1 source file\r\n"
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "mypy314",
+        "result": {
+          "chunk_id": "e6e18f",
+          "wall_time_seconds": 1.3750054999999999,
+          "exit_code": 0,
+          "original_token_count": 11,
+          "output": "Success: no issues found in 1 source file\r\n"
+        }
+      }
+    }
+  ],
+  "related": {
+    "chunk_id": "ba6d90",
+    "wall_time_seconds": 0.0000365,
+    "exit_code": 0,
+    "original_token_count": 45,
+    "output": "{\"exception_types\": {}, \"exit\": 0, \"failed\": [], \"failed_count\": 0, \"seconds\": 12.188, \"stats\": {\"collected\": 1122, \"passed\": 1122, \"unique_nodeids\": 1122, \"xfail_marked\": 0}}\r\n"
+  },
+  "ruff_format_all": [
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "related",
+        "result": {
+          "chunk_id": "177a94",
+          "wall_time_seconds": 10.0055865,
+          "session_id": 74429,
+          "original_token_count": 0,
+          "output": ""
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "ruff_all",
+        "result": {
+          "chunk_id": "54ccd6",
+          "wall_time_seconds": 0.7483992,
+          "exit_code": 0,
+          "original_token_count": 5,
+          "output": "All checks passed!\n"
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "format_all",
+        "result": {
+          "chunk_id": "f70842",
+          "wall_time_seconds": 0.728116,
+          "exit_code": 0,
+          "original_token_count": 7,
+          "output": "359 files already formatted\n"
+        }
+      }
+    }
+  ],
+  "mypy311": {
+    "chunk_id": "1bb21b",
+    "wall_time_seconds": 1.3443854,
+    "exit_code": 0,
+    "original_token_count": 12,
+    "output": "Success: no issues found in 359 source files\r\n"
+  },
+  "mypy314": {
+    "chunk_id": "281de6",
+    "wall_time_seconds": 1.4564523999999999,
+    "exit_code": 0,
+    "original_token_count": 12,
+    "output": "Success: no issues found in 359 source files\r\n"
+  },
+  "source": {
+    "sha256": "e9d8de9bcaf3c45092baad3775b0a0b5653b430a3aece158c64e653674e3500c",
+    "bytes": 34885,
+    "lines": 994
+  },
+  "test": {
+    "sha256": "0e9a8cc1d35f69e6ca03a14f8a910af5491df6dffadb32a432defeb445099371",
+    "bytes": 73046,
+    "lines": 1929
+  },
+  "independent_probes": {
+    "late_eof": "TIMEOUT",
+    "late_go": "ABORTED",
+    "late_go_queries": 0,
+    "fractional_summary": "ABORTED",
+    "wrong_guard": "GUARD_FAILED",
+    "secret_input_read_on_bad_guard": false,
+    "native_effects": false
+  },
+  "integrity": {
+    "frozen_test": true,
+    "upstream22_equal": true,
+    "app124_hashes_pathset_equal": true
+  },
+  "limits": "D1 deterministic trusted ports only; no physical guard/thread/socket/process/SQL. Real WorkerSession integration, D2 controls/interruption/retention, native bindings, generator/T5/host/readmission remain required. Runtime Windows3.11.3; 3.14 static only. Deploy source excluded from full mypy and uses restricted lint."
+}

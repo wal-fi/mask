@@ -1,0 +1,8 @@
+{
+  "clarification": "The review phrase Original89 test functions in frozen-red114.json is imprecise:89 means parametrized collected cases. AST comparison covered48 preexisting test function definitions. The revised file has57 test function definitions and114 collected cases. Raw RED counts and baselines remain unchanged.",
+  "original_test_functions": 48,
+  "original_collected_cases": 89,
+  "final_test_functions": 57,
+  "final_collected_cases": 114,
+  "source_or_test_change": false
+}

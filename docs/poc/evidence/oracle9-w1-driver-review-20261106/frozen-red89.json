@@ -1,0 +1,95 @@
+{
+  "test": "tests/test_oracle9_w1_driver.py",
+  "sha256": "5383286a24c9126aea3629b1ec7a4ef7f61e7a5c1fd21d18f90486a1fc3e61f7",
+  "bytes": 64490,
+  "lines": 1698,
+  "terminal": {
+    "chunk_id": "6f7aac",
+    "wall_time_seconds": 0.0000233,
+    "exit_code": 0,
+    "original_token_count": 183,
+    "output": "{\r\n    \"session_id\":  \"51ea0d85-05bb-4d24-ba9a-c9627c3f832f\",\r\n    \"is_error\":  false,\r\n    \"result\":  \"Quebrei em três linhas a chamada `self.cleanup(...)` da linha 745 de `tests/test_oracle9_w1_driver.py`. O argumento `complete=self.index not in self.world.script.get(\\\"close_held\\\", ())` ficou idêntico, numa linha própria recuada, com o parêntese de fechamento na linha seguinte.\\n\\nFoi só mudança de espaço e quebra de linha, sem efeito na AST, e nenhum outro arquivo foi tocado. O driver continua ausente. Não rodei Ruff, formatter nem testes, então a conformidade com o E501 e com o formatter fica para a sua verificação.\",\r\n    \"terminal_reason\":  \"completed\",\r\n    \"api_error_status\":  null,\r\n    \"exit\":  0\r\n}\r\n"
+  },
+  "qa": [
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "red",
+        "result": {
+          "chunk_id": "e57bbd",
+          "wall_time_seconds": 2.2787919,
+          "exit_code": 1,
+          "original_token_count": 751,
+          "output": "{\"exception_types\": {\"FileNotFoundError\": 67}, \"exit\": 1, \"failed\": [\"tests/test_oracle9_w1_driver.py::test_driver_source_has_no_entry_point_or_physical_imports\", \"tests/test_oracle9_w1_driver.py::test_driver_import_has_no_effect_and_does_not_load_pure\", \"tests/test_oracle9_w1_driver.py::test_constants_are_the_reviewed_prospective_values\", \"tests/test_oracle9_w1_driver.py::test_d1_1_loader_executes_exact_pinned_bytes\", \"tests/test_oracle9_w1_driver.py::test_d1_1_loader_refuses_before_execution[same-size-wrong-hash]\", \"tests/test_oracle9_w1_driver.py::test_d1_1_loader_refuses_before_execution[short]\", \"tests/test_oracle9_w1_driver.py::test_d1_1_loader_refuses_before_execution[over-by-one]\", \"tests/test_oracle9_w1_driver.py::test_d1_1_loader_refuses_before_execution[reader-overflow]\", \"tests/test_oracle9_w1_driver.py::test_d1_1_loader_refuses_before_execution[empty]\", \"tests/test_oracle9_w1_driver.py::test_d1_1_loader_refuses_before_execution[bytearray]\", \"tests/test_oracle9_w1_driver.py::test_d1_1_loader_refuses_before_execution[read-error]\", \"tests/test_oracle9_w1_driver.py::test_d1_1_run_load_failure_aborts_after_guard_without_init\", \"tests/test_oracle9_w1_driver.py::test_d1_2_order_guard_then_pinned_load_then_guard_event_then_init\", \"tests/test_oracle9_w1_driver.py::test_d1_2_guard_failure_reads_and_writes_nothing\", \"tests/test_oracle9_w1_driver.py::test_d1_3_full_walk_is_finite_and_never_global_pass[stop]\", \"tests/test_oracle9_w1_driver.py::test_d1_3_full_walk_is_finite_and_never_global_pass[nostop]\", \"tests/test_oracle9_w1_driver.py::test_d1_3_sessions_keys_profiles_and_snapshots_are_trusted_values\", \"tests/test_oracle9_w1_driver.py::test_d1_14_t3_exempt_and_t6_live_window_then_clean_unkilled_end\", \"tests/test_oracle9_w1_driver.py::test_d1_14_frame_after_t6_armed_is_never_accepted\", \"tests/test_oracle9_w1_driver.py::test_d1_17_ledger_values_at_t6_and_g1_draining\", \"tests/test_oracle9_w1_driver.py::test_d1_5_watcher_wrong_frame_never_stops_and_aborts[seq-47]\", \"tests/test_oracle9_w1_driver.py::test_d1_5_watcher_wrong_frame_never_stops_and_aborts[replay-45]\", \"tests/test_oracle9_w1_driver.py::test_d1_5_watcher_wrong_frame_never_stops_and_aborts[case-22]\", \"tests/test_oracle9_w1_driver.py::test_d1_5_watcher_wrong_frame_never_stops_and_aborts[go-kind]\", \"tests/test_oracle9_w1_driver.py::test_d1_5_watcher_wrong_frame_never_stops_and_aborts[malformed]\", \"tests/test_oracle9_w1_driver.py::test_d1_5_late_stop_is_fail_and_run_continues\", \"tests/test_oracle9_w1_driver.py::test_d1_5_watcher_registered_before_start_and_armed_published_after\", \"tests/test_oracle9_w1_driver.py::test_d1_6_watcher_join_failure_retains_owner_without_commit\", \"tests/test_oracle9_w1_driver.py::test_d1_9_watcher_start_failure_retains_handle_and_skips_query\", \"tests/test_oracle9_w1_driver.py::test_d1_7_sink_drain_is_bounded_and_stops_at_cap[ok]\"], \"failed_count\": 67, \"seconds\": 1.471, \"stats\": {\"collected\": 89, \"failed\": 67, \"passed\": 22, \"unique_nodeids\": 89, \"xfail_marked\": 0}}\r\n"
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "ruff",
+        "result": {
+          "chunk_id": "273ea9",
+          "wall_time_seconds": 0.4998927,
+          "exit_code": 0,
+          "original_token_count": 5,
+          "output": "All checks passed!\n"
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "format",
+        "result": {
+          "chunk_id": "da8f64",
+          "wall_time_seconds": 0.6606257,
+          "exit_code": 0,
+          "original_token_count": 7,
+          "output": "1 file already formatted\n"
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "mypy311",
+        "result": {
+          "chunk_id": "d4bd3a",
+          "wall_time_seconds": 1.6841650000000001,
+          "exit_code": 0,
+          "original_token_count": 11,
+          "output": "Success: no issues found in 1 source file\r\n"
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "mypy314",
+        "result": {
+          "chunk_id": "477fad",
+          "wall_time_seconds": 1.7794734,
+          "exit_code": 0,
+          "original_token_count": 11,
+          "output": "Success: no issues found in 1 source file\r\n"
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "integrity",
+        "result": {
+          "chunk_id": "275aa2",
+          "wall_time_seconds": 0.9466185,
+          "exit_code": 0,
+          "original_token_count": 53,
+          "output": "{\"sha256\": \"5383286a24c9126aea3629b1ec7a4ef7f61e7a5c1fd21d18f90486a1fc3e61f7\", \"bytes\": 64490, \"lines\": 1698, \"ast_equal_preformat\": true, \"upstream22_equal\": true, \"app124_equal\": true, \"driver_absent\": true}\r\n"
+        }
+      }
+    }
+  ],
+  "review": "Root read full initial1547 lines and complete functional delta. False wire count45 corrected46; no claim transport read equals main-machine commit. Event schema exact types strengthened, metadata/error/partial-start negative cases added. Format-only delta AST identical to7c763326. Accepted minimal API and test choices under delegation, no individual user approval invented.",
+  "scope": "D1 pure orchestration over deterministic trusted ports only; fake session does not prove worker result allocation pin, Linux, masking, PG, liveness or physical cleanup. Module absent throughout RED."
+}

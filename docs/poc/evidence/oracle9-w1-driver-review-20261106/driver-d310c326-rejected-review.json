@@ -1,0 +1,103 @@
+{
+  "terminal": {
+    "chunk_id": "4d6a11",
+    "wall_time_seconds": 0.0000213,
+    "exit_code": 0,
+    "original_token_count": 1087,
+    "output": "{\r\n    \"session_id\":  \"51ea0d85-05bb-4d24-ba9a-c9627c3f832f\",\r\n    \"is_error\":  false,\r\n    \"result\":  \"Implementei só `deploy/oracle9_w1_driver.py`. O teste congelado `5383286a` não foi tocado, nenhum outro arquivo mudou e não rodei nada; nenhum resultado de QA é medido.\\n\\n**Contrato implementado:**\\n- **Constantes** do cabeçalho do teste. `PARENT_BYTES` é derivado como 2F + 1 MiB, o que dá 33 MiB. Constantes internas extras: `SEND_CAP_S` 30, `JOIN_EXTRA_S` 3, `JOB_EXTRA_S` 10, `LOCK_S` 3.\\n- **`load_pure(reader)`:** uma leitura de `(PURE_PATH, PURE_BYTES + 1)`. Exige `bytes` exatos, tamanho e SHA fixados; só então cria um `ModuleType` privado (`__file__ = PURE_PATH`), registra em `sys.modules` e executa os mesmos bytes. Qualquer outra entrada gera `DriverRefusal(\\\"LOAD\\\")` fora de handler, sem execução.\\n- **`run(ports)`:** cria o `Owner`, aplica o guard pela porta, carrega o puro, emite GUARD, lê o `LAB_INIT` e chama `decode_init`, faz `capture` de G1 e G2, cria o `BudgetLedger` real com `threading.Lock` e publica G1, emite INIT_OK. Depois roda em série P (19 jobs), T1, T2 e T3, publica G2 substituindo G1 e roda T4, T5, SUMMARY e T6. Nunca levanta exceção para o chamador.\\n- **Sessões:**\\n  - A SessionKey é validada (id de 16 bytes único) antes do `reserve_session`.\\n  - O token vai para o owner antes da factory, e só o `open` adota.\\n  - Falha no construtor, ou `open` com estado NEW, levam a `ledger.retain` sem `close`, e a RETAINED.\\n  - `open` em HELD faz um único `close`.\\n  - `close` em HELD ou com exceção leva a RETAINED, e o driver não reserva mais nada.\\n- **Sink por resultado:** o par e o handle entram no owner antes do start. Uso `send_result_to(channel)` com um stop composto `min(t + 30, D − 1)`, depois `shutdown_write`, join e só então fecho os endpoints. O `sink_drain` limita leitura, prazo, cap F − 76 e sentinela. Divergência de hash vira EXPECTATION, outros problemas do sink viram SINK, falha de envio vira OUTPUT; join falho ou start falho viram RETAINED. As rows e o truncated vêm do `ResultSummary` (truncated só no job 9).\\n- **Erros dos jobs P:** só passam com a categoria igual ao `reason` esperado e `can_continue is True`. Qualquer outra coisa é ABORT com EXPECTATION, sem próxima query.\\n- **Janela de idle:** `D = t0 + idle − 2`, com `t0` tirado antes de `open`/`query`. As esperas usam `min(cap, D − 1)` e não são reiniciadas entre ACK e GO; vencimento pela janela dá IDLE_WINDOW. T3 é isento (espera idle + 1 s pelo `sleep_until`), e o ACK depois de fatal usa só o teto de 90 s.\\n- **T4:**\\n  - ordem: `emit(\\\"ARMED\\\")` interno, `handoff`, `create`/`start` do watcher e então o evento ARMED;\\n  - `CallState` liga e desliga em volta da query;\\n  - o join verificado vem antes de `machine.join`;\\n  - PASS só com `stop_applied` e JOB fatal.\\n- **T5:** sempre FAIL/PENDING.\\n- **SUMMARY:** a lista de falhas é a união dos FAIL do driver com os da máquina, então sempre contém 24.\\n- **T6:** `live_window_ms = floor((D − agora) · 1000)` dentro de 1000 a 30000. A espera vai até `D`. Um frame nesse intervalo dá ABORT PHASE. Se a janela vencer, o driver fecha a sessão de T6 e termina em `T6_UNKILLED`, que é FAIL.\\n- **ABORT:** marca FAIL no caso corrente. Se não houver incerteza, fecha a sessão ativa uma vez; HELD vira RETAINED. Emite ABORT e TERMINAL. O resultado RETAINED devolve o owner com sessão, token, handles, endpoints e `unknown`.\\n\\n**Limites honestos:**\\n- O módulo não foi executado. Conferi cada teste lendo, não rodando.\\n- O D1 não prova threads, tempo de vida, pin do receiver, masking, PG nem limpeza física. A retenção física do PID1 continua para o D2.\\n- `exec`/`compile` executam o código puro confiável fixado, seguindo o precedente de `deploy/oracle9_w1_update.py`. Sem `noqa`, o Ruff completo pode acusar S102 se for aplicado a `deploy/`, onde hoje só rodam E9/F63/F7/F82 e o format.\\n- Escolhas não fixadas pelo teste:\\n  - falha de escrita de evento é RETAINED com motivo OUTPUT;\\n  - query que levanta exceção em P dá motivo SESSION;\\n  - defeito inesperado no `run` dá RETAINED com o owner.\\n- Algumas linhas chegam a 98–100 colunas pela minha conta; o formatter pode pedir ajuste.\",\r\n    \"terminal_reason\":  \"completed\",\r\n    \"api_error_status\":  null,\r\n    \"exit\":  0\r\n}\r\n"
+  },
+  "initial_green_qa": [
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "own",
+        "result": {
+          "chunk_id": "3ada0b",
+          "wall_time_seconds": 2.4893003,
+          "exit_code": 0,
+          "original_token_count": 43,
+          "output": "{\"exception_types\": {}, \"exit\": 0, \"failed\": [], \"failed_count\": 0, \"seconds\": 1.712, \"stats\": {\"collected\": 89, \"passed\": 89, \"unique_nodeids\": 89, \"xfail_marked\": 0}}\r\n"
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "ruff_test",
+        "result": {
+          "chunk_id": "48044d",
+          "wall_time_seconds": 0.51364,
+          "exit_code": 0,
+          "original_token_count": 5,
+          "output": "All checks passed!\n"
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "ruff_source",
+        "result": {
+          "chunk_id": "3669d0",
+          "wall_time_seconds": 0.7128526,
+          "exit_code": 0,
+          "original_token_count": 5,
+          "output": "All checks passed!\n"
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "format",
+        "result": {
+          "chunk_id": "964485",
+          "wall_time_seconds": 0.8810417,
+          "exit_code": 0,
+          "original_token_count": 7,
+          "output": "2 files already formatted\n"
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "mypy311",
+        "result": {
+          "chunk_id": "097ba6",
+          "wall_time_seconds": 1.5521726999999998,
+          "exit_code": 0,
+          "original_token_count": 11,
+          "output": "Success: no issues found in 1 source file\r\n"
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "mypy314",
+        "result": {
+          "chunk_id": "f23b91",
+          "wall_time_seconds": 1.5382635,
+          "exit_code": 0,
+          "original_token_count": 11,
+          "output": "Success: no issues found in 1 source file\r\n"
+        }
+      }
+    }
+  ],
+  "decision": "REJECTED; all89 pass but independent probes reproduce uncovered deadline and exact-type/profile failures. No publication.",
+  "independent_probes": {
+    "late_eof_sink": "OK",
+    "late_go_queries": 23,
+    "late_go_outcome": "T6_UNKILLED",
+    "late_init_queries": 23,
+    "late_init_outcome": "T6_UNKILLED",
+    "inexact_summary_printed": true,
+    "inexact_summary_outcome": "T6_UNKILLED",
+    "wrong_guard_init_read": true,
+    "wrong_guard_queries": 23,
+    "wrong_guard_outcome": "T6_UNKILLED"
+  },
+  "next": "Only add regression tests first, keep source d310c326 fixed until measured RED and review. No native evidence."
+}

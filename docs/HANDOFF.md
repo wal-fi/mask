@@ -1,5 +1,30 @@
 # Handoff
 
+## W1 Oracle: D1 revisto com portas determinísticas — 2026-11-06
+
+Claude2 único programador/sessão51ea0d85/claude-opus-5-5/medium; root leu
+toda fonte inicial e delta final. CLI91374 recuperada0, zero escritor.
+Fontee9d8de9b/34885bytes/994linhas, teste0e9a8cc1/73046bytes/1929linhas:
+114 próprios1,959s e1122 relacionados12,188s passaram, sem falhas/erros/
+skips/xfail. Ruff src/tests, format359 e mypy359 alvos3.11/3.14 limpos;
+fonte deploy com lint restrito/format, fora do mypy. RuntimeWindows3.11.3.
+
+Prazos pós-retorno, guard antes de input e metadata exata corrigidos após
+RED114/92pass/22falhas. Green89 rejeitado/REDs67/89/114 e sondas preservados.
+48 funções antigas/89casos com AST intacta antes das regressões aditivas.
+Sondas finais TIMEOUT/ABORTED/GUARD_FAILED, sem query após GO tardio.
+Upstream22/app124/estado16 e tentativa consumida intactos.
+
+D1 só definições/portas confiáveis: não prova pin do receiver, concorrência,
+controle de interrupções, lifetime ou limpeza física. RETAINED finito guarda
+owner; hold real ainda ausente. T5_PENDING e T6_UNKILLED são FAIL. Nenhum
+main/binding/worker/container/conexão/SQL/native real executado. Próximo:
+SOMENTE leitura/desenho D2 e integração WorkerSession real com SO simulado,
+antes de testes/código/efeitos. Mesmo Claude2 após zero escritor, ativo só
+monitorar; recuperar terminal antes de outra chamada. Sem job/quota novo.
+B1/B2/D090/C1/T5/ingressos/produção abertos; Gateway indisponível.
+Evidência W1-ORACLE-DRIVER-D1-VALIDATION. Históricos abaixo.
+
 ## W1 Oracle: contrato do driver revisto para testes D1 — 2026-11-06
 
 CLI85542/90785/34291 encerradas0 e recuperadas; zero escritor confirmado.

@@ -1,0 +1,82 @@
+{
+  "test_sha256": "7c763326936e32788738252f9aa6b653fdc71518f5191d29b5d46e6b0a7eae94",
+  "bytes": 64460,
+  "lines": 1696,
+  "terminal": {
+    "chunk_id": "ad1f59",
+    "wall_time_seconds": 0.0000329,
+    "exit_code": 0,
+    "original_token_count": 897,
+    "output": "{\r\n    \"session_id\":  \"51ea0d85-05bb-4d24-ba9a-c9627c3f832f\",\r\n    \"is_error\":  false,\r\n    \"result\":  \"Terminei. Só editei `tests/test_oracle9_w1_driver.py`; `deploy/oracle9_w1_driver.py` continua ausente e não rodei nada.\\n\\n**Mudanças:**\\n1. **Contagem falsa corrigida (D1-6, join do watcher que falha):**\\n   - `45` passou a `46`, com comentário explicando que o fake do watcher já leu o STOP no fio durante a chamada, e que leitura no fio não é commit da máquina.\\n   - Novas asserções:\\n     - o último frame é STOP/23/46;\\n     - a última leitura do host foi a do watcher, logo depois do ARMED 23, sem leitura posterior;\\n     - o histórico de queries para em T4 (sem query seguinte);\\n     - não houve RESULT de T4 escrito, portanto nenhum ACK 47.\\n2. **Checks de evento endurecidos:**\\n   - Novo `exact_text`, que confere tipo `str` antes da pertinência. Todos os enums (verdict, kind, sink, reason, release, phase, outcome e o nome do evento `e`) passam por ele, então listas ou dicts não geram mais TypeError.\\n   - O GUARD agora confere cada campo com inteiro exato, via o novo `GUARD_FIELDS` tipado; `GUARD_EVENT` é derivado dele.\\n   - O ARMED usa `exact_int` em case, `next_seq` e janela.\\n   - `events_of` exige que o evento seja um `dict` e que `e` seja uma string conhecida antes de consultar as chaves.\\n3. **Sanidades novas, sem carregar o driver (16 casos):**\\n   - eventos válidos de GUARD, ARMED 23 e ARMED 25 aceitos;\\n   - recusas parametrizadas de bool e float em `pid`, `as`, `dumpable`, `pdeathsig`, no case e no `next_seq` do ARMED 23, no `next_seq` do ARMED 25 e em `live_window_ms`, além de lista ou dict em enums e no nome do evento. Todas esperam AssertionError.\\n4. **Testes de feature novos:**\\n   - `ResultSummary` divergente (rows e truncated) no job 2: ABORT com EXPECTATION, sem próxima query, e fechamento dos endpoints só depois do join verificado;\\n   - job 11 com categoria errada recuperável, e com a categoria certa mas `can_continue=False`. O fake modela o auto-cleanup público no fatal. O driver tem de abortar com EXPECTATION, sem a query do job 12, com um único `close`, cujo resultado real registrado é RELEASED ou ALREADY_RELEASED;\\n   - start parcial do sink e do watcher (`started=True` e depois OSError): RETAINED com o handle original retido por identidade; no sink, sem envio e sem query seguinte; no watcher, sem a query de T4 e com 45 frames.\\n5. **Fakes:** ganharam `error_override`, `summary_override`, `start_raise` e a lista `releases`. O caminho completo válido com STOP e NOSTOP não mudou.\\n6. **Cabeçalho:** agora diz explicitamente que o fake de sessão não simula a alocação do `ResultReceiver`, o pin de output nem o tempo de vida do worker, e que a integração com a `WorkerSession` real continua obrigatória.\\n\\nNenhuma asserção anterior foi removida ou enfraquecida, além da contagem 45 comprovadamente falsa. A estimativa é de cerca de 89 casos coletados (22 sanidades), planejada e não medida.\\n\\n**Limites honestos:**\\n- Não executei os testes. Os fakes novos podem ter erros que só a medição do root vai mostrar.\\n- O motivo EXPECTATION para fatal inesperado e para categoria errada é escolha minha de especificação.\\n- O teste do watcher com start parcial assume que o evento ARMED não chega ao host, porque o start falha antes da publicação. A contagem de 45 frames vale nos dois casos.\\n- O D1 continua sem provar concorrência, pin, tempo de vida ou limpeza física.\",\r\n    \"terminal_reason\":  \"completed\",\r\n    \"api_error_status\":  null,\r\n    \"exit\":  0\r\n}\r\n"
+  },
+  "qa": [
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "red",
+        "result": {
+          "chunk_id": "80afc2",
+          "wall_time_seconds": 2.2303175,
+          "exit_code": 1,
+          "original_token_count": 751,
+          "output": "{\"exception_types\": {\"FileNotFoundError\": 67}, \"exit\": 1, \"failed\": [\"tests/test_oracle9_w1_driver.py::test_driver_source_has_no_entry_point_or_physical_imports\", \"tests/test_oracle9_w1_driver.py::test_driver_import_has_no_effect_and_does_not_load_pure\", \"tests/test_oracle9_w1_driver.py::test_constants_are_the_reviewed_prospective_values\", \"tests/test_oracle9_w1_driver.py::test_d1_1_loader_executes_exact_pinned_bytes\", \"tests/test_oracle9_w1_driver.py::test_d1_1_loader_refuses_before_execution[same-size-wrong-hash]\", \"tests/test_oracle9_w1_driver.py::test_d1_1_loader_refuses_before_execution[short]\", \"tests/test_oracle9_w1_driver.py::test_d1_1_loader_refuses_before_execution[over-by-one]\", \"tests/test_oracle9_w1_driver.py::test_d1_1_loader_refuses_before_execution[reader-overflow]\", \"tests/test_oracle9_w1_driver.py::test_d1_1_loader_refuses_before_execution[empty]\", \"tests/test_oracle9_w1_driver.py::test_d1_1_loader_refuses_before_execution[bytearray]\", \"tests/test_oracle9_w1_driver.py::test_d1_1_loader_refuses_before_execution[read-error]\", \"tests/test_oracle9_w1_driver.py::test_d1_1_run_load_failure_aborts_after_guard_without_init\", \"tests/test_oracle9_w1_driver.py::test_d1_2_order_guard_then_pinned_load_then_guard_event_then_init\", \"tests/test_oracle9_w1_driver.py::test_d1_2_guard_failure_reads_and_writes_nothing\", \"tests/test_oracle9_w1_driver.py::test_d1_3_full_walk_is_finite_and_never_global_pass[stop]\", \"tests/test_oracle9_w1_driver.py::test_d1_3_full_walk_is_finite_and_never_global_pass[nostop]\", \"tests/test_oracle9_w1_driver.py::test_d1_3_sessions_keys_profiles_and_snapshots_are_trusted_values\", \"tests/test_oracle9_w1_driver.py::test_d1_14_t3_exempt_and_t6_live_window_then_clean_unkilled_end\", \"tests/test_oracle9_w1_driver.py::test_d1_14_frame_after_t6_armed_is_never_accepted\", \"tests/test_oracle9_w1_driver.py::test_d1_17_ledger_values_at_t6_and_g1_draining\", \"tests/test_oracle9_w1_driver.py::test_d1_5_watcher_wrong_frame_never_stops_and_aborts[seq-47]\", \"tests/test_oracle9_w1_driver.py::test_d1_5_watcher_wrong_frame_never_stops_and_aborts[replay-45]\", \"tests/test_oracle9_w1_driver.py::test_d1_5_watcher_wrong_frame_never_stops_and_aborts[case-22]\", \"tests/test_oracle9_w1_driver.py::test_d1_5_watcher_wrong_frame_never_stops_and_aborts[go-kind]\", \"tests/test_oracle9_w1_driver.py::test_d1_5_watcher_wrong_frame_never_stops_and_aborts[malformed]\", \"tests/test_oracle9_w1_driver.py::test_d1_5_late_stop_is_fail_and_run_continues\", \"tests/test_oracle9_w1_driver.py::test_d1_5_watcher_registered_before_start_and_armed_published_after\", \"tests/test_oracle9_w1_driver.py::test_d1_6_watcher_join_failure_retains_owner_without_commit\", \"tests/test_oracle9_w1_driver.py::test_d1_9_watcher_start_failure_retains_handle_and_skips_query\", \"tests/test_oracle9_w1_driver.py::test_d1_7_sink_drain_is_bounded_and_stops_at_cap[ok]\"], \"failed_count\": 67, \"seconds\": 1.323, \"stats\": {\"collected\": 89, \"failed\": 67, \"passed\": 22, \"unique_nodeids\": 89, \"xfail_marked\": 0}}\r\n"
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "ruff",
+        "result": {
+          "chunk_id": "20158f",
+          "wall_time_seconds": 0.6182574,
+          "exit_code": 1,
+          "original_token_count": 121,
+          "output": "E501 Line too long (102 > 100)\n   --> tests\\test_oracle9_w1_driver.py:745:101\n    |\n743 |             outcome = ReleaseOutcome.ALREADY_RELEASED\n744 |         else:\n745 |             outcome = self.cleanup(complete=self.index not in self.world.script.get(\"close_held\", ()))\n    |                                                                                                     ^^\n746 |         self.world.releases.append(outcome)\n747 |         return outcome\n    |\n\nFound 1 error.\n"
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "format",
+        "result": {
+          "chunk_id": "01f281",
+          "wall_time_seconds": 0.7103118,
+          "exit_code": 1,
+          "original_token_count": 114,
+          "output": "unformatted: File would be reformatted\n   --> tests\\test_oracle9_w1_driver.py:745:36\n    |\n744 |         else:\n    -             outcome = self.cleanup(complete=self.index not in self.world.script.get(\"close_held\", ()))\n745 +             outcome = self.cleanup(\n746 +                 complete=self.index not in self.world.script.get(\"close_held\", ())\n747 +             )\n748 |         self.world.releases.append(outcome)\n    |\n\n1 file would be reformatted\n"
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "mypy311",
+        "result": {
+          "chunk_id": "e7af4e",
+          "wall_time_seconds": 1.7482395,
+          "exit_code": 0,
+          "original_token_count": 11,
+          "output": "Success: no issues found in 1 source file\r\n"
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "mypy314",
+        "result": {
+          "chunk_id": "747740",
+          "wall_time_seconds": 1.6642858,
+          "exit_code": 0,
+          "original_token_count": 11,
+          "output": "Success: no issues found in 1 source file\r\n"
+        }
+      }
+    }
+  ],
+  "two_independent_scalar_probes_refused": true,
+  "driver_absent": true,
+  "remaining": "Only line745 wrapping E501 and formatter, no semantic edit authorized"
+}

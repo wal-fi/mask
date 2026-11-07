@@ -4,6 +4,98 @@ Criado por solicitação do usuário em2026-10-30. Inclui o trabalho acumulado
 após4a5e556, preservando resultados históricos e tentativas reprovadas. É
 checkpoint de desenvolvimento incompleto da Fase9, não release de produção.
 
+## W1 Oracle: D1 revisto com portas determinísticas — 2026-11-06
+
+Claude2 único programador/sessão51ea0d85/claude-opus-5-5/medium; root leu
+toda fonte inicial e delta final. CLI91374 recuperada0, zero escritor.
+Fontee9d8de9b/34885bytes/994linhas, teste0e9a8cc1/73046bytes/1929linhas:
+114 próprios1,959s e1122 relacionados12,188s passaram, sem falhas/erros/
+skips/xfail. Ruff src/tests, format359 e mypy359 alvos3.11/3.14 limpos;
+fonte deploy com lint restrito/format, fora do mypy. RuntimeWindows3.11.3.
+
+Prazos pós-retorno, guard antes de input e metadata exata corrigidos após
+RED114/92pass/22falhas. Green89 rejeitado/REDs67/89/114 e sondas preservados.
+48 funções antigas/89casos com AST intacta antes das regressões aditivas.
+Sondas finais TIMEOUT/ABORTED/GUARD_FAILED, sem query após GO tardio.
+Upstream22/app124/estado16 e tentativa consumida intactos.
+
+D1 só definições/portas confiáveis: não prova pin do receiver, concorrência,
+controle de interrupções, lifetime ou limpeza física. RETAINED finito guarda
+owner; hold real ainda ausente. T5_PENDING e T6_UNKILLED são FAIL. Nenhum
+main/binding/worker/container/conexão/SQL/native real executado. Próximo:
+SOMENTE leitura/desenho D2 e integração WorkerSession real com SO simulado,
+antes de testes/código/efeitos. Mesmo Claude2 após zero escritor, ativo só
+monitorar; recuperar terminal antes de outra chamada. Sem job/quota novo.
+B1/B2/D090/C1/T5/ingressos/produção abertos; Gateway indisponível.
+Evidência W1-ORACLE-DRIVER-D1-VALIDATION. Históricos abaixo.
+
+## W1 Oracle: RED114 congelado; fonte D1 em correção — 2026-11-06
+
+CLI88584 recuperada0, zero escritor; root leu delta aditivo, AST dos89
+casos antigos (48 funções) intacta.0e9a8cc1/73046bytes/1929linhas congelado: RED114,
+92pass/22falhas,2,458s; estáticos limpos. CLI91374 corrige só módulo D1,
+mesmo Claude2/sessão51ea0d85/opus5.5/medium; teste fixo. Recuperar terminal
+antes de outra chamada/gates; ativo só monitorar. Root lê delta e mede
+antes de publicar. Upstream22/app124/estado16 e gates abertos intactos;
+nenhum efeito físico/SQL/infra ou job/quota.
+
+## W1 Oracle: D1 rejeitado, regressões em andamento — 2026-11-06
+
+CLI26490 recuperada0, zero escritor; root leu947linhas/d310c326.89 testes
+passaram1,712s, estáticos limpos, mas sondas reproduzem EOF tardio OK,
+GO/INIT tardios com23queries, metadata rowsfloat e guard incompatível
+antes de INIT. Fonte não aceita/publicada. CLI88584 só acrescenta testes,
+mesma sessão51ea0d85/opus5.5/medium após guardzero; fonte fixa até RED.
+Recuperar terminal antes de outra chamada/gates; ativo só monitorar.
+Upstream22/app124/estado16 intactos; nenhum efeito/SQL/infra/job/quota.
+
+## W1 Oracle: módulo D1 em andamento — 2026-11-06
+
+CLI26490 escreve só deploy/oracle9_w1_driver.py, mesmo Claude2/sessão
+51ea0d85/opus5.5/medium após zero escritor. Teste5383286a fixo. Recuperar
+terminal antes de gates/outra chamada; ativo só monitorar. D1 sem main/
+bindings físicos, somente portas determinísticas. Root lê e mede antes
+de publicar. Upstream22/app124/estado16 e gates abertos preservados;
+nenhum efeito nativo/SQL/infra ou novo job/quota.
+
+## W1 Oracle: RED89 D1 congelado — 2026-11-06
+
+CLI36682 recuperada0 e zero escritor;5383286a/64490bytes/1698linhas
+congelado. RED89/22sanidades aprovadas/67 FileNotFoundError,1,471s;
+Ruff/format/mypy limpos e AST igual ao preformat. Upstream22/app124 fixos.
+Próximo lote é só módulo D1 pelo mesmo Claude2/sessão51ea0d85/opus5.5/
+medium, teste fixo, sem main/binding físico/efeito real. Root lê e mede
+antes de publicar; gates de produto abertos.
+
+## W1 Oracle: ajuste final de formato D1 — 2026-11-06
+
+CLI32062 recuperada0, zero escritor; root leu delta7c763326 e mediu RED89:
+22 sanidades aprovadas/67 FileNotFoundError,1,323s; mypy limpo. CLI36682
+quebra só linha745 para Ruff/format, mesmo Claude2/sessão51ea0d85/
+opus5.5/medium. Recuperar terminal antes de gates/outra chamada; ativo só
+monitorar. Root confere AST idêntica ao preformat e repete gates antes de
+congelar; driver ausente, fontes/estado fixos, nenhum efeito/job/quota.
+
+## W1 Oracle: testes D1 em correção — 2026-11-06
+
+CLI69762 recuperada0; zero escritor; root leu1547linhas/8e37628e e mediu
+RED67:6 sanidades passam/61 FileNotFoundError,1,541s. Estáticos limpos.
+Sondas confirmaram wireframes46 após watcher e join falho, não45, e
+loopholes bool/float no checker GUARD/ARMED. CLI32062 corrige só o teste,
+mesma sessão51ea0d85/opus5.5/medium. Acrescenta negativos de metadata/erro/
+start parcial. Recuperar terminal antes de outra chamada/gates; ativo só
+monitorar. Driver ausente até revisão/RED congelado, fontes/estado fixos,
+nenhum efeito nativo/SQL/infra ou job/quota; gates de produto abertos.
+
+## W1 Oracle: testes D1 do driver em preparação — 2026-11-06
+
+HEAD/originc356d34,0/0 e rastreados limpos antes da CLI69762. Mesmo único
+Claude2/sessão51ea0d85/opus5.5/medium escreve só test_oracle9_w1_driver.py;
+módulo driver ausente até revisão/sanidades/RED congelado. Recuperar
+terminal69762 antes de outra chamada/gates; ativo só monitorar. Portas
+determinísticas sem efeitos, núcleo/teste/source20/app124/estado16 fixos,
+nenhum job/quota ou efeito físico. Gateway e gates de produto abertos.
+
 ## W1 Oracle: contrato do driver revisto para testes D1 — 2026-11-06
 
 CLI85542/90785/34291 encerradas0 e recuperadas; zero escritor confirmado.
