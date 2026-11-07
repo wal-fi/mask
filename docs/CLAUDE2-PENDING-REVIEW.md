@@ -1,3 +1,90 @@
+## W1 Oracle: núcleo puro revisto e validado — 2026-11-06
+
+Claude2 programou sozinho na sessão51ea0d85, claude-opus-5-5, esforço medium.
+CLI8979/70101/28188 encerradas0 e recuperadas antes da próxima chamada;
+zero escritor confirmado. Root leu os testes, o delta e toda a fonte.
+Módulo4c155d76/22453bytes/658linhas; teste084d62cd/44298bytes/1108linhas:
+275 próprios em1,513s e960 relacionados em8,287s passaram, sem falhas,
+erros, skips ou xfail. Ruff src/tests, format358 e mypy358 nos alvos3.11/
+3.14 limpos; fonte deploy com lint restrito E9/F63/F7/F82 e format.
+Runtime Windows3.11.3; sem runtime3.14/Linux ou mypy do módulo deploy.
+
+Codecs LAB_INIT/CONTROL, DTOs redigidos, estados/50frames, SQL fixo, resolver
+literal e captura pública somente. Quatro sondas de tipos sem callbacks,
+cinco parsers adversariais,4080 mutações do header e quatro recusas aderentes
+conferidas. RED245/275 e falha de formato preservados como dados; ausência
+do módulo no RED não prova comportamento. Source20/estado16/app124 intactos.
+
+Próximo incremento: desenho restrito do driver do controlador com fakes,
+incluindo posse/ledger/sink/stop e contrato próprio de T5 antes de código
+com efeitos. Mesmo Claude2/sessão/modelo/medium após zero escritor; ativo
+só monitorar e recuperar terminal antes de outra chamada. Nenhum main,
+worker, container, conexão, consulta ou controle nativo executado. Candidata
+instalada permanece histórica até readmissão; Native3s/T5/B1/B2/D090gate2/
+C1/SQL/produção abertos. Nenhum serviço disponível ou novo job/quota.
+Evidência em W1-ORACLE-CONTROLLER-PURE-VALIDATION. Históricos abaixo.
+
+## W1 Oracle: módulo puro em implementação — 2026-11-06
+
+CLI28188 escreve SOMENTE deploy/oracle9_w1_controller.py após zero escritor,
+mesmo Claude2/sessão51ea0d85/claude-opus-5-5/medium. Recuperar terminal28188
+antes de revisar/medir/outra chamada; ativo implica só monitorar. Teste
+084d62cd/44298bytes/1108linhas congelado. Root também confirmou a composição
+pública com a policy completa do laboratório nas duas gerações, igual ao
+oráculo fake, sem connect/DNS/Popen/thread/env-provider. Não é evidência PG.
+Somente definições puras; nenhum efeito nativo/SQL/infra, fonte20/estado16/
+app124 e gates de produto permanecem abertos. Não publicar antes da revisão.
+
+## W1 Oracle: testes revistos e RED congelado — 2026-11-06
+
+CLI70101 terminou0 e foi recuperada; zero escritor confirmado. Root leu o
+delta inteiro e aceitou sob delegação a API mínima do cabeçalho, alvo
+sintético/revisão1 e recusas estritas. Nenhuma aprovação individual inventada.
+Teste084d62cd/44298bytes/1108linhas congelado:275 coletados,28 sanidades
+aprovadas,247 FileNotFoundError,1,618s; ausência não prova comportamento.
+Ruff/format/mypy3.11/3.14 limpos; zero asserções AST anteriores removidas.
+Source20 e124insumos app por hash/tamanho intactos. Dados/RED em
+evidence/oracle9-w1-controller-review-20261106/frozen-red275.json.
+
+Próximo lote seguro, sob delegação: mesmo Claude2 escreve SOMENTE
+deploy/oracle9_w1_controller.py com as definições puras; teste congelado,
+sem main/IO/spawn/threads/Docker/PG/SQL executado/native/runtime/config/
+binário/privado/root/nonce/comando operacional/deploy ou job/quota. Root
+revê fonte e mede antes de publicar. A prova nativa e gates seguem abertos.
+
+## W1 Oracle: revisão dos testes, ajustes em andamento — 2026-11-06
+
+CLI8979 terminou0, terminal recuperado; zero escritor confirmado antes da
+CLI70101. Mesmo Claude2/sessão51ea0d85/claude-opus-5-5/medium ajusta SOMENTE
+tests/test_oracle9_w1_controller.py. Recuperar terminal70101 antes de gates
+ou nova chamada; ativo implica apenas monitorar. Módulo continua ausente.
+
+Root leu as1032 linhas/e71c4ab2/40782bytes e o plano/revisão. RED inicial:
+245 coletados,28 sanidades aprovadas,217 FileNotFoundError por módulo
+ausente,1,337s; não é evidência comportamental. Ruff/mypy3.11/3.14 limpos;
+format ainda reprova o literal HEAVY. Ajustes pedidos: recusas de campos
+aninhados/tipos/duplicatas, imutabilidade do alvo, porta estrita do resolver,
+RESULT antes do join em T4 e repetição de READY. Amostra grande válida não
+é prova de máximo exato. Dados iniciais preservados em
+evidence/oracle9-w1-controller-review-20261106. O primeiro wrapper de QA
+falhou no nome de um argumento do hook antes da coleta; corrigido pelo
+revisor, sem executar testes nessa tentativa. Nenhum efeito nativo/SQL,
+source20/estado16/app124 fixos e gates de produto abertos.
+
+## W1 Oracle: testes puros em preparação — 2026-11-06
+
+Plano/revisão publicados em63235da1659fe92e10c9a4f29b047df7df5b0e0d,
+HEAD/origin iguais0/0, rastreados limpos antes da chamada.15arquivos somente
+documentos/dados, sem código de produto. Zero escritor confirmado.
+CLI8979 escreve SOMENTE tests/test_oracle9_w1_controller.py na mesma sessão
+51ea0d85/claude-opus-5-5/medium. deploy/oracle9_w1_controller.py deve continuar
+ausente. Worker atual termina apenas o teste; revisor/retomadas recuperam
+terminal8979 antes de revisão/gates/outra chamada; se ativo, só monitorar.
+Root lê oráculos, mede sanidades/RED e congela antes de qualquer módulo.
+Ler PLAN e PLAN-REVIEW completos. Núcleo puro/wire/schema/19SQL/captura/
+resolver/transições, nenhum main/spawn/socket/infra/PG/SQL executado ou
+outro efeito. Source20/estado16/124app fixos, gates abertos, nenhum job/quota.
+
 ## W1 Oracle: plano revisto para o primeiro teste puro — 2026-11-06
 
 CLI75815 terminou0, terminal recuperado e zero escritor confirmado. Root leu

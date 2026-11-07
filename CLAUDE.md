@@ -1,5 +1,31 @@
 # AI Data Masking Gateway
 
+## W1 Oracle: núcleo puro revisto e validado — 2026-11-06
+
+Claude2 programou sozinho na sessão51ea0d85, claude-opus-5-5, esforço medium.
+CLI8979/70101/28188 encerradas0 e recuperadas antes da próxima chamada;
+zero escritor confirmado. Root leu os testes, o delta e toda a fonte.
+Módulo4c155d76/22453bytes/658linhas; teste084d62cd/44298bytes/1108linhas:
+275 próprios em1,513s e960 relacionados em8,287s passaram, sem falhas,
+erros, skips ou xfail. Ruff src/tests, format358 e mypy358 nos alvos3.11/
+3.14 limpos; fonte deploy com lint restrito E9/F63/F7/F82 e format.
+Runtime Windows3.11.3; sem runtime3.14/Linux ou mypy do módulo deploy.
+
+Codecs LAB_INIT/CONTROL, DTOs redigidos, estados/50frames, SQL fixo, resolver
+literal e captura pública somente. Quatro sondas de tipos sem callbacks,
+cinco parsers adversariais,4080 mutações do header e quatro recusas aderentes
+conferidas. RED245/275 e falha de formato preservados como dados; ausência
+do módulo no RED não prova comportamento. Source20/estado16/app124 intactos.
+
+Próximo incremento: desenho restrito do driver do controlador com fakes,
+incluindo posse/ledger/sink/stop e contrato próprio de T5 antes de código
+com efeitos. Mesmo Claude2/sessão/modelo/medium após zero escritor; ativo
+só monitorar e recuperar terminal antes de outra chamada. Nenhum main,
+worker, container, conexão, consulta ou controle nativo executado. Candidata
+instalada permanece histórica até readmissão; Native3s/T5/B1/B2/D090gate2/
+C1/SQL/produção abertos. Nenhum serviço disponível ou novo job/quota.
+Evidência em W1-ORACLE-CONTROLLER-PURE-VALIDATION. Históricos abaixo.
+
 ## W1 Oracle: plano revisto para o primeiro teste puro — 2026-11-06
 
 CLI75815 terminou0, terminal recuperado e zero escritor confirmado. Root leu

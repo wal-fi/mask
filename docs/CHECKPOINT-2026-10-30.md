@@ -4,6 +4,71 @@ Criado por solicitação do usuário em2026-10-30. Inclui o trabalho acumulado
 após4a5e556, preservando resultados históricos e tentativas reprovadas. É
 checkpoint de desenvolvimento incompleto da Fase9, não release de produção.
 
+## W1 Oracle: núcleo puro revisto e validado — 2026-11-06
+
+Claude2 programou sozinho na sessão51ea0d85, claude-opus-5-5, esforço medium.
+CLI8979/70101/28188 encerradas0 e recuperadas antes da próxima chamada;
+zero escritor confirmado. Root leu os testes, o delta e toda a fonte.
+Módulo4c155d76/22453bytes/658linhas; teste084d62cd/44298bytes/1108linhas:
+275 próprios em1,513s e960 relacionados em8,287s passaram, sem falhas,
+erros, skips ou xfail. Ruff src/tests, format358 e mypy358 nos alvos3.11/
+3.14 limpos; fonte deploy com lint restrito E9/F63/F7/F82 e format.
+Runtime Windows3.11.3; sem runtime3.14/Linux ou mypy do módulo deploy.
+
+Codecs LAB_INIT/CONTROL, DTOs redigidos, estados/50frames, SQL fixo, resolver
+literal e captura pública somente. Quatro sondas de tipos sem callbacks,
+cinco parsers adversariais,4080 mutações do header e quatro recusas aderentes
+conferidas. RED245/275 e falha de formato preservados como dados; ausência
+do módulo no RED não prova comportamento. Source20/estado16/app124 intactos.
+
+Próximo incremento: desenho restrito do driver do controlador com fakes,
+incluindo posse/ledger/sink/stop e contrato próprio de T5 antes de código
+com efeitos. Mesmo Claude2/sessão/modelo/medium após zero escritor; ativo
+só monitorar e recuperar terminal antes de outra chamada. Nenhum main,
+worker, container, conexão, consulta ou controle nativo executado. Candidata
+instalada permanece histórica até readmissão; Native3s/T5/B1/B2/D090gate2/
+C1/SQL/produção abertos. Nenhum serviço disponível ou novo job/quota.
+Evidência em W1-ORACLE-CONTROLLER-PURE-VALIDATION. Históricos abaixo.
+
+## W1 Oracle: módulo puro em andamento — 2026-11-06
+
+CLI28188 implementa só deploy/oracle9_w1_controller.py, mesmo Claude2/
+sessão51ea0d85/opus5.5/medium após zero escritor. Teste084d62cd congelado.
+Recuperar terminal antes de gates/outra chamada; ativo só monitorar.
+Capturas puras da policy completa conferidas em G1/G2 sem efeitos. Nenhum
+main/IO/infra/PG/SQL/Native ou job/quota, fonte20/estado16/app124 fixos.
+Root revê e mede antes de publicar; produção indisponível e gates abertos.
+
+## W1 Oracle: RED275 congelado antes do módulo — 2026-11-06
+
+CLI70101 recuperada0, zero escritor; root reviu delta completo. Teste
+084d62cd/44298bytes/1108linhas congelado:28 sanidades passam e247
+FileNotFoundError em275,1,618s. Ruff/format/mypy3.11/3.14 limpos; asserções
+anteriores,source20/app124 intactos. API mínima aceita sob delegação,
+somente laboratório puro. Próximo lote: mesmo Claude2/sessão51ea0d85/
+opus5.5/medium escreve só deploy/oracle9_w1_controller.py, teste fixo;
+root lê e mede antes de publicar. Sem efeito nativo/SQL/infra e gates abertos.
+
+## W1 Oracle: revisão dos testes em andamento — 2026-11-06
+
+CLI8979 recuperada0; root leu1032linhas/e71c4ab2 e mediu RED245:
+28 sanidades aprovadas/217 FileNotFoundError,1,337s. Ruff/mypy3.11/3.14
+limpos; formato ainda reprovado. Baseline/dados preservados em
+oracle9-w1-controller-review-20261106. CLI70101 corrige só o teste,
+mesma sessão51ea0d85/opus5.5/medium após zero escritor. Recuperar terminal
+antes de gates/outra chamada; ativo só monitorar. Módulo deve continuar
+ausente até revisão/RED final congelado. Nenhum efeito nativo/SQL/infra,
+source20/estado16/app124 e gates abertos preservados.
+
+## W1 Oracle: teste puro em preparação — 2026-11-06
+
+Plano/revisão publicados63235da, HEAD/origin0/0 e rastreados limpos antes da
+CLI8979. Mesmo Claude2/sessão51ea0d85/opus5.5/medium escreve só
+test_oracle9_w1_controller.py; módulo deploy/oracle9_w1_controller.py ausente.
+Recuperar terminal8979 antes de outra chamada/gates; ativo só monitorar.
+Root lê oráculos/mede sanidades e RED/congela antes do módulo. Fonte20/
+estado16/app124 fixos, nenhum efeito Native/SQL/infra ou job/quota novo.
+
 ## W1 Oracle: plano revisto para o primeiro teste puro — 2026-11-06
 
 CLI75815 terminou0, terminal recuperado e zero escritor confirmado. Root leu

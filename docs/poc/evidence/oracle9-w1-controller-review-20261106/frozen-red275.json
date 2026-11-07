@@ -1,0 +1,106 @@
+{
+  "test": "tests/test_oracle9_w1_controller.py",
+  "sha256": "084d62cd2a567a0710a7e13b5e9b33896c255ee743fa58e3cc0dab08135b9039",
+  "bytes": 44298,
+  "lines": 1108,
+  "qa": [
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "ruff",
+        "result": {
+          "chunk_id": "9a29eb",
+          "wall_time_seconds": 0.2529835,
+          "exit_code": 0,
+          "original_token_count": 5,
+          "output": "All checks passed!\n"
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "format",
+        "result": {
+          "chunk_id": "ed4acf",
+          "wall_time_seconds": 0.3965654,
+          "exit_code": 0,
+          "original_token_count": 7,
+          "output": "1 file already formatted\n"
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "mypy311",
+        "result": {
+          "chunk_id": "19b682",
+          "wall_time_seconds": 1.5232189,
+          "exit_code": 0,
+          "original_token_count": 11,
+          "output": "Success: no issues found in 1 source file\r\n"
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "mypy314",
+        "result": {
+          "chunk_id": "09205f",
+          "wall_time_seconds": 1.6584595,
+          "exit_code": 0,
+          "original_token_count": 11,
+          "output": "Success: no issues found in 1 source file\r\n"
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "red",
+        "result": {
+          "chunk_id": "3f5637",
+          "wall_time_seconds": 2.8857677,
+          "exit_code": 1,
+          "original_token_count": 717,
+          "output": "{\"exception_types\": {\"FileNotFoundError\": 247}, \"exit\": 1, \"failed\": [\"tests/test_oracle9_w1_controller.py::test_module_source_is_definitions_only_and_uses_public_composition\", \"tests/test_oracle9_w1_controller.py::test_module_load_has_no_effect\", \"tests/test_oracle9_w1_controller.py::test_decode_init_golden_packet_detached_redacted_immutable\", \"tests/test_oracle9_w1_controller.py::test_decode_init_refuses_raw_packet[trailing-byte]\", \"tests/test_oracle9_w1_controller.py::test_decode_init_refuses_raw_packet[trailing-lf]\", \"tests/test_oracle9_w1_controller.py::test_decode_init_refuses_raw_packet[truncated-body]\", \"tests/test_oracle9_w1_controller.py::test_decode_init_refuses_raw_packet[header-longer]\", \"tests/test_oracle9_w1_controller.py::test_decode_init_refuses_raw_packet[empty-body]\", \"tests/test_oracle9_w1_controller.py::test_decode_init_refuses_raw_packet[body-over-cap]\", \"tests/test_oracle9_w1_controller.py::test_decode_init_refuses_raw_packet[magic]\", \"tests/test_oracle9_w1_controller.py::test_decode_init_refuses_raw_packet[short-header]\", \"tests/test_oracle9_w1_controller.py::test_decode_init_refuses_raw_packet[empty-packet]\", \"tests/test_oracle9_w1_controller.py::test_decode_init_refuses_raw_packet[bytearray]\", \"tests/test_oracle9_w1_controller.py::test_decode_init_refuses_raw_packet[non-ascii-byte]\", \"tests/test_oracle9_w1_controller.py::test_decode_init_refuses_raw_packet[spaces]\", \"tests/test_oracle9_w1_controller.py::test_decode_init_refuses_raw_packet[unsorted]\", \"tests/test_oracle9_w1_controller.py::test_decode_init_refuses_raw_packet[duplicate-key]\", \"tests/test_oracle9_w1_controller.py::test_decode_init_refuses_raw_packet[nan]\", \"tests/test_oracle9_w1_controller.py::test_decode_init_refuses_raw_packet[infinity]\", \"tests/test_oracle9_w1_controller.py::test_decode_init_refuses_raw_packet[escaped]\", \"tests/test_oracle9_w1_controller.py::test_decode_init_refuses_raw_packet[array-root]\", \"tests/test_oracle9_w1_controller.py::test_decode_init_refuses_raw_packet[null-root]\", \"tests/test_oracle9_w1_controller.py::test_decode_init_refuses_raw_packet[duplicate-target-key]\", \"tests/test_oracle9_w1_controller.py::test_decode_init_refuses_raw_packet[duplicate-record-key]\", \"tests/test_oracle9_w1_controller.py::test_decode_init_refuses_raw_packet[bytes-subclass]\", \"tests/test_oracle9_w1_controller.py::test_decode_init_refuses_schema[kind]\", \"tests/test_oracle9_w1_controller.py::test_decode_init_refuses_schema[version-bool]\", \"tests/test_oracle9_w1_controller.py::test_decode_init_refuses_schema[version-2]\", \"tests/test_oracle9_w1_controller.py::test_decode_init_refuses_schema[version-float]\", \"tests/test_oracle9_w1_controller.py::test_decode_init_refuses_schema[version-str]\"], \"failed_count\": 247, \"seconds\": 1.618, \"stats\": {\"collected\": 275, \"failed\": 247, \"passed\": 28, \"unique_nodeids\": 275, \"xfail_marked\": 0}}\r\n"
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "invariants",
+        "result": {
+          "chunk_id": "d9b39d",
+          "wall_time_seconds": 1.0923211,
+          "exit_code": 0,
+          "original_token_count": 86,
+          "output": "{\"app_differences\": [], \"app_rows\": 124, \"bytes\": 44298, \"lines\": 1108, \"manifest_sha256\": \"d4d4b29b302215b00d56ce249caebe6c5f76943d85725c654b8063d4940c5df8\", \"module_absent\": true, \"removed_assertion_count\": 0, \"source_differences\": [], \"source_pins\": 20, \"test_sha256\": \"084d62cd2a567a0710a7e13b5e9b33896c255ee743fa58e3cc0dab08135b9039\"}\r\n"
+        }
+      }
+    }
+  ],
+  "programmer_terminal": {
+    "chunk_id": "097f51",
+    "wall_time_seconds": 0.0000121,
+    "exit_code": 0,
+    "original_token_count": 831,
+    "output": "{\r\n    \"session_id\":  \"51ea0d85-05bb-4d24-ba9a-c9627c3f832f\",\r\n    \"is_error\":  false,\r\n    \"result\":  \"Terminei. Só editei `tests/test_oracle9_w1_controller.py`, e `deploy/oracle9_w1_controller.py` continua ausente. Não rodei nada: pytest, ruff, format e mypy ficam com você. Os números abaixo são planejados, não medidos.\\n\\n**Ajustes pedidos sem mudança de cobertura:**\\n- O literal `HEAVY` agora está numa única linha dentro dos parênteses (99 colunas pela minha conta).\\n- O test de amostra grande passou a se chamar `test_large_valid_near_bound_sample_is_accepted_below_cap`. O docstring agora diz que é uma amostra válida grande perto dos limites, não um máximo exato provado, e que não maximiza a largura do IPv4 nem da porta. Os limites fechados dos campos implicam corpo abaixo de 8 KiB; pela minha conta o pior caso fica em torno de 7 KB. As asserções são as mesmas.\\n\\n**Casos novos (30, sem remover nem enfraquecer nenhum anterior):**\\n- **LAB_INIT bruto (+3):** chave duplicada aninhada em `target` (`port`) e no primeiro registro de `expected` (`bytes`), e subclasse de `bytes`.\\n- **Schema (+11):**\\n  - `target` como lista e como string;\\n  - senha como int e como lista; HMAC como null e como int;\\n  - item de `expected` como lista e como string;\\n  - `job` 1.0, `rows` 3.0 e `bytes` True, sem coerção.\\n- **Sanidade existente estendida:** confere que os pacotes com chave duplicada diferem do válido e têm cabeçalho coerente. Também mostra que o `json` comum aceitaria esses pacotes (a última chave vence); por isso a recusa tem de vir do decoder.\\n- **DTO:** atribuir `target.ip`, `target.port` ou o próprio `target` levanta AttributeError.\\n- **LAB_CONTROL (+1):** subclasse de `bytes` recusada.\\n- **Transições (+6), todas aderentes e sem avançar contadores:**\\n  - READY repetido depois de READY;\\n  - RESULT depois do ARMED de T4, antes do handoff;\\n  - RESULT com o leitor em WATCHER, antes do join;\\n  - frame depois do GO de T6 e antes do ARMED de T6, em duas variantes: seq 50 dá PHASE, seq 51 dá CONTROL;\\n  - `accept` com subclasse de `bytes` dá CONTROL.\\n- **Resolver (+9):**\\n  - a fábrica `exact_resolver` valida o par fixado antes de devolver o resolver: recusa loopback, IP público, hostname, IP não canônico, porta 0, porta bool e porta float;\\n  - com o par fixado em `(IP, 1)`, o resolver devolvido aceita a porta 1 e recusa `True` e `1.0`.\\n\\n**Contagem planejada:** cerca de 275 coletados, dos quais 28 sanidades independentes (nenhuma nova; uma foi estendida) e cerca de 247 casos de feature que devem falhar com FileNotFoundError.\\n\\n**Limitações:**\\n- A subclasse de `bytes` também é recusada no `accept` da máquina de estados. Isso vai além do que você pediu (só os dois decoders); se não quiser esse caso, basta removê-lo.\\n- No caso \\\"frame antes do ARMED de T6\\\", não existe seq válido depois do 50º frame. Por isso há uma variante de fase (seq 50) e outra de codec (seq 51).\\n- O comprimento das linhas novas foi calculado à mão e algumas ficam perto de 100 colunas. O formatter pode pedir algum ajuste.\\n- Os oráculos continuam como antes: equivalência com o fake da D-111 e checagem de AST por nomes, sujeita a falso positivo.\",\r\n    \"terminal_reason\":  \"completed\",\r\n    \"api_error_status\":  null,\r\n    \"exit\":  0\r\n}\r\n"
+  },
+  "decisions_under_delegation": [
+    "Minimal pure API accepted as described by test header; laboratory table maskgw_lab.t, synthetic datasource dso_00000000000000000000000000000001 and record revision1; no operational identity.",
+    "Exact byte decoder boundaries and strict numeric port accepted; metadata/link-local refused consistent DestinationPolicy.",
+    "EOF is abort including T6; T4 NOSTOP tracked as prefix failure. Physical stop_applied is outside pure machine.",
+    "Root checked full initial test and complete delta; exact intended plan/schema, no removed assertion ASTs."
+  ],
+  "limits": [
+    "Absence RED is not behavior proof.",
+    "AST name checks and imported-attribute traps are evidence with limitations; root reviews source as well.",
+    "Large valid INIT sample is not exact mathematical maximum.",
+    "Lab canaries include data syntax safety; future host must generate an invalid-integer canary for job13 QUERY expectation.",
+    "No native/Docker/PG/SQL/production evidence."
+  ]
+}

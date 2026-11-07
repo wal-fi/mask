@@ -1,0 +1,167 @@
+{
+  "own_and_targeted": [
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "own",
+        "result": {
+          "chunk_id": "0d9be2",
+          "wall_time_seconds": 2.7515684,
+          "exit_code": 0,
+          "original_token_count": 44,
+          "output": "{\"exception_types\": {}, \"exit\": 0, \"failed\": [], \"failed_count\": 0, \"seconds\": 1.513, \"stats\": {\"collected\": 275, \"passed\": 275, \"unique_nodeids\": 275, \"xfail_marked\": 0}}\r\n"
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "ruff_test",
+        "result": {
+          "chunk_id": "dbbc6c",
+          "wall_time_seconds": 0.8355577,
+          "exit_code": 0,
+          "original_token_count": 5,
+          "output": "All checks passed!\n"
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "ruff_source",
+        "result": {
+          "chunk_id": "1d812f",
+          "wall_time_seconds": 0.8420185,
+          "exit_code": 0,
+          "original_token_count": 5,
+          "output": "All checks passed!\n"
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "format",
+        "result": {
+          "chunk_id": "0a3da3",
+          "wall_time_seconds": 1.1146083,
+          "exit_code": 0,
+          "original_token_count": 7,
+          "output": "2 files already formatted\n"
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "mypy311",
+        "result": {
+          "chunk_id": "e572a0",
+          "wall_time_seconds": 1.773339,
+          "exit_code": 0,
+          "original_token_count": 11,
+          "output": "Success: no issues found in 1 source file\r\n"
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "mypy314",
+        "result": {
+          "chunk_id": "f8a7e4",
+          "wall_time_seconds": 1.7780208,
+          "exit_code": 0,
+          "original_token_count": 11,
+          "output": "Success: no issues found in 1 source file\r\n"
+        }
+      }
+    }
+  ],
+  "related": [
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "related",
+        "result": {
+          "chunk_id": "c0a3f5",
+          "wall_time_seconds": 9.4052372,
+          "exit_code": 0,
+          "original_token_count": 44,
+          "output": "{\"exception_types\": {}, \"exit\": 0, \"failed\": [], \"failed_count\": 0, \"seconds\": 8.287, \"stats\": {\"collected\": 960, \"passed\": 960, \"unique_nodeids\": 960, \"xfail_marked\": 0}}\r\n"
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "ruff_all",
+        "result": {
+          "chunk_id": "7d350d",
+          "wall_time_seconds": 0.6835158,
+          "exit_code": 0,
+          "original_token_count": 5,
+          "output": "All checks passed!\n"
+        }
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "name": "format_all",
+        "result": {
+          "chunk_id": "169743",
+          "wall_time_seconds": 0.6917196,
+          "exit_code": 0,
+          "original_token_count": 7,
+          "output": "358 files already formatted\n"
+        }
+      }
+    }
+  ],
+  "mypy_all_311": {
+    "exit": 0,
+    "files": 358,
+    "output": "Success: no issues found in 358 source files"
+  },
+  "mypy_all_314": {
+    "chunk_id": "d57fc2",
+    "wall_time_seconds": 2.4979653,
+    "exit_code": 0,
+    "original_token_count": 12,
+    "output": "Success: no issues found in 358 source files\r\n"
+  },
+  "programmer_terminal": {
+    "chunk_id": "343f39",
+    "wall_time_seconds": 1.4132776,
+    "exit_code": 0,
+    "original_token_count": 1026,
+    "output": "{\r\n    \"session_id\":  \"51ea0d85-05bb-4d24-ba9a-c9627c3f832f\",\r\n    \"is_error\":  false,\r\n    \"result\":  \"Implementei só `deploy/oracle9_w1_controller.py`. Não editei nenhum outro arquivo e não rodei nada; o teste congelado `084d62cd` ficou intacto. Não afirmo nenhum resultado de QA.\\n\\n**Contrato implementado:**\\n- **`LabRefusal(category)`:** `args == (category,)`, com categorias fechadas em `REFUSAL_CATEGORIES`.\\n  - Nenhuma recusa é levantada dentro de um `except`. Os parsers devolvem `None` e a recusa sai depois, então não há cause, context nem valor de entrada.\\n  - Os helpers internos levantam `_InvalidError`, sempre convertido assim.\\n- **`decode_init`:**\\n  - Exige `bytes` exato (bytearray e subclasses recusados), cabeçalho `\\u003e4sI` com MGI1, corpo de 1 a 65536 bytes e tamanho igual ao declarado.\\n  - O corpo tem de ser ASCII e é parseado com rejeição de chave duplicada em qualquer nível e de NaN/Infinity. Depois é re-serializado de forma canônica e comparado byte a byte com o original.\\n  - O schema é fechado, com ints exatos (bool, float e subclasses recusados):\\n    - `target` com IPv4 privado canônico (exclui loopback, link-local, multicast, unspecified e reserved), porta 1–65535 e nomes `[a-z][a-z0-9_]{0,62}`;\\n    - senha de 48 hex e chave HMAC de 64 hex, em minúsculas;\\n    - de 1 a 16 canários ASCII imprimíveis, cada um com 1 a 128 caracteres;\\n    - 19 registros na ordem, com os erros 11/13/14/15/16/18.\\n  - DTOs `Target`, `ExpectedJob` e `LabInit` são frozen/slots e destacados (tuplas). O repr de `ExpectedJob` e `LabInit` é redigido.\\n- **`decode_control`:** 16 bytes exatos `\\u003e4sBBHII`, MGL1, versão 1, kind de 1 a 4, case de 1 a 25, seq de 1 a 50, reserved 0.\\n- **`ControlMachine`:** máquina de estados pura, sem threads.\\n  - Fases na ordem fixa: os casos 1–24, a janela de T4 (ARMED, handoff, join), o SUMMARY uma única vez depois do ACK de T5, e por fim o READY, o GO e o ARMED de T6, que é terminal.\\n  - O seq conta frames aceitos; um RESULT antes da hora é recusado.\\n  - Durante o T4 só o watcher lê; `accept` recusa. O avanço só acontece no `join`, chamado pela principal.\\n  - NOSTOP vai para `failed_cases`, e `global_pass` é sempre False.\\n  - `eof` sempre recusa. Toda recusa é aderente e não avança contadores.\\n  - O frame é decodificado antes da checagem de fase (por isso seq 51 dá CONTROL), e o `join` checa a fase antes.\\n- **`job_sql`:** tabela fixa. O canário do job 13 entra como literal com aspas dobradas e é validado em todos os jobs.\\n- **`exact_resolver` e `pinned_addresses`:** a fábrica valida o par fixado antes de devolver o resolver, e o resolver devolvido aceita só o host e a porta exatos (bool e float são recusados). `pinned_addresses` usa `resolve_destination` público com `DestinationPolicy()` e o resolver exato, sem DNS nem processo filho.\\n- **`capture`:** recebe só `LabInit` exato e geração 1 ou 2. Usa a composição pública (`RecordingSecrets` com `MappingSecretProvider`, depois `parse_config_bundle`, `effective_database_settings`, `GatewayConfig`, `build_conninfo` e `capture_template`). A chave HMAC entra como texto hex, sem decodificar. Nunca lê o ambiente. Qualquer falha vira CAPTURE.\\n\\n**Limitações honestas:**\\n- **Não medido:** a igualdade de bytes com o oráculo depende da minha política de laboratório coincidir campo a campo com a `lab_policy` do teste. Conferi por leitura, não executei.\\n- **N818 do Ruff:** o nome `LabRefusal`, imposto pelo teste, não termina em `Error`. Se o Ruff também rodar sobre `deploy/`, o N818 pode acusar. O `UpdateRefusal`, que já existe ali, sugere que esse diretório não é checado.\\n- **Mypy:** a narrowing depende de `isinstance` mais `type(...) is`; não verifiquei se o mypy aceita sem queixa.\\n- **Formatação:** algumas linhas chegam a 96–100 colunas, calculadas à mão.\\n- **Fora deste módulo:** zeroização de memória (não prometida), threads reais, I/O, a ponte, o driver e a sonda T5.\",\r\n    \"terminal_reason\":  \"completed\",\r\n    \"api_error_status\":  null,\r\n    \"exit\":  0\r\n}\r\n"
+  },
+  "independent_probes": {
+    "five_parser_adversaries": "closed INIT with no context/cause",
+    "four_subclass_paths": "zero foreign callbacks",
+    "control_header_mutations": 4080,
+    "shape_valid_mutations": 76,
+    "sticky_owner_refusals": 4,
+    "native_effects": false
+  },
+  "integrity": {
+    "source20_equal": true,
+    "app124_equal": true,
+    "app_pathset_equal": true,
+    "manifest_sha256": "d4d4b29b302215b00d56ce249caebe6c5f76943d85725c654b8063d4940c5df8"
+  },
+  "runtime": "Windows CPython 3.11.3; 3.14 static target only",
+  "module": {
+    "sha256": "4c155d76208f113852f95fec4c57253eef480c610aa390423fa6f82baf1f7bc7",
+    "bytes": 22453,
+    "lines": 658
+  },
+  "test": {
+    "sha256": "084d62cd2a567a0710a7e13b5e9b33896c255ee743fa58e3cc0dab08135b9039",
+    "bytes": 44298,
+    "lines": 1108
+  }
+}
