@@ -1,0 +1,382 @@
+# W1 nativo no Oracle9.8 — plano prospectivo da prova worker/PG16 (v2)
+
+2026-11-06. Plano somente documental, Claude2, sob a delegação vigente.
+Escolhas técnicas sob delegação; nenhuma aprovação individual do usuário é
+inventada ou necessária para o rotineiro, só revisão técnica e permissões
+efetivas. Nada executado para escrevê-lo: nenhum Docker/PG/SQL/runtime/root/
+nonce/estado/comando. Disponibilidade atual de imagem/Docker **não** conferida.
+Gateway indisponível. A v1 (13bde9be, 14774bytes/259linhas) foi arquivada
+pelo root como dado, NOT_READY_FOR_CODE; esta v2 corrige F1–F8.
+
+Estado do plano: **NOT_READY_FOR_CODE** enquanto B1 (§6) estiver aberto.
+
+## 1. Objetivo e fronteira
+
+Uma prova nativa única do caminho W1 real: controlador PID1 e worker Linux do
+pacote **instalado** na candidata aceita, contra PostgreSQL16 próprio,
+descartável e isolado, com dados sintéticos. Se verde, fecha a etapa3 do
+WORKER-SESSION-PLAN e fornece evidência para B-1 fim a fim no perfil local.
+
+Não é: coordenador Windows simulado novo; ingresso PGWire/MCP/Admin/IDE; SQL
+liberada (continua0A000); perfil C1 pronto ou injetado em domain.py; B-2
+estrito ou produção; pressão/concorrência/cliente lento/gerações. Independe
+do laboratório Windows PG16 shell e não alega Native3s verde (continua
+NOT_MEASURED, evidência congelada, sem dispensa). Source20/estado16 e a
+tentativa3f12dc584c29 (FAILED_ONLY_OPERATOR_ABORT) permanecem fixos.
+
+## 2. Insumos fixos aceitos
+
+- Candidata `sha256:621cc7f702ec34d7014809411fda7fc89ab6b95f6dc7d16315274d4a7006ef0b`,
+  Oracle9.8/Python3.11.13, origem87871290+layer d399fb14 (W1-UPDATE-V2-RUN).
+- Wheel6b63f239…877b/448821bytes; manifesto de contexto d4d4b29b…5df8/
+  270278bytes. Estrutura conferida pelo root: source_manifest com124 itens
+  {bytes,path,sha256} mais input público pyproject; target com5chaves
+  base_tools/console_scripts/installed_files/kind/wheels.
+- W1_MODULES (deploy/oracle9_w1_update.py): linux_guard, db.session_state,
+  worker_protocol, worker_process, worker_session; worker_job já no pacote.
+  Root conferiu os124 inputs contra o checkout atual em2026-11-06: zero
+  diferenças. Sem wheel novo/reinstalação; readmissão obrigatória antes do
+  uso; mudança genuína encontrada pela admissão para a prova e volta a revisão.
+- Fatos D-120: controller AS384MiB, filhos AS256MiB, externo512MiB/swap0/
+  pids32/CPU1/nofile128/core0/tmpfs16MiB/shm8MiB; imports D-118 pós-guard
+  VmSize≈91MB, Threads1.
+- Padrões D-117 (WORKER-ERRORS-PG-PLAN, docs/poc/worker_errors_pg.py):
+  `postgres:16-alpine` já local, create `--pull never` por ID, SCRAM,
+  log-driver none, volume anônimo próprio, inspect sem Config.Env, varredura
+  de segredo. Reuso de padrão e helpers pinados; nunca replay da raiz
+  consumida `maskgw-worker-errors-pg-20261023-3ce74efa`.
+
+## 3. Restrições do código atual (não contornar)
+
+Lidas em worker_session/worker_process/worker_protocol/worker_job/linux_guard:
+
+- WorkerSession exige Linux e GuardFacts CONTROLLER com `pid==getpid()==1`,
+  dumpable0, core(0,0), PDEATHSIG0: controlador é **o PID1 do container**.
+- protect_process exige UID/GID10001, caps0, NNP1, Seccomp2 e **Threads1 no
+  instante do guard**; VmSize+8MiB<AS; AS só diminui. Threads adicionais só
+  podem nascer depois do guard.
+- `open/query/send_result_to/close` passam por `_exclusive`: só a thread que
+  chamou open (não daemon). Essa é a thread principal, dona de todo o
+  lifetime e criadora do filho (PDEATHSIG). `request_stop` é o único método
+  documentado como cross-thread.
+- Worker: `sys.executable -I -B -m maskgw.runtime.worker_process FD PPID AS
+  IDLE`, env fixo, stdout/stderr DEVNULL, stdin vazio até GUARD_READY; AS do
+  filho ≤ AS do controlador. O filho conecta com `verify_capabilities=True`
+  e S1 baseline: a verificação pós-conexão acontece **no worker**.
+- Deadlines: abertura12s desde antes de Popen; job `statement_timeout_ms+10s`;
+  envio30s; limpeza3s; reap3×0,25s após kill; send ao filho limitado por
+  `idle_end`.
+
+## 4. Topologia
+
+```text
+Windows host (programa host novo, CLI limitado)
+ ├─ rede Docker própria --internal, label/task exclusivos, sem portas no host
+ │   ├─ PG16 próprio: servidor upstream explícito, fora do domínio do gateway
+ │   └─ gateway na candidata 621cc7f7
+ │        PID1 = controlador lab (python -I -B, pacote instalado)
+ │          ├─ thread principal: guard, owner de cada WorkerSession
+ │          ├─ thread sink (após guard)            §10
+ │          ├─ thread stop-watcher só no caso T4   §9
+ │          └─ worker_process, 1 por sessão, sequencial
+ └─ stdin/stdout do container gateway: único canal host↔controlador (§9)
+```
+
+Rede única `--internal` criada pela rodada; nenhum `-p`; nenhum recurso
+existente. IP do PG lido uma vez do inspect próprio, fixado; conninfo com
+`hostaddr` igual ao IP literal; nenhuma segunda resolução. Banco existente,
+credencial antiga, serviço ou DSN do host: nunca.
+
+## 5. Segredos e a exceção do PG
+
+Gerados pelo host em memória por rodada: senha superuser PG, senha do papel
+read-only, chave HMAC sintética, canários brutos.
+
+- **Exceção única do servidor próprio:** como D-117, a senha superuser vai
+  só ao ambiente do processo Docker CLI de create (`-e NOME` sem valor) e,
+  portanto, ao Config.Env do container PG próprio. O ambiente não é
+  globalmente livre de segredo; mitigação: inspect com template que exclui
+  Config.Env, container removido ao fim. Nunca se aplica a gateway, worker
+  ou credencial de usuário.
+- Fixture e senha read-only entram no psql do container PG por stdin.
+- Gateway: nenhum segredo em argv/env/imagem/arquivo. Só no frame LAB_INIT
+  pelo stdin, depois da linha GUARD (§9). Provider no controlador é
+  `MappingSecretProvider` fechado com a chave HMAC; nenhuma releitura ou
+  fallback de ambiente.
+- Toda saída/artefato é varrida pelos segredos e canários; qualquer
+  ocorrência reprova, mesmo redigida.
+
+## 6. Snapshot: caminho de captura (F4) — B1 BLOCKED
+
+Lido em runtime/snapshot.py, runtime/candidate.py e nos testes de snapshot.
+
+- `build_candidate(capture_snapshot=True)` resolve o destino e depois chama
+  sempre `verify(prepared)`. O default `verify_prepared` conecta no processo
+  chamador, o que é I/O proibido no pai. Os testes usam
+  `verifier=lambda _: None` e `resolver` fake: é **bypass de teste**, não
+  caminho aceitável aqui.
+- `capture_template(policy, config, conninfo, secrets)` é pública, mas o
+  `GatewayConfig` efetivo vem de `_compile`, privado. Recompor esses passos
+  no laboratório duplicaria o pipeline de compilação; recusado.
+- **B1 BLOCKED — API necessária antes do código do controlador:** função
+  pública estreita em candidate.py que reutilize exatamente `_compile` +
+  `RecordingSecrets` + `build_conninfo` + `capture_template`, com
+  `resolve_destination` real e `expected_addresses` = IP fixado, sem
+  conectar nem verificar, documentando que a verificação D-071 ocorre no
+  `connect()` do worker. Erros fechados `DatasourceCandidateError`. Requer
+  desenho/revisão próprios; este plano não a cria.
+- Decisão pendente dessa API: `resolve_destination` com resolver default
+  usa um filho limitado (D-092) mesmo para IP literal. Esse processo extra
+  conta em pids32 e precisa de reap comprovado no PID1. Ou a API aceita
+  só IP literal validado por `_validate_address` sem filho. Escolha na
+  revisão da API, não aqui.
+
+## 7. Destino e TLS do laboratório (F7)
+
+Lido em datasource/destination.py e datasource/models.py:
+
+- `DestinationPolicy()` default (allow_public False, allow_loopback False,
+  allowed_hosts vazio). `_validate_address` aceita `is_private` antes de
+  exigir allowlist. IP RFC1918 da rede interna passa sem allowlist ou bypass.
+  Loopback, link-local, metadata e multicast continuam recusados. Admissão
+  exige que o IP lido seja privado; senão, aborta antes de B.
+- `TlsSettings.mode="disable"`: perfil explícito de laboratório isolado
+  (rede interna sem outros membros, sem portas). SCRAM não transmite a
+  senha. **Não** é alegação de produção. `require`/`verify-full` com
+  certificado próprio continua gate separado do upstream real.
+
+## 8. Perfis, gerações e custos
+
+Gateway: UID/GID10001, rootfs RO, cap-drop ALL, NNP, seccomp padrão,
+memory512MiB, swap0, pids32, CPU1, nofile128, core0, /tmp16MiB, shm8MiB, rede
+interna própria. Valores iguais aos já medidos D-120, fixados antes da
+medição; só a rede muda.
+
+- Controlador AS384MiB; WorkerProfile.address_bytes256MiB (filho importa
+  ≈91MB +8MiB; sobra para libpq, resultado e 2F+scratch). Herança 256≤384.
+- ResultLimits F=max_frame_bytes16MiB (teto D-113), célula1MiB.
+- G1 (sessão persistente e terminais): policy.database e limits
+  statement_timeout_ms1000, max_rows1000. G2 (só T4): statement_timeout_ms
+  30000, max_rows1000. Mesmo datasource sintético; SessionKey distintas;
+  `sql` sem extensões (política padrão inalterada).
+- idle_ms: 30000 em todas as sessões, exceto T3 (1000, o mínimo).
+- Ledger D-112/D-116: W≥256MiB por worker, P≥2F+overhead; valores fixados no
+  estado antes de efeitos. API de BudgetLedger ainda não lida (§17).
+- AS é virtual: soma 640MiB > memory.max512MiB declarada, sob semântica
+  D-119, sem limite numérico inventado, STRICT, B-2 ou produção.
+  OOM/MEMORY é FAIL registrado, sem aumento de limite durante ou depois.
+- PG: 512MiB/swap/pids256/CPU1 (D-117), fora do domínio.
+
+## 9. Máquina de estados host↔controlador (F2)
+
+Canal: stdin/stdout do PID1 via `docker run -i` sem TTY.
+
+- Controlador→host: linhas JSON fechadas ASCII, ≤512bytes cada; total pelo
+  estado (≤256 linhas). Escritor único: a thread principal.
+- Host→controlador: frames binários com tamanho exato.
+- Nenhum sleep de coordenação; toda espera tem prazo; nenhum retry.
+
+Fases obrigatórias:
+
+1. `GUARD` (C→H): emitida pela thread principal depois de protect_process
+   CONTROLLER e antes de qualquer leitura do stdin. Campos: pid=1, AS,
+   Threads1, dumpable0. Host confere.
+2. `LAB_INIT` (H→C), **uma vez**, ≤64KiB: conninfo-parâmetros, senha
+   read-only, chave HMAC, expectativas por job (comprimento e SHA-256 do
+   corpo D-113 esperado, canários a procurar). Prazo10s.
+3. `INIT_OK` (C→H) após o snapshot de G1/G2 (depende de B1) e o sink pronto.
+4. Para cada caso, em ordem fixa (§11–§12), com seq monotônico:
+   `READY{case,seq}` (C) → ação do host, se houver → `GO{case,seq}` (H) →
+   execução → `RESULT{case,seq,campos fechados}` (C) → `ACK{case,seq}` (H).
+   O caso T4 insere `ARMED` (C) e `STOP` (H) entre GO e RESULT.
+5. `SUMMARY` (C) depois do último caso antes de T6; host não fecha o stdin
+   (EOF) antes disso. Em T6 o host mata o container (§12).
+
+Frames de controle (16bytes): magic, kind GO/STOP/ACK, case u16, seq u32.
+Proibidos: SQL arbitrária, case fora da tabela, seq fora de ordem, frame
+extra, EOF antecipado. Qualquer violação: controlador fecha a sessão ativa,
+emite `ABORT{fase}` e sai 1; host vai para cleanup e marca FAILED. Casos não
+alcançados ficam NOT_RUN, nunca repetidos.
+
+## 10. Sink e saída (F8)
+
+- Thread sink não daemon, criada depois do guard e antes do primeiro open.
+  Lê o par interno de um `socketpair` em buffer fixo de64KiB. Atualiza
+  SHA-256 e contagem; nunca guarda o corpo nem o publica. Compara com a
+  expectativa do job (comprimento exato) e entrega à thread principal só
+  booleano+contagem.
+- A thread principal chama `send_result_to(RawChannel(par))`: o
+  backpressure é o buffer do socket, limitado pelo prazo de envio de30s.
+  BUSY/DEADLINE/ReceiverError → sessão fecha conforme D-114; pin incerto
+  fica HELD e a capacidade fica retida, nunca é declarada limpa.
+- Parada: depois do último job, a thread principal faz shutdown do seu par.
+  O sink termina por EOF. join com prazo de3s; se falhar, evidência FAILED
+  e capacidade retida (o processo termina em T6 de qualquer forma).
+- Não há segundo executor de SQL, conexão no pai nem decoder de linhas.
+
+## 11. Sessão persistente P (G1): 19 jobs, numeração fixa (F1, F6)
+
+Open não é job: S1 conferido pelo OPENED (HMAC), GUARD_READY igual a
+PID/PPID/AS e baseline S1 no worker. Fixture igual à de
+tests/test_db_typed_integration.py: tabela `t` com id, cpf, tipo_cpf,
+email, numeric_secret, amount, token, active, label (domínio text). Policy
+`CONFIG` desse teste: cpf hmac_sha256, email regex, numeric_secret fixed,
+token random, exception tipo_cpf exact. Valores canário gerados pelo host.
+
+| job | SQL (t = schema.tabela sintética) | esperado |
+|---|---|---|
+| 1 | `SELECT id, active FROM t ORDER BY id` | ALLOW, digest |
+| 2 | `SELECT cpf FROM t ORDER BY id` | MASK HMAC text25, canário ausente |
+| 3 | `SELECT cpf AS tipo_cpf, tipo_cpf AS cpf FROM t WHERE id=1` | alias + exception autoritativa |
+| 4 | `SELECT substr(cpf,1,3) AS same, email AS same, active, id FROM t ORDER BY id` | expressão derivada, duplicadas |
+| 5 | `SELECT cpf FROM t WHERE id=1 UNION ALL SELECT cpf FROM t WHERE id=2` | UNION mascarado |
+| 6 | `WITH c AS (SELECT cpf AS x FROM t) SELECT x FROM c` | CTE mascarado |
+| 7 | `SELECT x FROM (SELECT email AS x FROM t) AS s` | subquery mascarada |
+| 8 | `SELECT numeric_secret FROM t ORDER BY id` | MASK numeric→text |
+| 9 | `SELECT g FROM generate_series(1,1001) AS g` | truncado rows=1000 |
+| 10 | `SELECT repeat('x',1048576) AS v FROM generate_series(1,15) AS g` | maior frame (<F) |
+| 11 | `SELECT repeat('x',1048576) AS v FROM generate_series(1,17) AS g` | LIMIT recuperável |
+| 12 | `SELECT 1` | saúde após LIMIT |
+| 13 | `SELECT '<canário>'::integer` | QUERY recuperável (D-117), canário ausente da saída |
+| 14 | `DELETE FROM t` | QUERY (QueryRejected), sem efeito |
+| 15 | `SELECT pg_read_file('postgresql.conf')` | QUERY (QueryRejected) |
+| 16 | `SELECT count(*) FROM generate_series(1,2000000000)` | TIMEOUT recuperável (servidor, 1000ms) |
+| 17 | `SELECT 2` | saúde e S1 iguais após TIMEOUT |
+| 18 | `SELECT amount FROM t WHERE id=1` | TYPE recuperável (numeric fora dos 8 OIDs, D-117) |
+| 19 | `SELECT 3` | saúde após TYPE |
+
+Depois do job19: CLOSE gracioso, reap real, release RELEASED. Cada resultado
+passa pelo sink; RESULT só existe após DONE correlacionado (código atual).
+
+- TIMEOUT usa `generate_series`, fora do namespace `pg_` e permitido pela
+  política padrão lida em sql/policy.py. **Sem** `allowed_pg_functions`
+  extra: os testes D-117 liberavam `pg_sleep`, o que aqui é recusado.
+- `pg_read_file` é negado pelo deny-by-default `pg_`.
+- Aceitação desses SQLs pelo validator/proveniência atual sem mudança: teste
+  puro obrigatório no incremento de código (§15), antes de efeitos. Se algum
+  for recusado, substituir na revisão, nunca afrouxar validator ou S1.
+- O job16 pode gerar arquivo temporário no PG próprio, limitado pelo timeout.
+- Após a rodada, o host confere pelo superuser que `t` não mudou.
+
+## 12. Sessões terminais, ordem fixa, uma vez cada (F3)
+
+- **T1 backend terminado** (G1): open → READY → host confirma por psql do
+  superuser exatamente1 backend do papel read-only e o termina (1 linha
+  true) → GO → controlador envia `SELECT 1` → esperado ERROR fatal
+  CONNECTION ou INTERNAL, sessão fecha com kill/reap.
+- **T2 blackhole** (G1): open → READY → host `docker pause` do PG por CID
+  conferido → GO → `SELECT 1` → prazo do pai (11s) → JOB fatal, kill/reap →
+  RESULT → host `docker unpause` do mesmo CID por identidade, inspect
+  Running/Paused false e `pg_isready` dentro de janela finita → ACK.
+  **Restauração faz parte do próprio T2.** Se o unpause ou o readiness
+  falhar, nenhum caso posterior roda (NOT_RUN), host vai a cleanup e FAILED.
+- **T3 idle do filho** (G1, idle_ms1000): open → READY → GO → espera local
+  limitada (idle_ms+1s, prazo monotônico, não coordenação) → `SELECT 1` →
+  send recusado pelo `idle_end` vencido → JOB fatal, reap. Limite: a API
+  pública não expõe o returncode; não se alega distinguir saída por idle de
+  kill.
+- **T4 request_stop durante job** (G2): open → READY → GO → C emite `ARMED`,
+  inicia a thread stop-watcher e chama `query("SELECT count(*) FROM
+  generate_series(1,2000000000)")` → host consulta `pg_stat_activity` do
+  papel até ver state active (≤20 chamadas psql sequenciais, sem sleep) →
+  STOP → watcher chama só `session.request_stop()` e termina → principal
+  recebe JOB fatal, kill/reap, join do watcher (3s) → RESULT. Sem active
+  observado: o host não envia STOP, o job acaba por prazo, T4 FAIL.
+- **T5 EOF do canal**: **UNRESOLVED/BLOCK_NATIVE**. Nenhuma API pública fecha
+  só o socket do pai sem kill. `close()` envia CLOSE e reaps; mexer em
+  `_sock` é proibido. O ramo EOF do filho (`_next` → None) é o mesmo de
+  idle/TIMEOUT, já exercido em T3 e nos testes simulados D-121. Follow-up:
+  decidir em revisão se T3 cobre o requisito ou se é preciso um método
+  público revisado. Não roda até lá; fica NOT_RUN declarado.
+- **T6 morte do PID1/namespace**: SUMMARY → open (G1) → READY → host `docker
+  kill` do gateway por CID → inspect: Running false, Pid0, sem processos.
+  PG mostra zero backends do papel em janela finita. Reap local não prova
+  fim instantâneo upstream.
+
+Em todo fatal: nenhum frame ou saída bruta, nada enviado, HELD/RELEASED
+conforme fatos reais. Erro do SO retém capacidade, nunca "limpo" por prazo.
+Total: 7 sessões (P + T1–T4 + T6), 19+4 jobs; T5 NOT_RUN até o follow-up.
+
+## 13. Ciclo e frescor (F5)
+
+Lido docs/poc/oracle9_cycle_freshness.py e seu teste (não executados).
+
+- Núcleo puro: TOTAL300s A→B, GAP30s, 9 OBSERVE ≥10s, READY, B único;
+  boot igual; tick e UTC concordantes (20s + 0,1%); rollback fatal; estado
+  canônico persistido antes de agir.
+- Suspensão: se o tick inclui o tempo suspenso, a suspensão cai em
+  TOTAL_AGE/GAP; se não inclui, o UTC diverge e cai em DISAGREEMENT. Os dois
+  casos recusam (teste `two_hour_pause_or_suspend_never_enters_b`).
+- A camada que lê o relógio no Windows (boot, `tick_ms` e UTC) fica no
+  chamador. Não li essa fonte: o pin é NOT_PREPARED e tem de ser a mesma
+  camada revisada que a UPDATE-V2 usou (mesmo boot, 12 checkpoints).
+- O desvio de ~2h16 da D-120 fica preservado como histórico e não se repete.
+
+## 14. Ownership e limpeza
+
+- Uma raiz nova, sentinel de invocação única, ownership (task/label/nomes)
+  com fsync **antes** de cada efeito. CID, ID de rede e de volume
+  registrados logo após a criação.
+- Desktop: padrão D-117/UPDATE-V2, restaurando só o próprio com identidade.
+- Finally: inspect por identidade fresca. Unpause se pausado e próprio. Stop
+  e rm só dos CIDs próprios; rede por ID; volume anônimo próprio. Inventário
+  final sem o label. Identidade incerta: não remove, FAILED, sem nova rodada.
+- CLI limitado, lista fechada de comandos no estado, sem retry automático.
+
+## 15. Incrementos necessários antes de efeitos
+
+1. **API de captura (B1, §6)**: desenho e revisão próprios; testes de
+   equivalência com o caminho build_candidate atual, sem conexão. Bloqueia
+   o item 2.
+2. **Controlador lab PID1** (deploy/, nome a definir): guard → GUARD →
+   LAB_INIT → snapshots G1/G2 → ledger → tabela fixa §11–§12 → linhas
+   fechadas. Testes puros: tabela finita, schema/limites de linhas,
+   máquina §9 (ordem, seq, extras, EOF), recusa de segredo em argv/env,
+   threads só após o guard, sink sem retenção, aceitação dos SQLs pelo
+   validator atual.
+3. **Programa host** (docs/poc/): rede/PG/gateway próprios, fixture por
+   stdin, máquina §9 bidirecional limitada, pausa/unpause por identidade,
+   varredura, cleanup, frescor §13. Testes puros de ownership/allowlist/
+   comandos/transições.
+4. **Fixture SQL** pinada por hash e expectativas geradas pelo host.
+
+Sem framework novo nem helper genérico. Depois: revisão do código, estado e
+comando preparados e revistos, uma invocação, revisão da evidência.
+
+## 16. NOT_PREPARED
+
+Raiz, task, estado, sentinel, nonce e comandos; arquivos e hashes do
+controlador, do host, da fixture e da API B1; ID atual do
+postgres:16-alpine local; hashes atuais de Docker CLI/Desktop/config/
+contexto; rede (nome, ID, subnet) e IP do PG; SessionKeys; P, overhead e W;
+digests esperados; pin da camada do relógio. Nada disso existe ou foi
+simulado.
+
+## 17. Incertezas, classificadas
+
+Bloqueiam código:
+- B1 API de captura (§6).
+- Transporte bidirecional limitado host↔`docker run -i`: não li a fonte do
+  helper run_linux_as_probe.py (58c692a7); não sei se suporta stdin em
+  streaming. Se não suportar, o host precisa de primitiva revisada própria.
+- Como o payload do controlador entra na imagem RO sem alterar o pacote:
+  mecanismo do payload566c46a8 da UPDATE-V2 não lido.
+- API pública de BudgetLedger (reserva, adoção, release) não lida.
+
+Bloqueiam só a verificação nativa:
+- Pin da camada do relógio do Windows (§13).
+- T5 EOF (§12).
+- Presença atual da imagem PG16 e da candidata; IP privado da rede interna.
+- Se `docker pause` congela o PG sem fechar o TCP (premissa de T2).
+- Ordem exata em T4: o pai pode observar o stop no envio ou no recv;
+  aceita-se o mesmo resultado fatal, sem alegar o ponto.
+
+Fora da matriz: duas sessões simultâneas (concorrência D-119/C1/B-2).
+
+## 18. Abertos mesmo se verde
+
+D-119/C1 novo tipo de perfil; B-2 local com pressão, concorrência, cliente
+lento e gerações; D-090 gate2 completo; TLS upstream de produção;
+patches/minimalização (OpenSSL3.5.8/cryptography/psycopg/pip/.pth);
+ingressos PGWire, MCP, Admin e quatro IDEs; produção. SQL PGWire continua
+recusada.

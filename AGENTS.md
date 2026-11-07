@@ -40,6 +40,26 @@ de produção nem dispensa revisão, isolamento, masking, read-only ou sigilo.
 
 ## Escopo atual
 
+## W1 Oracle: plano revisto para o primeiro teste puro — 2026-11-06
+
+CLI75815 terminou0, terminal recuperado e zero escritor confirmado. Root leu
+V4/delta5db1c1f4 e registrou precisões em W1-ORACLE-NATIVE-PLAN-REVIEW.
+Próximo caminho usa candidata instalada621cc7f7, não nova camada Windows;
+124 insumos públicos correspondem ao checkout (123pacote+pyproject). Quatro
+capturas puras equivalentes confirmam que não precisa API nova/rebuild.
+Intenção dos19SQL:17Selects admitidos,14/15QueryRejected; sem SQL executado.
+Source20 por SHA/tamanho e conjunto124 de paths reconferidos intactos.
+
+Somente direção prospectiva aceita sob delegação, sem execução autorizada
+por este registro. Próximo lote: Claude2 escreve SÓ
+ tests/test_oracle9_w1_controller.py, módulo deploy/oracle9_w1_controller.py
+continua ausente até root rever oráculos, medir e congelar RED. Mesma sessão
+51ea0d85/claude-opus-5-5/medium, conferir Git/zero escritor; ativo só monitorar,
+recuperar terminal antes de outra chamada. Wire/schema/tabela/captura/transições
+puros somente; sem main/spawn/socket/Native/Docker/PG/SQL/runtime/config/
+binário/privado/root/nonce/comando/deploy ou novo job/quota. Native3s/T5 e
+gates de produto continuam abertos; nenhum serviço disponível. Histórico abaixo.
+
 ## Ponte A→B: componente privado revisto e validado — 2026-11-06
 
 Claude2 único programador/sessão51ea0d85/claude-opus-5-5/medium. CLI20622

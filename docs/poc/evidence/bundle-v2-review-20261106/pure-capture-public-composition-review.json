@@ -1,0 +1,16 @@
+{
+  "result": {
+    "chunk_id": "b6ebdb",
+    "wall_time_seconds": 1.3143447,
+    "exit_code": 0,
+    "original_token_count": 30,
+    "output": "{\"cases\": 4, \"all_template_bytes_equal\": true, \"external_connect_dns_trapped\": true, \"uses_new_runtime_api\": false}\r\n"
+  },
+  "script": "import json,runpy,socket\nfrom unittest.mock import patch\nimport psycopg\nfrom maskgw.runtime import candidate as c\nfrom maskgw.runtime.snapshot import RecordingSecrets,capture_template\nfrom maskgw.datasource.models import DatasourcePolicy,DatasourceLimits\nfrom maskgw.secretsource import MappingSecretProvider\nT=runpy.run_path(\"tests/test_runtime_snapshot.py\")\npolicies=[{},{\"masking\":[{\"match\":\"email\",\"transformer\":\"hmac_sha256\"}]}]\nchecks=[]\ndef forbidden(*args,**kwargs):raise AssertionError(\"EXTERNAL_IO_IN_PURE_CAPTURE\")\nwith patch.object(psycopg,\"connect\",forbidden),patch.object(socket,\"getaddrinfo\",forbidden):\n for raw in policies:\n  for limits in [DatasourceLimits(),DatasourceLimits(max_rows=7,statement_timeout_ms=1234)]:\n   prepared=T[\"prepare\"](raw,limits=limits)\n   policy=DatasourcePolicy.from_mapping(raw)\n   recorder=RecordingSecrets(MappingSecretProvider({T[\"HMAC_KEY_ENV\"]:T[\"KEY_A\"]}))\n   loaded=c.parse_config_bundle(policy.to_mapping(),secrets=recorder)\n   settings=c.effective_database_settings(loaded.file_config,limits)\n   config=c.GatewayConfig(masking=loaded.gateway.masking,database=settings,sql=loaded.gateway.sql)\n   template=capture_template(policy,config,T[\"rebuild\"](prepared).connection_target(),recorder)\n   checks.append(template.bind(T[\"IDENTITY\"])==T[\"encoded\"](prepared))\nprint(json.dumps({\"cases\":len(checks),\"all_template_bytes_equal\":all(checks),\"external_connect_dns_trapped\":True,\"uses_new_runtime_api\":False}))\nraise SystemExit(not all(checks))\n",
+  "scope": "Validation only using synthetic existing test fixtures; comparator uses frozen build_candidate fake fixture. The proposed pure controller path does not call build_candidate or supply a no-op verifier.",
+  "harness_corrections": [
+    "Initial review harness requested absent PreparedRuntime.conninfo; corrected to public RecompiledSnapshot.connection_target().",
+    "Initial synthetic policy used unsupported column_pattern key; corrected to existing match field. Neither was a product finding."
+  ],
+  "conclusion": "Existing public normal loader + effective_database_settings + GatewayConfig + capture_template provide pure composition. New production API and image rebuild are not established as necessary."
+}

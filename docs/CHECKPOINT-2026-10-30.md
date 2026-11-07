@@ -4,6 +4,89 @@ Criado por solicitação do usuário em2026-10-30. Inclui o trabalho acumulado
 após4a5e556, preservando resultados históricos e tentativas reprovadas. É
 checkpoint de desenvolvimento incompleto da Fase9, não release de produção.
 
+## W1 Oracle: plano revisto para o primeiro teste puro — 2026-11-06
+
+CLI75815 terminou0, terminal recuperado e zero escritor confirmado. Root leu
+V4/delta5db1c1f4 e registrou precisões em W1-ORACLE-NATIVE-PLAN-REVIEW.
+Próximo caminho usa candidata instalada621cc7f7, não nova camada Windows;
+124 insumos públicos correspondem ao checkout (123pacote+pyproject). Quatro
+capturas puras equivalentes confirmam que não precisa API nova/rebuild.
+Intenção dos19SQL:17Selects admitidos,14/15QueryRejected; sem SQL executado.
+Source20 por SHA/tamanho e conjunto124 de paths reconferidos intactos.
+
+Somente direção prospectiva aceita sob delegação, sem execução autorizada
+por este registro. Próximo lote: Claude2 escreve SÓ
+ tests/test_oracle9_w1_controller.py, módulo deploy/oracle9_w1_controller.py
+continua ausente até root rever oráculos, medir e congelar RED. Mesma sessão
+51ea0d85/claude-opus-5-5/medium, conferir Git/zero escritor; ativo só monitorar,
+recuperar terminal antes de outra chamada. Wire/schema/tabela/captura/transições
+puros somente; sem main/spawn/socket/Native/Docker/PG/SQL/runtime/config/
+binário/privado/root/nonce/comando/deploy ou novo job/quota. Native3s/T5 e
+gates de produto continuam abertos; nenhum serviço disponível. Histórico abaixo.
+
+## W1 Oracle: fechamento V4 documental em andamento — 2026-11-06
+
+CLI2704 recuperada0; root leu446linhas/28c794d2, preservou V3. CLI75815
+corrige só o plano: wire16/cotas/contagens, PG externo com storage/temp
+finitos, query pesada de entradas limitadas, T4 sem confundir S1 e EOF com
+owner/orçamento antes do spawn e saída0 natural. Mesmo Claude2/sessão/modelo/
+medium, guardzero antes. Recuperar terminal antes de nova chamada; ativo só
+monitorar. Nenhum código/infra/SQL novo, Fonte20/estado16 e gates abertos fixos.
+
+## W1 Oracle: composição existente confirmada, plano em revisão — 2026-11-06
+
+CLI57391 recuperada0, V2 preservada. Root confirmou4 capturas puras iguais
+à fixture D111, sem connect/DNS; nova API/rebuild não é necessária por isso.
+CLI2704 corrige só o plano na mesma sessão51ea0d85/opus5.5/medium após guardzero.
+Recuperar terminal antes de nova chamada, ativo só monitorar. Ledger/payload/
+transport em revisão, EOF não dispensado; nenhum efeito/código novo.
+Source20/estado16 e gates abertos preservados; HEAD/origin9ba0d2b.
+
+## W1 Oracle: revisão documental em andamento — 2026-11-06
+
+CLI25630 recuperada0, root leu13bde9be/14774bytes/259linhas; V1 não pronta
+para código, preservada como dados. CLI57391 corrige só o plano, mesma
+sessão/opus5.5/medium, após guardzero. Fecha contagem de jobs, controle
+duplex/pause/stop, snapshot sem conexão no pai e demais contratos públicos.
+Recuperar terminal antes de outra chamada; ativo só monitorar. Nenhum
+código/efeito novo ou gate fechado. Source20/estado16/attempt preservados.
+
+## W1 Oracle: plano documental em andamento — 2026-11-06
+
+CLI75890 recuperada0; root encontrou candidata instalada posterior621cc7f7,
+não só87871290.124insumos do manifestod4d4b29b conferidos iguais ao checkout;
+wheel6b63f239 histórico, sem nova inspeção Docker. CLI25630 escreve só
+W1-ORACLE-NATIVE-PLAN, mesma sessão51ea0d85/opus5.5/medium, após guardzero.
+Reusar candidata se readmitida; PG16 por novo procedimento próprio, sem
+replay/Native3s presumido. Recuperar terminal antes de outra chamada; se
+ativo, só monitorar. Nenhum código/efeito nativo novo; gates/source20 fixos.
+
+## Caminho crítico: leitura corrigida em andamento — 2026-11-06
+
+CLI52597 recuperada0, V2 não aprovada por alegar imports Linux ainda não
+medidos apesar de LIB-RUN/LOADED-RUN posteriores. Fonte/caminhos atuais
+fornecidos; CLI75890 só Read na mesma sessão51ea0d85/opus5.5/medium após
+guard zero escritor. Recuperar terminal antes de outra chamada; ativo só
+monitorar. Source20/estado16 e gates abertos intactos, sem efeito operacional.
+
+## Caminho crítico: leitura em andamento — 2026-11-06
+
+CLI3083 terminou0, recuperada; proposta inicial não aprovada, resposta e
+findings preservados como dados. CLI52597 só Read na mesma sessão/opus5.5/
+medium após guard zero escritor; contrasta laboratório Windows com caminho
+real até produção Oracle Linux por documentos atuais. Recuperar terminal
+antes de outra chamada, ativo só monitorar. Sem código/efeito novo, source20/
+estado16/gates abertos fixos; HEAD/origin9ba0d2b. Não há job ou quota nova.
+
+## Produtor/coordenador: leitura em andamento — 2026-11-06
+
+Ponte publicada9ba0d2b, HEAD/origin0/0, rastreados limpos pós-fetch. Fonte91c20df4
+e testedd329afe/18upstream intactos; autoria/23arquivos/fsck conferidos.
+CLI3083 somente Read na mesma sessão51ea0d85/opus5.5/medium, após zero escritor,
+revê composição mínima e bloqueios reais até gates. Recuperar terminal antes
+de outra chamada; ativo só monitorar. Não autorizou código/consumidor/efeito
+novo. Source20/estado16/attempt e todos os limites operacionais preservados.
+
 ## Ponte A→B: componente privado revisto e validado — 2026-11-06
 
 Claude2 único programador/sessão51ea0d85/claude-opus-5-5/medium. CLI20622

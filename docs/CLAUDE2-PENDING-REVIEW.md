@@ -1,3 +1,126 @@
+## W1 Oracle: plano revisto para o primeiro teste puro — 2026-11-06
+
+CLI75815 terminou0, terminal recuperado e zero escritor confirmado. Root leu
+V4/delta5db1c1f4 e registrou precisões em W1-ORACLE-NATIVE-PLAN-REVIEW.
+Próximo caminho usa candidata instalada621cc7f7, não nova camada Windows;
+124 insumos públicos correspondem ao checkout (123pacote+pyproject). Quatro
+capturas puras equivalentes confirmam que não precisa API nova/rebuild.
+Intenção dos19SQL:17Selects admitidos,14/15QueryRejected; sem SQL executado.
+Source20 por SHA/tamanho e conjunto124 de paths reconferidos intactos.
+
+Somente direção prospectiva aceita sob delegação, sem execução autorizada
+por este registro. Próximo lote: Claude2 escreve SÓ
+ tests/test_oracle9_w1_controller.py, módulo deploy/oracle9_w1_controller.py
+continua ausente até root rever oráculos, medir e congelar RED. Mesma sessão
+51ea0d85/claude-opus-5-5/medium, conferir Git/zero escritor; ativo só monitorar,
+recuperar terminal antes de outra chamada. Wire/schema/tabela/captura/transições
+puros somente; sem main/spawn/socket/Native/Docker/PG/SQL/runtime/config/
+binário/privado/root/nonce/comando/deploy ou novo job/quota. Native3s/T5 e
+gates de produto continuam abertos; nenhum serviço disponível. Histórico abaixo.
+
+## W1 Oracle: V3 lida, fechamento V4 em andamento — 2026-11-06
+
+CLI2704 terminou0, recuperada. Root leu todas as446linhas/hash28c794d2 e
+preservou V3 como dados. Composição pública/snapshot e ledger confirmados;
+sem API nova/rebuild. Root pediu fechamento exato do wire16, contagens,
+orçamento/owner do EOF e recursos do PG externo antes de código.
+Consulta primária PG16/Docker confirmou temp_file_limit default sem teto e
+tmpfs limitado cobrado no cgroup; risco de SRF enorme é finding de desenho,
+não falha nativa medida. Sem SQL/infra executados.
+
+CLI75815 corrige SÓ o plano, mesma sessão51ea0d85/opus5.5/medium após guardzero.
+Header >4sBBHII16, seq por frame host e quotas fechadas; heavySQL com entradas
+limitadas e temp/PGDATA finitos; T4 deve observar SQL exato, não S1. T5 exige
+admissão/posse/reap antes de crédito e saída0 natural para provar EOF. Fonte20/
+estado16 fixos. Recuperar terminal75815 antes de nova chamada; ativo só
+monitorar. Primeiro código será só núcleo puro fechado/testes, após revisão;
+nenhum efeito nativo ou execução liberada por esse pedido documental.
+
+## W1 Oracle: composição pura confirmada, V3 documental em andamento — 2026-11-06
+
+CLI57391 terminou0, recuperada; V298bfc054/382linhas preservada como dados.
+Root demonstrou que o bloqueio de nova API é desnecessário: loader público+
+effective_database_settings+GatewayConfig+RecordingSecrets+capture_template
+formam o caminho puro, mesmo recorder/compilação.4 comparações de bytes
+contra fixture D111 congelada passaram com connect/DNS reais proibidos.
+Controle usa fakeCandidate só como oráculo; caminho puro não chama Candidate
+nem verifier nulo. Duas correções de harness (conninfo público/policy.match)
+registradas, não findings de produto. Sem nova API/rebuild por essa razão.
+
+CLI2704 corrige SÓ W1-ORACLE-NATIVE-PLAN, mesma sessão/opus5.5/medium após
+guard zero escritor. Fecha APIs de ledger/payload/transport e mantém EOF
+pendente sem dispensá-lo. Recuperar terminal2704 antes de nova chamada;
+ativo só monitorar. Nenhum código/teste/efeito nativo, source20/estado16 fixos.
+
+## W1 Oracle: plano V1 revisto, correção documental em andamento — 2026-11-06
+
+CLI25630 terminou0, recuperada; zero escritor confirmado. Root leu todas as
+259linhas/14774bytes/hash13bde9be. V1 preservada como dados, ainda não pronta
+para código:12jobs anunciados não batem com5formas derivadas; INIT único+EOF
+não permite coordenar pause/stop posteriores; PG pausado precisa restauração
+antes dos outros casos; snapshot deve usar caminho puro sem verify/connect
+no controlador. Q1/Q2/Q3/Q4/Q5/Q6 precisam fechamento por fonte pública.
+CLI57391 corrige SÓ o mesmo plano, mesma sessão/opus5.5/medium, após guardzero.
+Recuperar terminal57391 antes de nova chamada; ativo só monitorar. Nenhum
+código/teste/efeito nativo, source20/estado16 fixos. Gates de produto abertos.
+
+## W1 Oracle nativo: plano prospectivo em redação — 2026-11-06
+
+CLI75890 terminou0, recuperada. Root corrigiu ainda a premissa de imagem:
+UPDATE-V2-RUN registra candidata instalada621cc7f7, wheel6b63f239; manifesto
+públicod4d4b29b. Root conferiu124insumos atuais por SHA/tamanho sem divergência
+(123paths de pacote mais pyproject público). Comparação inicial recusou esse
+último path por allowlist do harness e foi corrigida explicitamente, sem
+diferença de conteúdo. Nenhuma disponibilidade Docker atual foi inspecionada.
+
+Direção sob delegação: reutilizar candidata se readmitida, novo procedimento
+PG16 próprio, sem replay das tentativas consumidas ou dependência presumida
+de novo coordenador Win32. Native3s permanece aberto no shell lab, e gates
+de produto permanecem abertos. Dados em production-path-v3-and-current-image-review.
+CLI25630 escreve SOMENTE docs/PHASE-9-W1-ORACLE-NATIVE-PLAN.md, mesma sessão/
+opus5.5/medium após guard zero escritor. Código/testes/source20/estado16 fixos.
+Recuperar terminal25630 antes de outra chamada; ativo só monitorar. Nenhum
+Docker/PG/SQL/native/runtime/config/binário/privado/root/nonce/comando/deploy
+ou outro efeito executado/autorizado por essa redação. Root revê antes do código.
+
+## Caminho crítico: conferência atual corrigida em andamento — 2026-11-06
+
+CLI52597 terminou0, recuperada. V2 não aprovada: usou registro Linux-AS
+antigo e chamou de primeira evidência imports já medidos em LIB-RUN e
+LOADED-RUN; nomes W1 foram adivinhados e falharam. Root leu os registros
+mais novos; dados e findings preservados em production-path-v2-unapproved.
+CLI75890 somente Read na mesma sessão/opus5.5/medium, após guard zero escritor,
+revê arquivos exatos mais atuais, fontes de produto e dependências reais.
+Recuperar terminal75890 antes de outra chamada; ativo só monitorar. Nenhum
+código/efeito novo, gate dispensado ou FAIL reclassificado. HEAD/origin9ba0d2b,
+source20/estado16 fixos; todas as restrições operacionais preservadas.
+
+## Caminho crítico de produção: revisão só leitura em andamento — 2026-11-06
+
+CLI3083 terminou0 e foi recuperada. Proposta inicial de coordenador não
+aprovada: mistura loader/coordenador/armazenamento e admite que Native3s
+Windows é ramo distinto dos gates Oracle Linux. Resposta e findings estão
+em producer-initial-proposal-unapproved.json; nenhuma implementação nova.
+CLI52597 somente Read na mesma sessão51ea0d85/opus5.5/medium, após guard de
+zero escritor, confere PRODUCTION-EXECUTION/CONTAINER-TARGET e Linux-AS/W1
+para justificar o próximo caminho por requisitos reais, sem enfraquecer
+gates nem presumir outra camada simulada. Recuperar terminal52597 antes de
+outra chamada; ativo só monitorar. HEAD/origin9ba0d2b, source20/estado16 fixos;
+nenhum Docker/PG/SQL/native/runtime/config/binário/privado/deploy ou job/quota.
+
+## Produtor/coordenador: revisão somente leitura em andamento — 2026-11-06
+
+Ponte A→B publicada em9ba0d2b45327915dcd6ef5925c93d67ee73a183f; após
+fetch, HEAD/origin iguais,0/0 e rastreados limpos. Root conferiu autoria,
+23 arquivos, integridade Git e hashes91c20df4/dd329afe após commit.
+CLI3083 está em andamento SOMENTE Read, mesma sessão51ea0d85/opus5.5/medium,
+após zero escritor. Pede composição mínima usando APIs aceitas e bloqueios
+concretos até evidência nativa/produto, sem outra camada genérica presumida.
+Recuperar terminal3083 antes de outra chamada; ativo só monitorar. Nenhum
+código/teste novo ou efeito autorizado por essa leitura. Source20/estado16/
+attempt consumido fixos, nenhum Native/Docker/PG/SQL/runtime/config/binário/
+privado/root/nonce/entrada/loader/collector/publicador/comando/deploy ou job/quota.
+
 ## Ponte A→B: componente privado revisto e validado — 2026-11-06
 
 Claude2 único programador/sessão51ea0d85/claude-opus-5-5/medium. CLI20622
