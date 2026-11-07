@@ -1,0 +1,47 @@
+{
+  "design_attempt": {
+    "chunk_id": "8ccc8d",
+    "wall_time_seconds": 7.6281432,
+    "exit_code": 0,
+    "original_token_count": 67,
+    "output": "{\r\n    \"session_id\":  \"51ea0d85-05bb-4d24-ba9a-c9627c3f832f\",\r\n    \"is_error\":  true,\r\n    \"result\":  \"You\\u0027ve hit your session limit · resets 2:30am (America/Sao_Paulo)\",\r\n    \"terminal_reason\":  \"api_error\",\r\n    \"api_error_status\":  429,\r\n    \"exit\":  1\r\n}\r\n"
+  },
+  "schedule_verification": {
+    "chunk_id": "066c6f",
+    "wall_time_seconds": 6.4018928,
+    "exit_code": 0,
+    "original_token_count": 184,
+    "output": "{\r\n    \"TaskName\":  \"Maskgw-Claude2-Resume-01a05804\",\r\n    \"State\":  \"Ready\",\r\n    \"NextRunTimeUtc\":  \"2026-11-07T05:35:00.0000000Z\",\r\n    \"StartBoundary\":  \"2026-11-07T02:35:00-03:00\",\r\n    \"ActionCount\":  1,\r\n    \"TriggerCount\":  1,\r\n    \"RunLevel\":  \"Limited\",\r\n    \"LogonType\":  \"Interactive\",\r\n    \"MultipleInstances\":  \"IgnoreNew\",\r\n    \"StartWhenAvailable\":  true,\r\n    \"MessageExact\":  true,\r\n    \"LastRunTimeUtc\":  \"2026-11-05T23:05:00.0000000Z\",\r\n    \"LastTaskResult\":  0,\r\n    \"Execute\":  \"C:\\\\Users\\\\w.filho\\\\AppData\\\\Roaming\\\\npm\\\\node_modules\\\\@openai\\\\codex\\\\node_modules\\\\@openai\\\\codex-win32-x64\\\\vendor\\\\x86_64-pc-windows-msvc\\\\bin\\\\codex.exe\",\r\n    \"WorkingDirectory\":  \"C:\\\\Users\\\\w.filho\\\\Desktop\\\\codes\\\\mask\"\r\n}\r\n"
+  },
+  "queued_message": "Resume authorized Mask Gateway work in this same conversation. Read docs/CLAUDE2-PENDING-REVIEW.md and docs/CHECKPOINT-2026-10-30.md first. Inspect Git and confirm no active Claude2 writer; if active monitor only, never start a second session call. Claude2 alone programs, always claude-opus-5-5 effort medium, only session 51ea0d85-05bb-4d24-ba9a-c9627c3f832f; root reviews. Published checkpoint ec8e736, D1 verified114 own and1122 related. Last session-design call returned API429 before edits; reset displayed2:30am America/Sao_Paulo, inferred2026-11-07T02:30:00-03:00, no reset independently observed. Check current time and fresh terminal metadata; no retry before05:30UTC and no quota workaround. Current safe lot is ONLY docs/PHASE-9-W1-ORACLE-DRIVER-SESSION-DESIGN.md, absent at last check: refine real WorkerSession integration with fake OS and caller-owned Owner contract using exact pending-review findings. No tests or source edits before design review and measured RED. Use same session and scoped Read/Edit/Write only that document. Keep D1 sourcee9d8de9b/test0e9a8cc1,pure4c155d76/test084d62cd,source20/app124/state16 and consumed attempt fixed. No actual socket/thread/process/guard/native calls, Docker, PG, SQL, runtime/config/binary/private reads, operational root/nonce/entry/loader/collector/publisher/command/deploy, other writer/account/model or quota workaround. Recover terminal before next call. Publish only reviewed verified results. This scheduled message grants no additional permission.",
+  "quota_reset": {
+    "displayed": "2:30am (America/Sao_Paulo)",
+    "inferred_date": "2026-11-07",
+    "inferred_utc": "2026-11-07T05:30:00Z",
+    "independently_observed": false
+  },
+  "resume": {
+    "existing_task": "Maskgw-Claude2-Resume-01a05804",
+    "once_at": "2026-11-07T02:35:00-03:00",
+    "utc": "2026-11-07T05:35:00Z",
+    "state": "Ready",
+    "limited": true,
+    "interactive": true,
+    "ignore_new": true,
+    "message_exact": true,
+    "not_yet_executed": true
+  },
+  "facts": {
+    "zero_claude_writer": true,
+    "design_absent": true,
+    "test_absent": true,
+    "no_retry_after429": true,
+    "no_native_or_product_effects": true
+  },
+  "references": [
+    "https://developers.openai.com/blog/mastering-codex-remote-for-engineering",
+    "https://developers.openai.com/training/walkthroughs/scheduled-tasks"
+  ],
+  "local_cli_probe": "codex queue --help confirms --thread and --message; no message was queued during this probe. Default-sandbox help emitted temporary arg0 cleanup/PATH warnings; no deletion attempted.",
+  "limits": "Registration and NextRunTime are not proof of delivery or quota availability. Requires machine/logon/app available; scheduled message grants no new permission."
+}

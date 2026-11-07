@@ -4,6 +4,39 @@ Criado por solicitação do usuário em2026-10-30. Inclui o trabalho acumulado
 após4a5e556, preservando resultados históricos e tentativas reprovadas. É
 checkpoint de desenvolvimento incompleto da Fase9, não release de produção.
 
+## W1 Oracle: limite C2 e retomada D2 registrada — 2026-11-06
+
+CLI15745 foi só Read, encerrou0 e foi recuperada; zero escritor confirmado.
+Root reviu a proposta e fontes pertinentes. Chamada seguinte, restrita ao
+DRIVER-SESSION-DESIGN, retornou API429 antes de editar. Desenho e teste de
+sessão ainda ausentes, sem retry após429. Fonte do produto inalterada.
+
+Reset exibido02h30 São Paulo, inferido07/11/2026 às05h30UTC; não observado.
+Mesma tarefa Maskgw-Claude2-Resume-01a05804 reprogramada e relida Ready:
+07/11 às02h35-03:00 (05h35UTC), uma vez, Limited/Interactive/IgnoreNew,
+mensagem queue nesta conversa conferida. Agendamento não comprova entrega
+ou quota; depende de host/logon/app disponíveis. Última execução05/11/result0
+é histórica; novo disparo ainda pendente. Nenhum outro escritor/conta/modelo.
+
+Próximo lote: mesmo Claude2/sessão51ea0d85/claude-opus-5-5/medium escreve
+só docs/PHASE-9-W1-ORACLE-DRIVER-SESSION-DESIGN.md após reset e guardzero.
+Ler DRIVER-SESSION-PENDING-REVIEW e checkpoints primeiro. Fechar harness
+com ledger/key reais do driver, clock único, pin antes de header, DONE,
+owner externo exato/uso único e limites de controle/hold D2. Sem teste ou
+código antes da revisão. Conferir Git atual; não reutilizar HEAD antigo.
+Fonte20/puro/driver/testes/app124/estado16 e tentativa consumida fixos.
+Sem Docker/PG/SQL/nativo/runtime/config/binário/privado ou deployment.
+Gates de produto continuam abertos, Gateway indisponível. Histórico abaixo.
+
+## W1 Oracle: leitura D2 em andamento — 2026-11-06
+
+HEAD/originec8e736, rastreados limpos, zero escritor antes da retomada.
+Primeiro launcher barrou guarda HEAD antiga140be3a antes de chamar C2;
+corrigida. CLI15745 somente Read, mesmo Claude2/sessão51ea0d85/
+opus5.5/medium. Recuperar terminal antes de outra chamada; ativo só
+monitorar. Fechar integração SDK com SO simulado e posse/controle D2,
+sem implementação ou efeito. Fontes/estado/gates fixos; nenhum job/quota.
+
 ## W1 Oracle: D1 revisto com portas determinísticas — 2026-11-06
 
 Claude2 único programador/sessão51ea0d85/claude-opus-5-5/medium; root leu
