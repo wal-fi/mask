@@ -1,3 +1,70 @@
+## W1 Oracle: contrato do driver revisto para testes D1 — 2026-11-06
+
+CLI85542/90785/34291 encerradas0 e recuperadas; zero escritor confirmado.
+Root leu a v3 inteira9e58a3ff/18804bytes/356linhas e APIs pertinentes.
+DRIVER-DESIGN-REVIEW aceita só os primeiros testes D1 com precisões:
+run aplica guard antes de loader pinado, sem namespace pronto ou pins
+substituíveis; posse antes de start; ARMED antes de handoff; seq46 antes de
+stop; sink EOF finito por resultado; idle agregado sem ler _idle_end;
+RETAINED finito com owner forte; SUMMARY inclui T5_PENDING. Nenhum efeito.
+
+Próximo lote seguro: mesmo Claude2/sessão51ea0d85/claude-opus-5-5/medium
+escreve só tests/test_oracle9_w1_driver.py. Módulo driver continua ausente
+até revisão/RED congelado. D1 só portas determinísticas, ledger/codecs/
+captura reais, sem sockets/threads/processos/guard reais. Recuperar terminal
+antes de outra chamada; ativo só monitorar. Puro4c155d76/teste084d62cd/
+source20/app124/estado16 e tentativa consumida fixos. Nenhum job/quota novo.
+B1/B2/D090/C1/T5/ingressos/produção abertos; Gateway indisponível.
+Históricos abaixo.
+
+## W1 Oracle: fechamento documental do desenho do driver — 2026-11-06
+
+CLI90785 encerrou0, terminal recuperado e zero escritor confirmado. V2
+preservada como proposta ainda não aceita para testes/código. Root pediu:
+ARMED interno antes do handoff, objeto de thread retido antes de start,
+seq46 conferido antes de stop, sink finito sem drain ilimitado, modelo D1
+sem sockets/threads reais, SUMMARY incluindo T5_PENDING e janela agregada
+idle (ACK20+GO20 pode ultrapassar idle30). RETAINED de teste deve reter o
+owner em resultado finito; main/hold físico ainda ausente. Source20/app124/
+estado16 e núcleo/teste permanecem fixos. Root confirmou ledger puro:
+reserved_bytes já inclui base/headroom,483MiB, disponível29MiB, pin aceito,
+segunda sessão CAPACITY; não é limite físico medido. Dois erros de rótulo/
+uso de property no harness do revisor foram preservados, não são findings.
+
+CLI34291 escreve SOMENTE docs/PHASE-9-W1-ORACLE-DRIVER-DESIGN.md, mesma
+sessão51ea0d85/claude-opus-5-5/medium após guardzero. Recuperar terminal
+antes de revisão/gates/nova chamada; ativo só monitorar. Nenhum driver/teste
+novo ou efeito nativo/SQL/infra/job/quota. Root revê documento antes do RED.
+
+## W1 Oracle: desenho do driver em revisão — 2026-11-06
+
+CLI85542 encerrou0, terminal recuperado, zero escritor. Proposta inicial
+preservada como não aprovada: APIs atuais não relidas e fronteira do sink
+indefinida. Root leu WorkerSession/budget/codec/receiver/frame pertinentes:
+query exige bytes; send_result_to retorna ResultSummary e entrega só corpo
+D113, sem header76. Pediu par/sink próprios por resultado com EOF explícito,
+limite incremental, join antes do próximo job e ABORT se divergente; nunca
+misturar sobras. Reserva retida antes da factory; open adota, sem dupla adoção.
+Erro sem adoção não autoriza close nem confirmação fictícia de limpeza.
+
+CLI90785 é SOMENTE Read na mesma sessão51ea0d85/claude-opus-5-5/medium,
+após guardzero. Recuperar terminal antes de nova chamada; ativo só monitorar.
+Fechar schemas/limites/posse/retensão e leitura atual antes de testes/código.
+Não há driver entregue ou efeito nativo/SQL/infra/job/quota. HEAD/origin
+140be3a; source20/estado16/app124/puro4c155d76/teste084d62cd fixos.
+
+## W1 Oracle: desenho do driver em leitura — 2026-11-06
+
+140be3aecd09ef76ff6eaf160037a225b4fd61d0 publicado e confirmado igual a
+origin/master,0/0, árvore rastreada limpa. CLI85542 é SOMENTE Read na mesma
+sessão51ea0d85/claude-opus-5-5/medium após zero escritor. Recuperar terminal
+antes de outra chamada; ativo só monitorar. Resposta é proposta, não código.
+Root pediu fechamento do owner/ledger/sink/stop/T5 e separação explícita
+entre núcleo puro congelado e futuro driver físico sob python -I. Montagem
+de arquivo único no plano antigo não pode enfraquecer o teste de pureza.
+Nenhum efeito, alteração de fonte ou novo job/quota; fonte20/estado16/app124
+e núcleo/teste4c155d76/084d62cd fixos, gates de produção abertos.
+
 ## W1 Oracle: núcleo puro revisto e validado — 2026-11-06
 
 Claude2 programou sozinho na sessão51ea0d85, claude-opus-5-5, esforço medium.

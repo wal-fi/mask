@@ -40,6 +40,25 @@ de produção nem dispensa revisão, isolamento, masking, read-only ou sigilo.
 
 ## Escopo atual
 
+## W1 Oracle: contrato do driver revisto para testes D1 — 2026-11-06
+
+CLI85542/90785/34291 encerradas0 e recuperadas; zero escritor confirmado.
+Root leu a v3 inteira9e58a3ff/18804bytes/356linhas e APIs pertinentes.
+DRIVER-DESIGN-REVIEW aceita só os primeiros testes D1 com precisões:
+run aplica guard antes de loader pinado, sem namespace pronto ou pins
+substituíveis; posse antes de start; ARMED antes de handoff; seq46 antes de
+stop; sink EOF finito por resultado; idle agregado sem ler _idle_end;
+RETAINED finito com owner forte; SUMMARY inclui T5_PENDING. Nenhum efeito.
+
+Próximo lote seguro: mesmo Claude2/sessão51ea0d85/claude-opus-5-5/medium
+escreve só tests/test_oracle9_w1_driver.py. Módulo driver continua ausente
+até revisão/RED congelado. D1 só portas determinísticas, ledger/codecs/
+captura reais, sem sockets/threads/processos/guard reais. Recuperar terminal
+antes de outra chamada; ativo só monitorar. Puro4c155d76/teste084d62cd/
+source20/app124/estado16 e tentativa consumida fixos. Nenhum job/quota novo.
+B1/B2/D090/C1/T5/ingressos/produção abertos; Gateway indisponível.
+Históricos abaixo.
+
 ## W1 Oracle: núcleo puro revisto e validado — 2026-11-06
 
 Claude2 programou sozinho na sessão51ea0d85, claude-opus-5-5, esforço medium.

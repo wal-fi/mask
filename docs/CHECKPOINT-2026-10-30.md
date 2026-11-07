@@ -4,6 +4,54 @@ Criado por solicitação do usuário em2026-10-30. Inclui o trabalho acumulado
 após4a5e556, preservando resultados históricos e tentativas reprovadas. É
 checkpoint de desenvolvimento incompleto da Fase9, não release de produção.
 
+## W1 Oracle: contrato do driver revisto para testes D1 — 2026-11-06
+
+CLI85542/90785/34291 encerradas0 e recuperadas; zero escritor confirmado.
+Root leu a v3 inteira9e58a3ff/18804bytes/356linhas e APIs pertinentes.
+DRIVER-DESIGN-REVIEW aceita só os primeiros testes D1 com precisões:
+run aplica guard antes de loader pinado, sem namespace pronto ou pins
+substituíveis; posse antes de start; ARMED antes de handoff; seq46 antes de
+stop; sink EOF finito por resultado; idle agregado sem ler _idle_end;
+RETAINED finito com owner forte; SUMMARY inclui T5_PENDING. Nenhum efeito.
+
+Próximo lote seguro: mesmo Claude2/sessão51ea0d85/claude-opus-5-5/medium
+escreve só tests/test_oracle9_w1_driver.py. Módulo driver continua ausente
+até revisão/RED congelado. D1 só portas determinísticas, ledger/codecs/
+captura reais, sem sockets/threads/processos/guard reais. Recuperar terminal
+antes de outra chamada; ativo só monitorar. Puro4c155d76/teste084d62cd/
+source20/app124/estado16 e tentativa consumida fixos. Nenhum job/quota novo.
+B1/B2/D090/C1/T5/ingressos/produção abertos; Gateway indisponível.
+Históricos abaixo.
+
+## W1 Oracle: fechamento do desenho do driver — 2026-11-06
+
+CLI90785 recuperada0 e zero escritor; V2 ainda não aceita para código.
+CLI34291 escreve só W1-ORACLE-DRIVER-DESIGN na mesma sessão51ea0d85/
+opus5.5/medium. Fecha ordem ARMED/handoff, posse antes de start, seq do stop,
+sink finito/EOF, D1 sem efeitos e RETAINED finito com owner, SUMMARY com
+T5_PENDING e teto agregado do idle. Recuperar terminal antes de outra
+chamada/gates; ativo só monitorar. HEAD/origin140be3a, núcleo/teste/app124/
+source20/estado16 fixos; nenhum efeito nativo/SQL/infra ou job/quota novo.
+
+## W1 Oracle: revisão do desenho do driver — 2026-11-06
+
+CLI85542 recuperada0 e zero escritor; proposta não aceita para código,
+preservada como dados. Root confirmou query(bytes), ResultSummary e corpo
+sem header76. Sink compartilhado sem fronteira por job precisa correção:
+par próprio/EOF/join, ABORT se divergente; reserva antes da factory/open
+adota uma vez e nenhuma confirmação fictícia. CLI90785 só Read na mesma
+sessão51ea0d85/opus5.5/medium. Recuperar terminal antes de nova chamada;
+ativo só monitorar. Driver ainda ausente, source20/estado16/app124/puro/
+teste fixos, gates abertos; nenhum efeito nativo/SQL/infra ou job/quota.
+
+## W1 Oracle: desenho do driver em leitura — 2026-11-06
+
+HEAD/origin140be3a,0/0 e rastreados limpos após publicar o núcleo. CLI85542
+somente Read, mesmo Claude2/sessão51ea0d85/opus5.5/medium após zero escritor.
+Recuperar terminal antes de outra chamada; ativo só monitorar. Fechar posse,
+ledger/sink/stop/T5 e separação do driver sem mudar núcleo/teste congelados
+ou app124. Nenhum efeito nativo/SQL/infra ou job/quota; gates abertos.
+
 ## W1 Oracle: núcleo puro revisto e validado — 2026-11-06
 
 Claude2 programou sozinho na sessão51ea0d85, claude-opus-5-5, esforço medium.
