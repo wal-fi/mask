@@ -1,0 +1,24 @@
+{
+  "terminal": {
+    "chunk_id": "83b560",
+    "wall_time_seconds": 0.0000196,
+    "exit_code": 0,
+    "original_token_count": 947,
+    "output": "{\r\n    \"session_id\":  \"51ea0d85-05bb-4d24-ba9a-c9627c3f832f\",\r\n    \"is_error\":  false,\r\n    \"result\":  \"Escrevi só `docs/PHASE-9-W1-ORACLE-DRIVER-SESSION-DESIGN.md`. Não alterei código nem testes e não rodei nada.\\n\\n**Correções incorporadas:**\\n- **Sem o `World` antigo.** Uma factory gravadora confere a assinatura exata, guarda ledger, token, chave, limites, perfil e guard recebidos do driver e devolve a `WorkerSession` real com esses valores. Antes de devolver, ativa um contexto de SO simulado por sessão, com os atributos que `Endpoint`, `Process` e `Pipe` do teste antigo esperam. Assim essas classes podem ser reusadas sem mudança.\\n- **Linha SESSION** encontrada como única pelo `ledger.status` público, sem slot fixo.\\n- **Relógio comum** trocando só nomes do módulo `worker_session`: `time`, `sys`, `os`, `socket`, `subprocess` e `select`. O nome `ResultDeadline` vira uma fábrica que devolve a classe pública exata com `clock` igual ao relógio fake. Isso cobre `_deadline`, o construtor direto em `_query` e o `_set_idle`, sem mexer na stdlib global nem em algoritmos.\\n- **Identidade LAB:** o teste confere o `SecretInit` decodificado (chave, limites, snapshot) e o HMAC. Os frames usam os campos 4–8 da chave real, e o canal de saída é o `RawChannel` exato, com o socket tipado como `Any` (sem cast nem ignore).\\n- **Matriz I1 de 7 casos:**\\n  - I1-1: caminho bom, com corpo sem cabeçalho e pin ligado e depois desligado;\\n  - I1-2: truncamento;\\n  - I1-3: P = 33 MiB − 1, em que o open conclui e a query falha só depois do cabeçalho de 12 bytes do RESULT, sem nenhuma leitura D-113;\\n  - I1-4: identidade do resultado errada; I1-5: DONE errado. Nenhum dos dois expõe bytes, e o estado do ledger tem de ser coerente com o resultado de `close`;\\n  - I1-6: o driver com a `WorkerSession` real nos jobs 1 e 2 até EOF no GO 3;\\n  - I1-7: interrupção dentro do SDK, convertida em erro fechado, sem alegar que o controle original foi preservado.\\n- **Owner do chamador:** `run(ports, *, owner=None)`. Sem owner, o comportamento atual se mantém. O tipo `Owner` tem de ser exato, e há uma trava de entrada única marcada antes do guard. Owner inválido ou reutilizado recebe `DriverRefusal(\\\"OWNER\\\")` antes de qualquer porta; não é RETAINED e nunca há substituição. Em RETAINED, `result.owner is owner`. Um `BaseException` fora do SDK atravessa `run` com o owner original intacto. A matriz S-1 a S-6 é o RED esperado da emenda, e os 114 casos D1 servem de prova de compatibilidade.\\n- **MainRoot D2, prospectivo:** slots fixos marcados UNKNOWN antes da alocação; o recurso é gravado no slot antes de voltar ao driver; a ambiguidade nunca é limpa por exceção. Admito que o intervalo entre o retorno do SO e o slot não é atômico. A saída é decidida por fatos de cada recurso; ledger e gerações são referências lógicas e ficam no owner. O hold vale até o kill do próprio host, com a mecânica pendente.\\n  - O bootstrap carrega o driver antes do guard como exceção declarada de import confiável; segredo e núcleo puro continuam depois do guard.\\n  - O terceiro bind RO para o main é uma emenda prospectiva.\\n- **Próximo incremento:** só `tests/test_oracle9_w1_driver_session.py`, e depois a medição do RED pelo root.\\n\\n**Pendências honestas:**\\n- Se `Endpoint`, `Process` e `Pipe` funcionam sem ajuste com o contexto novo só se confirma ao escrever o teste.\\n- Em I1-3 a I1-5, o resultado final (RELEASED ou HELD) depende dos fatos do SDK; o teste exige coerência, não um valor fixo.\\n- Continuam em aberto o intervalo do slot, os sinais do PID1 e o hold, além do aceite do terceiro bind e de todos os gates de produto.\",\r\n    \"terminal_reason\":  \"completed\",\r\n    \"api_error_status\":  null,\r\n    \"exit\":  0\r\n}\r\n"
+  },
+  "review": "Root read the entire design882a5c31. Scope documentary only. Integration harness, shared clock, real SDK pin and DONE tests match direction. Before publication clarify BaseException outside Exception, fresh owner exact latch/empty pre-entry resource slots, and binding slot refusal when occupied. No tests/source amendment authorized in this scheduled lot.",
+  "scheduler_observation": {
+    "last_run_utc": "2026-11-07T05:35:00Z",
+    "result": 0,
+    "message_received": true,
+    "next_run": null,
+    "zero_writer_before_resume": true
+  },
+  "pins_fixed": [
+    "driver e9d8de9b",
+    "test0e9a8cc1",
+    "pure4c155d76",
+    "test084d62cd",
+    "source20/app124/state16/consumed attempt"
+  ]
+}

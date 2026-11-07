@@ -1,5 +1,29 @@
 # W1 Oracle — integração SDK e caller owner pendentes
 
+## Atualização documental — 2026-11-07
+
+A retomada executou às05h35UTC, terminou0 e a mensagem foi recebida nesta
+conversa, sem próximo disparo. CLI23876 e88521 encerraram0, terminais
+recuperados antes da chamada seguinte e zero escritor confirmado.
+
+O desenho DRIVER-SESSION-DESIGN foi entregue, SHA-256
+92191298182d4f023c0f2ce336991e825ea23af8fc2dded8f9baebaddb88b614,
+16412bytes/297linhas. Root leu a V1 inteira e o delta final; aceita o
+contrato técnico sob delegação somente como desenho prospectivo. I1-1..7
+e S-1..7 continuam propostos, sem arquivo de teste ou implementação.
+
+Tipo exato/frescor/uso único do owner, controles fora de Exception e
+slots ocupados nunca sobrescritos ficaram explícitos. Terceiro bind é
+encaminhamento arquitetural prospectivo aceito pelo root, sem executar
+mount ou main. Hold, sinais e prova física continuam pendentes.
+
+Upstream24 e app124 por hashes/tamanhos intactos; nenhum teste/source
+alterado ou suíte repetida. Dados/revisão em
+evidence/oracle9-w1-driver-session-review-20261107/design-final-review.json.
+Este lote agendado encerra somente o documento. Não iniciou testes,
+código, ingressos, infraestrutura ou produção. Seções abaixo preservam
+o estado histórico de06/11, inclusive a ausência do desenho naquela hora.
+
 2026-11-06 em São Paulo. Código publicado ec8e736, D1 medido em114
 testes próprios e1122 relacionados. Nenhuma mudança funcional nesta retomada.
 Claude2 continua único programador, sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f,

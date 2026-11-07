@@ -1,0 +1,46 @@
+{
+  "terminal": {
+    "chunk_id": "02424f",
+    "wall_time_seconds": 0.0000195,
+    "exit_code": 0,
+    "original_token_count": 581,
+    "output": "{\r\n    \"session_id\":  \"51ea0d85-05bb-4d24-ba9a-c9627c3f832f\",\r\n    \"is_error\":  false,\r\n    \"result\":  \"Fiz só edições locais em `docs/PHASE-9-W1-ORACLE-DRIVER-SESSION-DESIGN.md`. Não alterei código, testes nem outros arquivos, e não rodei nada.\\n\\n1. **§4, controle fora do SDK:** agora só `BaseException` que não deriva de `Exception` (especificamente `KeyboardInterrupt` e `SystemExit`) atravessa `run` sem conversão. Falhas comuns derivadas de `Exception` mantêm o resultado finito e fechado de hoje. Continua explícito que, dentro do SDK, o controle original não é preservado.\\n2. **§4, owner novo:**\\n   - A trava de entrada é exatamente o bool `False`. Todos os campos têm de estar vazios antes da entrada: `session_token` e `session` None, e `endpoints`, `handles`, `unknown` e as referências retidas sem itens.\\n   - Um owner forjado ou pré-preenchido é recusado com `DriverRefusal(\\\"OWNER\\\")` antes das portas, sem ser zerado nem alterado. O mesmo vale para tipo estranho, subclasse, outro namespace e owner reutilizado.\\n   - Ficou separado o frescor antes da entrada da saída segura depois do `run`, quando o owner pode manter ledger, lock e tokens de geração.\\n   - Novo grupo prospectivo S-7: trava inválida (True, 0, None) e owner pré-preenchido, ambos recusados antes do guard. Não afirmo que tenha sido executado.\\n3. **§5, slots:** só um slot EMPTY inicia alocação. Um slot OWNED ou UNKNOWN recusa antes de qualquer efeito e preserva o objeto ou a incerteza, sem nunca sobrescrever com UNKNOWN. No par, os dois slots viram UNKNOWN antes do `socketpair`. Incluí a direção finita EMPTY → UNKNOWN → OWNED → EMPTY (esta última só com join ou close verificado), sem alegar atomicidade nem sucesso físico.\\n4. **§6:**\\n   - Incluí S-7 na lista do próximo incremento e no RED esperado.\\n   - Registrei que esses testes são prospectivos e não foram criados neste lote.\\n   - Registrei que o terceiro bind RO é uma emenda prospectiva sob delegação, sujeita à revisão do root, sem pedido de aprovação ao usuário nem permissão para executar.\\n\\nO resto do documento ficou igual: os outros grupos, as APIs, as contagens históricas e as pendências sobre hold e sinais.\",\r\n    \"terminal_reason\":  \"completed\",\r\n    \"api_error_status\":  null,\r\n    \"exit\":  0\r\n}\r\n"
+  },
+  "design": {
+    "path": "docs/PHASE-9-W1-ORACLE-DRIVER-SESSION-DESIGN.md",
+    "sha256": "92191298182d4f023c0f2ce336991e825ea23af8fc2dded8f9baebaddb88b614",
+    "bytes": 16412,
+    "lines": 297
+  },
+  "root_review": {
+    "full_v1_read": true,
+    "entire_final_delta_read": true,
+    "utf8_valid_no_replacement": true,
+    "technical_design_accepted_under_delegation": true,
+    "individual_user_approval_not_invented": true,
+    "third_ro_mount": "accepted as prospective architecture only; no mount/main/binding execution authorization",
+    "prospective_groups": "I1-1..7 and S-1..7, not implemented or measured",
+    "notes": [
+      "Control deriving from BaseException outside Exception is distinct from closed ordinary errors.",
+      "Pre-entry owner freshness is distinct from post-run resource-safe exit with logical references retained.",
+      "Occupied binding slots must refuse before allocation; uncertain references cannot be overwritten.",
+      "Public SDK integration uses shared fake clock and real ledger/key/pin/DONE paths, not old World-owned values.",
+      "Physical retention/signals and ownership gap remain unproven and require separate design before effects."
+    ]
+  },
+  "qa": {
+    "upstream24_equal": true,
+    "app124_equal": true,
+    "new_test_absent": true,
+    "code_or_test_change": false,
+    "functional_tests_executed": false
+  },
+  "scheduler": {
+    "last_run_utc": "2026-11-07T05:35:00Z",
+    "result": 0,
+    "message_received": true,
+    "next_run": null,
+    "new_task_created": false
+  },
+  "quota": "Both post-reset document calls completed0; does not attest future quota or bucket state. No account/model/session change or quota workaround."
+}

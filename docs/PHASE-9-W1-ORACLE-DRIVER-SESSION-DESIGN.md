@@ -1,0 +1,297 @@
+# W1 Oracle — integração da WorkerSession real e owner do chamador (desenho)
+
+2026-11-07. Somente desenho, escrito pelo Claude2 (sessão
+51ea0d85-05bb-4d24-ba9a-c9627c3f832f, claude-opus-5-5, esforço medium), sob a
+delegação vigente; nenhuma aprovação individual do usuário é inventada ou
+pedida. Nenhum código, teste ou efeito. Incorpora as oito correções de
+DRIVER-SESSION-PENDING-REVIEW.
+
+Fixos: driver e9d8de9b e teste D1 0e9a8cc1 (até medição do RED), núcleo
+puro 4c155d76 e teste 084d62cd, source20, app124, estado16 e a tentativa
+consumida. A WorkerSession pública e o SDK não mudam; nenhuma imagem é
+reconstruída.
+
+## 1. Fontes lidas para este desenho
+
+- `runtime/worker_session.py` 1–60, 119–193 (imports, `_deadline`,
+  `_send_pipe`, `_control`, `_exchange_init`) e 282–441 (`open`, `_open`,
+  `_set_idle`, `query`, `_query`, `send_result_to`); `_reap`, `_cleanup` e
+  `close` (442–538) lidos antes nesta sessão.
+- `pgwire/result_receiver.py` (completo, antes nesta sessão): pin no
+  construtor, `send_to` com tipo exato `RawChannel`/`TlsChannel`,
+  `ResultSummary(columns, rows, truncated)`.
+- `pgwire/result_frame.py` 1–269: `ResultDeadline(expires_at, clock=...)`,
+  `inspect_result_header`, `iter_chunks` a partir de 76.
+- `pgwire/transport.py` 1–339: `RawChannel(sock, *, stop, limits)`,
+  `recv_exact`, `recv_into`, `send_all`.
+- `tests/test_worker_session.py` 1–494 e `tests/test_result_frame.py`
+  1–130 (helper `frame`).
+- `deploy/oracle9_w1_driver.py` 1–160 e 930–995.
+
+Fatos que fixam o harness:
+
+- O módulo do SDK usa os nomes `os`, `select`, `socket`, `subprocess`,
+  `sys` e `time` do seu próprio namespace, e o nome `ResultDeadline`
+  importado de `result_frame`.
+- `_deadline(seconds)` constrói `ResultDeadline(expires_at=time.monotonic()+s)`.
+  `_query` também constrói `ResultDeadline(expires_at=min(...))` direto.
+  `_set_idle` usa `time.monotonic()`. O `clock` padrão de `ResultDeadline`
+  é o `time.monotonic` real, capturado na definição da classe.
+- `send_to` aceita só `type(channel)` exatamente `RawChannel` ou
+  `TlsChannel`.
+- `begin_output(frame_bytes=max_frame_bytes, overhead)` ocorre no
+  construtor do `ResultReceiver`, antes de qualquer leitura de cabeçalho ou
+  corpo D-113; o `open` não adquire pin.
+- `open`, `query` e `send_result_to` capturam `BaseException`, fazem o
+  próprio cleanup e levantam `WorkerSessionError(OPEN/JOB/OUTPUT)`.
+- O `run` do driver captura só `Exception`, e o `Owner` é local.
+
+## 2. Harness de SO simulado (sem `World` antigo)
+
+O `World` de `test_worker_session.py` não é instanciado: ele cria ledger,
+token, chave e sessão próprios. O harness novo vive só no novo arquivo de
+teste.
+
+### 2.1 Relógio comum e namespaces locais
+
+Um único relógio fake (`now: float`, `monotonic()`). Com `monkeypatch`,
+trocam-se **apenas atributos do módulo `maskgw.runtime.worker_session`**:
+
+| nome no módulo do SDK | substituto |
+|---|---|
+| `time` | namespace com `monotonic = relógio.monotonic` |
+| `ResultDeadline` | fábrica `(*, expires_at)` que devolve `result_frame.ResultDeadline(expires_at=expires_at, clock=relógio.monotonic)`, a classe pública exata |
+| `sys` | namespace com `platform="linux"` e `executable` fixo |
+| `os` | namespace com `getpid → 1`, `urandom` determinístico, `set_blocking` e `write` do contexto |
+| `socket` | namespace com `socketpair` do contexto, `AF_UNIX`, `SOCK_STREAM` |
+| `subprocess` | namespace com `Popen` do contexto e os `PIPE`, `DEVNULL` e `TimeoutExpired` reais |
+| `select` | namespace com `select` que devolve a escrita pronta |
+
+Nenhuma troca global na stdlib. Nenhum algoritmo de `open`, `query`,
+`cleanup` ou `_exchange_init` é alterado. No teste de integração com o
+driver, a porta `clock` do driver é o mesmo relógio.
+
+### 2.2 Factory gravadora e contexto por sessão
+
+`RecordingFactory.create(*args, **kwargs)`:
+
+1. confere `len(args) == 2` e as chaves exatas `lock`, `key`, `limits`,
+   `profile`, `guard`;
+2. grava ledger, token, chave, limites, perfil e guard recebidos do driver;
+3. cria um `SessionContext` novo e o torna o contexto corrente do SO
+   simulado **antes** de devolver;
+4. devolve `WorkerSession(ledger, token, lock=…, key=…, limits=…,
+   profile=…, guard=…)`, a classe real exata, com os valores do driver.
+
+O `SessionContext` oferece os atributos que `Endpoint`, `Process` e `Pipe`
+de `tests/test_worker_session.py` usam (`fragment`, `response`, `queries`,
+`process`, `parent`, `peer`, `pins_during_frame`, `bad_tag`, `writes`,
+`row`), de modo que essas classes podem ser reusadas sem modificação.
+Diferenças:
+
+- `row` devolve a **única** reserva `ReservationKind.SESSION` em
+  `ledger.status.entries` do ledger do driver, sem slot fixo. Zero ou mais
+  de uma linha é falha do teste.
+- `response(request)` gera
+  `RESULT notice + frame(rows=…, fields={4: key.session_id,
+  5: key.datasource_id, 6: key.generation, 7: key.record_revision,
+  8: request.job_id}) + encode_done(key, request.job_id)`, com a chave
+  gravada, nunca os defaults do helper.
+- `spawn(argv, **kwargs)` confere argv e kwargs como o teste existente,
+  enfileira `encode_guard(77, 1, profile.address_bytes)` e devolve o
+  `Process`.
+
+### 2.3 Saída tipada sem cast nem ignore
+
+Destino de `send_result_to`: `RawChannel(sock, stop=…,
+limits=TransportLimits())`, com `sock: Any` local que grava num buffer. A
+tipagem `Any` evita `cast` e `# type: ignore`, e o canal é o `RawChannel`
+público exato exigido por `send_to`.
+
+## 3. I1: matriz finita do SDK com identidade LAB
+
+Valores LAB construídos de forma independente do driver:
+
+- `BudgetLimits(512 MiB, 128 MiB, 64 MiB, 4, 1, 1, 1, 2, 1)`;
+- G1 com `shared_bytes = 1 MiB`;
+- sessão `reserve_session(G1, worker_bytes=256 MiB, parent_bytes=33 MiB)`;
+- `SessionKey(16 bytes, bytes.fromhex("0"*31+"1"), 1, 1)`;
+- `ResultLimits(max_rows=1000, max_frame_bytes=16 MiB)`;
+- `WorkerProfile(256 MiB, 30000, 1000, 1 MiB)`;
+- `GuardFacts` de controlador;
+- snapshot igual a `PURE["capture"](init, 1)`.
+
+| # | caso | asserções |
+|---|---|---|
+| I1-1 | open, RESULT, envio, close | `SecretInit` decodificado do stdin com chave, limites e snapshot iguais aos LAB, nonce de 32 bytes; tag de OPENED igual a `hmac(nonce, snapshot)`; `query` devolve None; `pins_during_frame` todos True; linha SESSION com `output_pinned` antes do envio; o sink recebe exatamente `frame[76:]`; `ResultSummary` igual ao cabeçalho, `truncated is False`; pin desligado depois; `close` RELEASED; nenhuma linha SESSION |
+| I1-2 | truncamento | flags 1 e `rows = 1000`: `summary.truncated is True`, `rows == 1000` |
+| I1-3 | P = 33 MiB − 1 | `open` conclui (READY); `query` levanta `WorkerSessionError`; depois do QUERY só o cabeçalho de controle de 12 bytes do RESULT foi lido; `pins_during_frame == []`; pin nunca ligado; sink vazio; estado e ledger refletem o cleanup real (`close` devolvendo ALREADY_RELEASED ou HELD conforme o fato) |
+| I1-4 | identidade de resultado errada | campo 8 com `job + 1`: `query` levanta exceção; `send_result_to` recusa; sink vazio; pin limpo ou retido conforme `close` |
+| I1-5 | DONE errado | frame válido seguido de `encode_done` com job + 1 e, em outra variante, com outro `session_id`: `query` levanta exceção; sink vazio; o frame foi recebido (pin ligado durante a leitura) mas nunca exposto; estado do ledger verdadeiro |
+
+I1-3 a I1-5 não fixam se o resultado final é RELEASED ou HELD: a asserção
+é a coerência entre o estado da sessão, a linha SESSION e o resultado de
+`close`, sem confirmação inventada.
+
+### I1-6: driver com WorkerSession real
+
+Portas do driver:
+
+- relógio comum;
+- reader, guard, ids, link e threads determinísticos (modelo D1);
+- `RecordingFactory`;
+- pares cujo `writer.channel(stop)` devolve o `RawChannel` exato do §2.3 e
+  cujo leitor lê o mesmo buffer;
+- LAB_INIT com expectativas dos jobs 1 e 2 calculadas do corpo
+  `frame(...)[76:]` (bytes, SHA-256 e rows); os demais registros com
+  valores válidos.
+
+O host fecha o canal no GO 3. Asserções:
+
+- RESULT 1 e 2 com PASS e `bytes` igual ao corpo;
+- `ABORT{3, CASE, EOF}`;
+- a sessão P real fechada RELEASED e nenhuma linha SESSION;
+- o `SecretInit` da sessão P bate com a chave gravada pela factory e com
+  `PURE["capture"](init, 1)`;
+- owner None.
+
+Nada disso é sucesso nativo: o processo, os sockets e o worker são
+simulados.
+
+### I1-7: interrupção dentro do SDK
+
+`KeyboardInterrupt` levantado pelo endpoint simulado durante a `query` é
+convertido pela WorkerSession em `WorkerSessionError(JOB)`, após o próprio
+cleanup. O driver devolve um `DriverResult` ABORTED ou RETAINED conforme o
+fato do cleanup. O teste afirma só que a interrupção **não** atravessa
+`run` por esse caminho; não afirma que o controle original foi preservado.
+
+## 4. Owner do chamador (emenda mínima, ainda não implementada)
+
+API: `run(ports, *, owner: Owner | None = None) -> DriverResult`.
+
+- **Padrão:** sem `owner`, `run` cria um `Owner` novo, exatamente como hoje.
+  Os 114 casos D1 não mudam.
+- **Tipo exato:** `type(owner) is Owner`, a classe do mesmo módulo do
+  driver carregado. Subclasse, objeto estranho ou `Owner` de outro
+  namespace carregado são recusados.
+- **Trava de entrada única:** `Owner` ganha um campo privado de entrada
+  que vale exatamente `False` (bool exato) na construção. `run` confere e
+  marca a trava **antes** do guard. Owner já usado é recusado.
+- **Frescor antes da entrada:** um owner fornecido só é aceito se, além da
+  trava `False` exata, estiverem vazios todos os seus campos: `session_token`
+  e `session` iguais a None, e `endpoints`, `handles`, `unknown` e as
+  referências retidas (ledger, lock, tokens de geração) sem nenhum item.
+  Um owner forjado ou preenchido por acidente é recusado como inválido;
+  `run` não zera nem altera nada nele.
+- **Frescor não é saída segura:** o frescor vale só antes da entrada. Depois
+  de um `run`, o owner legitimamente mantém referências lógicas (ledger,
+  lock, tokens de geração); a saída segura do main é decidida pelos fatos
+  por recurso do §5, não pelo vazio do owner.
+- **Recusa fechada:** owner de tipo estranho, subclasse, de outro namespace
+  carregado, reutilizado, com trava inválida ou pré-preenchido levanta
+  `DriverRefusal("OWNER")` antes de qualquer chamada de porta, com
+  `args == ("OWNER",)`, sem cause nem context. Não é RETAINED: nenhum
+  recurso foi adquirido nesta chamada. O owner recusado não é tocado e
+  nunca é trocado silenciosamente por outro.
+- **Identidade:** com owner fornecido, um resultado RETAINED devolve
+  exatamente esse objeto (`result.owner is owner`). Nos demais resultados,
+  `result.owner` continua None, mas o chamador mantém o objeto e seus
+  slots.
+- **Controle fora do SDK:** um controle que deriva de `BaseException` mas
+  **não** de `Exception` (especificamente `KeyboardInterrupt` e
+  `SystemExit`), levantado por porta ou pelo código do driver, atravessa
+  `run` sem conversão. O chamador ainda tem o owner original, com sessão,
+  token, handles, endpoints e `unknown` como estavam. Falhas comuns
+  derivadas de `Exception` continuam no comportamento atual: resultado
+  finito e fechado (ABORTED, RETAINED, GUARD_FAILED ou T6_UNKILLED).
+- **Controle dentro do SDK:** é convertido em falha fechada de sessão pela
+  WorkerSession; o driver o trata como `Exception`. Não há preservação do
+  controle original e isso não é alegado.
+
+Testes RED da emenda (no mesmo arquivo novo):
+
+| # | teste |
+|---|---|
+| S-1 | `run(ports)` sem owner mantém o comportamento (um caminho D1 curto) |
+| S-2 | owner fornecido e cenário RETAINED: `result.owner is owner` |
+| S-3 | segunda chamada com o mesmo owner: `DriverRefusal("OWNER")`, guard não chamado, nenhuma porta tocada |
+| S-4 | `object()`, subclasse de `Owner` e `Owner` de outro namespace carregado: recusa antes do guard |
+| S-5 | `KeyboardInterrupt` em `link.read_control` no GO 1: a exceção sai de `run`; o owner fornecido mantém a sessão P e o token; nenhuma porta é chamada depois |
+| S-6 | `SystemExit` em `handle.start` do sink: sai de `run`; o handle está em `owner.handles` (registrado antes do start) |
+| S-7 | owner com trava não `False` exato (por exemplo True, 0 ou None) e owner "novo" pré-preenchido (sessão, token, handle, endpoint, `unknown` ou referência retida): `DriverRefusal("OWNER")` antes do guard, nenhuma porta tocada, owner inalterado |
+
+Os 114 casos D1 existentes são a prova de compatibilidade; o root os
+repete na medição.
+
+## 5. Raiz física do main D2 (prospectivo)
+
+- **MainRoot** guarda o owner do chamador **e** as raízes de binding:
+  slots de tamanho fixo (`pair_writer`, `pair_reader`, `sink_thread`,
+  `watcher_thread`, `link`). Não é um registro genérico.
+- **Estados do slot, em uma só direção:**
+
+  ```text
+  EMPTY --(antes da alocação)--> UNKNOWN --(alocação bem-sucedida)--> OWNED
+  OWNED --(join/close verificado)--> EMPTY
+  UNKNOWN --(exceção ou retorno incerto)--> UNKNOWN (retido)
+  ```
+
+  - Só um slot EMPTY pode iniciar alocação. Um slot OWNED ou UNKNOWN recusa
+    **antes** de qualquer efeito novo e preserva o objeto original ou a
+    incerteza; nunca é sobrescrito com UNKNOWN.
+  - Para um par, os dois slots (`pair_writer` e `pair_reader`) passam a
+    UNKNOWN antes do `socketpair`.
+  - O recurso criado com sucesso é gravado no slot (OWNED) antes de voltar
+    ao driver. Uma exceção deixa o slot em UNKNOWN. Só join ou close
+    verificados levam de OWNED a EMPTY. Ambiguidade nunca é limpa por
+    exceção.
+  - Esta máquina de estados é de desenho: não há alegação de atomicidade
+    nem de sucesso físico.
+- **Limite honesto:** em CPython, o intervalo entre o retorno da chamada ao
+  SO e a atribuição ao slot não é atômico. Máscara de sinais não medida
+  não resolve isso. O slot UNKNOWN só garante que a incerteza fica retida.
+- **Fatos de saída por recurso:** o main só pode sair com nenhuma sessão
+  viva (sem linha SESSION no ledger, sessão fechada), nenhum handle,
+  endpoint ou `unknown` no owner e todos os slots de binding vazios. Ledger,
+  lock e tokens de geração são referências lógicas, não recursos nativos,
+  e continuam no owner. Qualquer incerteza leva ao hold.
+- **Hold:** o namespace PID1 próprio pode ficar retido até o kill feito pelo
+  próprio host. A mecânica de bloqueio, os sinais do PID1 e a prova física
+  ficam para desenho posterior.
+- **Bootstrap:** para construir o `Owner`, o main carrega os bytes fixados
+  do driver **antes** do guard. É uma exceção declarada de import de código
+  público confiável: importar o driver não tem efeito, não lê segredo e não
+  carrega o núcleo puro. Toda leitura do LAB_INIT e a carga/captura do
+  núcleo puro continuam depois do guard, dentro de `run`.
+- **Terceiro bind:** o teste D1 congelado proíbe imports físicos e `main`
+  no driver. O main físico precisa de um terceiro script RO fixado
+  (`/opt/maskgw/lab/oracle9_w1_main.py`, entry point sob `python -I -B`),
+  que carrega o driver pelos bytes fixados. Emenda prospectiva sob
+  delegação: três binds RO. Sem `sys.path`, `PYTHONPATH`, import de
+  vizinho, framework ou mudança de pacote.
+
+## 6. Próximo incremento
+
+Somente `tests/test_oracle9_w1_driver_session.py`, com I1-1 a I1-7 e S-1
+a S-7. Depois o root mede o RED antes de qualquer emenda de fonte. I1-1 a
+I1-5 não carregam o driver; I1-6/I1-7 e S-1 devem passar com o driver atual;
+S-2 a S-7 são o RED esperado da emenda. Nenhuma contagem é medida aqui.
+Esses testes são prospectivos e não foram criados neste lote; nenhum deles
+foi executado.
+
+O terceiro bind RO do §5 é uma emenda prospectiva sob delegação, sujeita
+à revisão do root; não é pedido de aprovação ao usuário nem permissão para
+executar.
+
+## 7. Não resolvido
+
+- Se `Endpoint`, `Process` e `Pipe` funcionam com o `SessionContext` sem
+  qualquer ajuste (verificável só ao escrever o teste; se não, o harness
+  reimplementa o mínimo, sem mudar o teste antigo).
+- O resultado exato do cleanup em I1-3 a I1-5 (RELEASED ou HELD) depende
+  dos fatos do SDK; o teste exige coerência, não um valor.
+- Intervalo não atômico do slot, sinais do PID1 e mecânica do hold.
+- Aceitação do terceiro bind pelo root.
+- T5, gerador de expectativas, ponte, readmissão e todos os gates de
+  produto continuam separados e abertos.

@@ -1,3 +1,56 @@
+## W1 Oracle: desenho de integração/owner revisto — 2026-11-07
+
+Retomada05h35UTC executou0, mensagem recebida, sem próximo disparo.
+CLI23876/88521 encerraram0 e foram recuperadas; zero escritor confirmado.
+Mesmo único Claude2/sessão51ea0d85/claude-opus-5-5/medium escreveu somente
+DRIVER-SESSION-DESIGN. Root leu261linhas V1 e todo delta final:
+92191298/16412bytes/297linhas, contrato técnico aceito sob delegação,
+sem inventar aprovação individual e sem executar código proposto.
+
+Fecha harness com ledger/key do driver, clock único, pin antes de header,
+identidade/DONE e owner exato/fresco/uso único. Controles BaseException
+fora de Exception distinguem-se dos erros fechados; slots ocupados recusam
+nova alocação sem perder referências. Terceiro bind é só arquitetura
+prospectiva, não mount/entrada/main autorizado ou executado.
+
+I1-1..7/S-1..7 são propostos, nenhum teste/source novo neste lote agendado.
+Upstream24/app124 por SHA/tamanho intactos, estado16/attempt consumido fixos.
+Sem Docker/PG/SQL/nativo/runtime/config/binário/privado ou deploy. Hold,
+sinais, T5, gerador/ponte/readmissão e B1/B2/D090/C1/ingressos/produção
+seguem abertos; Gateway indisponível. Próximo incremento futuro começa
+por testes e RED antes de emenda da fonte. Não foi iniciado nesta retomada.
+Evidência DRIVER-SESSION-PENDING-REVIEW e dados de07/11. Histórico abaixo.
+
+## W1 Oracle: desenho D2 entregue, revisão local em andamento — 2026-11-07
+
+CLI23876 encerrou0, terminal recuperado e zero escritor confirmado. Só
+DRIVER-SESSION-DESIGN foi criado. Root leu261linhas/14192bytes/882a5c31
+e preservou V1 como dados. Chamada pós-reset foi admitida; não se infere
+novo saldo ou validade futura da cota. Scheduler05h35/result0 recebido,
+sem próximo disparo e sem novo job.
+
+CLI88521 ajusta SOMENTE o mesmo documento, mesma sessão51ea0d85/
+claude-opus-5-5/medium, após guardzero: BaseException fora de Exception,
+freshness exata do owner e slots ocupados nunca sobrescritos. Recuperar
+terminal88521 antes de revisão/outra chamada; ativo só monitorar. Nenhum
+teste/fonte ou efeito físico/SQL/infra/deploy. Pins/estado/gates fixos.
+Este lote agendado continua exclusivamente documental.
+
+## W1 Oracle: retomada entregue; desenho D2 em andamento — 2026-11-07
+
+Tarefa existente executou07/11 às05h35UTC (02h35 São Paulo), result0,
+mensagem recebida nesta conversa; sem próximo disparo. Root leu os dois
+checkpoints e DRIVER-SESSION-PENDING-REVIEW, conferiu HEAD/origin4f00c91,
+rastreados limpos, quatro pins atuais intactos e zero escritor. Horário
+05h35UTC passou do reset exibido05h30; não houve retry antes dele.
+
+CLI23876 escreve SOMENTE docs/PHASE-9-W1-ORACLE-DRIVER-SESSION-DESIGN.md,
+mesma sessão51ea0d85/claude-opus-5-5/medium. Recuperar terminal23876 antes
+de outra chamada/revisão/gates; ativo só monitorar. Não declarar quota
+liberada até observar resultado. Somente desenho; nenhum teste ou fonte
+novo/alterado. Root revisa antes de publicar. Source20/puro/driver/testes/
+app124/estado16 fixos, sem efeitos físicos/SQL/infra/deploy ou job novo.
+
 ## W1 Oracle: limite C2 e retomada D2 registrada — 2026-11-06
 
 CLI15745 foi só Read, encerrou0 e foi recuperada; zero escritor confirmado.
