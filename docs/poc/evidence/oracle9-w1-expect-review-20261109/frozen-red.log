@@ -1,0 +1,3152 @@
+.....FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF [ 60%]
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF.F                          [100%]
+================================== FAILURES ===================================
+______________________ test_api_constants_and_signatures ______________________
+
+    def test_api_constants_and_signatures() -> None:
+>       g = gen()
+            ^^^^^
+
+tests\test_oracle9_w1_expect.py:628:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+____________ test_policy_mapping_normalizes_to_pinned_pure_policy _____________
+
+    def test_policy_mapping_normalizes_to_pinned_pure_policy() -> None:
+>       normalized = DatasourcePolicy.from_mapping(gen()["POLICY_MAPPING"]).to_mapping()
+                                                   ^^^^^
+
+tests\test_oracle9_w1_expect.py:658:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+__________________ test_source_imports_and_names_are_closed ___________________
+
+    def test_source_imports_and_names_are_closed() -> None:
+>       tree = ast.parse(GEN_FILE.read_text(encoding="utf-8"))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_expect.py:663:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\pathlib.py:1058: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = WindowsPath('C:/Users/w.filho/Desktop/codes/mask/docs/poc/oracle9_w1_expect.py')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\pathlib.py:1044: FileNotFoundError
+______________ test_expect_record_is_closed_frozen_and_redacted _______________
+
+    def test_expect_record_is_closed_frozen_and_redacted() -> None:
+>       record_type = gen()["ExpectRecord"]
+                      ^^^^^
+
+tests\test_oracle9_w1_expect.py:729:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______ test_expect_record_refuses_incoherent_or_foreign_fields[values0] _______
+
+values = {'job': 0, 'kind': 'RESULT', 'rows': 1, 'bytes': 60, ...}
+
+    @pytest.mark.parametrize("values", BAD_RECORDS)
+    def test_expect_record_refuses_incoherent_or_foreign_fields(values: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: gen()["ExpectRecord"](**values))
+
+tests\test_oracle9_w1_expect.py:792:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______ test_expect_record_refuses_incoherent_or_foreign_fields[values1] _______
+
+values = {'job': 20, 'kind': 'RESULT', 'rows': 1, 'bytes': 60, ...}
+
+    @pytest.mark.parametrize("values", BAD_RECORDS)
+    def test_expect_record_refuses_incoherent_or_foreign_fields(values: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: gen()["ExpectRecord"](**values))
+
+tests\test_oracle9_w1_expect.py:792:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______ test_expect_record_refuses_incoherent_or_foreign_fields[values2] _______
+
+values = {'job': True, 'kind': 'RESULT', 'rows': 1, 'bytes': 60, ...}
+
+    @pytest.mark.parametrize("values", BAD_RECORDS)
+    def test_expect_record_refuses_incoherent_or_foreign_fields(values: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: gen()["ExpectRecord"](**values))
+
+tests\test_oracle9_w1_expect.py:792:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______ test_expect_record_refuses_incoherent_or_foreign_fields[values3] _______
+
+values = {'job': 12.0, 'kind': 'RESULT', 'rows': 1, 'bytes': 60, ...}
+
+    @pytest.mark.parametrize("values", BAD_RECORDS)
+    def test_expect_record_refuses_incoherent_or_foreign_fields(values: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: gen()["ExpectRecord"](**values))
+
+tests\test_oracle9_w1_expect.py:792:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______ test_expect_record_refuses_incoherent_or_foreign_fields[values4] _______
+
+values = {'job': 12, 'kind': 'ERROR', 'rows': 1, 'bytes': 60, ...}
+
+    @pytest.mark.parametrize("values", BAD_RECORDS)
+    def test_expect_record_refuses_incoherent_or_foreign_fields(values: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: gen()["ExpectRecord"](**values))
+
+tests\test_oracle9_w1_expect.py:792:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______ test_expect_record_refuses_incoherent_or_foreign_fields[values5] _______
+
+values = {'job': 12, 'kind': 'result', 'rows': 1, 'bytes': 60, ...}
+
+    @pytest.mark.parametrize("values", BAD_RECORDS)
+    def test_expect_record_refuses_incoherent_or_foreign_fields(values: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: gen()["ExpectRecord"](**values))
+
+tests\test_oracle9_w1_expect.py:792:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______ test_expect_record_refuses_incoherent_or_foreign_fields[values6] _______
+
+values = {'job': 12, 'kind': 'RESULT', 'rows': None, 'bytes': 60, ...}
+
+    @pytest.mark.parametrize("values", BAD_RECORDS)
+    def test_expect_record_refuses_incoherent_or_foreign_fields(values: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: gen()["ExpectRecord"](**values))
+
+tests\test_oracle9_w1_expect.py:792:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______ test_expect_record_refuses_incoherent_or_foreign_fields[values7] _______
+
+values = {'job': 12, 'kind': 'RESULT', 'rows': -1, 'bytes': 60, ...}
+
+    @pytest.mark.parametrize("values", BAD_RECORDS)
+    def test_expect_record_refuses_incoherent_or_foreign_fields(values: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: gen()["ExpectRecord"](**values))
+
+tests\test_oracle9_w1_expect.py:792:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______ test_expect_record_refuses_incoherent_or_foreign_fields[values8] _______
+
+values = {'job': 12, 'kind': 'RESULT', 'rows': 1001, 'bytes': 60, ...}
+
+    @pytest.mark.parametrize("values", BAD_RECORDS)
+    def test_expect_record_refuses_incoherent_or_foreign_fields(values: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: gen()["ExpectRecord"](**values))
+
+tests\test_oracle9_w1_expect.py:792:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______ test_expect_record_refuses_incoherent_or_foreign_fields[values9] _______
+
+values = {'job': 12, 'kind': 'RESULT', 'rows': False, 'bytes': 60, ...}
+
+    @pytest.mark.parametrize("values", BAD_RECORDS)
+    def test_expect_record_refuses_incoherent_or_foreign_fields(values: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: gen()["ExpectRecord"](**values))
+
+tests\test_oracle9_w1_expect.py:792:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______ test_expect_record_refuses_incoherent_or_foreign_fields[values10] ______
+
+values = {'job': 12, 'kind': 'RESULT', 'rows': 1, 'bytes': 0, ...}
+
+    @pytest.mark.parametrize("values", BAD_RECORDS)
+    def test_expect_record_refuses_incoherent_or_foreign_fields(values: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: gen()["ExpectRecord"](**values))
+
+tests\test_oracle9_w1_expect.py:792:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______ test_expect_record_refuses_incoherent_or_foreign_fields[values11] ______
+
+values = {'job': 12, 'kind': 'RESULT', 'rows': 1, 'bytes': 16777141, ...}
+
+    @pytest.mark.parametrize("values", BAD_RECORDS)
+    def test_expect_record_refuses_incoherent_or_foreign_fields(values: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: gen()["ExpectRecord"](**values))
+
+tests\test_oracle9_w1_expect.py:792:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______ test_expect_record_refuses_incoherent_or_foreign_fields[values12] ______
+
+values = {'job': 12, 'kind': 'RESULT', 'rows': 1, 'bytes': 60, ...}
+
+    @pytest.mark.parametrize("values", BAD_RECORDS)
+    def test_expect_record_refuses_incoherent_or_foreign_fields(values: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: gen()["ExpectRecord"](**values))
+
+tests\test_oracle9_w1_expect.py:792:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______ test_expect_record_refuses_incoherent_or_foreign_fields[values13] ______
+
+values = {'job': 12, 'kind': 'RESULT', 'rows': 1, 'bytes': 60, ...}
+
+    @pytest.mark.parametrize("values", BAD_RECORDS)
+    def test_expect_record_refuses_incoherent_or_foreign_fields(values: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: gen()["ExpectRecord"](**values))
+
+tests\test_oracle9_w1_expect.py:792:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______ test_expect_record_refuses_incoherent_or_foreign_fields[values14] ______
+
+values = {'job': 12, 'kind': 'RESULT', 'rows': 1, 'bytes': 60, ...}
+
+    @pytest.mark.parametrize("values", BAD_RECORDS)
+    def test_expect_record_refuses_incoherent_or_foreign_fields(values: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: gen()["ExpectRecord"](**values))
+
+tests\test_oracle9_w1_expect.py:792:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______ test_expect_record_refuses_incoherent_or_foreign_fields[values15] ______
+
+values = {'job': 12, 'kind': 'RESULT', 'rows': 1, 'bytes': 60, ...}
+
+    @pytest.mark.parametrize("values", BAD_RECORDS)
+    def test_expect_record_refuses_incoherent_or_foreign_fields(values: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: gen()["ExpectRecord"](**values))
+
+tests\test_oracle9_w1_expect.py:792:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______ test_expect_record_refuses_incoherent_or_foreign_fields[values16] ______
+
+values = {'job': 12, 'kind': 'ERROR', 'rows': None, 'bytes': None, ...}
+
+    @pytest.mark.parametrize("values", BAD_RECORDS)
+    def test_expect_record_refuses_incoherent_or_foreign_fields(values: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: gen()["ExpectRecord"](**values))
+
+tests\test_oracle9_w1_expect.py:792:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______ test_expect_record_refuses_incoherent_or_foreign_fields[values17] ______
+
+values = {'job': 11, 'kind': 'ERROR', 'rows': None, 'bytes': None, ...}
+
+    @pytest.mark.parametrize("values", BAD_RECORDS)
+    def test_expect_record_refuses_incoherent_or_foreign_fields(values: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: gen()["ExpectRecord"](**values))
+
+tests\test_oracle9_w1_expect.py:792:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______ test_expect_record_refuses_incoherent_or_foreign_fields[values18] ______
+
+values = {'job': 11, 'kind': 'ERROR', 'rows': 0, 'bytes': None, ...}
+
+    @pytest.mark.parametrize("values", BAD_RECORDS)
+    def test_expect_record_refuses_incoherent_or_foreign_fields(values: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: gen()["ExpectRecord"](**values))
+
+tests\test_oracle9_w1_expect.py:792:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______ test_expect_record_refuses_incoherent_or_foreign_fields[values19] ______
+
+values = {'job': 11, 'kind': 'ERROR', 'rows': None, 'bytes': 1, ...}
+
+    @pytest.mark.parametrize("values", BAD_RECORDS)
+    def test_expect_record_refuses_incoherent_or_foreign_fields(values: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: gen()["ExpectRecord"](**values))
+
+tests\test_oracle9_w1_expect.py:792:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______ test_expect_record_refuses_incoherent_or_foreign_fields[values20] ______
+
+values = {'job': 11, 'kind': 'ERROR', 'rows': None, 'bytes': None, ...}
+
+    @pytest.mark.parametrize("values", BAD_RECORDS)
+    def test_expect_record_refuses_incoherent_or_foreign_fields(values: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: gen()["ExpectRecord"](**values))
+
+tests\test_oracle9_w1_expect.py:792:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______ test_expect_record_refuses_incoherent_or_foreign_fields[values21] ______
+
+values = {'job': 11, 'kind': 'RESULT', 'rows': None, 'bytes': None, ...}
+
+    @pytest.mark.parametrize("values", BAD_RECORDS)
+    def test_expect_record_refuses_incoherent_or_foreign_fields(values: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: gen()["ExpectRecord"](**values))
+
+tests\test_oracle9_w1_expect.py:792:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______ test_expect_record_refuses_incoherent_or_foreign_fields[values22] ______
+
+values = {'job': 11, 'kind': 'ERROR', 'rows': None, 'bytes': None, ...}
+
+    @pytest.mark.parametrize("values", BAD_RECORDS)
+    def test_expect_record_refuses_incoherent_or_foreign_fields(values: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: gen()["ExpectRecord"](**values))
+
+tests\test_oracle9_w1_expect.py:792:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______ test_expect_record_refuses_incoherent_or_foreign_fields[values23] ______
+
+values = {'job': 12, 'kind': 'RESULT', 'rows': 1, 'bytes': 60, ...}
+
+    @pytest.mark.parametrize("values", BAD_RECORDS)
+    def test_expect_record_refuses_incoherent_or_foreign_fields(values: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: gen()["ExpectRecord"](**values))
+
+tests\test_oracle9_w1_expect.py:792:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______ test_expect_record_refuses_incoherent_or_foreign_fields[values24] ______
+
+values = {'job': 12, 'kind': 'RESULT', 'rows': 1, 'bytes': 60, ...}
+
+    @pytest.mark.parametrize("values", BAD_RECORDS)
+    def test_expect_record_refuses_incoherent_or_foreign_fields(values: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: gen()["ExpectRecord"](**values))
+
+tests\test_oracle9_w1_expect.py:792:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______ test_expect_record_refuses_incoherent_or_foreign_fields[values25] ______
+
+values = {'job': 12, 'kind': 'RESULT', 'rows': 1, 'bytes': 60, ...}
+
+    @pytest.mark.parametrize("values", BAD_RECORDS)
+    def test_expect_record_refuses_incoherent_or_foreign_fields(values: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: gen()["ExpectRecord"](**values))
+
+tests\test_oracle9_w1_expect.py:792:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______ test_expect_record_refuses_incoherent_or_foreign_fields[values26] ______
+
+values = {'job': 11, 'kind': 'ERROR', 'rows': None, 'bytes': None, ...}
+
+    @pytest.mark.parametrize("values", BAD_RECORDS)
+    def test_expect_record_refuses_incoherent_or_foreign_fields(values: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: gen()["ExpectRecord"](**values))
+
+tests\test_oracle9_w1_expect.py:792:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______________ test_every_entry_refuses_bad_canaries[canaries0] _______________
+
+canaries = ['ABCDEFGHIJKLMNOP', 'BCDEFGHIJKLMNOPQ', 'CDEFGHIJKLMNOPQR', 'DEFGHIJKLMNOPQRS']
+
+    @pytest.mark.parametrize("canaries", BAD_CANARIES)
+    def test_every_entry_refuses_bad_canaries(canaries: Any) -> None:
+>       refused("INPUT", lambda: gen()["seed_sql"](canaries))
+
+tests\test_oracle9_w1_expect.py:831:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______________ test_every_entry_refuses_bad_canaries[canaries1] _______________
+
+canaries = ('ABCDEFGHIJKLMNOP', 'BCDEFGHIJKLMNOPQ', 'CDEFGHIJKLMNOPQR')
+
+    @pytest.mark.parametrize("canaries", BAD_CANARIES)
+    def test_every_entry_refuses_bad_canaries(canaries: Any) -> None:
+>       refused("INPUT", lambda: gen()["seed_sql"](canaries))
+
+tests\test_oracle9_w1_expect.py:831:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______________ test_every_entry_refuses_bad_canaries[canaries2] _______________
+
+canaries = ('ABCDEFGHIJKLMNOP', 'BCDEFGHIJKLMNOPQ', 'CDEFGHIJKLMNOPQR', 'DEFGHIJKLMNOPQRS', 'EFGHIJKLMNOPQRST')
+
+    @pytest.mark.parametrize("canaries", BAD_CANARIES)
+    def test_every_entry_refuses_bad_canaries(canaries: Any) -> None:
+>       refused("INPUT", lambda: gen()["seed_sql"](canaries))
+
+tests\test_oracle9_w1_expect.py:831:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______________ test_every_entry_refuses_bad_canaries[canaries3] _______________
+
+canaries = ('ABCDEFGHIJKLMNOP', 'ABCDEFGHIJKLMNOP', 'CDEFGHIJKLMNOPQR', 'DEFGHIJKLMNOPQRS')
+
+    @pytest.mark.parametrize("canaries", BAD_CANARIES)
+    def test_every_entry_refuses_bad_canaries(canaries: Any) -> None:
+>       refused("INPUT", lambda: gen()["seed_sql"](canaries))
+
+tests\test_oracle9_w1_expect.py:831:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______________ test_every_entry_refuses_bad_canaries[canaries4] _______________
+
+canaries = ('abcdefghijklmnop', 'BCDEFGHIJKLMNOPQ', 'CDEFGHIJKLMNOPQR', 'DEFGHIJKLMNOPQRS')
+
+    @pytest.mark.parametrize("canaries", BAD_CANARIES)
+    def test_every_entry_refuses_bad_canaries(canaries: Any) -> None:
+>       refused("INPUT", lambda: gen()["seed_sql"](canaries))
+
+tests\test_oracle9_w1_expect.py:831:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______________ test_every_entry_refuses_bad_canaries[canaries5] _______________
+
+canaries = ('0XABCDEF12345678', 'BCDEFGHIJKLMNOPQ', 'CDEFGHIJKLMNOPQR', 'DEFGHIJKLMNOPQRS')
+
+    @pytest.mark.parametrize("canaries", BAD_CANARIES)
+    def test_every_entry_refuses_bad_canaries(canaries: Any) -> None:
+>       refused("INPUT", lambda: gen()["seed_sql"](canaries))
+
+tests\test_oracle9_w1_expect.py:831:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______________ test_every_entry_refuses_bad_canaries[canaries6] _______________
+
+canaries = ('1234567890123456', 'BCDEFGHIJKLMNOPQ', 'CDEFGHIJKLMNOPQR', 'DEFGHIJKLMNOPQRS')
+
+    @pytest.mark.parametrize("canaries", BAD_CANARIES)
+    def test_every_entry_refuses_bad_canaries(canaries: Any) -> None:
+>       refused("INPUT", lambda: gen()["seed_sql"](canaries))
+
+tests\test_oracle9_w1_expect.py:831:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______________ test_every_entry_refuses_bad_canaries[canaries7] _______________
+
+canaries = ("ABCDEFGHIJKLMNO'", 'BCDEFGHIJKLMNOPQ', 'CDEFGHIJKLMNOPQR', 'DEFGHIJKLMNOPQRS')
+
+    @pytest.mark.parametrize("canaries", BAD_CANARIES)
+    def test_every_entry_refuses_bad_canaries(canaries: Any) -> None:
+>       refused("INPUT", lambda: gen()["seed_sql"](canaries))
+
+tests\test_oracle9_w1_expect.py:831:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______________ test_every_entry_refuses_bad_canaries[canaries8] _______________
+
+canaries = ('ABCDEFGHIJKLM;--', 'BCDEFGHIJKLMNOPQ', 'CDEFGHIJKLMNOPQR', 'DEFGHIJKLMNOPQRS')
+
+    @pytest.mark.parametrize("canaries", BAD_CANARIES)
+    def test_every_entry_refuses_bad_canaries(canaries: Any) -> None:
+>       refused("INPUT", lambda: gen()["seed_sql"](canaries))
+
+tests\test_oracle9_w1_expect.py:831:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______________ test_every_entry_refuses_bad_canaries[canaries9] _______________
+
+canaries = ('ABCDEFGHIJKLMNO', 'BCDEFGHIJKLMNOPQ', 'CDEFGHIJKLMNOPQR', 'DEFGHIJKLMNOPQRS')
+
+    @pytest.mark.parametrize("canaries", BAD_CANARIES)
+    def test_every_entry_refuses_bad_canaries(canaries: Any) -> None:
+>       refused("INPUT", lambda: gen()["seed_sql"](canaries))
+
+tests\test_oracle9_w1_expect.py:831:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______________ test_every_entry_refuses_bad_canaries[canaries10] ______________
+
+canaries = ('ABCDEFGHIJKLMNOPQ', 'BCDEFGHIJKLMNOPQ', 'CDEFGHIJKLMNOPQR', 'DEFGHIJKLMNOPQRS')
+
+    @pytest.mark.parametrize("canaries", BAD_CANARIES)
+    def test_every_entry_refuses_bad_canaries(canaries: Any) -> None:
+>       refused("INPUT", lambda: gen()["seed_sql"](canaries))
+
+tests\test_oracle9_w1_expect.py:831:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______________ test_every_entry_refuses_bad_canaries[canaries11] ______________
+
+canaries = ('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA...AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA', 'BCDEFGHIJKLMNOPQ', 'CDEFGHIJKLMNOPQR', 'DEFGHIJKLMNOPQRS')
+
+    @pytest.mark.parametrize("canaries", BAD_CANARIES)
+    def test_every_entry_refuses_bad_canaries(canaries: Any) -> None:
+>       refused("INPUT", lambda: gen()["seed_sql"](canaries))
+
+tests\test_oracle9_w1_expect.py:831:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______________ test_every_entry_refuses_bad_canaries[canaries12] ______________
+
+canaries = ('ÁBCDEFGHIJKLMNOP', 'BCDEFGHIJKLMNOPQ', 'CDEFGHIJKLMNOPQR', 'DEFGHIJKLMNOPQRS')
+
+    @pytest.mark.parametrize("canaries", BAD_CANARIES)
+    def test_every_entry_refuses_bad_canaries(canaries: Any) -> None:
+>       refused("INPUT", lambda: gen()["seed_sql"](canaries))
+
+tests\test_oracle9_w1_expect.py:831:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______________ test_every_entry_refuses_bad_canaries[canaries13] ______________
+
+canaries = (b'ABCDEFGHIJKLMNOP', 'BCDEFGHIJKLMNOPQ', 'CDEFGHIJKLMNOPQR', 'DEFGHIJKLMNOPQRS')
+
+    @pytest.mark.parametrize("canaries", BAD_CANARIES)
+    def test_every_entry_refuses_bad_canaries(canaries: Any) -> None:
+>       refused("INPUT", lambda: gen()["seed_sql"](canaries))
+
+tests\test_oracle9_w1_expect.py:831:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______________ test_every_entry_refuses_bad_canaries[canaries14] ______________
+
+canaries = (None, 'BCDEFGHIJKLMNOPQ', 'CDEFGHIJKLMNOPQR', 'DEFGHIJKLMNOPQRS')
+
+    @pytest.mark.parametrize("canaries", BAD_CANARIES)
+    def test_every_entry_refuses_bad_canaries(canaries: Any) -> None:
+>       refused("INPUT", lambda: gen()["seed_sql"](canaries))
+
+tests\test_oracle9_w1_expect.py:831:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______________ test_every_entry_refuses_bad_canaries[canaries15] ______________
+
+canaries = ('ABCDEFGHIJKLMNOP', 'BCDEFGHIJKLMNOPQ', 'CDEFGHIJKLMNOPQR', 'DEFGHIJKLMNOPQRS')
+
+    @pytest.mark.parametrize("canaries", BAD_CANARIES)
+    def test_every_entry_refuses_bad_canaries(canaries: Any) -> None:
+>       refused("INPUT", lambda: gen()["seed_sql"](canaries))
+
+tests\test_oracle9_w1_expect.py:831:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______________ test_every_entry_refuses_bad_canaries[canaries16] ______________
+
+canaries = ('ABCDEFGHIJKLMNOP', 'BCDEFGHIJKLMNOPQ', 'CDEFGHIJKLMNOPQR', 'DEFGHIJKLMNOPQRS')
+
+    @pytest.mark.parametrize("canaries", BAD_CANARIES)
+    def test_every_entry_refuses_bad_canaries(canaries: Any) -> None:
+>       refused("INPUT", lambda: gen()["seed_sql"](canaries))
+
+tests\test_oracle9_w1_expect.py:831:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+_________________ test_every_entry_refuses_bad_canaries[None] _________________
+
+canaries = None
+
+    @pytest.mark.parametrize("canaries", BAD_CANARIES)
+    def test_every_entry_refuses_bad_canaries(canaries: Any) -> None:
+>       refused("INPUT", lambda: gen()["seed_sql"](canaries))
+
+tests\test_oracle9_w1_expect.py:831:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+_ test_every_keyed_entry_refuses_bad_key[0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF] _
+
+key = '0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF'
+
+    @pytest.mark.parametrize("key", BAD_KEYS)
+    def test_every_keyed_entry_refuses_bad_key(key: Any) -> None:
+>       refused("INPUT", lambda: gen()["result_body"](12, hmac_key=key, canaries=CANARIES))
+
+tests\test_oracle9_w1_expect.py:839:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+_ test_every_keyed_entry_refuses_bad_key[0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcde] _
+
+key = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcde'
+
+    @pytest.mark.parametrize("key", BAD_KEYS)
+    def test_every_keyed_entry_refuses_bad_key(key: Any) -> None:
+>       refused("INPUT", lambda: gen()["result_body"](12, hmac_key=key, canaries=CANARIES))
+
+tests\test_oracle9_w1_expect.py:839:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+_ test_every_keyed_entry_refuses_bad_key[0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0] _
+
+key = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0'
+
+    @pytest.mark.parametrize("key", BAD_KEYS)
+    def test_every_keyed_entry_refuses_bad_key(key: Any) -> None:
+>       refused("INPUT", lambda: gen()["result_body"](12, hmac_key=key, canaries=CANARIES))
+
+tests\test_oracle9_w1_expect.py:839:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+_ test_every_keyed_entry_refuses_bad_key[gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg] _
+
+key = 'gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg'
+
+    @pytest.mark.parametrize("key", BAD_KEYS)
+    def test_every_keyed_entry_refuses_bad_key(key: Any) -> None:
+>       refused("INPUT", lambda: gen()["result_body"](12, hmac_key=key, canaries=CANARIES))
+
+tests\test_oracle9_w1_expect.py:839:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+_ test_every_keyed_entry_refuses_bad_key[\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9] _
+
+key = 'éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé'
+
+    @pytest.mark.parametrize("key", BAD_KEYS)
+    def test_every_keyed_entry_refuses_bad_key(key: Any) -> None:
+>       refused("INPUT", lambda: gen()["result_body"](12, hmac_key=key, canaries=CANARIES))
+
+tests\test_oracle9_w1_expect.py:839:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+_ test_every_keyed_entry_refuses_bad_key[0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef1] _
+
+key = b'0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
+
+    @pytest.mark.parametrize("key", BAD_KEYS)
+    def test_every_keyed_entry_refuses_bad_key(key: Any) -> None:
+>       refused("INPUT", lambda: gen()["result_body"](12, hmac_key=key, canaries=CANARIES))
+
+tests\test_oracle9_w1_expect.py:839:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+________________ test_every_keyed_entry_refuses_bad_key[None] _________________
+
+key = None
+
+    @pytest.mark.parametrize("key", BAD_KEYS)
+    def test_every_keyed_entry_refuses_bad_key(key: Any) -> None:
+>       refused("INPUT", lambda: gen()["result_body"](12, hmac_key=key, canaries=CANARIES))
+
+tests\test_oracle9_w1_expect.py:839:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+_ test_every_keyed_entry_refuses_bad_key[0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef2] _
+
+key = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
+
+    @pytest.mark.parametrize("key", BAD_KEYS)
+    def test_every_keyed_entry_refuses_bad_key(key: Any) -> None:
+>       refused("INPUT", lambda: gen()["result_body"](12, hmac_key=key, canaries=CANARIES))
+
+tests\test_oracle9_w1_expect.py:839:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+_________________ test_result_body_refuses_non_result_jobs[0] _________________
+
+job = 0
+
+    @pytest.mark.parametrize("job", [0, 11, 13, 14, 15, 16, 18, 20, True, 12.0, "12", IntProbe(12)])
+    def test_result_body_refuses_non_result_jobs(job: Any) -> None:
+>       refused("INPUT", lambda: gen()["result_body"](job, hmac_key=KEY, canaries=CANARIES))
+
+tests\test_oracle9_w1_expect.py:846:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+________________ test_result_body_refuses_non_result_jobs[11] _________________
+
+job = 11
+
+    @pytest.mark.parametrize("job", [0, 11, 13, 14, 15, 16, 18, 20, True, 12.0, "12", IntProbe(12)])
+    def test_result_body_refuses_non_result_jobs(job: Any) -> None:
+>       refused("INPUT", lambda: gen()["result_body"](job, hmac_key=KEY, canaries=CANARIES))
+
+tests\test_oracle9_w1_expect.py:846:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+________________ test_result_body_refuses_non_result_jobs[13] _________________
+
+job = 13
+
+    @pytest.mark.parametrize("job", [0, 11, 13, 14, 15, 16, 18, 20, True, 12.0, "12", IntProbe(12)])
+    def test_result_body_refuses_non_result_jobs(job: Any) -> None:
+>       refused("INPUT", lambda: gen()["result_body"](job, hmac_key=KEY, canaries=CANARIES))
+
+tests\test_oracle9_w1_expect.py:846:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+________________ test_result_body_refuses_non_result_jobs[14] _________________
+
+job = 14
+
+    @pytest.mark.parametrize("job", [0, 11, 13, 14, 15, 16, 18, 20, True, 12.0, "12", IntProbe(12)])
+    def test_result_body_refuses_non_result_jobs(job: Any) -> None:
+>       refused("INPUT", lambda: gen()["result_body"](job, hmac_key=KEY, canaries=CANARIES))
+
+tests\test_oracle9_w1_expect.py:846:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+________________ test_result_body_refuses_non_result_jobs[15] _________________
+
+job = 15
+
+    @pytest.mark.parametrize("job", [0, 11, 13, 14, 15, 16, 18, 20, True, 12.0, "12", IntProbe(12)])
+    def test_result_body_refuses_non_result_jobs(job: Any) -> None:
+>       refused("INPUT", lambda: gen()["result_body"](job, hmac_key=KEY, canaries=CANARIES))
+
+tests\test_oracle9_w1_expect.py:846:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+________________ test_result_body_refuses_non_result_jobs[16] _________________
+
+job = 16
+
+    @pytest.mark.parametrize("job", [0, 11, 13, 14, 15, 16, 18, 20, True, 12.0, "12", IntProbe(12)])
+    def test_result_body_refuses_non_result_jobs(job: Any) -> None:
+>       refused("INPUT", lambda: gen()["result_body"](job, hmac_key=KEY, canaries=CANARIES))
+
+tests\test_oracle9_w1_expect.py:846:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+________________ test_result_body_refuses_non_result_jobs[18] _________________
+
+job = 18
+
+    @pytest.mark.parametrize("job", [0, 11, 13, 14, 15, 16, 18, 20, True, 12.0, "12", IntProbe(12)])
+    def test_result_body_refuses_non_result_jobs(job: Any) -> None:
+>       refused("INPUT", lambda: gen()["result_body"](job, hmac_key=KEY, canaries=CANARIES))
+
+tests\test_oracle9_w1_expect.py:846:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+________________ test_result_body_refuses_non_result_jobs[20] _________________
+
+job = 20
+
+    @pytest.mark.parametrize("job", [0, 11, 13, 14, 15, 16, 18, 20, True, 12.0, "12", IntProbe(12)])
+    def test_result_body_refuses_non_result_jobs(job: Any) -> None:
+>       refused("INPUT", lambda: gen()["result_body"](job, hmac_key=KEY, canaries=CANARIES))
+
+tests\test_oracle9_w1_expect.py:846:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+_______________ test_result_body_refuses_non_result_jobs[True] ________________
+
+job = True
+
+    @pytest.mark.parametrize("job", [0, 11, 13, 14, 15, 16, 18, 20, True, 12.0, "12", IntProbe(12)])
+    def test_result_body_refuses_non_result_jobs(job: Any) -> None:
+>       refused("INPUT", lambda: gen()["result_body"](job, hmac_key=KEY, canaries=CANARIES))
+
+tests\test_oracle9_w1_expect.py:846:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+_______________ test_result_body_refuses_non_result_jobs[12.0] ________________
+
+job = 12.0
+
+    @pytest.mark.parametrize("job", [0, 11, 13, 14, 15, 16, 18, 20, True, 12.0, "12", IntProbe(12)])
+    def test_result_body_refuses_non_result_jobs(job: Any) -> None:
+>       refused("INPUT", lambda: gen()["result_body"](job, hmac_key=KEY, canaries=CANARIES))
+
+tests\test_oracle9_w1_expect.py:846:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+_______________ test_result_body_refuses_non_result_jobs[12_0] ________________
+
+job = '12'
+
+    @pytest.mark.parametrize("job", [0, 11, 13, 14, 15, 16, 18, 20, True, 12.0, "12", IntProbe(12)])
+    def test_result_body_refuses_non_result_jobs(job: Any) -> None:
+>       refused("INPUT", lambda: gen()["result_body"](job, hmac_key=KEY, canaries=CANARIES))
+
+tests\test_oracle9_w1_expect.py:846:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+_______________ test_result_body_refuses_non_result_jobs[12_1] ________________
+
+job = 12
+
+    @pytest.mark.parametrize("job", [0, 11, 13, 14, 15, 16, 18, 20, True, 12.0, "12", IntProbe(12)])
+    def test_result_body_refuses_non_result_jobs(job: Any) -> None:
+>       refused("INPUT", lambda: gen()["result_body"](job, hmac_key=KEY, canaries=CANARIES))
+
+tests\test_oracle9_w1_expect.py:846:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+_________ test_lab_init_packet_refuses_bad_explicit_fields[override0] _________
+
+override = {'ip': '127.0.0.1'}
+
+    @pytest.mark.parametrize("override", BAD_TARGETS)
+    def test_lab_init_packet_refuses_bad_explicit_fields(override: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: packet(**override))
+
+tests\test_oracle9_w1_expect.py:883:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+_________ test_lab_init_packet_refuses_bad_explicit_fields[override1] _________
+
+override = {'ip': '8.8.8.8'}
+
+    @pytest.mark.parametrize("override", BAD_TARGETS)
+    def test_lab_init_packet_refuses_bad_explicit_fields(override: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: packet(**override))
+
+tests\test_oracle9_w1_expect.py:883:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+_________ test_lab_init_packet_refuses_bad_explicit_fields[override2] _________
+
+override = {'ip': '169.254.1.1'}
+
+    @pytest.mark.parametrize("override", BAD_TARGETS)
+    def test_lab_init_packet_refuses_bad_explicit_fields(override: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: packet(**override))
+
+tests\test_oracle9_w1_expect.py:883:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+_________ test_lab_init_packet_refuses_bad_explicit_fields[override3] _________
+
+override = {'ip': '10.0.0.07'}
+
+    @pytest.mark.parametrize("override", BAD_TARGETS)
+    def test_lab_init_packet_refuses_bad_explicit_fields(override: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: packet(**override))
+
+tests\test_oracle9_w1_expect.py:883:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+_________ test_lab_init_packet_refuses_bad_explicit_fields[override4] _________
+
+override = {'ip': ' 10.0.0.7'}
+
+    @pytest.mark.parametrize("override", BAD_TARGETS)
+    def test_lab_init_packet_refuses_bad_explicit_fields(override: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: packet(**override))
+
+tests\test_oracle9_w1_expect.py:883:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+_________ test_lab_init_packet_refuses_bad_explicit_fields[override5] _________
+
+override = {'ip': '::1'}
+
+    @pytest.mark.parametrize("override", BAD_TARGETS)
+    def test_lab_init_packet_refuses_bad_explicit_fields(override: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: packet(**override))
+
+tests\test_oracle9_w1_expect.py:883:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+_________ test_lab_init_packet_refuses_bad_explicit_fields[override6] _________
+
+override = {'ip': '10.0.0.7'}
+
+    @pytest.mark.parametrize("override", BAD_TARGETS)
+    def test_lab_init_packet_refuses_bad_explicit_fields(override: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: packet(**override))
+
+tests\test_oracle9_w1_expect.py:883:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+_________ test_lab_init_packet_refuses_bad_explicit_fields[override7] _________
+
+override = {'port': 0}
+
+    @pytest.mark.parametrize("override", BAD_TARGETS)
+    def test_lab_init_packet_refuses_bad_explicit_fields(override: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: packet(**override))
+
+tests\test_oracle9_w1_expect.py:883:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+_________ test_lab_init_packet_refuses_bad_explicit_fields[override8] _________
+
+override = {'port': 65536}
+
+    @pytest.mark.parametrize("override", BAD_TARGETS)
+    def test_lab_init_packet_refuses_bad_explicit_fields(override: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: packet(**override))
+
+tests\test_oracle9_w1_expect.py:883:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+_________ test_lab_init_packet_refuses_bad_explicit_fields[override9] _________
+
+override = {'port': True}
+
+    @pytest.mark.parametrize("override", BAD_TARGETS)
+    def test_lab_init_packet_refuses_bad_explicit_fields(override: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: packet(**override))
+
+tests\test_oracle9_w1_expect.py:883:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+________ test_lab_init_packet_refuses_bad_explicit_fields[override10] _________
+
+override = {'port': 5432.0}
+
+    @pytest.mark.parametrize("override", BAD_TARGETS)
+    def test_lab_init_packet_refuses_bad_explicit_fields(override: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: packet(**override))
+
+tests\test_oracle9_w1_expect.py:883:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+________ test_lab_init_packet_refuses_bad_explicit_fields[override11] _________
+
+override = {'port': '5432'}
+
+    @pytest.mark.parametrize("override", BAD_TARGETS)
+    def test_lab_init_packet_refuses_bad_explicit_fields(override: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: packet(**override))
+
+tests\test_oracle9_w1_expect.py:883:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+________ test_lab_init_packet_refuses_bad_explicit_fields[override12] _________
+
+override = {'port': 5432}
+
+    @pytest.mark.parametrize("override", BAD_TARGETS)
+    def test_lab_init_packet_refuses_bad_explicit_fields(override: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: packet(**override))
+
+tests\test_oracle9_w1_expect.py:883:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+________ test_lab_init_packet_refuses_bad_explicit_fields[override13] _________
+
+override = {'database': ''}
+
+    @pytest.mark.parametrize("override", BAD_TARGETS)
+    def test_lab_init_packet_refuses_bad_explicit_fields(override: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: packet(**override))
+
+tests\test_oracle9_w1_expect.py:883:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+________ test_lab_init_packet_refuses_bad_explicit_fields[override14] _________
+
+override = {'database': 'Maskgw'}
+
+    @pytest.mark.parametrize("override", BAD_TARGETS)
+    def test_lab_init_packet_refuses_bad_explicit_fields(override: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: packet(**override))
+
+tests\test_oracle9_w1_expect.py:883:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+________ test_lab_init_packet_refuses_bad_explicit_fields[override15] _________
+
+override = {'database': '1lab'}
+
+    @pytest.mark.parametrize("override", BAD_TARGETS)
+    def test_lab_init_packet_refuses_bad_explicit_fields(override: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: packet(**override))
+
+tests\test_oracle9_w1_expect.py:883:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+________ test_lab_init_packet_refuses_bad_explicit_fields[override16] _________
+
+override = {'database': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'}
+
+    @pytest.mark.parametrize("override", BAD_TARGETS)
+    def test_lab_init_packet_refuses_bad_explicit_fields(override: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: packet(**override))
+
+tests\test_oracle9_w1_expect.py:883:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+________ test_lab_init_packet_refuses_bad_explicit_fields[override17] _________
+
+override = {'database': 'lab-db'}
+
+    @pytest.mark.parametrize("override", BAD_TARGETS)
+    def test_lab_init_packet_refuses_bad_explicit_fields(override: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: packet(**override))
+
+tests\test_oracle9_w1_expect.py:883:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+________ test_lab_init_packet_refuses_bad_explicit_fields[override18] _________
+
+override = {'database': 'maskgw_lab'}
+
+    @pytest.mark.parametrize("override", BAD_TARGETS)
+    def test_lab_init_packet_refuses_bad_explicit_fields(override: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: packet(**override))
+
+tests\test_oracle9_w1_expect.py:883:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+________ test_lab_init_packet_refuses_bad_explicit_fields[override19] _________
+
+override = {'username': 'RO'}
+
+    @pytest.mark.parametrize("override", BAD_TARGETS)
+    def test_lab_init_packet_refuses_bad_explicit_fields(override: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: packet(**override))
+
+tests\test_oracle9_w1_expect.py:883:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+________ test_lab_init_packet_refuses_bad_explicit_fields[override20] _________
+
+override = {'username': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'}
+
+    @pytest.mark.parametrize("override", BAD_TARGETS)
+    def test_lab_init_packet_refuses_bad_explicit_fields(override: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: packet(**override))
+
+tests\test_oracle9_w1_expect.py:883:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+________ test_lab_init_packet_refuses_bad_explicit_fields[override21] _________
+
+override = {'username': 'maskgw_ro'}
+
+    @pytest.mark.parametrize("override", BAD_TARGETS)
+    def test_lab_init_packet_refuses_bad_explicit_fields(override: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: packet(**override))
+
+tests\test_oracle9_w1_expect.py:883:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+________ test_lab_init_packet_refuses_bad_explicit_fields[override22] _________
+
+override = {'readonly_password': ''}
+
+    @pytest.mark.parametrize("override", BAD_TARGETS)
+    def test_lab_init_packet_refuses_bad_explicit_fields(override: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: packet(**override))
+
+tests\test_oracle9_w1_expect.py:883:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+________ test_lab_init_packet_refuses_bad_explicit_fields[override23] _________
+
+override = {'readonly_password': '0123456789abcdef0123456789abcdef0123456789abcde'}
+
+    @pytest.mark.parametrize("override", BAD_TARGETS)
+    def test_lab_init_packet_refuses_bad_explicit_fields(override: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: packet(**override))
+
+tests\test_oracle9_w1_expect.py:883:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+________ test_lab_init_packet_refuses_bad_explicit_fields[override24] _________
+
+override = {'readonly_password': '0123456789abcdef0123456789abcdef0123456789abcdef0'}
+
+    @pytest.mark.parametrize("override", BAD_TARGETS)
+    def test_lab_init_packet_refuses_bad_explicit_fields(override: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: packet(**override))
+
+tests\test_oracle9_w1_expect.py:883:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+________ test_lab_init_packet_refuses_bad_explicit_fields[override25] _________
+
+override = {'readonly_password': '0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF'}
+
+    @pytest.mark.parametrize("override", BAD_TARGETS)
+    def test_lab_init_packet_refuses_bad_explicit_fields(override: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: packet(**override))
+
+tests\test_oracle9_w1_expect.py:883:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+________ test_lab_init_packet_refuses_bad_explicit_fields[override26] _________
+
+override = {'readonly_password': 'gggggggggggggggggggggggggggggggggggggggggggggggg'}
+
+    @pytest.mark.parametrize("override", BAD_TARGETS)
+    def test_lab_init_packet_refuses_bad_explicit_fields(override: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: packet(**override))
+
+tests\test_oracle9_w1_expect.py:883:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+________ test_lab_init_packet_refuses_bad_explicit_fields[override27] _________
+
+override = {'readonly_password': '0123456789abcdef0123456789abcdef0123456789abcdef'}
+
+    @pytest.mark.parametrize("override", BAD_TARGETS)
+    def test_lab_init_packet_refuses_bad_explicit_fields(override: dict[str, Any]) -> None:
+>       refused("INPUT", lambda: packet(**override))
+
+tests\test_oracle9_w1_expect.py:883:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:535: in refused
+    refusal = gen()["ExpectRefusal"]
+              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+_________________ test_encoder_failures_become_closed_encode __________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000026C20E1C290>
+
+    def test_encoder_failures_become_closed_encode(monkeypatch: pytest.MonkeyPatch) -> None:
+>       namespace = gen()["result_body"].__globals__
+                    ^^^^^
+
+tests\test_oracle9_w1_expect.py:887:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+_______________ test_seed_sql_exact_literal_and_shared_canaries _______________
+
+    def test_seed_sql_exact_literal_and_shared_canaries() -> None:
+>       seed = gen()["seed_sql"](CANARIES)
+               ^^^^^
+
+tests\test_oracle9_w1_expect.py:905:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+_____________________ test_records_shape_and_known_values _____________________
+
+    def test_records_shape_and_known_values() -> None:
+>       result = records(KEY, CANARIES)
+                 ^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_expect.py:921:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:247: in records
+    result: tuple[Any, ...] = gen()["expected_records"](hmac_key=key, canaries=canaries)
+                              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+_ test_small_bodies_exact_columns_and_cells[0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef-canaries0] _
+
+key = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
+canaries = ('ABCDEFGHIJKLMNOP', 'BCDEFGHIJKLMNOPQ', 'CDEFGHIJKLMNOPQR', 'DEFGHIJKLMNOPQRS')
+
+    @pytest.mark.parametrize(("key", "canaries"), [(KEY, CANARIES), (KEY2, CANARIES2)])
+    def test_small_bodies_exact_columns_and_cells(key: str, canaries: tuple[str, ...]) -> None:
+        cells = expected_cells(key, canaries)
+        for job in RESULT_JOBS:
+            if job == 10:
+                continue
+>           columns, rows, tag = parse(body(job, key, canaries))
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_expect.py:958:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:252: in body
+    data: bytes = gen()["result_body"](job, hmac_key=key, canaries=canaries)
+                  ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+_ test_small_bodies_exact_columns_and_cells[fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210-canaries1] _
+
+key = 'fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210'
+canaries = ('QRSTUVWXYZ012345', 'RSTUVWXYZ0123456', 'STUVWXYZ01234567', 'TUVWXYZ012345678')
+
+    @pytest.mark.parametrize(("key", "canaries"), [(KEY, CANARIES), (KEY2, CANARIES2)])
+    def test_small_bodies_exact_columns_and_cells(key: str, canaries: tuple[str, ...]) -> None:
+        cells = expected_cells(key, canaries)
+        for job in RESULT_JOBS:
+            if job == 10:
+                continue
+>           columns, rows, tag = parse(body(job, key, canaries))
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_expect.py:958:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:252: in body
+    data: bytes = gen()["result_body"](job, hmac_key=key, canaries=canaries)
+                  ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+_______________ test_independent_vectors_select1_and_hmac_job2 ________________
+
+    def test_independent_vectors_select1_and_hmac_job2() -> None:
+        select1 = bytes.fromhex(SELECT1_HEX)
+>       assert body(12) == select1
+               ^^^^^^^^
+
+tests\test_oracle9_w1_expect.py:966:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:252: in body
+    data: bytes = gen()["result_body"](job, hmac_key=key, canaries=canaries)
+                  ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+________________________ test_job10_layout_by_formula _________________________
+
+    def test_job10_layout_by_formula() -> None:
+>       data = body(10)
+               ^^^^^^^^
+
+tests\test_oracle9_w1_expect.py:976:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:252: in body
+    data: bytes = gen()["result_body"](job, hmac_key=key, canaries=canaries)
+                  ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+____________ test_public_chain_descriptors_decisions_oids_identity ____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000026C20BF6950>
+
+    def test_public_chain_descriptors_decisions_oids_identity(monkeypatch: pytest.MonkeyPatch) -> None:
+>       namespace = gen()["result_body"].__globals__
+                    ^^^^^
+
+tests\test_oracle9_w1_expect.py:990:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______________ test_records_process_jobs_in_order_without_random ______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000026C20F2D110>
+
+    def test_records_process_jobs_in_order_without_random(monkeypatch: pytest.MonkeyPatch) -> None:
+>       namespace = gen()["result_body"].__globals__
+                    ^^^^^
+
+tests\test_oracle9_w1_expect.py:1030:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+_________________ test_determinism_and_exact_dependency_sets __________________
+
+    def test_determinism_and_exact_dependency_sets() -> None:
+>       base = {record.job: record.sha256 for record in records(KEY, CANARIES)}
+                                                        ^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_expect.py:1052:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:247: in records
+    result: tuple[Any, ...] = gen()["expected_records"](hmac_key=key, canaries=canaries)
+                              ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+_______ test_key_reaches_masking_only_through_explicit_mapping_provider _______
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000026C20BDB9D0>
+
+    def test_key_reaches_masking_only_through_explicit_mapping_provider(
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Local namespace spy delegating to the real public class; no environment access."""
+>       namespace = gen()["result_body"].__globals__
+                    ^^^^^
+
+tests\test_oracle9_w1_expect.py:1065:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______________ test_composition_validate_sink_and_canary_absence ______________
+
+    def test_composition_validate_sink_and_canary_absence() -> None:
+        """Sequential: header rebuilt here, public validate_result, pinned decode/sink."""
+>       init = pure()["decode_init"](packet())
+                                     ^^^^^^^^
+
+tests\test_oracle9_w1_expect.py:1086:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:267: in packet
+    data: bytes = gen()["lab_init_packet"](**fields)
+                  ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+_ test_lab_init_packet_matches_records_of_same_inputs[0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef-canaries0] _
+
+key = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
+canaries = ('ABCDEFGHIJKLMNOP', 'BCDEFGHIJKLMNOPQ', 'CDEFGHIJKLMNOPQR', 'DEFGHIJKLMNOPQRS')
+
+    @pytest.mark.parametrize(("key", "canaries"), [(KEY, CANARIES), (KEY2, CANARIES), (KEY, CANARIES2)])
+    def test_lab_init_packet_matches_records_of_same_inputs(
+        key: str, canaries: tuple[str, ...]
+    ) -> None:
+>       raw = packet(key, canaries)
+              ^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_expect.py:1121:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:267: in packet
+    data: bytes = gen()["lab_init_packet"](**fields)
+                  ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+_ test_lab_init_packet_matches_records_of_same_inputs[fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210-canaries1] _
+
+key = 'fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210'
+canaries = ('ABCDEFGHIJKLMNOP', 'BCDEFGHIJKLMNOPQ', 'CDEFGHIJKLMNOPQR', 'DEFGHIJKLMNOPQRS')
+
+    @pytest.mark.parametrize(("key", "canaries"), [(KEY, CANARIES), (KEY2, CANARIES), (KEY, CANARIES2)])
+    def test_lab_init_packet_matches_records_of_same_inputs(
+        key: str, canaries: tuple[str, ...]
+    ) -> None:
+>       raw = packet(key, canaries)
+              ^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_expect.py:1121:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:267: in packet
+    data: bytes = gen()["lab_init_packet"](**fields)
+                  ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+_ test_lab_init_packet_matches_records_of_same_inputs[0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef-canaries2] _
+
+key = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
+canaries = ('QRSTUVWXYZ012345', 'RSTUVWXYZ0123456', 'STUVWXYZ01234567', 'TUVWXYZ012345678')
+
+    @pytest.mark.parametrize(("key", "canaries"), [(KEY, CANARIES), (KEY2, CANARIES), (KEY, CANARIES2)])
+    def test_lab_init_packet_matches_records_of_same_inputs(
+        key: str, canaries: tuple[str, ...]
+    ) -> None:
+>       raw = packet(key, canaries)
+              ^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_expect.py:1121:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:267: in packet
+    data: bytes = gen()["lab_init_packet"](**fields)
+                  ^^^^^
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+______ test_no_retention_of_keys_canaries_or_bodies_in_module_namespace _______
+
+    def test_no_retention_of_keys_canaries_or_bodies_in_module_namespace() -> None:
+>       namespace = gen()["result_body"].__globals__
+                    ^^^^^
+
+tests\test_oracle9_w1_expect.py:1207:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:242: in gen
+    return runpy.run_path(str(GEN_FILE), run_name="_lab_test_expect")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen runpy>:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test_expect'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\docs\\poc\\oracle9_w1_expect.py'
+
+<frozen runpy>:254: FileNotFoundError
+=========================== short test summary info ===========================
+FAILED tests/test_oracle9_w1_expect.py::test_api_constants_and_signatures - F...
+FAILED tests/test_oracle9_w1_expect.py::test_policy_mapping_normalizes_to_pinned_pure_policy
+FAILED tests/test_oracle9_w1_expect.py::test_source_imports_and_names_are_closed
+FAILED tests/test_oracle9_w1_expect.py::test_expect_record_is_closed_frozen_and_redacted
+FAILED tests/test_oracle9_w1_expect.py::test_expect_record_refuses_incoherent_or_foreign_fields[values0]
+FAILED tests/test_oracle9_w1_expect.py::test_expect_record_refuses_incoherent_or_foreign_fields[values1]
+FAILED tests/test_oracle9_w1_expect.py::test_expect_record_refuses_incoherent_or_foreign_fields[values2]
+FAILED tests/test_oracle9_w1_expect.py::test_expect_record_refuses_incoherent_or_foreign_fields[values3]
+FAILED tests/test_oracle9_w1_expect.py::test_expect_record_refuses_incoherent_or_foreign_fields[values4]
+FAILED tests/test_oracle9_w1_expect.py::test_expect_record_refuses_incoherent_or_foreign_fields[values5]
+FAILED tests/test_oracle9_w1_expect.py::test_expect_record_refuses_incoherent_or_foreign_fields[values6]
+FAILED tests/test_oracle9_w1_expect.py::test_expect_record_refuses_incoherent_or_foreign_fields[values7]
+FAILED tests/test_oracle9_w1_expect.py::test_expect_record_refuses_incoherent_or_foreign_fields[values8]
+FAILED tests/test_oracle9_w1_expect.py::test_expect_record_refuses_incoherent_or_foreign_fields[values9]
+FAILED tests/test_oracle9_w1_expect.py::test_expect_record_refuses_incoherent_or_foreign_fields[values10]
+FAILED tests/test_oracle9_w1_expect.py::test_expect_record_refuses_incoherent_or_foreign_fields[values11]
+FAILED tests/test_oracle9_w1_expect.py::test_expect_record_refuses_incoherent_or_foreign_fields[values12]
+FAILED tests/test_oracle9_w1_expect.py::test_expect_record_refuses_incoherent_or_foreign_fields[values13]
+FAILED tests/test_oracle9_w1_expect.py::test_expect_record_refuses_incoherent_or_foreign_fields[values14]
+FAILED tests/test_oracle9_w1_expect.py::test_expect_record_refuses_incoherent_or_foreign_fields[values15]
+FAILED tests/test_oracle9_w1_expect.py::test_expect_record_refuses_incoherent_or_foreign_fields[values16]
+FAILED tests/test_oracle9_w1_expect.py::test_expect_record_refuses_incoherent_or_foreign_fields[values17]
+FAILED tests/test_oracle9_w1_expect.py::test_expect_record_refuses_incoherent_or_foreign_fields[values18]
+FAILED tests/test_oracle9_w1_expect.py::test_expect_record_refuses_incoherent_or_foreign_fields[values19]
+FAILED tests/test_oracle9_w1_expect.py::test_expect_record_refuses_incoherent_or_foreign_fields[values20]
+FAILED tests/test_oracle9_w1_expect.py::test_expect_record_refuses_incoherent_or_foreign_fields[values21]
+FAILED tests/test_oracle9_w1_expect.py::test_expect_record_refuses_incoherent_or_foreign_fields[values22]
+FAILED tests/test_oracle9_w1_expect.py::test_expect_record_refuses_incoherent_or_foreign_fields[values23]
+FAILED tests/test_oracle9_w1_expect.py::test_expect_record_refuses_incoherent_or_foreign_fields[values24]
+FAILED tests/test_oracle9_w1_expect.py::test_expect_record_refuses_incoherent_or_foreign_fields[values25]
+FAILED tests/test_oracle9_w1_expect.py::test_expect_record_refuses_incoherent_or_foreign_fields[values26]
+FAILED tests/test_oracle9_w1_expect.py::test_every_entry_refuses_bad_canaries[canaries0]
+FAILED tests/test_oracle9_w1_expect.py::test_every_entry_refuses_bad_canaries[canaries1]
+FAILED tests/test_oracle9_w1_expect.py::test_every_entry_refuses_bad_canaries[canaries2]
+FAILED tests/test_oracle9_w1_expect.py::test_every_entry_refuses_bad_canaries[canaries3]
+FAILED tests/test_oracle9_w1_expect.py::test_every_entry_refuses_bad_canaries[canaries4]
+FAILED tests/test_oracle9_w1_expect.py::test_every_entry_refuses_bad_canaries[canaries5]
+FAILED tests/test_oracle9_w1_expect.py::test_every_entry_refuses_bad_canaries[canaries6]
+FAILED tests/test_oracle9_w1_expect.py::test_every_entry_refuses_bad_canaries[canaries7]
+FAILED tests/test_oracle9_w1_expect.py::test_every_entry_refuses_bad_canaries[canaries8]
+FAILED tests/test_oracle9_w1_expect.py::test_every_entry_refuses_bad_canaries[canaries9]
+FAILED tests/test_oracle9_w1_expect.py::test_every_entry_refuses_bad_canaries[canaries10]
+FAILED tests/test_oracle9_w1_expect.py::test_every_entry_refuses_bad_canaries[canaries11]
+FAILED tests/test_oracle9_w1_expect.py::test_every_entry_refuses_bad_canaries[canaries12]
+FAILED tests/test_oracle9_w1_expect.py::test_every_entry_refuses_bad_canaries[canaries13]
+FAILED tests/test_oracle9_w1_expect.py::test_every_entry_refuses_bad_canaries[canaries14]
+FAILED tests/test_oracle9_w1_expect.py::test_every_entry_refuses_bad_canaries[canaries15]
+FAILED tests/test_oracle9_w1_expect.py::test_every_entry_refuses_bad_canaries[canaries16]
+FAILED tests/test_oracle9_w1_expect.py::test_every_entry_refuses_bad_canaries[None]
+FAILED tests/test_oracle9_w1_expect.py::test_every_keyed_entry_refuses_bad_key[0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF]
+FAILED tests/test_oracle9_w1_expect.py::test_every_keyed_entry_refuses_bad_key[0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcde]
+FAILED tests/test_oracle9_w1_expect.py::test_every_keyed_entry_refuses_bad_key[0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0]
+FAILED tests/test_oracle9_w1_expect.py::test_every_keyed_entry_refuses_bad_key[gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg]
+FAILED tests/test_oracle9_w1_expect.py::test_every_keyed_entry_refuses_bad_key[\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9\xe9]
+FAILED tests/test_oracle9_w1_expect.py::test_every_keyed_entry_refuses_bad_key[0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef1]
+FAILED tests/test_oracle9_w1_expect.py::test_every_keyed_entry_refuses_bad_key[None]
+FAILED tests/test_oracle9_w1_expect.py::test_every_keyed_entry_refuses_bad_key[0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef2]
+FAILED tests/test_oracle9_w1_expect.py::test_result_body_refuses_non_result_jobs[0]
+FAILED tests/test_oracle9_w1_expect.py::test_result_body_refuses_non_result_jobs[11]
+FAILED tests/test_oracle9_w1_expect.py::test_result_body_refuses_non_result_jobs[13]
+FAILED tests/test_oracle9_w1_expect.py::test_result_body_refuses_non_result_jobs[14]
+FAILED tests/test_oracle9_w1_expect.py::test_result_body_refuses_non_result_jobs[15]
+FAILED tests/test_oracle9_w1_expect.py::test_result_body_refuses_non_result_jobs[16]
+FAILED tests/test_oracle9_w1_expect.py::test_result_body_refuses_non_result_jobs[18]
+FAILED tests/test_oracle9_w1_expect.py::test_result_body_refuses_non_result_jobs[20]
+FAILED tests/test_oracle9_w1_expect.py::test_result_body_refuses_non_result_jobs[True]
+FAILED tests/test_oracle9_w1_expect.py::test_result_body_refuses_non_result_jobs[12.0]
+FAILED tests/test_oracle9_w1_expect.py::test_result_body_refuses_non_result_jobs[12_0]
+FAILED tests/test_oracle9_w1_expect.py::test_result_body_refuses_non_result_jobs[12_1]
+FAILED tests/test_oracle9_w1_expect.py::test_lab_init_packet_refuses_bad_explicit_fields[override0]
+FAILED tests/test_oracle9_w1_expect.py::test_lab_init_packet_refuses_bad_explicit_fields[override1]
+FAILED tests/test_oracle9_w1_expect.py::test_lab_init_packet_refuses_bad_explicit_fields[override2]
+FAILED tests/test_oracle9_w1_expect.py::test_lab_init_packet_refuses_bad_explicit_fields[override3]
+FAILED tests/test_oracle9_w1_expect.py::test_lab_init_packet_refuses_bad_explicit_fields[override4]
+FAILED tests/test_oracle9_w1_expect.py::test_lab_init_packet_refuses_bad_explicit_fields[override5]
+FAILED tests/test_oracle9_w1_expect.py::test_lab_init_packet_refuses_bad_explicit_fields[override6]
+FAILED tests/test_oracle9_w1_expect.py::test_lab_init_packet_refuses_bad_explicit_fields[override7]
+FAILED tests/test_oracle9_w1_expect.py::test_lab_init_packet_refuses_bad_explicit_fields[override8]
+FAILED tests/test_oracle9_w1_expect.py::test_lab_init_packet_refuses_bad_explicit_fields[override9]
+FAILED tests/test_oracle9_w1_expect.py::test_lab_init_packet_refuses_bad_explicit_fields[override10]
+FAILED tests/test_oracle9_w1_expect.py::test_lab_init_packet_refuses_bad_explicit_fields[override11]
+FAILED tests/test_oracle9_w1_expect.py::test_lab_init_packet_refuses_bad_explicit_fields[override12]
+FAILED tests/test_oracle9_w1_expect.py::test_lab_init_packet_refuses_bad_explicit_fields[override13]
+FAILED tests/test_oracle9_w1_expect.py::test_lab_init_packet_refuses_bad_explicit_fields[override14]
+FAILED tests/test_oracle9_w1_expect.py::test_lab_init_packet_refuses_bad_explicit_fields[override15]
+FAILED tests/test_oracle9_w1_expect.py::test_lab_init_packet_refuses_bad_explicit_fields[override16]
+FAILED tests/test_oracle9_w1_expect.py::test_lab_init_packet_refuses_bad_explicit_fields[override17]
+FAILED tests/test_oracle9_w1_expect.py::test_lab_init_packet_refuses_bad_explicit_fields[override18]
+FAILED tests/test_oracle9_w1_expect.py::test_lab_init_packet_refuses_bad_explicit_fields[override19]
+FAILED tests/test_oracle9_w1_expect.py::test_lab_init_packet_refuses_bad_explicit_fields[override20]
+FAILED tests/test_oracle9_w1_expect.py::test_lab_init_packet_refuses_bad_explicit_fields[override21]
+FAILED tests/test_oracle9_w1_expect.py::test_lab_init_packet_refuses_bad_explicit_fields[override22]
+FAILED tests/test_oracle9_w1_expect.py::test_lab_init_packet_refuses_bad_explicit_fields[override23]
+FAILED tests/test_oracle9_w1_expect.py::test_lab_init_packet_refuses_bad_explicit_fields[override24]
+FAILED tests/test_oracle9_w1_expect.py::test_lab_init_packet_refuses_bad_explicit_fields[override25]
+FAILED tests/test_oracle9_w1_expect.py::test_lab_init_packet_refuses_bad_explicit_fields[override26]
+FAILED tests/test_oracle9_w1_expect.py::test_lab_init_packet_refuses_bad_explicit_fields[override27]
+FAILED tests/test_oracle9_w1_expect.py::test_encoder_failures_become_closed_encode
+FAILED tests/test_oracle9_w1_expect.py::test_seed_sql_exact_literal_and_shared_canaries
+FAILED tests/test_oracle9_w1_expect.py::test_records_shape_and_known_values
+FAILED tests/test_oracle9_w1_expect.py::test_small_bodies_exact_columns_and_cells[0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef-canaries0]
+FAILED tests/test_oracle9_w1_expect.py::test_small_bodies_exact_columns_and_cells[fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210-canaries1]
+FAILED tests/test_oracle9_w1_expect.py::test_independent_vectors_select1_and_hmac_job2
+FAILED tests/test_oracle9_w1_expect.py::test_job10_layout_by_formula - FileNo...
+FAILED tests/test_oracle9_w1_expect.py::test_public_chain_descriptors_decisions_oids_identity
+FAILED tests/test_oracle9_w1_expect.py::test_records_process_jobs_in_order_without_random
+FAILED tests/test_oracle9_w1_expect.py::test_determinism_and_exact_dependency_sets
+FAILED tests/test_oracle9_w1_expect.py::test_key_reaches_masking_only_through_explicit_mapping_provider
+FAILED tests/test_oracle9_w1_expect.py::test_composition_validate_sink_and_canary_absence
+FAILED tests/test_oracle9_w1_expect.py::test_lab_init_packet_matches_records_of_same_inputs[0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef-canaries0]
+FAILED tests/test_oracle9_w1_expect.py::test_lab_init_packet_matches_records_of_same_inputs[fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210-canaries1]
+FAILED tests/test_oracle9_w1_expect.py::test_lab_init_packet_matches_records_of_same_inputs[0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef-canaries2]
+FAILED tests/test_oracle9_w1_expect.py::test_no_retention_of_keys_canaries_or_bodies_in_module_namespace

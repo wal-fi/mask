@@ -1,0 +1,11 @@
+{
+  "method": "Local Ruff formatter as mechanical QA only; root authored no functional code. AGY edit did not execute because automatic approval review hit its usage limit.",
+  "before_sha256": "e86aad3f0f90451a3cb7412ba8e2c2b9dc122868953559e4570b61284defd7e2",
+  "after_sha256": "ce6ff3896d44b7e27cbfe76ca4e1c63c5da87c7982ea7e591e8ef71517a06725",
+  "bytes": 22114,
+  "lines": 684,
+  "ast_identical": true,
+  "test_frozen": true,
+  "formatter_exit_code": 0,
+  "formatter_output": "1 file reformatted\n"
+}

@@ -1,0 +1,8 @@
+{
+  "path": "docs/poc/evidence/oracle9-w1-expect-review-20261109/formatted-related.log",
+  "sha256": "18b756c1b03f49b0126cf518e585238ef70b389d58ad4089ddca37e74d72cefe",
+  "bytes": 810,
+  "encoding": "utf-8",
+  "raw_zlib_base64": "eJzT06MOUIhWMDRQjeXlopJ5IAONqG2gMbUNNKG2gaaGVDbQjNoGmlPbQAtqG2hpRImBCugg2tAAHMsAP2aQjQ==",
+  "reason": "Preserve raw bytes before replacing CRLF console layout with LF. Staged git diff --check detected CR bytes, not a product or test failure."
+}

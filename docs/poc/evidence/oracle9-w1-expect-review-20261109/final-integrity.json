@@ -1,0 +1,9 @@
+{
+  "protected27_changed": [],
+  "app124_changed": [],
+  "source_sha256": "ce6ff3896d44b7e27cbfe76ca4e1c63c5da87c7982ea7e591e8ef71517a06725",
+  "source_bytes": 22114,
+  "test_sha256": "ccb1f29f8915a548085fc9028f4ea75a233ea859f54fb5b62275f1935e85441a",
+  "test_bytes": 45520,
+  "source_ast_identical": true
+}

@@ -52,6 +52,79 @@ de produção nem dispensa revisão, isolamento, masking, read-only ou sigilo.
 
 ## Escopo atual
 
+## W1 Oracle: EXPECT revisto e formatado, resultado local — 2026-11-09
+
+Fonte funcional escrita por Claude2 (sessão51ea0d85/opus5.5/medium);
+CLI23221 atingiu429 depois de escrever, não antes. Revisão somente leitura
+no Antigravity/Gemini ArgonHigh foi explicitamente autorizada e concluiu0,
+sem finding funcional/segurança/contrato; conversa b4ddb8b0. Gemini não
+editou. O comando posterior de edição não executou: revisão automática de
+permissões sem cota, retorno exibido12/11 às13h36, fuso não estabelecido.
+Não contornar essa falha nem confundi-la com cota do Gemini.
+
+Root aplicou apenas Ruff mecânico como QA local: AST igual à fonte Claude2,
+testeccb1f29f intacto. Fonte finalce6ff389/22114bytes/684linhas.
+704 relacionados finais (incluem119 próprios) em8,160s, sem falhas/erros/
+skips; Ruff src/tests+lint restrito da fonte, format363 e mypy363 explícito
+alvos3.11/3.14 aprovados.27 protegidos/app124/estado16/attempt intactos.
+Aceito sob delegação só como gerador puro, não prova nativa/PG/produção.
+
+Na medição pré-commit HEAD/origin eram9e56df4; conferir Git atual antes de
+retomar e não refazer formatação. Terminais desta tarefa recuperados; nenhum
+escritor novo iniciado. Consulta CIM restrita foi negada; na preparação
+posterior autorizada do commit confirmou zero agentes da tarefa ativos.
+Tarefa existente
+21h55UTC foi previamente relida Ready; não alterada nesta rodada, texto
+antigo sobre formatação foi superado aqui. Não comprova entrega ou quota.
+
+Ler PHASE-9-W1-ORACLE-EXPECT-SOURCE-REVIEW e evidência expect-review-20261109.
+Fechar publicação somente por ferramenta permitida e com estado revisto.
+Depois, próximo incremento é desenho mínimo T5 (canal próprio, posse antes
+de spawn, saída natural0), pelo programador autorizado; testes/RED antes
+de código. Sem novos efeitos físicos por esta nota. T5/B1/B2/D090gate2/C1/
+ingressos/produção abertos; Gateway indisponível. Históricos abaixo.
+
+
+## W1 Oracle: fonte EXPECT escrita antes da quota; envio AGY bloqueado — 2026-11-09
+
+CLI23221 encerrou exit1/API429 DEPOIS de gravar a fonte; terminal recuperado
+e zero Claude2 escritor confirmado. Não tratar como falha antes das edições.
+Reset exibido18h50 São Paulo, inferido09/11 às21h50UTC, não observado;
+nenhum retry. Fonte locale86aad3f/21998bytes/674linhas foi lida inteira pelo
+root; testeccb1f29f/45520bytes/1214linhas fixo.119próprios1,636s e704relacionados
+7,970s passaram, zero falhas/erros/skips/xfail. Ruff src/tests, format362 e
+mypy363 (inclui fonte PoC explicitamente) alvos3.11/3.14 limpos. Lint restrito
+da fonte E9/F63/F7/F82 limpo; format da fonte tem5hunks pendentes. Full Ruff
+exploratório da fonte acusou7itens; docs/poc é extend-exclude no pyproject,
+mantém o perfil restrito já adotado, não foi adicionada supressão. Fontes
+aceitas27/app124 e estado16/attempt intactos. Não houve execução nativa/PG/SQL.
+
+Autorização do usuário para AGY foi registrada e catálogo confirmou
+gemini-4-argon-high/ gemini-3.8-flash-high. Preparado scratch só com cópias
+do gerador/teste/contrato/vetores sintéticos. O comando de revisão readonly
+ArgonHigh foi REJEITADO antes de CreateProcess pela revisão automática:
+exige autorização explícita para exportar esse payload ao Gemini.
+Nenhum agente AGY dessa tarefa iniciou, nenhum arquivo foi enviado por
+esse comando, nenhuma conversa/id foi criada. Não tentar outra via para
+contornar. Esperar consentimento explícito desse envio nesta conversa,
+ou usar Claude2 já autorizado após quota; zero escritor sempre.
+
+Mesma tarefa Maskgw-Claude2-Resume-01a05804 reprogramada e relida Ready:
+09/11/2026 às18h55-03:00 (21h55UTC), uma vez, Limited/Interactive/IgnoreNew,
+action/trigger únicos e mensagem queue desta conversa conferidos.
+Última execução16h55UTC/result0 é histórica; novo disparo ainda pendente,
+não comprova entrega nem quota e depende de host/logon/app disponíveis.
+
+Próximo lote: SOMENTE formatação da fonte EXPECT por programador autorizado,
+sem mudar teste ou semântica; root revê delta/AST e valida antes de publicar.
+Se já resolvido, não refazer. Conferir HEAD atual, docs locais e escritores;
+não usar guardas HEAD antigas. Publicado ainda9e56df4; EXPECT/desenho/testes/
+evidências ficam locais até fechamento. Pedido de aprovação externa deve
+nomear gerador, teste, contrato e vetores; autorização de uso da ferramenta
+foi considerada insuficiente pelo auto-review. Dados em expect-review-20261109.
+Gates T5/native/B1/B2/D090/C1/ingressos/produção seguem abertos.
+Históricos abaixo.
+
 ## W1 Oracle: main D2 implementado e revisto com SO simulado — 2026-11-09
 
 CLI49822/30651/28740 encerraram0 e foram recuperadas, zero escritor.

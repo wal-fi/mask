@@ -1,0 +1,27 @@
+[
+  {
+    "gate": "ruff-all",
+    "exit_code": 0,
+    "output": "All checks passed!\n"
+  },
+  {
+    "gate": "format-all",
+    "exit_code": 0,
+    "output": "362 files already formatted\n"
+  },
+  {
+    "gate": "source-lint-restricted",
+    "exit_code": 0,
+    "output": "All checks passed!\n"
+  },
+  {
+    "gate": "mypy-all311",
+    "exit_code": 0,
+    "output": "Success: no issues found in 363 source files\r\n"
+  },
+  {
+    "gate": "mypy-all314",
+    "exit_code": 0,
+    "output": "Success: no issues found in 363 source files\r\n"
+  }
+]

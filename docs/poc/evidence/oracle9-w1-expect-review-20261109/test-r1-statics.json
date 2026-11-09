@@ -1,0 +1,22 @@
+[
+  {
+    "gate": "ruff",
+    "exit_code": 0,
+    "output": "All checks passed!\n"
+  },
+  {
+    "gate": "format",
+    "exit_code": 0,
+    "output": "1 file already formatted\n"
+  },
+  {
+    "gate": "mypy311",
+    "exit_code": 1,
+    "output": "tests\\test_oracle9_w1_expect.py:1202: error: Argument 1 to \"retained\" has incompatible type \"dict[str, Collection[object]]\"; expected \"dict[str, object]\"  [arg-type]\r\ntests\\test_oracle9_w1_expect.py:1202: note: \"dict\" is invariant -- see https://mypy.readthedocs.io/en/stable/common_issues.html#variance\r\ntests\\test_oracle9_w1_expect.py:1202: note: Consider using \"Mapping\" instead, which is covariant in the value type\r\nFound 1 error in 1 file (checked 1 source file)\r\n"
+  },
+  {
+    "gate": "mypy314",
+    "exit_code": 1,
+    "output": "tests\\test_oracle9_w1_expect.py:1202: error: Argument 1 to \"retained\" has incompatible type \"dict[str, Collection[object]]\"; expected \"dict[str, object]\"  [arg-type]\r\ntests\\test_oracle9_w1_expect.py:1202: note: \"dict\" is invariant -- see https://mypy.readthedocs.io/en/stable/common_issues.html#variance\r\ntests\\test_oracle9_w1_expect.py:1202: note: Consider using \"Mapping\" instead, which is covariant in the value type\r\nFound 1 error in 1 file (checked 1 source file)\r\n"
+  }
+]

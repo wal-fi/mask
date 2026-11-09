@@ -1,0 +1,27 @@
+{
+  "workspace": "C:\\Users\\WA2E4~1.FIL\\AppData\\Local\\Temp\\maskgw-agy-expect-review-rzva4y4k",
+  "files": [
+    {
+      "name": "oracle9_w1_expect.py",
+      "sha256": "e86aad3f0f90451a3cb7412ba8e2c2b9dc122868953559e4570b61284defd7e2",
+      "bytes": 21998
+    },
+    {
+      "name": "test_oracle9_w1_expect.py",
+      "sha256": "ccb1f29f8915a548085fc9028f4ea75a233ea859f54fb5b62275f1935e85441a",
+      "bytes": 45520
+    },
+    {
+      "name": "CONTRACT-REVIEW.md",
+      "sha256": "b50d30d1eddeb2ea124c5d2cd71ae6b11812193fa4ce59650bd9a22348aebd10",
+      "bytes": 7669
+    },
+    {
+      "name": "independent-vectors.json",
+      "sha256": "9e1d535a29d06cecf2d989724b8f1f24cc418bcb6ca57dad7530dea325000d80",
+      "bytes": 1484
+    }
+  ],
+  "task": "read-only peer review, gemini-4-argon-high, no edits/execution",
+  "claude2": "CLI23221 ended exit1/API429 after writing e86aad3f source; writer_count0; reset reported2026-11-09T21:50:00Z, no retry"
+}

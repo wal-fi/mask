@@ -1,0 +1,674 @@
+"""W1 Oracle laboratory fixture and expectations, pure definitions only.
+
+EXPECT-DESIGN v1 plus EXPECT-DESIGN-REVIEW precisions. No entry point, I/O, file,
+environment, clock, randomness, socket, process, Docker, PostgreSQL or SQL execution:
+``seed_sql`` only RETURNS the seed text for a future reviewed host step.
+
+One synthetic fixture drives both the seed literal and the modeled rows. Every RESULT
+body is produced by the public chain MaskingEngine -> MaskedResult ->
+TypedMaskedResult -> encode_result with a fixed synthetic identity, the driver's
+limits and a constant clock; the body is the frame from RESULT_HEADER_BYTES (76).
+Descriptors, decisions and OIDs come from the reviewed job table, never from aliases;
+any drift of the public engine from that table is a MODEL refusal. Row order for
+jobs 5/6/7, the CTE provenance and ERROR categories 13/16/18 are native hypotheses:
+shared engine/encoder agreement is consistency, not proof against PostgreSQL.
+
+The HMAC key is the 64-character lowercase hex TEXT (UTF-8), never hex-decoded, and
+reaches the compilation only through one in-memory MappingSecretProvider per body.
+Nothing is cached: keys, canaries and bodies are not retained by this module.
+Refusals are ``ExpectRefusal(category)`` with INPUT/MODEL/ENCODE/SIZE only, never a
+cause, context, value or index. No zeroization of Python memory is promised.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import ipaddress
+import json
+import re
+import struct
+from collections.abc import Callable
+from dataclasses import dataclass
+from decimal import Decimal
+from types import MappingProxyType
+from typing import Final, NoReturn, TypeAlias
+
+from maskgw.config.gateway import parse_config_bundle
+from maskgw.db.result import MaskedResult, TypedMaskedResult
+from maskgw.masking.descriptor import ColumnDescriptor, ProvenanceKind
+from maskgw.masking.engine import Action, Decision, MaskingEngine
+from maskgw.masking.transformers.hashes import HMAC_KEY_ENV
+from maskgw.pgwire.result_encoder import encode_result
+from maskgw.pgwire.result_frame import (
+    RESULT_HEADER_BYTES,
+    ResultDeadline,
+    ResultIdentity,
+    ResultLimits,
+)
+from maskgw.secretsource import MappingSecretProvider
+
+CANARY_COUNT: Final = 4
+RESULT_JOBS: Final = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 17, 19)
+ERRORS: Final = MappingProxyType(
+    {11: "LIMIT", 13: "QUERY", 14: "QUERY", 15: "QUERY", 16: "TIMEOUT", 18: "TYPE"}
+)
+# Literal mirror of the pinned pure ``_lab_policy(1)``; the test compares the
+# DatasourcePolicy normalization of both. Never imported from the pinned module.
+POLICY_MAPPING: Final[dict[str, object]] = {
+    "database": {"statement_timeout_ms": 1000, "max_rows": 1000},
+    "masking": [
+        {"match": "cpf", "transformer": "hmac_sha256"},
+        {
+            "match": "email",
+            "transformer": "regex",
+            "config": {"pattern": "^(.{2}).*(@.*)$", "replacement": "\\1***\\2"},
+        },
+        {
+            "match": "numeric_secret",
+            "transformer": "fixed",
+            "config": {"value": "[NUMBER]"},
+        },
+        {
+            "match": "token",
+            "transformer": "random",
+            "config": {"strategy": "alphanumeric", "preserve_length": False, "length": 12},
+        },
+    ],
+    "exceptions": [{"match": "tipo_cpf", "mode": "exact"}],
+}
+
+JOBS: Final = 19
+MAX_ROWS: Final = 1000
+MIB: Final = 1024 * 1024
+FRAME_LIMIT: Final = 16 * MIB
+BODY_CAP: Final = FRAME_LIMIT - RESULT_HEADER_BYTES
+INIT_BODY_MAX: Final = 65536
+INIT_KIND: Final = "MASKGW_W1_LAB_INIT_V1"
+INIT_VERSION: Final = 1
+
+_INIT_HEADER: Final = struct.Struct(">4sI")
+_INIT_MAGIC: Final = b"MGI1"
+_DATASOURCE: Final = bytes.fromhex("0" * 31 + "1")
+_TEXT_OID: Final = 25
+_RANDOM_RULE: Final = 3
+_CANARY_SIZE: Final = 16
+_IPV4_MAX: Final = 15
+_MAX_PORT: Final = 65535
+_CANARY: Final = re.compile(r"[A-Z][A-Z0-9]{15}")
+_HEX64: Final = re.compile(r"[0-9a-f]{64}")
+_HEX48: Final = re.compile(r"[0-9a-f]{48}")
+_NAME: Final = re.compile(r"[a-z][a-z0-9_]{0,62}")
+_NUMERIC: Final = re.compile(r"-?[0-9]+(\.[0-9]+)?")
+_LITERAL: Final = re.compile(r"[A-Za-z0-9@._]+")
+_HMAC, _REGEX, _FIXED = "hmac_sha256", "regex", "fixed"
+
+INPUT: Final = "INPUT"
+MODEL: Final = "MODEL"
+ENCODE: Final = "ENCODE"
+SIZE: Final = "SIZE"
+
+
+class ExpectRefusal(Exception):
+    """Closed category only; never input values, original exceptions or chains."""
+
+    def __init__(self, category: str) -> None:
+        super().__init__(category)
+        self.category = category
+
+
+def _refuse(category: str) -> NoReturn:
+    # A caller handler may be active: its exception would become __context__ at raise
+    # time, so the closed refusal is detached here and re-raised bare (chains nothing).
+    try:
+        raise ExpectRefusal(category)
+    except ExpectRefusal as refusal:
+        refusal.__context__ = None
+        refusal.__cause__ = None
+        raise
+
+
+# ---------------------------------------------------------------- exact scalars
+
+
+def _exact_str(value: object) -> str | None:
+    """Exact ``str`` only; a subclass is refused before any of its hooks can run."""
+    if type(value) is str and isinstance(value, str):
+        return value
+    return None
+
+
+def _exact_int(value: object) -> int | None:
+    """Exact ``int`` only: bool, subclasses and floats are refused."""
+    if type(value) is int and isinstance(value, int):
+        return value
+    return None
+
+
+def _text(value: object, pattern: re.Pattern[str]) -> str:
+    text = _exact_str(value)
+    if text is None or pattern.fullmatch(text) is None:
+        _refuse(INPUT)
+    return text
+
+
+def _ipv4(text: str) -> ipaddress.IPv4Address | None:
+    try:
+        return ipaddress.IPv4Address(text)
+    except ValueError:
+        return None
+
+
+def _ip(value: object) -> str:
+    """Canonical private IPv4 literal; loopback/link-local/special refused."""
+    text = _exact_str(value)
+    address = None if text is None or len(text) > _IPV4_MAX else _ipv4(text)
+    if text is None or address is None:
+        _refuse(INPUT)
+    special = (
+        address.is_loopback
+        or address.is_link_local
+        or address.is_multicast
+        or address.is_unspecified
+        or address.is_reserved
+    )
+    if str(address) != text or not address.is_private or special:
+        _refuse(INPUT)
+    return text
+
+
+def _port(value: object) -> int:
+    number = _exact_int(value)
+    if number is None or not 1 <= number <= _MAX_PORT:
+        _refuse(INPUT)
+    return number
+
+
+def _canaries(value: object) -> tuple[str, ...]:
+    """Exact tuple of four distinct ``[A-Z][A-Z0-9]{15}`` strings, never escaped."""
+    if type(value) is not tuple or not isinstance(value, tuple):
+        _refuse(INPUT)
+    if len(value) != CANARY_COUNT:
+        _refuse(INPUT)
+    items: list[str] = []
+    for item in value:
+        text = _exact_str(item)
+        if text is None or len(text) != _CANARY_SIZE or _CANARY.fullmatch(text) is None:
+            _refuse(INPUT)
+        items.append(text)
+    if len(set(items)) != CANARY_COUNT:
+        _refuse(INPUT)
+    return tuple(items)
+
+
+def _job(value: object) -> int:
+    number = _exact_int(value)
+    if number is None or number not in RESULT_JOBS:
+        _refuse(INPUT)
+    return number
+
+
+# ---------------------------------------------------------------- record
+
+
+def _record_valid(record: ExpectRecord) -> bool:
+    job, kind = _exact_int(record.job), _exact_str(record.kind)
+    if job is None or kind is None or not 1 <= job <= JOBS:
+        return False
+    reason = ERRORS.get(job)
+    if reason is not None:
+        return (
+            kind == "ERROR"
+            and record.rows is None
+            and record.bytes is None
+            and record.sha256 is None
+            and _exact_str(record.reason) == reason
+        )
+    rows, size, digest = (
+        _exact_int(record.rows),
+        _exact_int(record.bytes),
+        _exact_str(record.sha256),
+    )
+    return (
+        kind == "RESULT"
+        and record.reason is None
+        and rows is not None
+        and 0 <= rows <= MAX_ROWS
+        and size is not None
+        and 1 <= size <= BODY_CAP
+        and digest is not None
+        and _HEX64.fullmatch(digest) is not None
+    )
+
+
+@dataclass(frozen=True, slots=True, repr=False, kw_only=True)
+class ExpectRecord:
+    """Exactly the six LAB_INIT ``expected`` fields, validated on construction."""
+
+    job: int
+    kind: str
+    rows: int | None
+    bytes: int | None
+    sha256: str | None
+    reason: str | None
+
+    def __post_init__(self) -> None:
+        if not _record_valid(self):
+            _refuse(INPUT)
+
+    def __repr__(self) -> str:
+        return "ExpectRecord(<redacted>)"
+
+
+# ---------------------------------------------------------------- authoritative fixture
+
+
+@dataclass(frozen=True, slots=True)
+class _Canary:
+    """Fixture cell taken from the run's canary ``index`` plus a fixed suffix."""
+
+    index: int
+    suffix: str
+
+
+_COLUMNS: Final = (
+    ("id", "integer"),
+    ("cpf", "text"),
+    ("tipo_cpf", "text"),
+    ("email", "text"),
+    ("numeric_secret", "numeric"),
+    ("amount", "numeric"),
+    ("token", "text"),
+    ("active", "boolean"),
+    ("label", "maskgw_lab.label"),
+)
+_EMAIL: Final = "@example.test"
+_ROWS: Final[tuple[tuple[object, ...], ...]] = (
+    (
+        1,
+        _Canary(0, ""),
+        "physical",
+        _Canary(2, _EMAIL),
+        Decimal("123"),
+        Decimal("19.5"),
+        "secret1",
+        True,
+        "label1",
+    ),
+    (
+        2,
+        _Canary(1, ""),
+        "company",
+        _Canary(3, _EMAIL),
+        Decimal("456"),
+        Decimal("99.5"),
+        "secret2",
+        False,
+        "label2",
+    ),
+    (3, None, None, None, None, None, None, None, None),
+)
+
+_Table: TypeAlias = tuple[dict[str, object], ...]
+_RowsOf: TypeAlias = Callable[[_Table], list[tuple[object, ...]]]
+
+
+def _resolve(cell: object, canaries: tuple[str, ...]) -> object:
+    if type(cell) is _Canary and isinstance(cell, _Canary):
+        return canaries[cell.index] + cell.suffix
+    return cell
+
+
+def _table(canaries: tuple[str, ...]) -> _Table:
+    """Fixture rows in id order (also the assumed heap order of a fresh seed)."""
+    names = tuple(name for name, _ in _COLUMNS)
+    return tuple(
+        {name: _resolve(cell, canaries) for name, cell in zip(names, row, strict=True)}
+        for row in _ROWS
+    )
+
+
+def _literal(value: object) -> str:
+    """Closed SQL literal grammar; anything else is a fixture defect (MODEL)."""
+    if value is None:
+        return "null"
+    if type(value) is bool:
+        return "true" if value is True else "false"
+    if type(value) is int and isinstance(value, int):
+        return str(value)
+    if type(value) is Decimal and isinstance(value, Decimal):
+        number = str(value)
+        if _NUMERIC.fullmatch(number) is not None:
+            return number
+    text = _exact_str(value)
+    if text is not None and _LITERAL.fullmatch(text) is not None:
+        return "'" + text + "'"
+    _refuse(MODEL)
+
+
+def seed_sql(canaries: tuple[str, ...]) -> bytes:
+    """Seed text only (one statement per line, ASCII, LF). Executes nothing."""
+    resolved = _canaries(canaries)
+    names = ", ".join(name for name, _ in _COLUMNS)
+    columns = ", ".join(f"{name} {kind}" for name, kind in _COLUMNS)
+    values = ", ".join(
+        "(" + ", ".join(_literal(_resolve(cell, resolved)) for cell in row) + ")"
+        for row in _ROWS
+    )
+    lines = (
+        "begin;",
+        "create schema maskgw_lab;",
+        "create domain maskgw_lab.label as text;",
+        f"create table maskgw_lab.t ({columns});",
+        f"insert into maskgw_lab.t ({names}) values {values};",
+        "commit;",
+    )
+    return ("\n".join(lines) + "\n").encode("ascii")
+
+
+# ---------------------------------------------------------------- reviewed job table
+
+
+@dataclass(frozen=True, slots=True)
+class _Column:
+    descriptor: ColumnDescriptor
+    action: Action
+    rule: int | None
+    transformer: str | None
+    advertised: int  # OID PostgreSQL is modeled to announce; MASK is sent as text
+
+    @property
+    def decision(self) -> Decision:
+        item = self.descriptor
+        return Decision(self.action, item.output_name, item.origin_name, self.rule, self.transformer)
+
+    @property
+    def oid(self) -> int:
+        return _TEXT_OID if self.action is Action.MASK else self.advertised
+
+
+@dataclass(frozen=True, slots=True)
+class _Job:
+    columns: tuple[_Column, ...]
+    rows: _RowsOf
+    count: int
+    truncated: bool = False
+
+
+def _direct(name: str, origin: str) -> ColumnDescriptor:
+    return ColumnDescriptor(name, origin, "maskgw_lab", "t", ProvenanceKind.DIRECT, None)
+
+
+def _derived(name: str, rule: int | None) -> ColumnDescriptor:
+    return ColumnDescriptor(name, None, None, None, ProvenanceKind.DERIVED, rule)
+
+
+def _allow(descriptor: ColumnDescriptor, oid: int) -> _Column:
+    return _Column(descriptor, Action.ALLOW, None, None, oid)
+
+
+def _mask(descriptor: ColumnDescriptor, rule: int, transformer: str, oid: int = 25) -> _Column:
+    return _Column(descriptor, Action.MASK, rule, transformer, oid)
+
+
+def _pick(*names: str) -> _RowsOf:
+    def rows(table: _Table) -> list[tuple[object, ...]]:
+        return [tuple(row[name] for name in names) for row in table]
+
+    return rows
+
+
+def _where(ids: tuple[int, ...], *names: str) -> _RowsOf:
+    """Rows of each id in the given order (WHERE id=n, or UNION ALL branch order)."""
+
+    def rows(table: _Table) -> list[tuple[object, ...]]:
+        return [tuple(row[name] for name in names) for wanted in ids for row in table if row["id"] == wanted]
+
+    return rows
+
+
+def _prefix3(value: object) -> object:
+    text = _exact_str(value)
+    return None if text is None else text[:3]
+
+
+def _job4(table: _Table) -> list[tuple[object, ...]]:
+    return [(_prefix3(row["cpf"]), row["email"], row["active"], row["id"]) for row in table]
+
+
+def _series(table: _Table) -> list[tuple[object, ...]]:
+    # PostgreSQL yields 1..1001; the adapter keeps max_rows and flags truncation.
+    del table
+    return [(number,) for number in range(1, MAX_ROWS + 1)]
+
+
+def _wide(table: _Table) -> list[tuple[object, ...]]:
+    del table
+    value = "x" * MIB  # one shared cell object referenced by the 15 rows
+    return [(value,)] * 15
+
+
+def _constant(number: int) -> _RowsOf:
+    def rows(table: _Table) -> list[tuple[object, ...]]:
+        del table
+        return [(number,)]
+
+    return rows
+
+
+_QUESTION: Final = "?column?"
+_SPECS: Final = MappingProxyType(
+    {
+        1: _Job(
+            (_allow(_direct("id", "id"), 23), _allow(_direct("active", "active"), 16)),
+            _pick("id", "active"),
+            3,
+        ),
+        2: _Job((_mask(_direct("cpf", "cpf"), 0, _HMAC),), _pick("cpf"), 3),
+        3: _Job(
+            (
+                _mask(_direct("tipo_cpf", "cpf"), 0, _HMAC),
+                _Column(_direct("cpf", "tipo_cpf"), Action.EXCEPTION, 0, None, 25),
+            ),
+            _where((1,), "cpf", "tipo_cpf"),
+            1,
+        ),
+        4: _Job(
+            (
+                _mask(_derived("same", 0), 0, _HMAC),
+                _mask(_direct("same", "email"), 1, _REGEX),
+                _allow(_direct("active", "active"), 16),
+                _allow(_direct("id", "id"), 23),
+            ),
+            _job4,
+            3,
+        ),
+        5: _Job((_mask(_derived("cpf", 0), 0, _HMAC),), _where((1, 2), "cpf"), 2),
+        6: _Job((_mask(_direct("x", "cpf"), 0, _HMAC),), _pick("cpf"), 3),
+        7: _Job((_mask(_direct("x", "email"), 1, _REGEX),), _pick("email"), 3),
+        8: _Job(
+            (_mask(_direct("numeric_secret", "numeric_secret"), 2, _FIXED, 1700),),
+            _pick("numeric_secret"),
+            3,
+        ),
+        9: _Job((_allow(_derived("g", None), 23),), _series, MAX_ROWS, truncated=True),
+        10: _Job((_allow(_derived("v", None), 25),), _wide, 15),
+        12: _Job((_allow(_derived(_QUESTION, None), 23),), _constant(1), 1),
+        17: _Job((_allow(_derived(_QUESTION, None), 23),), _constant(2), 1),
+        19: _Job((_allow(_derived(_QUESTION, None), 23),), _constant(3), 1),
+    }
+)
+
+
+# ---------------------------------------------------------------- public chain
+
+
+def _zero_clock() -> float:
+    return 0.0
+
+
+def _policy() -> object:
+    """Fresh structures per call, so no callee can alter the module literal."""
+    copied: object = json.loads(json.dumps(POLICY_MAPPING))
+    return copied
+
+
+def _compile(provider: MappingSecretProvider) -> tuple[MaskingEngine, int] | None:
+    try:
+        loaded = parse_config_bundle(_policy(), secrets=provider)
+        return MaskingEngine(loaded.gateway.masking), loaded.gateway.database.max_rows
+    except Exception:  # converted to one closed ENCODE refusal by the caller
+        return None
+
+
+def _decide(engine: MaskingEngine, columns: tuple[ColumnDescriptor, ...]) -> tuple[Decision, ...] | None:
+    try:
+        return tuple(engine.decide(column) for column in columns)
+    except Exception:  # converted to one closed ENCODE refusal by the caller
+        return None
+
+
+def _frame(
+    engine: MaskingEngine,
+    spec: _Job,
+    decisions: tuple[Decision, ...],
+    raw: list[tuple[object, ...]],
+    job: int,
+) -> bytes | None:
+    columns = tuple(column.descriptor for column in spec.columns)
+    oids = tuple(column.oid for column in spec.columns)
+    try:
+        rows = tuple(tuple(row) for row in engine.mask_rows(columns, raw))
+        masked = MaskedResult(
+            columns=columns, decisions=decisions, rows=rows, truncated=spec.truncated
+        )
+        typed = TypedMaskedResult(masked=masked, type_oids=oids)
+        frame: object = encode_result(
+            typed,
+            identity=ResultIdentity(
+                session_id=bytes(16),
+                datasource_id=_DATASOURCE,
+                generation=1,
+                record_revision=1,
+                job_id=job,
+            ),
+            limits=ResultLimits(max_rows=MAX_ROWS, max_frame_bytes=FRAME_LIMIT),
+            deadline=ResultDeadline(expires_at=1.0, clock=_zero_clock),
+        )
+    except Exception:  # masking/encoder failure: one closed ENCODE refusal by the caller
+        return None
+    if type(frame) is not bytes or not isinstance(frame, bytes):
+        return None
+    return frame
+
+
+def result_body(job: int, *, hmac_key: str, canaries: tuple[str, ...]) -> bytes:
+    """Exact D-113 body (frame from byte 76) of one RESULT job; the sole body path."""
+    number = _job(job)
+    key = _text(hmac_key, _HEX64)
+    resolved = _canaries(canaries)
+    spec = _SPECS[number]
+    provider = MappingSecretProvider({HMAC_KEY_ENV: key})  # explicit, in memory only
+    compiled = _compile(provider)
+    del provider
+    if compiled is None:
+        _refuse(ENCODE)
+    engine, max_rows = compiled
+    if max_rows != MAX_ROWS:
+        _refuse(MODEL)
+    columns = tuple(column.descriptor for column in spec.columns)
+    decisions = _decide(engine, columns)
+    if decisions is None:
+        _refuse(ENCODE)
+    # Decisions are checked against the reviewed table BEFORE any value is masked;
+    # the random rule (index 3) is never selected, so its transformer is never applied.
+    expected = tuple(column.decision for column in spec.columns)
+    if decisions != expected or any(item.rule_index == _RANDOM_RULE for item in decisions):
+        _refuse(MODEL)
+    raw = spec.rows(_table(resolved))
+    if len(raw) != spec.count:
+        _refuse(MODEL)
+    frame = _frame(engine, spec, decisions, raw, number)
+    del raw
+    if frame is None or len(frame) <= RESULT_HEADER_BYTES:
+        _refuse(ENCODE)
+    body = frame[RESULT_HEADER_BYTES:]
+    del frame
+    if not 1 <= len(body) <= BODY_CAP:
+        _refuse(SIZE)
+    return body
+
+
+def expected_records(*, hmac_key: str, canaries: tuple[str, ...]) -> tuple[ExpectRecord, ...]:
+    """Nineteen records in job order; one body at a time, only metadata retained."""
+    key = _text(hmac_key, _HEX64)
+    resolved = _canaries(canaries)
+    records: list[ExpectRecord] = []
+    for job in range(1, JOBS + 1):
+        reason = ERRORS.get(job)
+        if reason is not None:
+            records.append(
+                ExpectRecord(job=job, kind="ERROR", rows=None, bytes=None, sha256=None, reason=reason)
+            )
+            continue
+        body = result_body(job, hmac_key=key, canaries=resolved)
+        size, digest = len(body), hashlib.sha256(body).hexdigest()
+        del body
+        records.append(
+            ExpectRecord(
+                job=job,
+                kind="RESULT",
+                rows=_SPECS[job].count,
+                bytes=size,
+                sha256=digest,
+                reason=None,
+            )
+        )
+    return tuple(records)
+
+
+def lab_init_packet(
+    *,
+    ip: str,
+    port: int,
+    database: str,
+    username: str,
+    readonly_password: str,
+    hmac_key: str,
+    canaries: tuple[str, ...],
+) -> bytes:
+    """LAB_INIT ``>4sI`` MGI1 + canonical ASCII JSON, expectations of the SAME inputs."""
+    target = {
+        "ip": _ip(ip),
+        "port": _port(port),
+        "database": _text(database, _NAME),
+        "username": _text(username, _NAME),
+    }
+    password = _text(readonly_password, _HEX48)
+    key = _text(hmac_key, _HEX64)
+    resolved = _canaries(canaries)
+    expected = [
+        {
+            "job": record.job,
+            "kind": record.kind,
+            "rows": record.rows,
+            "bytes": record.bytes,
+            "sha256": record.sha256,
+            "reason": record.reason,
+        }
+        for record in expected_records(hmac_key=key, canaries=resolved)
+    ]
+    document = {
+        "kind": INIT_KIND,
+        "version": INIT_VERSION,
+        "target": target,
+        "readonly_password": password,
+        "hmac_key": key,
+        "raw_canaries": list(resolved),
+        "expected": expected,
+    }
+    body = json.dumps(
+        document, sort_keys=True, separators=(",", ":"), ensure_ascii=True, allow_nan=False
+    ).encode("ascii")
+    if not 1 <= len(body) <= INIT_BODY_MAX:
+        _refuse(SIZE)
+    return _INIT_HEADER.pack(_INIT_MAGIC, len(body)) + body

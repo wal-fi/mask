@@ -1,0 +1,17 @@
+{
+  "source_sha256": "e86aad3f0f90451a3cb7412ba8e2c2b9dc122868953559e4570b61284defd7e2",
+  "exit_code": 0,
+  "suites": [
+    {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "119",
+      "time": "1.636",
+      "timestamp": "2026-11-09T15:51:58.217636-03:00",
+      "hostname": "SMTZDIBDN1954"
+    }
+  ],
+  "failures": []
+}

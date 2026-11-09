@@ -1,0 +1,75 @@
+{
+  "published_head": "9e56df41ac3033a33518d9a15231e1bbd84cc1b5",
+  "local_source_sha256": "e86aad3f0f90451a3cb7412ba8e2c2b9dc122868953559e4570b61284defd7e2",
+  "frozen_test_sha256": "ccb1f29f8915a548085fc9028f4ea75a233ea859f54fb5b62275f1935e85441a",
+  "own": {
+    "source_sha256": "e86aad3f0f90451a3cb7412ba8e2c2b9dc122868953559e4570b61284defd7e2",
+    "exit_code": 0,
+    "suites": [
+      {
+        "name": "pytest",
+        "errors": "0",
+        "failures": "0",
+        "skipped": "0",
+        "tests": "119",
+        "time": "1.636",
+        "timestamp": "2026-11-09T15:51:58.217636-03:00",
+        "hostname": "SMTZDIBDN1954"
+      }
+    ],
+    "failures": []
+  },
+  "related": {
+    "exit_code": 0,
+    "suites": [
+      {
+        "name": "pytest",
+        "errors": "0",
+        "failures": "0",
+        "skipped": "0",
+        "tests": "704",
+        "time": "7.970",
+        "timestamp": "2026-11-09T15:58:37.031946-03:00",
+        "hostname": "SMTZDIBDN1954"
+      }
+    ],
+    "targets": [
+      "tests/test_oracle9_w1_expect.py",
+      "tests/test_oracle9_w1_main.py",
+      "tests/test_oracle9_w1_driver.py",
+      "tests/test_oracle9_w1_driver_session.py",
+      "tests/test_oracle9_w1_controller.py"
+    ]
+  },
+  "statics": [
+    {
+      "gate": "ruff-all",
+      "exit_code": 0,
+      "output": "All checks passed!\n"
+    },
+    {
+      "gate": "format-all",
+      "exit_code": 0,
+      "output": "362 files already formatted\n"
+    },
+    {
+      "gate": "source-lint-restricted",
+      "exit_code": 0,
+      "output": "All checks passed!\n"
+    },
+    {
+      "gate": "mypy-all311",
+      "exit_code": 0,
+      "output": "Success: no issues found in 363 source files\r\n"
+    },
+    {
+      "gate": "mypy-all314",
+      "exit_code": 0,
+      "output": "Success: no issues found in 363 source files\r\n"
+    }
+  ],
+  "source_format": "5 layout hunks pending; formatter/programmer not yet applied",
+  "publication": "EXPECT work stays local until reviewed format correction; published main9e56df4 unchanged",
+  "external_payload_approval_pending": true,
+  "task": "Maskgw-Claude2-Resume-01a05804 confirmed21:55UTC; no retry before21:50UTC"
+}

@@ -1,0 +1,26 @@
+{
+  "test_sha": "86d852ab7424eb770d2f915f7b5a46197ea10c74ecedb5b0637de10c1094da46",
+  "rows": [
+    {
+      "gate": "ruff",
+      "exit_code": 0,
+      "output": "All checks passed!\n"
+    },
+    {
+      "gate": "format",
+      "exit_code": 1,
+      "output": "unformatted: File would be reformatted\n    --> tests\\test_oracle9_w1_expect.py:72:16\n     |\n71   | GEN_FILE = REPO / \"docs/poc/oracle9_w1_expect.py\"\n     - VECTORS_FILE = (\n     -     REPO / \"docs/poc/evidence/oracle9-w1-expect-review-20261109/independent-vectors.json\"\n     - )\n72   + VECTORS_FILE = REPO / \"docs/poc/evidence/oracle9-w1-expect-review-20261109/independent-vectors.json\"\n73   | PURE_FILE = REPO / \"deploy/oracle9_w1_controller.py\"\n--------------------------------------------------------------------------------\n1043 |\n     - @pytest.mark.parametrize(\n     -     (\"key\", \"canaries\"), [(KEY, CANARIES), (KEY2, CANARIES), (KEY, CANARIES2)]\n     - )\n1044 + @pytest.mark.parametrize((\"key\", \"canaries\"), [(KEY, CANARIES), (KEY2, CANARIES), (KEY, CANARIES2)])\n1045 | def test_lab_init_packet_matches_records_of_same_inputs(\n     |\n\n1 file would be reformatted\n"
+    },
+    {
+      "gate": "mypy311",
+      "exit_code": 1,
+      "output": "tests\\test_oracle9_w1_expect.py:422: error: Argument 1 of \"__contains__\" is incompatible with supertype \"typing.Sequence\"; supertype defines the argument type as \"object\"  [override]\r\ntests\\test_oracle9_w1_expect.py:422: note: This violates the Liskov substitution principle\r\ntests\\test_oracle9_w1_expect.py:422: note: See https://mypy.readthedocs.io/en/stable/common_issues.html#incompatible-overrides\r\ntests\\test_oracle9_w1_expect.py:422: error: Argument 1 of \"__contains__\" is incompatible with supertype \"typing.Container\"; supertype defines the argument type as \"object\"  [override]\r\nFound 2 errors in 1 file (checked 1 source file)\r\n"
+    },
+    {
+      "gate": "mypy314",
+      "exit_code": 1,
+      "output": "tests\\test_oracle9_w1_expect.py:422: error: Argument 1 of \"__contains__\" is incompatible with supertype \"typing.Sequence\"; supertype defines the argument type as \"object\"  [override]\r\ntests\\test_oracle9_w1_expect.py:422: note: This violates the Liskov substitution principle\r\ntests\\test_oracle9_w1_expect.py:422: note: See https://mypy.readthedocs.io/en/stable/common_issues.html#incompatible-overrides\r\ntests\\test_oracle9_w1_expect.py:422: error: Argument 1 of \"__contains__\" is incompatible with supertype \"typing.Container\"; supertype defines the argument type as \"object\"  [override]\r\nFound 2 errors in 1 file (checked 1 source file)\r\n"
+    }
+  ],
+  "pytest": "NOT RUN before removing real-env mutation"
+}

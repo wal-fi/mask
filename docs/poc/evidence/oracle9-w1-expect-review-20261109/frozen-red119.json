@@ -1,0 +1,181 @@
+{
+  "test_sha256": "ccb1f29f8915a548085fc9028f4ea75a233ea859f54fb5b62275f1935e85441a",
+  "test_bytes": 45520,
+  "test_lines": 1214,
+  "protected27": [
+    [
+      "docs/poc/pg16_shell_native_control_entry.py",
+      "356d22914c21c7fefb195b9471b12591cd7120deb152524104ff3b4559fbf0c6",
+      15580
+    ],
+    [
+      "docs/poc/pg16_shell_native_control.py",
+      "b4198fe1606120e1e2df4fe9bff6a52fce4601a67074fdd7e922ef528341a496",
+      30055
+    ],
+    [
+      "docs/poc/pg16_shell_native_control_win32.py",
+      "eaebedd6ac36602ba30cb51a4c30a2a93737f1127c23cdc4ebb8ae8cf9246407",
+      15373
+    ],
+    [
+      "docs/poc/pg16_shell_admission_win32.py",
+      "10c9058f0d6071e86c7b4c8b2566c1ae4c9f78aeba9d92c50687ae6481f22726",
+      31948
+    ],
+    [
+      "docs/poc/pg16_shell_admission_host.py",
+      "dfcc4ed6be3ea8ab47b7a38ca8a9d4bfa00b3c75cda41c365be3dd5b1aa3dac7",
+      33234
+    ],
+    [
+      "docs/poc/pg16_shell_native_control_verify.py",
+      "b3755d492ce147596a27dd9a36bc0ecf66686efd65ef60178915ab2d1d1f7a10",
+      24616
+    ],
+    [
+      "docs/poc/pg16_shell_native_control_collect.py",
+      "1972ec74d96f93d824dfe18da0e0288a7fc21b7f2997e28d5afe497b782c9f52",
+      20571
+    ],
+    [
+      "docs/poc/pg16_shell_native_control_collect_win32.py",
+      "ccb3f74af75be04bbe685bc195c84d17e0457efe15732ed6cdbe9f9f057c3b3a",
+      22315
+    ],
+    [
+      "docs/poc/pg16_shell_native_control_collect_pinned.py",
+      "37b098cf604099a8aa9e64c4a3569ce06c6fe389188eba9a2b46478b04a8285e",
+      5373
+    ],
+    [
+      "docs/poc/pg16_shell_native_control_collect_entry.py",
+      "3d309771f5b33151aaf8773bdc86fbca57a1d1777ea2620848133ad1129c9e4b",
+      26337
+    ],
+    [
+      "docs/poc/pg16_shell_native_control_lifecycle_v2.py",
+      "7bbf734c8b4a1fefe1617fc8c1cff2a5de0b33f8996eb98b0016233ab0b040cb",
+      14964
+    ],
+    [
+      "tests/test_pg16_shell_native_control_lifecycle_v2.py",
+      "4027984417a9dc811fb26859fd87acedb36b108a6b45d0090de681c0a8d065f8",
+      30476
+    ],
+    [
+      "docs/poc/pg16_shell_tree_reconcile.py",
+      "bb1f1984f5a144564a56e23fb5c4797dc0851651b608012ce229cc14d12a801b",
+      2935
+    ],
+    [
+      "tests/test_pg16_shell_tree_reconcile.py",
+      "ad0742c02abe3544b9b4c5607df88563d1c0bf6458f278050cc0829adefe3a04",
+      17763
+    ],
+    [
+      "docs/poc/pg16_shell_native_control_case_v2.py",
+      "0fac3c7bd807e34c46e61a16c20bcda5c3a77b4ebed3c3404ff9250c4405a936",
+      22627
+    ],
+    [
+      "tests/test_pg16_shell_native_control_case_v2.py",
+      "72dde65cd0c4db08c3a864726bcb86b57af43ff1011299770a069253c30385cf",
+      36085
+    ],
+    [
+      "docs/poc/pg16_shell_native_control_provenance_v2.py",
+      "eac9709115ddbb70dc89ea1c59b734ffec556cfbf6d1ff25b0eb859116761827",
+      21359
+    ],
+    [
+      "tests/test_pg16_shell_native_control_provenance_v2.py",
+      "692b4d4ea7414e419036bf3264cc8059ec367ade2c7ad074b49327bc518f8f57",
+      62796
+    ],
+    [
+      "docs/poc/pg16_shell_native_control_bundle_v2.py",
+      "91c20df4670cda5450aa02795627b719bf30309ae8cb2447d426e86b298f4687",
+      28551
+    ],
+    [
+      "tests/test_pg16_shell_native_control_bundle_v2.py",
+      "dd329afec13e3a66302136ad0421df91f20353bcd2a54e5483abe6330cc6ccda",
+      51189
+    ],
+    [
+      "deploy/oracle9_w1_controller.py",
+      "4c155d76208f113852f95fec4c57253eef480c610aa390423fa6f82baf1f7bc7",
+      22453
+    ],
+    [
+      "tests/test_oracle9_w1_controller.py",
+      "084d62cd2a567a0710a7e13b5e9b33896c255ee743fa58e3cc0dab08135b9039",
+      44298
+    ],
+    [
+      "tests/test_oracle9_w1_driver.py",
+      "0e9a8cc1d35f69e6ca03a14f8a910af5491df6dffadb32a432defeb445099371",
+      73046
+    ],
+    [
+      "deploy/oracle9_w1_driver.py",
+      "39a6890457c3bc9331fc371948fce896cbbc37e2d49f1584a5629490f43d2794",
+      36956
+    ],
+    [
+      "tests/test_oracle9_w1_driver_session.py",
+      "585540afafdc10b5f8a201770ff2fc1c33fd5f36219dc18907b1626498692bc7",
+      45030
+    ],
+    [
+      "deploy/oracle9_w1_main.py",
+      "372f342fe966217ed7bc7b03a7271e98eb2be708c2c319c7825551a904b690f1",
+      36213
+    ],
+    [
+      "tests/test_oracle9_w1_main.py",
+      "5abe4582908c5efe03222b26c2046e4607ab330d800186938151f6f5f443a463",
+      101669
+    ]
+  ],
+  "app124_changed": [],
+  "red": {
+    "exit_code": 1,
+    "suites": [
+      {
+        "name": "pytest",
+        "errors": "0",
+        "failures": "113",
+        "skipped": "0",
+        "tests": "119",
+        "time": "9.842",
+        "timestamp": "2026-11-09T15:41:12.100656-03:00",
+        "hostname": "SMTZDIBDN1954"
+      }
+    ],
+    "non_absence_failures": []
+  },
+  "statics": [
+    {
+      "gate": "ruff",
+      "exit_code": 0,
+      "output": "All checks passed!\n"
+    },
+    {
+      "gate": "format",
+      "exit_code": 0,
+      "output": "1 file already formatted\n"
+    },
+    {
+      "gate": "mypy311",
+      "exit_code": 0,
+      "output": "Success: no issues found in 1 source file\r\n"
+    },
+    {
+      "gate": "mypy314",
+      "exit_code": 0,
+      "output": "Success: no issues found in 1 source file\r\n"
+    }
+  ]
+}
