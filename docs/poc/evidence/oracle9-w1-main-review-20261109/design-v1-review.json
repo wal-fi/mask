@@ -1,0 +1,22 @@
+{
+  "terminal_recovered": 76883,
+  "exit": 0,
+  "design": {
+    "sha256": "8d5bc0ddb375ad8585978c64260f5a70eda7b3eb913e278fb233dbb016b2654b",
+    "bytes": 29127,
+    "lines": 521
+  },
+  "root_full_read": true,
+  "decision": "Not accepted for tests yet; documentary corrections only, source/test pins unchanged.",
+  "findings": [
+    "Bootstrap /dev/null and source-loader FDs are acquired before MainRoot and claimed resource-free on failure; outer containment covers run only. Track early FDs from before acquisition and verify close before safe early exit.",
+    "Permanent OWNED link exception conflicts with the prior all-slots-empty contract; reconcile borrowed stdio with verified link retirement, without clearing an active reader or uncertain slot.",
+    "hold rounds is a finite-return knob on the production hold; use finite step/decision testing and non-returning runtime hold. Reinstalling handlers and tight retry on failing wait must not escape or spin.",
+    "Reader lock is described inside read_exact, permitting release between INIT header and body. Public read_init/read_control must hold one reader lock for the whole frame.",
+    "MAIN output adds an unnecessary unaccepted protocol extension and post-predicate IO. Preserve existing driver-only metadata wire and caps, no new MAIN event.",
+    "WorkerSession.close does not universally convert BaseException into WorkerSessionError: _exclusive can let it escape, _cleanup catches internally and returns HELD. State this exactly.",
+    "Python installs default SIGINT before script; do not assume early signals ignored. Primary docs checked main-thread handlers, thread exception output, join/is_alive and namespace init behavior."
+  ],
+  "primary_reference_file": "primary-reference-review.json",
+  "effects": "No tests/source or native execution; design-only. Main implementation/test still absent."
+}

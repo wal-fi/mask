@@ -1,0 +1,49 @@
+{
+  "date": "2026-11-09",
+  "purpose": "Primary documentation review for prospective D2 design; no native or installed-candidate execution evidence.",
+  "sources": [
+    {
+      "url": "https://docs.python.org/3.11/library/signal.html",
+      "facts": [
+        "Python handlers execute in the main interpreter main thread and only that thread installs handlers.",
+        "A handler-raised exception can interrupt Python execution at an arbitrary bytecode boundary.",
+        "SIGKILL cannot be caught, blocked or ignored."
+      ],
+      "review_obligation": "Signal handlers must not acquire application locks or invoke session cleanup; interrupted acquisition cannot be treated as atomic."
+    },
+    {
+      "url": "https://docs.python.org/3.11/library/threading.html",
+      "facts": [
+        "Thread.join returns None; checking is_alive after a successful join determines whether timeout occurred.",
+        "Uncaught thread exceptions normally reach threading.excepthook and may print to stderr.",
+        "Daemon threads may be abruptly stopped at interpreter shutdown."
+      ],
+      "review_obligation": "Use non-daemon handles, no success on join return alone, preserve uncertainty after failed/interrupted join, sanitize target exceptions without raw traceback."
+    },
+    {
+      "url": "https://man7.org/linux/man-pages/man7/pid_namespaces.7.html",
+      "facts": [
+        "Termination of a PID namespace init process causes kernel SIGKILL of the namespace processes.",
+        "Namespace init has special signal handling restrictions; ancestor SIGKILL and SIGSTOP are exceptions."
+      ],
+      "review_obligation": "Do not equate cooperative signal handling with hard host-owned termination or infer native liveness from a fake hold seam."
+    },
+    {
+      "url": "https://peps.python.org/pep-0475/",
+      "facts": [
+        "For covered EINTR cases, returning signal handlers permit retry with timeout recomputed; raising handlers propagate.",
+        "os.close and os.dup2 are special: EINTR is ignored rather than retrying the syscall."
+      ],
+      "review_obligation": "Do not retry uncertain close; retain exact ownership and separate logical checks from physical evidence."
+    },
+    {
+      "url": "https://docs.python.org/3.11/using/cmdline.html",
+      "facts": [
+        "Isolated mode -I implies -E, -P and -s.",
+        "The script directory and user site are excluded from sys.path; PYTHON environment variables are ignored."
+      ],
+      "review_obligation": "Use installed app plus explicitly pinned source loading, no path injection; candidate runtime admission remains separate."
+    }
+  ],
+  "scope": "Documentation informs review only. Holds, signals, imported resource footprint and actual cleanup still require tests and later physical admission; no new code or deployment here."
+}

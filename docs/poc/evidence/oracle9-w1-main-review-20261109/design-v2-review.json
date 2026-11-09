@@ -1,0 +1,16 @@
+{
+  "terminal_recovered": 49592,
+  "exit": 0,
+  "full_design_read": true,
+  "sha256": "4b8d5e33a2751dac24fdba603769be72be6c7834b43bf201438805d548fb3f5a",
+  "bytes": 35418,
+  "lines": 634,
+  "resolved": "Early root/source ticket, logical link retirement, permanent nonraising handlers, hold_step without rounds, whole-frame locking, unchanged wire, outer containment direction.",
+  "remaining": [
+    "Known source FD must be closed once on ordinary fstat/read/validation failure before clean LOAD_FAILED; open uncertainty remains HOLD, align M3/M4.",
+    "Retained entry executes endless hold, so M18/M22 need finite _run_once(root)->decision seam with root already caller-owned; entry guarantees nonreturning hold.",
+    "In-flight read/write cannot deliver OK after link becomes POISONED concurrently; require post-IO sticky state checks.",
+    "Correct absolute no-thread/native-quietness and SDK cleanup-result language; late-control tests preserve already emitted allowed driver prefix."
+  ],
+  "decision": "Documentary review still pending; no tests/source/physical effects."
+}

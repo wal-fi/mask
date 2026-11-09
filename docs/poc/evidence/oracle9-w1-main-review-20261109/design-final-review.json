@@ -1,0 +1,33 @@
+{
+  "date": "2026-11-09",
+  "base_commit": "058bad8699416e0e0d2165ca40d24bc7d80a5495",
+  "terminals_recovered": [
+    76883,
+    49592,
+    22983
+  ],
+  "all_exit": 0,
+  "zero_writer_confirmed_before_review": true,
+  "design_sha256": "080c37abe7699a2df76e230f9c66cac502a3027e88a17e792c8344ec703dd4cc",
+  "design_bytes": 39922,
+  "design_lines": 697,
+  "review": "Root read whole V1 and V2, and entire final delta. Accepted under delegation for RED-first fake-OS tests with explicit DESIGN-REVIEW precisions, not for physical execution.",
+  "unchanged_upstream25": true,
+  "unchanged_app124": true,
+  "main_source_absent": true,
+  "main_test_absent": true,
+  "functional_test_runs": 0,
+  "code_changes": 0,
+  "native_effects": 0,
+  "limits": [
+    "No installed Oracle execution or resource admission measured.",
+    "Physical hold/liveness/signals and raw descriptor cleanup need later own evidence.",
+    "T5/host bridge/readmission/product gates remain open."
+  ],
+  "review_precisions": [
+    "System.is_main_thread callback for cooperative checks without global stdlib patches; fake role switches stay inside the seam.",
+    "HOLD_FAULTS_MAX exact255 replaces unspecified LIMITE.",
+    "MainDecision finite EXIT(code64..70) orHOLD(codeNone), no root/owner transfer.",
+    "No reads/outputs after last link retirement; finite tests use _run_once and hold_step, never endless entry/hold path."
+  ]
+}

@@ -1,0 +1,521 @@
+# W1 Oracle — main físico D2 e bindings das portas (desenho)
+
+2026-11-09. Somente desenho, escrito pelo Claude2 (sessão
+51ea0d85-05bb-4d24-ba9a-c9627c3f832f, claude-opus-5-5, esforço medium), sob a
+delegação vigente. Nenhuma aprovação individual do usuário é inventada ou
+pedida. Nada executado para escrevê-lo: nenhum teste, Docker, PostgreSQL,
+SQL, socket, thread, processo, guard, sinal ou chamada nativa real. Nenhuma
+contagem medida é alegada aqui.
+
+Fixos e inalterados: driver `deploy/oracle9_w1_driver.py` SHA-256
+`39a6890457c3bc9331fc371948fce896cbbc37e2d49f1584a5629490f43d2794`
+(36956 bytes), núcleo puro `deploy/oracle9_w1_controller.py`
+`4c155d76208f113852f95fec4c57253eef480c610aa390423fa6f82baf1f7bc7`
+(22453 bytes), os 114 testes D1, os 35 testes de sessão `585540af`, o SDK
+(`worker_session`, `result_receiver`, `transport`, `budget`, `linux_guard`),
+source23, app124, estado16 e a tentativa consumida.
+
+## 1. Fontes lidas
+
+- Driver vigente: `Ports`, `Owner`, `_claim`/`_fresh`, `run(ports, *,
+  owner=None)`, `_Driver` (portas usadas e ordem de registro).
+- `runtime/linux_guard.py` completo: `protect_process` exige
+  `threading.active_count() == 1` e `Threads: 1`, captura **BaseException** e
+  devolve `ProcessGuardError(SYSTEM)`.
+- `runtime/worker_session.py`, `pgwire/transport.py` (`RawChannel`),
+  `pgwire/result_receiver.py`, `runtime/budget.py` (status/entries/epochs).
+- NATIVE-PLAN v4 §§3, 4, 9, 10, 12, 14, 17; DRIVER-DESIGN v3 §§2, 5, 7–9,
+  11, 13; DRIVER-DESIGN-REVIEW; DRIVER-SESSION-DESIGN §5.
+- O documento DRIVER-SESSION-VALIDATION não foi relido; uso apenas o
+  registro do root sobre ele (35 próprios, 1109 relacionados).
+
+## 2. Reconciliação dos binds: emenda prospectiva para três RO
+
+Histórico, preservado como estava:
+
+- NATIVE-PLAN §4: um único bind RO do controlador.
+- DRIVER-DESIGN §2: dois binds RO (driver e núcleo puro), com o driver como
+  entry point.
+
+Emenda prospectiva sob delegação (não é aprovação do usuário nem mount
+realizado): **três binds RO de arquivo único** mais os tmpfs declarados do
+perfil:
+
+| destino | fonte | pin |
+|---|---|---|
+| `/opt/maskgw/lab/oracle9_w1_main.py` | `deploy/oracle9_w1_main.py` | NOT_PREPARED (ainda não existe) |
+| `/opt/maskgw/lab/oracle9_w1_driver.py` | `deploy/oracle9_w1_driver.py` | `39a68904…2794`, 36956 |
+| `/opt/maskgw/lab/oracle9_w1_controller.py` | `deploy/oracle9_w1_controller.py` | `4c155d76…7bc7`, 22453 |
+
+Comando do container: `python -I -B /opt/maskgw/lab/oracle9_w1_main.py`.
+O driver deixa de ser entry point; continua só definições (o teste D1
+congelado proíbe main nele). Sem rebuild de imagem ou pacote, sem `sys.path`,
+`PYTHONPATH`, `.pth` ou import de vizinho: `-I` no CPython 3.11 implica `-E
+-s -P`, então o diretório do script não entra no path (a conferir no runtime
+real, §11). O main carrega o driver pelos bytes pinados (§4); o driver carrega
+o núcleo puro pelos seus próprios pins, pela porta reader (§6.1).
+
+## 3. Módulo `deploy/oracle9_w1_main.py`: fronteira e API mínima
+
+Import do módulo é **só definições**: a única execução de topo é
+`if __name__ == "__main__": raise SystemExit(main(real_system(), real_hold()))`.
+Imports de topo: stdlib (`hashlib`, `os`, `select`, `signal`, `socket`,
+`stat`, `sys`, `threading`, `time`, `types`) e o `maskgw` instalado
+(`RawChannel`, `TransportLimits`, `WorkerSession`, `protect_process`,
+`ProcessRole`, `SessionState`, `ReservationKind`). Nenhum segredo, leitura de
+stdin ou thread antes do guard.
+
+Constantes:
+
+```text
+MAIN_PATH    = "/opt/maskgw/lab/oracle9_w1_main.py"
+DRIVER_PATH  = "/opt/maskgw/lab/oracle9_w1_driver.py"
+DRIVER_SHA   = "39a6890457c3bc9331fc371948fce896cbbc37e2d49f1584a5629490f43d2794"
+DRIVER_BYTES = 36956
+DRIVER_MODULE = "_maskgw_w1_lab_driver"
+PURE_SHA     = "4c155d76208f113852f95fec4c57253eef480c610aa390423fa6f82baf1f7bc7"
+PURE_BYTES   = 22453
+INIT_HEADER  = 8      # >4sI, magic MGI1
+INIT_BODY_MAX = 65536
+CONTROL_BYTES = 16    # >4sBBHII, magic MGL1
+LINE_MAX     = 512
+LINES_MAX    = 57     # 56 do driver + 1 linha MAIN
+WRITE_CAP_S  = 2.0
+SLICE_S      = 0.25
+SLOTS        = ("pair_writer", "pair_reader", "sink_thread", "watcher_thread", "link")
+```
+
+`WRITE_CAP_S`, `SLICE_S` e `LINES_MAX` são escolhas sob delegação, não
+medições.
+
+API estável (tudo testável com fakes, sem efeito no import):
+
+| nome | papel |
+|---|---|
+| `System` | dataclass congelada de callables do SO (seam único, §9) |
+| `real_system()` | constrói o `System` real; só chamado no bloco `__main__` |
+| `load_driver(system) -> types.ModuleType` | loader pinado (§4) |
+| `Slot`, `SlotState` (EMPTY/UNKNOWN/OWNED), `SlotRefusal` | §5 |
+| `MainRoot` | raiz forte (§5) |
+| `PinnedReader`, `ControllerGuard`, `MonotonicClock`, `SessionIds`, `SessionFactory`, `HostLink`, `SocketPairs`/`PairWriter`/`PairReader`, `ThreadPorts`/`ThreadHandle` | bindings (§6) |
+| `build_ports(root) -> Ports` | monta o `Ports` do namespace carregado |
+| `safe_exit(root) -> bool` | predicado de saída segura (§7) |
+| `hold(root, seam, *, rounds=None) -> int` | retenção (§8); `rounds` só em teste |
+| `MainOutcome` + `EXIT_CODES` | resultado fechado (§7) |
+| `main(system, seam) -> int` | ciclo de vida (§7) |
+
+Exceções próprias: `MainRefusal(Exception)` com categoria fechada (para
+recusas de binding que o driver deve tratar como falha comum) e
+`MainSignal(BaseException)` só com o número do sinal (§8). Nenhuma carrega
+texto de entrada, caminho, errno ou exceção original; são levantadas fora de
+`except` ou com `__context__`/`__cause__` zerados como no `_claim` do driver.
+
+## 4. Bootstrap confiável antes do guard
+
+Ordem exata dentro de `main(system, seam)`:
+
+1. **Silêncio de saída** (sem segredo ainda): `fd2` recebe `/dev/null` por
+   `open(O_WRONLY|O_CLOEXEC)` + `dup2(·, 2)` + `close`; `sys.stdout = None`,
+   `sys.stderr = None`; `sys.excepthook`, `threading.excepthook` e
+   `sys.unraisablehook` viram funções no-op. Falha: `SETUP_FAILED`, sem
+   escrita em fd1.
+2. **Carga do driver** (exceção declarada de bootstrap): necessária para
+   construir o `Owner` exato antes do guard. `load_driver`:
+   - `open(DRIVER_PATH, O_RDONLY|O_NOFOLLOW|O_CLOEXEC)`, `fstat` exige
+     arquivo regular com `st_size == DRIVER_BYTES`;
+   - lê no máximo `DRIVER_BYTES + 1` bytes, fecha o fd, exige tamanho exato e
+     SHA-256 igual a `DRIVER_SHA` **antes** de qualquer execução;
+   - `types.ModuleType(DRIVER_MODULE)`, `__file__ = DRIVER_PATH`, registro em
+     `sys.modules` (os dataclasses resolvem o módulo por esse nome) e
+     `exec(compile(raw, DRIVER_PATH, "exec"), module.__dict__)` dos mesmos
+     bytes;
+   - confere no namespace `PURE_SHA`, `PURE_BYTES` e `PURE_PATH` iguais às
+     constantes do main e a presença exata de `Owner`, `Ports`, `run`.
+
+   Falha (só `Exception`): remove o nome de `sys.modules` se registrado,
+   descarta a exceção sem formatar e devolve `LOAD_FAILED`. Nada foi
+   adquirido. Um `BaseException` nessa fase também não tem recurso a reter e
+   sai pelo caminho normal do interpretador, já silenciado.
+
+   Limite honesto: executar o driver importa transitivamente `maskgw` e a
+   stdlib (`socket`, `subprocess`, `select`, `ctypes` só depois do gate de
+   plataforma do guard etc.). Não se alega que esses imports são livres de
+   efeito físico implícito, nem que a admissão de imports/recursos no Linux
+   (VmSize antes do guard, `Threads: 1`) já foi medida para este conjunto de
+   três arquivos.
+3. `owner = namespace["Owner"]()`; `root = MainRoot(namespace, owner)`.
+4. **Handlers de sinal** (§8) instalados na thread principal.
+5. **Link** (§6.6): verifica e configura fd0/fd1; falha `LINK_FAILED`, sem
+   leitura nem escrita.
+6. `ports = build_ports(root)`; `result = namespace["run"](ports,
+   owner=root.owner)`.
+
+Guard antes de segredo: o primeiro uso de porta em `run` é
+`guard.protect`. LAB_INIT (leitura de fd0) e a carga/captura do núcleo puro
+só acontecem depois do guard aprovado, dentro do driver, como hoje. Nenhuma
+thread é criada antes do guard (o próprio guard recusa se houver).
+
+## 5. MainRoot e slots
+
+```text
+MainRoot
+  namespace : types.ModuleType      # o módulo exato carregado; retido sempre
+  owner     : namespace.Owner       # exato, fresco, passado a run e nunca trocado
+  slots     : dict[str, Slot]       # exatamente as 5 chaves de SLOTS, fixas
+  ledger    : BudgetLedger | None   # o único ledger visto pela factory
+  sessions  : list[WorkerSession]   # toda sessão criada, em ordem
+  result    : DriverResult | None
+  control   : int | None            # tipo fechado do BaseException que escapou
+  signals   : int                   # contador limitado 0..255
+  outcome   : MainOutcome | None
+
+Slot: state ∈ {EMPTY, UNKNOWN, OWNED}; value: objeto exato ou None
+```
+
+Regras (as únicas operações, todas na raiz):
+
+- `reserve(*names)`: todos os slots citados precisam estar EMPTY, senão
+  `SlotRefusal` **antes** de qualquer efeito; então todos viram UNKNOWN.
+  Um slot OWNED ou UNKNOWN nunca é sobrescrito nem rebaixado.
+- `own(name, value)`: exige UNKNOWN; grava o objeto exato e vira OWNED.
+  Acontece **antes** de devolver o objeto ao driver.
+- `clear(name, value)`: exige OWNED e `slot.value is value`; vira EMPTY. Só
+  chamado depois de close ou join **verificado** (§6.7, §6.8).
+- Exceção ou interrupção entre `reserve` e `own` deixa UNKNOWN: incerteza
+  retida, nunca limpa por exceção.
+
+Ordem por alocação: `reserve` → chamada ao SO → `own` → retorno ao driver →
+o driver registra no `Owner` (endpoints antes de usar, handle antes de
+`start`). Um par reserva **os dois** slots antes do `socketpair`.
+
+Limite honesto: em CPython o intervalo entre o retorno da chamada ao SO e a
+gravação no slot não é atômico. Um sinal tratado nesse intervalo pode
+levantar `MainSignal` com o fd ou a thread já criados e ainda não gravados.
+O slot fica UNKNOWN e a raiz não prova a ausência do recurso: o resultado é
+retenção (§8). Máscara de sinais não é apresentada como prova de atomicidade;
+não é usada.
+
+O slot `link` é OWNED desde o passo 5 pelo objeto `HostLink` exato e nunca é
+limpo durante o processo: fd0/fd1 são do processo e só terminam com ele.
+
+## 6. Bindings das portas (assinaturas exatas do driver, sem mudar o SDK)
+
+### 6.1 reader — `read(path: str, limit: int) -> bytes`
+
+Aceita só `path == namespace.PURE_PATH` e `limit == PURE_BYTES + 1`; senão
+`MainRefusal`. Mesmo procedimento de abrir/fstat/ler limitado/fechar do §4,
+sem conferir SHA (o driver confere tamanho e SHA e executa). Erros viram
+exceção comum; o driver converte em `LOAD`.
+
+### 6.2 guard — `protect(*, role, address_limit_bytes) -> GuardFacts`
+
+Chama `protect_process(role=role, address_limit_bytes=address_limit_bytes)`
+sem `expected_parent_pid`. Nada mais. Fato do SDK: um `MainSignal` levantado
+durante o guard é capturado por ele e vira `ProcessGuardError(SYSTEM)`, logo
+`GUARD_FAILED`; o contador `signals` da raiz registra o sinal (§8).
+
+### 6.3 clock — `monotonic() -> float`, `sleep_until(when: float) -> None`
+
+`time.monotonic`, absoluto. `sleep_until` repete `time.sleep(when − agora)`
+até `monotonic() >= when`; nunca volta antes. Sem busy loop.
+
+### 6.4 ids — `session_id() -> bytes`
+
+`os.urandom(16)`. A unicidade continua conferida pelo driver.
+
+### 6.5 factory — `create(ledger, token, *, lock, key, limits, profile, guard)`
+
+Exige exatamente esses argumentos e devolve
+`WorkerSession(ledger, token, lock=lock, key=key, limits=limits,
+profile=profile, guard=guard)`, a classe pública exata. Antes de devolver:
+grava o ledger na raiz (o primeiro; um ledger diferente depois é
+`MainRefusal`) e acrescenta a sessão a `root.sessions`. O construtor da
+sessão não cria recurso de SO; não há slot para ela (o `Owner` e o ledger são
+a fonte de verdade).
+
+### 6.6 link — fd0/fd1 binário, duplex, limitado
+
+Configuração (passo 5 do §4): `fstat` de fd0 e fd1 exige FIFO ou socket;
+`isatty` falso nos dois; `set_blocking(0, False)` e `set_blocking(1, False)`.
+Nada é lido ou escrito aqui. Estado interno: `poisoned: bool`, contador de
+linhas, um `threading.Lock` de leitor (`acquire(blocking=False)`), último
+status fechado `OK | EOF | EXPIRED | IO | POISONED | CONCURRENT`.
+
+Leitura comum a `read_init` e `read_control` (`read_exact(n, deadline)`):
+
+- adquire o lock de leitor sem bloquear; ocupado → `CONCURRENT`, `poisoned`,
+  devolve `None` (leitura simultânea é defeito, nunca intercalação);
+- laço: `select([0], [], [], min(restante, SLICE_S))`; pronto →
+  `os.read(0, faltam)`. **Nunca** pede mais que o restante do frame: não há
+  read-ahead nem buffer residual que outra thread herde;
+- `b""` → `EOF`; `EAGAIN`/`EINTR` → continua; outro `OSError` → `IO`;
+  restante ≤ 0 → `EXPIRED`. Frame parcial em qualquer saída não-OK →
+  `poisoned`; depois disso toda leitura devolve `None` sem tocar fd0;
+- libera o lock em `finally`; um `BaseException` no meio também envenena.
+
+`read_init(*, deadline) -> bytes | None`: lê 8 bytes; se magic ≠ `MGI1` ou
+comprimento > `INIT_BODY_MAX`, devolve **só** os 8 bytes (o decoder puro
+recusa → `ABORT{INIT}`), sem ler o corpo; senão lê exatamente o corpo e
+devolve cabeçalho+corpo. `read_control(*, deadline) -> bytes | None`: lê
+exatamente 16 bytes. A validação semântica é do núcleo puro; o
+retorno tardio é tratado pela cerca pós-retorno do driver (EXPIRED e EOF
+chegam como `None`; o driver distingue prazo pelo relógio, e IO é relatado
+pelo driver como EOF — limitação do enum atual, sem mudar o driver).
+
+`write(line: bytes) -> bool`: exige `bytes`, 1..`LINE_MAX`, ASCII, sem
+`\n`/`\r`, link não envenenado e linhas < `LINES_MAX`. Escreve `line + b"\n"`
+com `select` em fd1 e `os.write` até completar, prazo absoluto
+`agora + WRITE_CAP_S`. Completa → `True`. Parcial, `EPIPE` (Python ignora
+SIGPIPE por padrão, a conferir) ou prazo → `poisoned`, `False`. Nunca
+levanta para conteúdo; o driver converte `False` em `OUTPUT`. Escritor único
+é a thread principal (o driver só emite dela; o main só escreve a linha MAIN
+depois de `run`).
+
+Segredo: fd1 recebe só linhas de metadados do driver e uma linha MAIN
+fechada (§7). Nada de `print`, `sys.stdout`, traceback ou texto de exceção.
+fd2 é `/dev/null` desde o passo 1.
+
+**Um leitor por instante.** Principal lê GO{23} e só depois o driver cria e
+inicia o watcher; o watcher lê exatamente um frame; a principal só volta a
+ler depois de join verificado. Com join negativo o driver aborta sem ler, o
+watcher pode continuar dentro de `read_control` com o lock de leitor, o slot
+`watcher_thread` continua OWNED e a raiz vai para retenção (§8). Nenhuma
+leitura do main ou do hold toca fd0.
+
+### 6.7 pair — `create() -> (writer, reader)`
+
+1. `root.reserve("pair_writer", "pair_reader")` (ocupado → `MainRefusal`
+   antes do SO; o driver marca `unknown` e retém).
+2. `a, b = socket.socketpair(AF_UNIX, SOCK_STREAM)` (não herdáveis por
+   padrão no Python 3).
+3. `own("pair_writer", PairWriter(a))`, `own("pair_reader", PairReader(b))`;
+   devolve os dois objetos exatos.
+
+`PairWriter.channel(*, stop) -> RawChannel(a, stop=stop,
+limits=TransportLimits())`, a classe pública exata exigida pelo receiver.
+`shutdown_write()` → `a.shutdown(SHUT_WR)`. `PairReader.read(limit, *,
+deadline)`: `settimeout(min(restante, SLICE_S))` em fatias; `recv(limit)`
+nunca devolve mais que `limit`; `b""` → `None` (EOF); prazo vencido sem dado
+→ `TimeoutError`; outro erro → exceção comum (o sink classifica IO).
+
+`close()` dos dois: `sock.close()` e só então, se `fileno() == -1`,
+`root.clear(slot, self)`. Exceção ou fileno diferente → slot continua OWNED e
+a exceção sobe ao driver (que retém). Referência nunca é solta com incerteza.
+
+### 6.8 threads — `create(target, *, name) -> handle`; `start() -> bool`; `join(*, deadline) -> bool`
+
+- `name` só `"sink"` → slot `sink_thread` ou `"watcher"` → `watcher_thread`;
+  outro nome → `MainRefusal` antes de qualquer efeito.
+- `create`: `reserve(slot)`; constrói `threading.Thread(target=wrapper,
+  name=name, daemon=False)`; `own(slot, handle)`; devolve o handle **sem
+  iniciar**. O driver o registra no `Owner` antes de `start`.
+- `wrapper`: marca `entered`, executa `target()` e em `finally` marca
+  `exited` (Events). Exceções na thread vão ao `threading.excepthook` no-op.
+- `start()`: chama `thread.start()`; devolve `True` só se retornou
+  normalmente. Exceção (inclusive interrupção esperando `_started`) sobe ao
+  driver ou escapa (se `BaseException`); o slot continua OWNED.
+- `join(*, deadline)`: laço `thread.join(timeout=min(restante, SLICE_S))`;
+  devolve `True` só quando `exited` está marcado **e** `is_alive()` é falso;
+  então `root.clear(slot, self)`. Prazo sem isso → `False`, slot OWNED.
+  Termina-antes-do-start-voltar: `exited` marcado e thread morta → `True`.
+  Thread nunca iniciada (start falhou antes de criar) → `exited` nunca é
+  marcado → `False`; preferimos retenção a supor que não existe. Interrupção
+  dentro de `join` escapa com o slot OWNED.
+- As threads nunca chamam métodos exclusivos da `WorkerSession`. O driver só
+  passa `request_stop` ao watcher (§8 do DRIVER-DESIGN), e o sink só lê o
+  `PairReader`. Nenhuma thread é abandonada viva: thread viva mantém o slot
+  OWNED e a raiz em retenção.
+
+## 7. Ciclo de vida, resultado e predicado de saída segura
+
+```text
+SETUP_FAILED  → exit 64   (passo 1; nada adquirido)
+LOAD_FAILED   → exit 65   (passo 2)
+LINK_FAILED   → exit 66   (passo 5)
+GUARD_FAILED  → exit 67   (driver; se safe_exit)
+ABORTED       → exit 68   (driver; se safe_exit)
+T6_UNKILLED   → exit 69   (driver; se safe_exit)
+CONTROL       → exit 70   (BaseException escapou de run; se safe_exit)
+HELD          → sem exit  (§8)
+```
+
+Nenhum código é 0: não existe verde global no main. `RETAINED` vai sempre
+para HELD. Depois de `run`, o main escreve no máximo uma linha
+`{"e":"MAIN","hold":<bool>,"link":<status>,"outcome":<enum>,"signals":<0..255>}`
+pelo link (falha de escrita é ignorada) e então sai ou entra no hold.
+
+`main` captura o resultado assim, sem reexecutar nada:
+
+```text
+try:
+    root.result = namespace.run(ports, owner=root.owner)
+except BaseException as control:
+    root.control = classe fechada (KeyboardInterrupt | SystemExit | MainSignal | OTHER)
+    del control                     # sem traceback, sem texto, sem reraise
+```
+
+Sem nova chamada a `run`, sem retry de recurso, sem reset do owner, sem
+cleanup legado de fallback. O `Owner` usado é a única instância criada no
+passo 3; com resultado RETAINED exige-se `result.owner is root.owner`
+(identidade), senão HELD.
+
+`safe_exit(root)` devolve `True` somente se **todos** valem, avaliados sobre
+objetos reais (qualquer exceção na avaliação → `False`):
+
+1. `root.result` é um `DriverResult` do namespace com outcome em
+   GUARD_FAILED/ABORTED/T6_UNKILLED, **ou** `root.control` está definido;
+   RETAINED ou ausência de ambos → `False`.
+2. Owner: `session is None`, `session_token is None`, `endpoints`, `handles`
+   e `unknown` vazios. Referências lógicas retidas (ledger, lock, tokens de
+   geração em `_retained`) **não** tornam a saída insegura.
+3. Toda sessão em `root.sessions` tem `state is SessionState.CLOSED`.
+4. Se houve ledger: `status.failed` falso; nenhuma entrada (nem quarentenada)
+   de tipo SESSION; nenhuma com `output_pinned`. Entradas GENERATION LIVE ou
+   DRAINING são permitidas (lógicas, não recurso nativo).
+5. Slots `pair_writer`, `pair_reader`, `sink_thread`, `watcher_thread`
+   EMPTY; `link` OWNED pelo `HostLink` original e com o lock de leitor livre.
+6. `threading.active_count() == 1`.
+
+Labels de retorno não substituem fatos: um ABORTED com sessão HELD, linha
+SESSION ou slot ocupado é inseguro. CLOSED/RELEASED nunca é deduzido do
+outcome; vem do estado da sessão e do ledger. Os critérios 3–6 são fatos de
+objetos e do runtime Python, não prova física de fechamento de fd no kernel
+ou de reap de processo além do que o SDK já confirma (§11).
+
+## 8. Sinais e retenção física (PID1 próprio)
+
+Instalação: passo 4 do §4, na thread principal, depois da carga do driver e
+antes do link e de `run`. `signal.signal` para SIGTERM, SIGINT e SIGHUP com
+o mesmo handler. SIGPIPE e SIGCHLD não são alterados.
+
+Handler de execução (antes do hold): incrementa `root.signals` (satura em
+255); **só no primeiro** sinal levanta `MainSignal(signum)`; os seguintes só
+contam. Assim uma segunda entrega não interrompe a limpeza que o primeiro
+desencadeou.
+
+Interação, sem alegação além do código:
+
+- Durante o guard: o SDK captura e devolve GUARD_FAILED (§6.2).
+- Dentro de `open`/`query`/`send_result_to`/`close` da WorkerSession: o SDK
+  captura `BaseException`, faz o próprio cleanup e levanta
+  `WorkerSessionError` fechado; o driver trata como falha comum. O controle
+  original **não** é preservado; só `root.signals` registra que houve sinal.
+- Em código do driver ou de porta fora do SDK: `MainSignal` não é
+  `Exception`, escapa de `run` e o main registra `CONTROL`. Owner e slots
+  ficam como estavam.
+- Nas threads sink/watcher: handlers Python só rodam na principal.
+
+Hold (`hold(root, seam, *, rounds=None)`):
+
+- Entrada: RETAINED, `safe_exit` falso, erro na avaliação, ou qualquer falha
+  do próprio main depois de `run`.
+- Primeiro troca os três handlers por um que só conta (nunca levanta).
+- Depois `while True: seam.wait()`; o seam real é `signal.pause()`, que dorme
+  até um sinal: sem busy loop e sem timeout. Exceção vinda do `wait` é
+  contada e o laço continua. Não reavalia o predicado, não fecha, não lê fd0,
+  não libera slot, não chama o driver: uma vez retido, retido até o fim.
+- `rounds` existe só para testes finitos (fake seam); o bloco `__main__`
+  passa `None`, e um teste AST exige isso. Nenhum teste roda hold sem fim.
+- Término é do host: kill duro do container (`docker kill`, SIGKILL do
+  namespace pai), fora do processo. Não há timeout que abandone posse.
+
+Isto é a política de **uma tentativa de laboratório**, não a política de
+shutdown do Gateway de produção.
+
+Premissas de Linux/Python PID1 que exigem conferência autoritativa e prova
+física antes de rodar (§11): sinais sem handler enviados de dentro do
+namespace ao PID1 são ignorados pelo kernel, e SIGKILL do namespace pai
+sempre mata; `docker run` sem `--init` deixa o Python como PID1; o
+interpretador ignora SIGPIPE e instala o handler padrão de SIGINT antes do
+script; handlers rodam entre bytecodes da principal e as chamadas
+bloqueantes (`select`, `os.read`, `lock.acquire`, `time.sleep`,
+`signal.pause`) são interrompidas e retomadas conforme PEP 475; sinal
+recebido antes do passo 4 tem a disposição padrão do PID1 (provavelmente
+ignorado, a conferir).
+
+## 9. Seam de SO para testes
+
+`System` é uma dataclass congelada de callables, construída só por
+`real_system()` no bloco `__main__`: `open`, `read`, `close`, `fstat`,
+`dup2`, `isatty`, `set_blocking`, `os_write`, `os_read`, `select`,
+`socketpair`, `thread_class`, `active_count`, `signal`, `monotonic`,
+`sleep`, `urandom`, `protect`. Os bindings usam somente esse seam; nenhum
+monkeypatch global da stdlib nos testes. `seam.wait` do hold é separado.
+
+Não é framework genérico: é a lista fechada de chamadas que este main faz.
+
+## 10. Matriz D2 de testes (fake OS, antes da implementação)
+
+Arquivo futuro `tests/test_oracle9_w1_main.py`; main carregado por
+`runpy.run_path(..., run_name="_lab_test")`. Driver, núcleo, SDK e os testes
+existentes não mudam. Contagem prevista não é medição.
+
+| # | caso |
+|---|---|
+| M-1 | import só definições: nenhum callable do seam chamado; AST com único bloco `__main__` que chama `main(real_system(), real_hold())`; imports na lista do §3 |
+| M-2 | loader do driver: bytes do repositório iguais ao pin; tamanho ±1, SHA errado, não regular, `O_NOFOLLOW` recusado, leitura além de N+1 → `LOAD_FAILED`/65 sem guard, link ou escrita; nada em fd2; nome removido de `sys.modules` |
+| M-3 | pins cruzados `PURE_*` do namespace; `Owner` exato do namespace carregado passado a `run` |
+| M-4 | ordem do bootstrap: silêncio → carga → Owner → handlers → link → `run`; guard é a primeira porta; zero thread antes do guard |
+| M-5 | guard: argumentos exatos; `ProcessGuardError` → GUARD_FAILED/67, zero leitura de fd0 |
+| M-6 | `read_init`: 8+N exato; magic/comprimento inválido devolve só o cabeçalho; EOF, IO, prazo e parcial → `None`, parcial envenena; nunca pede mais que o restante |
+| M-7 | `read_control`: 16 exatos, mesmas distinções |
+| M-8 | `write`: limites de tamanho/ASCII/newline/linhas; parcial, EPIPE e prazo → `False` e envenenado |
+| M-9 | leitor único: leitura concorrente → `None` e CONCURRENT; handoff T4 com watcher fake; join negativo mantém o leitor e o slot, o main nunca lê e entra em HOLD |
+| M-10 | pair: os dois slots UNKNOWN antes do `socketpair`; falha deixa UNKNOWN; slot ocupado recusa antes do SO; `channel` é `RawChannel` exato; `read` bytes/None/TimeoutError; close verificado limpa, close falho mantém OWNED |
+| M-11 | threads: não daemon e nomeadas; UNKNOWN antes do construtor e OWNED antes do retorno; `start` True só após retorno; `start` com exceção mantém OWNED; join True só com `exited` e não vivo, inclusive término antes do retorno de `start`; nunca iniciada → False; join interrompido mantém OWNED |
+| M-12 | factory: `WorkerSession` real exata (harness de SO simulado do teste de sessão) com os valores do driver; ledger diferente recusado |
+| M-13 | clock absoluto e `sleep_until` sem retorno antecipado; ids de 16 bytes do seam |
+| M-14 | `safe_exit`: run limpo com gerações retidas → True; sessão não CLOSED, linha SESSION, pin, slot UNKNOWN/OWNED, leitor ocupado, thread extra ou RETAINED → False; outcome ABORTED com fatos ruins → False |
+| M-15 | controle: KeyboardInterrupt, SystemExit e MainSignal escapando de `run` → raiz retém namespace, owner idêntico e slots; sem novo `run`, retry ou reset; sem saída em fd2 |
+| M-16 | sinais: handler conta e levanta só no primeiro; no hold só conta; sinal durante o guard → GUARD_FAILED com contador |
+| M-17 | hold finito: `rounds` fake nunca devolve antes, não lê fd0, não fecha, não limpa slot; exceção do seam absorvida; bloco `__main__` passa `rounds=None` |
+| M-18 | segredo e saída: só linhas do driver mais uma MAIN fechada; varredura de senha, chave HMAC e canários em fd1/fd2; nenhum código de saída 0 |
+| M-19 | integração fake ponta a ponta: main + driver pinado + WorkerSession real sobre SO simulado, EOF no GO 3 → ABORTED/68 com `safe_exit` |
+| M-20 | RETAINED (ex.: start do sink falho) → HELD com owner e slots retidos |
+
+Distinções preservadas: import só definições (M-1); bootstrap confiável
+(M-2, M-3); guard antes de segredo (M-4, M-5); bindings (M-6 a M-13); posse
+de slots (M-10, M-11); leitor único (M-9); saída segura (M-14); retenção de
+controle (M-15, M-16); hold finito (M-17). Nada disso substitui a prova
+nativa do §11.
+
+## 11. Prova ainda necessária no Oracle Linux 9.8 (BLOCK_NATIVE)
+
+Antes de qualquer execução nativa, com evidência própria e revisada:
+
+- os três binds RO legíveis pelo UID10001 no perfil e `-I` sem o diretório
+  do script no path;
+- VmSize e `Threads: 1` no instante do guard depois da carga do driver
+  (admissão AS384MiB com margem de 8MiB);
+- fd0/fd1 como pipe ou socket sem TTY sob `docker run -i`, `O_NONBLOCK`
+  efetivo e escrita limitada sem bloquear o processo;
+- semântica real dos sinais no PID1 próprio (§8), entrega de SIGKILL pelo
+  host e ausência de reaper implícito necessário;
+- `signal.pause` sem consumo de CPU e prova de que o processo retido
+  permanece vivo até o kill do host, com recursos ainda presentes (prova de
+  vida);
+- fechamento real de fds de `socketpair` e término real das threads, além
+  dos fatos de objeto do §7.
+
+Nada disso está medido. Um gate não medido ou reprovado não vira PASS.
+
+## 12. Fora deste desenho e ainda abertos
+
+- Implementação do main e seus testes (próximo: testes RED-first do §10,
+  depois a fonte).
+- T5 (sonda física de EOF), gerador de expectativas, ponte duplex do host,
+  fixture/perfil PG, frescor, prova de vida de T6 e readmissão da candidata
+  621cc7f7.
+- B1, B2, D-090 gate 2, C1, TLS de upstream, ingressos e produção. SQL
+  PGWire continua recusada; Gateway indisponível.
+
+## 13. Não resolvido
+
+- Intervalo não atômico entre retorno do SO e gravação do slot (§5): só
+  resolvido por retenção, nunca por prova.
+- `IO` no link chega ao driver como `EOF` (enum atual do driver).
+- Disposição dos sinais antes do passo 4 e o comportamento PID1 real.
+- Se a linha MAIN extra será aceita pela ponte do host (D4); até lá é só
+  contrato prospectivo deste lado.
+- Valores `WRITE_CAP_S`, `SLICE_S` e `LINES_MAX` são escolhas, não medidas.
+- O pin do próprio main só existe depois da implementação e revisão.

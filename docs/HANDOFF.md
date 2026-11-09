@@ -1,5 +1,33 @@
 # Handoff
 
+## W1 Oracle: contrato main/bindings D2 revisto para testes — 2026-11-09
+
+Claude2 escreveu só ORACLE-MAIN-DESIGN, mesma sessão51ea0d85/opus5.5/medium.
+CLI76883/49592/22983 encerraram0 e foram recuperadas; zero escritor confirmado.
+Root leu V1/V2 inteiras e todo delta final:080c37ab/39922bytes/697linhas.
+MAIN-DESIGN-REVIEW aceita o contrato só para testes fake/RED antes da fonte,
+com precisões System.is_main_thread, contador255, decisão EXIT/HOLD imutável
+sem posse e leitura de fontes limitada aos pares públicos fixos. Decisão
+ausente/incoerente nunca libera saída.
+
+Raiz existe antes de adquirir FD; ticket retém incerteza, close original
+único antes de liberar bytes. Link emprestado aposenta logicamente só sem
+leitor/escritor ativo; poison em voo não entrega OK. Handler não levantador,
+observação cooperativa e hold sem retorno/knob finito. _run_once recebe a
+raiz do chamador e permite testes finitos sem abandonar o caminho físico.
+Wire do driver preservado, sem evento MAIN novo. V1/V2/revisões e fontes
+primárias Python/Linux ficam nos dados oracle9-w1-main-review-20261109.
+
+Upstream25 e app124 por SHA/tamanho intactos; nenhum teste/source/suíte ou
+efeito físico novo neste lote. Main e teste ainda ausentes. Só contrato
+prospectivo sob delegação, não aprovação individual ou prova Oracle.
+Próximo: mesmo Claude2 escreve apenas tests/test_oracle9_w1_main.py, main
+ausente até root revisar oráculos e medir/congelar RED. Conferir Git/zero
+escritor, ativo só monitorar, recuperar terminal antes de outra chamada.
+Estado16/attempt consumido fixos; sem SQL/native/Docker/PG/deploy agora.
+B1/B2/D090gate2/C1/T5/readmissão/ingressos/produção continuam abertos.
+Registros seguintes são históricos.
+
 ## W1 Oracle: integração SDK e owner do chamador validados — 2026-11-09
 
 Claude2 foi o único programador, sessão 51ea0d85-05bb-4d24-ba9a-c9627c3f832f,
