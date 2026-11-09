@@ -4,6 +4,31 @@ Criado por solicitação do usuário em2026-10-30. Inclui o trabalho acumulado
 após4a5e556, preservando resultados históricos e tentativas reprovadas. É
 checkpoint de desenvolvimento incompleto da Fase9, não release de produção.
 
+## W1 Oracle: desenho T5 revisto; implementação ausente — 2026-11-09
+
+Retomada21h55UTC executou0 e entregou esta conversa, sem próximo disparo.
+CLI13267/14897/43658 encerraram0 e foram recuperadas; zero escritor após
+cada revisão. Mesmo único Claude2/sessão51ea0d85/claude-opus-5-5/medium
+escreveu somente T5-DESIGN. Root leu V1/V2 completas e delta final V3:
+5eb14030/22567bytes/330linhas. Direção técnica aceita sob delegação apenas
+para futuros testes fake; nenhum teste/RED/código novo ou efeito físico.
+
+Cerca usa instante pré-envio, wait_end e idle separados; stdin pipe explícito
+com quatro pontas possuídas antes de Popen, SessionKey nova e token antes
+de adopt; pipe2 preguiçoso compatível com import no Windows. Kill nunca PASS.
+V1/V2 e findings lógicos preservados.27 protegidos/app124/EXPECT/estado16/
+attempt intactos por SHA/tamanho. Nenhuma nova suíte por só documentação.
+
+Próximo lote futuro: tests/test_oracle9_w1_driver_t5.py pelo mesmo Claude2,
+oráculos lidos e RED medido/congelado antes do driver. Migração só conforme
+lista do desenho; não publicar integração parcial com main de pin antigo.
+Conferir Git atual/zero escritor, ativo só monitorar e recuperar terminal
+antes de outra chamada. Ler T5-DESIGN-REVIEW e evidência t5-design-review.
+Sem novo job/quota, Docker/PG/SQL/native/runtime/config/binário/privado/
+root/nonce/deploy. T5/B1/B2/D090gate2/C1/ingressos/produção seguem abertos;
+Gateway indisponível. Históricos abaixo.
+
+
 ## W1 Oracle: EXPECT publicado; retomada T5 conferida — 2026-11-09
 
 Código EXPECT publicado em c152dc72e5c4dfb82c196e6a29617567804f136a por push

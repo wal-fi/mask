@@ -1,0 +1,22 @@
+{
+  "base": "9748d2b5cc22bc35515058646bdee680428f44af",
+  "design_sha256": "5eb14030f7100af00ad280681703c48d448a376833b01bc4620d06efdcc8173d",
+  "design_bytes": 22567,
+  "design_lines": 330,
+  "protected27_changed": [],
+  "app124_changed": [],
+  "expect_changed": [],
+  "tracked_changes_before_root_docs": [],
+  "new_tests_or_source": false,
+  "tests_run_this_design_lot": false,
+  "native_effects": false,
+  "writer_count_after_last_recovered_terminal": 0,
+  "scheduler": {
+    "last_run_utc": "2026-11-09T21:55:00Z",
+    "last_result": 0,
+    "next_run_utc": null,
+    "message_delivered_in_this_conversation": true,
+    "no_new_task": true
+  },
+  "review": "Read v1 all250lines, v2 all303lines and full final v3 delta; accept technical direction for future driver fake tests only."
+}

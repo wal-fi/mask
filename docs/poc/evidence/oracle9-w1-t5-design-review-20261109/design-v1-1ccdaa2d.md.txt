@@ -1,0 +1,250 @@
+# W1 Oracle — desenho mínimo da sonda EOF (T5, caso 24), v1
+
+2026-11-09. Somente desenho, Claude2 (sessão 51ea0d85-05bb-4d24-ba9a-c9627c3f832f,
+claude-opus-5-5, esforço medium), sob a delegação vigente. É uma proposta para
+revisão do root, não aprovação individual. Base HEAD/origin 9748d2b5. Nada foi
+executado: nenhum teste, processo, socket, thread, sinal, guard, Docker, PG ou SQL.
+Leituras feitas só no código e na documentação; nenhuma afirmação sobre o SO.
+
+Fixos neste lote: main 372f342f/teste 5abe4582, driver 39a68904/teste 585540af,
+puro 4c155d76/teste 084d62cd, EXPECT ce6ff389/teste ccb1f29f, protegidos 27,
+app124, estado16 e tentativa consumida. T5 continua BLOCK_NATIVE obrigatório
+para o laboratório completo. Hoje o driver emite
+`RESULT{24, FAIL, PENDING, T5_PENDING}` e **não** sonda EOF.
+
+## 1. Fatos lidos que fixam o desenho
+
+- `WorkerSession` (público) não oferece fechamento por EOF.
+  - `close()` em READY é gracioso e envia `CLOSE`.
+  - `_reap` usa `wait(1 s)` e depois `kill`.
+  - Por isso a sonda não pode usar a sessão: precisa do próprio canal.
+  - Os campos privados (`_sock`, `_process`, `_environment`) não são usados.
+- `worker_process` (instalado):
+  - `main` exige argv de 4 números e `protect_process(WORKER, expected_parent_pid)`;
+  - exige env igual ao público `child_environment()`, socket AF_UNIX/STREAM conectado e stdin FIFO;
+  - `_read_init` exige EOF no stdin depois do INIT;
+  - `_serve` envia GUARD_READY e depois OPENED com `hmac(nonce, snapshot)`;
+  - `_loop` devolve **0** quando `_next` devolve `None` (EOF **ou** expiração do idle) ou recebe `CLOSE`;
+  - qualquer exceção, recusa ou falha de abertura dá **1**.
+- Consequência central: **exit 0 sozinho não distingue EOF de idle**.
+  - O pai nunca escreve no socket, então `CLOSE` está excluído.
+  - O idle do filho começa em `_next`, depois de enviar OPENED, que por sua vez vem depois de ler EOF no stdin.
+  - Logo, `fim_idle_filho > t_stdin_fechado + idle_s` no mesmo CLOCK_MONOTONIC (premissa já usada pelo código; não medida).
+  - Um reap com rc 0 observado antes de `t_stdin_fechado + idle_s − IDLE_MARGIN_S` só pode ser EOF.
+- Codecs públicos de `worker_protocol` (já usados pela sessão):
+  - `HEADER_BYTES` e `parse_header`;
+  - `Kind.GUARD_READY/OPENED/ERROR`;
+  - `decode_guard`, `decode_opened`, `encode_init` e `SecretInit(key, limits, expires_at, nonce, snapshot)`.
+- Ledger público:
+  - `reserve_session` e `adopt_session` sob o lock comum;
+  - `begin_drain` + `release(token, CleanupConfirmation(...))`, que dá HELD se faltar fato;
+  - `retain`.
+- Main: `System` já tem `socketpair`, `select`, `set_blocking`, `os_write` (`os.write`, qualquer fd), `close` e `monotonic`. **Falta só criar processo.**
+
+## 2. Lacunas exatas (mudanças prospectivas mínimas)
+
+| # | Onde | Mudança | Motivo |
+|---|---|---|---|
+| L1 | driver `Ports` | 9º campo `children` | porta própria do canal/processo da sonda; as 8 portas atuais não criam processo |
+| L2 | driver porta `ids` | método `nonce() -> bytes` (32 bytes) | INIT exige nonce próprio; não reaproveitar `session_id` |
+| L3 | driver `t5()` | sonda §4 no lugar do PENDING | contrato T5 |
+| L4 | main `System` | 21º campo `popen` (`subprocess.Popen` em `real_system`) | única chamada física ausente |
+| L5 | main `SLOTS` | `probe_parent`, `probe_child`, `probe_process` | posse física da sonda retida no hold |
+| L6 | main | binding `ProbeChildren(root)` e `SessionIds.nonce` | ligar L1/L2 ao `System` |
+| L7 | main pins | `DRIVER_SHA`/`DRIVER_BYTES` do driver emendado | o driver muda de bytes |
+
+- Nada muda no SDK, no núcleo puro, no EXPECT, no wire host↔controlador, na contagem de frames (50) ou no limite de linhas (56).
+- O formato do resultado e do SUMMARY muda conforme §6.
+
+## 3. Porta `children` (contrato confiável, não sandbox)
+
+```text
+children.pair() -> (parent, child)
+  parent.recv_exact(n: int, *, deadline: float) -> bytes   # None/erro = falha
+  parent.close() -> bool                                   # único efeito do EOF
+  child.fd: int ; child.close() -> bool
+children.spawn(child, *, parent_pid: int, address_bytes: int, idle_ms: int) -> proc
+  proc.pid: int
+  proc.send_init(packet: bytes, *, deadline: float) -> bool  # escreve tudo e FECHA stdin
+  proc.wait(*, deadline: float) -> int | None               # rc só após reap real
+  proc.kill() -> bool                                       # só limpeza de fallback
+  proc.close_pipes() -> bool                                # stdin restante; só após reap
+```
+
+- `parent` **não tem** `send`, `write` nem `shutdown`.
+  - O pai fisicamente não consegue enviar STOP, CLOSE ou outro byte.
+  - O EOF vem só de `parent.close()`.
+- O binding em main (L6) faz exatamente o que `WorkerSession._open` faz.
+  - **Socketpair:** `socketpair(1, SOCK_STREAM)` com as duas pontas não herdáveis.
+  - **Leitura do pai:** `parent` usa `RawChannel` público, com `ResultDeadline(expires_at=deadline, clock=System.monotonic)`.
+  - **Criação do filho:** `popen` com:
+    - argv literal `[sys.executable, "-I", "-B", "-m", "maskgw.runtime.worker_process", fd, ppid, address_bytes, idle_ms]`;
+    - `stdin=PIPE`, `stdout/stderr=DEVNULL`;
+    - env literal igual a `child_environment()`;
+    - `close_fds=True`, `pass_fds=(fd,)`, `bufsize=0`.
+  - **Envio do INIT:** não bloqueante, com `select`/`os_write` sob prazo absoluto, sem retry após prazo; depois fecha o stdin.
+  - **`wait`:** usa `Popen.wait(timeout)` limitado. `TimeoutExpired` ou `OSError` dão `None`.
+- Ler `sys.executable` e as constantes de perfil é metadado/configuração. `popen`, `close`, `wait` e `kill` são ações físicas.
+- O main não importa `worker_process`, para não carregar o adapter/psycopg no PID1. A igualdade do env é pinada em teste contra o `child_environment()` público. O próprio filho recusa divergência (exit 1).
+
+## 4. Fluxo do caso 24 (G2, após T4 fechado RELEASED)
+
+Posse: um só `Owner`, enraizado na raiz do main. O Owner não ganha campos novos (`_fresh` e o shape preservados):
+
+| Recurso | Onde o driver registra | Slot físico no main |
+|---|---|---|
+| token | `owner._session_token` | — |
+| pontas | `owner._endpoints` | `probe_parent`, `probe_child` |
+| processo | `owner._handles` | `probe_process` |
+| criação incerta | `owner._unknown` (`"probe_pair"`/`"probe_process"`) | slot UNKNOWN |
+
+Regras gerais do fluxo:
+- Todo recurso devolvido vai para o owner **antes** do próximo passo falível.
+- `t_open = clock`; `open_end = t_open + 12 s`.
+
+1. **Reserva e adoção:** `token = reserve_session(G2, W, P)` e `adopt_session(token)`, cada um por `ledger_call` sob o lock comum.
+   - O token vai para o owner logo após a reserva.
+   - Falha na reserva: ABORT LEDGER.
+   - Falha na adoção: `retain(token)` e ABORT retido. Nenhum efeito físico.
+2. **Pontas:** `owner._unknown += ["probe_pair"]`, depois `pair()`. Com sucesso, `owner._endpoints += [parent, child]` e a marca sai.
+   - Exceção: marca mantida, ABORT retido.
+3. **Processo:** `owner._unknown += ["probe_process"]`, depois `spawn(child, parent_pid=guard.pid, address_bytes=W, idle_ms=30000)`. Com sucesso, `owner._handles += [proc]` e a marca sai.
+   - Exceção: marca mantida, ABORT retido, sem kill.
+4. **Fechar a ponta do filho no pai:** com o prazo `open_end` ainda válido, `child.close()`. Com `True`, sai de `_endpoints`; senão vai para a limpeza §5.
+5. **GUARD_READY:** `parent.recv_exact(HEADER_BYTES)` e `parse_header`.
+   - Só `GUARD_READY` com tamanho ≤ 256 antes de ler o corpo.
+   - Exige `decode_guard(body) == (proc.pid, guard.pid, W)`.
+   - Divergência: limpeza §5 sem enviar INIT.
+6. **INIT:** `nonce = ids.nonce()`, `expected = hmac.digest(nonce, snapshots[2], sha256)`.
+   - Pacote: `encode_init(SecretInit(key_G2, ResultLimits(1000, F), open_end, nonce, snapshots[2]))`.
+   - `proc.send_init(pacote, deadline=open_end)` precisa devolver `True`. Depois apagar `pacote` e `nonce`.
+   - `t_stdin = clock` após o retorno.
+7. **OPENED:** cabeçalho com `{OPENED, ERROR}` permitidos e tamanho ≤ 256.
+   - Exige `OPENED` e `compare_digest(decode_opened(body), expected)`. Senão limpeza §5.
+8. **Cerca:** `fence = t_stdin + idle_s − IDLE_MARGIN_S`. É ao mesmo tempo a janela de GO e o limite de discriminação EOF/idle.
+9. **READY e GO:** `ready(24)` e depois `accept(GO_CAP_S, fence)`. GO tardio dá `IDLE_WINDOW`, depois limpeza §5 e ABORT.
+10. **EOF:** `parent.close()`.
+    - `True`: sai de `_endpoints`, `t_eof = clock`.
+    - Senão: limpeza §5, resultado FAIL ou ABORT.
+11. **Espera:** `rc = proc.wait(deadline=min(t_eof + EOF_WAIT_S, fence))`, com cerca pós-retorno `t_ret = clock`.
+    - `rc is int` e `t_ret < fence`: o processo foi recolhido dentro da janela.
+    - `rc == 0` dá candidato **PASS**; `rc != 0` (inclui sinal negativo) dá **FAIL EXIT_NONZERO**.
+    - `rc is int` com `t_ret ≥ fence` dá **FAIL EXIT_LATE**, porque o EOF não é distinguível do idle.
+    - `rc is None` vai para o fallback §5 e dá **FAIL NO_EXIT**, mesmo que o rc pós-kill seja 0.
+12. **Fechamento e liberação:** `proc.close_pipes()` só depois do rc real.
+    - Liberação com `CleanupConfirmation(processes=rc real, threads=True, pipes=close_pipes, handles=todas as pontas fechadas, output=True)`.
+    - `output` e `threads` são `True` porque a sonda não cria `ResultReceiver` nem thread.
+    - RELEASED: limpar token, `_handles` e `_endpoints`. HELD: ABORT retido.
+13. **Resultado:** `RESULT{24}` (§6), depois `ACK` com `ACK_CAP_S` e sem janela, como hoje.
+
+Constantes novas, só lógicas: `OPEN_CAP_S = 12.0` (igual a `WorkerSession`), `EOF_WAIT_S = 10.0`, `KILL_REAP_S = 0.75` (3×0,25). Reuso de W = 256 MiB, P = 33 MiB, idle 30000 ms do perfil G2, `IDLE_MARGIN_S`, `LOCK_S` e ledger §4 do DRIVER-DESIGN. Nenhum limite é aumentado para obter verde.
+
+## 5. Limpeza de fallback e lacunas conservadoras
+
+- **Ordem:** se o processo existe e não há rc, `proc.kill()` e depois `rc2 = proc.wait(deadline=clock + KILL_REAP_S)`.
+  - Só com `rc2` int seguem `close_pipes`, os fechamentos pendentes e o `release` com fatos.
+  - `rc2 is None` ou uma exceção dão ABORT retido. Owner, token e slots ficam com tudo, e o main entra em hold.
+- **Kill nunca gera PASS.** Também nunca gera EXIT_NONZERO ou EXIT_LATE. A razão é sempre NO_EXIT ou o ABORT da fase.
+- **Sem desaparecimento:**
+  - prazo vencido, `poll`/`join` presumidos ou retorno `False` nunca removem do owner;
+  - um recurso só sai do owner com o fato positivo correspondente (`close() is True`, rc int).
+- **Controle fora de `Exception`** (KeyboardInterrupt, MainSignal):
+  - o driver não captura; `run` deixa escapar com o owner do chamador intacto;
+  - o main registra o controle e retém a raiz, em hold, sem saída;
+  - a janela entre o retorno de `popen` e o `own` fica coberta pelo slot já reservado UNKNOWN no binding.
+- **Falhas antes de READY** (passos 4–7):
+  - limpeza com sucesso: `ABORT{24, CASE, SESSION, retained:false}`;
+  - qualquer incerteza: `retained:true`.
+  - O caso não emite RESULT, igual a uma falha de `open` de sessão.
+
+## 6. Eventos e resultado (mudança prospectiva explícita)
+
+- Caso 24: `RESULT{case:24, kind:"EOF", verdict:PASS|FAIL, reason, release:"RELEASED"}`.
+  - `reason` é `null` no PASS, ou `EXIT_NONZERO`, `EXIT_LATE` ou `NO_EXIT`.
+  - Os demais campos ficam `null`.
+  - Sai `T5_PENDING` e `PENDING` do enum.
+  - Nenhum campo novo; `next_seq`, frames e linhas são os mesmos.
+- `SUMMARY.failed`: **deixa de conter sempre 24**. Pode ficar vazio, mas `global_pass` continua `false` e o resultado global continua exigindo T6, inventários e cleanup reais.
+- ABORT reutiliza `SESSION`, `IDLE_WINDOW` e `LEDGER`; nenhuma razão nova.
+- `DriverResult` não muda.
+
+## 7. Plano de testes com fakes (RED primeiro)
+
+**Arquivos futuros:**
+- `tests/test_oracle9_w1_driver_t5.py` (novo):
+  - ledger real e `encode_guard`/`encode_opened`/`decode_init` públicos para montar e conferir frames;
+  - porta `children` fake roteirizada com log de chamadas;
+  - relógio fake.
+- `tests/test_oracle9_w1_main_t5.py` (novo):
+  - `System` fake com `popen` fake (`pid`, `stdin` fd fake, `wait(timeout)`, `kill`).
+- Migração deliberada, sem afrouxar asserções:
+  - `test_oracle9_w1_driver.py`, `test_oracle9_w1_driver_session.py` e `test_oracle9_w1_main.py`;
+  - só os oráculos listados em "Migração" abaixo.
+
+**Positivos (driver):**
+- **D5-1:** rc 0 recolhido antes da cerca leva a PASS/EOF/RELEASED.
+  - Ordem exata do log: reserve, adopt, pair, spawn, `child.close`, `recv` GUARD, `send_init`, `recv` OPENED, READY, GO, `parent.close`, `wait`, `close_pipes`, release.
+  - Zero kill.
+  - O pacote enviado decodifica pelo `decode_init` público com key G2, `snapshots[2]`, nonce de 32 bytes e `expires_at = open_end`.
+  - O ledger volta a ter capacidade para T6.
+- **D5-2:** composição completa até `T6_UNKILLED`, com SUMMARY sem 24 e 50 frames.
+
+**Negativos independentes (driver):**
+- **D5-3:** rc 1 dá EXIT_NONZERO; rc −9 sem kill também dá EXIT_NONZERO.
+- **D5-4:** rc 0 com `t_ret ≥ cerca` dá EXIT_LATE.
+- **D5-5:** `None`, depois kill, depois rc2 = 0 dá **NO_EXIT** (o kill nunca é PASS).
+- **D5-6:** kill seguido de `None` ou exceção dá RETAINED. O owner contém processo, token e pontas, e não há release.
+- **D5-7:** `spawn` levanta, ou `pair` levanta: marca UNKNOWN, RETAINED, nenhum kill ou release.
+- **D5-8:** problemas no handshake:
+  - GUARD com pid, ppid ou AS errado: nenhum `send_init`;
+  - cabeçalho maior que 256 ou de outro kind: nenhuma leitura do corpo;
+  - OPENED com HMAC errado, `ERROR` ou `send_init` False.
+
+  Em todos: kill e reap, depois `ABORT SESSION retained:false`, ou `true` se a limpeza for incerta.
+- **D5-9:** GO após a cerca dá IDLE_WINDOW, com limpeza e ABORT, nunca PASS.
+- **D5-10:** `parent.close()` False ou com exceção: não há espera de EOF, o resultado vem do fallback e a ponta é retida.
+- **D5-11:** `adopt` falha dá `retain`, sem pair nem spawn. `release` HELD dá ABORT retido, e T6 não roda.
+- **D5-12:** KeyboardInterrupt levantado pelo `wait` fake escapa de `run`, e o owner do chamador continua com tudo (por identidade).
+- **D5-13:** prazos: `wait` recebe `min(t_eof + 10, cerca)` e a cerca pós-retorno é aplicada. AST mostra que `parent` não tem `send`, `write` ou `shutdown`.
+- **D5-14:** evento RESULT com chaves e enum exatos, sem senha, chave ou canário.
+
+**Main (bindings):**
+- **M5-1:** `real_system().popen is subprocess.Popen`, sem chamar.
+- **M5-2:** `spawn` usa argv, env (igual a `child_environment()`), stdin, stdout, stderr, `close_fds`, `pass_fds` e `bufsize` exatos. O slot é reservado UNKNOWN antes do `popen` e possuído depois.
+- **M5-3:** se `popen` levanta, ou um controle ocorre logo após o retorno, o slot fica UNKNOWN e o hold retém.
+- **M5-4:** `send_init` com escrita parcial, EAGAIN e prazo: não escreve depois do prazo e fecha o stdin.
+- **M5-5:** `wait`: `TimeoutExpired` ou `OSError` dão `None`; só retorno real dá rc.
+- **M5-6:** `pair` usa AF_UNIX literal 1, as duas pontas não herdáveis e os slots possuídos.
+- **M5-7:** `SessionIds.nonce` devolve 32 bytes via `urandom`.
+
+**Migração (única mudança de oráculos antigos):**
+- `T5_PENDING`/`PENDING` são substituídos pelo roteiro D5-1, que é explícito e injetado no mundo D1.
+- "SUMMARY.failed ⊇ {24}" vira dependente do roteiro.
+- `Ports` passa a ter 9 campos; `SYSTEM_FIELDS` ganha `popen`; `SLOTS` ganha 3; os imports do main ganham `subprocess`.
+- `DRIVER_SHA`/`BYTES` mudam no main e no teste do main.
+- Fakes antigos ganham `children`/`nonce` sem mudar nenhum outro comportamento.
+
+**Sequência:**
+1. Lote A, só testes do driver: novos e migração. O root mede e congela o RED.
+2. Emenda do driver, até ficar verde.
+3. Lote B, só testes do main: novos e migração com o novo SHA. RED.
+4. Emenda do main, até ficar verde.
+
+## 8. O que fakes provam e o que fica para o Oracle nativo
+
+- **Fakes provam:** ordem, posse antes do efeito, uso de fatos, cercas e prazos, recusa de kill como PASS, retenção, eventos e codecs públicos.
+- **Fakes não provam:**
+  - entrega de EOF pelo kernel;
+  - aceitação do env/guard pelo filho instalado;
+  - returncode real, waitpid e herança de fd;
+  - relógio monotônico comum entre pai e filho;
+  - fechamento do backend no PG.
+- O host deve confirmar, depois de T5, zero backends do papel em janela finita (NativePlan §12). Isso é critério nativo, não deste driver.
+
+## 9. Pendências e riscos declarados
+
+- A cerca supõe que pai e filho compartilham CLOCK_MONOTONIC, como o código já supõe; não medido.
+- Um exit 0 após EOF que chegue depois da cerca é FAIL conservador (EXIT_LATE), nunca promovido a PASS.
+- A sonda reimplementa só a abertura pública do `_open` e não pode verificar que continua igual ao `WorkerSession`. A divergência é pinada em teste por argv e env literais; o filho recusa o resto.
+- Sem execução física até a revisão desta proposta, dos testes/RED e das pré-condições nativas.
+- B1, B2, D-090 gate 2, C1, ingressos, IDE, MCP e produção continuam abertos.

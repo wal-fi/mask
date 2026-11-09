@@ -1,0 +1,68 @@
+{
+  "base": "9748d2b5cc22bc35515058646bdee680428f44af",
+  "execution": 13267,
+  "terminal_exit": 0,
+  "duration_ms": 234593,
+  "model": "claude-opus-5-5",
+  "effort": "medium",
+  "session": "51ea0d85-05bb-4d24-ba9a-c9627c3f832f",
+  "writer_guard_after": 0,
+  "design_sha256": "1ccdaa2dbec888637f0bda1e567ae227b220d4ee62456731ad1d7d0ce3a163d6",
+  "bytes": 17157,
+  "lines": 250,
+  "review": "Read all250lines. Findings below are logical contract counterexamples, not execution or native evidence.",
+  "findings": [
+    {
+      "id": "F1",
+      "lines": [
+        32,
+        33,
+        121,
+        124
+      ],
+      "reason": "Timestamp after send_init returns is an upper bound on stdin closure, not a lower bound on child idle start. Fence can allow natural idle exit0 as EOF.",
+      "logical_trace": {
+        "stdin_close": 1.0,
+        "child_idle_start": 1.01,
+        "send_init_return": 11.0,
+        "opened_read_and_ready": 11.1,
+        "go": 30.9,
+        "actual_idle_exit": 31.01,
+        "parent_endpoint_close": 31.1,
+        "wait_observed_exit0": 31.2,
+        "v1_fence": 39.0
+      },
+      "required": "Use trusted timestamp before send_init call or a pinned conservative pre-close lower bound. Fence must never move later due a delayed return."
+    },
+    {
+      "id": "F2",
+      "lines": [
+        129,
+        130,
+        131
+      ],
+      "reason": "Post-return check only fence ignores the earlier min(t_eof+10,fence) wait deadline. A callback returning late can still PASS.",
+      "required": "Capture absolute wait_end once, require current time strictly before both phase end and idle fence before accepting. Same post-return opening checks for all fallible phase calls."
+    },
+    {
+      "id": "F3",
+      "lines": [
+        42,
+        51,
+        82,
+        213
+      ],
+      "reason": "Popen(stdin=PIPE) allocates unregistered pipe descriptors inside spawn, contrary to ownership before Popen. Unknown process slot is conservative retention but not prior fd ownership.",
+      "required": "Design explicit pre-owned stdin pipe, smallest additional System pipe primitive/slots, exact stdin=read_fd and inheritance/closure ordering. Process gap remains UNKNOWN and fail-closed. No SDK/private-fd API change by assumption."
+    },
+    {
+      "id": "F4",
+      "lines": [
+        74,
+        75
+      ],
+      "reason": "A read-only endpoint facade is a trusted code contract, not physical inability of hostile Python to send.",
+      "required": "Scope statement to reviewed binding/no send operation, retain Python-trust qualification."
+    }
+  ]
+}

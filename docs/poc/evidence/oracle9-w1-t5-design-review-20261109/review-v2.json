@@ -1,0 +1,39 @@
+{
+  "execution": 14897,
+  "terminal_exit": 0,
+  "duration_ms": 119566,
+  "source": "design-v2-d505daed.md.txt",
+  "sha256": "d505daeda1ac643ff8418d9fbcbec15ddc79ff46f2da6bf4f00cdd30319356aa",
+  "bytes": 18768,
+  "lines": 303,
+  "writer_guard_after": 0,
+  "v1_findings": "F1-F4 corrected at design level; no new tests or native proof.",
+  "remaining_precisions": [
+    {
+      "id": "R2-1",
+      "lines": [
+        149
+      ],
+      "reason": "key_G2 is undefined; require fresh exact16-byte unique session id and explicit SessionKey generation2/datasource/revision binding, nonce32 separately. Token must be placed in original owner before adopt."
+    },
+    {
+      "id": "R2-2",
+      "lines": [
+        171
+      ],
+      "reason": "There are FOUR endpoint resources (two sockets, two pipe fds), plus a process, not five endpoints. Cleanup facts must track those original objects and retained owner only contains unsettled resources, not already closed ones."
+    },
+    {
+      "id": "R2-3",
+      "lines": [
+        51,
+        259
+      ],
+      "reason": "real_system().pipe2 is os.pipe2 cannot hold on reference Windows where os.pipe2 attribute absent. Use same lazy wrapper pattern as existing _pause/_set_blocking; verify wrapper by source/AST only, all effectful tests use fake System.pipe2, no global stdlib monkeypatch or platform skip."
+    }
+  ],
+  "local_public_python_observation": {
+    "os_pipe2_attribute_present": false,
+    "no_native_call": true
+  }
+}
