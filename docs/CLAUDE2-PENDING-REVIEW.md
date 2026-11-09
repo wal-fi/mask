@@ -1,3 +1,34 @@
+## W1 Oracle: EXPECT publicado; retomada T5 conferida — 2026-11-09
+
+Código EXPECT publicado em c152dc72e5c4dfb82c196e6a29617567804f136a por push
+normal, fetch posterior confirmou HEAD/origin iguais,0/0 e rastreados limpos.
+119 próprios incluídos nos704 relacionados finais verdes; Ruff/format e
+mypy363 alvos3.11/3.14 aprovados. Fontece6ff389/testeccb1f29f,27 protegidos/
+app124 intactos. Root revisou/validou; Claude2 escreveu a lógica e Gemini
+fez somente revisão. Não refazer gerador ou formatação. Histórico local
+abaixo descreve o estado ANTERIOR à publicação.
+
+Mesma tarefa Maskgw-Claude2-Resume-01a05804 atualizada somente na mensagem
+e relida Ready:09/11 às18h55-03:00/21h55UTC, Limited/Interactive/IgnoreNew,
+uma ação/um trigger, mensagem desta conversa conferida. Sem task adicional;
+registro não comprova entrega ou quota. Claude2 sem retry antes21h50UTC.
+
+Próximo lote SOMENTE docs/PHASE-9-W1-ORACLE-T5-DESIGN.md (ainda ausente),
+mesma sessão51ea0d85/claude-opus-5-5/medium após confirmar zero escritores.
+Agente ativo implica monitorar/recolher terminal, nunca nova chamada.
+Fechar sonda EOF mínima com canal próprio, ledger/posse antes do spawn e
+saída natural0; reaproveitar portas existentes, sem camada genérica nova.
+Design antes de testes/RED/código ou efeitos. Manter pins atuais até plano
+de alteração revisto. Sem Docker/PG/SQL/nativo/privado/runtime/deploy.
+T5/B1/B2/D090gate2/C1/ingressos/produção continuam abertos.
+
+A falha de cota da revisão automática impediu só o comando AGY de edição
+anterior. Ações distintas posteriores de Git e scheduler foram autorizadas
+pelo fluxo normal e executaram; não houve desvio daquele comando rejeitado.
+Evidência publication-and-resume.json e EXPECT-SOURCE-REVIEW. Conferir HEAD
+real após commits documentais; c152dc7 é checkpoint do código, não guarda
+imutável do próximo HEAD. Continuidade sob delegação, sem novo aval individual.
+
 ## W1 Oracle: EXPECT revisto e formatado, resultado local — 2026-11-09
 
 Fonte funcional escrita por Claude2 (sessão51ea0d85/opus5.5/medium);

@@ -1,0 +1,47 @@
+{
+  "code_commit": "c152dc72e5c4dfb82c196e6a29617567804f136a",
+  "code_parent": "9e56df41ac3033a33518d9a15231e1bbd84cc1b5",
+  "push": "Normal fast-forward; fetched before and after; HEAD==origin/master, 0/0; tracked tree clean. Personal untracked files preserved.",
+  "scheduler_before": {
+    "TaskName": "Maskgw-Claude2-Resume-01a05804",
+    "State": "Ready",
+    "Actions": [
+      {
+        "Execute": "C:\\Users\\w.filho\\AppData\\Roaming\\npm\\node_modules\\@openai\\codex\\node_modules\\@openai\\codex-win32-x64\\vendor\\x86_64-pc-windows-msvc\\bin\\codex.exe",
+        "Arguments": "queue --thread 01a05804-2c07-71f2-bfef-7e3c90c06476 --message \"Resume authorized Mask Gateway work in this same conversation. Read docs/CLAUDE2-PENDING-REVIEW.md and docs/CHECKPOINT-2026-10-30.md first. Inspect actual Git and confirm zero active Claude2/Antigravity writers; if any is active, monitor only and recover its existing terminal, never start a second writer. Current published code checkpoint9e56df4 has main372f342f/test5abe4582. Local EXPECT sourcee86aad3f and frozen testccb1f29f have119 own and704 related passing, mypy363 targets3.11/3.14 clean; source format has5 layout hunks pending. Inspect actual current HEAD after documentation commits, never reuse a stale guard. Last Claude2 execution23221 ended exit1/API429 AFTER writing the source; reset displayed6:50pm America/Sao_Paulo, inferred2026-11-09T18:50:00-03:00 or21:50UTC, not independently observed. No retry before21:50UTC. Same Claude2 session51ea0d85-05bb-4d24-ba9a-c9627c3f832f, claude-opus-5-5 effort medium, programs; root reviews. Safe lot is ONLY source formatting in docs/poc/oracle9_w1_expect.py with tests/semantics fixed, scoped Read/Edit/Write and no programmer commands or execution. If already reviewed and published, do not redo it; follow newest checkpoint. User authorized Antigravity/Gemini fallback, but automatic review rejected uploading source/tests/design/vectors; that specific export requires explicit approval unless subsequently granted in this conversation. Do not bypass that rejection or send repository data to Gemini while approval is missing. No other writer or quota workaround. Preserve source27/app124/state16/consumed attempt. No actual socket/thread/process/guard/signal/native calls, Docker, PG, SQL, runtime/config/binary/private/environment reads, operational root/nonce/entry/loader/collector/publisher/command/deployment. Publish only reviewed verified results. This scheduled message grants no additional permission.\"",
+        "WorkingDirectory": "C:\\Users\\w.filho\\Desktop\\codes\\mask"
+      }
+    ],
+    "Triggers": [
+      {
+        "StartBoundary": "2026-11-09T18:55:00-03:00",
+        "Enabled": true
+      }
+    ],
+    "RunLevel": "Limited",
+    "LogonType": "Interactive",
+    "MultipleInstances": "IgnoreNew",
+    "NextRunUtc": "2026-11-09T21:55:00.0000000Z",
+    "LastRunUtc": "2026-11-09T16:55:00.0000000Z",
+    "LastResult": 0,
+    "NowUtc": "2026-11-09T19:39:14.1600919Z"
+  },
+  "scheduler_after": {
+    "TaskName": "Maskgw-Claude2-Resume-01a05804",
+    "State": "Ready",
+    "StartBoundary": "2026-11-09T18:55:00-03:00",
+    "NextRunUtc": "2026-11-09T21:55:00.0000000Z",
+    "LastRunUtc": "2026-11-09T16:55:00.0000000Z",
+    "LastResult": 0,
+    "RunLevel": "Limited",
+    "LogonType": "Interactive",
+    "MultipleInstances": "IgnoreNew",
+    "ActionCount": 1,
+    "TriggerCount": 1,
+    "MessageVerified": true,
+    "NowUtc": "2026-11-09T19:39:56.8173767Z"
+  },
+  "resume_message": "Resume authorized Mask Gateway work in this same conversation. Read docs/CLAUDE2-PENDING-REVIEW.md and docs/CHECKPOINT-2026-10-30.md first. EXPECT code checkpoint c152dc7 is published: sourcece6ff389/testccb1f29f, 704 related tests including119 own, Ruff/format/mypy363 targets3.11/3.14 clean. Inspect actual Git after any documentation commits; never reuse a stale HEAD guard or redo completed formatting. Recover existing agent terminals and verify zero active Claude2/Antigravity writers; if active monitor only, never start a second writer. Claude2 last execution23221 ended exit1/API429 AFTER writing source; reset displayed6:50pm America/Sao_Paulo, inferred2026-11-09T21:50:00Z, not independently observed. No retry before21:50UTC or quota workaround. Resume only Claude2 session51ea0d85-05bb-4d24-ba9a-c9627c3f832f with claude-opus-5-5 effort medium. Current safe lot is ONLY docs/PHASE-9-W1-ORACLE-T5-DESIGN.md, absent at last check: minimal EOF probe using installed worker, dedicated channel and ownership/ledger before spawn; only natural exit0 can pass, fallback kill proves cleanup only. Reuse reviewed ports, no new generic layer. Read EXPECT-SOURCE-REVIEW and the T5 sections of ORACLE-DRIVER-DESIGN, MAIN-DESIGN and NATIVE-PLAN-REVIEW plus pertinent public SDK definitions. Scoped Read/Edit/Write only the design; no tests or source edits before root reviews design and freezes RED. No programmer commands or execution. Preserve main372f342f/test5abe4582, driver39a68904/test585540af, pure4c155d76/test084d62cd, protected27/app124/state16 and consumed attempt. No actual socket/thread/process/guard/signal/native calls, Docker, PG, SQL, runtime/config/binary/private/environment reads, operational root/nonce/entry/loader/collector/publisher/command/deployment. Four-file Gemini review was explicitly authorized and completed; its edit command did not execute due automatic approval-review usage failure. Do not bypass a tool rejection or export additional payload without its applicable authorization. User fallback remains conditional, never duplicate writers. Publish only reviewed verified results; all native/product gates remain open. This scheduled message grants no additional permission.",
+  "tool_review": "AGY edit action previously did not execute due approval-review usage error. Later distinct authorized Git and scheduler actions were approved and executed through the normal review path; the blocked AGY edit was never rerouted or retried.",
+  "limits": "Schedule registration is not quota reset, task delivery, or production readiness. Native and product gates remain open."
+}

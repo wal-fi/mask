@@ -89,6 +89,15 @@ consumida não mudaram. Não há dispensa implícita de T5.
 
 ## Continuidade e publicação
 
+**Atualização posterior:** código publicado em
+`c152dc72e5c4dfb82c196e6a29617567804f136a`, por push normal. Fetch confirmou
+HEAD/origin iguais e0/0, árvore rastreada limpa. Nenhum artefato funcional
+mudou após os gates. A mensagem da tarefa existente foi atualizada para
+o desenho T5 e relida Ready às21h55UTC, mantendo Limited/Interactive/IgnoreNew.
+Dados em publication-and-resume.json. Ações distintas de Git e scheduler
+passaram pelo fluxo normal de revisão; o comando AGY de edição rejeitado
+não foi repetido ou desviado. O relato abaixo preserva o estado pré-commit.
+
 Resultado ainda local. HEAD e origin/master permanecem em `9e56df4` até um
 commit/push efetivamente confirmado. Não publicar por via alternativa para
 contornar a falha da revisão automática. Não refazer a formatação concluída.
