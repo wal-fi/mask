@@ -1,0 +1,26 @@
+{
+  "source_sha256": "f8e884a2dfac9e66a0920daf8a64b8e1d928959a860676251aee6ed4e79495e4",
+  "source_bytes": 36596,
+  "source_lines": 1035,
+  "root_full_final_delta_read": true,
+  "original_Owner_properties_AST_unchanged": true,
+  "original_constructor_prefix_AST_unchanged": true,
+  "run_after_claim_AST_unchanged": true,
+  "all_other_old_definitions_AST_unchanged": true,
+  "green143": {
+    "passed": 143,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 1.43
+  },
+  "statics": {
+    "ruff_src_tests": "pass",
+    "format360": "pass",
+    "mypy360_311": "pass",
+    "mypy360_314": "pass",
+    "deploy_restricted_lint": "pass",
+    "changed_format2": "pass"
+  },
+  "finding": "Closed OWNER refusal must not retain an active caller exception in __context__; independently reproduced; source not yet accepted for publication."
+}

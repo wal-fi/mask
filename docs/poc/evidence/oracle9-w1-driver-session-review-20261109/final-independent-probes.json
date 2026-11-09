@@ -1,0 +1,32 @@
+{
+  "invalid_owner_cases": [
+    "uninitialized exact Owner",
+    "missing _session_token",
+    "missing _session",
+    "missing _endpoints",
+    "missing _handles",
+    "missing _unknown",
+    "missing _retained",
+    "missing _entered",
+    "extra field",
+    "foreign value _session_token",
+    "foreign value _session",
+    "foreign value _endpoints",
+    "foreign value _handles",
+    "foreign value _unknown",
+    "foreign value _retained",
+    "foreign value _entered",
+    "list subclass _endpoints",
+    "list subclass _handles",
+    "list subclass _unknown",
+    "list subclass _retained",
+    "foreign key",
+    "dict subclass"
+  ],
+  "refused_without_callbacks_or_port_calls": 22,
+  "explicit_none_compatibility": "pass",
+  "caller_context_detached": "pass",
+  "held_helper_calls_in_i1_7": 0,
+  "source": "39a68904",
+  "scope": "Pure Python and existing fake-OS test only; no physical worker/connection/control."
+}

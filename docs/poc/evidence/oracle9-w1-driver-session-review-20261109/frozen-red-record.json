@@ -1,0 +1,73 @@
+{
+  "code_checkpoint": "5708b8f37111a4ae67e34e6e3de314f2c77f9a78",
+  "programmer_session": "51ea0d85-05bb-4d24-ba9a-c9627c3f832f",
+  "programmer_model": "claude-opus-5-5",
+  "effort": "medium",
+  "terminals_recovered": [
+    43145,
+    43934,
+    64135
+  ],
+  "all_exit": 0,
+  "zero_writers_confirmed": true,
+  "test": {
+    "path": "tests/test_oracle9_w1_driver_session.py",
+    "sha256": "104086c961f28c015d25aec7180c24dadad444e6e365c9ca1cfcef8f15096606",
+    "bytes": 43720,
+    "lines": 1232
+  },
+  "root_review": {
+    "whole_initial_file_read": true,
+    "whole_deltas_read": true,
+    "old17_test_functions_and_all_parameterizations_preserved": true,
+    "additional_port_trap_sanity": true,
+    "budget_epochs_alignment_confirmed": true
+  },
+  "red": {
+    "collected": 29,
+    "passed": 12,
+    "failed": 17,
+    "errors": 0,
+    "skipped": 0,
+    "xfail": 0,
+    "stdout_seconds": 1.41,
+    "failed_cases": [
+      "test_s7_fresh_owner_constructs_exact_false_latch_and_empty_fields",
+      "test_s2_supplied_owner_is_the_exact_retained_owner",
+      "test_s3_reused_owner_is_refused_before_any_port",
+      "test_s4_foreign_owner_is_refused_before_guard[object]",
+      "test_s4_foreign_owner_is_refused_before_guard[subclass]",
+      "test_s4_foreign_owner_is_refused_before_guard[namespace]",
+      "test_s5_keyboard_interrupt_at_go1_escapes_with_owner_intact",
+      "test_s6_system_exit_at_sink_start_escapes_with_handle_registered",
+      "test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[latch-true]",
+      "test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[latch-zero]",
+      "test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[latch-none]",
+      "test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[token]",
+      "test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[session]",
+      "test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[endpoint]",
+      "test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[handle]",
+      "test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[unknown]",
+      "test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[retained]"
+    ]
+  },
+  "gates": {
+    "ruff": "pass",
+    "format": "pass",
+    "mypy311": "pass",
+    "mypy314": "pass",
+    "upstream24_equal": true,
+    "app124_equal": true
+  },
+  "driver_before": {
+    "sha256": "e9d8de9bcaf3c45092baad3775b0a0b5653b430a3aece158c64e653674e3500c",
+    "bytes": 34885
+  },
+  "runtime": "Windows CPython3.11.3; Python3.14 static only",
+  "limits": [
+    "Simulated OS only; no physical worker, sockets or threads",
+    "No PostgreSQL, SQL execution, Docker or native proof",
+    "Held coherence helper is conditional; do not claim forced physical uncertainty"
+  ],
+  "status": "Test frozen before minimal owner API amendment, under existing delegation; no individual user approval invented."
+}

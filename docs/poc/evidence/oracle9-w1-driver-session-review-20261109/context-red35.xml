@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="6" skipped="0" tests="35" time="1.317" timestamp="2026-11-09T09:29:54.470782-03:00" hostname="SMTZDIBDN1954"><testcase classname="tests.test_oracle9_w1_driver_session" name="test_sanity_harness_patches_only_sdk_module_names" time="0.001" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_sanity_port_trap_records_clock_and_link_reads_without_driver" time="0.012" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_sanity_lab_packet_expects_sdk_bodies" time="0.002" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_i1_1_open_result_send_close_with_lab_identity" time="0.002" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_i1_2_truncated_result_reports_exact_flag" time="0.005" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_i1_3_parent_one_byte_short_refuses_after_control_header_only" time="0.001" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_i1_4_wrong_result_identity_is_never_exposed" time="0.001" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_i1_5_wrong_done_after_valid_frame_is_never_exposed[done-job]" time="0.002" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_i1_5_wrong_done_after_valid_frame_is_never_exposed[done-session]" time="0.002" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_i1_6_driver_runs_two_real_sdk_results_then_eof_on_go3" time="0.015" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_i1_7_control_inside_sdk_becomes_a_closed_session_failure" time="0.016" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s1_default_path_without_owner_is_unchanged" time="0.014" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s7_fresh_owner_constructs_exact_false_latch_and_empty_fields" time="0.001" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s2_supplied_owner_is_the_exact_retained_owner" time="0.011" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s3_reused_owner_is_refused_before_any_port" time="0.013" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s4_foreign_owner_is_refused_before_guard[object]" time="0.001" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s4_foreign_owner_is_refused_before_guard[subclass]" time="0.001" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s4_foreign_owner_is_refused_before_guard[namespace]" time="0.026" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s5_keyboard_interrupt_at_go1_escapes_with_owner_intact" time="0.019" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s6_system_exit_at_sink_start_escapes_with_handle_registered" time="0.011" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[latch-true]" time="0.001" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[latch-zero]" time="0.001" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[latch-none]" time="0.001" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[token]" time="0.001" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[session]" time="0.001" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[endpoint]" time="0.001" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[handle]" time="0.001" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[unknown]" time="0.001" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[retained]" time="0.001" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s8_refusal_inside_active_caller_handler_has_no_context[runtime-error-foreign]" time="0.001"><failure message="AssertionError: assert RuntimeError('SYNTHETIC-CALLER-CANARY-0001') is None&#10; +  where RuntimeError('SYNTHETIC-CALLER-CANARY-0001') = DriverRefusal('OWNER').__context__">tests\test_oracle9_w1_driver_session.py:1259: in test_s8_refusal_inside_active_caller_handler_has_no_context
+    raise caller(CALLER_CANARY)
+E   RuntimeError: SYNTHETIC-CALLER-CANARY-0001
+
+During handling of the above exception, another exception occurred:
+tests\test_oracle9_w1_driver_session.py:1264: in test_s8_refusal_inside_active_caller_handler_has_no_context
+    assert_owner_refused(d1.World(), owner)
+tests\test_oracle9_w1_driver_session.py:703: in assert_owner_refused
+    d1.assert_closed(caught.value, "OWNER")
+tests\test_oracle9_w1_driver.py:237: in assert_closed
+    assert error.__context__ is None
+E   AssertionError: assert RuntimeError('SYNTHETIC-CALLER-CANARY-0001') is None
+E    +  where RuntimeError('SYNTHETIC-CALLER-CANARY-0001') = DriverRefusal('OWNER').__context__</failure></testcase><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s8_refusal_inside_active_caller_handler_has_no_context[runtime-error-latch]" time="0.001"><failure message="AssertionError: assert RuntimeError('SYNTHETIC-CALLER-CANARY-0001') is None&#10; +  where RuntimeError('SYNTHETIC-CALLER-CANARY-0001') = DriverRefusal('OWNER').__context__">tests\test_oracle9_w1_driver_session.py:1259: in test_s8_refusal_inside_active_caller_handler_has_no_context
+    raise caller(CALLER_CANARY)
+E   RuntimeError: SYNTHETIC-CALLER-CANARY-0001
+
+During handling of the above exception, another exception occurred:
+tests\test_oracle9_w1_driver_session.py:1264: in test_s8_refusal_inside_active_caller_handler_has_no_context
+    assert_owner_refused(d1.World(), owner)
+tests\test_oracle9_w1_driver_session.py:703: in assert_owner_refused
+    d1.assert_closed(caught.value, "OWNER")
+tests\test_oracle9_w1_driver.py:237: in assert_closed
+    assert error.__context__ is None
+E   AssertionError: assert RuntimeError('SYNTHETIC-CALLER-CANARY-0001') is None
+E    +  where RuntimeError('SYNTHETIC-CALLER-CANARY-0001') = DriverRefusal('OWNER').__context__</failure></testcase><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s8_refusal_inside_active_caller_handler_has_no_context[runtime-error-reused]" time="0.010"><failure message="AssertionError: assert RuntimeError('SYNTHETIC-CALLER-CANARY-0001') is None&#10; +  where RuntimeError('SYNTHETIC-CALLER-CANARY-0001') = DriverRefusal('OWNER').__context__">tests\test_oracle9_w1_driver_session.py:1259: in test_s8_refusal_inside_active_caller_handler_has_no_context
+    raise caller(CALLER_CANARY)
+E   RuntimeError: SYNTHETIC-CALLER-CANARY-0001
+
+During handling of the above exception, another exception occurred:
+tests\test_oracle9_w1_driver_session.py:1264: in test_s8_refusal_inside_active_caller_handler_has_no_context
+    assert_owner_refused(d1.World(), owner)
+tests\test_oracle9_w1_driver_session.py:703: in assert_owner_refused
+    d1.assert_closed(caught.value, "OWNER")
+tests\test_oracle9_w1_driver.py:237: in assert_closed
+    assert error.__context__ is None
+E   AssertionError: assert RuntimeError('SYNTHETIC-CALLER-CANARY-0001') is None
+E    +  where RuntimeError('SYNTHETIC-CALLER-CANARY-0001') = DriverRefusal('OWNER').__context__</failure></testcase><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s8_refusal_inside_active_caller_handler_has_no_context[key-error-foreign]" time="0.001"><failure message="AssertionError: assert KeyError('SYNTHETIC-CALLER-CANARY-0001') is None&#10; +  where KeyError('SYNTHETIC-CALLER-CANARY-0001') = DriverRefusal('OWNER').__context__">tests\test_oracle9_w1_driver_session.py:1259: in test_s8_refusal_inside_active_caller_handler_has_no_context
+    raise caller(CALLER_CANARY)
+E   KeyError: 'SYNTHETIC-CALLER-CANARY-0001'
+
+During handling of the above exception, another exception occurred:
+tests\test_oracle9_w1_driver_session.py:1264: in test_s8_refusal_inside_active_caller_handler_has_no_context
+    assert_owner_refused(d1.World(), owner)
+tests\test_oracle9_w1_driver_session.py:703: in assert_owner_refused
+    d1.assert_closed(caught.value, "OWNER")
+tests\test_oracle9_w1_driver.py:237: in assert_closed
+    assert error.__context__ is None
+E   AssertionError: assert KeyError('SYNTHETIC-CALLER-CANARY-0001') is None
+E    +  where KeyError('SYNTHETIC-CALLER-CANARY-0001') = DriverRefusal('OWNER').__context__</failure></testcase><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s8_refusal_inside_active_caller_handler_has_no_context[key-error-latch]" time="0.001"><failure message="AssertionError: assert KeyError('SYNTHETIC-CALLER-CANARY-0001') is None&#10; +  where KeyError('SYNTHETIC-CALLER-CANARY-0001') = DriverRefusal('OWNER').__context__">tests\test_oracle9_w1_driver_session.py:1259: in test_s8_refusal_inside_active_caller_handler_has_no_context
+    raise caller(CALLER_CANARY)
+E   KeyError: 'SYNTHETIC-CALLER-CANARY-0001'
+
+During handling of the above exception, another exception occurred:
+tests\test_oracle9_w1_driver_session.py:1264: in test_s8_refusal_inside_active_caller_handler_has_no_context
+    assert_owner_refused(d1.World(), owner)
+tests\test_oracle9_w1_driver_session.py:703: in assert_owner_refused
+    d1.assert_closed(caught.value, "OWNER")
+tests\test_oracle9_w1_driver.py:237: in assert_closed
+    assert error.__context__ is None
+E   AssertionError: assert KeyError('SYNTHETIC-CALLER-CANARY-0001') is None
+E    +  where KeyError('SYNTHETIC-CALLER-CANARY-0001') = DriverRefusal('OWNER').__context__</failure></testcase><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s8_refusal_inside_active_caller_handler_has_no_context[key-error-reused]" time="0.010"><failure message="AssertionError: assert KeyError('SYNTHETIC-CALLER-CANARY-0001') is None&#10; +  where KeyError('SYNTHETIC-CALLER-CANARY-0001') = DriverRefusal('OWNER').__context__">tests\test_oracle9_w1_driver_session.py:1259: in test_s8_refusal_inside_active_caller_handler_has_no_context
+    raise caller(CALLER_CANARY)
+E   KeyError: 'SYNTHETIC-CALLER-CANARY-0001'
+
+During handling of the above exception, another exception occurred:
+tests\test_oracle9_w1_driver_session.py:1264: in test_s8_refusal_inside_active_caller_handler_has_no_context
+    assert_owner_refused(d1.World(), owner)
+tests\test_oracle9_w1_driver_session.py:703: in assert_owner_refused
+    d1.assert_closed(caught.value, "OWNER")
+tests\test_oracle9_w1_driver.py:237: in assert_closed
+    assert error.__context__ is None
+E   AssertionError: assert KeyError('SYNTHETIC-CALLER-CANARY-0001') is None
+E    +  where KeyError('SYNTHETIC-CALLER-CANARY-0001') = DriverRefusal('OWNER').__context__</failure></testcase></testsuite></testsuites>

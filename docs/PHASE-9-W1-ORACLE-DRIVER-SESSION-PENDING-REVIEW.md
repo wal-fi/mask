@@ -1,5 +1,21 @@
 # W1 Oracle — integração SDK e caller owner pendentes
 
+## Fechamento do componente simulado — 2026-11-09
+
+Integração SDK e API de owner do chamador implementadas e revistas, fonte
+39a68904 e teste 585540af. 35 próprios e 1109 relacionados passaram; 114
+testes D1 antigos intactos. Finding de posição dos helpers e contexto da
+recusa corrigidos após RED, sem enfraquecer testes. Evidência detalhada em
+PHASE-9-W1-ORACLE-DRIVER-SESSION-VALIDATION.md e dados de 09/11.
+
+Isso fecha somente o incremento com SO simulado. MainRoot, bindings,
+sinais e hold físicos, terceiro script RO, T5, ponte/readmissão e gates
+de produto continuam pendentes. Próximo: desenho do main/bindings D2
+antes de código ou efeitos reais, mesmo Claude2 após confirmar zero
+escritor. Nenhuma chamada em andamento ao final deste fechamento.
+
+Registros de pendência abaixo preservam o estado das respectivas datas.
+
 ## Atualização documental — 2026-11-07
 
 A retomada executou às05h35UTC, terminou0 e a mensagem foi recebida nesta

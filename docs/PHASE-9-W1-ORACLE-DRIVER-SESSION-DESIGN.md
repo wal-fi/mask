@@ -1,5 +1,16 @@
 # W1 Oracle — integração da WorkerSession real e owner do chamador (desenho)
 
+## Atualização de implementação — 2026-11-09
+
+O incremento simulado das seções 2–4 foi implementado/revisto: fonte
+39a68904, teste 585540af, 35 próprios/1109 relacionados aprovados.
+VALIDATION.md registra escopo, REDs, findings e limites. O desenho original
+de 07/11 abaixo permanece histórico, inclusive o planejamento das seções
+6–7. A seção 5 ainda é prospectiva: não há main/bindings físicos novos.
+O terceiro RO foi aceito como direção arquitetural, sem execução/mount;
+sinais/hold e prova física continuam abertos. A recusa fechada de owner
+também não herda contexto de um handler ativo do chamador (regressões S8).
+
 2026-11-07. Somente desenho, escrito pelo Claude2 (sessão
 51ea0d85-05bb-4d24-ba9a-c9627c3f832f, claude-opus-5-5, esforço medium), sob a
 delegação vigente; nenhuma aprovação individual do usuário é inventada ou

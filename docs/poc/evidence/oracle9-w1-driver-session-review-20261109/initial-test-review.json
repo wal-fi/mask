@@ -1,0 +1,39 @@
+{
+  "session_id": "51ea0d85-05bb-4d24-ba9a-c9627c3f832f",
+  "terminal_reason": "completed",
+  "exit_code": 0,
+  "is_error": false,
+  "result": "Criei somente `tests/test_oracle9_w1_driver_session.py`. Nada foi executado: nem testes, nem ruff/format/mypy. Por isso não há contagem medida, e o que digo abaixo sobre verde e RED é só o que se espera. Nenhum outro arquivo foi alterado.\n\n**Harness**\n- O monkeypatch troca somente os nomes do módulo `maskgw.runtime.worker_session`: `time`, `ResultDeadline`, `sys`, `os`, `socket`, `subprocess` e `select`.\n- Um único relógio fake (o `Clock` do D1) vale para o driver, para o idle do SDK e para todo `ResultDeadline` que o SDK constrói.\n- Um teste de sanidade confere que `socket.socketpair`, `subprocess.Popen`, `select.select`, `time.monotonic`, `os.urandom` e `sys.platform` globais continuam intactos.\n- `RecordingFactory` guarda ledger, token, key, limits, profile e guard recebidos do driver e devolve a `WorkerSession` real.\n- A linha SESSION é localizada por `ledger.status`, sem slot fixo.\n- A saída usa o `RawChannel` público exato sobre um socket fake numa variável local `Any`, sem cast nem ignore.\n\n**Casos I1 (SDK real)**\n- **I1-1:** abre, recebe um RESULT, envia e fecha. Decodifica o `SecretInit` e compara chave, limites, snapshot e nonce LAB; a tag de OPENED é comparada com `hmac(nonce, snapshot)`. Confere o pin ligado durante a leitura do frame e durante o envio, saída só com o corpo (sem o cabeçalho de 76 bytes) e `ResultSummary(1, 1, False)`. Termina RELEASED, sem linha SESSION.\n- **I1-2:** truncamento dá `ResultSummary(1, 1000, True)`.\n- **I1-3:** com P = 33 MiB − 1, depois do QUERY só é lido o cabeçalho de controle de 12 bytes. Nenhuma leitura D-113, pin nunca ligado, envio recusado.\n- **I1-4:** frame com job errado. **I1-5:** DONE com job errado ou com outro `session_id`. Nos dois casos nada é exposto e o envio é recusado.\n- **I1-6:** o driver roda dois resultados reais e recebe EOF no GO 3. Espera RESULT 1 e 2 com PASS e o corpo exato, `ABORT{3, CASE, EOF}`, sessão fechada e sem linha SESSION, identidade dos frames igual à chave gravada, e owner None.\n- **I1-7:** `KeyboardInterrupt` dentro do SDK não atravessa `run`. O teste não afirma que o controle original sobrevive.\n- Em I1-3 a I1-5 e I1-7, o cleanup só é aceito se estado, ledger e `close` concordam: CLOSED sem linha SESSION, ou HELD com a linha retida.\n\n**Casos S (owner)**\n- O teste fixa o contrato da futura `run(ports, *, owner=None)`.\n- **Trava escolhida:** campo privado `_entered`, que deve ser exatamente `False` (bool) na construção e é marcado antes do guard. Junto com os seis campos que já existem, `Owner()` passa a ter exatamente sete campos.\n- **S-1:** caminho sem owner inalterado.\n- **Frescor:** `Owner()` novo com a trava `False` exata e todos os campos vazios.\n- **S-2:** em RETAINED, `result.owner is owner`, e a trava já está marcada quando o guard é chamado.\n- **S-3:** owner reutilizado é recusado.\n- **S-4:** `object()`, subclasse e `Owner` carregado de outro namespace são recusados.\n- **S-5:** `KeyboardInterrupt` no `read_control` do GO 1 escapa, e o owner mantém sessão e token.\n- **S-6:** `SystemExit` no `start` do sink escapa, com o handle já registrado em `owner.handles`.\n- **S-7:** trava `True`, `0` ou `None`, e owner pré-preenchido em qualquer um dos seis campos, são recusados.\n- Toda recusa exige `DriverRefusal(\"OWNER\")` sem cause nem context, nenhuma porta chamada e owner inalterado.\n\n**O que espero ao rodar (não medido)**\n- Sanidades, I1-1 a I1-7 e S-1 devem passar no driver atual (e9d8de9b).\n- S-2 a S-7 devem falhar, assim como o teste de frescor: o `run` atual recusa o parâmetro `owner` e `Owner()` ainda não tem `_entered`. Isso acontece na execução, não na coleta; não importo nada do futuro.\n\n**Limites do harness**\n- `Endpoint`, `Process` e `Pipe` de `test_worker_session.py` são tipados para o `World` antigo e não têm marca de leitura nem interrupção. Por isso reimplementei o mínimo no arquivo novo, com os mesmos nomes de atributos (alternativa prevista no §7 do desenho).\n- Reaproveito do teste D1 as portas determinísticas (reader, guard, link, ids, threads e `FakeSession`). O `World` de `test_worker_session.py` não é instanciado.\n- O idle do SDK está no mesmo relógio por construção, mas nenhum teste avança o relógio além da janela.\n- O ramo HELD da checagem de coerência não é provocado de propósito nesta matriz.\n\nO próximo passo é a medição pelo root antes de qualquer mudança no driver.",
+  "permission_denials": [],
+  "subagent_spawned": 0,
+  "root_review": {
+    "file": "tests/test_oracle9_w1_driver_session.py",
+    "sha256": "b38ab0cf7c8eb9449fca6f24387eff66588be05bc20ecdfd607dc18d36ab9142",
+    "bytes": 40099,
+    "byte_count_note": "40045 was partial file metadata observed while CLI43145 was still writing. The final b38ab0cf bytes are 40099, confirmed from the exact archived bytes with the same SHA256. No artifact content or test result changed.",
+    "lines": 1137,
+    "full_file_read": true,
+    "initial_red": {
+      "collected": 28,
+      "passed": 11,
+      "failed": 17,
+      "errors": 0,
+      "skipped": 0,
+      "pytest_seconds": 1.27,
+      "wall_seconds": 2.8818014,
+      "source_fixed": "e9d8de9b"
+    },
+    "statics": {
+      "ruff": "pass",
+      "format": "pass",
+      "mypy311": "FAIL: lines724 attr-defined and791 unreachable"
+    },
+    "findings": [
+      "Get the SDK time namespace through a typed dynamic module dictionary access without suppression; keep the clock assertion.",
+      "Preserve both RESULT and READY assertions through a small typed state-check helper or fresh read that avoids stale mypy narrowing; do not weaken states.",
+      "Invalid-owner refusal currently checks world.log but misses clock and some unlogged ports. Every port operation must be trapped and logged before expecting OWNER.",
+      "For HELD cleanup require the surviving SESSION row state HELD, both before and after repeated close, not just presence."
+    ]
+  },
+  "scope": "Only new test file; source amendments still prohibited before reviewed frozen RED."
+}

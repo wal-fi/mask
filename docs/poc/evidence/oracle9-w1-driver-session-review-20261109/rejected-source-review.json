@@ -1,0 +1,17 @@
+{
+  "source": "b3a412bfa3d1c73448fd473085150fdd42d1c6f9d4c6f4c9638d27d156e49fa3",
+  "terminal_recovered": 66525,
+  "exit": 0,
+  "review": "Source rejected before publication: existing Owner property/repr definitions became unreachable nested functions in _claim, leaving Owner with only __init__.",
+  "red": {
+    "collected": 143,
+    "passed": 131,
+    "failed": 12,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 2.45
+  },
+  "old_d1_test": "0e9a8cc1d35f69e6ca03a14f8a910af5491df6dffadb32a432defeb445099371",
+  "frozen_new_test": "104086c961f28c015d25aec7180c24dadad444e6e365c9ca1cfcef8f15096606",
+  "next": "Same Claude2 moves helper block below complete Owner class, restores original property/repr bodies byte-for-byte, no test change."
+}

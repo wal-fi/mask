@@ -4,6 +4,76 @@ Criado por solicitação do usuário em2026-10-30. Inclui o trabalho acumulado
 após4a5e556, preservando resultados históricos e tentativas reprovadas. É
 checkpoint de desenvolvimento incompleto da Fase9, não release de produção.
 
+## W1 Oracle: integração SDK e owner do chamador validados — 2026-11-09
+
+Claude2 foi o único programador, sessão 51ea0d85-05bb-4d24-ba9a-c9627c3f832f,
+claude-opus-5-5, esforço medium. Terminais 43145/43934/64135/66525/23351/
+34650/12000 recuperados; zero escritor confirmado antes da revisão final.
+Root leu o teste inicial, todos os deltas e a emenda completa da fonte.
+Fonte 39a68904 (36956 bytes/1043 linhas), teste 585540af (45030/1266):
+35 próprios passaram em 0,49 s; matriz relacionada de dez arquivos,
+1109 aprovações em 9,17 s, sem falhas, erros, skips ou xfail. Ruff/format
+360 e mypy 360 nos alvos 3.11/3.14 limpos; deploy tem lint restrito/format,
+fora do mypy. Runtime somente Windows CPython 3.11.3.
+
+RED29 (12 pass/17 falhas) e RED35 contextual (29/6) medidos antes da fonte;
+b3a412bf rejeitada com 12 falhas/131 pass por propriedades aninhadas.
+Histórico e dados reais preservados, incluindo erros de tipagem anteriores.
+Recusas OWNER agora não herdam contexto do chamador; owner exato/fresco/
+uso único antes das portas, identidade e controles fora de Exception
+preservados. Os 114 testes D1 antigos e 23 upstream fixos ficaram intactos,
+assim como os 124 insumos da aplicação, estado16 e tentativa consumida.
+
+Aceito sob delegação somente com SO simulado/portas confiáveis. Não prova
+masking/PG, concorrência, vida ou cleanup físico. A guarda HELD foi revista,
+mas I1-7 não entrou nesse ramo; hold/sinais/slots físicos continuam pendentes.
+Nenhum Docker/PG/SQL/controle nativo, serviço ou deploy executado. B1/B2/
+D090gate2/C1/T5/ingressos/produção seguem abertos; Gateway indisponível.
+Próximo incremento: leitura/desenho do main/bindings D2, incluindo retenção
+do owner e slots, sinais/hold e terceiro RO, antes de código ou efeitos.
+Não iniciar segundo escritor; recuperar terminal antes de nova chamada.
+Evidência: PHASE-9-W1-ORACLE-DRIVER-SESSION-VALIDATION e dados de 09/11.
+Registros seguintes são históricos.
+
+## W1 Oracle: RED35 contextual congelado; correção mínima — 2026-11-09
+
+CLI34650 recuperada0; teste585540af preserva prefixo/AST29. RED35:
+29pass/6falhas S8,1,42s, estáticos limpos. CLI12000 corrige só recusa
+OWNER na fontef8, mesma sessão/modelo/medium, testes congelados. Recuperar
+terminal antes de revisão/gates/nova chamada; só fakes, gates abertos.
+
+## W1 Oracle: owner verde143; finding de contexto em regressão — 2026-11-09
+
+CLI23351 recuperada0. Fontef8e884a2+teste104086c9 passam143 (29+114),
+estáticos limpos; b3a412bf rejeitada/RED12 preservados. Sonda reproduziu
+__context__ do except ativo do chamador; não publicar. CLI34650 adiciona
+só seis regressões ao novo teste, AST29/fontef8 fixas, mesma sessão/modelo/
+medium. Recuperar terminal antes de revisão/RED/nova chamada; só fakes.
+
+## W1 Oracle: RED29 congelado; emenda de owner em andamento — 2026-11-09
+
+CLI64135 recuperada0; teste104086c9 congelado após RED29/12pass/17falhas,
+1,41s e Ruff/format/mypy311/314 limpos. Fontes24/app124 intactas. CLI66525
+altera só driver após guardzero, mesma sessão51ea0d85/opus5.5/medium;
+testes/SDK/puro/source20/estado16/attempt fixos. Recuperar terminal antes
+de revisão/gates/nova chamada; ativo só monitorar. Nenhum efeito físico.
+
+## W1 Oracle: RED inicial e correção dos oráculos — 2026-11-09
+
+CLI43145 recuperada0; root leu b38ab0cf/1137linhas e mediu RED28 com
+11pass/17falhas,1,27s. Ruff/format limpos, mypy311 com dois erros;
+inicial preservado, não congelado. CLI43934 corrige só o novo teste,
+mesma sessão51ea0d85/opus5.5/medium após zero escritor; recuperar terminal
+antes de revisão/gates/nova chamada. D1/puro/fontes/gates fixos, só fakes.
+
+## W1 Oracle: testes de integração/owner em andamento — 2026-11-09
+
+CLI43145 escreve só tests/test_oracle9_w1_driver_session.py, mesmo único
+Claude2/sessão51ea0d85/opus5.5/medium, após HEAD/origin5708b8f/guardzero.
+Recuperar terminal antes de revisão ou outra chamada; ativo só monitorar.
+Root revê oráculos, mede/congela RED antes de fonte. D1/puro/source20/
+app124/estado16/attempt fixos; só fakes, nenhum efeito físico/SQL/deploy.
+
 ## W1 Oracle: desenho de integração/owner revisto — 2026-11-07
 
 Retomada05h35UTC executou0, mensagem recebida, sem próximo disparo.

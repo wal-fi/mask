@@ -1,3 +1,91 @@
+## W1 Oracle: integração SDK e owner do chamador validados — 2026-11-09
+
+Claude2 foi o único programador, sessão 51ea0d85-05bb-4d24-ba9a-c9627c3f832f,
+claude-opus-5-5, esforço medium. Terminais 43145/43934/64135/66525/23351/
+34650/12000 recuperados; zero escritor confirmado antes da revisão final.
+Root leu o teste inicial, todos os deltas e a emenda completa da fonte.
+Fonte 39a68904 (36956 bytes/1043 linhas), teste 585540af (45030/1266):
+35 próprios passaram em 0,49 s; matriz relacionada de dez arquivos,
+1109 aprovações em 9,17 s, sem falhas, erros, skips ou xfail. Ruff/format
+360 e mypy 360 nos alvos 3.11/3.14 limpos; deploy tem lint restrito/format,
+fora do mypy. Runtime somente Windows CPython 3.11.3.
+
+RED29 (12 pass/17 falhas) e RED35 contextual (29/6) medidos antes da fonte;
+b3a412bf rejeitada com 12 falhas/131 pass por propriedades aninhadas.
+Histórico e dados reais preservados, incluindo erros de tipagem anteriores.
+Recusas OWNER agora não herdam contexto do chamador; owner exato/fresco/
+uso único antes das portas, identidade e controles fora de Exception
+preservados. Os 114 testes D1 antigos e 23 upstream fixos ficaram intactos,
+assim como os 124 insumos da aplicação, estado16 e tentativa consumida.
+
+Aceito sob delegação somente com SO simulado/portas confiáveis. Não prova
+masking/PG, concorrência, vida ou cleanup físico. A guarda HELD foi revista,
+mas I1-7 não entrou nesse ramo; hold/sinais/slots físicos continuam pendentes.
+Nenhum Docker/PG/SQL/controle nativo, serviço ou deploy executado. B1/B2/
+D090gate2/C1/T5/ingressos/produção seguem abertos; Gateway indisponível.
+Próximo incremento: leitura/desenho do main/bindings D2, incluindo retenção
+do owner e slots, sinais/hold e terceiro RO, antes de código ou efeitos.
+Não iniciar segundo escritor; recuperar terminal antes de nova chamada.
+Evidência: PHASE-9-W1-ORACLE-DRIVER-SESSION-VALIDATION e dados de 09/11.
+Registros seguintes são históricos.
+
+## W1 Oracle: RED35 contextual congelado; correção mínima — 2026-11-09
+
+CLI34650 recuperada0; prefixo inteiro/AST dos29 antigos intactos. Novo
+teste585540af/45030bytes/1266linhas congelado:35coletados/29pass/6falhas,
+1,42s; exatamente S8 falha em __context__. Ruff/format/mypy311/314 limpos.
+CLI12000 corrige só o encadeamento da recusa OWNER em driverf8e884a2,
+mesma sessão/modelo/medium após zero escritor. Recuperar terminal antes
+de revisão/gates/nova chamada; testes/SDK/upstream/estado/attempt fixos.
+Sem física/SQL/deploy; fonte ainda não aceita para publicação.
+
+## W1 Oracle: owner verde143; finding de contexto em regressão — 2026-11-09
+
+CLI66525/23351 recuperadas0; b3a412bf rejeitada após12falhas/131pass por
+métodos Owner aninhados no helper. Correção f8e884a2/36596bytes/1035linhas
+restaura AST dos métodos/fluxos antigos.29novos+114antigos passam143/1,43s;
+Ruff/format360/mypy360311/314 e lint/format deploy limpos. Teste104086c9
+permaneceu intacto.22 sondas de owner inválido sem callbacks/portas passam.
+Sonda separada reproduziu __context__ herdado do except ativo do chamador;
+fonte ainda rejeitada para publicação. CLI34650 acrescenta só seis casos
+ao novo teste, preservando AST29 e fontef8e884a2. Mesma sessão/modelo/medium;
+recuperar terminal antes de revisão/RED/nova chamada. Nenhum efeito físico.
+
+## W1 Oracle: RED29 congelado; emenda de owner em andamento — 2026-11-09
+
+CLI43934/64135 recuperadas0, zero escritor antes de66525. Root leu os
+deltas completos; testes antigos/parametrizações preservados. Teste
+104086c9/43720bytes/1232linhas congelado:29coletados/12pass/17falhas,
+1,41s, sem erros/skips. Ruff/format/mypy311/314 limpos. Upstream24/app124
+por SHA/tamanho intactos; dados em frozen-red-record.json na evidência09/11.
+CLI66525 implementa SÓ deploy/oracle9_w1_driver.py: owner externo/frescor/
+trava antes das portas, identidade e controles preservados. Mesmo único
+Claude2/sessão51ea0d85/opus5.5/medium. Recuperar terminal antes de ler
+fonte/gates/nova chamada; ativo só monitorar. Testes/SDK/puro/source20/
+app124/estado16/attempt fixos. Sem efeitos físicos/SQL/deploy; gates abertos.
+
+## W1 Oracle: RED inicial e correção dos oráculos — 2026-11-09
+
+CLI43145 encerrou0 e foi recuperada; zero escritor confirmado. Root leu
+teste b38ab0cf/40099bytes/1137linhas. RED28:11pass/17falhas,1,27s;
+Ruff/format passam, mypy311 reprova duas linhas. Dados e teste inicial
+preservados em oracle9-w1-driver-session-review-20261109. Não congelado.
+CLI43934 corrige só o novo teste: tipagem sem supressão, todas as portas
+observáveis na recusa OWNER e ledger HELD comprovado, sem mudar fonte.
+Mesma sessão/modelo/medium; recuperar terminal antes de ler/gates/nova
+chamada. Ativo só monitorar. D1/puro/upstream/app/estado/attempt fixos.
+
+## W1 Oracle: testes de integração/owner em andamento — 2026-11-09
+
+HEAD/origin5708b8f reconferidos, rastreados limpos e zero escritor antes
+da CLI43145. Mesmo único Claude2/sessão51ea0d85/claude-opus-5-5/medium
+escreve somente tests/test_oracle9_w1_driver_session.py, grupos I1/S do
+desenho revisto. Fonte e testes D1, puro/source20/app124/estado16 e attempt
+consumido permanecem fixos. Root recupera terminal antes de ler o novo
+teste ou medir RED; se ativo, somente monitorar. Nenhuma emenda de fonte
+antes da revisão dos oráculos e RED medido. Somente SO simulado: sem
+efeito físico, Docker/PG/SQL, infraestrutura ou deploy. Gates abertos.
+
 ## W1 Oracle: desenho de integração/owner revisto — 2026-11-07
 
 Retomada05h35UTC executou0, mensagem recebida, sem próximo disparo.

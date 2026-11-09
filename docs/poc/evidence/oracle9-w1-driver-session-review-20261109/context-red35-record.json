@@ -1,0 +1,30 @@
+{
+  "terminal_recovered": 34650,
+  "exit": 0,
+  "test_sha256": "585540afafdc10b5f8a201770ff2fc1c33fd5f36219dc18907b1626498692bc7",
+  "test_bytes": 45030,
+  "test_lines": 1266,
+  "all_previous_test_bytes_and_AST_unchanged": true,
+  "red": {
+    "collected": 35,
+    "passed": 29,
+    "failed": 6,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 1.42,
+    "failed_cases": [
+      "test_s8_refusal_inside_active_caller_handler_has_no_context[runtime-error-foreign]",
+      "test_s8_refusal_inside_active_caller_handler_has_no_context[runtime-error-latch]",
+      "test_s8_refusal_inside_active_caller_handler_has_no_context[runtime-error-reused]",
+      "test_s8_refusal_inside_active_caller_handler_has_no_context[key-error-foreign]",
+      "test_s8_refusal_inside_active_caller_handler_has_no_context[key-error-latch]",
+      "test_s8_refusal_inside_active_caller_handler_has_no_context[key-error-reused]"
+    ]
+  },
+  "source_frozen": "f8e884a2dfac9e66a0920daf8a64b8e1d928959a860676251aee6ed4e79495e4",
+  "ruff": "pass",
+  "format": "pass",
+  "mypy311": "pass",
+  "mypy314": "pass",
+  "context": "Caller exception must be detached, not merely suppressed. Regressions measured before source fix."
+}

@@ -1,0 +1,77 @@
+{
+  "purpose": "Lossless encoding normalization of reviewer-generated QA logs for textual Git review. No newline/content changes. Original byte hashes and reconstruction rule preserved.",
+  "logs": [
+    {
+      "file": "context-red35.log",
+      "original_encoding": "UTF-16LE with BOM from PowerShell5 redirection",
+      "original_sha256": "8dfa99f5dbb3d05c35e3c23b79c1f57606b35fadc39e71b22e2a3b48c171d275",
+      "original_bytes": 12692,
+      "utf8_sha256": "4bb1a77662eb26a86ac6375b56af3dd4f4b4578d1c0477226f600082dcd98aa0",
+      "utf8_bytes": 6345,
+      "exact_original_reconstructible": "UTF-8 decoded text encoded as UTF-16LE with leading FFFE; round-trip checked before conversion"
+    },
+    {
+      "file": "final-own35.log",
+      "original_encoding": "UTF-16LE with BOM from PowerShell5 redirection",
+      "original_sha256": "c6dbedc55e0b9e19414d79b41f5daa5a8dcc4c3fc24ba89de8c632621b88e947",
+      "original_bytes": 204,
+      "utf8_sha256": "1a94816784849eb84730dcf0d3308e1f3df528499de40a69c61b1cbac4b437e2",
+      "utf8_bytes": 101,
+      "exact_original_reconstructible": "UTF-8 decoded text encoded as UTF-16LE with leading FFFE; round-trip checked before conversion"
+    },
+    {
+      "file": "final-related.log",
+      "original_encoding": "UTF-16LE with BOM from PowerShell5 redirection",
+      "original_sha256": "a8ad9e4c35758472f84b3bafc9e58236f7b6056ee0e0f3db7db0bd08d06b431b",
+      "original_bytes": 2638,
+      "utf8_sha256": "e786e8c42f7fa0a8e7837763e5ab2bfe48f2306b1c4f7439963d09de109697cd",
+      "utf8_bytes": 1318,
+      "exact_original_reconstructible": "UTF-8 decoded text encoded as UTF-16LE with leading FFFE; round-trip checked before conversion"
+    },
+    {
+      "file": "frozen-red.log",
+      "original_encoding": "UTF-16LE with BOM from PowerShell5 redirection",
+      "original_sha256": "895cb14b7a7f12362a30224d09f7b2c49ca75fee51036aa2ffdc72bca601473a",
+      "original_bytes": 18058,
+      "utf8_sha256": "d8c821ceb7aa22ea7a2d2f515c67dc101165702a32153c8b2d0d3c9efce55f98",
+      "utf8_bytes": 9028,
+      "exact_original_reconstructible": "UTF-8 decoded text encoded as UTF-16LE with leading FFFE; round-trip checked before conversion"
+    },
+    {
+      "file": "green143.log",
+      "original_encoding": "UTF-16LE with BOM from PowerShell5 redirection",
+      "original_sha256": "acd379e31ed18c83fb567711d87f7f0e6ad919769113495305f3b56ddd5712bf",
+      "original_bytes": 368,
+      "utf8_sha256": "efc90751deb3e5dd2e7e6dffe4f62b3e3d71e18fae943e182648ed2b84e79a76",
+      "utf8_bytes": 183,
+      "exact_original_reconstructible": "UTF-8 decoded text encoded as UTF-16LE with leading FFFE; round-trip checked before conversion"
+    },
+    {
+      "file": "initial-red.log",
+      "original_encoding": "UTF-16LE with BOM from PowerShell5 redirection",
+      "original_sha256": "f937f97ae9b23bbfa395766d8ef3a4ac58a4b3299e958bb754b185b9f5b48430",
+      "original_bytes": 18056,
+      "utf8_sha256": "0113a3efd545156ca9d61a2d814ad8fa48bffe17eee4f1e08f2eea207c4edb16",
+      "utf8_bytes": 9027,
+      "exact_original_reconstructible": "UTF-8 decoded text encoded as UTF-16LE with leading FFFE; round-trip checked before conversion"
+    },
+    {
+      "file": "rejected-source-b3a412bf.log",
+      "original_encoding": "UTF-16LE with BOM from PowerShell5 redirection",
+      "original_sha256": "16f98aa23367736ddc865f3090e9b3cea29df7a417dbf2fdb3d51780d2d4b993",
+      "original_bytes": 11420,
+      "utf8_sha256": "b365b5f7362007f4f510999481630b2bc2eab0e4a36e45d95a71b19b78fda51c",
+      "utf8_bytes": 5709,
+      "exact_original_reconstructible": "UTF-8 decoded text encoded as UTF-16LE with leading FFFE; round-trip checked before conversion"
+    },
+    {
+      "file": "reviewed-red.log",
+      "original_encoding": "UTF-16LE with BOM from PowerShell5 redirection",
+      "original_sha256": "a0861786c9ab9862969df2caac31d92c31e1c041585f5f52de5cdf90ced60a5e",
+      "original_bytes": 18058,
+      "utf8_sha256": "62722344b6440b37ad4d69675647d66bc0b01c380303d2db2c9442ec92b6d05a",
+      "utf8_bytes": 9028,
+      "exact_original_reconstructible": "UTF-8 decoded text encoded as UTF-16LE with leading FFFE; round-trip checked before conversion"
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+.............F....FF.................................................... [ 50%]
+......FF..............FFFFFFF..........................................  [100%]
+================================== FAILURES ===================================
+_____________ test_s2_supplied_owner_is_the_exact_retained_owner ______________
+tests\test_oracle9_w1_driver_session.py:1101: in test_s2_supplied_owner_is_the_exact_retained_owner
+    assert owner.session is world.sessions[0]
+           ^^^^^^^^^^^^^
+E   AttributeError: 'Owner' object has no attribute 'session'
+_________ test_s5_keyboard_interrupt_at_go1_escapes_with_owner_intact _________
+tests\test_oracle9_w1_driver_session.py:1148: in test_s5_keyboard_interrupt_at_go1_escapes_with_owner_intact
+    assert owner.session is session
+           ^^^^^^^^^^^^^
+E   AttributeError: 'Owner' object has no attribute 'session'
+______ test_s6_system_exit_at_sink_start_escapes_with_handle_registered _______
+tests\test_oracle9_w1_driver_session.py:1169: in test_s6_system_exit_at_sink_start_escapes_with_handle_registered
+    assert owner.handles == (handle,)  # registered BEFORE start
+           ^^^^^^^^^^^^^
+E   AttributeError: 'Owner' object has no attribute 'handles'
+_________ test_d1_6_watcher_join_failure_retains_owner_without_commit _________
+tests\test_oracle9_w1_driver.py:1318: in test_d1_6_watcher_join_failure_retains_owner_without_commit
+    assert watcher in result.owner.handles
+                      ^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'Owner' object has no attribute 'handles'
+_______ test_d1_9_watcher_start_failure_retains_handle_and_skips_query ________
+tests\test_oracle9_w1_driver.py:1338: in test_d1_9_watcher_start_failure_retains_handle_and_skips_query
+    assert world.handles[-1] in result.owner.handles
+                                ^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'Owner' object has no attribute 'handles'
+__________ test_d1_8_sink_join_failure_retains_endpoints_and_session __________
+tests\test_oracle9_w1_driver.py:1478: in test_d1_8_sink_join_failure_retains_endpoints_and_session
+    assert world.handles[0] in owner.handles
+                               ^^^^^^^^^^^^^
+E   AttributeError: 'Owner' object has no attribute 'handles'
+_________ test_d1_9_sink_start_failure_retains_handle_before_any_send _________
+tests\test_oracle9_w1_driver.py:1490: in test_d1_9_sink_start_failure_retains_handle_before_any_send
+    assert world.handles[0] in result.owner.handles
+                               ^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'Owner' object has no attribute 'handles'
+________ test_d1_9_sink_partial_start_exception_retains_started_handle ________
+tests\test_oracle9_w1_driver.py:1502: in test_d1_9_sink_partial_start_exception_retains_started_handle
+    assert any(item is handle for item in result.owner.handles)
+                                          ^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'Owner' object has no attribute 'handles'
+______ test_d1_9_watcher_partial_start_exception_retains_started_handle _______
+tests\test_oracle9_w1_driver.py:1517: in test_d1_9_watcher_partial_start_exception_retains_started_handle
+    assert any(item is handle for item in result.owner.handles)
+                                          ^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'Owner' object has no attribute 'handles'
+_____________ test_d1_10_pair_creation_unknown_effect_is_retained _____________
+tests\test_oracle9_w1_driver.py:1528: in test_d1_10_pair_creation_unknown_effect_is_retained
+    assert result.owner.unknown == ("pair",)
+           ^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'Owner' object has no attribute 'unknown'
+___________ test_d1_11_factory_failure_retains_token_without_close ____________
+tests\test_oracle9_w1_driver.py:1544: in test_d1_11_factory_failure_retains_token_without_close
+    assert result.owner.session_token is world.tokens[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'Owner' object has no attribute 'session_token'
+______ test_d1_11_open_failure_before_adoption_retains_and_never_closes _______
+tests\test_oracle9_w1_driver.py:1557: in test_d1_11_open_failure_before_adoption_retains_and_never_closes
+    assert result.owner.session is world.sessions[0]
+           ^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'Owner' object has no attribute 'session'
+=========================== short test summary info ===========================
+FAILED tests/test_oracle9_w1_driver_session.py::test_s2_supplied_owner_is_the_exact_retained_owner
+FAILED tests/test_oracle9_w1_driver_session.py::test_s5_keyboard_interrupt_at_go1_escapes_with_owner_intact
+FAILED tests/test_oracle9_w1_driver_session.py::test_s6_system_exit_at_sink_start_escapes_with_handle_registered
+FAILED tests/test_oracle9_w1_driver.py::test_d1_6_watcher_join_failure_retains_owner_without_commit
+FAILED tests/test_oracle9_w1_driver.py::test_d1_9_watcher_start_failure_retains_handle_and_skips_query
+FAILED tests/test_oracle9_w1_driver.py::test_d1_8_sink_join_failure_retains_endpoints_and_session
+FAILED tests/test_oracle9_w1_driver.py::test_d1_9_sink_start_failure_retains_handle_before_any_send
+FAILED tests/test_oracle9_w1_driver.py::test_d1_9_sink_partial_start_exception_retains_started_handle
+FAILED tests/test_oracle9_w1_driver.py::test_d1_9_watcher_partial_start_exception_retains_started_handle
+FAILED tests/test_oracle9_w1_driver.py::test_d1_10_pair_creation_unknown_effect_is_retained
+FAILED tests/test_oracle9_w1_driver.py::test_d1_11_factory_failure_retains_token_without_close
+FAILED tests/test_oracle9_w1_driver.py::test_d1_11_open_failure_before_adoption_retains_and_never_closes
+12 failed, 131 passed in 2.45s

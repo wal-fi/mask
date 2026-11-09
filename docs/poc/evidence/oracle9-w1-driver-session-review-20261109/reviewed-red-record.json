@@ -1,0 +1,22 @@
+{
+  "claude_terminal": 43934,
+  "exit": 0,
+  "root_full_delta_reviewed": true,
+  "test_sha256": "92a3566568514e60c702dced5370624c6bf917d5cc72b24dae7e579cc2d2d884",
+  "test_bytes": 43567,
+  "test_lines": 1227,
+  "red": {
+    "collected": 29,
+    "passed": 12,
+    "failed": 17,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 1.45
+  },
+  "ruff": "pass",
+  "format": "pass",
+  "mypy311": "FAIL unreachable881",
+  "mypy314": "FAIL unreachable881",
+  "remaining_finding": "mypy retains output_pinned True across SDK send; fresh pin-state assertion required, no assertion weakening",
+  "frozen": false
+}

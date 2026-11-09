@@ -120,7 +120,10 @@ class Ports:
 
 
 class Owner:
-    """Strong references to every reservation, allocation and uncertain slot."""
+    """Strong references to every reservation, allocation and uncertain slot.
+
+    ``_entered`` is the single-use latch: exactly ``False`` until ``run`` claims it.
+    """
 
     def __init__(self) -> None:
         self._session_token: Any = None
@@ -129,6 +132,7 @@ class Owner:
         self._handles: list[Any] = []
         self._unknown: list[str] = []
         self._retained: list[Any] = []  # ledger, lock and generation tokens
+        self._entered: bool = False
 
     @property
     def session_token(self) -> Any:
@@ -152,6 +156,47 @@ class Owner:
 
     def __repr__(self) -> str:
         return "Owner(<private>)"
+
+
+_OWNER_EMPTY: Final = ("_session_token", "_session")
+_OWNER_LISTS: Final = ("_endpoints", "_handles", "_unknown", "_retained")
+_OWNER_FIELDS: Final = frozenset((*_OWNER_EMPTY, *_OWNER_LISTS, "_entered"))
+
+
+def _fresh(owner: Owner) -> bool:
+    """Exact-type owner only; inspects identities/exact types, never calls its values."""
+    fields = vars(owner)
+    if type(fields) is not dict or not all(type(name) is str for name in fields):
+        return False  # only exact str keys before any set membership/hash comparison
+    if len(fields) != len(_OWNER_FIELDS) or not all(name in fields for name in _OWNER_FIELDS):
+        return False  # incomplete or extended forged state
+    latch = fields["_entered"]
+    return (
+        type(latch) is bool
+        and latch is False
+        and all(fields[name] is None for name in _OWNER_EMPTY)
+        and all(type(fields[name]) is list and len(fields[name]) == 0 for name in _OWNER_LISTS)
+    )
+
+
+def _claim(owner: object) -> Owner:
+    """Fresh Owner when omitted; otherwise the exact caller object, claimed once."""
+    if owner is None:
+        claimed = Owner()
+    elif type(owner) is Owner and _fresh(owner):
+        claimed = owner
+    else:
+        # Rejected owner left untouched. A caller handler may be active: its exception
+        # becomes __context__ at raise time (``from None`` would only hide it), so the
+        # closed refusal is detached here and re-raised bare, which chains nothing.
+        try:
+            raise DriverRefusal("OWNER")
+        except DriverRefusal as refusal:
+            refusal.__context__ = None
+            refusal.__cause__ = None
+            raise
+    claimed._entered = True  # BEFORE any collaborator operation
+    return claimed
 
 
 @dataclass(frozen=True, slots=True, repr=False)
@@ -977,9 +1022,13 @@ class _Driver:
             return self.abort(stop)
 
 
-def run(ports: Ports) -> DriverResult:
-    """Owner, then guard, then the pinned loader; finite result, never raises."""
-    owner = Owner()
+def run(ports: Ports, *, owner: Owner | None = None) -> DriverResult:
+    """Owner, then guard, then the pinned loader; finite result for port failures.
+
+    Only ``DriverRefusal("OWNER")`` for an invalid supplied owner, before any port
+    operation; controls outside ``Exception`` escape with the caller's owner intact.
+    """
+    owner = _claim(owner)
     facts: Any = None
     try:
         facts = ports.guard.protect(role=ProcessRole.CONTROLLER, address_limit_bytes=GUARD_AS_BYTES)

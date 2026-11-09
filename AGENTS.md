@@ -40,6 +40,37 @@ de produção nem dispensa revisão, isolamento, masking, read-only ou sigilo.
 
 ## Escopo atual
 
+## W1 Oracle: integração SDK e owner do chamador validados — 2026-11-09
+
+Claude2 foi o único programador, sessão 51ea0d85-05bb-4d24-ba9a-c9627c3f832f,
+claude-opus-5-5, esforço medium. Terminais 43145/43934/64135/66525/23351/
+34650/12000 recuperados; zero escritor confirmado antes da revisão final.
+Root leu o teste inicial, todos os deltas e a emenda completa da fonte.
+Fonte 39a68904 (36956 bytes/1043 linhas), teste 585540af (45030/1266):
+35 próprios passaram em 0,49 s; matriz relacionada de dez arquivos,
+1109 aprovações em 9,17 s, sem falhas, erros, skips ou xfail. Ruff/format
+360 e mypy 360 nos alvos 3.11/3.14 limpos; deploy tem lint restrito/format,
+fora do mypy. Runtime somente Windows CPython 3.11.3.
+
+RED29 (12 pass/17 falhas) e RED35 contextual (29/6) medidos antes da fonte;
+b3a412bf rejeitada com 12 falhas/131 pass por propriedades aninhadas.
+Histórico e dados reais preservados, incluindo erros de tipagem anteriores.
+Recusas OWNER agora não herdam contexto do chamador; owner exato/fresco/
+uso único antes das portas, identidade e controles fora de Exception
+preservados. Os 114 testes D1 antigos e 23 upstream fixos ficaram intactos,
+assim como os 124 insumos da aplicação, estado16 e tentativa consumida.
+
+Aceito sob delegação somente com SO simulado/portas confiáveis. Não prova
+masking/PG, concorrência, vida ou cleanup físico. A guarda HELD foi revista,
+mas I1-7 não entrou nesse ramo; hold/sinais/slots físicos continuam pendentes.
+Nenhum Docker/PG/SQL/controle nativo, serviço ou deploy executado. B1/B2/
+D090gate2/C1/T5/ingressos/produção seguem abertos; Gateway indisponível.
+Próximo incremento: leitura/desenho do main/bindings D2, incluindo retenção
+do owner e slots, sinais/hold e terceiro RO, antes de código ou efeitos.
+Não iniciar segundo escritor; recuperar terminal antes de nova chamada.
+Evidência: PHASE-9-W1-ORACLE-DRIVER-SESSION-VALIDATION e dados de 09/11.
+Registros seguintes são históricos.
+
 ## W1 Oracle: desenho de integração/owner revisto — 2026-11-07
 
 Retomada05h35UTC executou0, mensagem recebida, sem próximo disparo.

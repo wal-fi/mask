@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="17" skipped="0" tests="29" time="1.332" timestamp="2026-11-09T09:20:10.118885-03:00" hostname="SMTZDIBDN1954"><testcase classname="tests.test_oracle9_w1_driver_session" name="test_sanity_harness_patches_only_sdk_module_names" time="0.002" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_sanity_port_trap_records_clock_and_link_reads_without_driver" time="0.012" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_sanity_lab_packet_expects_sdk_bodies" time="0.001" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_i1_1_open_result_send_close_with_lab_identity" time="0.002" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_i1_2_truncated_result_reports_exact_flag" time="0.005" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_i1_3_parent_one_byte_short_refuses_after_control_header_only" time="0.001" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_i1_4_wrong_result_identity_is_never_exposed" time="0.001" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_i1_5_wrong_done_after_valid_frame_is_never_exposed[done-job]" time="0.001" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_i1_5_wrong_done_after_valid_frame_is_never_exposed[done-session]" time="0.002" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_i1_6_driver_runs_two_real_sdk_results_then_eof_on_go3" time="0.019" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_i1_7_control_inside_sdk_becomes_a_closed_session_failure" time="0.013" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s1_default_path_without_owner_is_unchanged" time="0.011" /><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s7_fresh_owner_constructs_exact_false_latch_and_empty_fields" time="0.001"><failure message="AssertionError: assert {'_session_to...les': [], ...} == {'_session_to...les': [], ...}&#10;  &#10;  Omitting 6 identical items, use -vv to show&#10;  Right contains 1 more item:&#10;  {'_entered': False}&#10;  Use -v to get more diff">tests\test_oracle9_w1_driver_session.py:1087: in test_s7_fresh_owner_constructs_exact_false_latch_and_empty_fields
+    assert vars(owner) == FRESH_OWNER
+E   AssertionError: assert {'_session_to...les': [], ...} == {'_session_to...les': [], ...}
+E
+E     Omitting 6 identical items, use -vv to show
+E     Right contains 1 more item:
+E     {'_entered': False}
+E     Use -v to get more diff</failure></testcase><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s2_supplied_owner_is_the_exact_retained_owner" time="0.001"><failure message="TypeError: run() got an unexpected keyword argument 'owner'">tests\test_oracle9_w1_driver_session.py:1096: in test_s2_supplied_owner_is_the_exact_retained_owner
+    result = module["run"](ports_for(world, guard=guard), owner=owner)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: run() got an unexpected keyword argument 'owner'</failure></testcase><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s3_reused_owner_is_refused_before_any_port" time="0.001"><failure message="TypeError: run() got an unexpected keyword argument 'owner'">tests\test_oracle9_w1_driver_session.py:1111: in test_s3_reused_owner_is_refused_before_any_port
+    result = module["run"](ports_for(first), owner=owner)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: run() got an unexpected keyword argument 'owner'</failure></testcase><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s4_foreign_owner_is_refused_before_guard[object]" time="0.001"><failure message="TypeError: run() got an unexpected keyword argument 'owner'">tests\test_oracle9_w1_driver_session.py:1132: in test_s4_foreign_owner_is_refused_before_guard
+    assert_owner_refused(d1.World(), foreign_owner(kind))
+tests\test_oracle9_w1_driver_session.py:702: in assert_owner_refused
+    module["run"](ports, owner=owner)
+E   TypeError: run() got an unexpected keyword argument 'owner'</failure></testcase><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s4_foreign_owner_is_refused_before_guard[subclass]" time="0.001"><failure message="TypeError: run() got an unexpected keyword argument 'owner'">tests\test_oracle9_w1_driver_session.py:1132: in test_s4_foreign_owner_is_refused_before_guard
+    assert_owner_refused(d1.World(), foreign_owner(kind))
+tests\test_oracle9_w1_driver_session.py:702: in assert_owner_refused
+    module["run"](ports, owner=owner)
+E   TypeError: run() got an unexpected keyword argument 'owner'</failure></testcase><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s4_foreign_owner_is_refused_before_guard[namespace]" time="0.012"><failure message="TypeError: run() got an unexpected keyword argument 'owner'">tests\test_oracle9_w1_driver_session.py:1132: in test_s4_foreign_owner_is_refused_before_guard
+    assert_owner_refused(d1.World(), foreign_owner(kind))
+tests\test_oracle9_w1_driver_session.py:702: in assert_owner_refused
+    module["run"](ports, owner=owner)
+E   TypeError: run() got an unexpected keyword argument 'owner'</failure></testcase><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s5_keyboard_interrupt_at_go1_escapes_with_owner_intact" time="0.001"><failure message="TypeError: run() got an unexpected keyword argument 'owner'">tests\test_oracle9_w1_driver_session.py:1142: in test_s5_keyboard_interrupt_at_go1_escapes_with_owner_intact
+    module["run"](ports_for(world, link=link), owner=owner)
+E   TypeError: run() got an unexpected keyword argument 'owner'</failure></testcase><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s6_system_exit_at_sink_start_escapes_with_handle_registered" time="0.001"><failure message="TypeError: run() got an unexpected keyword argument 'owner'">tests\test_oracle9_w1_driver_session.py:1163: in test_s6_system_exit_at_sink_start_escapes_with_handle_registered
+    module["run"](ports_for(world, threads=threads), owner=owner)
+E   TypeError: run() got an unexpected keyword argument 'owner'</failure></testcase><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[latch-true]" time="0.001"><failure message="TypeError: run() got an unexpected keyword argument 'owner'">tests\test_oracle9_w1_driver_session.py:1232: in test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged
+    assert_owner_refused(d1.World(), owner)
+tests\test_oracle9_w1_driver_session.py:702: in assert_owner_refused
+    module["run"](ports, owner=owner)
+E   TypeError: run() got an unexpected keyword argument 'owner'</failure></testcase><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[latch-zero]" time="0.001"><failure message="TypeError: run() got an unexpected keyword argument 'owner'">tests\test_oracle9_w1_driver_session.py:1232: in test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged
+    assert_owner_refused(d1.World(), owner)
+tests\test_oracle9_w1_driver_session.py:702: in assert_owner_refused
+    module["run"](ports, owner=owner)
+E   TypeError: run() got an unexpected keyword argument 'owner'</failure></testcase><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[latch-none]" time="0.001"><failure message="TypeError: run() got an unexpected keyword argument 'owner'">tests\test_oracle9_w1_driver_session.py:1232: in test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged
+    assert_owner_refused(d1.World(), owner)
+tests\test_oracle9_w1_driver_session.py:702: in assert_owner_refused
+    module["run"](ports, owner=owner)
+E   TypeError: run() got an unexpected keyword argument 'owner'</failure></testcase><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[token]" time="0.001"><failure message="TypeError: run() got an unexpected keyword argument 'owner'">tests\test_oracle9_w1_driver_session.py:1232: in test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged
+    assert_owner_refused(d1.World(), owner)
+tests\test_oracle9_w1_driver_session.py:702: in assert_owner_refused
+    module["run"](ports, owner=owner)
+E   TypeError: run() got an unexpected keyword argument 'owner'</failure></testcase><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[session]" time="0.002"><failure message="TypeError: run() got an unexpected keyword argument 'owner'">tests\test_oracle9_w1_driver_session.py:1232: in test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged
+    assert_owner_refused(d1.World(), owner)
+tests\test_oracle9_w1_driver_session.py:702: in assert_owner_refused
+    module["run"](ports, owner=owner)
+E   TypeError: run() got an unexpected keyword argument 'owner'</failure></testcase><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[endpoint]" time="0.001"><failure message="TypeError: run() got an unexpected keyword argument 'owner'">tests\test_oracle9_w1_driver_session.py:1232: in test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged
+    assert_owner_refused(d1.World(), owner)
+tests\test_oracle9_w1_driver_session.py:702: in assert_owner_refused
+    module["run"](ports, owner=owner)
+E   TypeError: run() got an unexpected keyword argument 'owner'</failure></testcase><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[handle]" time="0.001"><failure message="TypeError: run() got an unexpected keyword argument 'owner'">tests\test_oracle9_w1_driver_session.py:1232: in test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged
+    assert_owner_refused(d1.World(), owner)
+tests\test_oracle9_w1_driver_session.py:702: in assert_owner_refused
+    module["run"](ports, owner=owner)
+E   TypeError: run() got an unexpected keyword argument 'owner'</failure></testcase><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[unknown]" time="0.001"><failure message="TypeError: run() got an unexpected keyword argument 'owner'">tests\test_oracle9_w1_driver_session.py:1232: in test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged
+    assert_owner_refused(d1.World(), owner)
+tests\test_oracle9_w1_driver_session.py:702: in assert_owner_refused
+    module["run"](ports, owner=owner)
+E   TypeError: run() got an unexpected keyword argument 'owner'</failure></testcase><testcase classname="tests.test_oracle9_w1_driver_session" name="test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[retained]" time="0.001"><failure message="TypeError: run() got an unexpected keyword argument 'owner'">tests\test_oracle9_w1_driver_session.py:1232: in test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged
+    assert_owner_refused(d1.World(), owner)
+tests\test_oracle9_w1_driver_session.py:702: in assert_owner_refused
+    module["run"](ports, owner=owner)
+E   TypeError: run() got an unexpected keyword argument 'owner'</failure></testcase></testsuite></testsuites>

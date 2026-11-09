@@ -1,0 +1,94 @@
+.............................FFFFFF                                      [100%]
+================================== FAILURES ===================================
+_ test_s8_refusal_inside_active_caller_handler_has_no_context[runtime-error-foreign] _
+tests\test_oracle9_w1_driver_session.py:1259: in test_s8_refusal_inside_active_caller_handler_has_no_context
+    raise caller(CALLER_CANARY)
+E   RuntimeError: SYNTHETIC-CALLER-CANARY-0001
+
+During handling of the above exception, another exception occurred:
+tests\test_oracle9_w1_driver_session.py:1264: in test_s8_refusal_inside_active_caller_handler_has_no_context
+    assert_owner_refused(d1.World(), owner)
+tests\test_oracle9_w1_driver_session.py:703: in assert_owner_refused
+    d1.assert_closed(caught.value, "OWNER")
+tests\test_oracle9_w1_driver.py:237: in assert_closed
+    assert error.__context__ is None
+E   AssertionError: assert RuntimeError('SYNTHETIC-CALLER-CANARY-0001') is None
+E    +  where RuntimeError('SYNTHETIC-CALLER-CANARY-0001') = DriverRefusal('OWNER').__context__
+_ test_s8_refusal_inside_active_caller_handler_has_no_context[runtime-error-latch] _
+tests\test_oracle9_w1_driver_session.py:1259: in test_s8_refusal_inside_active_caller_handler_has_no_context
+    raise caller(CALLER_CANARY)
+E   RuntimeError: SYNTHETIC-CALLER-CANARY-0001
+
+During handling of the above exception, another exception occurred:
+tests\test_oracle9_w1_driver_session.py:1264: in test_s8_refusal_inside_active_caller_handler_has_no_context
+    assert_owner_refused(d1.World(), owner)
+tests\test_oracle9_w1_driver_session.py:703: in assert_owner_refused
+    d1.assert_closed(caught.value, "OWNER")
+tests\test_oracle9_w1_driver.py:237: in assert_closed
+    assert error.__context__ is None
+E   AssertionError: assert RuntimeError('SYNTHETIC-CALLER-CANARY-0001') is None
+E    +  where RuntimeError('SYNTHETIC-CALLER-CANARY-0001') = DriverRefusal('OWNER').__context__
+_ test_s8_refusal_inside_active_caller_handler_has_no_context[runtime-error-reused] _
+tests\test_oracle9_w1_driver_session.py:1259: in test_s8_refusal_inside_active_caller_handler_has_no_context
+    raise caller(CALLER_CANARY)
+E   RuntimeError: SYNTHETIC-CALLER-CANARY-0001
+
+During handling of the above exception, another exception occurred:
+tests\test_oracle9_w1_driver_session.py:1264: in test_s8_refusal_inside_active_caller_handler_has_no_context
+    assert_owner_refused(d1.World(), owner)
+tests\test_oracle9_w1_driver_session.py:703: in assert_owner_refused
+    d1.assert_closed(caught.value, "OWNER")
+tests\test_oracle9_w1_driver.py:237: in assert_closed
+    assert error.__context__ is None
+E   AssertionError: assert RuntimeError('SYNTHETIC-CALLER-CANARY-0001') is None
+E    +  where RuntimeError('SYNTHETIC-CALLER-CANARY-0001') = DriverRefusal('OWNER').__context__
+_ test_s8_refusal_inside_active_caller_handler_has_no_context[key-error-foreign] _
+tests\test_oracle9_w1_driver_session.py:1259: in test_s8_refusal_inside_active_caller_handler_has_no_context
+    raise caller(CALLER_CANARY)
+E   KeyError: 'SYNTHETIC-CALLER-CANARY-0001'
+
+During handling of the above exception, another exception occurred:
+tests\test_oracle9_w1_driver_session.py:1264: in test_s8_refusal_inside_active_caller_handler_has_no_context
+    assert_owner_refused(d1.World(), owner)
+tests\test_oracle9_w1_driver_session.py:703: in assert_owner_refused
+    d1.assert_closed(caught.value, "OWNER")
+tests\test_oracle9_w1_driver.py:237: in assert_closed
+    assert error.__context__ is None
+E   AssertionError: assert KeyError('SYNTHETIC-CALLER-CANARY-0001') is None
+E    +  where KeyError('SYNTHETIC-CALLER-CANARY-0001') = DriverRefusal('OWNER').__context__
+_ test_s8_refusal_inside_active_caller_handler_has_no_context[key-error-latch] _
+tests\test_oracle9_w1_driver_session.py:1259: in test_s8_refusal_inside_active_caller_handler_has_no_context
+    raise caller(CALLER_CANARY)
+E   KeyError: 'SYNTHETIC-CALLER-CANARY-0001'
+
+During handling of the above exception, another exception occurred:
+tests\test_oracle9_w1_driver_session.py:1264: in test_s8_refusal_inside_active_caller_handler_has_no_context
+    assert_owner_refused(d1.World(), owner)
+tests\test_oracle9_w1_driver_session.py:703: in assert_owner_refused
+    d1.assert_closed(caught.value, "OWNER")
+tests\test_oracle9_w1_driver.py:237: in assert_closed
+    assert error.__context__ is None
+E   AssertionError: assert KeyError('SYNTHETIC-CALLER-CANARY-0001') is None
+E    +  where KeyError('SYNTHETIC-CALLER-CANARY-0001') = DriverRefusal('OWNER').__context__
+_ test_s8_refusal_inside_active_caller_handler_has_no_context[key-error-reused] _
+tests\test_oracle9_w1_driver_session.py:1259: in test_s8_refusal_inside_active_caller_handler_has_no_context
+    raise caller(CALLER_CANARY)
+E   KeyError: 'SYNTHETIC-CALLER-CANARY-0001'
+
+During handling of the above exception, another exception occurred:
+tests\test_oracle9_w1_driver_session.py:1264: in test_s8_refusal_inside_active_caller_handler_has_no_context
+    assert_owner_refused(d1.World(), owner)
+tests\test_oracle9_w1_driver_session.py:703: in assert_owner_refused
+    d1.assert_closed(caught.value, "OWNER")
+tests\test_oracle9_w1_driver.py:237: in assert_closed
+    assert error.__context__ is None
+E   AssertionError: assert KeyError('SYNTHETIC-CALLER-CANARY-0001') is None
+E    +  where KeyError('SYNTHETIC-CALLER-CANARY-0001') = DriverRefusal('OWNER').__context__
+=========================== short test summary info ===========================
+FAILED tests/test_oracle9_w1_driver_session.py::test_s8_refusal_inside_active_caller_handler_has_no_context[runtime-error-foreign]
+FAILED tests/test_oracle9_w1_driver_session.py::test_s8_refusal_inside_active_caller_handler_has_no_context[runtime-error-latch]
+FAILED tests/test_oracle9_w1_driver_session.py::test_s8_refusal_inside_active_caller_handler_has_no_context[runtime-error-reused]
+FAILED tests/test_oracle9_w1_driver_session.py::test_s8_refusal_inside_active_caller_handler_has_no_context[key-error-foreign]
+FAILED tests/test_oracle9_w1_driver_session.py::test_s8_refusal_inside_active_caller_handler_has_no_context[key-error-latch]
+FAILED tests/test_oracle9_w1_driver_session.py::test_s8_refusal_inside_active_caller_handler_has_no_context[key-error-reused]
+6 failed, 29 passed in 1.42s
