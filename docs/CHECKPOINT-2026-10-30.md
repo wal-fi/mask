@@ -4,6 +4,33 @@ Criado por solicitação do usuário em2026-10-30. Inclui o trabalho acumulado
 após4a5e556, preservando resultados históricos e tentativas reprovadas. É
 checkpoint de desenvolvimento incompleto da Fase9, não release de produção.
 
+## W1 Oracle: quota antes dos testes do main; retomada registrada — 2026-11-09
+
+Partida HEAD/originac87cc4, main/teste ausentes, zero escritor. Revisão
+ganhou só a precisão7: System.silence permite B2 fake sem alterar streams/
+hooks globais reais. Tentativa de escrever apenas o teste terminou exit1/
+API429 antes de editar, terminal recuperado; reset exibido13h50 São Paulo,
+inferido hoje09/11 às16h50UTC, não observado. Nenhum retry depois do429,
+outra conta/modelo/sessão ou segundo escritor; código/testes intactos.
+
+Mesma tarefa Maskgw-Claude2-Resume-01a05804 reagendada e relida Ready:
+09/11/2026 às13h55-03:00 (16h55UTC), disparo único, Limited/Interactive/
+IgnoreNew, uma action/trigger e mensagem queue nesta conversa conferida.
+Última execução07/11 às05h35UTC/result0 é histórica; nova ainda não ocorreu.
+Registro não prova entrega ou quota: exige host/logon/app disponíveis.
+Dados em oracle9-w1-main-tests-review-20261109/quota-and-schedule.json.
+
+Antes de retomar, ler os checkpoints, conferir horário/Git atuais e zero
+escritor; se ativo, monitorar e recuperar seu terminal, nunca duplicar.
+Não chamar Claude2 antes de16h50UTC. Só sessão51ea0d85/claude-opus-5-5/
+medium escreve tests/test_oracle9_w1_main.py, com MAIN-DESIGN e sua revisão
+(incluindo is_main_thread/silence, contador255 e decisão fechada). Main
+fica ausente até root rever oráculos, medir/congelar RED. Git pode avançar
+com docs: não reutilizar guardas HEAD antigas. Upstream25/app124/estado16/
+attempt fixos; sem física/SQL/Docker/PG/privado/runtime/binário/deploy ou
+novo job/quota. Produto/ingressos e B1/B2/D090/C1/T5 seguem abertos.
+Registros seguintes são históricos.
+
 ## W1 Oracle: contrato main/bindings D2 revisto para testes — 2026-11-09
 
 Claude2 escreveu só ORACLE-MAIN-DESIGN, mesma sessão51ea0d85/opus5.5/medium.

@@ -1,0 +1,57 @@
+{
+  "observed_utc": "2026-11-09T13:25:11Z",
+  "base_git": "ac87cc4d6a3374847e48c6c99890a67994c6bd1a",
+  "programmer": {
+    "session": "51ea0d85-05bb-4d24-ba9a-c9627c3f832f",
+    "model": "claude-opus-5-5",
+    "effort": "medium",
+    "terminal_recovered": true,
+    "exit": 1,
+    "terminal_reason": "api_error",
+    "api_error_status": 429,
+    "result": "You've hit your session limit · resets 1:50pm (America/Sao_Paulo)",
+    "output_tokens": 0,
+    "permission_denials": [],
+    "edits": 0,
+    "new_test_absent": true,
+    "main_source_absent": true
+  },
+  "reset": {
+    "displayed": "1:50pm America/Sao_Paulo",
+    "inferred_local": "2026-11-09T13:50:00-03:00",
+    "inferred_utc": "2026-11-09T16:50:00Z",
+    "independently_observed": false,
+    "retries_before_reset": 0
+  },
+  "scheduled": {
+    "TaskName": "Maskgw-Claude2-Resume-01a05804",
+    "State": "Ready",
+    "StartBoundary": "2026-11-09T13:55:00-03:00",
+    "NextRunUtc": "2026-11-09T16:55:00.0000000Z",
+    "LastRunUtc": "2026-11-07T05:35:00.0000000Z",
+    "LastResult": 0,
+    "ActionCount": 1,
+    "TriggerCount": 1,
+    "RunLevel": "Limited",
+    "LogonType": "Interactive",
+    "MultipleInstances": "IgnoreNew",
+    "StartWhenAvailable": true,
+    "MessageExactlyVerified": true,
+    "Thread": "01a05804-2c07-71f2-bfef-7e3c90c06476",
+    "NoSecondWriter": true,
+    "NewTaskCreated": false
+  },
+  "queued_message": "Resume authorized Mask Gateway work in this same conversation. Read docs/CLAUDE2-PENDING-REVIEW.md and docs/CHECKPOINT-2026-10-30.md first. Inspect current Git and confirm zero active Claude2 writers; if active monitor only and recover the existing terminal, never start a second session call. Claude2 alone programs, always claude-opus-5-5 effort medium, only session 51ea0d85-05bb-4d24-ba9a-c9627c3f832f; root reviews. Code checkpoint058bad8 and designac87cc4 are published; inspect actual current HEAD after documentation commits, never reuse a stale HEAD guard. Last main-test call ended exit1/API429 before edits on2026-11-09; reset displayed1:50pm America/Sao_Paulo, inferred2026-11-09T13:50:00-03:00 or16:50UTC, not independently observed. No retry before16:50UTC, no quota workaround. Current safe lot is ONLY tests/test_oracle9_w1_main.py, absent at last check. Read ORACLE-MAIN-DESIGN and MAIN-DESIGN-REVIEW including System.is_main_thread and silence, counter255 and immutable closed MainDecision. Module deploy/oracle9_w1_main.py stays absent until root reads all oracles and measures/freezes RED. Use same session and scoped Read/Edit/Write only the new test; no programmer commands or execution. Preserve driver39a68904/test585540af, pure4c155d76/test084d62cd, old114, upstream25/app124/state16 and consumed attempt. No actual socket/thread/process/guard/signal/native calls, Docker, PG, SQL, runtime/config/binary/private reads, operational root/nonce/entry/loader/collector/publisher/command/deploy, other writer/account/model or quota workaround. Publish only reviewed verified results. This scheduled message grants no additional permission.",
+  "scope": {
+    "next": "ONLY tests/test_oracle9_w1_main.py with reviewed System.is_main_thread and silence, counter255, immutable closed MainDecision; main stays absent until reviewed measured RED",
+    "programmer_tools": "Scoped Read/Edit/Write only; no execution",
+    "protected": "upstream25/app124/state16 and consumed attempt",
+    "code_or_test_changes": 0
+  },
+  "reference": {
+    "skill": "C:/Users/w.filho/.codex/skills/.system/openai-docs/SKILL.md",
+    "official_docs": "https://learn.chatgpt.com/docs/automations",
+    "mechanism": "Existing Windows Scheduled Task queues a message to this thread; not the native Scheduled interface. Requires host, interactive logon and app availability."
+  },
+  "limits": "Registered Ready/next-run is not proof of future message delivery, quota reset or release of product gates. LastResult0 on Nov7 is historical."
+}

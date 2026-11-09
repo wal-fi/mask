@@ -63,6 +63,12 @@ consumida, driver39a68904/teste585540af e puro4c155d76 não mudaram.
    active_count não é prova de quietude nativa. O risco de pause e sleep
    falharem persistentemente permanece falha não aprovada para gate nativo,
    nunca motivo para abandonar a raiz.
+7. System também oferece **silence() -> None** para B2. O binding real só
+   então instala os hooks/streams fechados descritos no desenho; o fake
+   registra a operação sem alterar sys.stdout, sys.stderr ou hooks reais.
+   Import/real_system não instalam silêncio. Essa passagem pelo seam fecha
+   a testabilidade de B2 sem patch global e sem descritor diagnóstico novo;
+   qualquer falha mantém a contenção já definida para B1/B2.
 
 São decisões técnicas do revisor sob delegação, não mudanças de produto ou
 licença para executar main físico. Incorporar este arquivo ao contexto do
