@@ -1,0 +1,2565 @@
+"""D2 main/bindings over a closed fake System; RED-first, no physical effect.
+
+Contract for the FUTURE ``deploy/oracle9_w1_main.py`` (MAIN-DESIGN 080c37ab plus
+MAIN-DESIGN-REVIEW precisions 1-7). The module stays absent until the root reviews
+these oracles; every case that needs it loads it inside ``main()`` (cached runpy with
+run_name "_lab_test"), so absence fails at execution, never at collection. The
+``test_sanity_*`` cases never load it.
+
+No real socket, thread, process, signal, Linux guard, DLL, Docker, PostgreSQL or SQL.
+The fake ``System`` is the only OS seam. For the WorkerSession cases only module-local
+names of ``maskgw.runtime.worker_session`` are patched, through the reviewed session
+harness; stdlib modules and SDK algorithms are untouched. Fakes model contracts only:
+kernel close, thread lifetime, signal delivery, PID1 and hold liveness stay unproven.
+Harness limit: the fake thread runs its target synchronously inside join, and joining
+a never-started fake thread returns without RuntimeError (real Thread raises). The
+negative-watcher composition is a finite binding composition driven by fake scheduling,
+not evidence of native concurrency nor of a complete T4 cycle.
+
+Review R1 precisions (MAIN-TESTS-REVIEW) fixed here: retire() is accepted only after a
+completed closed DriverResult or a contained control was recorded on the root, never on
+a merely LINKED/RUNNING root; B5 reserves the link slot BEFORE fstat/isatty, so a tty or
+non-FIFO/socket fd leaves UNKNOWN and HOLD (no clean 66); source opens pass the literal
+Linux x86-64 flags SOURCE_FLAGS (no Linux constant lookup on the test host); the public
+MainDecision constructor refuses incoherent values with MainRefusal; entry() returns only
+the code bound from decision_code. The finite entry test installs a test tripwire for
+``hold`` in the loaded module globals so a defect fails instead of hanging.
+
+Minimal stable API expected from the runpy namespace (names fixed from the design):
+
+- Constants: DRIVER_PATH, DRIVER_SHA, DRIVER_BYTES 36956, DRIVER_MODULE
+  "_maskgw_w1_lab_driver", PURE_SHA, PURE_BYTES 22453, INIT_HEADER 8, INIT_BODY_MAX
+  65536, CONTROL_BYTES 16, LINE_MAX 512 (LF included), LINES_MAX 56, WRITE_CAP_S,
+  SLICE_S, HOLD_BACKOFF_S > 0, HOLD_FAULTS_MAX 255, SLOTS, TICKET "source_fd",
+  HANDLED_SIGNALS (15, 2, 1) as Linux numbers, EXIT_CODES {MainOutcome: int}.
+- System: frozen dataclass, keyword constructor with exactly SYSTEM_FIELDS below;
+  real_system() builds it with no effect. Call shapes: open(path, flags) -> fd;
+  read(fd, n) -> bytes; close(fd); fstat(fd) -> st_mode/st_size; isatty(fd);
+  set_blocking(fd, flag); os_read(0, n); os_write(1, data) -> int;
+  select(r, w, x, timeout); socketpair(family, type); thread_class(*, target, name,
+  daemon) -> start()/join(timeout)/is_alive(); active_count(); signal(signum,
+  handler); monotonic(); sleep(seconds); pause(); urandom(n); protect(*, role,
+  address_limit_bytes); is_main_thread(); silence().
+- Enums compared by member name: SlotState EMPTY/UNKNOWN/OWNED; Phase BOOT/BOUND/
+  LINKED/RUNNING/DECIDING/EXITING/HOLDING; MainOutcome SETUP_FAILED/LOAD_FAILED/
+  LINK_FAILED/GUARD_FAILED/ABORTED/T6_UNKILLED/CONTROL; HoldStep WOKE/BACKOFF/FAULT;
+  HostLink.state ACTIVE/POISONED/RETIRED; HostLink.status OK/EOF/EXPIRED/IO/
+  POISONED/CONCURRENT/RETIRED.
+- MainRoot(system): fields system, phase, namespace, owner, slots (dict of the five
+  SLOTS), ticket, ledger, sessions, result, control ("KeyboardInterrupt" |
+  "SystemExit" | "MainSignal" | "OTHER" | None), failure (MainOutcome | None),
+  signal_seen, hold_faults; methods reserve(*names), own(name, value),
+  clear(name, value), reserve_ticket(), own_ticket(fd), clear_ticket(fd),
+  bind(module, owner). Slot: state, value (None when EMPTY).
+- SlotRefusal and MainRefusal (Exception; MainRefusal.category str, args ==
+  (category,)) and MainSignal (BaseException, no text): none keeps cause/context.
+- read_pinned(root, path, size, limit) accepts only the two fixed public pairs;
+  load_driver(root); attach_link(root) -> HostLink (B5); build_ports(root).
+- Bindings built as Cls(root): PinnedReader, ControllerGuard, MonotonicClock,
+  SessionIds, SessionFactory, SocketPairs (-> PairWriter, PairReader) and
+  ThreadPorts (-> ThreadHandle). HostLink: read_init/read_control(*, deadline),
+  write(line), retire() -> bool.
+- MainDecision(kind=, code=) frozen; decision_code(decision) -> int | None is the only
+  gate entry uses to return; safe_exit(root) -> bool; _run_once(root) -> MainDecision;
+  hold_step(root) -> HoldStep; hold(root); entry(system). Tests never run hold or
+  entry on a HOLD path.
+"""
+
+from __future__ import annotations
+
+import ast
+import dataclasses
+import errno
+import functools
+import hashlib
+import json
+import runpy
+import signal as real_signal
+import socket
+import stat
+import sys
+import threading
+import types
+from collections.abc import Callable
+from pathlib import Path
+from types import SimpleNamespace
+from typing import Any
+
+import pytest
+
+from maskgw.pgwire.result_frame import ResultDeadline
+from maskgw.pgwire.transport import RawChannel
+from maskgw.runtime import worker_session as session_module
+from maskgw.runtime.budget import BudgetLedger, DatasourceCapacity
+from maskgw.runtime.linux_guard import GuardFacts, GuardFailure, ProcessGuardError, ProcessRole
+from maskgw.runtime.worker_protocol import SessionKey
+from maskgw.runtime.worker_session import SessionState
+from tests import test_oracle9_w1_driver as d1
+from tests import test_oracle9_w1_driver_session as s2
+
+REPO = Path(__file__).resolve().parents[1]
+MAIN_FILE = REPO / "deploy/oracle9_w1_main.py"
+DRIVER_SOURCE = (REPO / "deploy/oracle9_w1_driver.py").read_bytes()
+DRIVER_PATH = "/opt/maskgw/lab/oracle9_w1_driver.py"
+DRIVER_SHA = "39a6890457c3bc9331fc371948fce896cbbc37e2d49f1584a5629490f43d2794"
+DRIVER_SIZE = 36956
+DRIVER_MODULE = "_maskgw_w1_lab_driver"
+PURE_MODULE = "_maskgw_w1_lab_pure"
+PURE_SOURCE = d1.PURE_SOURCE
+PURE_PATH = d1.PURE_PATH
+PURE_SHA = d1.PURE_SHA
+PURE_SIZE = d1.PURE_SIZE
+MIB = d1.MIB
+SLOTS = ("pair_writer", "pair_reader", "sink_thread", "watcher_thread", "link")
+HANDLED = (15, 2, 1)
+SYSTEM_FIELDS = frozenset(
+    {
+        "open",
+        "read",
+        "close",
+        "fstat",
+        "isatty",
+        "set_blocking",
+        "os_read",
+        "os_write",
+        "select",
+        "socketpair",
+        "thread_class",
+        "active_count",
+        "signal",
+        "monotonic",
+        "sleep",
+        "pause",
+        "urandom",
+        "protect",
+        "is_main_thread",
+        "silence",
+    }
+)
+EXPECTED_CODES = {
+    "SETUP_FAILED": 64,
+    "LOAD_FAILED": 65,
+    "LINK_FAILED": 66,
+    "GUARD_FAILED": 67,
+    "ABORTED": 68,
+    "T6_UNKILLED": 69,
+    "CONTROL": 70,
+}
+ALLOWED_IMPORTS = frozenset(
+    {
+        "__future__",
+        "collections.abc",
+        "dataclasses",
+        "enum",
+        "errno",
+        "hashlib",
+        "os",
+        "select",
+        "signal",
+        "socket",
+        "stat",
+        "sys",
+        "threading",
+        "time",
+        "types",
+        "typing",
+        "maskgw.pgwire.transport",
+        "maskgw.runtime.budget",
+        "maskgw.runtime.linux_guard",
+        "maskgw.runtime.worker_session",
+    }
+)
+GO_FRAME = d1.frame(d1.GO, 1, 1)
+STOP_FRAME = d1.frame(d1.STOP, 23, 46)
+ACK_FRAME = d1.frame(d1.ACK, 1, 2)
+GUARD_LINE = d1.canonical(d1.GUARD_EVENT)
+CALLER_MARKER = "SYNTHETIC-CALLER-MARKER-0002"  # closed synthetic text, no private data
+SOURCE_FLAGS = 0o2400000  # Linux x86-64 literal O_RDONLY | O_NOFOLLOW | O_CLOEXEC
+LEAKS = (DRIVER_PATH, PURE_PATH, CALLER_MARKER, d1.HMAC_KEY, d1.READONLY_HEX, d1.CANARY)
+
+
+@functools.cache
+def main() -> dict[str, Any]:
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+
+
+@pytest.fixture(autouse=True)
+def lab_modules(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Whatever the main registers in sys.modules is restored after each case."""
+    for name in (DRIVER_MODULE, PURE_MODULE):
+        monkeypatch.setitem(sys.modules, name, types.ModuleType(name))
+        monkeypatch.delitem(sys.modules, name)
+
+
+# ---------------------------------------------------------------- closed fake System
+
+
+class FakeOSError(OSError):
+    """Synthetic ordinary failure of a fake OS call; carries no data."""
+
+    def __init__(self) -> None:
+        super().__init__(errno.EIO, "SYNTHETIC")
+
+
+class Reactor:
+    """D1-style host: GO after READY, ACK after RESULT; configured EOF instead of GO."""
+
+    def __init__(self, fake: FakeOS, eof: set[tuple[int, int]]) -> None:
+        self.fake, self.eof = fake, eof
+
+    def react(self, line: bytes) -> None:
+        event = json.loads(line)
+        kind, case, seq = event["e"], event.get("case", 0), event.get("next_seq", 0)
+        if kind == "READY":
+            self.queue(d1.GO, case, seq)
+        elif kind == "RESULT":
+            self.queue(d1.ACK, case, seq)
+
+    def queue(self, kind: int, case: int, seq: int) -> None:
+        if (kind, case) in self.eof:
+            self.fake.eof = True
+            return
+        self.fake.inbound.extend(d1.frame(kind, case, seq))
+
+
+class FakeThread:
+    def __init__(self, fake: FakeOS, target: Callable[[], object], name: str, daemon: bool) -> None:
+        self.fake, self.target, self.name, self.daemon = fake, target, name, daemon
+        self.started = False
+        self.alive = False
+        self.runs = 0
+
+    def start(self) -> None:
+        self.fake.enter("thread_start", self.name, self.name)
+        self.started = True
+        self.alive = True
+        if self.name in self.fake.finish_on_start:
+            self.run_target()
+
+    def run_target(self) -> None:
+        previous = self.fake.main
+        self.fake.main = False  # the target runs in a non-main role
+        self.runs += 1
+        try:
+            self.target()
+        finally:
+            self.fake.main = previous
+            self.alive = False
+
+    def join(self, timeout: float | None = None) -> None:
+        self.fake.enter("thread_join", None, self.name, timeout)
+        failure = self.fake.join_raise.get(self.name)
+        if failure is not None:
+            self.alive = False  # would look closed afterwards; the join itself failed
+            raise failure
+        running = self.alive and self.runs > 0  # target still executing (fake scheduling)
+        if self.name in self.fake.stuck or running or (not self.alive and self.runs == 0):
+            # Stuck, still running or never-entered thread: the join slice elapses.
+            self.fake.clock.now += timeout if timeout is not None else 0.25
+            return
+        if self.alive and self.runs == 0:
+            self.run_target()
+
+    def is_alive(self) -> bool:
+        return self.alive
+
+
+class FakeSock:
+    def __init__(self, fake: FakeOS, fd: int) -> None:
+        self.fake, self.fd = fake, fd
+        self.peer: FakeSock | None = None
+        self.buffer = bytearray()
+        self.write_shut = False
+        self.closed = False
+        self.timeout: float | None = None
+
+    def settimeout(self, value: float | None) -> None:
+        self.fake.check(value is None or value > 0, "settimeout")
+        self.timeout = value
+
+    def send(self, view: memoryview) -> int:
+        peer = self.peer
+        if self.closed or self.write_shut or peer is None:
+            raise OSError(errno.EPIPE, "EPIPE")
+        peer.buffer.extend(view)
+        return len(view)
+
+    def recv(self, size: int) -> bytes:
+        if self.closed:
+            raise OSError(errno.EBADF, "EBADF")
+        if self.buffer:
+            data = bytes(self.buffer[:size])
+            del self.buffer[:size]
+            return data
+        peer = self.peer
+        if peer is not None and (peer.write_shut or peer.closed):
+            return b""
+        self.fake.clock.now += self.timeout if self.timeout is not None else 0.25
+        raise TimeoutError
+
+    def shutdown(self, how: int) -> None:
+        self.fake.enter("sock_shutdown", self.fd, self.fd, how)
+        self.write_shut = True
+
+    def close(self) -> None:
+        self.fake.enter("sock_close", self.fd, self.fd)
+        if self.fd not in self.fake.sock_lies:
+            self.closed = True
+
+    def fileno(self) -> int:
+        return -1 if self.closed else self.fd
+
+
+class FakeOS:
+    """Records every call; failures, probes and one-shot hooks are per operation."""
+
+    def __init__(self, clock: d1.Clock | None = None) -> None:
+        self.clock = clock if clock is not None else d1.Clock()
+        self.log: list[tuple[Any, ...]] = []
+        self.violations: list[str] = []
+        self.foreign: list[tuple[str, int]] = []
+        self.fail: dict[str, dict[object, BaseException]] = {}
+        self.probes: dict[str, Callable[[], object]] = {}
+        self.observed: dict[str, list[object]] = {}
+        self.hooks: dict[str, Callable[[], None]] = {}
+        self.files: dict[str, bytes] = {DRIVER_PATH: DRIVER_SOURCE, PURE_PATH: PURE_SOURCE}
+        self.modes: dict[str, int] = {}
+        self.lies: set[str] = set()
+        self.open_fds: dict[int, str] = {}
+        self.positions: dict[int, int] = {}
+        self.opened: list[tuple[str, int]] = []
+        self.open_flags: list[int] = []
+        self.after: dict[str, Callable[[], None]] = {}  # one-shot, after a successful op
+        self.read_errors: list[BaseException] = []
+        self.write_errors: list[BaseException] = []
+        self.write_late = 0.0
+        self.next_fd = 20
+        self.file_chunk = 1 << 20
+        self.inbound = bytearray()
+        self.chunk = 1 << 20
+        self.eof = False
+        self.read_late = 0.0
+        self.select_late = 0.0
+        self.fd_modes = {0: stat.S_IFIFO, 1: stat.S_IFIFO}
+        self.ttys: set[int] = set()
+        self.write_limit = 1 << 20
+        self.fd1_blocked = False
+        self.outbound = bytearray()
+        self.lines: list[bytes] = []
+        self.reactor: Reactor | None = None
+        self.handlers: dict[int, Any] = {}
+        self.main = True
+        self.threads: list[FakeThread] = []
+        self.finish_on_start: set[str] = set()
+        self.stuck: set[str] = set()
+        self.join_raise: dict[str, BaseException] = {}
+        self.socks: list[FakeSock] = []
+        self.sock_lies: set[int] = set()
+        self.extra_threads = 0
+        self.randoms = 0
+        self.facts: GuardFacts = d1.GUARD_FACTS
+
+    def check(self, condition: bool, text: str) -> None:
+        if not condition:
+            self.violations.append(text)
+
+    def enter(self, name: str, key: object, *logged: object) -> None:
+        self.log.append((name, *logged))
+        probe = self.probes.get(name)
+        if probe is not None:
+            self.observed.setdefault(name, []).append(probe())
+        hook = self.hooks.pop(name, None)
+        if hook is not None:
+            hook()
+        failure = self.fail.get(name, {}).get(key)
+        if failure is not None:
+            raise failure
+
+    def system(self, ns: dict[str, Any]) -> Any:
+        return ns["System"](**{name: getattr(self, name) for name in SYSTEM_FIELDS})
+
+    def open(self, path: str, flags: int) -> int:
+        self.check(type(path) is str and type(flags) is int, "open-args")
+        self.open_flags.append(flags)
+        self.enter("open", path, path, flags)
+        fd = self.next_fd
+        self.next_fd += 1
+        self.open_fds[fd] = path
+        self.positions[fd] = 0
+        self.opened.append((path, fd))
+        return fd
+
+    def run_after(self, name: str) -> None:
+        hook = self.after.pop(name, None)
+        if hook is not None:
+            hook()
+
+    def read(self, fd: int, size: int) -> bytes:
+        path = self.open_fds.get(fd)
+        self.enter("read", path, fd, size)
+        if path is None:
+            raise OSError(errno.EBADF, "EBADF")
+        start = self.positions[fd]
+        piece = self.files[path][start : start + min(size, self.file_chunk)]
+        self.positions[fd] = start + len(piece)
+        return piece
+
+    def close(self, fd: int) -> None:
+        path = self.open_fds.get(fd)
+        self.check(fd not in (0, 1, 2), "close-borrowed")
+        self.enter("close", path, fd)
+        if path is not None and path not in self.lies:
+            del self.open_fds[fd]
+            del self.positions[fd]
+
+    def fstat(self, fd: int) -> SimpleNamespace:
+        path = self.open_fds.get(fd)
+        self.enter("fstat", fd, fd)
+        if path is not None:
+            mode = self.modes.get(path, stat.S_IFREG)
+            return SimpleNamespace(st_mode=mode | 0o444, st_size=len(self.files[path]))
+        if fd in self.fd_modes:
+            return SimpleNamespace(st_mode=self.fd_modes[fd] | 0o600, st_size=0)
+        raise OSError(errno.EBADF, "EBADF")
+
+    def isatty(self, fd: int) -> bool:
+        self.enter("isatty", fd, fd)
+        return fd in self.ttys
+
+    def set_blocking(self, fd: int, flag: bool) -> None:
+        self.enter("set_blocking", fd, fd, flag)
+
+    def os_read(self, fd: int, size: int) -> bytes:
+        self.enter("os_read", fd, fd, size)
+        if fd != 0:
+            self.foreign.append(("os_read", fd))
+            raise OSError(errno.EBADF, "EBADF")
+        if self.read_errors:
+            raise self.read_errors.pop(0)
+        if self.inbound:
+            count = min(size, self.chunk, len(self.inbound))
+            data = bytes(self.inbound[:count])
+            del self.inbound[:count]
+            self.clock.now += self.read_late
+            self.run_after("os_read")
+            return data
+        if self.eof:
+            return b""
+        raise BlockingIOError(errno.EAGAIN, "EAGAIN")
+
+    def os_write(self, fd: int, data: bytes | memoryview) -> int:
+        self.enter("os_write", fd, fd, len(data))
+        if fd != 1:
+            self.foreign.append(("os_write", fd))
+            return len(data)
+        if self.write_errors:
+            raise self.write_errors.pop(0)
+        self.clock.now += self.write_late
+        chunk = bytes(data)[: self.write_limit]
+        self.outbound.extend(chunk)
+        while b"\n" in self.outbound:
+            line, _, rest = bytes(self.outbound).partition(b"\n")
+            self.outbound = bytearray(rest)
+            self.lines.append(line)
+            if self.reactor is not None:
+                self.reactor.react(line)
+        return len(chunk)
+
+    def select(
+        self, readers: list[int], writers: list[int], errors: list[int], timeout: float
+    ) -> tuple[list[int], list[int], list[int]]:
+        self.enter("select", None, tuple(readers), tuple(writers), timeout)
+        self.check(not errors and timeout > 0, "select-args")
+        ready_r = [0] if 0 in readers and (self.inbound or self.eof) else []
+        ready_w = [1] if 1 in writers and not self.fd1_blocked else []
+        if ready_r or ready_w:
+            self.clock.now += self.select_late
+        else:
+            self.clock.now += timeout
+        return ready_r, ready_w, []
+
+    def socketpair(self, family: object, kind: object) -> tuple[FakeSock, FakeSock]:
+        self.enter("socketpair", None, family, kind)
+        first, second = FakeSock(self, self.next_fd), FakeSock(self, self.next_fd + 1)
+        self.next_fd += 2
+        first.peer, second.peer = second, first
+        self.socks += [first, second]
+        return first, second
+
+    def thread_class(self, *, target: Callable[[], object], name: str, daemon: bool) -> FakeThread:
+        self.enter("thread_class", name, name, daemon)
+        thread = FakeThread(self, target, name, daemon)
+        self.threads.append(thread)
+        return thread
+
+    def active_count(self) -> int:
+        return 1 + sum(thread.alive for thread in self.threads) + self.extra_threads
+
+    def signal(self, signum: int, handler: object) -> None:
+        self.enter("signal", signum, signum)
+        self.handlers[signum] = handler
+
+    def monotonic(self) -> float:
+        return self.clock.now
+
+    def sleep(self, seconds: float) -> None:
+        self.enter("sleep", None, seconds)
+        self.clock.now += seconds
+
+    def pause(self) -> None:
+        self.enter("pause", None)
+
+    def urandom(self, size: int) -> bytes:
+        self.enter("urandom", None, size)
+        self.randoms += 1
+        return bytes([0xA0 + self.randoms]) * size
+
+    def protect(self, *, role: object, address_limit_bytes: int) -> GuardFacts:
+        self.enter("protect", None, role, address_limit_bytes)
+        return self.facts
+
+    def is_main_thread(self) -> bool:
+        return self.main
+
+    def silence(self) -> None:
+        self.enter("silence", None)
+
+
+# ---------------------------------------------------------------- helpers
+
+
+def ops(fake: FakeOS, name: str) -> list[tuple[Any, ...]]:
+    return [entry for entry in fake.log if entry[0] == name]
+
+
+def position(fake: FakeOS, name: str) -> int:
+    return next(index for index, entry in enumerate(fake.log) if entry[0] == name)
+
+
+def closes(fake: FakeOS) -> list[int]:
+    return [entry[1] for entry in ops(fake, "close")]
+
+
+def named(value: Any) -> str:
+    return str(value.name)
+
+
+def new_root(fake: FakeOS) -> Any:
+    ns = main()
+    return ns["MainRoot"](fake.system(ns))
+
+
+def bound_root(fake: FakeOS) -> Any:
+    ns = main()
+    root = new_root(fake)
+    module = ns["load_driver"](root)
+    root.bind(module, module.Owner())
+    return root
+
+
+def linked(fake: FakeOS) -> tuple[Any, Any]:
+    root = bound_root(fake)
+    link = main()["attach_link"](root)
+    fake.log.clear()
+    return root, link
+
+
+def deadline(fake: FakeOS, seconds: float = 1.0) -> float:
+    return fake.clock.now + seconds
+
+
+def assert_decision(decision: Any, kind: str, code: int | None) -> None:
+    assert type(decision) is main()["MainDecision"]
+    assert type(decision.kind) is str
+    assert decision.kind == kind
+    if code is None:
+        assert decision.code is None
+    else:
+        assert type(decision.code) is int
+        assert decision.code == code
+
+
+def assert_closed(error: BaseException, cls: type[BaseException]) -> None:
+    assert type(error) is cls
+    assert error.__cause__ is None
+    assert error.__context__ is None
+    for leak in LEAKS:
+        assert leak not in str(error) + repr(error)
+
+
+def assert_within_frame(requests: list[int], parts: list[int], chunk: int) -> None:
+    """Every os_read asks for at most the bytes still missing in the current part."""
+    remaining = list(parts)
+    index = 0
+    for size in requests:
+        while index < len(remaining) and remaining[index] == 0:
+            index += 1
+        assert index < len(remaining)
+        assert 0 < size <= remaining[index]
+        remaining[index] -= min(size, chunk)
+    assert remaining == [0] * len(parts)
+
+
+def lab_ledger(*, session: bool) -> BudgetLedger:
+    ledger = BudgetLedger(s2.LAB_BUDGET, (DatasourceCapacity(1, 1),))
+    generation = ledger.reserve_candidate(0, shared_bytes=MIB)
+    ledger.publish(generation)
+    if session:
+        ledger.reserve_session(generation, worker_bytes=256 * MIB, parent_bytes=s2.PARENT_BYTES)
+    return ledger
+
+
+def lab_token() -> tuple[BudgetLedger, Any]:
+    ledger = BudgetLedger(s2.LAB_BUDGET, (DatasourceCapacity(1, 1),))
+    generation = ledger.reserve_candidate(0, shared_bytes=MIB)
+    ledger.publish(generation)
+    token = ledger.reserve_session(generation, worker_bytes=256 * MIB, parent_bytes=s2.PARENT_BYTES)
+    return ledger, token
+
+
+def pinned_ledger() -> BudgetLedger:
+    """Real ledger with an adopted session and its maximum output pin taken."""
+    ledger, token = lab_token()
+    ledger.adopt_session(token)
+    ledger.begin_output(token, frame_bytes=d1.FRAME_LIMIT, overhead_bytes=MIB)
+    return ledger
+
+
+def create_session(root: Any, ledger: BudgetLedger, token: Any) -> Any:
+    return main()["SessionFactory"](root).create(
+        ledger,
+        token,
+        lock=threading.Lock(),
+        key=s2.LAB_KEY,
+        limits=s2.LAB_RESULT_LIMITS,
+        profile=s2.LAB_PROFILE,
+        guard=d1.GUARD_FACTS,
+    )
+
+
+def complete(root: Any, outcome: str = "ABORTED") -> None:
+    """Record a completed closed driver result BEFORE any legitimate retirement."""
+    root.result = root.namespace.DriverResult(outcome, ("NOT_RUN",) * 25, None)
+
+
+def clean_root(fake: FakeOS) -> Any:
+    root, link = linked(fake)
+    complete(root)
+    assert link.retire() is True
+    return root
+
+
+def read_attr(value: Any, name: str) -> Any:
+    """Fresh typed read: no narrowing carried across side-effecting calls."""
+    return getattr(value, name)
+
+
+def retained_view(root: Any) -> tuple[list[object], list[object]]:
+    """Exact referenced objects plus states; compared by identity and value."""
+    slots = list(root.slots.values())
+    owner = root.owner
+    objects: list[object] = [
+        root.system,
+        root.namespace,
+        owner,
+        root.ledger,
+        root.result,
+        root.ticket,
+        root.ticket.value,
+        *root.sessions,
+        *slots,
+        *(slot.value for slot in slots),
+    ]
+    states: list[object] = [
+        named(root.phase),
+        root.control,
+        named(root.ticket.state),
+        *(named(slot.state) for slot in slots),
+        *(session.state for session in root.sessions),
+        len(root.sessions),
+    ]
+    if owner is not None:
+        objects += [owner.session, owner.session_token, *owner.handles, *owner.endpoints]
+        states += [len(owner.handles), len(owner.endpoints), owner.unknown]
+    return objects, states
+
+
+def assert_same_view(before: tuple[list[object], list[object]], root: Any) -> None:
+    objects, states = retained_view(root)
+    assert len(objects) == len(before[0])
+    assert all(old is new for old, new in zip(before[0], objects, strict=True))
+    assert states == before[1]
+
+
+def forge(**fields: object) -> Any:
+    decision = object.__new__(main()["MainDecision"])
+    for name, value in fields.items():
+        object.__setattr__(decision, name, value)
+    return decision
+
+
+def main_tree() -> ast.Module:
+    return ast.parse(MAIN_FILE.read_text(encoding="utf-8"))
+
+
+def function(tree: ast.Module, name: str) -> ast.FunctionDef:
+    found = [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == name]
+    assert len(found) == 1
+    return found[0]
+
+
+def argument_names(node: ast.FunctionDef) -> list[str]:
+    args = node.args
+    assert args.vararg is None
+    assert args.kwarg is None
+    assert args.defaults == []
+    return [arg.arg for arg in [*args.posonlyargs, *args.args, *args.kwonlyargs]]
+
+
+def calls_in(node: ast.AST) -> list[str]:
+    return [ast.unparse(item) for item in ast.walk(node) if isinstance(item, ast.Call)]
+
+
+def assigned_names(node: ast.Assign | ast.AnnAssign) -> list[str]:
+    targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+    return [ast.unparse(target) for target in targets]
+
+
+def integrate(monkeypatch: pytest.MonkeyPatch, fake: FakeOS) -> tuple[Any, Any, Any, SessionKey]:
+    """Main + pinned driver + real WorkerSession over the session harness OS."""
+    ns = main()
+    fake.inbound.extend(s2.lab_packet())
+    fake.reactor = Reactor(fake, {(d1.GO, 3)})
+    hub = s2.install(monkeypatch, fake.clock, ("ok",))
+    key = SessionKey(bytes([0xA1]) * 16, d1.DATASOURCE_BYTES, 1, d1.PURE["RECORD_REVISION"])
+    root = ns["MainRoot"](fake.system(ns))
+
+    def lazy_socketpair(family: int, kind: int) -> tuple[Any, Any]:
+        if len(hub.contexts) < len(root.sessions):
+            hub.attach(root.ledger, key, s2.LAB_PROFILE)
+        return hub.socketpair(family, kind)
+
+    monkeypatch.setattr(
+        session_module,
+        "socket",
+        SimpleNamespace(
+            socketpair=lazy_socketpair,
+            AF_UNIX=s2.AF_UNIX,
+            SOCK_STREAM=socket.SOCK_STREAM,
+        ),
+    )
+    decision = ns["_run_once"](root)
+    return root, decision, hub, key
+
+
+# ---------------------------------------------------------------- sanities (no main)
+
+
+def test_sanity_fixed_driver_and_pure_pins() -> None:
+    assert len(DRIVER_SOURCE) == DRIVER_SIZE
+    assert hashlib.sha256(DRIVER_SOURCE).hexdigest() == DRIVER_SHA
+    assert len(PURE_SOURCE) == PURE_SIZE
+    assert hashlib.sha256(PURE_SOURCE).hexdigest() == PURE_SHA
+
+
+def test_sanity_fake_files_close_and_ebadf() -> None:
+    fake = FakeOS()
+    fd = fake.open(DRIVER_PATH, 0)
+    assert fake.read(fd, 10) == DRIVER_SOURCE[:10]
+    assert fake.fstat(fd).st_size == DRIVER_SIZE
+    assert stat.S_ISREG(fake.fstat(fd).st_mode)
+    fake.close(fd)
+    with pytest.raises(OSError) as caught:
+        fake.fstat(fd)
+    assert caught.value.errno == errno.EBADF
+    fake.lies.add(PURE_PATH)
+    lying = fake.open(PURE_PATH, 0)
+    fake.close(lying)
+    assert fake.fstat(lying).st_size == PURE_SIZE
+    assert stat.S_ISFIFO(fake.fstat(0).st_mode)
+    assert fake.violations == []
+
+
+def test_sanity_fake_link_reactor_and_clock() -> None:
+    fake = FakeOS()
+    fake.inbound.extend(GO_FRAME)
+    fake.chunk = 5
+    assert fake.select([0], [], [], 0.25) == ([0], [], [])
+    assert fake.os_read(0, 16) == GO_FRAME[:5]
+    fake.inbound.clear()
+    with pytest.raises(BlockingIOError):
+        fake.os_read(0, 1)
+    start = fake.clock.now
+    assert fake.select([0], [], [], 0.25) == ([], [], [])
+    assert fake.clock.now == start + 0.25
+    fake.reactor = Reactor(fake, {(d1.GO, 3)})
+    ready = d1.canonical({"case": 1, "e": "READY", "next_seq": 1})
+    assert fake.os_write(1, ready + b"\n") == len(ready) + 1
+    assert fake.lines == [ready]
+    assert bytes(fake.inbound) == GO_FRAME
+    fake.os_write(1, d1.canonical({"case": 3, "e": "READY", "next_seq": 5}) + b"\n")
+    assert fake.eof is True
+    assembled = b""
+    while len(assembled) < len(GO_FRAME):  # chunk 5: the frame arrives fragmented
+        assembled += fake.os_read(0, len(GO_FRAME) - len(assembled))
+    assert assembled == GO_FRAME
+    assert [entry[2] for entry in ops(fake, "os_read")][-4:] == [16, 11, 6, 1]
+    assert fake.os_read(0, 16) == b""
+    assert fake.os_read(0, 1) == b""
+
+
+def test_sanity_fake_socket_and_thread() -> None:
+    fake = FakeOS()
+    first, second = fake.socketpair(1, 1)
+    assert first.send(memoryview(b"abc")) == 3
+    assert second.recv(2) == b"ab"
+    assert second.recv(8) == b"c"
+    second.settimeout(0.25)
+    start = fake.clock.now
+    with pytest.raises(TimeoutError):
+        second.recv(8)
+    assert fake.clock.now == start + 0.25
+    first.shutdown(socket.SHUT_WR)
+    assert second.recv(8) == b""
+    first.close()
+    assert first.fileno() == -1
+    seen: list[bool] = []
+    thread = fake.thread_class(target=lambda: seen.append(fake.main), name="sink", daemon=False)
+    thread.start()
+    assert thread.is_alive()
+    assert fake.active_count() == 2
+    thread.join(0.25)
+    assert seen == [False]
+    assert not thread.is_alive()
+    assert fake.main is True
+    assert fake.active_count() == 1
+    other = fake.thread_class(target=lambda: None, name="watcher", daemon=False)
+    other.start()
+    fake.join_raise["watcher"] = FakeOSError()
+    with pytest.raises(FakeOSError):
+        other.join(0.25)
+    assert not other.is_alive()
+
+
+# ---------------------------------------------------------------- M-1 definition only
+
+
+def test_m01_import_is_definition_only_and_real_system_has_no_effect() -> None:
+    before = (
+        sys.stdout,
+        sys.stderr,
+        sys.excepthook,
+        threading.excepthook,
+        sys.unraisablehook,
+        real_signal.getsignal(real_signal.SIGINT),
+        threading.active_count(),
+    )
+    ns = main()
+    system = ns["real_system"]()
+    after = (
+        sys.stdout,
+        sys.stderr,
+        sys.excepthook,
+        threading.excepthook,
+        sys.unraisablehook,
+        real_signal.getsignal(real_signal.SIGINT),
+        threading.active_count(),
+    )
+    assert after == before
+    assert type(system) is ns["System"]
+    assert {field.name for field in dataclasses.fields(system)} == SYSTEM_FIELDS
+    with pytest.raises(AttributeError):
+        system.pause = None
+
+
+def test_m01_ast_top_level_has_only_definitions_and_one_main_guard() -> None:
+    tree = main_tree()
+    guards: list[ast.If] = []
+    modules: set[str] = set()
+    definitions = (ast.Assign, ast.AnnAssign, ast.FunctionDef, ast.ClassDef)
+    for node in tree.body:
+        if isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant):
+            continue
+        if isinstance(node, ast.If):
+            guards.append(node)
+        elif isinstance(node, ast.Import):
+            modules.update(alias.name for alias in node.names)
+        elif isinstance(node, ast.ImportFrom):
+            assert node.level == 0
+            modules.add(str(node.module))
+        else:
+            assert isinstance(node, definitions)
+            if isinstance(node, (ast.Assign, ast.AnnAssign)):
+                called = {call.split("(")[0] for call in calls_in(node)}
+                assert not called & {"entry", "_run_once", "real_system", "hold", "hold_step"}
+    assert modules <= ALLOWED_IMPORTS
+    assert len(guards) == 1
+    guard = guards[0]
+    assert ast.unparse(guard.test) == "__name__ == '__main__'"
+    assert [ast.unparse(item) for item in guard.body] == ["raise SystemExit(entry(real_system()))"]
+    assert guard.orelse == []
+    texts = {
+        node.value
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Constant) and isinstance(node.value, str)
+    }
+    assert "MAIN" not in texts  # no main-owned protocol event
+    source = MAIN_FILE.read_text(encoding="utf-8")
+    for absent in ("rounds", "real_primitives", "print("):
+        assert absent not in source
+
+
+def test_m01_constants_are_the_fixed_public_pins() -> None:
+    ns = main()
+    assert (ns["DRIVER_PATH"], ns["DRIVER_SHA"], ns["DRIVER_BYTES"]) == (
+        DRIVER_PATH,
+        DRIVER_SHA,
+        DRIVER_SIZE,
+    )
+    assert (ns["PURE_SHA"], ns["PURE_BYTES"]) == (PURE_SHA, PURE_SIZE)
+    assert ns["DRIVER_MODULE"] == DRIVER_MODULE
+    assert ns["SLOTS"] == SLOTS
+    assert ns["TICKET"] == "source_fd"
+    exact = {
+        "INIT_HEADER": 8,
+        "INIT_BODY_MAX": 65536,
+        "CONTROL_BYTES": 16,
+        "LINE_MAX": 512,
+        "LINES_MAX": 56,
+        "HOLD_FAULTS_MAX": 255,
+    }
+    for name, value in exact.items():
+        assert type(ns[name]) is int
+        assert ns[name] == value
+    assert ns["HANDLED_SIGNALS"] == HANDLED
+    assert ns["HOLD_BACKOFF_S"] > 0
+    assert 0 < ns["SLICE_S"] <= 0.25
+    assert ns["WRITE_CAP_S"] > 0
+    codes = {named(outcome): code for outcome, code in ns["EXIT_CODES"].items()}
+    assert codes == EXPECTED_CODES
+    assert all(type(code) is int for code in codes.values())
+
+
+# ---------------------------------------------------------------- M-2 root first
+
+
+def test_m02_root_exists_before_any_acquisition() -> None:
+    ns = main()
+    fake = FakeOS()
+    root = new_root(fake)
+    assert fake.log == []
+    assert root.system is not None
+    assert named(root.phase) == "BOOT"
+    assert root.namespace is None
+    assert root.owner is None
+    assert tuple(root.slots) == SLOTS
+    assert all(named(slot.state) == "EMPTY" and slot.value is None for slot in root.slots.values())
+    assert named(root.ticket.state) == "EMPTY"
+    assert (root.ledger, root.result, root.control, root.failure) == (None, None, None, None)
+    assert root.sessions == []
+    assert root.signal_seen is False
+    assert type(root.hold_faults) is int
+    assert root.hold_faults == 0
+    assert type(root.ticket) is type(root.slots["link"]) is ns["Slot"]
+
+
+# ---------------------------------------------------------------- M-3 source ticket
+
+
+def test_m03_ticket_unknown_before_open_exact_fd_one_verified_close() -> None:
+    ns = main()
+    fake = FakeOS()
+    root = new_root(fake)
+    fake.probes["open"] = lambda: (named(root.ticket.state), root.ticket.value)
+    fake.probes["close"] = lambda: (named(root.ticket.state), root.ticket.value)
+    data = ns["read_pinned"](root, DRIVER_PATH, DRIVER_SIZE, DRIVER_SIZE + 1)
+    assert data == DRIVER_SOURCE
+    [(path, fd)] = fake.opened
+    assert path == DRIVER_PATH
+    assert fake.observed["open"] == [("UNKNOWN", None)]
+    assert fake.observed["close"] == [("OWNED", fd)]
+    assert closes(fake) == [fd]
+    assert named(root.ticket.state) == "EMPTY"
+    assert root.ticket.value is None
+    names = [entry[0] for entry in fake.log]
+    last_fstat = max(index for index, name in enumerate(names) if name == "fstat")
+    assert last_fstat > names.index("close")  # EBADF verification after the close
+    assert fake.violations == []
+    assert fake.open_flags == [SOURCE_FLAGS]
+
+
+def test_m03_both_source_opens_use_literal_linux_flags() -> None:
+    ns = main()
+    fake = FakeOS()
+    root = bound_root(fake)
+    assert ns["PinnedReader"](root).read(PURE_PATH, PURE_SIZE + 1) == PURE_SOURCE
+    assert [path for path, _ in fake.opened] == [DRIVER_PATH, PURE_PATH]
+    assert fake.open_flags == [SOURCE_FLAGS, SOURCE_FLAGS]
+    assert all(type(flags) is int for flags in fake.open_flags)
+    assert named(root.ticket.state) == "EMPTY"
+
+
+@pytest.mark.parametrize("failure", [FakeOSError, KeyboardInterrupt], ids=["nofollow", "control"])
+def test_m03_open_uncertainty_keeps_unknown_and_never_closes(failure: type[BaseException]) -> None:
+    ns = main()
+    fake = FakeOS()
+    fake.fail["open"] = {DRIVER_PATH: failure()}
+    root = new_root(fake)
+    with pytest.raises((failure, ns["MainRefusal"])):
+        ns["read_pinned"](root, DRIVER_PATH, DRIVER_SIZE, DRIVER_SIZE + 1)
+    assert named(root.ticket.state) == "UNKNOWN"
+    assert closes(fake) == []
+    other = FakeOS()
+    other.fail["open"] = {DRIVER_PATH: failure()}
+    held = new_root(other)
+    assert_decision(ns["_run_once"](held), "HOLD", None)
+    assert named(held.ticket.state) == "UNKNOWN"
+    assert closes(other) == []
+    assert ops(other, "protect") == []
+
+
+@pytest.mark.parametrize("mode", ["raise", "control", "lie", "thread"])
+def test_m03_close_uncertainty_retains_fd_once_and_returns_no_bytes(mode: str) -> None:
+    ns = main()
+    fake = FakeOS()
+    if mode == "raise":
+        fake.fail["close"] = {DRIVER_PATH: FakeOSError()}
+    elif mode == "control":
+        fake.fail["close"] = {DRIVER_PATH: KeyboardInterrupt()}
+    elif mode == "lie":
+        fake.lies.add(DRIVER_PATH)
+    else:
+        fake.extra_threads = 1
+    root = new_root(fake)
+    expected: tuple[type[BaseException], ...] = (FakeOSError, ns["MainRefusal"])
+    if mode == "control":
+        expected = (KeyboardInterrupt,)
+    with pytest.raises(expected):
+        ns["read_pinned"](root, DRIVER_PATH, DRIVER_SIZE, DRIVER_SIZE + 1)
+    [(_, fd)] = fake.opened
+    assert closes(fake) == [fd]
+    assert named(root.ticket.state) == "OWNED"
+    assert root.ticket.value == fd
+
+
+@pytest.mark.parametrize(
+    ("path", "size", "limit"),
+    [
+        ("/etc/passwd", 10, 11),
+        (DRIVER_PATH, PURE_SIZE, PURE_SIZE + 1),
+        (DRIVER_PATH, DRIVER_SIZE, DRIVER_SIZE + 2),
+        (PURE_PATH, DRIVER_SIZE, DRIVER_SIZE + 1),
+        (PURE_PATH, PURE_SIZE, PURE_SIZE),
+    ],
+)
+def test_m03_only_fixed_public_pairs_are_readable(path: str, size: int, limit: int) -> None:
+    ns = main()
+    fake = FakeOS()
+    root = bound_root(fake)
+    fake.log.clear()
+    with pytest.raises(ns["MainRefusal"]) as caught:
+        ns["read_pinned"](root, path, size, limit)
+    assert_closed(caught.value, ns["MainRefusal"])
+    assert fake.log == []
+    assert named(root.ticket.state) == "EMPTY"
+
+
+# ---------------------------------------------------------------- M-4 loader failures
+
+
+def corrupt_last_byte(source: bytes) -> bytes:
+    return source[:-1] + bytes([source[-1] ^ 0x01])
+
+
+def not_regular(fake: FakeOS) -> None:
+    fake.modes[DRIVER_PATH] = stat.S_IFIFO
+
+
+def size_plus(fake: FakeOS) -> None:
+    fake.files[DRIVER_PATH] = DRIVER_SOURCE + b"#"
+
+
+def size_minus(fake: FakeOS) -> None:
+    fake.files[DRIVER_PATH] = DRIVER_SOURCE[:-1]
+
+
+def wrong_sha(fake: FakeOS) -> None:
+    fake.files[DRIVER_PATH] = corrupt_last_byte(DRIVER_SOURCE)
+
+
+def read_error(fake: FakeOS) -> None:
+    fake.fail["read"] = {DRIVER_PATH: FakeOSError()}
+
+
+LOADER_FAILURES: dict[str, Callable[[FakeOS], None]] = {
+    "not-regular": not_regular,
+    "size-plus": size_plus,
+    "size-minus": size_minus,
+    "sha": wrong_sha,
+    "read": read_error,
+}
+
+
+@pytest.mark.parametrize("variant", sorted(LOADER_FAILURES))
+def test_m04_validation_failure_closes_once_then_clean_load_failed(variant: str) -> None:
+    ns = main()
+    fake = FakeOS()
+    LOADER_FAILURES[variant](fake)
+    root = new_root(fake)
+    assert_decision(ns["_run_once"](root), "EXIT", 65)
+    [(_, fd)] = fake.opened
+    assert closes(fake) == [fd]
+    assert named(root.ticket.state) == "EMPTY"
+    assert named(root.failure) == "LOAD_FAILED"
+    assert root.namespace is None
+    assert root.owner is None
+    assert ops(fake, "protect") == []
+    assert ops(fake, "os_write") == []
+    assert [entry for entry in ops(fake, "fstat") if entry[1] in (0, 1)] == []
+    assert DRIVER_MODULE not in sys.modules
+    assert fake.lines == []
+
+
+@pytest.mark.parametrize("variant", ["sha", "not-regular"])
+def test_m04_validation_failure_with_uncertain_close_holds(variant: str) -> None:
+    ns = main()
+    fake = FakeOS()
+    LOADER_FAILURES[variant](fake)
+    fake.fail["close"] = {DRIVER_PATH: FakeOSError()}
+    root = new_root(fake)
+    assert_decision(ns["_run_once"](root), "HOLD", None)
+    [(_, fd)] = fake.opened
+    assert closes(fake) == [fd]
+    assert named(root.ticket.state) == "OWNED"
+    assert root.ticket.value == fd
+    assert ops(fake, "protect") == []
+
+
+# ---------------------------------------------------------------- M-5 bind once
+
+
+def test_m05_bind_once_with_exact_owner_and_cross_pins() -> None:
+    ns = main()
+    fake = FakeOS()
+    root = new_root(fake)
+    module = ns["load_driver"](root)
+    assert sys.modules[DRIVER_MODULE] is module
+    assert module.__file__ == DRIVER_PATH
+    assert (module.PURE_SHA, module.PURE_BYTES, module.PURE_PATH) == (
+        PURE_SHA,
+        PURE_SIZE,
+        PURE_PATH,
+    )
+    foreign = d1.driver()["Owner"]()
+    with pytest.raises(ns["SlotRefusal"]):
+        root.bind(module, foreign)
+    assert read_attr(root, "namespace") is None
+    owner = module.Owner()
+    root.bind(module, owner)
+    assert read_attr(root, "namespace") is module
+    assert read_attr(root, "owner") is owner
+    assert named(root.phase) == "BOUND"
+    with pytest.raises(ns["SlotRefusal"]) as caught:
+        root.bind(module, module.Owner())
+    assert_closed(caught.value, ns["SlotRefusal"])
+    assert read_attr(root, "namespace") is module
+    assert read_attr(root, "owner") is owner
+
+
+# ---------------------------------------------------------------- M-6 bootstrap order
+
+
+def test_m06_bootstrap_order_and_guard_is_the_first_port() -> None:
+    ns = main()
+    fake = FakeOS()
+    fake.fail["protect"] = {None: ProcessGuardError(GuardFailure.PROFILE)}
+    root = new_root(fake)
+    fake.probes["fstat"] = lambda: named(root.slots["link"].state)
+    fake.probes["isatty"] = lambda: named(root.slots["link"].state)
+    fake.probes["set_blocking"] = lambda: named(root.slots["link"].state)
+    assert_decision(ns["_run_once"](root), "EXIT", 67)
+    assert fake.observed["fstat"][-2:] == ["UNKNOWN", "UNKNOWN"]  # reserved before checks
+    assert fake.observed["isatty"] == ["UNKNOWN", "UNKNOWN"]
+    assert fake.observed["set_blocking"] == ["UNKNOWN", "UNKNOWN"]
+    link_fstats = [entry for entry in ops(fake, "fstat") if entry[1] in (0, 1)]
+    assert sorted(entry[1] for entry in link_fstats) == [0, 1]
+    names = [entry[0] for entry in fake.log]
+    assert names[:3] == ["signal"] * 3
+    assert sorted(entry[1] for entry in ops(fake, "signal")) == sorted(HANDLED)
+    assert names[3] == "silence"
+    assert names[4] == "open"
+    driver_close = names.index("close")
+    guard = names.index("protect")
+    link_ops = [index for index, entry in enumerate(fake.log) if entry[0] == "set_blocking"]
+    assert sorted(entry[1:] for entry in ops(fake, "set_blocking")) == [(0, False), (1, False)]
+    assert driver_close < min(link_ops) and max(link_ops) < guard
+    assert "os_read" not in names
+    assert "thread_class" not in names
+    assert [path for path, _ in fake.opened] == [DRIVER_PATH]
+    assert fake.lines == []
+    assert all(named(slot.state) == "EMPTY" for slot in root.slots.values())
+
+
+def test_m06_guard_precedes_pure_load_and_lab_init_secret() -> None:
+    ns = main()
+    fake = FakeOS()
+    fake.eof = True  # host closes before LAB_INIT
+    root = new_root(fake)
+    assert_decision(ns["_run_once"](root), "EXIT", 68)
+    names = [entry[0] for entry in fake.log]
+    guard = names.index("protect")
+    pure_open = next(
+        index for index, entry in enumerate(fake.log) if entry[:2] == ("open", PURE_PATH)
+    )
+    assert guard < pure_open < names.index("os_read")
+    assert ops(fake, "protect") == [("protect", ProcessRole.CONTROLLER, 384 * MIB)]
+    assert ops(fake, "protect")[0][1] is ProcessRole.CONTROLLER
+    events = d1.events_of(fake.lines)
+    assert [event["e"] for event in events] == ["GUARD", "ABORT", "TERMINAL"]
+    assert named(root.ticket.state) == "EMPTY"
+    assert root.result.outcome == "ABORTED"
+
+
+def test_m06_pure_open_failure_keeps_unknown_ticket_and_holds() -> None:
+    ns = main()
+    fake = FakeOS()
+    fake.fail["open"] = {PURE_PATH: FakeOSError()}
+    root = new_root(fake)
+    assert_decision(ns["_run_once"](root), "HOLD", None)
+    assert named(root.ticket.state) == "UNKNOWN"
+    assert [path for path, _ in fake.opened] == [DRIVER_PATH]
+    assert len(closes(fake)) == 1
+    assert ops(fake, "os_read") == []
+    assert root.result.outcome == "ABORTED"
+    assert named(root.phase) == "HOLDING"
+
+
+def test_m06_build_ports_binds_exact_owned_objects() -> None:
+    ns = main()
+    fake = FakeOS()
+    root, link = linked(fake)
+    ports = ns["build_ports"](root)
+    assert type(ports) is root.namespace.Ports
+    assert ports.link is link
+    assert root.slots["link"].value is link
+    expected = {
+        "reader": "PinnedReader",
+        "guard": "ControllerGuard",
+        "clock": "MonotonicClock",
+        "ids": "SessionIds",
+        "factory": "SessionFactory",
+        "pair": "SocketPairs",
+        "threads": "ThreadPorts",
+    }
+    for field, cls in expected.items():
+        assert type(getattr(ports, field)) is ns[cls]
+    assert fake.log == []
+
+
+# ---------------------------------------------------------------- M-7 guard
+
+
+def test_m07_guard_binding_forwards_exact_arguments() -> None:
+    ns = main()
+    fake = FakeOS()
+    root, _ = linked(fake)
+    facts = ns["ControllerGuard"](root).protect(
+        role=ProcessRole.CONTROLLER, address_limit_bytes=384 * MIB
+    )
+    assert facts is d1.GUARD_FACTS
+    assert fake.log == [("protect", ProcessRole.CONTROLLER, 384 * MIB)]
+
+
+def test_m07_signal_during_guard_is_only_marked_then_observed_cooperatively() -> None:
+    ns = main()
+    fake = FakeOS()
+    fake.hooks["protect"] = lambda: fake.handlers[15](15, None)
+    root = new_root(fake)
+    assert_decision(ns["_run_once"](root), "EXIT", 70)
+    assert root.signal_seen is True
+    assert root.control == "MainSignal"
+    assert [path for path, _ in fake.opened] == [DRIVER_PATH]  # pure never opened
+    assert len(ops(fake, "protect")) == 1
+    assert fake.lines == []
+    assert named(root.ticket.state) == "EMPTY"
+    assert all(named(slot.state) == "EMPTY" for slot in root.slots.values())
+
+
+# ---------------------------------------------------------------- M-8/M-9 frame reads
+
+
+def test_m08_read_init_owns_header_and_body_without_read_ahead() -> None:
+    fake = FakeOS()
+    _, link = linked(fake)
+    packet = s2.lab_packet()
+    fake.inbound.extend(packet + GO_FRAME)
+    fake.chunk = 3
+    assert link.read_init(deadline=deadline(fake, 5.0)) == packet
+    assert bytes(fake.inbound) == GO_FRAME
+    requests = [entry[2] for entry in ops(fake, "os_read")]
+    assert_within_frame(requests, [8, len(packet) - 8], 3)
+    assert named(link.state) == "ACTIVE"
+    assert fake.foreign == []
+
+
+@pytest.mark.parametrize(
+    "header",
+    [d1.INIT_HEADER.pack(b"MGI0", 10), d1.INIT_HEADER.pack(b"MGI1", 65537)],
+    ids=["magic", "length"],
+)
+def test_m08_invalid_init_header_returns_only_the_header(header: bytes) -> None:
+    fake = FakeOS()
+    _, link = linked(fake)
+    fake.inbound.extend(header + b"x" * 10)
+    assert link.read_init(deadline=deadline(fake)) == header
+    assert bytes(fake.inbound) == b"x" * 10
+
+
+def eof_mid(fake: FakeOS) -> None:
+    fake.inbound.extend(s2.lab_packet()[:20])
+    fake.eof = True
+
+
+def expired_mid(fake: FakeOS) -> None:
+    fake.inbound.extend(s2.lab_packet()[:20])
+
+
+def late_frame(fake: FakeOS) -> None:
+    fake.inbound.extend(s2.lab_packet())
+    fake.read_late = 5.0
+
+
+READ_FAILURES: dict[str, tuple[Callable[[FakeOS], None], str]] = {
+    "eof-mid": (eof_mid, "EOF"),
+    "expired-mid": (expired_mid, "EXPIRED"),
+    "late": (late_frame, "EXPIRED"),
+}
+
+
+@pytest.mark.parametrize("variant", sorted(READ_FAILURES))
+def test_m08_partial_or_late_init_is_closed_and_poisons(variant: str) -> None:
+    fake = FakeOS()
+    _, link = linked(fake)
+    setup, status = READ_FAILURES[variant]
+    setup(fake)
+    assert link.read_init(deadline=deadline(fake, 1.0)) is None
+    assert named(link.status) == status
+    assert named(link.state) == "POISONED"
+    fake.inbound.clear()
+    fake.inbound.extend(GO_FRAME)
+    fake.eof = False
+    calls = len(ops(fake, "os_read"))
+    assert link.read_control(deadline=deadline(fake)) is None
+    assert link.read_init(deadline=deadline(fake)) is None
+    assert len(ops(fake, "os_read")) == calls
+
+
+def test_m08_eof_or_io_before_any_byte_returns_none() -> None:
+    fake = FakeOS()
+    _, link = linked(fake)
+    fake.eof = True
+    assert link.read_init(deadline=deadline(fake)) is None
+    assert named(link.status) == "EOF"
+    other = FakeOS()
+    _, failing = linked(other)
+    other.inbound.extend(GO_FRAME)
+    other.fail["os_read"] = {0: FakeOSError()}
+    assert failing.read_control(deadline=deadline(other)) is None
+    assert named(failing.status) == "IO"
+
+
+def test_m09_read_control_exact_sixteen_bytes() -> None:
+    fake = FakeOS()
+    _, link = linked(fake)
+    fake.inbound.extend(GO_FRAME + ACK_FRAME)
+    fake.chunk = 5
+    assert link.read_control(deadline=deadline(fake)) == GO_FRAME
+    assert bytes(fake.inbound) == ACK_FRAME
+    assert_within_frame([entry[2] for entry in ops(fake, "os_read")], [16], 5)
+    fake.inbound.clear()
+    fake.inbound.extend(GO_FRAME[:7])
+    fake.eof = True
+    assert link.read_control(deadline=deadline(fake)) is None
+    assert named(link.state) == "POISONED"
+
+
+def test_m09_frame_completed_at_deadline_is_not_delivered() -> None:
+    fake = FakeOS()
+    _, link = linked(fake)
+    fake.inbound.extend(GO_FRAME)
+    fake.select_late = 2.0  # select returns ready only after the deadline
+    assert link.read_control(deadline=deadline(fake, 1.0)) is None
+    assert named(link.status) == "EXPIRED"
+    assert ops(fake, "os_read") == []  # deadline rechecked after select, before any read
+    assert bytes(fake.inbound) == GO_FRAME
+
+
+def test_m08_intruder_between_init_header_and_body_never_gets_or_gives_bytes() -> None:
+    fake = FakeOS()
+    _, link = linked(fake)
+    packet = s2.lab_packet()
+    fake.inbound.extend(packet)
+    fake.chunk = 8  # the first os_read returns exactly the header
+    nested: list[object] = []
+
+    def intrude() -> None:
+        fake.main = False
+        try:
+            before = (len(ops(fake, "os_read")), bytes(fake.inbound))
+            nested.append(link.read_control(deadline=deadline(fake)))
+            nested.append(link.read_init(deadline=deadline(fake)))
+            nested.append((len(ops(fake, "os_read")), bytes(fake.inbound)) == before)
+        finally:
+            fake.main = True
+
+    fake.after["os_read"] = intrude
+    assert link.read_init(deadline=deadline(fake, 5.0)) is None
+    assert nested == [None, None, True]
+    assert named(link.state) == "POISONED"
+    calls = len(ops(fake, "os_read"))
+    assert link.read_init(deadline=deadline(fake)) is None
+    assert len(ops(fake, "os_read")) == calls
+
+
+def test_m09_control_completed_after_deadline_is_closed_and_poisons() -> None:
+    fake = FakeOS()
+    _, link = linked(fake)
+    fake.inbound.extend(GO_FRAME + ACK_FRAME)
+    fake.read_late = 5.0  # the whole frame is returned, but only after the deadline
+    assert link.read_control(deadline=deadline(fake, 1.0)) is None
+    assert named(link.status) == "EXPIRED"
+    assert named(link.state) == "POISONED"
+    calls = len(ops(fake, "os_read"))
+    fake.read_late = 0.0
+    assert link.read_control(deadline=deadline(fake)) is None
+    assert len(ops(fake, "os_read")) == calls
+    assert bytes(fake.inbound) == ACK_FRAME
+
+
+def test_m09_finite_eagain_and_eintr_are_retried_within_the_frame() -> None:
+    fake = FakeOS()
+    _, link = linked(fake)
+    fake.inbound.extend(GO_FRAME)
+    fake.read_errors += [
+        BlockingIOError(errno.EAGAIN, "EAGAIN"),
+        InterruptedError(errno.EINTR, "EINTR"),
+    ]
+    assert link.read_control(deadline=deadline(fake)) == GO_FRAME
+    assert named(link.status) == "OK"
+    assert named(link.state) == "ACTIVE"
+    assert len(ops(fake, "os_read")) == 3
+    assert fake.read_errors == []
+
+
+# ---------------------------------------------------------------- M-10 writes
+
+
+@pytest.mark.parametrize(
+    "line",
+    [b"", b"a" * 512, b"a\nb", b"a\rb", b"\xc3\xa9", "text"],
+    ids=["empty", "512", "lf", "cr", "non-ascii", "str"],
+)
+def test_m10_invalid_lines_refused_without_io(line: Any) -> None:
+    fake = FakeOS()
+    _, link = linked(fake)
+    assert link.write(line) is False
+    assert ops(fake, "os_write") == []
+    assert fake.lines == []
+
+
+def test_m10_payload_511_plus_lf_and_56_line_cap() -> None:
+    fake = FakeOS()
+    _, link = linked(fake)
+    assert link.write(b"a" * 511) is True
+    assert fake.lines == [b"a" * 511]
+    for _ in range(55):
+        assert link.write(b'{"e":"INIT_OK"}') is True
+    calls = len(ops(fake, "os_write"))
+    assert link.write(b'{"e":"INIT_OK"}') is False
+    assert len(ops(fake, "os_write")) == calls
+    assert len(fake.lines) == 56
+
+
+def test_m10_short_writes_complete_line() -> None:
+    fake = FakeOS()
+    _, link = linked(fake)
+    fake.write_limit = 1
+    assert link.write(b'{"e":"INIT_OK"}') is True
+    assert fake.lines == [b'{"e":"INIT_OK"}']
+
+
+def test_m10_finite_eagain_and_eintr_writes_complete() -> None:
+    fake = FakeOS()
+    _, link = linked(fake)
+    fake.write_errors += [
+        BlockingIOError(errno.EAGAIN, "EAGAIN"),
+        InterruptedError(errno.EINTR, "EINTR"),
+    ]
+    assert link.write(b'{"e":"INIT_OK"}') is True
+    assert fake.lines == [b'{"e":"INIT_OK"}']
+    assert fake.write_errors == []
+    assert named(link.state) == "ACTIVE"
+
+
+def test_m10_write_completed_after_deadline_is_false_and_poisons() -> None:
+    ns = main()
+    fake = FakeOS()
+    _, link = linked(fake)
+    fake.write_late = ns["WRITE_CAP_S"] + 1.0  # bytes accepted, but only after the cap
+    assert link.write(b'{"e":"INIT_OK"}') is False
+    assert named(link.state) == "POISONED"
+    calls = len(ops(fake, "os_write"))
+    fake.write_late = 0.0
+    assert link.write(b'{"e":"INIT_OK"}') is False
+    assert len(ops(fake, "os_write")) == calls
+
+
+@pytest.mark.parametrize("mode", ["blocked", "epipe"])
+def test_m10_blocked_or_broken_write_poisons(mode: str) -> None:
+    fake = FakeOS()
+    _, link = linked(fake)
+    if mode == "blocked":
+        fake.fd1_blocked = True
+    else:
+        fake.fail["os_write"] = {1: BrokenPipeError(errno.EPIPE, "EPIPE")}
+    assert link.write(b'{"e":"INIT_OK"}') is False
+    assert named(link.state) == "POISONED"
+    calls = len(ops(fake, "os_write"))
+    fake.fd1_blocked = False
+    fake.fail.clear()
+    assert link.write(b'{"e":"INIT_OK"}') is False
+    assert len(ops(fake, "os_write")) == calls
+    assert fake.lines == []
+
+
+# ---------------------------------------------------------------- M-11 one reader
+
+
+def test_m11_second_reader_poisons_in_flight_frame() -> None:
+    fake = FakeOS()
+    _, link = linked(fake)
+    fake.inbound.extend(GO_FRAME)
+    fake.chunk = 4
+    nested: list[object] = []
+
+    def intrude() -> None:
+        fake.main = False
+        try:
+            before = len(ops(fake, "os_read"))
+            nested.append(link.read_control(deadline=deadline(fake)))
+            nested.append(len(ops(fake, "os_read")) - before)
+        finally:
+            fake.main = True
+
+    fake.hooks["os_read"] = intrude
+    assert link.read_control(deadline=deadline(fake)) is None
+    assert nested == [None, 0]
+    assert named(link.state) == "POISONED"
+    fake.inbound.clear()
+    fake.inbound.extend(GO_FRAME)
+    calls = len(ops(fake, "os_read"))
+    assert link.read_control(deadline=deadline(fake)) is None
+    assert len(ops(fake, "os_read")) == calls
+
+
+def test_m11_poison_observed_during_write_never_returns_true() -> None:
+    fake = FakeOS()
+    _, link = linked(fake)
+    fake.inbound.extend(GO_FRAME[:3])
+    nested: list[object] = []
+    fake.hooks["select"] = lambda: nested.append(link.read_control(deadline=deadline(fake, 0.1)))
+    assert link.write(b'{"e":"INIT_OK"}') is False
+    assert nested == [None]
+    assert named(link.state) == "POISONED"
+    assert ops(fake, "os_write") == []
+    assert fake.lines == []
+    assert fake.outbound == bytearray()
+
+
+def test_m11_t4_handoff_one_frame_each_without_overlap() -> None:
+    fake = FakeOS()
+    _, link = linked(fake)
+    fake.inbound.extend(GO_FRAME + STOP_FRAME + ACK_FRAME)
+    assert link.read_control(deadline=deadline(fake)) == GO_FRAME
+    fake.main = False
+    assert link.read_control(deadline=deadline(fake)) == STOP_FRAME
+    fake.main = True
+    assert link.read_control(deadline=deadline(fake)) == ACK_FRAME
+    assert named(link.state) == "ACTIVE"
+
+
+def test_m11_negative_watcher_join_keeps_reader_slot_and_blocks_exit() -> None:
+    """Finite binding composition with fake scheduling; not native concurrency or T4."""
+    ns = main()
+    fake = FakeOS()
+    root, link = linked(fake)
+    fake.inbound.extend(GO_FRAME + STOP_FRAME + ACK_FRAME)
+    assert link.read_control(deadline=deadline(fake)) == GO_FRAME
+    box: list[object] = []
+    handle = ns["ThreadPorts"](root).create(
+        lambda: box.append(link.read_control(deadline=deadline(fake, 30.0))), name="watcher"
+    )
+    assert handle.start() is True
+    seen: list[object] = []
+
+    def principal_while_watcher_reads() -> None:
+        fake.main = True
+        try:
+            reads = len(ops(fake, "os_read"))
+            limit = deadline(fake, 1.0)
+            seen.append(handle.join(deadline=limit))
+            seen.append(fake.clock.now >= limit)
+            complete(root)
+            seen.append(link.retire())
+            seen.append(ns["safe_exit"](root))
+            seen.append(root.slots["watcher_thread"].value is handle)
+            seen.append(named(root.slots["link"].state))
+            seen.append(len(ops(fake, "os_read")) == reads)  # no principal follow-on read
+        finally:
+            fake.main = False
+
+    fake.chunk = 4
+    fake.after["os_read"] = principal_while_watcher_reads
+    fake.threads[-1].run_target()  # fake scheduler: the watcher enters its frame read
+    assert seen == [False, True, False, False, True, "OWNED", True]
+    assert box == [STOP_FRAME]  # the watcher's own frame stays whole
+    assert bytes(fake.inbound) == ACK_FRAME
+    assert named(root.slots["watcher_thread"].state) == "OWNED"
+    assert root.slots["link"].value is link
+    assert ns["safe_exit"](root) is False
+
+
+# ---------------------------------------------------------------- M-12 link retirement
+
+
+@pytest.mark.parametrize("phase", ["LINKED", "RUNNING"])
+def test_m12_retire_refused_before_completion_preserves_slot_link_and_io(phase: str) -> None:
+    ns = main()
+    fake = FakeOS()
+    root, link = linked(fake)
+    root.phase = ns["Phase"][phase]
+    assert link.retire() is False
+    assert fake.log == []
+    assert named(root.slots["link"].state) == "OWNED"
+    assert root.slots["link"].value is link
+    assert named(link.state) == "ACTIVE"
+    fake.inbound.extend(GO_FRAME)
+    assert link.read_control(deadline=deadline(fake)) == GO_FRAME
+    assert link.write(b'{"e":"INIT_OK"}') is True
+    complete(root)
+    calls = len(fake.log)
+    assert link.retire() is True  # legitimate retirement after completion, no new IO
+    assert len(fake.log) == calls
+    assert named(root.slots["link"].state) == "EMPTY"
+
+
+def test_m12_contained_control_also_allows_retirement() -> None:
+    fake = FakeOS()
+    root, link = linked(fake)
+    root.control = "KeyboardInterrupt"
+    assert link.retire() is True
+    assert fake.log == []
+    assert named(root.slots["link"].state) == "EMPTY"
+
+
+def test_m12_retire_refused_while_reader_holds_the_frame() -> None:
+    fake = FakeOS()
+    root, link = linked(fake)
+    complete(root)  # completion recorded: only the active reader blocks retirement
+    fake.inbound.extend(GO_FRAME)
+    attempts: list[object] = []
+    fake.hooks["os_read"] = lambda: attempts.append(link.retire())
+    assert link.read_control(deadline=deadline(fake)) == GO_FRAME
+    assert attempts == [False]
+    assert named(root.slots["link"].state) == "OWNED"
+    assert root.slots["link"].value is link
+
+
+def test_m12_retire_clears_only_original_slot_and_stops_io() -> None:
+    ns = main()
+    fake = FakeOS()
+    root, link = linked(fake)
+    with pytest.raises(ns["SlotRefusal"]):
+        root.clear("link", object())
+    assert root.slots["link"].value is link
+    with pytest.raises((ns["SlotRefusal"], ns["MainRefusal"])):
+        ns["attach_link"](root)
+    assert ops(fake, "fstat") == []
+    complete(root)
+    assert link.retire() is True
+    assert named(root.slots["link"].state) == "EMPTY"
+    assert named(link.state) == "RETIRED"
+    fake.inbound.extend(GO_FRAME)
+    assert link.read_control(deadline=deadline(fake)) is None
+    assert link.write(b'{"e":"INIT_OK"}') is False
+    assert link.retire() is False
+    assert ops(fake, "os_read") == []
+    assert ops(fake, "os_write") == []
+    assert [entry for entry in ops(fake, "close") if entry[1] in (0, 1)] == []
+    assert fake.violations == []
+
+
+# ---------------------------------------------------------------- M-13 pair
+
+
+def test_m13_pair_reserves_both_slots_first_and_owns_exact_objects() -> None:
+    fake = FakeOS()
+    root, _ = linked(fake)
+    fake.probes["socketpair"] = lambda: (
+        named(root.slots["pair_writer"].state),
+        named(root.slots["pair_reader"].state),
+    )
+    writer, reader = main()["SocketPairs"](root).create()
+    assert fake.observed["socketpair"] == [("UNKNOWN", "UNKNOWN")]
+    assert root.slots["pair_writer"].value is writer
+    assert root.slots["pair_reader"].value is reader
+    assert named(root.slots["pair_writer"].state) == "OWNED"
+    stop = [False]
+    channel = writer.channel(stop=lambda: stop[0])
+    assert type(channel) is RawChannel
+    limit = ResultDeadline(expires_at=deadline(fake, 5.0), clock=fake.monotonic)
+    channel.send_all(b"abcdef", limit)
+    assert reader.read(4, deadline=deadline(fake)) == b"abcd"
+    assert reader.read(64, deadline=deadline(fake)) == b"ef"
+    start = fake.clock.now
+    with pytest.raises(TimeoutError):
+        reader.read(64, deadline=deadline(fake, 0.5))
+    assert fake.clock.now >= start + 0.5
+    writer.shutdown_write()
+    assert reader.read(64, deadline=deadline(fake)) is None
+    writer.close()
+    reader.close()
+    assert named(root.slots["pair_writer"].state) == "EMPTY"
+    assert named(root.slots["pair_reader"].state) == "EMPTY"
+
+
+def test_m13_pair_failures_keep_ownership() -> None:
+    ns = main()
+    fake = FakeOS()
+    root, _ = linked(fake)
+    fake.fail["socketpair"] = {None: FakeOSError()}
+    with pytest.raises((FakeOSError, ns["MainRefusal"])):
+        ns["SocketPairs"](root).create()
+    assert named(root.slots["pair_writer"].state) == "UNKNOWN"
+    assert named(root.slots["pair_reader"].state) == "UNKNOWN"
+    calls = len(ops(fake, "socketpair"))
+    with pytest.raises((ns["SlotRefusal"], ns["MainRefusal"])):
+        ns["SocketPairs"](root).create()
+    assert len(ops(fake, "socketpair")) == calls
+    assert named(root.slots["pair_writer"].state) == "UNKNOWN"
+
+
+@pytest.mark.parametrize("mode", ["raise", "lie"])
+def test_m13_unverified_close_keeps_slot_owned(mode: str) -> None:
+    ns = main()
+    fake = FakeOS()
+    root, _ = linked(fake)
+    writer, _reader = ns["SocketPairs"](root).create()
+    sock = fake.socks[0]
+    if mode == "raise":
+        fake.fail["sock_close"] = {sock.fd: FakeOSError()}
+    else:
+        fake.sock_lies.add(sock.fd)
+    with pytest.raises((FakeOSError, ns["MainRefusal"])):
+        writer.close()
+    assert named(root.slots["pair_writer"].state) == "OWNED"
+    assert root.slots["pair_writer"].value is writer
+
+
+# ---------------------------------------------------------------- M-14 threads
+
+
+def test_m14_thread_owned_before_return_and_verified_join() -> None:
+    ns = main()
+    fake = FakeOS()
+    root, _ = linked(fake)
+    seen: list[bool] = []
+    fake.probes["thread_class"] = lambda: named(root.slots["sink_thread"].state)
+    handle = ns["ThreadPorts"](root).create(lambda: seen.append(fake.main), name="sink")
+    assert fake.observed["thread_class"] == ["UNKNOWN"]
+    assert ops(fake, "thread_class") == [("thread_class", "sink", False)]
+    assert root.slots["sink_thread"].value is handle
+    assert ops(fake, "thread_start") == []
+    assert handle.start() is True
+    assert handle.join(deadline=deadline(fake)) is True
+    assert seen == [False]
+    assert named(root.slots["sink_thread"].state) == "EMPTY"
+    with pytest.raises(ns["MainRefusal"]):
+        ns["ThreadPorts"](root).create(lambda: None, name="other")
+    assert len(ops(fake, "thread_class")) == 1
+
+
+def test_m14_finish_before_start_returns_and_target_control_contained() -> None:
+    ns = main()
+    fake = FakeOS()
+    root, _ = linked(fake)
+    fake.finish_on_start.add("watcher")
+
+    def stop() -> None:
+        raise SystemExit(3)
+
+    handle = ns["ThreadPorts"](root).create(stop, name="watcher")
+    assert handle.start() is True
+    assert handle.join(deadline=deadline(fake)) is True
+    assert named(root.slots["watcher_thread"].state) == "EMPTY"
+
+
+def test_m14_start_failure_and_occupied_slot_retain() -> None:
+    ns = main()
+    fake = FakeOS()
+    root, _ = linked(fake)
+    fake.fail["thread_start"] = {"sink": FakeOSError()}
+    handle = ns["ThreadPorts"](root).create(lambda: None, name="sink")
+    with pytest.raises(FakeOSError):
+        handle.start()
+    assert root.slots["sink_thread"].value is handle
+    assert handle.join(deadline=deadline(fake)) is False  # never entered the wrapper
+    assert named(root.slots["sink_thread"].state) == "OWNED"
+    with pytest.raises((ns["SlotRefusal"], ns["MainRefusal"])):
+        ns["ThreadPorts"](root).create(lambda: None, name="sink")
+    assert len(ops(fake, "thread_class")) == 1
+    assert root.slots["sink_thread"].value is handle
+
+
+def test_m14_stuck_join_times_out_and_retains() -> None:
+    ns = main()
+    fake = FakeOS()
+    root, _ = linked(fake)
+    fake.stuck.add("sink")
+    handle = ns["ThreadPorts"](root).create(lambda: None, name="sink")
+    assert handle.start() is True
+    limit = deadline(fake, 1.0)
+    assert handle.join(deadline=limit) is False
+    assert fake.clock.now >= limit
+    assert named(root.slots["sink_thread"].state) == "OWNED"
+
+
+@pytest.mark.parametrize("failure", [FakeOSError, KeyboardInterrupt], ids=["error", "control"])
+def test_m14_interrupted_join_retains_even_if_thread_looks_closed(
+    failure: type[BaseException],
+) -> None:
+    ns = main()
+    fake = FakeOS()
+    root, _ = linked(fake)
+    handle = ns["ThreadPorts"](root).create(lambda: None, name="sink")
+    assert handle.start() is True
+    fake.join_raise["sink"] = failure()
+    with pytest.raises(failure):
+        handle.join(deadline=deadline(fake))
+    assert fake.threads[0].is_alive() is False
+    assert named(root.slots["sink_thread"].state) == "OWNED"
+    assert root.slots["sink_thread"].value is handle
+
+
+# ---------------------------------------------------------------- M-15 factory
+
+
+def test_m15_factory_returns_exact_worker_session_and_refuses_second_ledger(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    ns = main()
+    fake = FakeOS()
+    s2.install(monkeypatch, fake.clock, ())
+    root, _ = linked(fake)
+    ledger, token = lab_token()
+    session = create_session(root, ledger, token)
+    assert type(session) is session_module.WorkerSession
+    assert session.state is SessionState.NEW
+    assert root.ledger is ledger
+    assert root.sessions == [session]
+    other, other_token = lab_token()
+    with pytest.raises(ns["MainRefusal"]):
+        create_session(root, other, other_token)
+    assert root.sessions == [session]
+    assert root.ledger is ledger
+
+
+# ---------------------------------------------------------------- M-16 clock and ids
+
+
+def test_m16_absolute_clock_and_session_ids() -> None:
+    ns = main()
+    fake = FakeOS()
+    root, _ = linked(fake)
+    clock = ns["MonotonicClock"](root)
+    assert clock.monotonic() == fake.clock.now
+    target = fake.clock.now + 0.6
+    clock.sleep_until(target)
+    sleeps = [entry[1] for entry in ops(fake, "sleep")]
+    assert fake.clock.now >= target
+    assert sleeps
+    assert all(0 < value <= ns["SLICE_S"] for value in sleeps)
+    clock.sleep_until(fake.clock.now - 1.0)
+    assert len(ops(fake, "sleep")) == len(sleeps)
+    ids = ns["SessionIds"](root)
+    first, second = ids.session_id(), ids.session_id()
+    assert type(first) is bytes
+    assert len(first) == len(second) == 16
+    assert first != second
+    assert ops(fake, "urandom") == [("urandom", 16), ("urandom", 16)]
+
+
+# ---------------------------------------------------------------- M-17 safe exit
+
+
+def retained_result(root: Any, _fake: FakeOS) -> None:
+    root.result = root.namespace.DriverResult("RETAINED", ("NOT_RUN",) * 25, root.owner)
+
+
+def no_decision(root: Any, _fake: FakeOS) -> None:
+    root.result = None
+
+
+def foreign_result(root: Any, _fake: FakeOS) -> None:
+    root.result = SimpleNamespace(outcome="ABORTED", verdicts=(), owner=None)
+
+
+def owned_ticket(root: Any, _fake: FakeOS) -> None:
+    root.reserve_ticket()
+    root.own_ticket(9)
+
+
+def unknown_pair(root: Any, _fake: FakeOS) -> None:
+    root.reserve("pair_writer")
+
+
+def extra_thread(_root: Any, fake: FakeOS) -> None:
+    fake.extra_threads = 1
+
+
+def owner_session(root: Any, _fake: FakeOS) -> None:
+    root.owner._session = object()
+
+
+def owner_handle(root: Any, _fake: FakeOS) -> None:
+    root.owner._handles.append(object())
+
+
+def owner_unknown(root: Any, _fake: FakeOS) -> None:
+    root.owner._unknown.append("pair")
+
+
+def ledger_session(root: Any, _fake: FakeOS) -> None:
+    root.ledger = lab_ledger(session=True)
+
+
+def bad_session(root: Any, _fake: FakeOS) -> None:
+    root.sessions.append(object())
+
+
+def owner_token(root: Any, _fake: FakeOS) -> None:
+    root.owner._session_token = object()
+
+
+def owner_endpoint(root: Any, _fake: FakeOS) -> None:
+    root.owner._endpoints.append(object())
+
+
+def ledger_pinned(root: Any, _fake: FakeOS) -> None:
+    root.ledger = pinned_ledger()
+
+
+UNSAFE: dict[str, Callable[[Any, FakeOS], None]] = {
+    "retained": retained_result,
+    "no-decision": no_decision,
+    "foreign-result": foreign_result,
+    "ticket": owned_ticket,
+    "pair-unknown": unknown_pair,
+    "thread": extra_thread,
+    "owner-session": owner_session,
+    "owner-handle": owner_handle,
+    "owner-unknown": owner_unknown,
+    "ledger-session": ledger_session,
+    "bad-session": bad_session,
+    "owner-token": owner_token,
+    "owner-endpoint": owner_endpoint,
+    "ledger-pinned": ledger_pinned,
+}
+
+
+def test_sanity_pinned_ledger_has_real_session_row_with_output_pin() -> None:
+    rows = s2.session_rows(pinned_ledger())
+    assert len(rows) == 1
+    assert rows[0].output_pinned is True
+
+
+def test_m17_multi_slot_reservation_is_all_or_none_and_never_replaces() -> None:
+    ns = main()
+    fake = FakeOS()
+    root, link = linked(fake)
+    original = root.slots["pair_reader"]
+    root.reserve("pair_reader")
+    marker = object()
+    root.own("pair_reader", marker)
+    with pytest.raises(ns["SlotRefusal"]):
+        root.reserve("pair_writer", "pair_reader")
+    assert named(root.slots["pair_writer"].state) == "EMPTY"  # no partial reservation
+    assert root.slots["pair_reader"] is original
+    assert root.slots["pair_reader"].value is marker
+    with pytest.raises(ns["SlotRefusal"]):
+        root.own("pair_reader", object())
+    with pytest.raises(ns["SlotRefusal"]):
+        root.own("pair_writer", object())  # EMPTY slot was never reserved
+    assert root.slots["pair_reader"].value is marker
+    with pytest.raises(ns["SlotRefusal"]):
+        root.reserve("link")
+    assert root.slots["link"].value is link
+    ticket = root.ticket
+    root.reserve_ticket()
+    root.own_ticket(7)
+    with pytest.raises(ns["SlotRefusal"]):
+        root.reserve_ticket()
+    with pytest.raises(ns["SlotRefusal"]):
+        root.own_ticket(8)
+    with pytest.raises(ns["SlotRefusal"]):
+        root.clear_ticket(8)
+    assert root.ticket is ticket
+    assert root.ticket.value == 7
+    assert named(root.ticket.state) == "OWNED"
+    assert fake.log == []
+
+
+@pytest.mark.parametrize("variant", sorted(UNSAFE))
+def test_m17_unsafe_facts_never_exit(variant: str) -> None:
+    fake = FakeOS()
+    root = clean_root(fake)
+    assert main()["safe_exit"](root) is True
+    UNSAFE[variant](root, fake)
+    assert main()["safe_exit"](root) is False
+
+
+def test_m17_logical_generation_refs_and_control_stay_safe() -> None:
+    ns = main()
+    fake = FakeOS()
+    root = clean_root(fake)
+    ledger = lab_ledger(session=False)
+    root.ledger = ledger
+    root.owner._retained += [ledger, object()]
+    assert ns["safe_exit"](root) is True
+    root.result = None
+    root.control = "KeyboardInterrupt"
+    assert ns["safe_exit"](root) is True
+    fresh = new_root(FakeOS())
+    fresh.failure = ns["MainOutcome"].LOAD_FAILED
+    assert ns["safe_exit"](fresh) is True
+
+
+def test_m17_unretired_link_and_live_session_are_unsafe(monkeypatch: pytest.MonkeyPatch) -> None:
+    ns = main()
+    fake = FakeOS()
+    root, _ = linked(fake)
+    root.result = root.namespace.DriverResult("ABORTED", ("NOT_RUN",) * 25, None)
+    assert ns["safe_exit"](root) is False
+    s2.install(monkeypatch, fake.clock, ())
+    other = clean_root(FakeOS(fake.clock))
+    ledger, token = lab_token()
+    create_session(other, ledger, token)
+    assert ns["safe_exit"](other) is False
+
+
+# ---------------------------------------------------------------- M-18 containment
+
+
+@pytest.mark.parametrize(
+    ("op", "failure", "code", "outcome", "control"),
+    [
+        ("signal", FakeOSError, 64, "SETUP_FAILED", None),
+        ("signal", KeyboardInterrupt, 70, None, "KeyboardInterrupt"),
+        ("silence", FakeOSError, 64, "SETUP_FAILED", None),
+        ("silence", SystemExit, 70, None, "SystemExit"),
+    ],
+)
+def test_m18_early_setup_failures_and_controls(
+    op: str, failure: type[BaseException], code: int, outcome: str | None, control: str | None
+) -> None:
+    ns = main()
+    fake = FakeOS()
+    keys: list[object] = list(HANDLED) if op == "signal" else [None]
+    fake.fail[op] = {key: failure() for key in keys}
+    root = new_root(fake)
+    assert_decision(ns["_run_once"](root), "EXIT", code)
+    assert root.control == control
+    if outcome is None:
+        assert root.failure is None
+    else:
+        assert named(root.failure) == outcome
+    assert fake.opened == []
+    assert root.namespace is None
+    assert named(root.ticket.state) == "EMPTY"
+
+
+@pytest.mark.parametrize("failure", [FakeOSError, KeyboardInterrupt], ids=["error", "control"])
+def test_m18_link_setup_after_state_change_holds_with_bound_root(
+    failure: type[BaseException],
+) -> None:
+    ns = main()
+    fake = FakeOS()
+    fake.fail["set_blocking"] = {1: failure()}
+    root = new_root(fake)
+    assert_decision(ns["_run_once"](root), "HOLD", None)
+    assert root.namespace is not None
+    assert type(root.owner) is root.namespace.Owner
+    assert named(root.slots["link"].state) != "EMPTY"
+    assert ops(fake, "protect") == []
+
+
+@pytest.mark.parametrize("variant", ["tty", "regular"])
+def test_m18_link_refused_after_reservation_stays_unknown_and_holds(variant: str) -> None:
+    """Conservative B5: the slot is reserved before fstat/isatty, so no clean 66."""
+    ns = main()
+    fake = FakeOS()
+    if variant == "tty":
+        fake.ttys.add(0)
+    else:
+        fake.fd_modes[0] = stat.S_IFREG
+    root = new_root(fake)
+    fake.probes["fstat"] = lambda: named(root.slots["link"].state)
+    assert_decision(ns["_run_once"](root), "HOLD", None)
+    assert fake.observed["fstat"][-1] == "UNKNOWN"
+    assert named(root.slots["link"].state) == "UNKNOWN"
+    assert root.slots["link"].value is None
+    assert ops(fake, "set_blocking") == []
+    assert ops(fake, "protect") == []
+    assert ops(fake, "os_write") == []
+    assert type(root.owner) is root.namespace.Owner
+    assert named(root.phase) == "HOLDING"
+
+
+def test_m18_control_from_guard_port_is_contained_without_rerun() -> None:
+    ns = main()
+    fake = FakeOS()
+    fake.fail["protect"] = {None: SystemExit(2)}
+    root = new_root(fake)
+    owner = None
+
+    def remember() -> None:
+        nonlocal owner
+        owner = root.owner
+
+    fake.hooks["protect"] = remember
+    assert_decision(ns["_run_once"](root), "EXIT", 70)
+    assert root.control == "SystemExit"
+    assert root.owner is owner
+    assert len(ops(fake, "protect")) == 1
+    assert named(root.slots["link"].state) == "EMPTY"
+    assert fake.lines == []
+
+
+def test_m18_late_control_preserves_only_emitted_driver_prefix() -> None:
+    ns = main()
+    fake = FakeOS()
+    fake.inbound.extend(s2.lab_packet())
+    fake.fail["os_read"] = {0: KeyboardInterrupt()}
+    root = new_root(fake)
+    assert_decision(ns["_run_once"](root), "EXIT", 70)
+    assert root.control == "KeyboardInterrupt"
+    assert fake.lines == [GUARD_LINE]
+    assert fake.foreign == []
+    assert fake.outbound == bytearray()
+    assert len(ops(fake, "protect")) == 1
+    assert named(root.ticket.state) == "EMPTY"
+    assert root.sessions == []
+    for line in fake.lines:
+        for leak in LEAKS:
+            assert leak.encode() not in line
+
+
+# ---------------------------------------------------------------- M-19 signals
+
+
+def test_m19_permanent_handler_is_sticky_and_non_raising() -> None:
+    ns = main()
+    fake = FakeOS()
+    fake.fail["protect"] = {None: ProcessGuardError(GuardFailure.PROFILE)}
+    root = new_root(fake)
+    assert_decision(ns["_run_once"](root), "EXIT", 67)
+    assert len(ops(fake, "signal")) == 3
+    handlers = {id(fake.handlers[signum]) for signum in HANDLED}
+    assert len(handlers) == 1
+    assert read_attr(root, "signal_seen") is False
+    count = len(fake.log)
+    assert fake.handlers[15](15, None) is None
+    assert read_attr(root, "signal_seen") is True
+    assert fake.handlers[2](2, None) is None
+    assert read_attr(root, "signal_seen") is True
+    assert len(fake.log) == count
+
+
+def cooperative_point(root: Any, fake: FakeOS, point: str) -> None:
+    ns = main()
+    if point == "reader":
+        ns["PinnedReader"](root).read(PURE_PATH, PURE_SIZE + 1)
+    elif point == "factory":
+        ledger, token = lab_token()
+        create_session(root, ledger, token)
+    elif point == "pair":
+        ns["SocketPairs"](root).create()
+    elif point == "threads":
+        ns["ThreadPorts"](root).create(lambda: None, name="sink")
+    elif point == "read_control":
+        root.slots["link"].value.read_control(deadline=deadline(fake))
+    elif point == "read_init":
+        root.slots["link"].value.read_init(deadline=deadline(fake))
+    else:
+        ns["MonotonicClock"](root).sleep_until(deadline(fake, 1.0))
+
+
+@pytest.mark.parametrize(
+    "point",
+    ["reader", "factory", "pair", "threads", "read_control", "read_init", "sleep_until"],
+)
+def test_m19_main_signal_only_at_cooperative_boundaries(point: str) -> None:
+    ns = main()
+    fake = FakeOS()
+    root, link = linked(fake)
+    fake.inbound.extend(GO_FRAME)
+    root.signal_seen = True
+    with pytest.raises(ns["MainSignal"]) as caught:
+        cooperative_point(root, fake, point)
+    assert not isinstance(caught.value, Exception)
+    assert_closed(caught.value, ns["MainSignal"])
+    allowed = {"sleep"} if point == "sleep_until" else set()
+    assert {entry[0] for entry in fake.log} <= allowed
+    assert len(fake.log) <= 1
+    assert all(named(slot.state) == "EMPTY" for name, slot in root.slots.items() if name != "link")
+    assert named(root.ticket.state) == "EMPTY"
+    assert root.sessions == []
+    assert named(link.state) == "ACTIVE"
+    assert bytes(fake.inbound) == GO_FRAME
+
+
+def test_m19_watcher_and_cleanup_paths_never_raise_main_signal() -> None:
+    ns = main()
+    fake = FakeOS()
+    root, link = linked(fake)
+    writer, reader = ns["SocketPairs"](root).create()
+    handle = ns["ThreadPorts"](root).create(lambda: None, name="watcher")
+    assert handle.start() is True
+    root.signal_seen = True
+    fake.inbound.extend(GO_FRAME)
+    fake.main = False
+    assert link.read_control(deadline=deadline(fake)) == GO_FRAME
+    fake.main = True
+    assert link.write(b'{"e":"INIT_OK"}') is True
+    assert handle.join(deadline=deadline(fake)) is True
+    writer.close()
+    reader.close()
+    complete(root)
+    assert link.retire() is True
+    assert all(named(slot.state) == "EMPTY" for slot in root.slots.values())
+
+
+def test_m19_closed_refusals_never_chain_active_caller_errors() -> None:
+    ns = main()
+    fake = FakeOS()
+    root, _ = linked(fake)
+    root.reserve("pair_writer")
+    errors: list[tuple[BaseException, type[BaseException]]] = []
+    try:
+        raise RuntimeError(CALLER_MARKER)
+    except RuntimeError:
+        with pytest.raises(ns["SlotRefusal"]) as slot:
+            root.reserve("pair_writer")
+        errors.append((slot.value, ns["SlotRefusal"]))
+        with pytest.raises(ns["MainRefusal"]) as refused:
+            ns["read_pinned"](root, "/etc/passwd", 1, 2)
+        errors.append((refused.value, ns["MainRefusal"]))
+        root.signal_seen = True
+        with pytest.raises(ns["MainSignal"]) as signalled:
+            ns["ThreadPorts"](root).create(lambda: None, name="sink")
+        errors.append((signalled.value, ns["MainSignal"]))
+    for error, cls in errors:
+        assert_closed(error, cls)
+    assert all(path != "/etc/passwd" for path, _ in fake.opened)
+    assert ops(fake, "thread_class") == []
+
+
+# ---------------------------------------------------------------- M-20 hold and decision
+
+
+def test_m20_hold_step_pause_backoff_fault_and_saturation() -> None:
+    ns = main()
+    fake = FakeOS()
+    root = new_root(fake)
+    view = retained_view(root)
+    assert named(ns["hold_step"](root)) == "WOKE"
+    assert fake.log == [("pause",)]
+    assert root.hold_faults == 0
+    fake.fail["pause"] = {None: KeyboardInterrupt()}
+    assert named(ns["hold_step"](root)) == "BACKOFF"
+    assert ops(fake, "sleep") == [("sleep", ns["HOLD_BACKOFF_S"])]
+    assert root.hold_faults == 1
+    fake.fail["sleep"] = {None: FakeOSError()}
+    root.hold_faults = 254
+    assert named(ns["hold_step"](root)) == "FAULT"
+    assert root.hold_faults == 255
+    assert named(ns["hold_step"](root)) == "FAULT"
+    assert type(root.hold_faults) is int
+    assert root.hold_faults == ns["HOLD_FAULTS_MAX"] == 255
+    assert {entry[0] for entry in fake.log} == {"pause", "sleep"}
+    assert_same_view(view, root)
+
+
+def test_m20_hold_steps_preserve_a_populated_retained_root(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    ns = main()
+    fake = FakeOS()
+    fake.fail["thread_start"] = {"sink": FakeOSError()}
+    root, decision, _, _ = integrate(monkeypatch, fake)
+    assert_decision(decision, "HOLD", None)
+    view = retained_view(root)
+    assert root.owner.session is not None
+    assert len(root.owner.handles) == 1
+    assert len(root.owner.endpoints) == 2
+    fake.log.clear()
+    steps = [named(ns["hold_step"](root))]
+    assert_same_view(view, root)
+    fake.fail["pause"] = {None: FakeOSError()}
+    steps.append(named(ns["hold_step"](root)))
+    assert_same_view(view, root)
+    fake.fail["sleep"] = {None: KeyboardInterrupt()}
+    steps.append(named(ns["hold_step"](root)))
+    assert_same_view(view, root)
+    assert steps == ["WOKE", "BACKOFF", "FAULT"]
+    assert {entry[0] for entry in fake.log} == {"pause", "sleep"}
+    assert ns["safe_exit"](root) is False
+
+
+def test_m20_ast_hold_never_returns_and_entry_retains_its_root() -> None:
+    tree = main_tree()
+    hold = function(tree, "hold")
+    assert argument_names(hold) == ["root"]
+    body = [
+        node
+        for node in hold.body
+        if not (isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant))
+    ]
+    assert len(body) == 1
+    loop = body[0]
+    assert isinstance(loop, ast.While)
+    assert isinstance(loop.test, ast.Constant)
+    assert loop.test.value is True
+    assert loop.orelse == []
+    forbidden = (ast.Break, ast.Return, ast.Try, ast.TryStar, ast.Raise)
+    assert not any(isinstance(node, forbidden) for node in ast.walk(hold))
+    assert calls_in(hold) == ["hold_step(root)"]
+    step_calls = calls_in(function(tree, "hold_step"))
+    assert "root.system.pause()" in step_calls
+    assert "root.system.sleep(HOLD_BACKOFF_S)" in step_calls
+    entry = function(tree, "entry")
+    assert argument_names(entry) == ["system"]
+    statements = [
+        node
+        for node in entry.body
+        if not (isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant))
+    ]
+    assert ast.unparse(statements[0]) == "root = MainRoot(system)"
+    stores = [
+        node
+        for node in ast.walk(entry)
+        if isinstance(node, ast.Name) and node.id == "root" and isinstance(node.ctx, ast.Store)
+    ]
+    assert len(stores) == 1
+    calls = calls_in(entry)
+    assert "_run_once(root)" in calls
+    assert sum(call.startswith("MainRoot(") for call in calls) == 1
+    returns = [node for node in ast.walk(entry) if isinstance(node, ast.Return)]
+    assert len(returns) == 1
+    returned = returns[0].value
+    assert isinstance(returned, ast.Name)  # only a name bound from decision_code
+    name = returned.id
+    bound = [
+        node.value
+        for node in ast.walk(entry)
+        if isinstance(node, (ast.Assign, ast.AnnAssign)) and assigned_names(node) == [name]
+    ]
+    assert len(bound) == 1
+    call = bound[0]
+    assert isinstance(call, ast.Call)
+    assert ast.unparse(call.func) == "decision_code"
+    stores = [
+        node
+        for node in ast.walk(entry)
+        if isinstance(node, ast.Name) and node.id == name and isinstance(node.ctx, ast.Store)
+    ]
+    assert len(stores) == 1
+    guards = [
+        node
+        for node in ast.walk(entry)
+        if isinstance(node, ast.If) and any(item is returns[0] for item in node.body)
+    ]
+    assert [ast.unparse(node.test) for node in guards] == [f"{name} is not None"]
+    assert ast.unparse(entry.body[-1]) == "hold(root)"
+
+
+def test_m20_decision_value_is_frozen_and_closed() -> None:
+    ns = main()
+    decision = ns["MainDecision"](kind="EXIT", code=68)
+    assert [field.name for field in dataclasses.fields(decision)] == ["kind", "code"]
+    with pytest.raises(AttributeError):
+        decision.code = 64
+    assert ns["decision_code"](decision) == 68
+    for code in range(64, 71):
+        assert ns["decision_code"](ns["MainDecision"](kind="EXIT", code=code)) == code
+    assert ns["decision_code"](ns["MainDecision"](kind="HOLD", code=None)) is None
+
+
+class StrKind(str):
+    __slots__ = ()
+
+
+@pytest.mark.parametrize(
+    ("kind", "code"),
+    [
+        ("EXIT", None),
+        ("EXIT", True),
+        ("EXIT", 63),
+        ("EXIT", 71),
+        ("EXIT", 68.0),
+        ("HOLD", 68),
+        ("HOLD", False),
+        ("exit", 68),
+        (StrKind("EXIT"), 68),
+        (None, None),
+    ],
+)
+def test_m20_public_decision_constructor_refuses_incoherent_values(kind: Any, code: Any) -> None:
+    ns = main()
+    with pytest.raises(ns["MainRefusal"]) as caught:
+        ns["MainDecision"](kind=kind, code=code)
+    assert_closed(caught.value, ns["MainRefusal"])
+
+
+def test_m20_entry_exit_wiring_is_finite_with_fake_os(monkeypatch: pytest.MonkeyPatch) -> None:
+    ns = main()
+    fake = FakeOS()
+    fake.fail["protect"] = {None: ProcessGuardError(GuardFailure.PROFILE)}
+    entry = ns["entry"]
+    held: list[object] = []
+
+    def tripwire(root: Any) -> None:  # test-only: a defect fails instead of hanging
+        held.append(root)
+        raise AssertionError
+
+    monkeypatch.setitem(entry.__globals__, "hold", tripwire)
+    code = entry(fake.system(ns))
+    assert type(code) is int
+    assert code == 67
+    assert held == []
+    assert ops(fake, "pause") == []
+    assert len(ops(fake, "protect")) == 1
+    assert len(ops(fake, "signal")) == 3
+    assert fake.lines == []
+
+
+@pytest.mark.parametrize(
+    "variant",
+    [
+        "none",
+        "lookalike",
+        "exit-none",
+        "exit-bool",
+        "exit-low",
+        "exit-high",
+        "exit-float",
+        "hold-code",
+        "lowercase",
+        "str-subclass",
+    ],
+)
+def test_m20_absent_foreign_or_incoherent_decision_never_exits(variant: str) -> None:
+    ns = main()
+    values: dict[str, Any] = {
+        "none": None,
+        "lookalike": SimpleNamespace(kind="EXIT", code=68),
+        "exit-none": forge(kind="EXIT", code=None),
+        "exit-bool": forge(kind="EXIT", code=True),
+        "exit-low": forge(kind="EXIT", code=63),
+        "exit-high": forge(kind="EXIT", code=71),
+        "exit-float": forge(kind="EXIT", code=68.0),
+        "hold-code": forge(kind="HOLD", code=68),
+        "lowercase": forge(kind="exit", code=68),
+        "str-subclass": forge(kind=StrKind("EXIT"), code=68),
+    }
+    assert ns["decision_code"](values[variant]) is None
+
+
+# ---------------------------------------------------------------- M-21/M-22 integration
+
+
+def test_m21_pinned_driver_and_real_session_two_results_then_eof_exit_68(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake = FakeOS()
+    root, decision, hub, key = integrate(monkeypatch, fake)
+    assert_decision(decision, "EXIT", 68)
+    assert named(root.phase) == "EXITING"
+    assert root.result.outcome == "ABORTED"
+    assert root.result.owner is None
+    events = d1.events_of(fake.lines)
+    assert [(event["e"], event.get("case")) for event in events] == [
+        ("GUARD", None),
+        ("INIT_OK", None),
+        ("READY", 1),
+        ("RESULT", 1),
+        ("READY", 2),
+        ("RESULT", 2),
+        ("READY", 3),
+        ("ABORT", 3),
+        ("TERMINAL", None),
+    ]
+    assert [event["bytes"] for event in events if event["e"] == "RESULT"] == [
+        len(s2.body_of(1)),
+        len(s2.body_of(2)),
+    ]
+    [session] = root.sessions
+    assert type(session) is session_module.WorkerSession
+    assert session.state is SessionState.CLOSED
+    assert s2.session_rows(root.ledger) == []
+    assert main()["safe_exit"](root) is True
+    assert all(named(slot.state) == "EMPTY" for slot in root.slots.values())
+    assert named(root.ticket.state) == "EMPTY"
+    init = s2.secret_init(hub.contexts[0])
+    assert init.key == key
+    assert init.snapshot == d1.PURE["capture"](d1.PURE["decode_init"](s2.lab_packet()), 1)
+    assert ops(fake, "thread_class") == [("thread_class", "sink", False)] * 2
+    assert not any(thread.is_alive() for thread in fake.threads)
+    assert all(sock.closed for sock in fake.socks)
+    assert len(ops(fake, "protect")) == 1
+    assert position(fake, "protect") < position(fake, "os_read")
+    assert [entry for entry in ops(fake, "close") if entry[1] in (0, 1, 2)] == []
+    assert fake.foreign == []
+    assert fake.violations == []
+    assert ops(fake, "pause") == []
+
+
+def test_m22_retained_run_holds_same_root_owner_and_resources(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake = FakeOS()
+    fake.fail["thread_start"] = {"sink": FakeOSError()}
+    root, decision, _, _ = integrate(monkeypatch, fake)
+    assert_decision(decision, "HOLD", None)
+    assert named(root.phase) == "HOLDING"
+    assert root.result.outcome == "RETAINED"
+    assert root.result.owner is root.owner
+    handle = root.slots["sink_thread"].value
+    assert named(root.slots["sink_thread"].state) == "OWNED"
+    assert root.owner.handles == (handle,)
+    assert root.owner.endpoints == (
+        root.slots["pair_writer"].value,
+        root.slots["pair_reader"].value,
+    )
+    assert named(root.slots["pair_writer"].state) == "OWNED"
+    [session] = root.sessions
+    assert root.owner.session is session
+    assert session.state is SessionState.RESULT
+    assert len(s2.session_rows(root.ledger)) == 1
+    assert main()["safe_exit"](root) is False
+    events = d1.events_of(fake.lines)
+    assert events[-2]["e"] == "ABORT"
+    assert events[-2]["retained"] is True
+    assert events[-1] == {"e": "TERMINAL", "outcome": "RETAINED"}
+    assert ops(fake, "pause") == []
+    assert fake.foreign == []

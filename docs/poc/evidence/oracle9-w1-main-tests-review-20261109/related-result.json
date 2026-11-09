@@ -1,0 +1,25 @@
+{
+  "exit_code": 0,
+  "suites": [
+    {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "429",
+      "time": "2.646",
+      "timestamp": "2026-11-09T14:24:14.631212-03:00",
+      "hostname": "SMTZDIBDN1954"
+    }
+  ],
+  "targets": [
+    "tests\\test_oracle9_w1_main.py::test_sanity_fixed_driver_and_pure_pins",
+    "tests\\test_oracle9_w1_main.py::test_sanity_fake_files_close_and_ebadf",
+    "tests\\test_oracle9_w1_main.py::test_sanity_fake_link_reactor_and_clock",
+    "tests\\test_oracle9_w1_main.py::test_sanity_fake_socket_and_thread",
+    "tests\\test_oracle9_w1_main.py::test_sanity_pinned_ledger_has_real_session_row_with_output_pin",
+    "tests/test_oracle9_w1_driver.py",
+    "tests/test_oracle9_w1_driver_session.py",
+    "tests/test_oracle9_w1_controller.py"
+  ]
+}

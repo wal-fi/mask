@@ -1,0 +1,3024 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="115" skipped="0" tests="118" time="18.255" timestamp="2026-11-09T14:14:02.982218-03:00" hostname="SMTZDIBDN1954"><testcase classname="tests.test_oracle9_w1_main" name="test_sanity_fixed_driver_and_pure_pins" time="0.001" /><testcase classname="tests.test_oracle9_w1_main" name="test_sanity_fake_files_close_and_ebadf" time="0.001" /><testcase classname="tests.test_oracle9_w1_main" name="test_sanity_fake_link_reactor_and_clock" time="0.001"><failure message="AssertionError: assert b'MGL1\x01' == b'MGL1\x01\x0...0\x00\x00\x00'&#10;  &#10;  Use -v to get more diff">def test_sanity_fake_link_reactor_and_clock() -&gt; None:
+        fake = FakeOS()
+        fake.inbound.extend(GO_FRAME)
+        fake.chunk = 5
+        assert fake.select([0], [], [], 0.25) == ([0], [], [])
+        assert fake.os_read(0, 16) == GO_FRAME[:5]
+        fake.inbound.clear()
+        with pytest.raises(BlockingIOError):
+            fake.os_read(0, 1)
+        start = fake.clock.now
+        assert fake.select([0], [], [], 0.25) == ([], [], [])
+        assert fake.clock.now == start + 0.25
+        fake.reactor = Reactor(fake, {(d1.GO, 3)})
+        ready = d1.canonical({"case": 1, "e": "READY", "next_seq": 1})
+        assert fake.os_write(1, ready + b"\n") == len(ready) + 1
+        assert fake.lines == [ready]
+        assert bytes(fake.inbound) == GO_FRAME
+        fake.os_write(1, d1.canonical({"case": 3, "e": "READY", "next_seq": 5}) + b"\n")
+        assert fake.eof is True
+&gt;       assert fake.os_read(0, 16) == GO_FRAME
+E       AssertionError: assert b'MGL1\x01' == b'MGL1\x01\x0...0\x00\x00\x00'
+E
+E         Use -v to get more diff
+
+tests\test_oracle9_w1_main.py:720: AssertionError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_sanity_fake_socket_and_thread" time="0.001" /><testcase classname="tests.test_oracle9_w1_main" name="test_m01_import_is_definition_only_and_real_system_has_no_effect" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">def test_m01_import_is_definition_only_and_real_system_has_no_effect() -&gt; None:
+        before = (
+            sys.stdout,
+            sys.stderr,
+            sys.excepthook,
+            threading.excepthook,
+            sys.unraisablehook,
+            real_signal.getsignal(real_signal.SIGINT),
+            threading.active_count(),
+        )
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:770:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m01_ast_top_level_has_only_definitions_and_one_main_guard" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">def test_m01_ast_top_level_has_only_definitions_and_one_main_guard() -&gt; None:
+&gt;       tree = main_tree()
+               ^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:789:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:625: in main_tree
+    return ast.parse(MAIN_FILE.read_text(encoding="utf-8"))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\pathlib.py:1058: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = WindowsPath('C:/Users/w.filho/Desktop/codes/mask/deploy/oracle9_w1_main.py')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+&gt;       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\pathlib.py:1044: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m01_constants_are_the_fixed_public_pins" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">def test_m01_constants_are_the_fixed_public_pins() -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:826:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m02_root_exists_before_any_acquisition" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">def test_m02_root_exists_before_any_acquisition() -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:860:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m03_ticket_unknown_before_open_exact_fd_one_verified_close" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">def test_m03_ticket_unknown_before_open_exact_fd_one_verified_close() -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:883:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m03_open_uncertainty_keeps_unknown_and_never_closes[nofollow]" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">failure = &lt;class 'tests.test_oracle9_w1_main.FakeFailure'&gt;
+
+    @pytest.mark.parametrize("failure", [FakeFailure, KeyboardInterrupt], ids=["nofollow", "control"])
+    def test_m03_open_uncertainty_keeps_unknown_and_never_closes(failure: type[BaseException]) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:905:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m03_open_uncertainty_keeps_unknown_and_never_closes[control]" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">failure = &lt;class 'KeyboardInterrupt'&gt;
+
+    @pytest.mark.parametrize("failure", [FakeFailure, KeyboardInterrupt], ids=["nofollow", "control"])
+    def test_m03_open_uncertainty_keeps_unknown_and_never_closes(failure: type[BaseException]) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:905:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m03_close_uncertainty_retains_fd_once_and_returns_no_bytes[raise]" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">mode = 'raise'
+
+    @pytest.mark.parametrize("mode", ["raise", "control", "lie", "thread"])
+    def test_m03_close_uncertainty_retains_fd_once_and_returns_no_bytes(mode: str) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:924:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m03_close_uncertainty_retains_fd_once_and_returns_no_bytes[control]" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">mode = 'control'
+
+    @pytest.mark.parametrize("mode", ["raise", "control", "lie", "thread"])
+    def test_m03_close_uncertainty_retains_fd_once_and_returns_no_bytes(mode: str) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:924:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m03_close_uncertainty_retains_fd_once_and_returns_no_bytes[lie]" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">mode = 'lie'
+
+    @pytest.mark.parametrize("mode", ["raise", "control", "lie", "thread"])
+    def test_m03_close_uncertainty_retains_fd_once_and_returns_no_bytes(mode: str) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:924:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m03_close_uncertainty_retains_fd_once_and_returns_no_bytes[thread]" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">mode = 'thread'
+
+    @pytest.mark.parametrize("mode", ["raise", "control", "lie", "thread"])
+    def test_m03_close_uncertainty_retains_fd_once_and_returns_no_bytes(mode: str) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:924:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m03_only_fixed_public_pairs_are_readable[/etc/passwd-10-11]" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">path = '/etc/passwd', size = 10, limit = 11
+
+    @pytest.mark.parametrize(
+        ("path", "size", "limit"),
+        [
+            ("/etc/passwd", 10, 11),
+            (DRIVER_PATH, PURE_SIZE, PURE_SIZE + 1),
+            (DRIVER_PATH, DRIVER_SIZE, DRIVER_SIZE + 2),
+            (PURE_PATH, DRIVER_SIZE, DRIVER_SIZE + 1),
+            (PURE_PATH, PURE_SIZE, PURE_SIZE),
+        ],
+    )
+    def test_m03_only_fixed_public_pairs_are_readable(path: str, size: int, limit: int) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:957:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m03_only_fixed_public_pairs_are_readable[/opt/maskgw/lab/oracle9_w1_driver.py-22453-22454]" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">path = '/opt/maskgw/lab/oracle9_w1_driver.py', size = 22453, limit = 22454
+
+    @pytest.mark.parametrize(
+        ("path", "size", "limit"),
+        [
+            ("/etc/passwd", 10, 11),
+            (DRIVER_PATH, PURE_SIZE, PURE_SIZE + 1),
+            (DRIVER_PATH, DRIVER_SIZE, DRIVER_SIZE + 2),
+            (PURE_PATH, DRIVER_SIZE, DRIVER_SIZE + 1),
+            (PURE_PATH, PURE_SIZE, PURE_SIZE),
+        ],
+    )
+    def test_m03_only_fixed_public_pairs_are_readable(path: str, size: int, limit: int) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:957:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m03_only_fixed_public_pairs_are_readable[/opt/maskgw/lab/oracle9_w1_driver.py-36956-36958]" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">path = '/opt/maskgw/lab/oracle9_w1_driver.py', size = 36956, limit = 36958
+
+    @pytest.mark.parametrize(
+        ("path", "size", "limit"),
+        [
+            ("/etc/passwd", 10, 11),
+            (DRIVER_PATH, PURE_SIZE, PURE_SIZE + 1),
+            (DRIVER_PATH, DRIVER_SIZE, DRIVER_SIZE + 2),
+            (PURE_PATH, DRIVER_SIZE, DRIVER_SIZE + 1),
+            (PURE_PATH, PURE_SIZE, PURE_SIZE),
+        ],
+    )
+    def test_m03_only_fixed_public_pairs_are_readable(path: str, size: int, limit: int) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:957:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m03_only_fixed_public_pairs_are_readable[/opt/maskgw/lab/oracle9_w1_controller.py-36956-36957]" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">path = '/opt/maskgw/lab/oracle9_w1_controller.py', size = 36956, limit = 36957
+
+    @pytest.mark.parametrize(
+        ("path", "size", "limit"),
+        [
+            ("/etc/passwd", 10, 11),
+            (DRIVER_PATH, PURE_SIZE, PURE_SIZE + 1),
+            (DRIVER_PATH, DRIVER_SIZE, DRIVER_SIZE + 2),
+            (PURE_PATH, DRIVER_SIZE, DRIVER_SIZE + 1),
+            (PURE_PATH, PURE_SIZE, PURE_SIZE),
+        ],
+    )
+    def test_m03_only_fixed_public_pairs_are_readable(path: str, size: int, limit: int) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:957:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m03_only_fixed_public_pairs_are_readable[/opt/maskgw/lab/oracle9_w1_controller.py-22453-22453]" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">path = '/opt/maskgw/lab/oracle9_w1_controller.py', size = 22453, limit = 22453
+
+    @pytest.mark.parametrize(
+        ("path", "size", "limit"),
+        [
+            ("/etc/passwd", 10, 11),
+            (DRIVER_PATH, PURE_SIZE, PURE_SIZE + 1),
+            (DRIVER_PATH, DRIVER_SIZE, DRIVER_SIZE + 2),
+            (PURE_PATH, DRIVER_SIZE, DRIVER_SIZE + 1),
+            (PURE_PATH, PURE_SIZE, PURE_SIZE),
+        ],
+    )
+    def test_m03_only_fixed_public_pairs_are_readable(path: str, size: int, limit: int) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:957:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m04_validation_failure_closes_once_then_clean_load_failed[not-regular]" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">variant = 'not-regular'
+
+    @pytest.mark.parametrize("variant", sorted(LOADER_FAILURES))
+    def test_m04_validation_failure_closes_once_then_clean_load_failed(variant: str) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1006:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m04_validation_failure_closes_once_then_clean_load_failed[read]" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">variant = 'read'
+
+    @pytest.mark.parametrize("variant", sorted(LOADER_FAILURES))
+    def test_m04_validation_failure_closes_once_then_clean_load_failed(variant: str) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1006:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m04_validation_failure_closes_once_then_clean_load_failed[sha]" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">variant = 'sha'
+
+    @pytest.mark.parametrize("variant", sorted(LOADER_FAILURES))
+    def test_m04_validation_failure_closes_once_then_clean_load_failed(variant: str) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1006:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m04_validation_failure_closes_once_then_clean_load_failed[size-minus]" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">variant = 'size-minus'
+
+    @pytest.mark.parametrize("variant", sorted(LOADER_FAILURES))
+    def test_m04_validation_failure_closes_once_then_clean_load_failed(variant: str) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1006:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m04_validation_failure_closes_once_then_clean_load_failed[size-plus]" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">variant = 'size-plus'
+
+    @pytest.mark.parametrize("variant", sorted(LOADER_FAILURES))
+    def test_m04_validation_failure_closes_once_then_clean_load_failed(variant: str) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1006:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m04_validation_failure_with_uncertain_close_holds[sha]" time="0.003"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">variant = 'sha'
+
+    @pytest.mark.parametrize("variant", ["sha", "not-regular"])
+    def test_m04_validation_failure_with_uncertain_close_holds(variant: str) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1026:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m04_validation_failure_with_uncertain_close_holds[not-regular]" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">variant = 'not-regular'
+
+    @pytest.mark.parametrize("variant", ["sha", "not-regular"])
+    def test_m04_validation_failure_with_uncertain_close_holds(variant: str) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1026:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m05_bind_once_with_exact_owner_and_cross_pins" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">def test_m05_bind_once_with_exact_owner_and_cross_pins() -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1043:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m06_bootstrap_order_and_guard_is_the_first_port" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">def test_m06_bootstrap_order_and_guard_is_the_first_port() -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1074:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m06_guard_precedes_pure_load_and_lab_init_secret" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">def test_m06_guard_precedes_pure_load_and_lab_init_secret() -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1097:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m06_pure_open_failure_keeps_unknown_ticket_and_holds" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">def test_m06_pure_open_failure_keeps_unknown_ticket_and_holds() -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1117:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m06_build_ports_binds_exact_owned_objects" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">def test_m06_build_ports_binds_exact_owned_objects() -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1131:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m07_guard_binding_forwards_exact_arguments" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">def test_m07_guard_binding_forwards_exact_arguments() -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1156:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m07_signal_during_guard_is_only_marked_then_observed_cooperatively" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">def test_m07_signal_during_guard_is_only_marked_then_observed_cooperatively() -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1167:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m08_read_init_owns_header_and_body_without_read_ahead" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">def test_m08_read_init_owns_header_and_body_without_read_ahead() -&gt; None:
+        fake = FakeOS()
+&gt;       _, link = linked(fake)
+                  ^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:1186:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:535: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:527: in bound_root
+    ns = main()
+         ^^^^^^
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m08_invalid_init_header_returns_only_the_header[magic]" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">header = b'MGI0\x00\x00\x00\n'
+
+    @pytest.mark.parametrize(
+        "header",
+        [d1.INIT_HEADER.pack(b"MGI0", 10), d1.INIT_HEADER.pack(b"MGI1", 65537)],
+        ids=["magic", "length"],
+    )
+    def test_m08_invalid_init_header_returns_only_the_header(header: bytes) -&gt; None:
+        fake = FakeOS()
+&gt;       _, link = linked(fake)
+                  ^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:1205:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:535: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:527: in bound_root
+    ns = main()
+         ^^^^^^
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m08_invalid_init_header_returns_only_the_header[length]" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">header = b'MGI1\x00\x01\x00\x01'
+
+    @pytest.mark.parametrize(
+        "header",
+        [d1.INIT_HEADER.pack(b"MGI0", 10), d1.INIT_HEADER.pack(b"MGI1", 65537)],
+        ids=["magic", "length"],
+    )
+    def test_m08_invalid_init_header_returns_only_the_header(header: bytes) -&gt; None:
+        fake = FakeOS()
+&gt;       _, link = linked(fake)
+                  ^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:1205:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:535: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:527: in bound_root
+    ns = main()
+         ^^^^^^
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m08_partial_or_late_init_is_closed_and_poisons[eof-mid]" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">variant = 'eof-mid'
+
+    @pytest.mark.parametrize("variant", sorted(READ_FAILURES))
+    def test_m08_partial_or_late_init_is_closed_and_poisons(variant: str) -&gt; None:
+        fake = FakeOS()
+&gt;       _, link = linked(fake)
+                  ^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:1235:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:535: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:527: in bound_root
+    ns = main()
+         ^^^^^^
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m08_partial_or_late_init_is_closed_and_poisons[expired-mid]" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">variant = 'expired-mid'
+
+    @pytest.mark.parametrize("variant", sorted(READ_FAILURES))
+    def test_m08_partial_or_late_init_is_closed_and_poisons(variant: str) -&gt; None:
+        fake = FakeOS()
+&gt;       _, link = linked(fake)
+                  ^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:1235:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:535: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:527: in bound_root
+    ns = main()
+         ^^^^^^
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m08_partial_or_late_init_is_closed_and_poisons[late]" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">variant = 'late'
+
+    @pytest.mark.parametrize("variant", sorted(READ_FAILURES))
+    def test_m08_partial_or_late_init_is_closed_and_poisons(variant: str) -&gt; None:
+        fake = FakeOS()
+&gt;       _, link = linked(fake)
+                  ^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:1235:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:535: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:527: in bound_root
+    ns = main()
+         ^^^^^^
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m08_eof_or_io_before_any_byte_returns_none" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">def test_m08_eof_or_io_before_any_byte_returns_none() -&gt; None:
+        fake = FakeOS()
+&gt;       _, link = linked(fake)
+                  ^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:1252:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:535: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:527: in bound_root
+    ns = main()
+         ^^^^^^
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m09_read_control_exact_sixteen_bytes" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">def test_m09_read_control_exact_sixteen_bytes() -&gt; None:
+        fake = FakeOS()
+&gt;       _, link = linked(fake)
+                  ^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:1266:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:535: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:527: in bound_root
+    ns = main()
+         ^^^^^^
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m09_frame_completed_at_deadline_is_not_delivered" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">def test_m09_frame_completed_at_deadline_is_not_delivered() -&gt; None:
+        fake = FakeOS()
+&gt;       _, link = linked(fake)
+                  ^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:1281:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:535: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:527: in bound_root
+    ns = main()
+         ^^^^^^
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m10_invalid_lines_refused_without_io[empty]" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">line = b''
+
+    @pytest.mark.parametrize(
+        "line",
+        [b"", b"a" * 512, b"a\nb", b"a\rb", b"\xc3\xa9", "text"],
+        ids=["empty", "512", "lf", "cr", "non-ascii", "str"],
+    )
+    def test_m10_invalid_lines_refused_without_io(line: Any) -&gt; None:
+        fake = FakeOS()
+&gt;       _, link = linked(fake)
+                  ^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:1300:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:535: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:527: in bound_root
+    ns = main()
+         ^^^^^^
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m10_invalid_lines_refused_without_io[512]" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">line = b'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+
+    @pytest.mark.parametrize(
+        "line",
+        [b"", b"a" * 512, b"a\nb", b"a\rb", b"\xc3\xa9", "text"],
+        ids=["empty", "512", "lf", "cr", "non-ascii", "str"],
+    )
+    def test_m10_invalid_lines_refused_without_io(line: Any) -&gt; None:
+        fake = FakeOS()
+&gt;       _, link = linked(fake)
+                  ^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:1300:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:535: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:527: in bound_root
+    ns = main()
+         ^^^^^^
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m10_invalid_lines_refused_without_io[lf]" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">line = b'a\nb'
+
+    @pytest.mark.parametrize(
+        "line",
+        [b"", b"a" * 512, b"a\nb", b"a\rb", b"\xc3\xa9", "text"],
+        ids=["empty", "512", "lf", "cr", "non-ascii", "str"],
+    )
+    def test_m10_invalid_lines_refused_without_io(line: Any) -&gt; None:
+        fake = FakeOS()
+&gt;       _, link = linked(fake)
+                  ^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:1300:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:535: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:527: in bound_root
+    ns = main()
+         ^^^^^^
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m10_invalid_lines_refused_without_io[cr]" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">line = b'a\rb'
+
+    @pytest.mark.parametrize(
+        "line",
+        [b"", b"a" * 512, b"a\nb", b"a\rb", b"\xc3\xa9", "text"],
+        ids=["empty", "512", "lf", "cr", "non-ascii", "str"],
+    )
+    def test_m10_invalid_lines_refused_without_io(line: Any) -&gt; None:
+        fake = FakeOS()
+&gt;       _, link = linked(fake)
+                  ^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:1300:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:535: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:527: in bound_root
+    ns = main()
+         ^^^^^^
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m10_invalid_lines_refused_without_io[non-ascii]" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">line = b'\xc3\xa9'
+
+    @pytest.mark.parametrize(
+        "line",
+        [b"", b"a" * 512, b"a\nb", b"a\rb", b"\xc3\xa9", "text"],
+        ids=["empty", "512", "lf", "cr", "non-ascii", "str"],
+    )
+    def test_m10_invalid_lines_refused_without_io(line: Any) -&gt; None:
+        fake = FakeOS()
+&gt;       _, link = linked(fake)
+                  ^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:1300:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:535: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:527: in bound_root
+    ns = main()
+         ^^^^^^
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m10_invalid_lines_refused_without_io[str]" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">line = 'text'
+
+    @pytest.mark.parametrize(
+        "line",
+        [b"", b"a" * 512, b"a\nb", b"a\rb", b"\xc3\xa9", "text"],
+        ids=["empty", "512", "lf", "cr", "non-ascii", "str"],
+    )
+    def test_m10_invalid_lines_refused_without_io(line: Any) -&gt; None:
+        fake = FakeOS()
+&gt;       _, link = linked(fake)
+                  ^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:1300:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:535: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:527: in bound_root
+    ns = main()
+         ^^^^^^
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m10_payload_511_plus_lf_and_56_line_cap" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">def test_m10_payload_511_plus_lf_and_56_line_cap() -&gt; None:
+        fake = FakeOS()
+&gt;       _, link = linked(fake)
+                  ^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:1308:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:535: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:527: in bound_root
+    ns = main()
+         ^^^^^^
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m10_short_writes_complete_line" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">def test_m10_short_writes_complete_line() -&gt; None:
+        fake = FakeOS()
+&gt;       _, link = linked(fake)
+                  ^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:1321:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:535: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:527: in bound_root
+    ns = main()
+         ^^^^^^
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m10_blocked_or_broken_write_poisons[blocked]" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">mode = 'blocked'
+
+    @pytest.mark.parametrize("mode", ["blocked", "epipe"])
+    def test_m10_blocked_or_broken_write_poisons(mode: str) -&gt; None:
+        fake = FakeOS()
+&gt;       _, link = linked(fake)
+                  ^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:1330:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:535: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:527: in bound_root
+    ns = main()
+         ^^^^^^
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m10_blocked_or_broken_write_poisons[epipe]" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">mode = 'epipe'
+
+    @pytest.mark.parametrize("mode", ["blocked", "epipe"])
+    def test_m10_blocked_or_broken_write_poisons(mode: str) -&gt; None:
+        fake = FakeOS()
+&gt;       _, link = linked(fake)
+                  ^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:1330:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:535: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:527: in bound_root
+    ns = main()
+         ^^^^^^
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m11_second_reader_poisons_in_flight_frame" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">def test_m11_second_reader_poisons_in_flight_frame() -&gt; None:
+        fake = FakeOS()
+&gt;       _, link = linked(fake)
+                  ^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:1350:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:535: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:527: in bound_root
+    ns = main()
+         ^^^^^^
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m11_poison_observed_during_write_never_returns_true" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">def test_m11_poison_observed_during_write_never_returns_true() -&gt; None:
+        fake = FakeOS()
+&gt;       _, link = linked(fake)
+                  ^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:1377:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:535: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:527: in bound_root
+    ns = main()
+         ^^^^^^
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m11_t4_handoff_one_frame_each_without_overlap" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">def test_m11_t4_handoff_one_frame_each_without_overlap() -&gt; None:
+        fake = FakeOS()
+&gt;       _, link = linked(fake)
+                  ^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:1391:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:535: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:527: in bound_root
+    ns = main()
+         ^^^^^^
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m12_retire_refused_while_reader_holds_the_frame" time="0.003"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">def test_m12_retire_refused_while_reader_holds_the_frame() -&gt; None:
+        fake = FakeOS()
+&gt;       root, link = linked(fake)
+                     ^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:1406:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:535: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:527: in bound_root
+    ns = main()
+         ^^^^^^
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m12_retire_clears_only_original_slot_and_stops_io" time="0.003"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">def test_m12_retire_clears_only_original_slot_and_stops_io() -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1417:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m13_pair_reserves_both_slots_first_and_owns_exact_objects" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">def test_m13_pair_reserves_both_slots_first_and_owns_exact_objects() -&gt; None:
+        fake = FakeOS()
+&gt;       root, _ = linked(fake)
+                  ^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:1444:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:535: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:527: in bound_root
+    ns = main()
+         ^^^^^^
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m13_pair_failures_keep_ownership" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">def test_m13_pair_failures_keep_ownership() -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1474:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m13_unverified_close_keeps_slot_owned[raise]" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">mode = 'raise'
+
+    @pytest.mark.parametrize("mode", ["raise", "lie"])
+    def test_m13_unverified_close_keeps_slot_owned(mode: str) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1491:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m13_unverified_close_keeps_slot_owned[lie]" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">mode = 'lie'
+
+    @pytest.mark.parametrize("mode", ["raise", "lie"])
+    def test_m13_unverified_close_keeps_slot_owned(mode: str) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1491:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m14_thread_owned_before_return_and_verified_join" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">def test_m14_thread_owned_before_return_and_verified_join() -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1510:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m14_finish_before_start_returns_and_target_control_contained" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">def test_m14_finish_before_start_returns_and_target_control_contained() -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1530:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m14_start_failure_and_occupied_slot_retain" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">def test_m14_start_failure_and_occupied_slot_retain() -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1545:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m14_stuck_join_times_out_and_retains" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">def test_m14_stuck_join_times_out_and_retains() -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1562:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m14_interrupted_join_retains_even_if_thread_looks_closed[error]" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">failure = &lt;class 'tests.test_oracle9_w1_main.FakeFailure'&gt;
+
+    @pytest.mark.parametrize("failure", [FakeFailure, KeyboardInterrupt], ids=["error", "control"])
+    def test_m14_interrupted_join_retains_even_if_thread_looks_closed(
+        failure: type[BaseException],
+    ) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1578:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m14_interrupted_join_retains_even_if_thread_looks_closed[control]" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">failure = &lt;class 'KeyboardInterrupt'&gt;
+
+    @pytest.mark.parametrize("failure", [FakeFailure, KeyboardInterrupt], ids=["error", "control"])
+    def test_m14_interrupted_join_retains_even_if_thread_looks_closed(
+        failure: type[BaseException],
+    ) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1578:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m15_factory_returns_exact_worker_session_and_refuses_second_ledger" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x00000180B5349010&gt;
+
+    def test_m15_factory_returns_exact_worker_session_and_refuses_second_ledger(
+        monkeypatch: pytest.MonkeyPatch,
+    ) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1597:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m16_absolute_clock_and_session_ids" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">def test_m16_absolute_clock_and_session_ids() -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1618:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m17_unsafe_facts_never_exit[bad-session]" time="0.003"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">variant = 'bad-session'
+
+    @pytest.mark.parametrize("variant", sorted(UNSAFE))
+    def test_m17_unsafe_facts_never_exit(variant: str) -&gt; None:
+        fake = FakeOS()
+&gt;       root = clean_root(fake)
+               ^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:1705:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:611: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:535: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:527: in bound_root
+    ns = main()
+         ^^^^^^
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m17_unsafe_facts_never_exit[foreign-result]" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">variant = 'foreign-result'
+
+    @pytest.mark.parametrize("variant", sorted(UNSAFE))
+    def test_m17_unsafe_facts_never_exit(variant: str) -&gt; None:
+        fake = FakeOS()
+&gt;       root = clean_root(fake)
+               ^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:1705:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:611: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:535: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:527: in bound_root
+    ns = main()
+         ^^^^^^
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m17_unsafe_facts_never_exit[ledger-session]" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">variant = 'ledger-session'
+
+    @pytest.mark.parametrize("variant", sorted(UNSAFE))
+    def test_m17_unsafe_facts_never_exit(variant: str) -&gt; None:
+        fake = FakeOS()
+&gt;       root = clean_root(fake)
+               ^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:1705:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:611: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:535: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:527: in bound_root
+    ns = main()
+         ^^^^^^
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m17_unsafe_facts_never_exit[no-decision]" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">variant = 'no-decision'
+
+    @pytest.mark.parametrize("variant", sorted(UNSAFE))
+    def test_m17_unsafe_facts_never_exit(variant: str) -&gt; None:
+        fake = FakeOS()
+&gt;       root = clean_root(fake)
+               ^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:1705:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:611: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:535: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:527: in bound_root
+    ns = main()
+         ^^^^^^
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m17_unsafe_facts_never_exit[owner-handle]" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">variant = 'owner-handle'
+
+    @pytest.mark.parametrize("variant", sorted(UNSAFE))
+    def test_m17_unsafe_facts_never_exit(variant: str) -&gt; None:
+        fake = FakeOS()
+&gt;       root = clean_root(fake)
+               ^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:1705:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:611: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:535: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:527: in bound_root
+    ns = main()
+         ^^^^^^
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m17_unsafe_facts_never_exit[owner-session]" time="0.003"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">variant = 'owner-session'
+
+    @pytest.mark.parametrize("variant", sorted(UNSAFE))
+    def test_m17_unsafe_facts_never_exit(variant: str) -&gt; None:
+        fake = FakeOS()
+&gt;       root = clean_root(fake)
+               ^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:1705:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:611: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:535: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:527: in bound_root
+    ns = main()
+         ^^^^^^
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m17_unsafe_facts_never_exit[owner-unknown]" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">variant = 'owner-unknown'
+
+    @pytest.mark.parametrize("variant", sorted(UNSAFE))
+    def test_m17_unsafe_facts_never_exit(variant: str) -&gt; None:
+        fake = FakeOS()
+&gt;       root = clean_root(fake)
+               ^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:1705:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:611: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:535: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:527: in bound_root
+    ns = main()
+         ^^^^^^
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m17_unsafe_facts_never_exit[pair-unknown]" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">variant = 'pair-unknown'
+
+    @pytest.mark.parametrize("variant", sorted(UNSAFE))
+    def test_m17_unsafe_facts_never_exit(variant: str) -&gt; None:
+        fake = FakeOS()
+&gt;       root = clean_root(fake)
+               ^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:1705:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:611: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:535: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:527: in bound_root
+    ns = main()
+         ^^^^^^
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m17_unsafe_facts_never_exit[retained]" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">variant = 'retained'
+
+    @pytest.mark.parametrize("variant", sorted(UNSAFE))
+    def test_m17_unsafe_facts_never_exit(variant: str) -&gt; None:
+        fake = FakeOS()
+&gt;       root = clean_root(fake)
+               ^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:1705:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:611: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:535: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:527: in bound_root
+    ns = main()
+         ^^^^^^
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m17_unsafe_facts_never_exit[thread]" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">variant = 'thread'
+
+    @pytest.mark.parametrize("variant", sorted(UNSAFE))
+    def test_m17_unsafe_facts_never_exit(variant: str) -&gt; None:
+        fake = FakeOS()
+&gt;       root = clean_root(fake)
+               ^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:1705:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:611: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:535: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:527: in bound_root
+    ns = main()
+         ^^^^^^
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m17_unsafe_facts_never_exit[ticket]" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">variant = 'ticket'
+
+    @pytest.mark.parametrize("variant", sorted(UNSAFE))
+    def test_m17_unsafe_facts_never_exit(variant: str) -&gt; None:
+        fake = FakeOS()
+&gt;       root = clean_root(fake)
+               ^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:1705:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:611: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:535: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:527: in bound_root
+    ns = main()
+         ^^^^^^
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m17_logical_generation_refs_and_control_stay_safe" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">def test_m17_logical_generation_refs_and_control_stay_safe() -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1712:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m17_unretired_link_and_live_session_are_unsafe" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x00000180B61320D0&gt;
+
+    def test_m17_unretired_link_and_live_session_are_unsafe(monkeypatch: pytest.MonkeyPatch) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1728:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m18_early_setup_failures_and_controls[signal-FakeFailure-64-SETUP_FAILED-None]" time="0.003"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">op = 'signal', failure = &lt;class 'tests.test_oracle9_w1_main.FakeFailure'&gt;
+code = 64, outcome = 'SETUP_FAILED', control = None
+
+    @pytest.mark.parametrize(
+        ("op", "failure", "code", "outcome", "control"),
+        [
+            ("signal", FakeFailure, 64, "SETUP_FAILED", None),
+            ("signal", KeyboardInterrupt, 70, None, "KeyboardInterrupt"),
+            ("silence", FakeFailure, 64, "SETUP_FAILED", None),
+            ("silence", SystemExit, 70, None, "SystemExit"),
+        ],
+    )
+    def test_m18_early_setup_failures_and_controls(
+        op: str, failure: type[BaseException], code: int, outcome: str | None, control: str | None
+    ) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1755:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m18_early_setup_failures_and_controls[signal-KeyboardInterrupt-70-None-KeyboardInterrupt]" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">op = 'signal', failure = &lt;class 'KeyboardInterrupt'&gt;, code = 70, outcome = None
+control = 'KeyboardInterrupt'
+
+    @pytest.mark.parametrize(
+        ("op", "failure", "code", "outcome", "control"),
+        [
+            ("signal", FakeFailure, 64, "SETUP_FAILED", None),
+            ("signal", KeyboardInterrupt, 70, None, "KeyboardInterrupt"),
+            ("silence", FakeFailure, 64, "SETUP_FAILED", None),
+            ("silence", SystemExit, 70, None, "SystemExit"),
+        ],
+    )
+    def test_m18_early_setup_failures_and_controls(
+        op: str, failure: type[BaseException], code: int, outcome: str | None, control: str | None
+    ) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1755:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m18_early_setup_failures_and_controls[silence-FakeFailure-64-SETUP_FAILED-None]" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">op = 'silence', failure = &lt;class 'tests.test_oracle9_w1_main.FakeFailure'&gt;
+code = 64, outcome = 'SETUP_FAILED', control = None
+
+    @pytest.mark.parametrize(
+        ("op", "failure", "code", "outcome", "control"),
+        [
+            ("signal", FakeFailure, 64, "SETUP_FAILED", None),
+            ("signal", KeyboardInterrupt, 70, None, "KeyboardInterrupt"),
+            ("silence", FakeFailure, 64, "SETUP_FAILED", None),
+            ("silence", SystemExit, 70, None, "SystemExit"),
+        ],
+    )
+    def test_m18_early_setup_failures_and_controls(
+        op: str, failure: type[BaseException], code: int, outcome: str | None, control: str | None
+    ) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1755:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m18_early_setup_failures_and_controls[silence-SystemExit-70-None-SystemExit]" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">op = 'silence', failure = &lt;class 'SystemExit'&gt;, code = 70, outcome = None
+control = 'SystemExit'
+
+    @pytest.mark.parametrize(
+        ("op", "failure", "code", "outcome", "control"),
+        [
+            ("signal", FakeFailure, 64, "SETUP_FAILED", None),
+            ("signal", KeyboardInterrupt, 70, None, "KeyboardInterrupt"),
+            ("silence", FakeFailure, 64, "SETUP_FAILED", None),
+            ("silence", SystemExit, 70, None, "SystemExit"),
+        ],
+    )
+    def test_m18_early_setup_failures_and_controls(
+        op: str, failure: type[BaseException], code: int, outcome: str | None, control: str | None
+    ) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1755:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m18_link_setup_after_state_change_holds_with_bound_root[error]" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">failure = &lt;class 'tests.test_oracle9_w1_main.FakeFailure'&gt;
+
+    @pytest.mark.parametrize("failure", [FakeFailure, KeyboardInterrupt], ids=["error", "control"])
+    def test_m18_link_setup_after_state_change_holds_with_bound_root(
+        failure: type[BaseException],
+    ) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1775:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m18_link_setup_after_state_change_holds_with_bound_root[control]" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">failure = &lt;class 'KeyboardInterrupt'&gt;
+
+    @pytest.mark.parametrize("failure", [FakeFailure, KeyboardInterrupt], ids=["error", "control"])
+    def test_m18_link_setup_after_state_change_holds_with_bound_root(
+        failure: type[BaseException],
+    ) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1775:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m18_link_refused_before_fd_change_is_clean_66[tty]" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">variant = 'tty'
+
+    @pytest.mark.parametrize("variant", ["tty", "regular"])
+    def test_m18_link_refused_before_fd_change_is_clean_66(variant: str) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1788:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m18_link_refused_before_fd_change_is_clean_66[regular]" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">variant = 'regular'
+
+    @pytest.mark.parametrize("variant", ["tty", "regular"])
+    def test_m18_link_refused_before_fd_change_is_clean_66(variant: str) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1788:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m18_control_from_guard_port_is_contained_without_rerun" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">def test_m18_control_from_guard_port_is_contained_without_rerun() -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1803:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m18_late_control_preserves_only_emitted_driver_prefix" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">def test_m18_late_control_preserves_only_emitted_driver_prefix() -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1823:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m19_permanent_handler_is_sticky_and_non_raising" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">def test_m19_permanent_handler_is_sticky_and_non_raising() -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1845:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m19_main_signal_only_at_cooperative_boundaries[reader]" time="0.004"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">point = 'reader'
+
+    @pytest.mark.parametrize(
+        "point",
+        ["reader", "factory", "pair", "threads", "read_control", "read_init", "sleep_until"],
+    )
+    def test_m19_main_signal_only_at_cooperative_boundaries(point: str) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1886:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m19_main_signal_only_at_cooperative_boundaries[factory]" time="0.004"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">point = 'factory'
+
+    @pytest.mark.parametrize(
+        "point",
+        ["reader", "factory", "pair", "threads", "read_control", "read_init", "sleep_until"],
+    )
+    def test_m19_main_signal_only_at_cooperative_boundaries(point: str) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1886:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m19_main_signal_only_at_cooperative_boundaries[pair]" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">point = 'pair'
+
+    @pytest.mark.parametrize(
+        "point",
+        ["reader", "factory", "pair", "threads", "read_control", "read_init", "sleep_until"],
+    )
+    def test_m19_main_signal_only_at_cooperative_boundaries(point: str) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1886:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m19_main_signal_only_at_cooperative_boundaries[threads]" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">point = 'threads'
+
+    @pytest.mark.parametrize(
+        "point",
+        ["reader", "factory", "pair", "threads", "read_control", "read_init", "sleep_until"],
+    )
+    def test_m19_main_signal_only_at_cooperative_boundaries(point: str) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1886:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m19_main_signal_only_at_cooperative_boundaries[read_control]" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">point = 'read_control'
+
+    @pytest.mark.parametrize(
+        "point",
+        ["reader", "factory", "pair", "threads", "read_control", "read_init", "sleep_until"],
+    )
+    def test_m19_main_signal_only_at_cooperative_boundaries(point: str) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1886:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m19_main_signal_only_at_cooperative_boundaries[read_init]" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">point = 'read_init'
+
+    @pytest.mark.parametrize(
+        "point",
+        ["reader", "factory", "pair", "threads", "read_control", "read_init", "sleep_until"],
+    )
+    def test_m19_main_signal_only_at_cooperative_boundaries(point: str) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1886:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m19_main_signal_only_at_cooperative_boundaries[sleep_until]" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">point = 'sleep_until'
+
+    @pytest.mark.parametrize(
+        "point",
+        ["reader", "factory", "pair", "threads", "read_control", "read_init", "sleep_until"],
+    )
+    def test_m19_main_signal_only_at_cooperative_boundaries(point: str) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1886:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m19_watcher_and_cleanup_paths_never_raise_main_signal" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">def test_m19_watcher_and_cleanup_paths_never_raise_main_signal() -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1906:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m19_closed_refusals_never_chain_active_caller_errors" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">def test_m19_closed_refusals_never_chain_active_caller_errors() -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1926:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m20_hold_step_pause_backoff_fault_and_saturation" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">def test_m20_hold_step_pause_backoff_fault_and_saturation() -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:1954:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m20_ast_hold_never_returns_and_entry_retains_its_root" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">def test_m20_ast_hold_never_returns_and_entry_retains_its_root() -&gt; None:
+&gt;       tree = main_tree()
+               ^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:1978:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:625: in main_tree
+    return ast.parse(MAIN_FILE.read_text(encoding="utf-8"))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\pathlib.py:1058: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = WindowsPath('C:/Users/w.filho/Desktop/codes/mask/deploy/oracle9_w1_main.py')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+&gt;       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\pathlib.py:1044: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m20_decision_value_is_frozen_and_closed" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">def test_m20_decision_value_is_frozen_and_closed() -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:2021:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m20_absent_foreign_or_incoherent_decision_never_exits[none]" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">variant = 'none'
+
+    @pytest.mark.parametrize(
+        "variant",
+        [
+            "none",
+            "lookalike",
+            "exit-none",
+            "exit-bool",
+            "exit-low",
+            "exit-high",
+            "exit-float",
+            "hold-code",
+            "lowercase",
+            "str-subclass",
+        ],
+    )
+    def test_m20_absent_foreign_or_incoherent_decision_never_exits(variant: str) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:2052:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m20_absent_foreign_or_incoherent_decision_never_exits[lookalike]" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">variant = 'lookalike'
+
+    @pytest.mark.parametrize(
+        "variant",
+        [
+            "none",
+            "lookalike",
+            "exit-none",
+            "exit-bool",
+            "exit-low",
+            "exit-high",
+            "exit-float",
+            "hold-code",
+            "lowercase",
+            "str-subclass",
+        ],
+    )
+    def test_m20_absent_foreign_or_incoherent_decision_never_exits(variant: str) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:2052:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m20_absent_foreign_or_incoherent_decision_never_exits[exit-none]" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">variant = 'exit-none'
+
+    @pytest.mark.parametrize(
+        "variant",
+        [
+            "none",
+            "lookalike",
+            "exit-none",
+            "exit-bool",
+            "exit-low",
+            "exit-high",
+            "exit-float",
+            "hold-code",
+            "lowercase",
+            "str-subclass",
+        ],
+    )
+    def test_m20_absent_foreign_or_incoherent_decision_never_exits(variant: str) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:2052:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m20_absent_foreign_or_incoherent_decision_never_exits[exit-bool]" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">variant = 'exit-bool'
+
+    @pytest.mark.parametrize(
+        "variant",
+        [
+            "none",
+            "lookalike",
+            "exit-none",
+            "exit-bool",
+            "exit-low",
+            "exit-high",
+            "exit-float",
+            "hold-code",
+            "lowercase",
+            "str-subclass",
+        ],
+    )
+    def test_m20_absent_foreign_or_incoherent_decision_never_exits(variant: str) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:2052:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m20_absent_foreign_or_incoherent_decision_never_exits[exit-low]" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">variant = 'exit-low'
+
+    @pytest.mark.parametrize(
+        "variant",
+        [
+            "none",
+            "lookalike",
+            "exit-none",
+            "exit-bool",
+            "exit-low",
+            "exit-high",
+            "exit-float",
+            "hold-code",
+            "lowercase",
+            "str-subclass",
+        ],
+    )
+    def test_m20_absent_foreign_or_incoherent_decision_never_exits(variant: str) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:2052:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m20_absent_foreign_or_incoherent_decision_never_exits[exit-high]" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">variant = 'exit-high'
+
+    @pytest.mark.parametrize(
+        "variant",
+        [
+            "none",
+            "lookalike",
+            "exit-none",
+            "exit-bool",
+            "exit-low",
+            "exit-high",
+            "exit-float",
+            "hold-code",
+            "lowercase",
+            "str-subclass",
+        ],
+    )
+    def test_m20_absent_foreign_or_incoherent_decision_never_exits(variant: str) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:2052:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m20_absent_foreign_or_incoherent_decision_never_exits[exit-float]" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">variant = 'exit-float'
+
+    @pytest.mark.parametrize(
+        "variant",
+        [
+            "none",
+            "lookalike",
+            "exit-none",
+            "exit-bool",
+            "exit-low",
+            "exit-high",
+            "exit-float",
+            "hold-code",
+            "lowercase",
+            "str-subclass",
+        ],
+    )
+    def test_m20_absent_foreign_or_incoherent_decision_never_exits(variant: str) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:2052:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m20_absent_foreign_or_incoherent_decision_never_exits[hold-code]" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">variant = 'hold-code'
+
+    @pytest.mark.parametrize(
+        "variant",
+        [
+            "none",
+            "lookalike",
+            "exit-none",
+            "exit-bool",
+            "exit-low",
+            "exit-high",
+            "exit-float",
+            "hold-code",
+            "lowercase",
+            "str-subclass",
+        ],
+    )
+    def test_m20_absent_foreign_or_incoherent_decision_never_exits(variant: str) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:2052:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m20_absent_foreign_or_incoherent_decision_never_exits[lowercase]" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">variant = 'lowercase'
+
+    @pytest.mark.parametrize(
+        "variant",
+        [
+            "none",
+            "lookalike",
+            "exit-none",
+            "exit-bool",
+            "exit-low",
+            "exit-high",
+            "exit-float",
+            "hold-code",
+            "lowercase",
+            "str-subclass",
+        ],
+    )
+    def test_m20_absent_foreign_or_incoherent_decision_never_exits(variant: str) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:2052:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m20_absent_foreign_or_incoherent_decision_never_exits[str-subclass]" time="0.004"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">variant = 'str-subclass'
+
+    @pytest.mark.parametrize(
+        "variant",
+        [
+            "none",
+            "lookalike",
+            "exit-none",
+            "exit-bool",
+            "exit-low",
+            "exit-high",
+            "exit-float",
+            "hold-code",
+            "lowercase",
+            "str-subclass",
+        ],
+    )
+    def test_m20_absent_foreign_or_incoherent_decision_never_exits(variant: str) -&gt; None:
+&gt;       ns = main()
+             ^^^^^^
+
+tests\test_oracle9_w1_main.py:2052:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m21_pinned_driver_and_real_session_two_results_then_eof_exit_68" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x00000180B617C6D0&gt;
+
+    def test_m21_pinned_driver_and_real_session_two_results_then_eof_exit_68(
+        monkeypatch: pytest.MonkeyPatch,
+    ) -&gt; None:
+        fake = FakeOS()
+&gt;       root, decision, hub, key = integrate(monkeypatch, fake)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:2075:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:648: in integrate
+    ns = main()
+         ^^^^^^
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_m22_retained_run_holds_same_root_owner_and_resources" time="0.002"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x00000180B64D57D0&gt;
+
+    def test_m22_retained_run_holds_same_root_owner_and_resources(
+        monkeypatch: pytest.MonkeyPatch,
+    ) -&gt; None:
+        fake = FakeOS()
+        fake.fail["thread_start"] = {"sink": FakeFailure()}
+&gt;       root, decision, _, _ = integrate(monkeypatch, fake)
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:2122:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:648: in integrate
+    ns = main()
+         ^^^^^^
+tests\test_oracle9_w1_main.py:171: in main
+    return runpy.run_path(str(MAIN_FILE), run_name="_lab_test")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen runpy&gt;:290: in run_path
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+run_name = '_lab_test'
+fname = 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\w.filho\\Desktop\\codes\\mask\\deploy\\oracle9_w1_main.py'
+
+&lt;frozen runpy&gt;:254: FileNotFoundError</failure></testcase></testsuite></testsuites>

@@ -1,0 +1,88 @@
+{
+  "head_before_publication": "5590b59d6e3d4a4648227e9c2cda2d96853c23dd",
+  "author": "Claude2 sole programmer, session51ea0d85-05bb-4d24-ba9a-c9627c3f832f, claude-opus-5-5 effort medium",
+  "reviewer": "root",
+  "executions": [
+    {
+      "id": 31468,
+      "exit_code": 0
+    },
+    {
+      "id": 69483,
+      "exit_code": 0
+    }
+  ],
+  "runtime": "3.11.3 (tags/v3.11.3:f3909b8, Apr  4 2023, 23:49:59) [MSC v.1934 64 bit (AMD64)]",
+  "test": {
+    "path": "tests/test_oracle9_w1_main.py",
+    "sha256": "1723ef505be6d407862b60c5e53b0198ee46bb96d81095f4532339152d6ddeda",
+    "bytes": 92893,
+    "lines": 2565,
+    "snapshot": "r1-1723ef50.py.txt",
+    "publication": "snapshot data only; discoverable test stays local until matching source is reviewed, to avoid adding expected RED to remote CI"
+  },
+  "initial_red": {
+    "tests": 118,
+    "passed": 3,
+    "failures": 115,
+    "missing_main": 114,
+    "harness_failure": 1,
+    "seconds": 18.255
+  },
+  "frozen_red": {
+    "tests": 145,
+    "passed": 5,
+    "failures": 140,
+    "missing_main": 140,
+    "errors": 0,
+    "skips": 0,
+    "xfail": 0,
+    "seconds": 24.877,
+    "exit_code": 1
+  },
+  "related": {
+    "tests": 429,
+    "passed": 429,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0,
+    "xfail": 0,
+    "seconds": 2.646,
+    "exit_code": 0
+  },
+  "statics": [
+    {
+      "gate": "ruff-all",
+      "exit_code": 0,
+      "output": "All checks passed!\n"
+    },
+    {
+      "gate": "format-all",
+      "exit_code": 0,
+      "output": "361 files already formatted\n"
+    },
+    {
+      "gate": "mypy-all311",
+      "exit_code": 0,
+      "output": "Success: no issues found in 361 source files\r\n"
+    },
+    {
+      "gate": "mypy-all314",
+      "exit_code": 0,
+      "output": "Success: no issues found in 361 source files\r\n"
+    }
+  ],
+  "main_absent": true,
+  "protected_count": 25,
+  "app_count": 124,
+  "changed_protected": [],
+  "limits": [
+    "Expected absence RED proves no main behavior",
+    "Fake OS, Windows CPython3.11.3 only; no physical/native/Oracle runtime test",
+    "Ledger.failed and quarantine branch not exercised independently; output_pin shares SESSION guard",
+    "Negative watcher join is finite binding composition, not full T4 or concurrency proof",
+    "Infinite hold only AST; entry EXIT uses fake System and test-only hold tripwire",
+    "No Docker, PG, SQL, production ingress or deployment",
+    "B1/B2/D090gate2/C1/T5/readmission/production remain open"
+  ]
+}

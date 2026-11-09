@@ -1,0 +1,22 @@
+[
+  {
+    "gate": "ruff-all",
+    "exit_code": 0,
+    "output": "All checks passed!\n"
+  },
+  {
+    "gate": "format-all",
+    "exit_code": 0,
+    "output": "361 files already formatted\n"
+  },
+  {
+    "gate": "mypy-all311",
+    "exit_code": 0,
+    "output": "Success: no issues found in 361 source files\r\n"
+  },
+  {
+    "gate": "mypy-all314",
+    "exit_code": 0,
+    "output": "Success: no issues found in 361 source files\r\n"
+  }
+]

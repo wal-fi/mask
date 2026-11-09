@@ -1,0 +1,33 @@
+unformatted: File would be reformatted
+   --> tests\test_oracle9_w1_main.py:214:18
+    |
+213 | class FakeThread:
+    -     def __init__(
+    -         self, fake: FakeOS, target: Callable[[], object], name: str, daemon: bool
+    -     ) -> None:
+214 +     def __init__(self, fake: FakeOS, target: Callable[[], object], name: str, daemon: bool) -> None:
+215 |         self.fake, self.target, self.name, self.daemon = fake, target, name, daemon
+--------------------------------------------------------------------------------
+458 |
+    -     def thread_class(
+    -         self, *, target: Callable[[], object], name: str, daemon: bool
+    -     ) -> FakeThread:
+459 +     def thread_class(self, *, target: Callable[[], object], name: str, daemon: bool) -> FakeThread:
+460 |         self.enter("thread_class", name, name, daemon)
+--------------------------------------------------------------------------------
+577 |     if session:
+    -         ledger.reserve_session(
+    -             generation, worker_bytes=256 * MIB, parent_bytes=s2.PARENT_BYTES
+    -         )
+578 +         ledger.reserve_session(generation, worker_bytes=256 * MIB, parent_bytes=s2.PARENT_BYTES)
+579 |     return ledger
+--------------------------------------------------------------------------------
+585 |     ledger.publish(generation)
+    -     token = ledger.reserve_session(
+    -         generation, worker_bytes=256 * MIB, parent_bytes=s2.PARENT_BYTES
+    -     )
+586 +     token = ledger.reserve_session(generation, worker_bytes=256 * MIB, parent_bytes=s2.PARENT_BYTES)
+587 |     return ledger, token
+    |
+
+1 file would be reformatted

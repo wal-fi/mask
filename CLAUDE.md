@@ -1,5 +1,35 @@
 # AI Data Masking Gateway
 
+## W1 Oracle: testes do main revistos e RED congelado — 2026-11-09
+
+Retomada16h55UTC executou0, mensagem recebida, sem próximo disparo.
+CLI31468/69483 encerraram0 e foram recuperadas; zero escritor confirmado.
+Mesmo único Claude2/sessão51ea0d85/claude-opus-5-5/medium alterou somente
+o novo teste. Root leu2145linhas iniciais e todo delta922linhas final:
+1723ef50/92893bytes/2565linhas, teste congelado. Fonte main ainda ausente.
+
+RED145:5sanidades passam,140falhas apenas por ausência do main,24,877s;
+isso não prova comportamento.429relacionados passaram em2,646s, sem falhas/
+erros/skips/xfail. Ruff src/tests, format361 e mypy361 alvos3.11/3.14 limpos;
+runtime Windows3.11.3. Upstream25/app124 por SHA/tamanho intactos, estado16/
+attempt consumido fixos. Baseline118/3pass/115falhas e statics reprovados
+preservados. Oráculos de retire prematuro e B5/UNKNOWN corrigidos; INIT,
+cercas tardias, retenção e decisões fechadas ampliados. Evidência em
+MAIN-TESTS-REVIEW e oracle9-w1-main-tests-review-20261109/frozen-red145.json.
+
+Publicação somente docs/dados e snapshot exato r1-1723ef50.py.txt. O teste
+descobrível tests/test_oracle9_w1_main.py permanece local não rastreado até
+fonte correspondente revista; evita acrescentar RED esperado ao CI remoto
+e permite recuperar os mesmos bytes pelo snapshot. Nenhum source/main foi
+iniciado neste lote. Futuro lote: mesmo Claude2 escreve somente o main com
+teste fixo, após Git atual/zero escritor; ativo só monitorar e recuperar o
+terminal antes de nova chamada. Sem precisar de nova aprovação de rotina.
+Ledger.failed/quarentena não exercitados isoladamente, pin sobre SESSION
+não prova guarda independente; watcher negativo só composição finita.
+Hold sem fim só AST, não vida física. Nenhum Docker/PG/SQL/native/runtime/
+config/binário/privado/root/nonce/deploy. B1/B2/D090gate2/C1/T5/readmissão/
+ingressos/produção continuam abertos; Gateway indisponível. Histórico abaixo.
+
 ## W1 Oracle: quota antes dos testes do main; retomada registrada — 2026-11-09
 
 Partida HEAD/originac87cc4, main/teste ausentes, zero escritor. Revisão

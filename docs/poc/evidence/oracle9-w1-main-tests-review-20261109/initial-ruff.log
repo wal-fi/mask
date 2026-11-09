@@ -1,0 +1,19 @@
+S105 Possible hardcoded password assigned to: "CALLER_SECRET"
+   --> tests\test_oracle9_w1_main.py:165:17
+    |
+163 | ACK_FRAME = d1.frame(d1.ACK, 1, 2)
+164 | GUARD_LINE = d1.canonical(d1.GUARD_EVENT)
+165 | CALLER_SECRET = "SYNTHETIC-CALLER-SECRET-0002"  # closed synthetic text, no private data
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+166 | LEAKS = (DRIVER_PATH, PURE_PATH, CALLER_SECRET, d1.HMAC_KEY, d1.READONLY_HEX, d1.CANARY)
+    |
+
+N818 Exception name `FakeFailure` should be named with an Error suffix
+   --> tests\test_oracle9_w1_main.py:185:7
+    |
+185 | class FakeFailure(OSError):
+    |       ^^^^^^^^^^^
+186 |     """Synthetic ordinary failure of a fake OS call; carries no data."""
+    |
+
+Found 2 errors.
