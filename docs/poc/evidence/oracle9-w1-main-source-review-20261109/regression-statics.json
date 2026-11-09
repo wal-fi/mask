@@ -1,0 +1,22 @@
+[
+  {
+    "gate": "test-lint",
+    "exit_code": 0,
+    "output": "All checks passed!\n"
+  },
+  {
+    "gate": "test-format",
+    "exit_code": 0,
+    "output": "1 file already formatted\n"
+  },
+  {
+    "gate": "test-mypy311",
+    "exit_code": 0,
+    "output": "Success: no issues found in 1 source file\r\n"
+  },
+  {
+    "gate": "test-mypy314",
+    "exit_code": 0,
+    "output": "Success: no issues found in 1 source file\r\n"
+  }
+]

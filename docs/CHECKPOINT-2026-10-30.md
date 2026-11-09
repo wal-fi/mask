@@ -4,6 +4,44 @@ Criado por solicitação do usuário em2026-10-30. Inclui o trabalho acumulado
 após4a5e556, preservando resultados históricos e tentativas reprovadas. É
 checkpoint de desenvolvimento incompleto da Fase9, não release de produção.
 
+## W1 Oracle: main D2 implementado e revisto com SO simulado — 2026-11-09
+
+CLI49822/30651/28740 encerraram0 e foram recuperadas, zero escritor.
+Mesmo Claude2/sessão51ea0d85/claude-opus-5-5/medium programou sozinho.
+Root leu toda fonte inicial1122linhas e delta final:372f342f/36213bytes/
+1138linhas; teste5abe4582/101669bytes/2814linhas.145originais preservados
+como prefixo exato92893bytes;16regressões aditivas medidas RED161/145pass/
+16falhas antes do fix, após sondas independentes reproduzirem os três casos.
+
+Final161próprios2,150s e585relacionados4,206s passaram, zero falhas/erros/
+skips/xfail. Ruff src/tests, format361 e mypy361 alvos3.11/3.14 limpos;
+fonte deploy com lint restrito/format, fora do mypy. RuntimeWindows3.11.3.
+Sondas finais: zero callback estrangeiro, retire/safe_exit falsos durante
+write, retirement seguro depois; select IO fechado sem exceção original.
+Upstream25/app124 por SHA/tamanho intactos; estado16/attempt fixos.
+
+Aceito sob delegação somente como módulo/teste com SO simulado. Import
+define nomes; entry físico nunca executado. Writer único não reentrante
+da principal é premissa do driver pinado, não mutex entre threads.
+Sem Docker/PG/SQL/native/runtime/config/binário/privado/root/nonce/deploy.
+T5, expectativas, ponte host/fixture/frescor, readmissão, vida do hold/
+sinais/close físico e B1/B2/D090gate2/C1/ingressos/produção seguem abertos;
+Gateway indisponível. Evidência MAIN-SOURCE-REVIEW e dados
+oracle9-w1-main-source-review-20261109. Próximo: menor plano de integração
+Oracle sobre essas fontes já revistas, antes de novos efeitos. Históricos abaixo.
+
+Atualização explícita do usuário em2026-11-09: se Claude2 esgotar o
+limite, o assistente pode usar o Antigravity (agy) instalado nesta máquina,
+com Gemini Argon high ou Flash3.8 high conforme a tarefa e a disponibilidade
+confirmada. Substitui condicionalmente a exclusividade de Claude2 e a vedação
+histórica de outra ferramenta/modelo: confirmar que Claude2 encerrou, nunca
+duplicar escritores, transferir só contexto público pertinente e registrar
+ferramenta/modelo efetivamente usados. Root continua como revisor/validador,
+sem programar o produto. Não reiniciar nem contornar a quota do Claude2;
+a troca de serviço foi autorizada expressamente. Sem limite observado,
+Claude2 segue na sessão/modelo/esforço já definidos. Esta atualização não
+altera os gates nem libera produção ou efeitos fora do lote seguro.
+
 ## W1 Oracle: testes do main revistos e RED congelado — 2026-11-09
 
 Retomada16h55UTC executou0, mensagem recebida, sem próximo disparo.

@@ -1,0 +1,10 @@
+{
+  "source_sha256": "48127217bdcf4a3b8ef301df1aa08e0da31f24b49bc83eea2ae0fd28adf916eb",
+  "source_bytes": 35382,
+  "source_lines": 1122,
+  "test_sha256": "1723ef505be6d407862b60c5e53b0198ee46bb96d81095f4532339152d6ddeda",
+  "protected25_app124_changed": [],
+  "terminal49822_exit": 0,
+  "writer_count_after": 0,
+  "review": "Root read all1122 source lines before module/test execution."
+}

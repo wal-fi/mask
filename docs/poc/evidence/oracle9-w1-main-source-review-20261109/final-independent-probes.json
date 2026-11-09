@@ -1,0 +1,24 @@
+[
+  {
+    "case": "foreign_kind_callbacks",
+    "calls": [],
+    "error": "MainRefusal"
+  },
+  {
+    "case": "retire_during_write",
+    "during": [
+      {
+        "retired": false,
+        "safe_exit": false
+      }
+    ],
+    "write_returned": true,
+    "after_retire": true,
+    "safe_exit_after": true
+  },
+  {
+    "case": "select_io",
+    "returned": null,
+    "status": "IO"
+  }
+]

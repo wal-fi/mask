@@ -1,0 +1,473 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="16" skipped="0" tests="161" time="7.463" timestamp="2026-11-09T14:55:05.166193-03:00" hostname="SMTZDIBDN1954"><testcase classname="tests.test_oracle9_w1_main" name="test_sanity_fixed_driver_and_pure_pins" time="0.001" /><testcase classname="tests.test_oracle9_w1_main" name="test_sanity_fake_files_close_and_ebadf" time="0.001" /><testcase classname="tests.test_oracle9_w1_main" name="test_sanity_fake_link_reactor_and_clock" time="0.001" /><testcase classname="tests.test_oracle9_w1_main" name="test_sanity_fake_socket_and_thread" time="0.001" /><testcase classname="tests.test_oracle9_w1_main" name="test_m01_import_is_definition_only_and_real_system_has_no_effect" time="0.012" /><testcase classname="tests.test_oracle9_w1_main" name="test_m01_ast_top_level_has_only_definitions_and_one_main_guard" time="0.015" /><testcase classname="tests.test_oracle9_w1_main" name="test_m01_constants_are_the_fixed_public_pins" time="0.001" /><testcase classname="tests.test_oracle9_w1_main" name="test_m02_root_exists_before_any_acquisition" time="0.001" /><testcase classname="tests.test_oracle9_w1_main" name="test_m03_ticket_unknown_before_open_exact_fd_one_verified_close" time="0.001" /><testcase classname="tests.test_oracle9_w1_main" name="test_m03_both_source_opens_use_literal_linux_flags" time="0.010" /><testcase classname="tests.test_oracle9_w1_main" name="test_m03_open_uncertainty_keeps_unknown_and_never_closes[nofollow]" time="0.001" /><testcase classname="tests.test_oracle9_w1_main" name="test_m03_open_uncertainty_keeps_unknown_and_never_closes[control]" time="0.001" /><testcase classname="tests.test_oracle9_w1_main" name="test_m03_close_uncertainty_retains_fd_once_and_returns_no_bytes[raise]" time="0.001" /><testcase classname="tests.test_oracle9_w1_main" name="test_m03_close_uncertainty_retains_fd_once_and_returns_no_bytes[control]" time="0.002" /><testcase classname="tests.test_oracle9_w1_main" name="test_m03_close_uncertainty_retains_fd_once_and_returns_no_bytes[lie]" time="0.001" /><testcase classname="tests.test_oracle9_w1_main" name="test_m03_close_uncertainty_retains_fd_once_and_returns_no_bytes[thread]" time="0.001" /><testcase classname="tests.test_oracle9_w1_main" name="test_m03_only_fixed_public_pairs_are_readable[/etc/passwd-10-11]" time="0.013" /><testcase classname="tests.test_oracle9_w1_main" name="test_m03_only_fixed_public_pairs_are_readable[/opt/maskgw/lab/oracle9_w1_driver.py-22453-22454]" time="0.011" /><testcase classname="tests.test_oracle9_w1_main" name="test_m03_only_fixed_public_pairs_are_readable[/opt/maskgw/lab/oracle9_w1_driver.py-36956-36958]" time="0.016" /><testcase classname="tests.test_oracle9_w1_main" name="test_m03_only_fixed_public_pairs_are_readable[/opt/maskgw/lab/oracle9_w1_controller.py-36956-36957]" time="0.016" /><testcase classname="tests.test_oracle9_w1_main" name="test_m03_only_fixed_public_pairs_are_readable[/opt/maskgw/lab/oracle9_w1_controller.py-22453-22453]" time="0.011" /><testcase classname="tests.test_oracle9_w1_main" name="test_m04_validation_failure_closes_once_then_clean_load_failed[not-regular]" time="0.001" /><testcase classname="tests.test_oracle9_w1_main" name="test_m04_validation_failure_closes_once_then_clean_load_failed[read]" time="0.001" /><testcase classname="tests.test_oracle9_w1_main" name="test_m04_validation_failure_closes_once_then_clean_load_failed[sha]" time="0.001" /><testcase classname="tests.test_oracle9_w1_main" name="test_m04_validation_failure_closes_once_then_clean_load_failed[size-minus]" time="0.002" /><testcase classname="tests.test_oracle9_w1_main" name="test_m04_validation_failure_closes_once_then_clean_load_failed[size-plus]" time="0.001" /><testcase classname="tests.test_oracle9_w1_main" name="test_m04_validation_failure_with_uncertain_close_holds[sha]" time="0.001" /><testcase classname="tests.test_oracle9_w1_main" name="test_m04_validation_failure_with_uncertain_close_holds[not-regular]" time="0.001" /><testcase classname="tests.test_oracle9_w1_main" name="test_m05_bind_once_with_exact_owner_and_cross_pins" time="0.021" /><testcase classname="tests.test_oracle9_w1_main" name="test_m06_bootstrap_order_and_guard_is_the_first_port" time="0.011" /><testcase classname="tests.test_oracle9_w1_main" name="test_m06_guard_precedes_pure_load_and_lab_init_secret" time="0.018" /><testcase classname="tests.test_oracle9_w1_main" name="test_m06_pure_open_failure_keeps_unknown_ticket_and_holds" time="0.013" /><testcase classname="tests.test_oracle9_w1_main" name="test_m06_build_ports_binds_exact_owned_objects" time="0.014" /><testcase classname="tests.test_oracle9_w1_main" name="test_m07_guard_binding_forwards_exact_arguments" time="0.010" /><testcase classname="tests.test_oracle9_w1_main" name="test_m07_signal_during_guard_is_only_marked_then_observed_cooperatively" time="0.012" /><testcase classname="tests.test_oracle9_w1_main" name="test_m08_read_init_owns_header_and_body_without_read_ahead" time="0.016" /><testcase classname="tests.test_oracle9_w1_main" name="test_m08_invalid_init_header_returns_only_the_header[magic]" time="0.017" /><testcase classname="tests.test_oracle9_w1_main" name="test_m08_invalid_init_header_returns_only_the_header[length]" time="0.012" /><testcase classname="tests.test_oracle9_w1_main" name="test_m08_partial_or_late_init_is_closed_and_poisons[eof-mid]" time="0.012" /><testcase classname="tests.test_oracle9_w1_main" name="test_m08_partial_or_late_init_is_closed_and_poisons[expired-mid]" time="0.011" /><testcase classname="tests.test_oracle9_w1_main" name="test_m08_partial_or_late_init_is_closed_and_poisons[late]" time="0.015" /><testcase classname="tests.test_oracle9_w1_main" name="test_m08_eof_or_io_before_any_byte_returns_none" time="0.023" /><testcase classname="tests.test_oracle9_w1_main" name="test_m09_read_control_exact_sixteen_bytes" time="0.011" /><testcase classname="tests.test_oracle9_w1_main" name="test_m09_frame_completed_at_deadline_is_not_delivered" time="0.011" /><testcase classname="tests.test_oracle9_w1_main" name="test_m08_intruder_between_init_header_and_body_never_gets_or_gives_bytes" time="0.031" /><testcase classname="tests.test_oracle9_w1_main" name="test_m09_control_completed_after_deadline_is_closed_and_poisons" time="0.010" /><testcase classname="tests.test_oracle9_w1_main" name="test_m09_finite_eagain_and_eintr_are_retried_within_the_frame" time="0.010" /><testcase classname="tests.test_oracle9_w1_main" name="test_m10_invalid_lines_refused_without_io[empty]" time="0.011" /><testcase classname="tests.test_oracle9_w1_main" name="test_m10_invalid_lines_refused_without_io[512]" time="0.011" /><testcase classname="tests.test_oracle9_w1_main" name="test_m10_invalid_lines_refused_without_io[lf]" time="0.010" /><testcase classname="tests.test_oracle9_w1_main" name="test_m10_invalid_lines_refused_without_io[cr]" time="0.011" /><testcase classname="tests.test_oracle9_w1_main" name="test_m10_invalid_lines_refused_without_io[non-ascii]" time="0.011" /><testcase classname="tests.test_oracle9_w1_main" name="test_m10_invalid_lines_refused_without_io[str]" time="0.011" /><testcase classname="tests.test_oracle9_w1_main" name="test_m10_payload_511_plus_lf_and_56_line_cap" time="0.012" /><testcase classname="tests.test_oracle9_w1_main" name="test_m10_short_writes_complete_line" time="0.011" /><testcase classname="tests.test_oracle9_w1_main" name="test_m10_finite_eagain_and_eintr_writes_complete" time="0.012" /><testcase classname="tests.test_oracle9_w1_main" name="test_m10_write_completed_after_deadline_is_false_and_poisons" time="0.013" /><testcase classname="tests.test_oracle9_w1_main" name="test_m10_blocked_or_broken_write_poisons[blocked]" time="0.010" /><testcase classname="tests.test_oracle9_w1_main" name="test_m10_blocked_or_broken_write_poisons[epipe]" time="0.011" /><testcase classname="tests.test_oracle9_w1_main" name="test_m11_second_reader_poisons_in_flight_frame" time="0.011" /><testcase classname="tests.test_oracle9_w1_main" name="test_m11_poison_observed_during_write_never_returns_true" time="0.010" /><testcase classname="tests.test_oracle9_w1_main" name="test_m11_t4_handoff_one_frame_each_without_overlap" time="0.011" /><testcase classname="tests.test_oracle9_w1_main" name="test_m11_negative_watcher_join_keeps_reader_slot_and_blocks_exit" time="0.010" /><testcase classname="tests.test_oracle9_w1_main" name="test_m12_retire_refused_before_completion_preserves_slot_link_and_io[LINKED]" time="0.010" /><testcase classname="tests.test_oracle9_w1_main" name="test_m12_retire_refused_before_completion_preserves_slot_link_and_io[RUNNING]" time="0.010" /><testcase classname="tests.test_oracle9_w1_main" name="test_m12_contained_control_also_allows_retirement" time="0.010" /><testcase classname="tests.test_oracle9_w1_main" name="test_m12_retire_refused_while_reader_holds_the_frame" time="0.010" /><testcase classname="tests.test_oracle9_w1_main" name="test_m12_retire_clears_only_original_slot_and_stops_io" time="0.011" /><testcase classname="tests.test_oracle9_w1_main" name="test_m13_pair_reserves_both_slots_first_and_owns_exact_objects" time="0.012" /><testcase classname="tests.test_oracle9_w1_main" name="test_m13_pair_failures_keep_ownership" time="0.011" /><testcase classname="tests.test_oracle9_w1_main" name="test_m13_unverified_close_keeps_slot_owned[raise]" time="0.012" /><testcase classname="tests.test_oracle9_w1_main" name="test_m13_unverified_close_keeps_slot_owned[lie]" time="0.017" /><testcase classname="tests.test_oracle9_w1_main" name="test_m14_thread_owned_before_return_and_verified_join" time="0.010" /><testcase classname="tests.test_oracle9_w1_main" name="test_m14_finish_before_start_returns_and_target_control_contained" time="0.012" /><testcase classname="tests.test_oracle9_w1_main" name="test_m14_start_failure_and_occupied_slot_retain" time="0.010" /><testcase classname="tests.test_oracle9_w1_main" name="test_m14_stuck_join_times_out_and_retains" time="0.012" /><testcase classname="tests.test_oracle9_w1_main" name="test_m14_interrupted_join_retains_even_if_thread_looks_closed[error]" time="0.011" /><testcase classname="tests.test_oracle9_w1_main" name="test_m14_interrupted_join_retains_even_if_thread_looks_closed[control]" time="0.013" /><testcase classname="tests.test_oracle9_w1_main" name="test_m15_factory_returns_exact_worker_session_and_refuses_second_ledger" time="0.011" /><testcase classname="tests.test_oracle9_w1_main" name="test_m16_absolute_clock_and_session_ids" time="0.011" /><testcase classname="tests.test_oracle9_w1_main" name="test_sanity_pinned_ledger_has_real_session_row_with_output_pin" time="0.001" /><testcase classname="tests.test_oracle9_w1_main" name="test_m17_multi_slot_reservation_is_all_or_none_and_never_replaces" time="0.012" /><testcase classname="tests.test_oracle9_w1_main" name="test_m17_unsafe_facts_never_exit[bad-session]" time="0.011" /><testcase classname="tests.test_oracle9_w1_main" name="test_m17_unsafe_facts_never_exit[foreign-result]" time="0.014" /><testcase classname="tests.test_oracle9_w1_main" name="test_m17_unsafe_facts_never_exit[ledger-pinned]" time="0.011" /><testcase classname="tests.test_oracle9_w1_main" name="test_m17_unsafe_facts_never_exit[ledger-session]" time="0.012" /><testcase classname="tests.test_oracle9_w1_main" name="test_m17_unsafe_facts_never_exit[no-decision]" time="0.014" /><testcase classname="tests.test_oracle9_w1_main" name="test_m17_unsafe_facts_never_exit[owner-endpoint]" time="0.012" /><testcase classname="tests.test_oracle9_w1_main" name="test_m17_unsafe_facts_never_exit[owner-handle]" time="0.013" /><testcase classname="tests.test_oracle9_w1_main" name="test_m17_unsafe_facts_never_exit[owner-session]" time="0.012" /><testcase classname="tests.test_oracle9_w1_main" name="test_m17_unsafe_facts_never_exit[owner-token]" time="0.011" /><testcase classname="tests.test_oracle9_w1_main" name="test_m17_unsafe_facts_never_exit[owner-unknown]" time="0.012" /><testcase classname="tests.test_oracle9_w1_main" name="test_m17_unsafe_facts_never_exit[pair-unknown]" time="0.013" /><testcase classname="tests.test_oracle9_w1_main" name="test_m17_unsafe_facts_never_exit[retained]" time="0.012" /><testcase classname="tests.test_oracle9_w1_main" name="test_m17_unsafe_facts_never_exit[thread]" time="0.012" /><testcase classname="tests.test_oracle9_w1_main" name="test_m17_unsafe_facts_never_exit[ticket]" time="0.012" /><testcase classname="tests.test_oracle9_w1_main" name="test_m17_logical_generation_refs_and_control_stay_safe" time="0.013" /><testcase classname="tests.test_oracle9_w1_main" name="test_m17_unretired_link_and_live_session_are_unsafe" time="0.025" /><testcase classname="tests.test_oracle9_w1_main" name="test_m18_early_setup_failures_and_controls[signal-FakeOSError-64-SETUP_FAILED-None]" time="0.002" /><testcase classname="tests.test_oracle9_w1_main" name="test_m18_early_setup_failures_and_controls[signal-KeyboardInterrupt-70-None-KeyboardInterrupt]" time="0.001" /><testcase classname="tests.test_oracle9_w1_main" name="test_m18_early_setup_failures_and_controls[silence-FakeOSError-64-SETUP_FAILED-None]" time="0.002" /><testcase classname="tests.test_oracle9_w1_main" name="test_m18_early_setup_failures_and_controls[silence-SystemExit-70-None-SystemExit]" time="0.001" /><testcase classname="tests.test_oracle9_w1_main" name="test_m18_link_setup_after_state_change_holds_with_bound_root[error]" time="0.016" /><testcase classname="tests.test_oracle9_w1_main" name="test_m18_link_setup_after_state_change_holds_with_bound_root[control]" time="0.018" /><testcase classname="tests.test_oracle9_w1_main" name="test_m18_link_refused_after_reservation_stays_unknown_and_holds[tty]" time="0.019" /><testcase classname="tests.test_oracle9_w1_main" name="test_m18_link_refused_after_reservation_stays_unknown_and_holds[regular]" time="0.024" /><testcase classname="tests.test_oracle9_w1_main" name="test_m18_control_from_guard_port_is_contained_without_rerun" time="0.023" /><testcase classname="tests.test_oracle9_w1_main" name="test_m18_late_control_preserves_only_emitted_driver_prefix" time="0.041" /><testcase classname="tests.test_oracle9_w1_main" name="test_m19_permanent_handler_is_sticky_and_non_raising" time="0.019" /><testcase classname="tests.test_oracle9_w1_main" name="test_m19_main_signal_only_at_cooperative_boundaries[reader]" time="0.028" /><testcase classname="tests.test_oracle9_w1_main" name="test_m19_main_signal_only_at_cooperative_boundaries[factory]" time="0.032" /><testcase classname="tests.test_oracle9_w1_main" name="test_m19_main_signal_only_at_cooperative_boundaries[pair]" time="0.024" /><testcase classname="tests.test_oracle9_w1_main" name="test_m19_main_signal_only_at_cooperative_boundaries[threads]" time="0.028" /><testcase classname="tests.test_oracle9_w1_main" name="test_m19_main_signal_only_at_cooperative_boundaries[read_control]" time="0.037" /><testcase classname="tests.test_oracle9_w1_main" name="test_m19_main_signal_only_at_cooperative_boundaries[read_init]" time="0.033" /><testcase classname="tests.test_oracle9_w1_main" name="test_m19_main_signal_only_at_cooperative_boundaries[sleep_until]" time="0.031" /><testcase classname="tests.test_oracle9_w1_main" name="test_m19_watcher_and_cleanup_paths_never_raise_main_signal" time="0.037" /><testcase classname="tests.test_oracle9_w1_main" name="test_m19_closed_refusals_never_chain_active_caller_errors" time="0.042" /><testcase classname="tests.test_oracle9_w1_main" name="test_m20_hold_step_pause_backoff_fault_and_saturation" time="0.004" /><testcase classname="tests.test_oracle9_w1_main" name="test_m20_hold_steps_preserve_a_populated_retained_root" time="0.067" /><testcase classname="tests.test_oracle9_w1_main" name="test_m20_ast_hold_never_returns_and_entry_retains_its_root" time="0.017" /><testcase classname="tests.test_oracle9_w1_main" name="test_m20_decision_value_is_frozen_and_closed" time="0.001" /><testcase classname="tests.test_oracle9_w1_main" name="test_m20_public_decision_constructor_refuses_incoherent_values[EXIT-None]" time="0.001" /><testcase classname="tests.test_oracle9_w1_main" name="test_m20_public_decision_constructor_refuses_incoherent_values[EXIT-True]" time="0.002" /><testcase classname="tests.test_oracle9_w1_main" name="test_m20_public_decision_constructor_refuses_incoherent_values[EXIT-63]" time="0.002" /><testcase classname="tests.test_oracle9_w1_main" name="test_m20_public_decision_constructor_refuses_incoherent_values[EXIT-71]" time="0.002" /><testcase classname="tests.test_oracle9_w1_main" name="test_m20_public_decision_constructor_refuses_incoherent_values[EXIT-68.0]" time="0.002" /><testcase classname="tests.test_oracle9_w1_main" name="test_m20_public_decision_constructor_refuses_incoherent_values[HOLD-68]" time="0.002" /><testcase classname="tests.test_oracle9_w1_main" name="test_m20_public_decision_constructor_refuses_incoherent_values[HOLD-False]" time="0.002" /><testcase classname="tests.test_oracle9_w1_main" name="test_m20_public_decision_constructor_refuses_incoherent_values[exit-68]" time="0.002" /><testcase classname="tests.test_oracle9_w1_main" name="test_m20_public_decision_constructor_refuses_incoherent_values[EXIT-68]" time="0.002" /><testcase classname="tests.test_oracle9_w1_main" name="test_m20_public_decision_constructor_refuses_incoherent_values[None-None]" time="0.001" /><testcase classname="tests.test_oracle9_w1_main" name="test_m20_entry_exit_wiring_is_finite_with_fake_os" time="0.013" /><testcase classname="tests.test_oracle9_w1_main" name="test_m20_absent_foreign_or_incoherent_decision_never_exits[none]" time="0.001" /><testcase classname="tests.test_oracle9_w1_main" name="test_m20_absent_foreign_or_incoherent_decision_never_exits[lookalike]" time="0.002" /><testcase classname="tests.test_oracle9_w1_main" name="test_m20_absent_foreign_or_incoherent_decision_never_exits[exit-none]" time="0.002" /><testcase classname="tests.test_oracle9_w1_main" name="test_m20_absent_foreign_or_incoherent_decision_never_exits[exit-bool]" time="0.001" /><testcase classname="tests.test_oracle9_w1_main" name="test_m20_absent_foreign_or_incoherent_decision_never_exits[exit-low]" time="0.001" /><testcase classname="tests.test_oracle9_w1_main" name="test_m20_absent_foreign_or_incoherent_decision_never_exits[exit-high]" time="0.001" /><testcase classname="tests.test_oracle9_w1_main" name="test_m20_absent_foreign_or_incoherent_decision_never_exits[exit-float]" time="0.001" /><testcase classname="tests.test_oracle9_w1_main" name="test_m20_absent_foreign_or_incoherent_decision_never_exits[hold-code]" time="0.001" /><testcase classname="tests.test_oracle9_w1_main" name="test_m20_absent_foreign_or_incoherent_decision_never_exits[lowercase]" time="0.001" /><testcase classname="tests.test_oracle9_w1_main" name="test_m20_absent_foreign_or_incoherent_decision_never_exits[str-subclass]" time="0.001" /><testcase classname="tests.test_oracle9_w1_main" name="test_m21_pinned_driver_and_real_session_two_results_then_eof_exit_68" time="0.041" /><testcase classname="tests.test_oracle9_w1_main" name="test_m22_retained_run_holds_same_root_owner_and_resources" time="0.058" /><testcase classname="tests.test_oracle9_w1_main" name="test_r1_decision_refuses_foreign_kind_before_any_callback[foreign-68]" time="0.002"><failure message="AssertionError: assert ['EXIT', 'HOLD'] == []&#10;  &#10;  Left contains 2 more items, first extra item: 'EXIT'&#10;  Use -v to get more diff">variant = 'foreign', code = 68
+
+    @pytest.mark.parametrize(
+        ("variant", "code"),
+        [("foreign", 68), ("foreign", None), ("subclass-exit", 68), ("subclass-hold", None)],
+    )
+    def test_r1_decision_refuses_foreign_kind_before_any_callback(
+        variant: str, code: int | None
+    ) -&gt; None:
+        ns = main()
+        probe: EqProbe | EqStr = EqProbe()
+        if variant == "subclass-exit":
+            probe = EqStr("EXIT")
+        elif variant == "subclass-hold":
+            probe = EqStr("HOLD")
+        errors: list[BaseException] = []
+        try:
+            raise RuntimeError(CALLER_MARKER)
+        except RuntimeError:
+            with pytest.raises(ns["MainRefusal"]) as caught:
+                ns["MainDecision"](kind=probe, code=code)
+            errors.append(caught.value)
+&gt;       assert probe.calls == []  # refused by exact type before any comparison
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: assert ['EXIT', 'HOLD'] == []
+E
+E         Left contains 2 more items, first extra item: 'EXIT'
+E         Use -v to get more diff
+
+tests\test_oracle9_w1_main.py:2625: AssertionError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_r1_decision_refuses_foreign_kind_before_any_callback[foreign-None]" time="0.002"><failure message="AssertionError: assert ['EXIT', 'HOLD'] == []&#10;  &#10;  Left contains 2 more items, first extra item: 'EXIT'&#10;  Use -v to get more diff">variant = 'foreign', code = None
+
+    @pytest.mark.parametrize(
+        ("variant", "code"),
+        [("foreign", 68), ("foreign", None), ("subclass-exit", 68), ("subclass-hold", None)],
+    )
+    def test_r1_decision_refuses_foreign_kind_before_any_callback(
+        variant: str, code: int | None
+    ) -&gt; None:
+        ns = main()
+        probe: EqProbe | EqStr = EqProbe()
+        if variant == "subclass-exit":
+            probe = EqStr("EXIT")
+        elif variant == "subclass-hold":
+            probe = EqStr("HOLD")
+        errors: list[BaseException] = []
+        try:
+            raise RuntimeError(CALLER_MARKER)
+        except RuntimeError:
+            with pytest.raises(ns["MainRefusal"]) as caught:
+                ns["MainDecision"](kind=probe, code=code)
+            errors.append(caught.value)
+&gt;       assert probe.calls == []  # refused by exact type before any comparison
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: assert ['EXIT', 'HOLD'] == []
+E
+E         Left contains 2 more items, first extra item: 'EXIT'
+E         Use -v to get more diff
+
+tests\test_oracle9_w1_main.py:2625: AssertionError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_r1_decision_refuses_foreign_kind_before_any_callback[subclass-exit-68]" time="0.001"><failure message="AssertionError: assert ['EXIT', 'HOLD'] == []&#10;  &#10;  Left contains 2 more items, first extra item: 'EXIT'&#10;  Use -v to get more diff">variant = 'subclass-exit', code = 68
+
+    @pytest.mark.parametrize(
+        ("variant", "code"),
+        [("foreign", 68), ("foreign", None), ("subclass-exit", 68), ("subclass-hold", None)],
+    )
+    def test_r1_decision_refuses_foreign_kind_before_any_callback(
+        variant: str, code: int | None
+    ) -&gt; None:
+        ns = main()
+        probe: EqProbe | EqStr = EqProbe()
+        if variant == "subclass-exit":
+            probe = EqStr("EXIT")
+        elif variant == "subclass-hold":
+            probe = EqStr("HOLD")
+        errors: list[BaseException] = []
+        try:
+            raise RuntimeError(CALLER_MARKER)
+        except RuntimeError:
+            with pytest.raises(ns["MainRefusal"]) as caught:
+                ns["MainDecision"](kind=probe, code=code)
+            errors.append(caught.value)
+&gt;       assert probe.calls == []  # refused by exact type before any comparison
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: assert ['EXIT', 'HOLD'] == []
+E
+E         Left contains 2 more items, first extra item: 'EXIT'
+E         Use -v to get more diff
+
+tests\test_oracle9_w1_main.py:2625: AssertionError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_r1_decision_refuses_foreign_kind_before_any_callback[subclass-hold-None]" time="0.002"><failure message="AssertionError: assert ['EXIT', 'HOLD'] == []&#10;  &#10;  Left contains 2 more items, first extra item: 'EXIT'&#10;  Use -v to get more diff">variant = 'subclass-hold', code = None
+
+    @pytest.mark.parametrize(
+        ("variant", "code"),
+        [("foreign", 68), ("foreign", None), ("subclass-exit", 68), ("subclass-hold", None)],
+    )
+    def test_r1_decision_refuses_foreign_kind_before_any_callback(
+        variant: str, code: int | None
+    ) -&gt; None:
+        ns = main()
+        probe: EqProbe | EqStr = EqProbe()
+        if variant == "subclass-exit":
+            probe = EqStr("EXIT")
+        elif variant == "subclass-hold":
+            probe = EqStr("HOLD")
+        errors: list[BaseException] = []
+        try:
+            raise RuntimeError(CALLER_MARKER)
+        except RuntimeError:
+            with pytest.raises(ns["MainRefusal"]) as caught:
+                ns["MainDecision"](kind=probe, code=code)
+            errors.append(caught.value)
+&gt;       assert probe.calls == []  # refused by exact type before any comparison
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: assert ['EXIT', 'HOLD'] == []
+E
+E         Left contains 2 more items, first extra item: 'EXIT'
+E         Use -v to get more diff
+
+tests\test_oracle9_w1_main.py:2625: AssertionError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_r2_retire_reentered_during_write_is_refused_until_write_ends[select]" time="0.019"><failure message="assert False is True&#10; +  where False = write(b'{&quot;e&quot;:&quot;INIT_OK&quot;}')&#10; +    where write = &lt;_lab_test.HostLink object at 0x000001A754025A90&gt;.write">op = 'select'
+
+    @pytest.mark.parametrize("op", ["select", "os_write"])
+    def test_r2_retire_reentered_during_write_is_refused_until_write_ends(op: str) -&gt; None:
+        ns = main()
+        fake = FakeOS()
+        root, link = linked(fake)
+        complete(root)  # completion recorded: only the in-flight write blocks retirement
+        seen: list[object] = []
+
+        def reenter() -&gt; None:
+            seen.append(link.retire())
+            seen.append(named(root.slots["link"].state))
+            seen.append(root.slots["link"].value is link)
+            seen.append(ns["safe_exit"](root))
+
+        fake.hooks[op] = reenter
+&gt;       assert link.write(b'{"e":"INIT_OK"}') is True
+E       assert False is True
+E        +  where False = write(b'{"e":"INIT_OK"}')
+E        +    where write = &lt;_lab_test.HostLink object at 0x000001A754025A90&gt;.write
+
+tests\test_oracle9_w1_main.py:2650: AssertionError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_r2_retire_reentered_during_write_is_refused_until_write_ends[os_write]" time="0.021"><failure message="assert False is True&#10; +  where False = write(b'{&quot;e&quot;:&quot;INIT_OK&quot;}')&#10; +    where write = &lt;_lab_test.HostLink object at 0x000001A7541BD010&gt;.write">op = 'os_write'
+
+    @pytest.mark.parametrize("op", ["select", "os_write"])
+    def test_r2_retire_reentered_during_write_is_refused_until_write_ends(op: str) -&gt; None:
+        ns = main()
+        fake = FakeOS()
+        root, link = linked(fake)
+        complete(root)  # completion recorded: only the in-flight write blocks retirement
+        seen: list[object] = []
+
+        def reenter() -&gt; None:
+            seen.append(link.retire())
+            seen.append(named(root.slots["link"].state))
+            seen.append(root.slots["link"].value is link)
+            seen.append(ns["safe_exit"](root))
+
+        fake.hooks[op] = reenter
+&gt;       assert link.write(b'{"e":"INIT_OK"}') is True
+E       assert False is True
+E        +  where False = write(b'{"e":"INIT_OK"}')
+E        +    where write = &lt;_lab_test.HostLink object at 0x000001A7541BD010&gt;.write
+
+tests\test_oracle9_w1_main.py:2650: AssertionError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_r2_retire_reentered_during_failing_write_is_refused" time="0.021"><failure message="AssertionError: assert [True, 'EMPTY', True] == [False, 'OWNED', False]&#10;  &#10;  At index 0 diff: True != False&#10;  Use -v to get more diff">def test_r2_retire_reentered_during_failing_write_is_refused() -&gt; None:
+        ns = main()
+        fake = FakeOS()
+        root, link = linked(fake)
+        complete(root)
+        seen: list[object] = []
+
+        def reenter() -&gt; None:
+            seen.append(link.retire())
+            seen.append(named(root.slots["link"].state))
+            seen.append(ns["safe_exit"](root))
+
+        write_fail_epipe(fake)
+        fake.hooks["os_write"] = reenter
+        assert link.write(b'{"e":"INIT_OK"}') is False
+&gt;       assert seen == [False, "OWNED", False]
+E       AssertionError: assert [True, 'EMPTY', True] == [False, 'OWNED', False]
+E
+E         At index 0 diff: True != False
+E         Use -v to get more diff
+
+tests\test_oracle9_w1_main.py:2679: AssertionError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_r3_init_select_eintr_eagain_retried_within_frame" time="0.017"><failure message="InterruptedError: [Errno 4] EINTR">def test_r3_init_select_eintr_eagain_retried_within_frame() -&gt; None:
+        fake = FakeOS()
+        _, link = linked(fake)
+        packet = s2.lab_packet()
+        fake.inbound.extend(packet + GO_FRAME)
+        count = select_plan(fake, finite_interruptions())
+&gt;       assert link.read_init(deadline=deadline(fake, 5.0)) == packet
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:2717:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+deploy\oracle9_w1_main.py:560: in read_init
+    header = self._read_exact(INIT_HEADER, deadline)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+deploy\oracle9_w1_main.py:515: in _read_exact
+    ready = system.select([0], [], [], min(remaining, SLICE_S))[0]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:471: in select
+    self.enter("select", None, tuple(readers), tuple(writers), timeout)
+tests\test_oracle9_w1_main.py:370: in enter
+    self.observed.setdefault(name, []).append(probe())
+                                              ^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def probe() -&gt; object:
+        count[0] += 1
+        failure = plan.get(count[0])
+        if failure is not None:
+&gt;           raise failure
+E           InterruptedError: [Errno 4] EINTR
+
+tests\test_oracle9_w1_main.py:2697: InterruptedError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_r3_control_select_eintr_eagain_retried_within_frame" time="0.017"><failure message="InterruptedError: [Errno 4] EINTR">def test_r3_control_select_eintr_eagain_retried_within_frame() -&gt; None:
+        fake = FakeOS()
+        _, link = linked(fake)
+        fake.inbound.extend(GO_FRAME + ACK_FRAME)
+        count = select_plan(fake, finite_interruptions())
+&gt;       assert link.read_control(deadline=deadline(fake)) == GO_FRAME
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:2730:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+deploy\oracle9_w1_main.py:581: in read_control
+    frame = self._read_exact(CONTROL_BYTES, deadline)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+deploy\oracle9_w1_main.py:515: in _read_exact
+    ready = system.select([0], [], [], min(remaining, SLICE_S))[0]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:471: in select
+    self.enter("select", None, tuple(readers), tuple(writers), timeout)
+tests\test_oracle9_w1_main.py:370: in enter
+    self.observed.setdefault(name, []).append(probe())
+                                              ^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def probe() -&gt; object:
+        count[0] += 1
+        failure = plan.get(count[0])
+        if failure is not None:
+&gt;           raise failure
+E           InterruptedError: [Errno 4] EINTR
+
+tests\test_oracle9_w1_main.py:2697: InterruptedError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_r3_write_select_eintr_eagain_retried_before_cap" time="0.029"><failure message="InterruptedError: [Errno 4] EINTR">def test_r3_write_select_eintr_eagain_retried_before_cap() -&gt; None:
+        fake = FakeOS()
+        _, link = linked(fake)
+        count = select_plan(fake, finite_interruptions())
+&gt;       assert link.write(b'{"e":"INIT_OK"}') is True
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:2742:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+deploy\oracle9_w1_main.py:599: in write
+    written = self._write_all(line + b"\n")
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+deploy\oracle9_w1_main.py:618: in _write_all
+    ready = system.select([], [1], [], min(remaining, SLICE_S))[1]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:471: in select
+    self.enter("select", None, tuple(readers), tuple(writers), timeout)
+tests\test_oracle9_w1_main.py:370: in enter
+    self.observed.setdefault(name, []).append(probe())
+                                              ^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def probe() -&gt; object:
+        count[0] += 1
+        failure = plan.get(count[0])
+        if failure is not None:
+&gt;           raise failure
+E           InterruptedError: [Errno 4] EINTR
+
+tests\test_oracle9_w1_main.py:2697: InterruptedError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_r3_select_oserror_before_any_byte_is_closed_io[init]" time="0.012"><failure message="tests.test_oracle9_w1_main.FakeOSError: [Errno 5] SYNTHETIC">frame = 'init'
+
+    @pytest.mark.parametrize("frame", ["init", "control"])
+    def test_r3_select_oserror_before_any_byte_is_closed_io(frame: str) -&gt; None:
+        fake = FakeOS()
+        _, link = linked(fake)
+        fake.inbound.extend(s2.lab_packet() if frame == "init" else GO_FRAME)
+        before = bytes(fake.inbound)
+        select_plan(fake, {1: FakeOSError()})
+        reader = link.read_init if frame == "init" else link.read_control
+&gt;       assert reader(deadline=deadline(fake)) is None  # no FakeOSError escapes
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:2757:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+deploy\oracle9_w1_main.py:560: in read_init
+    header = self._read_exact(INIT_HEADER, deadline)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+deploy\oracle9_w1_main.py:515: in _read_exact
+    ready = system.select([0], [], [], min(remaining, SLICE_S))[0]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:471: in select
+    self.enter("select", None, tuple(readers), tuple(writers), timeout)
+tests\test_oracle9_w1_main.py:370: in enter
+    self.observed.setdefault(name, []).append(probe())
+                                              ^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def probe() -&gt; object:
+        count[0] += 1
+        failure = plan.get(count[0])
+        if failure is not None:
+&gt;           raise failure
+E           tests.test_oracle9_w1_main.FakeOSError: [Errno 5] SYNTHETIC
+
+tests\test_oracle9_w1_main.py:2697: FakeOSError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_r3_select_oserror_before_any_byte_is_closed_io[control]" time="0.022"><failure message="tests.test_oracle9_w1_main.FakeOSError: [Errno 5] SYNTHETIC">frame = 'control'
+
+    @pytest.mark.parametrize("frame", ["init", "control"])
+    def test_r3_select_oserror_before_any_byte_is_closed_io(frame: str) -&gt; None:
+        fake = FakeOS()
+        _, link = linked(fake)
+        fake.inbound.extend(s2.lab_packet() if frame == "init" else GO_FRAME)
+        before = bytes(fake.inbound)
+        select_plan(fake, {1: FakeOSError()})
+        reader = link.read_init if frame == "init" else link.read_control
+&gt;       assert reader(deadline=deadline(fake)) is None  # no FakeOSError escapes
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:2757:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+deploy\oracle9_w1_main.py:581: in read_control
+    frame = self._read_exact(CONTROL_BYTES, deadline)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+deploy\oracle9_w1_main.py:515: in _read_exact
+    ready = system.select([0], [], [], min(remaining, SLICE_S))[0]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:471: in select
+    self.enter("select", None, tuple(readers), tuple(writers), timeout)
+tests\test_oracle9_w1_main.py:370: in enter
+    self.observed.setdefault(name, []).append(probe())
+                                              ^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def probe() -&gt; object:
+        count[0] += 1
+        failure = plan.get(count[0])
+        if failure is not None:
+&gt;           raise failure
+E           tests.test_oracle9_w1_main.FakeOSError: [Errno 5] SYNTHETIC
+
+tests\test_oracle9_w1_main.py:2697: FakeOSError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_r3_init_select_oserror_after_header_poisons_and_stops_io" time="0.018"><failure message="tests.test_oracle9_w1_main.FakeOSError: [Errno 5] SYNTHETIC">def test_r3_init_select_oserror_after_header_poisons_and_stops_io() -&gt; None:
+        fake = FakeOS()
+        _, link = linked(fake)
+        packet = s2.lab_packet()
+        fake.inbound.extend(packet)
+        fake.chunk = 8  # the first read consumes exactly the header
+        select_plan(fake, {2: FakeOSError()})
+&gt;       assert link.read_init(deadline=deadline(fake, 5.0)) is None
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:2770:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+deploy\oracle9_w1_main.py:566: in read_init
+    body = self._read_exact(length, deadline) if length else b""
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+deploy\oracle9_w1_main.py:515: in _read_exact
+    ready = system.select([0], [], [], min(remaining, SLICE_S))[0]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:471: in select
+    self.enter("select", None, tuple(readers), tuple(writers), timeout)
+tests\test_oracle9_w1_main.py:370: in enter
+    self.observed.setdefault(name, []).append(probe())
+                                              ^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def probe() -&gt; object:
+        count[0] += 1
+        failure = plan.get(count[0])
+        if failure is not None:
+&gt;           raise failure
+E           tests.test_oracle9_w1_main.FakeOSError: [Errno 5] SYNTHETIC
+
+tests\test_oracle9_w1_main.py:2697: FakeOSError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_r3_control_select_oserror_after_partial_read_poisons_and_stops_io" time="0.022"><failure message="tests.test_oracle9_w1_main.FakeOSError: [Errno 5] SYNTHETIC">def test_r3_control_select_oserror_after_partial_read_poisons_and_stops_io() -&gt; None:
+        fake = FakeOS()
+        _, link = linked(fake)
+        fake.inbound.extend(GO_FRAME)
+        fake.chunk = 5
+        select_plan(fake, {2: FakeOSError()})
+&gt;       assert link.read_control(deadline=deadline(fake)) is None
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:2788:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+deploy\oracle9_w1_main.py:581: in read_control
+    frame = self._read_exact(CONTROL_BYTES, deadline)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+deploy\oracle9_w1_main.py:515: in _read_exact
+    ready = system.select([0], [], [], min(remaining, SLICE_S))[0]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:471: in select
+    self.enter("select", None, tuple(readers), tuple(writers), timeout)
+tests\test_oracle9_w1_main.py:370: in enter
+    self.observed.setdefault(name, []).append(probe())
+                                              ^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def probe() -&gt; object:
+        count[0] += 1
+        failure = plan.get(count[0])
+        if failure is not None:
+&gt;           raise failure
+E           tests.test_oracle9_w1_main.FakeOSError: [Errno 5] SYNTHETIC
+
+tests\test_oracle9_w1_main.py:2697: FakeOSError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_r3_write_select_oserror_is_false_and_poisoned[first-select]" time="0.017"><failure message="tests.test_oracle9_w1_main.FakeOSError: [Errno 5] SYNTHETIC">partial = False
+
+    @pytest.mark.parametrize("partial", [False, True], ids=["first-select", "after-partial-write"])
+    def test_r3_write_select_oserror_is_false_and_poisoned(partial: bool) -&gt; None:
+        fake = FakeOS()
+        _, link = linked(fake)
+        if partial:
+            fake.write_limit = 4
+        select_plan(fake, {2 if partial else 1: FakeOSError()})
+&gt;       assert link.write(b'{"e":"INIT_OK"}') is False  # no FakeOSError escapes
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:2806:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+deploy\oracle9_w1_main.py:599: in write
+    written = self._write_all(line + b"\n")
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+deploy\oracle9_w1_main.py:618: in _write_all
+    ready = system.select([], [1], [], min(remaining, SLICE_S))[1]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:471: in select
+    self.enter("select", None, tuple(readers), tuple(writers), timeout)
+tests\test_oracle9_w1_main.py:370: in enter
+    self.observed.setdefault(name, []).append(probe())
+                                              ^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def probe() -&gt; object:
+        count[0] += 1
+        failure = plan.get(count[0])
+        if failure is not None:
+&gt;           raise failure
+E           tests.test_oracle9_w1_main.FakeOSError: [Errno 5] SYNTHETIC
+
+tests\test_oracle9_w1_main.py:2697: FakeOSError</failure></testcase><testcase classname="tests.test_oracle9_w1_main" name="test_r3_write_select_oserror_is_false_and_poisoned[after-partial-write]" time="0.018"><failure message="tests.test_oracle9_w1_main.FakeOSError: [Errno 5] SYNTHETIC">partial = True
+
+    @pytest.mark.parametrize("partial", [False, True], ids=["first-select", "after-partial-write"])
+    def test_r3_write_select_oserror_is_false_and_poisoned(partial: bool) -&gt; None:
+        fake = FakeOS()
+        _, link = linked(fake)
+        if partial:
+            fake.write_limit = 4
+        select_plan(fake, {2 if partial else 1: FakeOSError()})
+&gt;       assert link.write(b'{"e":"INIT_OK"}') is False  # no FakeOSError escapes
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:2806:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+deploy\oracle9_w1_main.py:599: in write
+    written = self._write_all(line + b"\n")
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+deploy\oracle9_w1_main.py:618: in _write_all
+    ready = system.select([], [1], [], min(remaining, SLICE_S))[1]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:471: in select
+    self.enter("select", None, tuple(readers), tuple(writers), timeout)
+tests\test_oracle9_w1_main.py:370: in enter
+    self.observed.setdefault(name, []).append(probe())
+                                              ^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def probe() -&gt; object:
+        count[0] += 1
+        failure = plan.get(count[0])
+        if failure is not None:
+&gt;           raise failure
+E           tests.test_oracle9_w1_main.FakeOSError: [Errno 5] SYNTHETIC
+
+tests\test_oracle9_w1_main.py:2697: FakeOSError</failure></testcase></testsuite></testsuites>

@@ -1,0 +1,12 @@
+unformatted: File would be reformatted
+   --> deploy\oracle9_w1_main.py:820:18
+    |
+819 | class ThreadHandle:
+    -     def __init__(
+    -         self, root: MainRoot, slot: str, target: Callable[[], object], name: str
+    -     ) -> None:
+820 +     def __init__(self, root: MainRoot, slot: str, target: Callable[[], object], name: str) -> None:
+821 |         self._root, self._slot, self._target = root, slot, target
+    |
+
+1 file would be reformatted

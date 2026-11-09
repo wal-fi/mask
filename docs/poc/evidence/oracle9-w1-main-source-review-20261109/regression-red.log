@@ -1,0 +1,541 @@
+........................................................................ [ 44%]
+........................................................................ [ 89%]
+.FFFFFFFFFFFFFFFF                                                        [100%]
+================================== FAILURES ===================================
+____ test_r1_decision_refuses_foreign_kind_before_any_callback[foreign-68] ____
+
+variant = 'foreign', code = 68
+
+    @pytest.mark.parametrize(
+        ("variant", "code"),
+        [("foreign", 68), ("foreign", None), ("subclass-exit", 68), ("subclass-hold", None)],
+    )
+    def test_r1_decision_refuses_foreign_kind_before_any_callback(
+        variant: str, code: int | None
+    ) -> None:
+        ns = main()
+        probe: EqProbe | EqStr = EqProbe()
+        if variant == "subclass-exit":
+            probe = EqStr("EXIT")
+        elif variant == "subclass-hold":
+            probe = EqStr("HOLD")
+        errors: list[BaseException] = []
+        try:
+            raise RuntimeError(CALLER_MARKER)
+        except RuntimeError:
+            with pytest.raises(ns["MainRefusal"]) as caught:
+                ns["MainDecision"](kind=probe, code=code)
+            errors.append(caught.value)
+>       assert probe.calls == []  # refused by exact type before any comparison
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: assert ['EXIT', 'HOLD'] == []
+E
+E         Left contains 2 more items, first extra item: 'EXIT'
+E         Use -v to get more diff
+
+tests\test_oracle9_w1_main.py:2625: AssertionError
+___ test_r1_decision_refuses_foreign_kind_before_any_callback[foreign-None] ___
+
+variant = 'foreign', code = None
+
+    @pytest.mark.parametrize(
+        ("variant", "code"),
+        [("foreign", 68), ("foreign", None), ("subclass-exit", 68), ("subclass-hold", None)],
+    )
+    def test_r1_decision_refuses_foreign_kind_before_any_callback(
+        variant: str, code: int | None
+    ) -> None:
+        ns = main()
+        probe: EqProbe | EqStr = EqProbe()
+        if variant == "subclass-exit":
+            probe = EqStr("EXIT")
+        elif variant == "subclass-hold":
+            probe = EqStr("HOLD")
+        errors: list[BaseException] = []
+        try:
+            raise RuntimeError(CALLER_MARKER)
+        except RuntimeError:
+            with pytest.raises(ns["MainRefusal"]) as caught:
+                ns["MainDecision"](kind=probe, code=code)
+            errors.append(caught.value)
+>       assert probe.calls == []  # refused by exact type before any comparison
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: assert ['EXIT', 'HOLD'] == []
+E
+E         Left contains 2 more items, first extra item: 'EXIT'
+E         Use -v to get more diff
+
+tests\test_oracle9_w1_main.py:2625: AssertionError
+_ test_r1_decision_refuses_foreign_kind_before_any_callback[subclass-exit-68] _
+
+variant = 'subclass-exit', code = 68
+
+    @pytest.mark.parametrize(
+        ("variant", "code"),
+        [("foreign", 68), ("foreign", None), ("subclass-exit", 68), ("subclass-hold", None)],
+    )
+    def test_r1_decision_refuses_foreign_kind_before_any_callback(
+        variant: str, code: int | None
+    ) -> None:
+        ns = main()
+        probe: EqProbe | EqStr = EqProbe()
+        if variant == "subclass-exit":
+            probe = EqStr("EXIT")
+        elif variant == "subclass-hold":
+            probe = EqStr("HOLD")
+        errors: list[BaseException] = []
+        try:
+            raise RuntimeError(CALLER_MARKER)
+        except RuntimeError:
+            with pytest.raises(ns["MainRefusal"]) as caught:
+                ns["MainDecision"](kind=probe, code=code)
+            errors.append(caught.value)
+>       assert probe.calls == []  # refused by exact type before any comparison
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: assert ['EXIT', 'HOLD'] == []
+E
+E         Left contains 2 more items, first extra item: 'EXIT'
+E         Use -v to get more diff
+
+tests\test_oracle9_w1_main.py:2625: AssertionError
+_ test_r1_decision_refuses_foreign_kind_before_any_callback[subclass-hold-None] _
+
+variant = 'subclass-hold', code = None
+
+    @pytest.mark.parametrize(
+        ("variant", "code"),
+        [("foreign", 68), ("foreign", None), ("subclass-exit", 68), ("subclass-hold", None)],
+    )
+    def test_r1_decision_refuses_foreign_kind_before_any_callback(
+        variant: str, code: int | None
+    ) -> None:
+        ns = main()
+        probe: EqProbe | EqStr = EqProbe()
+        if variant == "subclass-exit":
+            probe = EqStr("EXIT")
+        elif variant == "subclass-hold":
+            probe = EqStr("HOLD")
+        errors: list[BaseException] = []
+        try:
+            raise RuntimeError(CALLER_MARKER)
+        except RuntimeError:
+            with pytest.raises(ns["MainRefusal"]) as caught:
+                ns["MainDecision"](kind=probe, code=code)
+            errors.append(caught.value)
+>       assert probe.calls == []  # refused by exact type before any comparison
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: assert ['EXIT', 'HOLD'] == []
+E
+E         Left contains 2 more items, first extra item: 'EXIT'
+E         Use -v to get more diff
+
+tests\test_oracle9_w1_main.py:2625: AssertionError
+__ test_r2_retire_reentered_during_write_is_refused_until_write_ends[select] __
+
+op = 'select'
+
+    @pytest.mark.parametrize("op", ["select", "os_write"])
+    def test_r2_retire_reentered_during_write_is_refused_until_write_ends(op: str) -> None:
+        ns = main()
+        fake = FakeOS()
+        root, link = linked(fake)
+        complete(root)  # completion recorded: only the in-flight write blocks retirement
+        seen: list[object] = []
+
+        def reenter() -> None:
+            seen.append(link.retire())
+            seen.append(named(root.slots["link"].state))
+            seen.append(root.slots["link"].value is link)
+            seen.append(ns["safe_exit"](root))
+
+        fake.hooks[op] = reenter
+>       assert link.write(b'{"e":"INIT_OK"}') is True
+E       assert False is True
+E        +  where False = write(b'{"e":"INIT_OK"}')
+E        +    where write = <_lab_test.HostLink object at 0x000001A754025A90>.write
+
+tests\test_oracle9_w1_main.py:2650: AssertionError
+_ test_r2_retire_reentered_during_write_is_refused_until_write_ends[os_write] _
+
+op = 'os_write'
+
+    @pytest.mark.parametrize("op", ["select", "os_write"])
+    def test_r2_retire_reentered_during_write_is_refused_until_write_ends(op: str) -> None:
+        ns = main()
+        fake = FakeOS()
+        root, link = linked(fake)
+        complete(root)  # completion recorded: only the in-flight write blocks retirement
+        seen: list[object] = []
+
+        def reenter() -> None:
+            seen.append(link.retire())
+            seen.append(named(root.slots["link"].state))
+            seen.append(root.slots["link"].value is link)
+            seen.append(ns["safe_exit"](root))
+
+        fake.hooks[op] = reenter
+>       assert link.write(b'{"e":"INIT_OK"}') is True
+E       assert False is True
+E        +  where False = write(b'{"e":"INIT_OK"}')
+E        +    where write = <_lab_test.HostLink object at 0x000001A7541BD010>.write
+
+tests\test_oracle9_w1_main.py:2650: AssertionError
+__________ test_r2_retire_reentered_during_failing_write_is_refused ___________
+
+    def test_r2_retire_reentered_during_failing_write_is_refused() -> None:
+        ns = main()
+        fake = FakeOS()
+        root, link = linked(fake)
+        complete(root)
+        seen: list[object] = []
+
+        def reenter() -> None:
+            seen.append(link.retire())
+            seen.append(named(root.slots["link"].state))
+            seen.append(ns["safe_exit"](root))
+
+        write_fail_epipe(fake)
+        fake.hooks["os_write"] = reenter
+        assert link.write(b'{"e":"INIT_OK"}') is False
+>       assert seen == [False, "OWNED", False]
+E       AssertionError: assert [True, 'EMPTY', True] == [False, 'OWNED', False]
+E
+E         At index 0 diff: True != False
+E         Use -v to get more diff
+
+tests\test_oracle9_w1_main.py:2679: AssertionError
+____________ test_r3_init_select_eintr_eagain_retried_within_frame ____________
+
+    def test_r3_init_select_eintr_eagain_retried_within_frame() -> None:
+        fake = FakeOS()
+        _, link = linked(fake)
+        packet = s2.lab_packet()
+        fake.inbound.extend(packet + GO_FRAME)
+        count = select_plan(fake, finite_interruptions())
+>       assert link.read_init(deadline=deadline(fake, 5.0)) == packet
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:2717:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+deploy\oracle9_w1_main.py:560: in read_init
+    header = self._read_exact(INIT_HEADER, deadline)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+deploy\oracle9_w1_main.py:515: in _read_exact
+    ready = system.select([0], [], [], min(remaining, SLICE_S))[0]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:471: in select
+    self.enter("select", None, tuple(readers), tuple(writers), timeout)
+tests\test_oracle9_w1_main.py:370: in enter
+    self.observed.setdefault(name, []).append(probe())
+                                              ^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def probe() -> object:
+        count[0] += 1
+        failure = plan.get(count[0])
+        if failure is not None:
+>           raise failure
+E           InterruptedError: [Errno 4] EINTR
+
+tests\test_oracle9_w1_main.py:2697: InterruptedError
+__________ test_r3_control_select_eintr_eagain_retried_within_frame ___________
+
+    def test_r3_control_select_eintr_eagain_retried_within_frame() -> None:
+        fake = FakeOS()
+        _, link = linked(fake)
+        fake.inbound.extend(GO_FRAME + ACK_FRAME)
+        count = select_plan(fake, finite_interruptions())
+>       assert link.read_control(deadline=deadline(fake)) == GO_FRAME
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:2730:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+deploy\oracle9_w1_main.py:581: in read_control
+    frame = self._read_exact(CONTROL_BYTES, deadline)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+deploy\oracle9_w1_main.py:515: in _read_exact
+    ready = system.select([0], [], [], min(remaining, SLICE_S))[0]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:471: in select
+    self.enter("select", None, tuple(readers), tuple(writers), timeout)
+tests\test_oracle9_w1_main.py:370: in enter
+    self.observed.setdefault(name, []).append(probe())
+                                              ^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def probe() -> object:
+        count[0] += 1
+        failure = plan.get(count[0])
+        if failure is not None:
+>           raise failure
+E           InterruptedError: [Errno 4] EINTR
+
+tests\test_oracle9_w1_main.py:2697: InterruptedError
+____________ test_r3_write_select_eintr_eagain_retried_before_cap _____________
+
+    def test_r3_write_select_eintr_eagain_retried_before_cap() -> None:
+        fake = FakeOS()
+        _, link = linked(fake)
+        count = select_plan(fake, finite_interruptions())
+>       assert link.write(b'{"e":"INIT_OK"}') is True
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:2742:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+deploy\oracle9_w1_main.py:599: in write
+    written = self._write_all(line + b"\n")
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+deploy\oracle9_w1_main.py:618: in _write_all
+    ready = system.select([], [1], [], min(remaining, SLICE_S))[1]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:471: in select
+    self.enter("select", None, tuple(readers), tuple(writers), timeout)
+tests\test_oracle9_w1_main.py:370: in enter
+    self.observed.setdefault(name, []).append(probe())
+                                              ^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def probe() -> object:
+        count[0] += 1
+        failure = plan.get(count[0])
+        if failure is not None:
+>           raise failure
+E           InterruptedError: [Errno 4] EINTR
+
+tests\test_oracle9_w1_main.py:2697: InterruptedError
+__________ test_r3_select_oserror_before_any_byte_is_closed_io[init] __________
+
+frame = 'init'
+
+    @pytest.mark.parametrize("frame", ["init", "control"])
+    def test_r3_select_oserror_before_any_byte_is_closed_io(frame: str) -> None:
+        fake = FakeOS()
+        _, link = linked(fake)
+        fake.inbound.extend(s2.lab_packet() if frame == "init" else GO_FRAME)
+        before = bytes(fake.inbound)
+        select_plan(fake, {1: FakeOSError()})
+        reader = link.read_init if frame == "init" else link.read_control
+>       assert reader(deadline=deadline(fake)) is None  # no FakeOSError escapes
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:2757:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+deploy\oracle9_w1_main.py:560: in read_init
+    header = self._read_exact(INIT_HEADER, deadline)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+deploy\oracle9_w1_main.py:515: in _read_exact
+    ready = system.select([0], [], [], min(remaining, SLICE_S))[0]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:471: in select
+    self.enter("select", None, tuple(readers), tuple(writers), timeout)
+tests\test_oracle9_w1_main.py:370: in enter
+    self.observed.setdefault(name, []).append(probe())
+                                              ^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def probe() -> object:
+        count[0] += 1
+        failure = plan.get(count[0])
+        if failure is not None:
+>           raise failure
+E           tests.test_oracle9_w1_main.FakeOSError: [Errno 5] SYNTHETIC
+
+tests\test_oracle9_w1_main.py:2697: FakeOSError
+________ test_r3_select_oserror_before_any_byte_is_closed_io[control] _________
+
+frame = 'control'
+
+    @pytest.mark.parametrize("frame", ["init", "control"])
+    def test_r3_select_oserror_before_any_byte_is_closed_io(frame: str) -> None:
+        fake = FakeOS()
+        _, link = linked(fake)
+        fake.inbound.extend(s2.lab_packet() if frame == "init" else GO_FRAME)
+        before = bytes(fake.inbound)
+        select_plan(fake, {1: FakeOSError()})
+        reader = link.read_init if frame == "init" else link.read_control
+>       assert reader(deadline=deadline(fake)) is None  # no FakeOSError escapes
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:2757:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+deploy\oracle9_w1_main.py:581: in read_control
+    frame = self._read_exact(CONTROL_BYTES, deadline)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+deploy\oracle9_w1_main.py:515: in _read_exact
+    ready = system.select([0], [], [], min(remaining, SLICE_S))[0]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:471: in select
+    self.enter("select", None, tuple(readers), tuple(writers), timeout)
+tests\test_oracle9_w1_main.py:370: in enter
+    self.observed.setdefault(name, []).append(probe())
+                                              ^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def probe() -> object:
+        count[0] += 1
+        failure = plan.get(count[0])
+        if failure is not None:
+>           raise failure
+E           tests.test_oracle9_w1_main.FakeOSError: [Errno 5] SYNTHETIC
+
+tests\test_oracle9_w1_main.py:2697: FakeOSError
+________ test_r3_init_select_oserror_after_header_poisons_and_stops_io ________
+
+    def test_r3_init_select_oserror_after_header_poisons_and_stops_io() -> None:
+        fake = FakeOS()
+        _, link = linked(fake)
+        packet = s2.lab_packet()
+        fake.inbound.extend(packet)
+        fake.chunk = 8  # the first read consumes exactly the header
+        select_plan(fake, {2: FakeOSError()})
+>       assert link.read_init(deadline=deadline(fake, 5.0)) is None
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:2770:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+deploy\oracle9_w1_main.py:566: in read_init
+    body = self._read_exact(length, deadline) if length else b""
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+deploy\oracle9_w1_main.py:515: in _read_exact
+    ready = system.select([0], [], [], min(remaining, SLICE_S))[0]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:471: in select
+    self.enter("select", None, tuple(readers), tuple(writers), timeout)
+tests\test_oracle9_w1_main.py:370: in enter
+    self.observed.setdefault(name, []).append(probe())
+                                              ^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def probe() -> object:
+        count[0] += 1
+        failure = plan.get(count[0])
+        if failure is not None:
+>           raise failure
+E           tests.test_oracle9_w1_main.FakeOSError: [Errno 5] SYNTHETIC
+
+tests\test_oracle9_w1_main.py:2697: FakeOSError
+___ test_r3_control_select_oserror_after_partial_read_poisons_and_stops_io ____
+
+    def test_r3_control_select_oserror_after_partial_read_poisons_and_stops_io() -> None:
+        fake = FakeOS()
+        _, link = linked(fake)
+        fake.inbound.extend(GO_FRAME)
+        fake.chunk = 5
+        select_plan(fake, {2: FakeOSError()})
+>       assert link.read_control(deadline=deadline(fake)) is None
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:2788:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+deploy\oracle9_w1_main.py:581: in read_control
+    frame = self._read_exact(CONTROL_BYTES, deadline)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+deploy\oracle9_w1_main.py:515: in _read_exact
+    ready = system.select([0], [], [], min(remaining, SLICE_S))[0]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:471: in select
+    self.enter("select", None, tuple(readers), tuple(writers), timeout)
+tests\test_oracle9_w1_main.py:370: in enter
+    self.observed.setdefault(name, []).append(probe())
+                                              ^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def probe() -> object:
+        count[0] += 1
+        failure = plan.get(count[0])
+        if failure is not None:
+>           raise failure
+E           tests.test_oracle9_w1_main.FakeOSError: [Errno 5] SYNTHETIC
+
+tests\test_oracle9_w1_main.py:2697: FakeOSError
+______ test_r3_write_select_oserror_is_false_and_poisoned[first-select] _______
+
+partial = False
+
+    @pytest.mark.parametrize("partial", [False, True], ids=["first-select", "after-partial-write"])
+    def test_r3_write_select_oserror_is_false_and_poisoned(partial: bool) -> None:
+        fake = FakeOS()
+        _, link = linked(fake)
+        if partial:
+            fake.write_limit = 4
+        select_plan(fake, {2 if partial else 1: FakeOSError()})
+>       assert link.write(b'{"e":"INIT_OK"}') is False  # no FakeOSError escapes
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:2806:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+deploy\oracle9_w1_main.py:599: in write
+    written = self._write_all(line + b"\n")
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+deploy\oracle9_w1_main.py:618: in _write_all
+    ready = system.select([], [1], [], min(remaining, SLICE_S))[1]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:471: in select
+    self.enter("select", None, tuple(readers), tuple(writers), timeout)
+tests\test_oracle9_w1_main.py:370: in enter
+    self.observed.setdefault(name, []).append(probe())
+                                              ^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def probe() -> object:
+        count[0] += 1
+        failure = plan.get(count[0])
+        if failure is not None:
+>           raise failure
+E           tests.test_oracle9_w1_main.FakeOSError: [Errno 5] SYNTHETIC
+
+tests\test_oracle9_w1_main.py:2697: FakeOSError
+___ test_r3_write_select_oserror_is_false_and_poisoned[after-partial-write] ___
+
+partial = True
+
+    @pytest.mark.parametrize("partial", [False, True], ids=["first-select", "after-partial-write"])
+    def test_r3_write_select_oserror_is_false_and_poisoned(partial: bool) -> None:
+        fake = FakeOS()
+        _, link = linked(fake)
+        if partial:
+            fake.write_limit = 4
+        select_plan(fake, {2 if partial else 1: FakeOSError()})
+>       assert link.write(b'{"e":"INIT_OK"}') is False  # no FakeOSError escapes
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main.py:2806:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+deploy\oracle9_w1_main.py:599: in write
+    written = self._write_all(line + b"\n")
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+deploy\oracle9_w1_main.py:618: in _write_all
+    ready = system.select([], [1], [], min(remaining, SLICE_S))[1]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:471: in select
+    self.enter("select", None, tuple(readers), tuple(writers), timeout)
+tests\test_oracle9_w1_main.py:370: in enter
+    self.observed.setdefault(name, []).append(probe())
+                                              ^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def probe() -> object:
+        count[0] += 1
+        failure = plan.get(count[0])
+        if failure is not None:
+>           raise failure
+E           tests.test_oracle9_w1_main.FakeOSError: [Errno 5] SYNTHETIC
+
+tests\test_oracle9_w1_main.py:2697: FakeOSError
+=========================== short test summary info ===========================
+FAILED tests/test_oracle9_w1_main.py::test_r1_decision_refuses_foreign_kind_before_any_callback[foreign-68]
+FAILED tests/test_oracle9_w1_main.py::test_r1_decision_refuses_foreign_kind_before_any_callback[foreign-None]
+FAILED tests/test_oracle9_w1_main.py::test_r1_decision_refuses_foreign_kind_before_any_callback[subclass-exit-68]
+FAILED tests/test_oracle9_w1_main.py::test_r1_decision_refuses_foreign_kind_before_any_callback[subclass-hold-None]
+FAILED tests/test_oracle9_w1_main.py::test_r2_retire_reentered_during_write_is_refused_until_write_ends[select]
+FAILED tests/test_oracle9_w1_main.py::test_r2_retire_reentered_during_write_is_refused_until_write_ends[os_write]
+FAILED tests/test_oracle9_w1_main.py::test_r2_retire_reentered_during_failing_write_is_refused
+FAILED tests/test_oracle9_w1_main.py::test_r3_init_select_eintr_eagain_retried_within_frame
+FAILED tests/test_oracle9_w1_main.py::test_r3_control_select_eintr_eagain_retried_within_frame
+FAILED tests/test_oracle9_w1_main.py::test_r3_write_select_eintr_eagain_retried_before_cap
+FAILED tests/test_oracle9_w1_main.py::test_r3_select_oserror_before_any_byte_is_closed_io[init]
+FAILED tests/test_oracle9_w1_main.py::test_r3_select_oserror_before_any_byte_is_closed_io[control]
+FAILED tests/test_oracle9_w1_main.py::test_r3_init_select_oserror_after_header_poisons_and_stops_io
+FAILED tests/test_oracle9_w1_main.py::test_r3_control_select_oserror_after_partial_read_poisons_and_stops_io
+FAILED tests/test_oracle9_w1_main.py::test_r3_write_select_oserror_is_false_and_poisoned[first-select]
+FAILED tests/test_oracle9_w1_main.py::test_r3_write_select_oserror_is_false_and_poisoned[after-partial-write]

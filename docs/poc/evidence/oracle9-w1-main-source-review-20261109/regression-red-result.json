@@ -1,0 +1,82 @@
+{
+  "test_sha256": "5abe4582908c5efe03222b26c2046e4607ab330d800186938151f6f5f443a463",
+  "exit_code": 1,
+  "suites": [
+    {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "16",
+      "skipped": "0",
+      "tests": "161",
+      "time": "7.463",
+      "timestamp": "2026-11-09T14:55:05.166193-03:00",
+      "hostname": "SMTZDIBDN1954"
+    }
+  ],
+  "failures": [
+    [
+      "test_r1_decision_refuses_foreign_kind_before_any_callback[foreign-68]",
+      "AssertionError: assert ['EXIT', 'HOLD'] == []\n  \n  Left contains 2 more items, first extra item: 'EXIT'\n  Use -v to get more diff"
+    ],
+    [
+      "test_r1_decision_refuses_foreign_kind_before_any_callback[foreign-None]",
+      "AssertionError: assert ['EXIT', 'HOLD'] == []\n  \n  Left contains 2 more items, first extra item: 'EXIT'\n  Use -v to get more diff"
+    ],
+    [
+      "test_r1_decision_refuses_foreign_kind_before_any_callback[subclass-exit-68]",
+      "AssertionError: assert ['EXIT', 'HOLD'] == []\n  \n  Left contains 2 more items, first extra item: 'EXIT'\n  Use -v to get more diff"
+    ],
+    [
+      "test_r1_decision_refuses_foreign_kind_before_any_callback[subclass-hold-None]",
+      "AssertionError: assert ['EXIT', 'HOLD'] == []\n  \n  Left contains 2 more items, first extra item: 'EXIT'\n  Use -v to get more diff"
+    ],
+    [
+      "test_r2_retire_reentered_during_write_is_refused_until_write_ends[select]",
+      "assert False is True\n +  where False = write(b'{\"e\":\"INIT_OK\"}')\n +    where write = <_lab_test.HostLink object at 0x000001A754025A90>.write"
+    ],
+    [
+      "test_r2_retire_reentered_during_write_is_refused_until_write_ends[os_write]",
+      "assert False is True\n +  where False = write(b'{\"e\":\"INIT_OK\"}')\n +    where write = <_lab_test.HostLink object at 0x000001A7541BD010>.write"
+    ],
+    [
+      "test_r2_retire_reentered_during_failing_write_is_refused",
+      "AssertionError: assert [True, 'EMPTY', True] == [False, 'OWNED', False]\n  \n  At index 0 diff: True != False\n  Use -v to get more diff"
+    ],
+    [
+      "test_r3_init_select_eintr_eagain_retried_within_frame",
+      "InterruptedError: [Errno 4] EINTR"
+    ],
+    [
+      "test_r3_control_select_eintr_eagain_retried_within_frame",
+      "InterruptedError: [Errno 4] EINTR"
+    ],
+    [
+      "test_r3_write_select_eintr_eagain_retried_before_cap",
+      "InterruptedError: [Errno 4] EINTR"
+    ],
+    [
+      "test_r3_select_oserror_before_any_byte_is_closed_io[init]",
+      "tests.test_oracle9_w1_main.FakeOSError: [Errno 5] SYNTHETIC"
+    ],
+    [
+      "test_r3_select_oserror_before_any_byte_is_closed_io[control]",
+      "tests.test_oracle9_w1_main.FakeOSError: [Errno 5] SYNTHETIC"
+    ],
+    [
+      "test_r3_init_select_oserror_after_header_poisons_and_stops_io",
+      "tests.test_oracle9_w1_main.FakeOSError: [Errno 5] SYNTHETIC"
+    ],
+    [
+      "test_r3_control_select_oserror_after_partial_read_poisons_and_stops_io",
+      "tests.test_oracle9_w1_main.FakeOSError: [Errno 5] SYNTHETIC"
+    ],
+    [
+      "test_r3_write_select_oserror_is_false_and_poisoned[first-select]",
+      "tests.test_oracle9_w1_main.FakeOSError: [Errno 5] SYNTHETIC"
+    ],
+    [
+      "test_r3_write_select_oserror_is_false_and_poisoned[after-partial-write]",
+      "tests.test_oracle9_w1_main.FakeOSError: [Errno 5] SYNTHETIC"
+    ]
+  ]
+}

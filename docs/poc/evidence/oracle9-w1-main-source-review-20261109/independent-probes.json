@@ -1,0 +1,32 @@
+[
+  {
+    "case": "foreign_kind_callbacks",
+    "calls": [
+      "EXIT",
+      "HOLD"
+    ],
+    "error": "MainRefusal",
+    "context": false
+  },
+  {
+    "case": "retire_during_write",
+    "during": [
+      {
+        "retired": true,
+        "safe_exit": true
+      }
+    ],
+    "write_returned": false,
+    "lines": [
+      "{\"e\":\"INIT_OK\"}"
+    ],
+    "link_state": "RETIRED",
+    "slot_state": "EMPTY"
+  },
+  {
+    "case": "select_io",
+    "raised": "FakeOSError",
+    "status": "OK",
+    "state": "POISONED"
+  }
+]

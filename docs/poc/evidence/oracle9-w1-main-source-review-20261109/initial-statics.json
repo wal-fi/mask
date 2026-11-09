@@ -1,0 +1,32 @@
+[
+  {
+    "gate": "source-lint",
+    "exit_code": 0,
+    "output": "All checks passed!\n"
+  },
+  {
+    "gate": "source-format",
+    "exit_code": 1,
+    "output": "unformatted: File would be reformatted\n   --> deploy\\oracle9_w1_main.py:820:18\n    |\n819 | class ThreadHandle:\n    -     def __init__(\n    -         self, root: MainRoot, slot: str, target: Callable[[], object], name: str\n    -     ) -> None:\n820 +     def __init__(self, root: MainRoot, slot: str, target: Callable[[], object], name: str) -> None:\n821 |         self._root, self._slot, self._target = root, slot, target\n    |\n\n1 file would be reformatted\n"
+  },
+  {
+    "gate": "ruff-all",
+    "exit_code": 0,
+    "output": "All checks passed!\n"
+  },
+  {
+    "gate": "format-all",
+    "exit_code": 0,
+    "output": "361 files already formatted\n"
+  },
+  {
+    "gate": "mypy311",
+    "exit_code": 0,
+    "output": "Success: no issues found in 361 source files\r\n"
+  },
+  {
+    "gate": "mypy314",
+    "exit_code": 0,
+    "output": "Success: no issues found in 361 source files\r\n"
+  }
+]

@@ -1,0 +1,34 @@
+[
+  {
+    "gate": "main",
+    "exit_code": 0,
+    "suites": [
+      {
+        "name": "pytest",
+        "errors": "0",
+        "failures": "0",
+        "skipped": "0",
+        "tests": "161",
+        "time": "2.150",
+        "timestamp": "2026-11-09T14:57:48.898702-03:00",
+        "hostname": "SMTZDIBDN1954"
+      }
+    ]
+  },
+  {
+    "gate": "related",
+    "exit_code": 0,
+    "suites": [
+      {
+        "name": "pytest",
+        "errors": "0",
+        "failures": "0",
+        "skipped": "0",
+        "tests": "585",
+        "time": "4.206",
+        "timestamp": "2026-11-09T14:57:52.428645-03:00",
+        "hostname": "SMTZDIBDN1954"
+      }
+    ]
+  }
+]

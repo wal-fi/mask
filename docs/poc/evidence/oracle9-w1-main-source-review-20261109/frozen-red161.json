@@ -1,0 +1,38 @@
+{
+  "source_sha256": "48127217bdcf4a3b8ef301df1aa08e0da31f24b49bc83eea2ae0fd28adf916eb",
+  "test_sha256": "5abe4582908c5efe03222b26c2046e4607ab330d800186938151f6f5f443a463",
+  "test_bytes": 101669,
+  "test_lines": 2814,
+  "frozen145_prefix_intact": true,
+  "red": {
+    "tests": 161,
+    "passed": 145,
+    "failures": 16,
+    "errors": 0,
+    "skips": 0,
+    "xfail": 0,
+    "seconds": 7.463
+  },
+  "statics": [
+    {
+      "gate": "test-lint",
+      "exit_code": 0,
+      "output": "All checks passed!\n"
+    },
+    {
+      "gate": "test-format",
+      "exit_code": 0,
+      "output": "1 file already formatted\n"
+    },
+    {
+      "gate": "test-mypy311",
+      "exit_code": 0,
+      "output": "Success: no issues found in 1 source file\r\n"
+    },
+    {
+      "gate": "test-mypy314",
+      "exit_code": 0,
+      "output": "Success: no issues found in 1 source file\r\n"
+    }
+  ]
+}
