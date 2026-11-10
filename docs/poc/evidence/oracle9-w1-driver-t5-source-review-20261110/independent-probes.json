@@ -1,0 +1,49 @@
+{
+  "source_sha256": "8c67ee4e002cd8abab507362e2a8cb664f338e9e59761e56dea64b46c5ef684b",
+  "test_sha256": "3402d6818d424efe2a59372e9283d1e5f83070f0a5a1022c1e2567a031af2cbd",
+  "fake_only": true,
+  "native_effects": false,
+  "probes": {
+    "reserve_return_late": {
+      "outcome": "ABORTED",
+      "calls": [
+        "reserve",
+        "adopt",
+        "release"
+      ],
+      "deadline": 1014.0,
+      "adopt_at": 1015.0,
+      "adopt_after_deadline": true,
+      "packets": 0
+    },
+    "opened_verify_return_late": {
+      "outcome": "T6_UNKILLED",
+      "opening_deadline": 1014.0,
+      "ready_at": 1015.0,
+      "results": [
+        {
+          "bytes": null,
+          "case": 24,
+          "e": "RESULT",
+          "kind": "EOF",
+          "next_seq": 49,
+          "reason": null,
+          "release": "RELEASED",
+          "rows": null,
+          "sink": null,
+          "stop_applied": null,
+          "truncated": null,
+          "verdict": "PASS"
+        }
+      ],
+      "false_pass_after_late_open": true
+    },
+    "pid_metadata_return_late": {
+      "outcome": "ABORTED",
+      "opening_deadline": 1014.0,
+      "guard_header_at": 1015.0,
+      "guard_io_after_deadline": true,
+      "packets": 0
+    }
+  }
+}

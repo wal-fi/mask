@@ -1,0 +1,53 @@
+..........FF...............................                              [100%]
+================================== FAILURES ===================================
+_____ test_m5_3_spawn_refuses_after_a_parent_side_end_was_closed[parent] ______
+
+closed = 'parent'
+
+    @pytest.mark.parametrize("closed", ["parent", "writer"])
+    def test_m5_3_spawn_refuses_after_a_parent_side_end_was_closed(closed: str) -> None:
+        """All four ends must still be owned at Popen; a closed parent/writer refuses first."""
+        fake = ProbeOS()
+        root = baseline(fake)
+        children = ns()["ProbeChildren"](root)
+        parent, child = children.pair()
+        reader, writer = children.stdin()
+        facades = {
+            "probe_parent": parent,
+            "probe_child": child,
+            "probe_stdin_r": reader,
+            "probe_stdin_w": writer,
+        }
+        gone = "probe_parent" if closed == "parent" else "probe_stdin_w"
+        assert facades.pop(gone).close() is True  # a positive close: that slot is EMPTY now
+>       with pytest.raises(ns()["MainRefusal"]) as caught:
+E       Failed: DID NOT RAISE MainRefusal
+
+tests\test_oracle9_w1_main_t5.py:559: Failed
+_____ test_m5_3_spawn_refuses_after_a_parent_side_end_was_closed[writer] ______
+
+closed = 'writer'
+
+    @pytest.mark.parametrize("closed", ["parent", "writer"])
+    def test_m5_3_spawn_refuses_after_a_parent_side_end_was_closed(closed: str) -> None:
+        """All four ends must still be owned at Popen; a closed parent/writer refuses first."""
+        fake = ProbeOS()
+        root = baseline(fake)
+        children = ns()["ProbeChildren"](root)
+        parent, child = children.pair()
+        reader, writer = children.stdin()
+        facades = {
+            "probe_parent": parent,
+            "probe_child": child,
+            "probe_stdin_r": reader,
+            "probe_stdin_w": writer,
+        }
+        gone = "probe_parent" if closed == "parent" else "probe_stdin_w"
+        assert facades.pop(gone).close() is True  # a positive close: that slot is EMPTY now
+>       with pytest.raises(ns()["MainRefusal"]) as caught:
+E       Failed: DID NOT RAISE MainRefusal
+
+tests\test_oracle9_w1_main_t5.py:559: Failed
+=========================== short test summary info ===========================
+FAILED tests/test_oracle9_w1_main_t5.py::test_m5_3_spawn_refuses_after_a_parent_side_end_was_closed[parent]
+FAILED tests/test_oracle9_w1_main_t5.py::test_m5_3_spawn_refuses_after_a_parent_side_end_was_closed[writer]

@@ -1,0 +1,32 @@
+{
+  "command": [
+    ".venv/Scripts/python.exe",
+    "-X",
+    "utf8",
+    "-m",
+    "pytest",
+    "tests/test_oracle9_w1_controller.py",
+    "tests/test_oracle9_w1_driver.py",
+    "tests/test_oracle9_w1_driver_session.py",
+    "tests/test_oracle9_w1_expect.py",
+    "tests/test_oracle9_w1_main.py",
+    "tests/test_oracle9_w1_driver_t5.py",
+    "tests/test_oracle9_w1_main_t5.py",
+    "-q",
+    "--junitxml=docs\\poc\\evidence\\oracle9-w1-main-t5-review-20261110\\final-related.xml"
+  ],
+  "exit": 0,
+  "suites": [
+    {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "849",
+      "time": "12.615",
+      "timestamp": "2026-11-10T10:36:02.665006-03:00",
+      "hostname": "SMTZDIBDN1954"
+    }
+  ],
+  "failures": []
+}

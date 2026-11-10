@@ -1,0 +1,24 @@
+{
+  "test_sha256": "6063c0e39387079c0ca89002a3514c6091af2c8d0eab1d3d6b3061b6d282ef04",
+  "bytes": 34736,
+  "main_sha256": "372f342fe966217ed7bc7b03a7271e98eb2be708c2c319c7825551a904b690f1",
+  "suites": [
+    {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "39",
+      "skipped": "0",
+      "tests": "41",
+      "time": "12.232",
+      "timestamp": "2026-11-10T10:19:01.181358-03:00",
+      "hostname": "SMTZDIBDN1954"
+    }
+  ],
+  "failure_categories": {
+    "System count": 1,
+    "missing _pipe2": 1,
+    "missing popen field": 37
+  },
+  "kind": "API absence RED; not behavioral proof",
+  "source_change_allowed_only": "deploy/oracle9_w1_main.py"
+}

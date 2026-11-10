@@ -1,0 +1,31 @@
+{
+  "exit_code": 1,
+  "source_sha256": "8c67ee4e002cd8abab507362e2a8cb664f338e9e59761e56dea64b46c5ef684b",
+  "test_sha256": "2b509c870292a30612953257565d8a705d23da11acbf62fad8ba40c7fbfeff0e",
+  "suites": [
+    {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "3",
+      "skipped": "0",
+      "tests": "89",
+      "time": "3.392",
+      "timestamp": "2026-11-10T09:32:33.437818-03:00",
+      "hostname": "SMTZDIBDN1954"
+    }
+  ],
+  "failures": [
+    {
+      "test": "test_r1_late_reserve_return_never_adopts_and_retains",
+      "message": "AssertionError: assert (24, 'SESSION', False) == (24, 'SESSION', True)\n  \n  At index 2 diff: False != True\n  Use -v to get more diff"
+    },
+    {
+      "test": "test_r1_late_opened_verification_is_not_a_pass",
+      "message": "AssertionError: assert [{'bytes': No...: 'EOF', ...}] == []\n  \n  Left contains one more item: {'bytes': None, 'case': 24, 'e': 'RESULT', 'kind': 'EOF', ...}\n  Use -v to get more diff"
+    },
+    {
+      "test": "test_r1_late_pid_read_gets_no_guard_io",
+      "message": "AssertionError: assert 'guard_header' not in ['reserve', 'adopt', 'pair', 'stdin', 'spawn', 'child_close', ...]\n +  where ['reserve', 'adopt', 'pair', 'stdin', 'spawn', 'child_close', ...] = names()\n +    where names = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000002E287E22790>.names"
+    }
+  ]
+}

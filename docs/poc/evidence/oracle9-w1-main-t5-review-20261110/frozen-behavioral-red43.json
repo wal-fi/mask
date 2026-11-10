@@ -1,0 +1,31 @@
+{
+  "exit": 1,
+  "suites": [
+    {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "2",
+      "skipped": "0",
+      "tests": "43",
+      "time": "1.374",
+      "timestamp": "2026-11-10T10:29:52.996030-03:00",
+      "hostname": "SMTZDIBDN1954"
+    }
+  ],
+  "failures": [
+    {
+      "name": "test_m5_3_spawn_refuses_after_a_parent_side_end_was_closed[parent]",
+      "type": "failure",
+      "message": "Failed: DID NOT RAISE MainRefusal"
+    },
+    {
+      "name": "test_m5_3_spawn_refuses_after_a_parent_side_end_was_closed[writer]",
+      "type": "failure",
+      "message": "Failed: DID NOT RAISE MainRefusal"
+    }
+  ],
+  "test_sha256": "ec2df9113c8c3c78eb22512144a6dd41b3e3c6e43b07dcbc3773ee76d2a3dc69",
+  "main_sha256": "c2eddba474a66f0879a7eb41fc665d130dd8707da78ff1185e915abdf0f03325",
+  "test_bytes": 36224,
+  "kind": "behavioral RED: preclosed parent/writer still spawn; original41 PASS"
+}

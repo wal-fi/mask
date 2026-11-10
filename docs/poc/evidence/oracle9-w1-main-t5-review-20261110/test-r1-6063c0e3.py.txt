@@ -1,0 +1,864 @@
+"""Main T5 probe binding (M5-1..7) over the closed fake System; RED-first, no effect.
+
+Contract for the FUTURE amendment of ``deploy/oracle9_w1_main.py`` (T5-DESIGN v3 §3,
+T5-DESIGN-REVIEW, T5-SOURCE-REVIEW). The current main (372f342f) still pins driver
+39a68904 and has 20 System fields / 5 slots, so feature cases are expected to fail
+first (old pin refused by ``load_driver``, missing ``ProbeChildren``/fields). That
+API/pin RED proves no binding behavior. Main is loaded lazily (``m1.main()``) inside
+feature cases only; ``test_sanity_*`` never loads it.
+
+Harness: the reviewed ``FakeOS``/``FakeSock`` of ``tests/test_oracle9_w1_main.py`` are
+extended by subclass (``ProbeOS``/``ProbeSock``); the old module and its globals are
+not modified. ``ProbeOS.system`` builds the prospective 22-field System. One shared
+``d1.Clock``. Nothing global (stdlib, environment, SDK algorithm) is patched.
+
+Prospective stable contract fixed by this file:
+
+- ``System`` has exactly the old 20 fields plus ``popen`` and ``pipe2``;
+  ``real_system().popen is subprocess.Popen`` (never invoked) and ``pipe2`` is the
+  module function ``_pipe2(flags)`` whose body only returns ``os.pipe2(flags)``; that
+  is the only ``os.pipe2`` reference, so import/``real_system()`` never look it up.
+- ``SLOTS`` = old five + ``probe_parent``, ``probe_child``, ``probe_stdin_r``,
+  ``probe_stdin_w``, ``probe_process``; ``DRIVER_SHA``/``DRIVER_BYTES`` = b54a8a94/51913.
+- ``build_ports`` passes ``children=ProbeChildren(root)``; ``SessionIds.nonce()``
+  returns exactly 32 bytes from ``System.urandom(32)``, else ``MainRefusal("IDS")``.
+- ``ProbeChildren(root).pair()``: both parent/child slots reserved UNKNOWN before
+  ``System.socketpair(1, SOCK_STREAM)``, owned right after, then each socket
+  ``set_inheritable(False)``. Parent facade: ``recv_exact(n, *, deadline)`` through the
+  public ``RawChannel`` with ``ResultDeadline(expires_at=deadline, clock=System.monotonic)``
+  and ``close() -> bool``; no send/write/shutdown/channel attribute. Child facade:
+  ``fd`` and ``close() -> bool``. A socket close is positive only when ``fileno() == -1``.
+- ``stdin()``: both stdin slots reserved UNKNOWN before ``System.pipe2(0o2000000)``
+  (Linux O_CLOEXEC literal), owned right after, then only the writer
+  ``set_blocking(w, False)``. Reader facade: ``fd``, ``close()``; writer facade:
+  ``write_all(packet, *, deadline) -> bool`` (select/os_write, partial writes and EAGAIN
+  retried, never a write after the absolute deadline) and ``close()``. A raw fd close is
+  positive when ``System.close(fd)`` returns (os.close contract); OSError keeps the slot.
+- ``spawn(child, reader, *, parent_pid, address_bytes, idle_ms)``: only the owned child
+  and reader facades; process slot reserved UNKNOWN before ``System.popen`` with the
+  installed worker argv, ``stdin=<reader fd>``, ``stdout/stderr=subprocess.DEVNULL``,
+  ``env=child_environment()``, ``close_fds=True``, ``pass_fds=(<child fd>,)``,
+  ``bufsize=0``, no shell; owned right after. Process facade: ``pid``,
+  ``wait(*, deadline) -> int | None`` (finite raw ``wait(timeout)`` slices of at most
+  ``SLICE_S``; only an exact int result clears the slot) and ``kill() -> bool``
+  (never clears).
+
+Unproven by these fakes (native Oracle proof): kernel EOF, dup2/fd inheritance and
+close-on-exec, waitpid/returncode, the installed worker env/guard, a common monotonic
+clock and PostgreSQL backend closure. The fake child honours its argv and the public
+codecs only; it is not the real worker.
+"""
+
+from __future__ import annotations
+
+import ast
+import dataclasses
+import errno
+import hashlib
+import hmac
+import socket
+import subprocess
+import sys
+from types import SimpleNamespace
+from typing import Any
+
+import pytest
+
+from maskgw.pgwire.result_frame import ResultLimits
+from maskgw.pgwire.transport import TransportError, TransportFailure
+from maskgw.runtime import worker_protocol as wire
+from maskgw.runtime.budget import ReservationKind
+from maskgw.runtime.worker_process import child_environment
+from tests import test_oracle9_w1_driver as d1
+from tests import test_oracle9_w1_main as m1
+
+MIB = d1.MIB
+T5 = d1.T5
+O_CLOEXEC = 0o2000000  # Linux x86-64 literal; native value itself is NOT proven here
+PROC_PID = 4242
+WORKER_AS = 256 * MIB
+IDLE_MS = 30000
+NEW_DRIVER_SHA = "b54a8a9457a908e839d1f5870280644839478bc471e5e06cd4268bcdcff8c51f"
+NEW_DRIVER_SIZE = 51913
+# Independent literal contracts: never derived from the old fixture, which will migrate.
+LEGACY20 = frozenset(
+    {
+        "open",
+        "read",
+        "close",
+        "fstat",
+        "isatty",
+        "set_blocking",
+        "os_read",
+        "os_write",
+        "select",
+        "socketpair",
+        "thread_class",
+        "active_count",
+        "signal",
+        "monotonic",
+        "sleep",
+        "pause",
+        "urandom",
+        "protect",
+        "is_main_thread",
+        "silence",
+    }
+)
+BASE5 = ("pair_writer", "pair_reader", "sink_thread", "watcher_thread", "link")
+FIELDS22 = LEGACY20 | {"popen", "pipe2"}
+PROBE_SLOTS = ("probe_parent", "probe_child", "probe_stdin_r", "probe_stdin_w", "probe_process")
+SLOTS10 = (*BASE5, *PROBE_SLOTS)
+NO_SEND = ("send", "send_all", "sendall", "write", "shutdown", "shutdown_write", "channel")
+
+
+# ---------------------------------------------------------------- fake OS extension
+
+
+class ProbeSock(m1.FakeSock):
+    """Fake socket end; parent reads never see EOF from closing its copy of the child end."""
+
+    def __init__(self, fake: ProbeOS, fd: int) -> None:
+        super().__init__(fake, fd)
+        self.inheritable: bool | None = None
+
+    def set_inheritable(self, flag: bool) -> None:
+        self.fake.enter("set_inheritable", self.fd, self.fd, flag)
+        self.inheritable = flag
+
+    def recv(self, size: int) -> bytes:
+        if self.closed:
+            raise OSError(errno.EBADF, "EBADF")
+        if self.buffer:
+            data = bytes(self.buffer[:size])
+            del self.buffer[:size]
+            return data
+        self.fake.clock.now += self.timeout if self.timeout is not None else 0.25
+        raise TimeoutError
+
+
+class FakeProc:
+    """Raw fake process: natural exit 0 only after the parent socket end was closed."""
+
+    def __init__(self, fake: ProbeOS, parent: ProbeSock, argv: list[str]) -> None:
+        self.fake, self.parent, self.argv = fake, parent, argv
+        self.pid = PROC_PID
+        self.stdin = None  # Popen(stdin=<fd>) creates no pipe of its own
+        self.returncode: int | None = None
+
+    def wait(self, timeout: float) -> Any:
+        self.fake.enter("proc_wait", None, timeout)
+        if self.fake.wait_script:
+            item = self.fake.wait_script.pop(0)
+            if isinstance(item, BaseException):
+                raise item
+            return item
+        if self.returncode is not None:
+            return self.returncode
+        if self.parent.closed:
+            self.returncode = 0
+            return 0
+        self.fake.clock.now += timeout
+        raise subprocess.TimeoutExpired("SYNTHETIC", timeout)
+
+    def kill(self) -> None:
+        self.fake.enter("proc_kill", None)
+        self.returncode = -9
+
+
+class ProbeOS(m1.FakeOS):
+    """Reviewed FakeOS plus the two prospective calls and pipe/process fakes."""
+
+    def __init__(self, clock: d1.Clock | None = None) -> None:
+        super().__init__(clock)
+        self.pipes: dict[int, str] = {}
+        self.last_pipe: tuple[int, int] = (-1, -1)
+        self.pipe_data = bytearray()
+        self.pipe_limit = 1 << 20
+        self.pipe_eagain = 0
+        self.pipe_blocked = False
+        self.procs: list[FakeProc] = []
+        self.popen_calls: list[tuple[list[str], dict[str, Any]]] = []
+        self.wait_script: list[object] = []
+        self.random_override: object = None
+
+    def system(self, ns: dict[str, Any]) -> Any:
+        return ns["System"](**{name: getattr(self, name) for name in FIELDS22})
+
+    def socketpair(self, family: object, kind: object) -> tuple[ProbeSock, ProbeSock]:
+        self.enter("socketpair", None, family, kind)
+        first, second = ProbeSock(self, self.next_fd), ProbeSock(self, self.next_fd + 1)
+        self.next_fd += 2
+        first.peer, second.peer = second, first
+        self.socks += [first, second]
+        return first, second
+
+    def pipe2(self, flags: int) -> tuple[int, int]:
+        self.enter("pipe2", None, flags)
+        read_fd, write_fd = self.next_fd, self.next_fd + 1
+        self.next_fd += 2
+        self.pipes[read_fd], self.pipes[write_fd] = "r", "w"
+        self.last_pipe = (read_fd, write_fd)
+        return read_fd, write_fd
+
+    def os_write(self, fd: int, data: bytes | memoryview) -> int:
+        if fd not in self.pipes:
+            return super().os_write(fd, data)
+        self.enter("pipe_write", fd, fd, len(data))
+        self.check(self.pipes[fd] == "w", "write-to-read-end")
+        if self.pipe_eagain:
+            self.pipe_eagain -= 1
+            raise BlockingIOError(errno.EAGAIN, "EAGAIN")
+        chunk = bytes(data)[: self.pipe_limit]
+        self.pipe_data.extend(chunk)
+        return len(chunk)
+
+    def select(
+        self, readers: list[int], writers: list[int], errors: list[int], timeout: float
+    ) -> tuple[list[int], list[int], list[int]]:
+        if not any(fd in self.pipes for fd in writers):
+            return super().select(readers, writers, errors, timeout)
+        self.enter("pipe_select", None, tuple(writers), timeout)
+        self.check(not readers and not errors and timeout > 0, "pipe-select-args")
+        if self.pipe_blocked:
+            self.clock.now += timeout
+            return [], [], []
+        return [], list(writers), []
+
+    def close(self, fd: int) -> None:
+        if fd not in self.pipes:
+            super().close(fd)
+            return
+        self.enter("pipe_close", fd, fd)
+        kind = self.pipes.pop(fd)
+        if kind == "w":
+            self.child_reads_init()
+
+    def child_reads_init(self) -> None:
+        """Fake child: full INIT plus stdin EOF => OPENED with the public HMAC binding."""
+        if not self.procs or len(self.pipe_data) < wire.HEADER_BYTES:
+            return
+        data = bytes(self.pipe_data)
+        kind, size = wire.parse_header(data[: wire.HEADER_BYTES])
+        if kind is not wire.Kind.INIT or size != len(data) - wire.HEADER_BYTES:
+            return
+        init = wire.decode_init(data[wire.HEADER_BYTES :])
+        tag = hmac.digest(init.nonce, init.snapshot, "sha256")
+        self.procs[-1].parent.buffer.extend(wire.encode_opened(tag))
+
+    def popen(self, argv: list[str], **kwargs: Any) -> FakeProc:
+        self.enter("popen", None, tuple(argv))
+        self.popen_calls.append((list(argv), dict(kwargs)))
+        child_fd = int(argv[5])
+        child = next(sock for sock in self.socks if sock.fd == child_fd)
+        parent = child.peer
+        assert isinstance(parent, ProbeSock)
+        proc = FakeProc(self, parent, list(argv))
+        self.procs.append(proc)
+        parent.buffer.extend(wire.encode_guard(PROC_PID, int(argv[6]), int(argv[7])))
+        return proc
+
+    def urandom(self, size: int) -> Any:
+        """Hostile System port for refusal cases: may return a foreign value on purpose."""
+        if self.random_override is None:
+            return super().urandom(size)
+        self.enter("urandom", None, size)
+        return self.random_override
+
+
+# ---------------------------------------------------------------- helpers
+
+
+def ns() -> dict[str, Any]:
+    return m1.main()
+
+
+def probe_states(root: Any) -> dict[str, str]:
+    return {name: root.slots[name].state.name for name in PROBE_SLOTS}
+
+
+def states_with(**changes: str) -> dict[str, str]:
+    states = dict.fromkeys(PROBE_SLOTS, "EMPTY")
+    states.update(changes)
+    return states
+
+
+def baseline(fake: ProbeOS) -> Any:
+    """Clean decided root (completed ABORTED, link retired): safe_exit holds first."""
+    root = m1.clean_root(fake)
+    assert ns()["safe_exit"](root) is True
+    fake.log.clear()
+    return root
+
+
+def acquire(fake: ProbeOS, root: Any) -> tuple[Any, Any, Any, Any, Any, Any]:
+    assert root.system.monotonic == fake.monotonic  # the root is bound to this fake OS
+    children = ns()["ProbeChildren"](root)
+    parent, child = children.pair()
+    reader, writer = children.stdin()
+    proc = children.spawn(child, reader, parent_pid=1, address_bytes=WORKER_AS, idle_ms=IDLE_MS)
+    return children, parent, child, reader, writer, proc
+
+
+def worker_argv(child_fd: int) -> list[str]:
+    return [
+        sys.executable,
+        "-I",
+        "-B",
+        "-m",
+        "maskgw.runtime.worker_process",
+        str(child_fd),
+        "1",
+        str(WORKER_AS),
+        str(IDLE_MS),
+    ]
+
+
+class IntZero(int):
+    """int subclass: never an exact returncode."""
+
+
+class RootFactory(d1.Factory):
+    """D1 trusted session fake; also binds the same real ledger to the main root."""
+
+    def __init__(self, world: d1.World, root: Any) -> None:
+        super().__init__(world)
+        self.root = root
+
+    def create(self, *args: Any, **kwargs: Any) -> d1.FakeSession:
+        session = super().create(*args, **kwargs)
+        if self.root.ledger is None:
+            self.root.ledger = args[0]
+        return session
+
+
+# ---------------------------------------------------------------- sanities (no main)
+
+
+def test_sanity_prospective_literals_and_pure_child_environment() -> None:
+    assert len(LEGACY20) == 20 and len(FIELDS22) == 22
+    assert {"popen", "pipe2"}.isdisjoint(LEGACY20)
+    assert len(BASE5) == 5 and len(SLOTS10) == 10 and len(set(SLOTS10)) == 10
+    assert set(PROBE_SLOTS).isdisjoint(BASE5)
+    assert len(m1.DRIVER_SOURCE) == NEW_DRIVER_SIZE
+    assert hashlib.sha256(m1.DRIVER_SOURCE).hexdigest() == NEW_DRIVER_SHA
+    env = child_environment()
+    assert type(env) is dict and set(env) == {
+        "PATH",
+        "LANG",
+        "LC_ALL",
+        "HOME",
+        "TMPDIR",
+        "MALLOC_ARENA_MAX",
+    }
+    assert child_environment() == env and child_environment() is not env  # pure literal
+
+
+def test_sanity_probe_os_speaks_public_codecs_and_keeps_child_copy_separate() -> None:
+    fake = ProbeOS()
+    parent, child = fake.socketpair(1, socket.SOCK_STREAM)
+    read_fd, write_fd = fake.pipe2(O_CLOEXEC)
+    proc = fake.popen(worker_argv(child.fd), stdin=read_fd, pass_fds=(child.fd,))
+    kind, size = wire.parse_header(bytes(parent.buffer[: wire.HEADER_BYTES]))
+    assert kind is wire.Kind.GUARD_READY
+    body = bytes(parent.buffer[wire.HEADER_BYTES : wire.HEADER_BYTES + size])
+    assert wire.decode_guard(body) == (PROC_PID, 1, WORKER_AS)
+    parent.buffer.clear()
+    child.close()  # the parent's local copy: never an EOF for the parent end
+    parent.settimeout(0.25)
+    with pytest.raises(TimeoutError):
+        parent.recv(1)
+    key = wire.SessionKey(bytes(16), d1.DATASOURCE_BYTES, 2, 1)
+    limits = ResultLimits(max_rows=1000, max_frame_bytes=d1.FRAME_LIMIT)
+    packet = wire.encode_init(wire.SecretInit(key, limits, 1012.0, bytes(32), b"SNAP"))
+    assert fake.select([], [write_fd], [], 0.25) == ([], [write_fd], [])
+    assert fake.os_write(write_fd, packet) == len(packet)
+    fake.close(write_fd)
+    tag = hmac.digest(bytes(32), b"SNAP", "sha256")
+    assert bytes(parent.buffer) == wire.encode_opened(tag)
+    with pytest.raises(subprocess.TimeoutExpired):
+        proc.wait(0.25)
+    parent.close()
+    assert proc.wait(0.25) == 0
+    assert proc.stdin is None
+    assert fake.violations == []
+
+
+# ---------------------------------------------------------------- M5-1 fields, slots, pins
+
+
+def test_m5_1_system_slots_pins_and_lazy_wrappers() -> None:
+    names = [field.name for field in dataclasses.fields(ns()["System"])]
+    assert len(names) == 22 and set(names) == FIELDS22
+    assert ns()["SLOTS"] == SLOTS10
+    assert (ns()["DRIVER_SHA"], ns()["DRIVER_BYTES"]) == (NEW_DRIVER_SHA, NEW_DRIVER_SIZE)
+    system = ns()["real_system"]()  # references only: nothing is invoked
+    assert system.popen is subprocess.Popen
+    assert system.pipe2 is ns()["_pipe2"]
+
+
+def test_m5_1_pipe2_wrapper_is_the_only_lazy_os_pipe2_reference() -> None:
+    tree = m1.main_tree()
+    wrapper = m1.function(tree, "_pipe2")
+    assert m1.argument_names(wrapper) == ["flags"]
+    assert len(wrapper.body) == 1
+    statement = wrapper.body[0]
+    assert isinstance(statement, ast.Return) and statement.value is not None
+    assert ast.unparse(statement.value) == "os.pipe2(flags)"
+    everywhere = [
+        node for node in ast.walk(tree) if isinstance(node, ast.Attribute) and node.attr == "pipe2"
+    ]
+    inside = [
+        node
+        for node in ast.walk(wrapper)
+        if isinstance(node, ast.Attribute) and node.attr == "pipe2"
+    ]
+    assert len(everywhere) == len(inside) == 1
+    keywords = {
+        keyword.arg: ast.unparse(keyword.value)
+        for node in ast.walk(m1.function(tree, "real_system"))
+        if isinstance(node, ast.Call)
+        for keyword in node.keywords
+    }
+    assert keywords["popen"] == "subprocess.Popen"
+    assert keywords["pipe2"] == "_pipe2"
+
+
+def test_m5_1_build_ports_binds_probe_children_and_session_ids() -> None:
+    fake = ProbeOS()
+    root, _ = m1.linked(fake)
+    ports = ns()["build_ports"](root)
+    assert type(ports.children) is ns()["ProbeChildren"]
+    assert type(ports.ids) is ns()["SessionIds"]
+    assert probe_states(root) == states_with()
+
+
+# ---------------------------------------------------------------- M5-2 pair and pipe
+
+
+def test_m5_2_pair_reserves_before_owns_after_then_noninheritable() -> None:
+    fake = ProbeOS()
+    root = baseline(fake)
+    fake.probes["socketpair"] = lambda: probe_states(root)
+    fake.probes["set_inheritable"] = lambda: probe_states(root)
+    parent, child = ns()["ProbeChildren"](root).pair()
+    unknown = states_with(probe_parent="UNKNOWN", probe_child="UNKNOWN")
+    owned = states_with(probe_parent="OWNED", probe_child="OWNED")
+    assert fake.observed["socketpair"] == [unknown]
+    assert fake.observed["set_inheritable"] == [owned, owned]
+    assert m1.ops(fake, "socketpair") == [("socketpair", 1, socket.SOCK_STREAM)]
+    first, second = fake.socks
+    assert isinstance(first, ProbeSock) and isinstance(second, ProbeSock)
+    assert (first.inheritable, second.inheritable) == (False, False)
+    assert root.slots["probe_parent"].value is parent
+    assert root.slots["probe_child"].value is child
+    assert child.fd == second.fd
+    for name in NO_SEND:
+        assert not hasattr(parent, name)
+    assert ns()["safe_exit"](root) is False  # owned ends, not a missing decision
+    assert parent.close() is True and child.close() is True
+    assert probe_states(root) == states_with()
+    assert ns()["safe_exit"](root) is True
+
+
+def test_m5_2_stdin_pipe2_cloexec_and_only_writer_nonblocking() -> None:
+    fake = ProbeOS()
+    root = baseline(fake)
+    children = ns()["ProbeChildren"](root)
+    children.pair()
+    fake.probes["pipe2"] = lambda: probe_states(root)
+    fake.probes["set_blocking"] = lambda: probe_states(root)
+    reader, writer = children.stdin()
+    read_fd, write_fd = fake.last_pipe
+    ends = {"probe_parent": "OWNED", "probe_child": "OWNED"}
+    assert fake.observed["pipe2"] == [
+        states_with(**ends, probe_stdin_r="UNKNOWN", probe_stdin_w="UNKNOWN")
+    ]
+    owned = states_with(**ends, probe_stdin_r="OWNED", probe_stdin_w="OWNED")
+    assert fake.observed["set_blocking"] == [owned]
+    assert m1.ops(fake, "pipe2") == [("pipe2", O_CLOEXEC)]
+    assert m1.ops(fake, "set_blocking") == [("set_blocking", write_fd, False)]
+    assert reader.fd == read_fd
+    assert root.slots["probe_stdin_r"].value is reader
+    assert root.slots["probe_stdin_w"].value is writer
+    for name in ("send", "send_all", "recv", "recv_exact"):
+        assert not hasattr(writer, name)
+
+
+# ---------------------------------------------------------------- M5-3 Popen
+
+
+def test_m5_3_popen_after_four_owned_ends_with_exact_worker_arguments() -> None:
+    fake = ProbeOS()
+    root = baseline(fake)
+    children = ns()["ProbeChildren"](root)
+    parent, child = children.pair()
+    reader, writer = children.stdin()
+    read_fd, write_fd = fake.last_pipe
+    fake.probes["popen"] = lambda: probe_states(root)
+    proc = children.spawn(child, reader, parent_pid=1, address_bytes=WORKER_AS, idle_ms=IDLE_MS)
+    four = dict.fromkeys(PROBE_SLOTS[:4], "OWNED")
+    assert fake.observed["popen"] == [states_with(**four, probe_process="UNKNOWN")]
+    assert probe_states(root) == states_with(**four, probe_process="OWNED")
+    assert root.slots["probe_process"].value is proc
+    argv, kwargs = fake.popen_calls[0]
+    assert argv == worker_argv(child.fd)
+    assert kwargs == {
+        "stdin": read_fd,
+        "stdout": subprocess.DEVNULL,
+        "stderr": subprocess.DEVNULL,
+        "env": child_environment(),
+        "close_fds": True,
+        "pass_fds": (child.fd,),
+        "bufsize": 0,
+    }
+    assert "shell" not in kwargs and kwargs["stdin"] is not subprocess.PIPE
+    assert write_fd not in kwargs["pass_fds"] and write_fd != kwargs["stdin"]
+    assert str(write_fd) not in argv
+    assert proc.pid == PROC_PID
+    assert fake.procs[0].stdin is None
+    del parent, writer
+
+
+@pytest.mark.parametrize("which", ["child", "reader"])
+def test_m5_3_spawn_refuses_foreign_ends_before_any_process(which: str) -> None:
+    fake = ProbeOS()
+    root = baseline(fake)
+    children = ns()["ProbeChildren"](root)
+    _, child = children.pair()
+    reader, _ = children.stdin()
+    foreign = SimpleNamespace(fd=child.fd if which == "child" else reader.fd)
+    args = (foreign, reader) if which == "child" else (child, foreign)
+    with pytest.raises(ns()["MainRefusal"]) as caught:
+        children.spawn(*args, parent_pid=1, address_bytes=WORKER_AS, idle_ms=IDLE_MS)
+    m1.assert_closed(caught.value, ns()["MainRefusal"])
+    assert m1.ops(fake, "popen") == []
+    assert root.slots["probe_process"].state.name == "EMPTY"
+
+
+# ---------------------------------------------------------------- M5-4 failures and controls
+
+
+def raise_control() -> None:
+    raise KeyboardInterrupt
+
+
+@pytest.mark.parametrize(
+    ("stage", "mechanism", "error", "expected"),
+    [
+        pytest.param(
+            "pair",
+            "socketpair",
+            m1.FakeOSError(),
+            {"probe_parent": "UNKNOWN", "probe_child": "UNKNOWN"},
+            id="socketpair-error",
+        ),
+        pytest.param(
+            "pair",
+            "socketpair",
+            KeyboardInterrupt(),
+            {"probe_parent": "UNKNOWN", "probe_child": "UNKNOWN"},
+            id="socketpair-control",
+        ),
+        pytest.param(
+            "pair",
+            "set_inheritable",
+            None,
+            {"probe_parent": "OWNED", "probe_child": "OWNED"},
+            id="control-after-socketpair-return",
+        ),
+        pytest.param(
+            "stdin",
+            "pipe2",
+            m1.FakeOSError(),
+            {"probe_stdin_r": "UNKNOWN", "probe_stdin_w": "UNKNOWN"},
+            id="pipe2-error",
+        ),
+        pytest.param(
+            "stdin",
+            "set_blocking",
+            None,
+            {"probe_stdin_r": "OWNED", "probe_stdin_w": "OWNED"},
+            id="control-after-pipe2-return",
+        ),
+        pytest.param(
+            "spawn", "popen", m1.FakeOSError(), {"probe_process": "UNKNOWN"}, id="popen-error"
+        ),
+        pytest.param(
+            "spawn", "popen", KeyboardInterrupt(), {"probe_process": "UNKNOWN"}, id="popen-control"
+        ),
+    ],
+)
+def test_m5_4_creation_failure_or_control_retains_and_blocks_safe_exit(
+    stage: str, mechanism: str, error: BaseException | None, expected: dict[str, str]
+) -> None:
+    fake = ProbeOS()
+    root = baseline(fake)
+    children = ns()["ProbeChildren"](root)
+    prior: dict[str, str] = {}
+    child: Any = None
+    reader: Any = None
+    if stage in ("stdin", "spawn"):
+        _, child = children.pair()
+        prior |= {"probe_parent": "OWNED", "probe_child": "OWNED"}
+    if stage == "spawn":
+        reader, _ = children.stdin()
+        prior |= {"probe_stdin_r": "OWNED", "probe_stdin_w": "OWNED"}
+    if error is None:
+        fake.hooks[mechanism] = raise_control  # runs after the creating call returned
+    else:
+        fake.fail[mechanism] = {None: error}
+    with pytest.raises((m1.FakeOSError, KeyboardInterrupt)):
+        if stage == "pair":
+            children.pair()
+        elif stage == "stdin":
+            children.stdin()
+        else:
+            children.spawn(child, reader, parent_pid=1, address_bytes=WORKER_AS, idle_ms=IDLE_MS)
+    assert probe_states(root) == states_with(**prior, **expected)
+    assert ns()["safe_exit"](root) is False
+    for name, state in expected.items():
+        if state == "OWNED":
+            assert root.slots[name].value is not None  # the original stays reachable
+
+
+# ---------------------------------------------------------------- M5-5 writer and raw closes
+
+
+def test_m5_5_writer_partial_writes_and_eagain_within_deadline() -> None:
+    fake = ProbeOS()
+    root = baseline(fake)
+    _, _, _, _, writer, _ = acquire(fake, root)
+    fake.pipe_limit, fake.pipe_eagain = 5, 1
+    start = fake.clock.now
+    assert writer.write_all(b"0123456789AB", deadline=start + 1.0) is True
+    assert bytes(fake.pipe_data) == b"0123456789AB"
+    sizes = [entry[2] for entry in m1.ops(fake, "pipe_write")]
+    assert sizes == [12, 12, 7, 2]  # EAGAIN first, then offset-only partial writes
+    assert all(0 < entry[2] <= 0.25 for entry in m1.ops(fake, "pipe_select"))
+
+
+def test_m5_5_writer_never_writes_after_absolute_deadline() -> None:
+    fake = ProbeOS()
+    root = baseline(fake)
+    _, _, _, _, writer, _ = acquire(fake, root)
+    fake.pipe_blocked = True
+    deadline = fake.clock.now + 0.6
+    assert writer.write_all(b"never", deadline=deadline) is False
+    assert m1.ops(fake, "pipe_write") == []
+    assert fake.clock.now >= deadline
+    fake.pipe_blocked = False
+    assert writer.write_all(b"late", deadline=fake.clock.now) is False  # already expired
+    assert m1.ops(fake, "pipe_write") == []
+    assert fake.pipe_data == bytearray()
+
+
+@pytest.mark.parametrize("late", [0.0, 0.5], ids=["at-deadline", "past-deadline"])
+def test_m5_5_ready_select_delivered_late_gets_zero_writes(late: float) -> None:
+    fake = ProbeOS()
+    root = baseline(fake)
+    _, _, _, _, writer, _ = acquire(fake, root)
+    deadline = fake.clock.now + 1.0
+
+    def deliver_late() -> None:  # the select call itself returns ready only at/after it
+        fake.clock.now = deadline + late
+
+    fake.hooks["pipe_select"] = deliver_late
+    assert writer.write_all(b"payload", deadline=deadline) is False
+    assert len(m1.ops(fake, "pipe_select")) == 1
+    assert m1.ops(fake, "pipe_write") == []
+    assert fake.pipe_data == bytearray()
+
+
+@pytest.mark.parametrize("late", [0.0, 0.5], ids=["at-deadline", "past-deadline"])
+def test_m5_5_partial_write_returning_after_deadline_gets_no_next_write(late: float) -> None:
+    fake = ProbeOS()
+    root = baseline(fake)
+    _, _, _, _, writer, _ = acquire(fake, root)
+    fake.pipe_limit = 3
+    deadline = fake.clock.now + 1.0
+
+    def return_late() -> None:  # this write completes, but only at/after the deadline
+        fake.clock.now = deadline + late
+
+    fake.hooks["pipe_write"] = return_late
+    assert writer.write_all(b"0123456789", deadline=deadline) is False
+    assert [entry[2] for entry in m1.ops(fake, "pipe_write")] == [10]
+    assert bytes(fake.pipe_data) == b"012"
+
+
+@pytest.mark.parametrize("end", ["reader", "writer"])
+def test_m5_5_raw_fd_close_contract(end: str) -> None:
+    fake = ProbeOS()
+    root = baseline(fake)
+    _, _, _, reader, writer, _ = acquire(fake, root)
+    facade = reader if end == "reader" else writer
+    slot = "probe_stdin_r" if end == "reader" else "probe_stdin_w"
+    fd = fake.last_pipe[0 if end == "reader" else 1]
+    fake.fail["pipe_close"] = {fd: m1.FakeOSError()}
+    assert facade.close() is False
+    assert root.slots[slot].state.name == "OWNED" and root.slots[slot].value is facade
+    fake.fail["pipe_close"] = {fd: KeyboardInterrupt()}
+    with pytest.raises(KeyboardInterrupt):
+        facade.close()
+    assert root.slots[slot].state.name == "OWNED"
+    del fake.fail["pipe_close"]
+    assert facade.close() is True
+    assert root.slots[slot].state.name == "EMPTY"
+    assert fd not in fake.pipes
+
+
+# ---------------------------------------------------------------- M5-6 wait and kill
+
+
+@pytest.mark.parametrize(
+    ("script", "reaped"),
+    [
+        pytest.param([0], 0, id="exact-zero"),
+        pytest.param([1], 1, id="exact-one"),
+        pytest.param([True], None, id="bool"),
+        pytest.param([IntZero(0)], None, id="int-subclass"),
+        pytest.param([0.0], None, id="float"),
+        pytest.param([m1.FakeOSError()], None, id="oserror"),
+    ],
+)
+def test_m5_6_only_exact_int_wait_result_clears_process(
+    script: list[object], reaped: int | None
+) -> None:
+    fake = ProbeOS()
+    root = baseline(fake)
+    _, _, _, _, _, proc = acquire(fake, root)
+    fake.wait_script = list(script)
+    result = proc.wait(deadline=fake.clock.now + 1.0)
+    if reaped is None:
+        assert result is None
+        assert root.slots["probe_process"].state.name == "OWNED"
+        assert root.slots["probe_process"].value is proc
+    else:
+        assert type(result) is int and result == reaped
+        assert root.slots["probe_process"].state.name == "EMPTY"
+
+
+def test_m5_6_wait_uses_finite_slices_and_never_waits_after_deadline() -> None:
+    fake = ProbeOS()
+    root = baseline(fake)
+    _, parent, _, _, _, proc = acquire(fake, root)
+    deadline = fake.clock.now + 0.6
+    assert proc.wait(deadline=deadline) is None  # no EOF yet: natural timeout
+    timeouts = [entry[1] for entry in m1.ops(fake, "proc_wait")]
+    assert timeouts and all(0 < value <= 0.25 for value in timeouts)
+    assert fake.clock.now >= deadline
+    fake.log.clear()
+    assert proc.wait(deadline=fake.clock.now) is None  # expired before any raw wait
+    assert m1.ops(fake, "proc_wait") == []
+    assert root.slots["probe_process"].state.name == "OWNED"
+    assert parent.close() is True
+    assert proc.wait(deadline=fake.clock.now + 1.0) == 0
+    assert root.slots["probe_process"].state.name == "EMPTY"
+
+
+def test_m5_6_kill_alone_never_clears_the_process() -> None:
+    fake = ProbeOS()
+    root = baseline(fake)
+    _, _, _, _, _, proc = acquire(fake, root)
+    assert proc.kill() is True
+    assert m1.ops(fake, "proc_kill") == [("proc_kill",)]
+    assert root.slots["probe_process"].state.name == "OWNED"
+    assert proc.wait(deadline=fake.clock.now + 1.0) == -9
+    assert root.slots["probe_process"].state.name == "EMPTY"
+
+
+# ---------------------------------------------------------------- M5-7 parent, child, nonce
+
+
+def test_m5_7_parent_receives_through_rawchannel_with_finite_deadline() -> None:
+    fake = ProbeOS()
+    root = baseline(fake)
+    children = ns()["ProbeChildren"](root)
+    parent, child = children.pair()
+    first, _ = fake.socks
+    first.buffer.extend(b"abcdef")
+    assert parent.recv_exact(4, deadline=fake.clock.now + 1.0) == b"abcd"
+    assert child.close() is True  # the parent's copy of the child end
+    deadline = fake.clock.now + 0.6
+    with pytest.raises(TransportError) as caught:
+        parent.recv_exact(4, deadline=deadline)  # 2 bytes buffered, no EOF from that close
+    assert caught.value.kind is TransportFailure.TIMEOUT
+    assert fake.clock.now >= deadline
+    fake.sock_lies.add(first.fd)
+    assert parent.close() is False
+    assert root.slots["probe_parent"].state.name == "OWNED"
+    fake.sock_lies.clear()
+    assert parent.close() is True
+    assert probe_states(root) == states_with()
+
+
+def test_m5_7_nonce_is_exactly_32_urandom_bytes() -> None:
+    fake = ProbeOS()
+    root = baseline(fake)
+    value = ns()["SessionIds"](root).nonce()
+    assert type(value) is bytes and len(value) == 32
+    assert m1.ops(fake, "urandom") == [("urandom", 32)]
+
+
+@pytest.mark.parametrize("bad", [bytes(31), bytes(33), bytearray(32), "x" * 32, None], ids=str)
+def test_m5_7_wrong_nonce_type_or_length_is_closed_refusal(bad: object) -> None:
+    fake = ProbeOS()
+    root = baseline(fake)
+    fake.random_override = bad if bad is not None else 0
+    with pytest.raises(ns()["MainRefusal"]) as caught:
+        ns()["SessionIds"](root).nonce()
+    m1.assert_closed(caught.value, ns()["MainRefusal"])
+    assert caught.value.category == "IDS"
+
+
+# ---------------------------------------------------------------- composition
+
+
+def test_composition_public_driver_run_with_main_probe_binding() -> None:
+    """Public driver.run + main ProbeChildren over fake OS; other cases use D1 fakes."""
+    world = d1.World()
+    fake = ProbeOS(clock=world.clock)
+    root = m1.bound_root(fake)  # verified load_driver: same bytes, pinned SHA
+    module = root.namespace
+    owner = root.owner
+    ports = module.Ports(
+        reader=d1.PureReader(world),
+        guard=d1.Guard(world),
+        clock=world.clock,
+        link=world.link,
+        ids=ns()["SessionIds"](root),
+        factory=RootFactory(world, root),
+        pair=d1.Pair(world),
+        threads=d1.Threads(world),
+        children=ns()["ProbeChildren"](root),
+    )
+    result = module.run(ports, owner=owner)
+    assert result.outcome == "T6_UNKILLED"
+    assert result.verdicts[T5 - 1] == "PASS"
+    events = d1.events_of(world.link.lines)
+    eof = [event for event in events if event["e"] == "RESULT" and event["case"] == T5]
+    assert eof == [d1.result_event(T5, 49, d1.STOP)]
+    assert probe_states(root) == states_with()
+    assert (owner.session, owner.session_token) == (None, None)
+    assert (owner.endpoints, owner.handles, owner.unknown) == ((), (), ())
+    assert len(fake.procs) == 1 and fake.procs[0].returncode == 0
+    assert m1.ops(fake, "proc_kill") == []
+    assert all(sock.closed for sock in fake.socks) and fake.pipes == {}
+    argv, kwargs = fake.popen_calls[0]
+    assert kwargs["pass_fds"] == (int(argv[5]),) and kwargs["stdin"] == fake.last_pipe[0]
+    data = bytes(fake.pipe_data)
+    assert wire.parse_header(data[: wire.HEADER_BYTES]) == (
+        wire.Kind.INIT,
+        len(data) - wire.HEADER_BYTES,
+    )
+    init = wire.decode_init(data[wire.HEADER_BYTES :])
+    assert (init.key.generation, len(init.nonce)) == (2, 32)
+    assert init.snapshot == world.sessions[4].snapshot  # same G2 snapshot as T4/T6
+    assert m1.ops(fake, "urandom").count(("urandom", 32)) == 1
+    assert root.ledger is world.ledger
+    rows = [row for row in world.ledger.status.entries if row is not None]
+    assert not any(row.kind is ReservationKind.SESSION for row in rows)
+    assert world.violations == [] and fake.violations == []
+    root.result = result
+    assert ns()["safe_exit"](root) is True  # every probe resource settled by real facts

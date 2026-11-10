@@ -1,0 +1,1065 @@
+"""T5 EOF probe (case 24) over deterministic fake ports; RED-first, no physical effect.
+
+Contract for the FUTURE amendment of ``deploy/oracle9_w1_driver.py`` described by
+T5-DESIGN v3 (5eb14030) and T5-DESIGN-REVIEW. The current driver (39a68904) has eight
+ports and emits T5_PENDING, so every feature case here is expected to fail first with
+the new ``Ports(children=...)`` constructor; that API RED alone proves no temporal or
+ownership behavior. The driver is loaded lazily (``d1.driver()``) inside the feature
+tests, never at collection. The ``test_sanity_*`` cases do not load the driver.
+
+Reused, unchanged: the D1 deterministic world (Link, Factory/FakeSession over the REAL
+BudgetLedger, Pair/Threads, PureReader, Guard) from ``tests/test_oracle9_w1_driver.py``.
+Added here only: a ``children`` port fake (socket ends, explicit stdin pipe ends and a
+child process), ``ids.nonce()``, a clock able to return one invalid reading, and a
+delegating recording subclass of the REAL public ``BudgetLedger`` installed only in
+the loaded driver namespace (it never invents a ledger result; at most it raises a
+control interruption AFTER the real call). Old helpers/assertions are not modified;
+case-24 RESULT and SUMMARY use a local exact checker because the old one rejects the
+new EOF schema by design.
+
+Prospective API fixed by this file (names from T5-DESIGN v3 §3/§4):
+
+- ``Ports(..., children=...)`` (9th field) and ``ids.nonce() -> bytes`` (exactly 32).
+- ``children.pair() -> (parent, child)``; ``parent.recv_exact(n, *, deadline)``,
+  ``parent.close() -> bool``; ``child.fd``, ``child.close() -> bool``.
+- ``children.stdin() -> (reader, writer)``; ``reader.fd``, ``reader.close() -> bool``;
+  ``writer.write_all(packet, *, deadline) -> bool``, ``writer.close() -> bool``.
+- ``children.spawn(child, reader, *, parent_pid, address_bytes, idle_ms) -> proc``;
+  ``proc.pid``, ``proc.wait(*, deadline) -> int | None``, ``proc.kill() -> bool``.
+- Owner unchanged: token in ``session_token`` (set BEFORE adopt), the four ends in
+  ``endpoints``, the process in ``handles``, uncertain creations in ``unknown`` as
+  ``probe_pair``/``probe_stdin``/``probe_process``.
+- RESULT case 24: ``kind`` "EOF", ``verdict`` PASS/FAIL, ``reason`` null or one of
+  EXIT_NONZERO/EXIT_LATE/WAIT_LATE/NO_EXIT, ``release`` "RELEASED", other fields null.
+  SUMMARY no longer always contains 24; ``global_pass`` stays false.
+
+Not driven (stated, not hidden): a genuine ``adopt_session`` refusal for the probe
+token would need an invented ledger result, so D5-12 is covered only through REAL
+partial-confirmation retention (unconfirmed close) and the interrupted-adopt case.
+Fakes model contracts only: kernel EOF, fd inheritance/close-on-exec, waitpid and
+returncode, the installed worker env/guard, a common monotonic clock and PostgreSQL
+backend closure remain native Oracle proof. Nothing here is native evidence.
+"""
+
+from __future__ import annotations
+
+import hmac
+import json
+import math
+import struct
+from typing import Any
+
+import pytest
+
+from maskgw.pgwire.result_frame import ResultLimits
+from maskgw.runtime import worker_protocol as wire
+from maskgw.runtime.budget import BudgetLedger, CleanupConfirmation, ReleaseOutcome
+from tests import test_oracle9_w1_driver as d1
+
+MIB = d1.MIB
+T5 = d1.T5
+HB = wire.HEADER_BYTES
+PROC_PID = 4242
+WORKER_AS = 256 * MIB
+IDLE_S = 30.0
+MARGIN_S = 2.0
+EOF_WAIT_S = 10.0
+OPEN_CAP_S = 12.0
+NONCE = bytes([0xA5]) * 32
+T5_ID = bytes([6]) * 16  # sixth session id: P, T1, T2, T3, T4, then the probe
+FULL = CleanupConfirmation(processes=True, threads=True, pipes=True, handles=True, output=True)
+FAIL_REASONS = ("EXIT_NONZERO", "EXIT_LATE", "WAIT_LATE", "NO_EXIT")
+LEAKS = (*d1.LEAKS, NONCE.hex())
+RECORDING_KEY = "BudgetLedger"
+
+
+def eof_event(verdict: str, reason: str | None) -> dict[str, Any]:
+    return {
+        "bytes": None,
+        "case": T5,
+        "e": "RESULT",
+        "kind": "EOF",
+        "next_seq": 49,
+        "reason": reason,
+        "release": "RELEASED",
+        "rows": None,
+        "sink": None,
+        "stop_applied": None,
+        "truncated": None,
+        "verdict": verdict,
+    }
+
+
+EOF_PASS = eof_event("PASS", None)
+
+
+# ---------------------------------------------------------------- local exact checkers
+
+
+def check_eof(event: dict[str, Any]) -> bool:
+    verdict, reason = event["verdict"], event["reason"]
+    coherent = (verdict == "PASS" and reason is None) or (
+        verdict == "FAIL" and d1.exact_text(reason, FAIL_REASONS)
+    )
+    return (
+        d1.exact_int(event["case"], T5, T5)
+        and d1.exact_int(event["next_seq"], 49, 49)
+        and d1.exact_text(verdict, ("PASS", "FAIL"))
+        and d1.exact_text(event["kind"], ("EOF",))
+        and coherent
+        and d1.exact_text(event["release"], ("RELEASED",))
+        and all(event[name] is None for name in ("rows", "truncated", "bytes", "sink"))
+        and event["stop_applied"] is None
+    )
+
+
+def check_summary(event: dict[str, Any]) -> bool:
+    failed = event["failed"]
+    return (
+        type(failed) is list
+        and all(d1.exact_int(case, 1, 24) for case in failed)
+        and failed == sorted(set(failed))
+        and event["global_pass"] is False
+        and d1.exact_int(event["prefix_cases"], 24, 24)
+    )
+
+
+def events_t5(lines: list[bytes]) -> list[dict[str, Any]]:
+    """Same per-line rules as D1; only case-24 RESULT and SUMMARY use the new schema."""
+    assert len(lines) <= 56
+    result: list[dict[str, Any]] = []
+    for line in lines:
+        assert type(line) is bytes
+        assert 0 < len(line) <= 512
+        assert b"\n" not in line
+        for leak in LEAKS:
+            assert leak.encode() not in line
+        event = json.loads(line)
+        assert d1.canonical(event) == line
+        assert type(event) is dict
+        assert d1.exact_text(event.get("e"), tuple(d1.KEYS))
+        assert set(event) == d1.KEYS[event["e"]]
+        if event["e"] == "RESULT" and event["case"] == T5:
+            assert check_eof(event)
+        elif event["e"] == "SUMMARY":
+            assert check_summary(event)
+        else:
+            assert d1.CHECKS[event["e"]](event)
+        result.append(event)
+    return result
+
+
+# ---------------------------------------------------------------- fakes
+
+
+_NO_READING = object()
+
+
+class T5Clock(d1.Clock):
+    """D1 clock plus one scripted invalid reading (NaN, inf, bool, object...)."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.bad: object = _NO_READING
+
+    def monotonic(self) -> Any:
+        if self.bad is not _NO_READING:
+            value, self.bad = self.bad, _NO_READING
+            return value
+        return self.now
+
+
+class T5Ids(d1.Ids):
+    def __init__(self, world: T5World) -> None:
+        super().__init__(world)
+        self.t5world = world
+
+    def session_id(self) -> Any:
+        self.count += 1
+        self.world.log.append(("id", self.count))
+        script = self.t5world.t5
+        if self.count == 6 and "t5_id" in script:
+            return script["t5_id"]
+        return bytes([self.count]) * 16
+
+    def nonce(self) -> Any:
+        world = self.t5world
+        world.step("nonce")
+        value = world.t5.get("nonce", NONCE)
+        world.after("nonce")
+        return value
+
+
+class ChildEnd:
+    fd = 11
+
+    def __init__(self, world: T5World) -> None:
+        self.world = world
+
+    def close(self) -> bool:
+        return self.world.closing("child_close")
+
+
+class StdinReader:
+    fd = 12
+
+    def __init__(self, world: T5World) -> None:
+        self.world = world
+
+    def close(self) -> bool:
+        return self.world.closing("reader_close")
+
+
+class ParentEnd:
+    """Trusted fake: exposes no send/write/shutdown, by contract of the binding."""
+
+    def __init__(self, world: T5World) -> None:
+        self.world = world
+        self.inbox = bytearray()
+        self.reads = 0
+
+    def recv_exact(self, n: int, *, deadline: float) -> bytes:
+        world = self.world
+        names = ("guard_header", "guard_body", "opened_header", "opened_body")
+        name = names[self.reads] if self.reads < len(names) else "extra_recv"
+        self.reads += 1
+        world.step(name, n=n, deadline=deadline)
+        world.clock.now += world.t5.get("recv_delay", {}).get(name, 0.0)
+        if len(self.inbox) < n:
+            world.after(name)
+            raise TimeoutError
+        data = bytes(self.inbox[:n])
+        del self.inbox[:n]
+        world.after(name)
+        return data
+
+    def close(self) -> bool:
+        return self.world.closing("parent_close")
+
+
+class StdinWriter:
+    def __init__(self, world: T5World) -> None:
+        self.world = world
+        self.wrote_ok = False
+
+    def write_all(self, packet: bytes, *, deadline: float) -> bool:
+        world = self.world
+        world.t_write = world.clock.now
+        world.step("write_all", deadline=deadline)
+        world.packets.append(packet)
+        world.clock.now += world.t5.get("write_delay", 0.0)
+        self.wrote_ok = world.t5.get("write_ok", True) is True
+        world.after("write_all")
+        return self.wrote_ok
+
+    def close(self) -> bool:
+        world = self.world
+        closed = world.closing("writer_close")
+        if closed and self.wrote_ok and world.parent is not None and not world.opened_sent:
+            world.opened_sent = True
+            world.parent.inbox += world.opened_frame()
+        return closed
+
+
+class Proc:
+    pid = PROC_PID
+
+    def __init__(self, world: T5World) -> None:
+        self.world = world
+        self.killed = False
+
+    def wait(self, *, deadline: float) -> Any:
+        world = self.world
+        world.step("wait", deadline=deadline)
+        script = world.t5
+        if not self.killed:
+            failure = script.get("wait_raise")
+            if failure is not None:
+                raise failure
+            rc = script.get("rc", 0)
+            if rc is None:
+                world.clock.now = max(world.clock.now, deadline)
+                return None
+            world.clock.now = max(world.clock.now, world.t_write + script.get("wait_at", 1.0))
+            return rc
+        if script.get("rc2_raise"):
+            raise OSError("WAIT_UNCERTAIN")
+        world.clock.now += script.get("rc2_delay", 0.1)
+        return script.get("rc2", 0)
+
+    def kill(self) -> bool:
+        self.world.step("kill")
+        self.killed = True
+        return True
+
+
+class ChildPort:
+    def __init__(self, world: T5World) -> None:
+        self.world = world
+
+    def pair(self) -> tuple[ParentEnd, ChildEnd]:
+        world = self.world
+        world.t_pair = world.clock.now
+        world.step("pair")
+        if "pair_raise" in world.t5:
+            raise world.t5["pair_raise"]
+        world.parent, world.child = ParentEnd(world), ChildEnd(world)
+        world.after("pair")
+        return world.parent, world.child
+
+    def stdin(self) -> tuple[StdinReader, StdinWriter]:
+        world = self.world
+        world.step("stdin")
+        if "stdin_raise" in world.t5:
+            raise world.t5["stdin_raise"]
+        world.reader, world.writer = StdinReader(world), StdinWriter(world)
+        world.after("stdin")
+        return world.reader, world.writer
+
+    def spawn(self, child: Any, reader: Any, **kwargs: Any) -> Proc:
+        world = self.world
+        world.step("spawn")
+        world.spawn_args = (child, reader, kwargs)
+        if "spawn_raise" in world.t5:
+            raise world.t5["spawn_raise"]
+        world.proc = Proc(world)
+        assert world.parent is not None
+        first = world.t5.get("first_frame")
+        if first is None:
+            first = wire.encode_guard(*world.t5.get("guard", (PROC_PID, 1, WORKER_AS)))
+        world.parent.inbox += first
+        world.after("spawn")
+        return world.proc
+
+
+def recording_ledger(world: T5World) -> type[BudgetLedger]:
+    """Delegating subclass of the REAL public ledger; it records, never invents."""
+
+    class Recording(BudgetLedger):
+        def reserve_session(self, *args: Any, **kwargs: Any) -> Any:
+            token = super().reserve_session(*args, **kwargs)
+            world.reserves.append((token, kwargs))
+            if len(world.reserves) == 6:
+                world.t5_token = token
+                world.step("reserve")
+            return token
+
+        def adopt_session(self, *args: Any, **kwargs: Any) -> Any:
+            token = (*args, *kwargs.values())[0]
+            if token is world.t5_token:
+                owner = world.owner
+                world.adopt_owned = owner is not None and owner.session_token is token
+                world.step("adopt")
+            outcome = super().adopt_session(*args, **kwargs)
+            if token is world.t5_token and world.t5.get("adopt_interrupt"):
+                raise KeyboardInterrupt  # control AFTER the real adoption
+            return outcome
+
+        def release(self, *args: Any, **kwargs: Any) -> Any:
+            token, confirmation = (*args, *kwargs.values())[:2]
+            outcome = super().release(*args, **kwargs)
+            if token is world.t5_token:
+                world.t5_releases.append((confirmation, outcome))
+                world.step("release")
+            return outcome
+
+    return Recording
+
+
+class T5World(d1.World):
+    def __init__(self, **script: Any) -> None:
+        super().__init__(**script)
+        self.clock = T5Clock()
+        self.t5: dict[str, Any] = script.get("t5", {})
+        self.owner: Any = None
+        self.reserves: list[tuple[Any, dict[str, Any]]] = []
+        self.t5_token: Any = None
+        self.adopt_owned: bool | None = None
+        self.t5_releases: list[tuple[Any, Any]] = []
+        self.packets: list[bytes] = []
+        self.snaps: dict[str, dict[str, Any]] = {}
+        self.calls: list[tuple[str, dict[str, Any]]] = []
+        self.parent: ParentEnd | None = None
+        self.child: ChildEnd | None = None
+        self.reader: StdinReader | None = None
+        self.writer: StdinWriter | None = None
+        self.proc: Proc | None = None
+        self.spawn_args: Any = None
+        self.opened_sent = False
+        self.t_pair = 0.0
+        self.t_write = 0.0
+
+    # ------------------------------------------------------------ bookkeeping
+
+    def snap(self) -> dict[str, Any]:
+        owner = self.owner
+        return {
+            "endpoints": {id(item) for item in owner.endpoints},
+            "handles": {id(item) for item in owner.handles},
+            "unknown": tuple(owner.unknown),
+            "token": owner.session_token,
+        }
+
+    def step(self, name: str, **details: Any) -> None:
+        self.log.append(("t5", name))
+        self.calls.append((name, details))
+        if name not in self.snaps and self.owner is not None:
+            self.snaps[name] = self.snap()
+
+    def after(self, name: str) -> None:
+        if name in self.t5.get("late", ()):
+            self.clock.now += OPEN_CAP_S + 1.0  # returned only after the opening deadline
+        bad = self.t5.get("bad_clock")
+        if bad is not None and bad[0] == name:
+            self.clock.bad = bad[1]
+
+    def closing(self, name: str) -> bool:
+        self.step(name)
+        outcome = self.t5.get("close", {}).get(name, True)
+        if isinstance(outcome, BaseException):
+            raise outcome
+        self.after(name)
+        return outcome is True
+
+    def opened_frame(self) -> bytes:
+        packet = self.packets[-1]
+        init = wire.decode_init(packet[HB:])
+        mode = self.t5.get("opened", "ok")
+        if mode == "error":
+            failure = wire.ErrorReply(init.key, 0, wire.WireFailure.CONNECTION, False)
+            return wire.encode_error(failure)
+        tag = hmac.digest(init.nonce, init.snapshot, "sha256")
+        if mode == "bad_hmac":
+            tag = bytes([tag[0] ^ 1]) + tag[1:]
+        return wire.encode_opened(tag)
+
+    # ------------------------------------------------------------ views
+
+    def trace(self) -> list[str]:
+        result: list[str] = []
+        for entry in self.log:
+            if entry[0] == "t5":
+                result.append(entry[1])
+            elif entry[0] == "write" and entry[2] == T5 and entry[1] in ("READY", "RESULT"):
+                result.append(f"{entry[1]}24")
+        return result
+
+    def names(self) -> list[str]:
+        return [name for name, _ in self.calls]
+
+    def details(self, name: str) -> list[dict[str, Any]]:
+        return [values for called, values in self.calls if called == name]
+
+    def init(self) -> wire.SecretInit:
+        packet = self.packets[-1]
+        kind, size = wire.parse_header(packet[:HB])
+        assert kind is wire.Kind.INIT and size == len(packet) - HB
+        return wire.decode_init(packet[HB:])
+
+    def events(self) -> list[dict[str, Any]]:
+        return events_t5(self.link.lines)
+
+    def eof_results(self) -> list[dict[str, Any]]:
+        return [e for e in self.events() if e["e"] == "RESULT" and e["case"] == T5]
+
+    def aborts(self) -> list[dict[str, Any]]:
+        return [e for e in self.events() if e["e"] == "ABORT"]
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+        ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+        return module["run"](ports, owner=self.owner)
+
+
+class IntZero(int):
+    """int subclass: never an exact returncode."""
+
+
+def ids(items: Any) -> set[int]:
+    return {id(item) for item in items}
+
+
+def probe_ends(world: T5World) -> dict[str, int]:
+    ends = {"parent": world.parent, "child": world.child}
+    ends |= {"reader": world.reader, "writer": world.writer}
+    return {name: id(end) for name, end in ends.items() if end is not None}
+
+
+def assert_completed(world: T5World, result: Any, verdict: str, reason: str | None) -> None:
+    """Case 24 settled with a REAL RELEASED ledger outcome; the walk continued to T6."""
+    assert result.outcome == "T6_UNKILLED"
+    assert result.owner is None
+    assert world.eof_results() == [eof_event(verdict, reason)]
+    assert world.t5_releases == [(FULL, ReleaseOutcome.RELEASED)]
+    assert len(world.sessions) == 6  # T6 could open after the probe returned its credits
+    summary = [event for event in world.events() if event["e"] == "SUMMARY"]
+    assert len(summary) == 1
+    assert (T5 in summary[0]["failed"]) is (verdict == "FAIL")
+    assert world.violations == []
+
+
+def assert_aborted_24(world: T5World, result: Any, reason: str, *, retained: bool) -> None:
+    assert world.eof_results() == []
+    aborts = world.aborts()
+    assert len(aborts) == 1
+    assert (aborts[0]["case"], aborts[0]["reason"], aborts[0]["retained"]) == (
+        T5,
+        reason,
+        retained,
+    )
+    assert result.verdicts[T5 - 1] == "FAIL"
+    assert result.outcome == ("RETAINED" if retained else "ABORTED")
+    assert len(world.sessions) == 5  # T6 never opened
+    if retained:
+        assert result.owner is world.owner
+        assert not any(o is ReleaseOutcome.RELEASED for _, o in world.t5_releases)
+    else:
+        assert result.owner is None
+        if world.t5_token is None:  # refused before any probe reservation
+            assert world.t5_releases == []
+        else:
+            assert world.t5_releases == [(FULL, ReleaseOutcome.RELEASED)]
+
+
+# ---------------------------------------------------------------- independent sanities
+
+
+def test_sanity_fake_child_frames_use_public_codecs() -> None:
+    world = T5World()
+    port = ChildPort(world)
+    parent, child = port.pair()
+    reader, writer = port.stdin()
+    proc = port.spawn(child, reader, parent_pid=1, address_bytes=WORKER_AS, idle_ms=30000)
+    kind, size = wire.parse_header(parent.recv_exact(HB, deadline=2000.0))
+    assert kind is wire.Kind.GUARD_READY
+    assert wire.decode_guard(parent.recv_exact(size, deadline=2000.0)) == (PROC_PID, 1, WORKER_AS)
+    key = wire.SessionKey(T5_ID, d1.DATASOURCE_BYTES, 2, 1)
+    snapshot = b"SYNTHETIC-SNAPSHOT" * 3
+    limits = ResultLimits(max_rows=1000, max_frame_bytes=16 * MIB)
+    packet = wire.encode_init(wire.SecretInit(key, limits, 1012.0, NONCE, snapshot))
+    assert writer.write_all(packet, deadline=2000.0) is True
+    assert parent.inbox == bytearray()  # OPENED only after the stdin writer closed
+    assert writer.close() is True
+    kind, size = wire.parse_header(parent.recv_exact(HB, deadline=2000.0))
+    assert kind is wire.Kind.OPENED
+    tag = wire.decode_opened(parent.recv_exact(size, deadline=2000.0))
+    assert hmac.compare_digest(tag, hmac.digest(NONCE, snapshot, "sha256"))
+    for name in ("send", "send_all", "write", "shutdown", "shutdown_write", "channel"):
+        assert not hasattr(parent, name)
+    assert proc.wait(deadline=2000.0) == 0
+    assert proc.kill() is True
+
+
+@pytest.mark.parametrize("mode", ["bad_hmac", "error"])
+def test_sanity_fake_negative_opened_frames_are_distinguishable(mode: str) -> None:
+    world = T5World(t5={"opened": mode})
+    key = wire.SessionKey(T5_ID, d1.DATASOURCE_BYTES, 2, 1)
+    limits = ResultLimits(max_rows=1000, max_frame_bytes=16 * MIB)
+    world.packets.append(
+        wire.encode_init(wire.SecretInit(key, limits, 1012.0, NONCE, b"SNAPSHOT"))
+    )
+    frame = world.opened_frame()
+    kind, size = wire.parse_header(frame[:HB])
+    if mode == "error":
+        assert kind is wire.Kind.ERROR
+    else:
+        assert kind is wire.Kind.OPENED
+        assert frame[HB:] != hmac.digest(NONCE, b"SNAPSHOT", "sha256")
+        assert len(frame) - HB == size == 32
+
+
+def test_sanity_v1_delayed_return_trace_and_v3_fence_arithmetic() -> None:
+    """Review F1 trace, relative seconds: only the pre-write base keeps below idle end."""
+    t_pre, stdin_closed, child_idle_start, write_returned = 0.0, 1.0, 1.01, 11.0
+    opened, go, eof, reaped = 11.1, 30.9, 31.1, 31.2
+    idle_end = child_idle_start + IDLE_S
+    v1_fence = write_returned + IDLE_S - MARGIN_S
+    v3_fence = t_pre + IDLE_S - MARGIN_S
+    assert t_pre <= stdin_closed < child_idle_start
+    assert v1_fence > reaped > idle_end  # v1 would accept an idle exit as EOF
+    assert v3_fence < idle_end  # a lower bound of the child idle end
+    assert go > min(opened + 20.0, v3_fence - 1.0)  # GO too late for the v3 window
+    assert reaped >= v3_fence  # and the reap is idle-late under v3
+    assert min(eof + EOF_WAIT_S, v3_fence) == v3_fence
+
+
+def test_sanity_local_eof_checker_is_exact() -> None:
+    lines = [d1.canonical(EOF_PASS)]
+    lines += [d1.canonical(eof_event("FAIL", reason)) for reason in FAIL_REASONS]
+    assert events_t5(lines)[0] == EOF_PASS
+    bad = [
+        {**EOF_PASS, "kind": "PENDING"},
+        {**EOF_PASS, "reason": "T5_PENDING"},
+        {**EOF_PASS, "reason": "NO_EXIT"},
+        eof_event("FAIL", None),
+        {**EOF_PASS, "release": "HELD"},
+        {**EOF_PASS, "next_seq": 48},
+        {**EOF_PASS, "bytes": 0},
+        {**EOF_PASS, "stop_applied": False},
+        {**EOF_PASS, "verdict": True},
+        {**EOF_PASS, "returncode": 0},
+    ]
+    for event in bad:
+        with pytest.raises(AssertionError):
+            events_t5([d1.canonical(event)])
+    summary = {"e": "SUMMARY", "failed": [], "global_pass": False, "prefix_cases": 24}
+    assert events_t5([d1.canonical(summary)]) == [summary]
+    with pytest.raises(AssertionError):
+        events_t5([d1.canonical({**summary, "global_pass": True})])
+
+
+def test_sanity_invalid_clock_reading_is_single_shot() -> None:
+    clock = T5Clock()
+    clock.bad = math.nan
+    first, second = clock.monotonic(), clock.monotonic()
+    assert math.isnan(first)
+    assert second == d1.START
+
+
+# ---------------------------------------------------------------- D5-1/2/16/17 positive
+
+
+def test_d5_1_positive_probe_walk(monkeypatch: pytest.MonkeyPatch) -> None:
+    world = T5World()
+    result = world.run_t5(monkeypatch)
+    assert_completed(world, result, "PASS", None)
+    assert result.verdicts == ("PASS",) * 24 + ("FAIL",)  # T6_UNKILLED stays FAIL
+    assert len(world.frames) == 50
+    assert len(world.queries) == 23
+    assert [entry[1] for entry in world.log if entry[0] == "create"] == list(range(6))
+    assert world.trace() == [
+        "reserve",
+        "adopt",
+        "pair",
+        "stdin",
+        "spawn",
+        "child_close",
+        "reader_close",
+        "guard_header",
+        "guard_body",
+        "nonce",
+        "write_all",
+        "writer_close",
+        "opened_header",
+        "opened_body",
+        "READY24",
+        "parent_close",
+        "wait",
+        "release",
+        "RESULT24",
+    ]
+    assert world.log.index(("id", 6)) < world.log.index(("t5", "reserve"))
+    assert "kill" not in world.names()
+    assert [entry["n"] for entry in world.details("guard_header")] == [HB]
+    assert [entry["n"] for entry in world.details("opened_header")] == [HB]
+
+
+def test_d5_1_probe_ownership_before_each_effect(monkeypatch: pytest.MonkeyPatch) -> None:
+    world = T5World()
+    world.run_t5(monkeypatch)
+    token = world.t5_token
+    assert token is not None
+    assert world.adopt_owned is True  # token rooted in the original owner BEFORE adopt
+    ends = probe_ends(world)
+    assert len(ends) == 4
+    spawn = world.snaps["spawn"]
+    assert spawn["endpoints"] == set(ends.values())  # four ends rooted before spawn
+    assert "probe_process" in spawn["unknown"]
+    assert spawn["token"] is token
+    assert world.snaps["guard_header"]["endpoints"] == {ends["parent"], ends["writer"]}
+    assert world.snaps["opened_header"]["endpoints"] == {ends["parent"]}
+    wait = world.snaps["wait"]
+    assert wait["endpoints"] == set()
+    assert wait["handles"] == {id(world.proc)}
+    assert wait["token"] is token
+    assert wait["unknown"] == ()
+    assert world.reserves[5][1] == {"worker_bytes": WORKER_AS, "parent_bytes": 33 * MIB}
+    child, reader, kwargs = world.spawn_args
+    assert child is world.child and reader is world.reader
+    assert kwargs == {"parent_pid": 1, "address_bytes": WORKER_AS, "idle_ms": 30000}
+
+
+def test_d5_16_probe_key_nonce_and_init(monkeypatch: pytest.MonkeyPatch) -> None:
+    world = T5World()
+    world.run_t5(monkeypatch)
+    assert len(world.packets) == 1
+    init = world.init()
+    key = init.key
+    assert key.session_id == T5_ID
+    assert key.session_id not in {item.session_id for item in world.keys}
+    assert key.datasource_id == d1.DATASOURCE_BYTES
+    assert key.datasource_id == bytes.fromhex(d1.PURE["DATASOURCE_ID"][4:])
+    assert (key.generation, key.record_revision) == (2, d1.PURE["RECORD_REVISION"])
+    assert init.nonce == NONCE
+    assert init.limits == ResultLimits(max_rows=1000, max_frame_bytes=16 * MIB)
+    assert type(init.expires_at) is float
+    assert init.expires_at == pytest.approx(world.t_pair + OPEN_CAP_S, abs=1e-9)
+    assert init.snapshot == world.sessions[4].snapshot == world.sessions[5].snapshot  # G2
+    assert init.snapshot != world.sessions[0].snapshot  # never the G1 snapshot
+    assert world.details("write_all")[0]["deadline"] == pytest.approx(init.expires_at)
+
+
+def test_d5_17_interrupt_after_real_adopt_keeps_token(monkeypatch: pytest.MonkeyPatch) -> None:
+    world = T5World(t5={"adopt_interrupt": True})
+    with pytest.raises(KeyboardInterrupt):
+        world.run_t5(monkeypatch)
+    assert world.adopt_owned is True
+    assert world.owner.session_token is world.t5_token
+    assert "pair" not in world.names()
+    assert world.t5_releases == []
+
+
+# ---------------------------------------------------------------- D5-F1 and fences
+
+
+def test_d5_f1_delayed_return_cannot_open_late_go_window(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    script = {"write_delay": 10.0, "recv_delay": {"opened_header": 0.1}}
+    world = T5World(t5=script, go_delay={T5: 19.8})
+    result = world.run_t5(monkeypatch)
+    assert_aborted_24(world, result, "IDLE_WINDOW", retained=False)
+    assert "READY24" in world.trace()
+    assert "parent_close" not in world.names()[: world.names().index("kill")]
+    assert world.names().index("kill") < world.names().index("wait")
+
+
+def test_d5_f1_delayed_return_reap_is_idle_late(monkeypatch: pytest.MonkeyPatch) -> None:
+    script = {"write_delay": 10.0, "recv_delay": {"opened_header": 0.1}, "wait_at": 31.2}
+    world = T5World(t5=script, go_delay={T5: 16.0})
+    result = world.run_t5(monkeypatch)
+    assert_completed(world, result, "FAIL", "EXIT_LATE")
+    wait = world.details("wait")[0]["deadline"]
+    assert wait == pytest.approx(world.t_write + IDLE_S - MARGIN_S, abs=1e-6)  # not rebased
+    assert "kill" not in world.names()
+
+
+@pytest.mark.parametrize(("go_delay", "wait_offset"), [(0.0, 10.0), (5.0, 15.0), (19.0, 28.0)])
+def test_d5_wait_end_is_min_of_eof_cap_and_fence(
+    monkeypatch: pytest.MonkeyPatch, go_delay: float, wait_offset: float
+) -> None:
+    world = T5World(go_delay={T5: go_delay})
+    result = world.run_t5(monkeypatch)
+    assert_completed(world, result, "PASS", None)
+    deadlines = [entry["deadline"] for entry in world.details("wait")]
+    assert deadlines == [pytest.approx(world.t_write + wait_offset, abs=1e-6)]
+
+
+# ---------------------------------------------------------------- D5-3/4/4b/5/7 classification
+
+
+@pytest.mark.parametrize(
+    ("script", "verdict", "reason", "killed"),
+    [
+        pytest.param({"rc": 0, "wait_at": 9.9}, "PASS", None, False, id="pass-before-wait-end"),
+        pytest.param({"rc": 0, "wait_at": 10.0}, "FAIL", "WAIT_LATE", False, id="at-wait-end"),
+        pytest.param({"rc": 0, "wait_at": 10.5}, "FAIL", "WAIT_LATE", False, id="phase-late"),
+        pytest.param({"rc": 0, "wait_at": 27.9}, "FAIL", "WAIT_LATE", False, id="pre-fence"),
+        pytest.param({"rc": 0, "wait_at": 28.0}, "FAIL", "EXIT_LATE", False, id="at-fence"),
+        pytest.param({"rc": 0, "wait_at": 31.0}, "FAIL", "EXIT_LATE", False, id="idle-late"),
+        pytest.param({"rc": 1}, "FAIL", "EXIT_NONZERO", False, id="rc1"),
+        pytest.param({"rc": -9}, "FAIL", "EXIT_NONZERO", False, id="signal-without-kill"),
+        pytest.param({"rc": 255}, "FAIL", "EXIT_NONZERO", False, id="rc255"),
+        pytest.param({"rc": None}, "FAIL", "NO_EXIT", True, id="timeout-kill-rc0"),
+        pytest.param({"rc": True}, "FAIL", "NO_EXIT", True, id="bool-true"),
+        pytest.param({"rc": False}, "FAIL", "NO_EXIT", True, id="bool-false"),
+        pytest.param({"rc": IntZero(0)}, "FAIL", "NO_EXIT", True, id="int-subclass"),
+        pytest.param({"rc": 0.0}, "FAIL", "NO_EXIT", True, id="float"),
+        pytest.param({"rc": "0"}, "FAIL", "NO_EXIT", True, id="text"),
+    ],
+)
+def test_d5_exit_classification(
+    monkeypatch: pytest.MonkeyPatch,
+    script: dict[str, Any],
+    verdict: str,
+    reason: str | None,
+    killed: bool,
+) -> None:
+    world = T5World(t5=script)
+    result = world.run_t5(monkeypatch)
+    assert_completed(world, result, verdict, reason)
+    assert world.names().count("kill") == (1 if killed else 0)
+    if killed:  # fallback cleanup: kill strictly before the second wait, never PASS
+        names = world.names()
+        assert names.index("kill") < len(names) - 1 - names[::-1].index("wait")
+
+
+# ---------------------------------------------------------------- D5-6 unconfirmed fallback
+
+
+@pytest.mark.parametrize(
+    "script",
+    [
+        pytest.param({"rc": None, "rc2": None}, id="rc2-none"),
+        pytest.param({"rc": None, "rc2_delay": 1.0}, id="rc2-late"),
+        pytest.param({"rc": None, "rc2_raise": True}, id="rc2-raises"),
+        pytest.param({"rc": None, "rc2": True}, id="rc2-bool"),
+    ],
+)
+def test_d5_6_unconfirmed_fallback_retains(
+    monkeypatch: pytest.MonkeyPatch, script: dict[str, Any]
+) -> None:
+    world = T5World(t5=script)
+    result = world.run_t5(monkeypatch)
+    assert_aborted_24(world, result, world.aborts()[0]["reason"], retained=True)
+    owner = world.owner
+    assert owner.session_token is world.t5_token
+    assert id(world.proc) in ids(owner.handles)
+    assert ids(owner.endpoints) == set()  # the four ends were confirmed closed earlier
+    assert world.names().count("kill") == 1
+
+
+# ---------------------------------------------------------------- D5-8 acquisition
+
+
+@pytest.mark.parametrize(
+    ("failing", "marker", "absent", "held"),
+    [
+        pytest.param("pair_raise", "probe_pair", "stdin", (), id="pair"),
+        pytest.param("stdin_raise", "probe_stdin", "spawn", ("parent", "child"), id="stdin"),
+        pytest.param(
+            "spawn_raise",
+            "probe_process",
+            "guard_header",
+            ("parent", "child", "reader", "writer"),
+            id="spawn",
+        ),
+    ],
+)
+def test_d5_8_uncertain_acquisition_retains_without_kill(
+    monkeypatch: pytest.MonkeyPatch,
+    failing: str,
+    marker: str,
+    absent: str,
+    held: tuple[str, ...],
+) -> None:
+    world = T5World(t5={failing: OSError("EFFECT_UNKNOWN")})
+    result = world.run_t5(monkeypatch)
+    assert_aborted_24(world, result, world.aborts()[0]["reason"], retained=True)
+    owner = world.owner
+    assert marker in owner.unknown
+    assert owner.session_token is world.t5_token
+    ends = probe_ends(world)
+    assert {ends[name] for name in held} <= ids(owner.endpoints)
+    assert absent not in world.names()
+    assert "kill" not in world.names()
+    assert world.t5_releases == []
+
+
+# ---------------------------------------------------------------- D5-9 handshake
+
+
+BIG_INIT_HEADER = struct.pack("!4sBBHI", b"MGW2", 2, wire.Kind.INIT.value, 0, 1000)
+
+
+@pytest.mark.parametrize(
+    ("script", "absent", "retained"),
+    [
+        pytest.param({"guard": (PROC_PID + 1, 1, WORKER_AS)}, "write_all", False, id="pid"),
+        pytest.param({"guard": (PROC_PID, 2, WORKER_AS)}, "write_all", False, id="ppid"),
+        pytest.param({"guard": (PROC_PID, 1, 128 * MIB)}, "write_all", False, id="as"),
+        pytest.param(
+            {"first_frame": wire.encode_opened(bytes(32))}, "guard_body", False, id="kind"
+        ),
+        pytest.param({"first_frame": BIG_INIT_HEADER}, "guard_body", False, id="big-header"),
+        pytest.param({"opened": "bad_hmac"}, "READY24", False, id="hmac"),
+        pytest.param({"opened": "error"}, "READY24", False, id="error-reply"),
+        pytest.param({"write_ok": False}, "opened_header", False, id="write-false"),
+        pytest.param(
+            {"close": {"writer_close": False}}, "opened_header", True, id="writer-close-false"
+        ),
+    ],
+)
+def test_d5_9_handshake_failure_aborts_before_ready(
+    monkeypatch: pytest.MonkeyPatch, script: dict[str, Any], absent: str, retained: bool
+) -> None:
+    world = T5World(t5=script)
+    result = world.run_t5(monkeypatch)
+    assert_aborted_24(world, result, "SESSION", retained=retained)
+    assert "READY24" not in world.trace()
+    assert absent not in world.trace()
+    assert world.names().count("kill") == 1  # the spawned child is cleaned up, never PASS
+    if absent == "write_all":
+        assert world.packets == []  # no INIT after a failed GUARD
+
+
+# ---------------------------------------------------------------- D5-10 opening deadline
+
+
+@pytest.mark.parametrize(
+    ("late", "absent"),
+    [
+        ("pair", "stdin"),
+        ("stdin", "spawn"),
+        ("spawn", "guard_header"),
+        ("child_close", "guard_header"),
+        ("reader_close", "guard_header"),
+        ("guard_header", "guard_body"),
+        ("guard_body", "nonce"),
+        ("nonce", "write_all"),
+        ("write_all", "opened_header"),
+        ("writer_close", "opened_header"),
+        ("opened_header", "opened_body"),
+        ("opened_body", "READY24"),
+    ],
+)
+def test_d5_10_late_opening_return_gets_no_next_io(
+    monkeypatch: pytest.MonkeyPatch, late: str, absent: str
+) -> None:
+    world = T5World(t5={"late": (late,)})
+    result = world.run_t5(monkeypatch)
+    assert_aborted_24(world, result, "SESSION", retained=False)
+    assert absent not in world.trace()
+    if late in ("pair", "stdin", "spawn", "child_close", "reader_close", "guard_header"):
+        assert world.packets == []  # expired before INIT: no INIT byte ever written
+
+
+# ---------------------------------------------------------------- D5-11/12 close facts
+
+
+@pytest.mark.parametrize(
+    "outcome", [pytest.param(False, id="false"), pytest.param(OSError("CLOSE"), id="raises")]
+)
+def test_d5_11_parent_close_unconfirmed_uses_fallback_and_retains(
+    monkeypatch: pytest.MonkeyPatch, outcome: object
+) -> None:
+    world = T5World(t5={"close": {"parent_close": outcome}})
+    result = world.run_t5(monkeypatch)
+    assert_aborted_24(world, result, world.aborts()[0]["reason"], retained=True)
+    names = world.names()
+    assert names.index("kill") < names.index("wait")  # no EOF wait without a confirmed close
+    owner = world.owner
+    assert probe_ends(world)["parent"] in ids(owner.endpoints)
+    assert owner.session_token is world.t5_token
+
+
+# ---------------------------------------------------------------- D5-13 controls
+
+
+@pytest.mark.parametrize(
+    ("script", "ends", "marker"),
+    [
+        pytest.param({"wait_raise": KeyboardInterrupt()}, (), None, id="wait"),
+        pytest.param(
+            {"spawn_raise": KeyboardInterrupt()},
+            ("parent", "child", "reader", "writer"),
+            "probe_process",
+            id="spawn",
+        ),
+    ],
+)
+def test_d5_13_control_escapes_with_unsettled_owner(
+    monkeypatch: pytest.MonkeyPatch,
+    script: dict[str, Any],
+    ends: tuple[str, ...],
+    marker: str | None,
+) -> None:
+    world = T5World(t5=script)
+    with pytest.raises(KeyboardInterrupt):
+        world.run_t5(monkeypatch)
+    owner = world.owner
+    assert owner.session_token is world.t5_token
+    known = probe_ends(world)
+    assert ids(owner.endpoints) == {known[name] for name in ends}
+    if marker is None:
+        assert ids(owner.handles) == {id(world.proc)}
+    else:
+        assert marker in owner.unknown
+    assert world.t5_releases == []
+    assert world.eof_results() == []
+
+
+# ---------------------------------------------------------------- D5-14 clocks
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param(math.nan, id="nan"),
+        pytest.param(math.inf, id="inf"),
+        pytest.param(-math.inf, id="minus-inf"),
+        pytest.param(True, id="bool"),
+        pytest.param(None, id="none"),
+        pytest.param(object(), id="object"),
+    ],
+)
+def test_d5_14_invalid_clock_fails_closed(monkeypatch: pytest.MonkeyPatch, value: object) -> None:
+    world = T5World(t5={"bad_clock": ("spawn", value)})
+    result = world.run_t5(monkeypatch)
+    assert world.eof_results() == []
+    assert "guard_header" not in world.names()
+    assert "READY24" not in world.trace()
+    assert result.outcome in ("ABORTED", "RETAINED")
+    assert result.verdicts[T5 - 1] == "FAIL"
+
+
+# ---------------------------------------------------------------- D5-16 key and nonce
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param(bytes([1]) * 16, id="duplicate"),
+        pytest.param(bytes(15), id="15-bytes"),
+        pytest.param(bytes(17), id="17-bytes"),
+        pytest.param(bytearray(T5_ID), id="bytearray"),
+        pytest.param("x" * 16, id="text"),
+    ],
+)
+def test_d5_16_bad_session_id_refused_before_reserve(
+    monkeypatch: pytest.MonkeyPatch, value: object
+) -> None:
+    world = T5World(t5={"t5_id": value})
+    result = world.run_t5(monkeypatch)
+    assert_aborted_24(world, result, "SESSION", retained=False)
+    assert len(world.reserves) == 5
+    assert world.names() == []  # no ledger, port or physical step for the probe
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param(bytes(31), id="31"),
+        pytest.param(bytes(33), id="33"),
+        pytest.param(bytearray(32), id="bytearray"),
+        pytest.param("n" * 32, id="text"),
+        pytest.param(None, id="none"),
+    ],
+)
+def test_d5_16_bad_nonce_never_reaches_init(
+    monkeypatch: pytest.MonkeyPatch, value: object
+) -> None:
+    world = T5World(t5={"nonce": value})
+    result = world.run_t5(monkeypatch)
+    assert_aborted_24(world, result, "SESSION", retained=False)
+    assert "write_all" not in world.names()
+    assert world.packets == []
+    assert world.names().count("kill") == 1
+
+
+# ---------------------------------------------------------------- D5-15 events
+
+
+def test_d5_15_events_hide_secrets_and_keep_frame_limits(monkeypatch: pytest.MonkeyPatch) -> None:
+    world = T5World()
+    world.run_t5(monkeypatch)
+    events = world.events()  # exact keys/enums, <=512 B, <=56 lines, no leak incl. nonce
+    ready = [e for e in events if e["e"] == "READY" and e["case"] == T5]
+    assert ready == [{"case": T5, "e": "READY", "next_seq": 48}]
+    raw = b"".join(world.link.lines)
+    init = world.init()
+    for secret in (init.snapshot, init.nonce, init.nonce.hex().encode(), T5_ID.hex().encode()):
+        assert secret not in raw

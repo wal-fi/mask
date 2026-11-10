@@ -1,0 +1,28 @@
+[
+  {
+    "closed_before_spawn": "parent",
+    "slots_before": {
+      "probe_parent": "EMPTY",
+      "probe_child": "OWNED",
+      "probe_stdin_r": "OWNED",
+      "probe_stdin_w": "OWNED",
+      "probe_process": "EMPTY"
+    },
+    "outcome": "SPAWNED",
+    "new_fake_processes": 1,
+    "safe_exit": false
+  },
+  {
+    "closed_before_spawn": "writer",
+    "slots_before": {
+      "probe_parent": "OWNED",
+      "probe_child": "OWNED",
+      "probe_stdin_r": "OWNED",
+      "probe_stdin_w": "EMPTY",
+      "probe_process": "EMPTY"
+    },
+    "outcome": "SPAWNED",
+    "new_fake_processes": 1,
+    "safe_exit": false
+  }
+]

@@ -11,6 +11,12 @@ close contract over the real ledger; it does NOT simulate ResultReceiver
 allocation, output pin or worker lifetime, so a separate integration with the
 real WorkerSession remains mandatory before any of that is claimed.
 
+T5 migration (T5-DESIGN v3): ``Ports`` has a ninth ``children`` port and ``ids.nonce``.
+The D1 world supplies a deterministic fake probe child (public GUARD/OPENED codecs,
+natural exit 0, no OS object) kept apart from ``World.endpoints``/``handles``; case 24
+is ``RESULT kind EOF`` released, and SUMMARY no longer always contains 24. This fake
+is no native, kernel EOF or WorkerSession evidence.
+
 Minimal stable API of the future module (``runpy`` namespace):
 
 - Constants: ``PURE_PATH`` "/opt/maskgw/lab/oracle9_w1_controller.py",
@@ -68,6 +74,7 @@ import ast
 import builtins
 import functools
 import hashlib
+import hmac
 import json
 import os
 import runpy
@@ -98,7 +105,18 @@ from maskgw.runtime.budget import (
 )
 from maskgw.runtime.linux_guard import GuardFacts, GuardFailure, ProcessGuardError, ProcessRole
 from maskgw.runtime.snapshot import SnapshotIdentity, recompile_snapshot
-from maskgw.runtime.worker_protocol import ErrorReply, SessionKey, WireFailure
+from maskgw.runtime.worker_protocol import (
+    HEADER_BYTES,
+    ErrorReply,
+    Kind,
+    SessionKey,
+    WireFailure,
+    decode_guard,
+    decode_init,
+    encode_guard,
+    encode_opened,
+    parse_header,
+)
 from maskgw.runtime.worker_session import (
     SessionFailure,
     SessionState,
@@ -275,8 +293,9 @@ RESULT_REASONS = {
     "IDLE_WINDOW",
     "EXPECTATION",
     "STOP_LATE",
-    "T5_PENDING",
 }
+# T5 migration (T5-DESIGN v3): case 24 is the EOF probe; PENDING/T5_PENDING are gone.
+EOF_REASONS = ("EXIT_NONZERO", "EXIT_LATE", "WAIT_LATE", "NO_EXIT")
 ABORT_REASONS = {
     "INIT",
     "CONTROL",
@@ -312,12 +331,32 @@ def optional(value: object, check: Callable[[object], bool]) -> bool:
     return value is None or check(value)
 
 
-def check_result(event: dict[str, Any]) -> bool:
+def check_eof_result(event: dict[str, Any]) -> bool:
+    """Case 24 only: kind EOF, RELEASED, PASS without reason or FAIL with an EOF reason."""
+    verdict, reason = event["verdict"], event["reason"]
+    coherent = (verdict == "PASS" and reason is None) or (
+        verdict == "FAIL" and exact_text(reason, EOF_REASONS)
+    )
     return (
-        exact_int(event["case"], 1, 24)
+        exact_int(event["case"], T5, T5)
+        and exact_int(event["next_seq"], 49, 49)
+        and exact_text(verdict, ("PASS", "FAIL"))
+        and exact_text(event["kind"], ("EOF",))
+        and coherent
+        and exact_text(event["release"], ("RELEASED",))
+        and all(event[name] is None for name in ("rows", "truncated", "bytes", "sink"))
+        and event["stop_applied"] is None
+    )
+
+
+def check_result(event: dict[str, Any]) -> bool:
+    if exact_int(event["case"], T5, T5):
+        return check_eof_result(event)
+    return (
+        exact_int(event["case"], 1, 23)
         and exact_int(event["next_seq"], 2, 49)
         and exact_text(event["verdict"], ("PASS", "FAIL"))
-        and exact_text(event["kind"], ("RESULT", "ERROR", "FATAL", "PENDING"))
+        and exact_text(event["kind"], ("RESULT", "ERROR", "FATAL"))
         and optional(event["rows"], lambda v: exact_int(v, 0, 1000))
         and optional(event["truncated"], lambda v: type(v) is bool)
         and optional(event["bytes"], lambda v: exact_int(v, 0, SINK_CAP + 1))
@@ -345,7 +384,6 @@ def check_summary(event: dict[str, Any]) -> bool:
         type(failed) is list
         and all(exact_int(case, 1, 24) for case in failed)
         and failed == sorted(set(failed))
-        and T5 in failed
         and event["global_pass"] is False
         and exact_int(event["prefix_cases"], 24, 24)
     )
@@ -444,6 +482,10 @@ class Ids:
         if self.world.script.get("duplicate_id") and self.count > 1:
             return bytes([1]) * 16
         return bytes([self.count]) * 16
+
+    def nonce(self) -> bytes:
+        self.world.probe_calls.append("nonce")
+        return PROBE_NONCE
 
 
 class Link:
@@ -763,6 +805,107 @@ class FakeSession:
         self.world.stops.append(self.index)
 
 
+PROBE_PID = 4242
+PROBE_NONCE = bytes([0x5A]) * 32
+PROBE_WORKER_AS = 256 * MIB
+
+
+class ProbeEnd:
+    """Fake T5 child-side end (child socket copy or stdin reader); owns no OS object."""
+
+    def __init__(self, world: World, name: str, fd: int) -> None:
+        self.world, self.name, self.fd = world, name, fd
+
+    def close(self) -> bool:
+        self.world.probe_calls.append(self.name)
+        return True
+
+
+class ProbeParent:
+    """Fake T5 parent socket end: receive and close only, no send/shutdown."""
+
+    def __init__(self, world: World) -> None:
+        self.world = world
+        self.inbox = bytearray()
+
+    def recv_exact(self, n: int, *, deadline: float) -> bytes:
+        assert deadline >= self.world.clock.now  # an immediate fake read, never past due
+        self.world.probe_calls.append(f"recv:{n}")
+        if len(self.inbox) < n:
+            raise TimeoutError
+        data = bytes(self.inbox[:n])
+        del self.inbox[:n]
+        return data
+
+    def close(self) -> bool:
+        self.world.probe_calls.append("parent_close")
+        return True
+
+
+class ProbeWriter:
+    """Fake stdin writer; closing it lets the fake child answer OPENED (public codec)."""
+
+    def __init__(self, world: World, parent: ProbeParent) -> None:
+        self.world, self.parent = world, parent
+
+    def write_all(self, packet: bytes, *, deadline: float) -> bool:
+        assert deadline >= self.world.clock.now  # an immediate fake write, never past due
+        self.world.probe_calls.append("write_all")
+        self.world.probe_packets.append(packet)
+        return True
+
+    def close(self) -> bool:
+        self.world.probe_calls.append("writer_close")
+        if self.world.probe_packets:
+            init = decode_init(self.world.probe_packets[-1][HEADER_BYTES:])
+            self.parent.inbox += encode_opened(hmac.digest(init.nonce, init.snapshot, "sha256"))
+        return True
+
+
+class ProbeProcess:
+    """Deterministic fake child: natural exit 0 on the first wait; no real process."""
+
+    pid = PROBE_PID
+
+    def __init__(self, world: World) -> None:
+        self.world = world
+
+    def wait(self, *, deadline: float) -> int:
+        assert deadline >= self.world.clock.now  # an immediate fake reap, never past due
+        self.world.probe_calls.append("wait")
+        return 0
+
+    def kill(self) -> bool:
+        self.world.probe_calls.append("kill")
+        return True
+
+
+class ProbeChildren:
+    """Fake ``children`` port for the dedicated T5 probe; kept apart from sink pairs."""
+
+    def __init__(self, world: World) -> None:
+        self.world = world
+        self.parent: ProbeParent | None = None
+
+    def pair(self) -> tuple[ProbeParent, ProbeEnd]:
+        self.world.probe_calls.append("pair")
+        self.parent = ProbeParent(self.world)
+        return self.parent, ProbeEnd(self.world, "child_close", 11)
+
+    def stdin(self) -> tuple[ProbeEnd, ProbeWriter]:
+        self.world.probe_calls.append("stdin")
+        assert self.parent is not None
+        return ProbeEnd(self.world, "reader_close", 12), ProbeWriter(self.world, self.parent)
+
+    def spawn(self, child: Any, reader: Any, **kwargs: Any) -> ProbeProcess:
+        assert (child.fd, reader.fd) == (11, 12)  # the fake child-side ends from pair/stdin
+        self.world.probe_calls.append("spawn")
+        self.world.probe_spawns.append(kwargs)
+        assert self.parent is not None
+        self.parent.inbox += encode_guard(PROBE_PID, 1, PROBE_WORKER_AS)
+        return ProbeProcess(self.world)
+
+
 class Factory:
     def __init__(self, world: World) -> None:
         self.world = world
@@ -810,6 +953,9 @@ class World:
         self.handles: list[Handle] = []
         self.endpoints: list[Any] = []
         self.frames: list[bytes] = []
+        self.probe_calls: list[str] = []  # T5 probe resources kept apart from sink pairs
+        self.probe_packets: list[bytes] = []
+        self.probe_spawns: list[dict[str, Any]] = []
         self.link = Link(self)
 
     def unlocked(self, where: str) -> None:
@@ -827,6 +973,7 @@ class World:
             factory=Factory(self),
             pair=Pair(self),
             threads=Threads(self),
+            children=ProbeChildren(self),
         )
         return module["run"](ports)
 
@@ -915,7 +1062,7 @@ def test_sanity_event_checker_rejects_bool_ints_and_free_strings() -> None:
         {"case": 1, "e": "READY", "next_seq": 51},
         {"case": 1, "e": "READY", "next_seq": 1, "detail": "x"},
         {"case": 25, "e": "ARMED", "live_window_ms": 999, "next_seq": 51},
-        {"e": "SUMMARY", "failed": [], "global_pass": False, "prefix_cases": 24},
+        {"e": "SUMMARY", "failed": [25], "global_pass": False, "prefix_cases": 24},
         {"e": "SUMMARY", "failed": [24], "global_pass": True, "prefix_cases": 24},
     ):
         with pytest.raises((AssertionError, KeyError)):
@@ -929,6 +1076,66 @@ ARMED_T6 = {"case": T6, "e": "ARMED", "live_window_ms": 28000, "next_seq": 51}
 def test_sanity_event_checker_accepts_exact_valid_events() -> None:
     lines = [canonical(GUARD_EVENT), canonical(ARMED_T4), canonical(ARMED_T6)]
     assert events_of(lines) == [GUARD_EVENT, ARMED_T4, ARMED_T6]
+
+
+EOF_PASS: dict[str, object] = {
+    "bytes": None,
+    "case": T5,
+    "e": "RESULT",
+    "kind": "EOF",
+    "next_seq": 49,
+    "reason": None,
+    "release": "RELEASED",
+    "rows": None,
+    "sink": None,
+    "stop_applied": None,
+    "truncated": None,
+    "verdict": "PASS",
+}
+
+
+def test_sanity_t5_migration_accepts_eof_and_empty_summary() -> None:
+    assert result_event(T5, 49, STOP) == EOF_PASS == result_event(T5, 49, NOSTOP)
+    events = [EOF_PASS, *({**EOF_PASS, "reason": r, "verdict": "FAIL"} for r in EOF_REASONS)]
+    summary = {"e": "SUMMARY", "failed": [], "global_pass": False, "prefix_cases": 24}
+    assert events_of([canonical(event) for event in [*events, summary]]) == [*events, summary]
+
+
+@pytest.mark.parametrize(
+    "bad",
+    [
+        pytest.param({**EOF_PASS, "kind": "PENDING", "reason": "T5_PENDING"}, id="legacy-pending"),
+        pytest.param({**EOF_PASS, "kind": "PENDING"}, id="pending-kind"),
+        pytest.param({**EOF_PASS, "reason": "T5_PENDING", "verdict": "FAIL"}, id="pending-reason"),
+        pytest.param({**EOF_PASS, "case": 23, "next_seq": 47}, id="eof-on-case-23"),
+        pytest.param({**EOF_PASS, "case": 1, "next_seq": 2}, id="eof-on-case-1"),
+        pytest.param({**EOF_PASS, "reason": "NO_EXIT"}, id="pass-with-reason"),
+        pytest.param({**EOF_PASS, "verdict": "FAIL"}, id="fail-without-reason"),
+        pytest.param({**EOF_PASS, "release": "HELD"}, id="eof-held"),
+        pytest.param({**EOF_PASS, "release": None}, id="eof-no-release"),
+        pytest.param({**EOF_PASS, "rows": 0}, id="eof-rows"),
+        pytest.param({**EOF_PASS, "kind": "FATAL", "reason": "JOB"}, id="case-24-fatal"),
+    ],
+)
+def test_sanity_t5_migration_rejects_legacy_and_misplaced_eof(bad: dict[str, object]) -> None:
+    with pytest.raises(AssertionError):
+        events_of([canonical(bad)])
+
+
+def test_sanity_probe_child_fake_speaks_public_codecs() -> None:
+    world = World()
+    children = ProbeChildren(world)
+    parent, child = children.pair()
+    reader, writer = children.stdin()
+    process = children.spawn(child, reader, parent_pid=1, address_bytes=PROBE_WORKER_AS)
+    kind, size = parse_header(parent.recv_exact(HEADER_BYTES, deadline=START))
+    assert kind is Kind.GUARD_READY
+    assert decode_guard(parent.recv_exact(size, deadline=START)) == (PROBE_PID, 1, PROBE_WORKER_AS)
+    assert not any(hasattr(parent, name) for name in ("send", "send_all", "shutdown"))
+    assert process.wait(deadline=START) == 0
+    assert world.endpoints == [] and world.handles == []  # never mixed with sink pairs
+    assert writer.close() is True and parent.inbox == bytearray()  # no INIT, no OPENED
+    assert world.probe_spawns == [{"parent_pid": 1, "address_bytes": PROBE_WORKER_AS}]
 
 
 @pytest.mark.parametrize(
@@ -1156,7 +1363,7 @@ def result_event(case: int, seq: int, t4: int) -> dict[str, Any]:
     elif case == T4:
         event.update(stop_applied=t4 == STOP, verdict="PASS" if t4 == STOP else "FAIL")
     elif case == T5:
-        event.update(kind="PENDING", reason="T5_PENDING", release=None, verdict="FAIL")
+        event.update(kind="EOF", reason=None, release="RELEASED")
     return event
 
 
@@ -1171,7 +1378,7 @@ def expected_walk(t4: int) -> list[dict[str, Any]]:
             seq += 1
         events.append(result_event(case, seq, t4))
         seq += 1
-    failed = [T5] if t4 == STOP else [T4, T5]
+    failed = [] if t4 == STOP else [T4]
     events.append({"e": "SUMMARY", "failed": failed, "global_pass": False, "prefix_cases": 24})
     events.append({"case": T6, "e": "READY", "next_seq": seq})
     events.append({"case": T6, "e": "ARMED", "live_window_ms": 28000, "next_seq": 51})
@@ -1187,7 +1394,7 @@ def test_d1_3_full_walk_is_finite_and_never_global_pass(forbidden: list[str], t4
     assert result.outcome == "T6_UNKILLED"
     assert result.owner is None
     verdicts = ["PASS"] * 25
-    verdicts[T5 - 1] = verdicts[T6 - 1] = "FAIL"
+    verdicts[T6 - 1] = "FAIL"
     if t4 == NOSTOP:
         verdicts[T4 - 1] = "FAIL"
     assert result.verdicts == tuple(verdicts)
@@ -1295,7 +1502,7 @@ def test_d1_5_late_stop_is_fail_and_run_continues() -> None:
     events = world.events()
     t4_result = next(e for e in events if e["e"] == "RESULT" and e["case"] == T4)
     assert (t4_result["stop_applied"], t4_result["verdict"]) == (False, "FAIL")
-    assert next(e for e in events if e["e"] == "SUMMARY")["failed"] == [T4, T5]
+    assert next(e for e in events if e["e"] == "SUMMARY")["failed"] == [T4]
     assert result.outcome == "T6_UNKILLED"
 
 

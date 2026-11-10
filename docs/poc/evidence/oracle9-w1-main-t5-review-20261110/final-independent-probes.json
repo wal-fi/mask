@@ -1,0 +1,14 @@
+[
+  {
+    "closed_before_spawn": "parent",
+    "outcome": "MainRefusal",
+    "new_fake_processes": 0,
+    "safe_exit": false
+  },
+  {
+    "closed_before_spawn": "writer",
+    "outcome": "MainRefusal",
+    "new_fake_processes": 0,
+    "safe_exit": false
+  }
+]

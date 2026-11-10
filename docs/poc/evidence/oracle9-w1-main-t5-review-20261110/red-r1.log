@@ -1,0 +1,1838 @@
+..FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF                                [100%]
+================================== FAILURES ===================================
+________________ test_m5_1_system_slots_pins_and_lazy_wrappers ________________
+
+    def test_m5_1_system_slots_pins_and_lazy_wrappers() -> None:
+        names = [field.name for field in dataclasses.fields(ns()["System"])]
+>       assert len(names) == 22 and set(names) == FIELDS22
+E       AssertionError: assert (20 == 22)
+E        +  where 20 = len(['open', 'read', 'close', 'fstat', 'isatty', 'set_blocking', ...])
+
+tests\test_oracle9_w1_main_t5.py:392: AssertionError
+_________ test_m5_1_pipe2_wrapper_is_the_only_lazy_os_pipe2_reference _________
+
+    def test_m5_1_pipe2_wrapper_is_the_only_lazy_os_pipe2_reference() -> None:
+        tree = m1.main_tree()
+>       wrapper = m1.function(tree, "_pipe2")
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main_t5.py:402:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+tree = <ast.Module object at 0x0000028C59529DE0>, name = '_pipe2'
+
+    def function(tree: ast.Module, name: str) -> ast.FunctionDef:
+        found = [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == name]
+>       assert len(found) == 1
+E       assert 0 == 1
+E        +  where 0 = len([])
+
+tests\test_oracle9_w1_main.py:707: AssertionError
+_________ test_m5_1_build_ports_binds_probe_children_and_session_ids __________
+
+    def test_m5_1_build_ports_binds_probe_children_and_session_ids() -> None:
+        fake = ProbeOS()
+>       root, _ = m1.linked(fake)
+                  ^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main_t5.py:429:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:561: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:554: in bound_root
+    root = new_root(fake)
+           ^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:549: in new_root
+    return ns["MainRoot"](fake.system(ns))
+                          ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_main_t5.ProbeOS object at 0x0000028C59448F90>
+ns = {'__name__': '_lab_test', '__doc__': "W1 Oracle laboratory main, D2: root, bindings, containment and physical hold.\n\...teway's\nproduction shutdown policy. Object facts are not kernel proof.\n", '__package__': '', '__loader__': None, ...}
+
+    def system(self, ns: dict[str, Any]) -> Any:
+>       return ns["System"](**{name: getattr(self, name) for name in FIELDS22})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: System.__init__() got an unexpected keyword argument 'popen'
+
+tests\test_oracle9_w1_main_t5.py:186: TypeError
+________ test_m5_2_pair_reserves_before_owns_after_then_noninheritable ________
+
+    def test_m5_2_pair_reserves_before_owns_after_then_noninheritable() -> None:
+        fake = ProbeOS()
+>       root = baseline(fake)
+               ^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main_t5.py:441:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main_t5.py:288: in baseline
+    root = m1.clean_root(fake)
+           ^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:646: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:561: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:554: in bound_root
+    root = new_root(fake)
+           ^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:549: in new_root
+    return ns["MainRoot"](fake.system(ns))
+                          ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_main_t5.ProbeOS object at 0x0000028C591E7D10>
+ns = {'__name__': '_lab_test', '__doc__': "W1 Oracle laboratory main, D2: root, bindings, containment and physical hold.\n\...teway's\nproduction shutdown policy. Object facts are not kernel proof.\n", '__package__': '', '__loader__': None, ...}
+
+    def system(self, ns: dict[str, Any]) -> Any:
+>       return ns["System"](**{name: getattr(self, name) for name in FIELDS22})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: System.__init__() got an unexpected keyword argument 'popen'
+
+tests\test_oracle9_w1_main_t5.py:186: TypeError
+__________ test_m5_2_stdin_pipe2_cloexec_and_only_writer_nonblocking __________
+
+    def test_m5_2_stdin_pipe2_cloexec_and_only_writer_nonblocking() -> None:
+        fake = ProbeOS()
+>       root = baseline(fake)
+               ^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main_t5.py:466:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main_t5.py:288: in baseline
+    root = m1.clean_root(fake)
+           ^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:646: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:561: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:554: in bound_root
+    root = new_root(fake)
+           ^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:549: in new_root
+    return ns["MainRoot"](fake.system(ns))
+                          ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_main_t5.ProbeOS object at 0x0000028C58DCB250>
+ns = {'__name__': '_lab_test', '__doc__': "W1 Oracle laboratory main, D2: root, bindings, containment and physical hold.\n\...teway's\nproduction shutdown policy. Object facts are not kernel proof.\n", '__package__': '', '__loader__': None, ...}
+
+    def system(self, ns: dict[str, Any]) -> Any:
+>       return ns["System"](**{name: getattr(self, name) for name in FIELDS22})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: System.__init__() got an unexpected keyword argument 'popen'
+
+tests\test_oracle9_w1_main_t5.py:186: TypeError
+______ test_m5_3_popen_after_four_owned_ends_with_exact_worker_arguments ______
+
+    def test_m5_3_popen_after_four_owned_ends_with_exact_worker_arguments() -> None:
+        fake = ProbeOS()
+>       root = baseline(fake)
+               ^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main_t5.py:493:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main_t5.py:288: in baseline
+    root = m1.clean_root(fake)
+           ^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:646: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:561: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:554: in bound_root
+    root = new_root(fake)
+           ^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:549: in new_root
+    return ns["MainRoot"](fake.system(ns))
+                          ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_main_t5.ProbeOS object at 0x0000028C591AFC90>
+ns = {'__name__': '_lab_test', '__doc__': "W1 Oracle laboratory main, D2: root, bindings, containment and physical hold.\n\...teway's\nproduction shutdown policy. Object facts are not kernel proof.\n", '__package__': '', '__loader__': None, ...}
+
+    def system(self, ns: dict[str, Any]) -> Any:
+>       return ns["System"](**{name: getattr(self, name) for name in FIELDS22})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: System.__init__() got an unexpected keyword argument 'popen'
+
+tests\test_oracle9_w1_main_t5.py:186: TypeError
+_______ test_m5_3_spawn_refuses_foreign_ends_before_any_process[child] ________
+
+which = 'child'
+
+    @pytest.mark.parametrize("which", ["child", "reader"])
+    def test_m5_3_spawn_refuses_foreign_ends_before_any_process(which: str) -> None:
+        fake = ProbeOS()
+>       root = baseline(fake)
+               ^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main_t5.py:526:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main_t5.py:288: in baseline
+    root = m1.clean_root(fake)
+           ^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:646: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:561: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:554: in bound_root
+    root = new_root(fake)
+           ^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:549: in new_root
+    return ns["MainRoot"](fake.system(ns))
+                          ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_main_t5.ProbeOS object at 0x0000028C58F928D0>
+ns = {'__name__': '_lab_test', '__doc__': "W1 Oracle laboratory main, D2: root, bindings, containment and physical hold.\n\...teway's\nproduction shutdown policy. Object facts are not kernel proof.\n", '__package__': '', '__loader__': None, ...}
+
+    def system(self, ns: dict[str, Any]) -> Any:
+>       return ns["System"](**{name: getattr(self, name) for name in FIELDS22})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: System.__init__() got an unexpected keyword argument 'popen'
+
+tests\test_oracle9_w1_main_t5.py:186: TypeError
+_______ test_m5_3_spawn_refuses_foreign_ends_before_any_process[reader] _______
+
+which = 'reader'
+
+    @pytest.mark.parametrize("which", ["child", "reader"])
+    def test_m5_3_spawn_refuses_foreign_ends_before_any_process(which: str) -> None:
+        fake = ProbeOS()
+>       root = baseline(fake)
+               ^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main_t5.py:526:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main_t5.py:288: in baseline
+    root = m1.clean_root(fake)
+           ^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:646: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:561: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:554: in bound_root
+    root = new_root(fake)
+           ^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:549: in new_root
+    return ns["MainRoot"](fake.system(ns))
+                          ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_main_t5.ProbeOS object at 0x0000028C590C5310>
+ns = {'__name__': '_lab_test', '__doc__': "W1 Oracle laboratory main, D2: root, bindings, containment and physical hold.\n\...teway's\nproduction shutdown policy. Object facts are not kernel proof.\n", '__package__': '', '__loader__': None, ...}
+
+    def system(self, ns: dict[str, Any]) -> Any:
+>       return ns["System"](**{name: getattr(self, name) for name in FIELDS22})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: System.__init__() got an unexpected keyword argument 'popen'
+
+tests\test_oracle9_w1_main_t5.py:186: TypeError
+_ test_m5_4_creation_failure_or_control_retains_and_blocks_safe_exit[socketpair-error] _
+
+stage = 'pair', mechanism = 'socketpair', error = FakeOSError(5, 'SYNTHETIC')
+expected = {'probe_parent': 'UNKNOWN', 'probe_child': 'UNKNOWN'}
+
+    @pytest.mark.parametrize(
+        ("stage", "mechanism", "error", "expected"),
+        [
+            pytest.param(
+                "pair",
+                "socketpair",
+                m1.FakeOSError(),
+                {"probe_parent": "UNKNOWN", "probe_child": "UNKNOWN"},
+                id="socketpair-error",
+            ),
+            pytest.param(
+                "pair",
+                "socketpair",
+                KeyboardInterrupt(),
+                {"probe_parent": "UNKNOWN", "probe_child": "UNKNOWN"},
+                id="socketpair-control",
+            ),
+            pytest.param(
+                "pair",
+                "set_inheritable",
+                None,
+                {"probe_parent": "OWNED", "probe_child": "OWNED"},
+                id="control-after-socketpair-return",
+            ),
+            pytest.param(
+                "stdin",
+                "pipe2",
+                m1.FakeOSError(),
+                {"probe_stdin_r": "UNKNOWN", "probe_stdin_w": "UNKNOWN"},
+                id="pipe2-error",
+            ),
+            pytest.param(
+                "stdin",
+                "set_blocking",
+                None,
+                {"probe_stdin_r": "OWNED", "probe_stdin_w": "OWNED"},
+                id="control-after-pipe2-return",
+            ),
+            pytest.param(
+                "spawn", "popen", m1.FakeOSError(), {"probe_process": "UNKNOWN"}, id="popen-error"
+            ),
+            pytest.param(
+                "spawn", "popen", KeyboardInterrupt(), {"probe_process": "UNKNOWN"}, id="popen-control"
+            ),
+        ],
+    )
+    def test_m5_4_creation_failure_or_control_retains_and_blocks_safe_exit(
+        stage: str, mechanism: str, error: BaseException | None, expected: dict[str, str]
+    ) -> None:
+        fake = ProbeOS()
+>       root = baseline(fake)
+               ^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main_t5.py:596:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main_t5.py:288: in baseline
+    root = m1.clean_root(fake)
+           ^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:646: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:561: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:554: in bound_root
+    root = new_root(fake)
+           ^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:549: in new_root
+    return ns["MainRoot"](fake.system(ns))
+                          ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_main_t5.ProbeOS object at 0x0000028C59632850>
+ns = {'__name__': '_lab_test', '__doc__': "W1 Oracle laboratory main, D2: root, bindings, containment and physical hold.\n\...teway's\nproduction shutdown policy. Object facts are not kernel proof.\n", '__package__': '', '__loader__': None, ...}
+
+    def system(self, ns: dict[str, Any]) -> Any:
+>       return ns["System"](**{name: getattr(self, name) for name in FIELDS22})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: System.__init__() got an unexpected keyword argument 'popen'
+
+tests\test_oracle9_w1_main_t5.py:186: TypeError
+_ test_m5_4_creation_failure_or_control_retains_and_blocks_safe_exit[socketpair-control] _
+
+stage = 'pair', mechanism = 'socketpair', error = KeyboardInterrupt()
+expected = {'probe_parent': 'UNKNOWN', 'probe_child': 'UNKNOWN'}
+
+    @pytest.mark.parametrize(
+        ("stage", "mechanism", "error", "expected"),
+        [
+            pytest.param(
+                "pair",
+                "socketpair",
+                m1.FakeOSError(),
+                {"probe_parent": "UNKNOWN", "probe_child": "UNKNOWN"},
+                id="socketpair-error",
+            ),
+            pytest.param(
+                "pair",
+                "socketpair",
+                KeyboardInterrupt(),
+                {"probe_parent": "UNKNOWN", "probe_child": "UNKNOWN"},
+                id="socketpair-control",
+            ),
+            pytest.param(
+                "pair",
+                "set_inheritable",
+                None,
+                {"probe_parent": "OWNED", "probe_child": "OWNED"},
+                id="control-after-socketpair-return",
+            ),
+            pytest.param(
+                "stdin",
+                "pipe2",
+                m1.FakeOSError(),
+                {"probe_stdin_r": "UNKNOWN", "probe_stdin_w": "UNKNOWN"},
+                id="pipe2-error",
+            ),
+            pytest.param(
+                "stdin",
+                "set_blocking",
+                None,
+                {"probe_stdin_r": "OWNED", "probe_stdin_w": "OWNED"},
+                id="control-after-pipe2-return",
+            ),
+            pytest.param(
+                "spawn", "popen", m1.FakeOSError(), {"probe_process": "UNKNOWN"}, id="popen-error"
+            ),
+            pytest.param(
+                "spawn", "popen", KeyboardInterrupt(), {"probe_process": "UNKNOWN"}, id="popen-control"
+            ),
+        ],
+    )
+    def test_m5_4_creation_failure_or_control_retains_and_blocks_safe_exit(
+        stage: str, mechanism: str, error: BaseException | None, expected: dict[str, str]
+    ) -> None:
+        fake = ProbeOS()
+>       root = baseline(fake)
+               ^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main_t5.py:596:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main_t5.py:288: in baseline
+    root = m1.clean_root(fake)
+           ^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:646: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:561: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:554: in bound_root
+    root = new_root(fake)
+           ^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:549: in new_root
+    return ns["MainRoot"](fake.system(ns))
+                          ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_main_t5.ProbeOS object at 0x0000028C58D6B050>
+ns = {'__name__': '_lab_test', '__doc__': "W1 Oracle laboratory main, D2: root, bindings, containment and physical hold.\n\...teway's\nproduction shutdown policy. Object facts are not kernel proof.\n", '__package__': '', '__loader__': None, ...}
+
+    def system(self, ns: dict[str, Any]) -> Any:
+>       return ns["System"](**{name: getattr(self, name) for name in FIELDS22})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: System.__init__() got an unexpected keyword argument 'popen'
+
+tests\test_oracle9_w1_main_t5.py:186: TypeError
+_ test_m5_4_creation_failure_or_control_retains_and_blocks_safe_exit[control-after-socketpair-return] _
+
+stage = 'pair', mechanism = 'set_inheritable', error = None
+expected = {'probe_parent': 'OWNED', 'probe_child': 'OWNED'}
+
+    @pytest.mark.parametrize(
+        ("stage", "mechanism", "error", "expected"),
+        [
+            pytest.param(
+                "pair",
+                "socketpair",
+                m1.FakeOSError(),
+                {"probe_parent": "UNKNOWN", "probe_child": "UNKNOWN"},
+                id="socketpair-error",
+            ),
+            pytest.param(
+                "pair",
+                "socketpair",
+                KeyboardInterrupt(),
+                {"probe_parent": "UNKNOWN", "probe_child": "UNKNOWN"},
+                id="socketpair-control",
+            ),
+            pytest.param(
+                "pair",
+                "set_inheritable",
+                None,
+                {"probe_parent": "OWNED", "probe_child": "OWNED"},
+                id="control-after-socketpair-return",
+            ),
+            pytest.param(
+                "stdin",
+                "pipe2",
+                m1.FakeOSError(),
+                {"probe_stdin_r": "UNKNOWN", "probe_stdin_w": "UNKNOWN"},
+                id="pipe2-error",
+            ),
+            pytest.param(
+                "stdin",
+                "set_blocking",
+                None,
+                {"probe_stdin_r": "OWNED", "probe_stdin_w": "OWNED"},
+                id="control-after-pipe2-return",
+            ),
+            pytest.param(
+                "spawn", "popen", m1.FakeOSError(), {"probe_process": "UNKNOWN"}, id="popen-error"
+            ),
+            pytest.param(
+                "spawn", "popen", KeyboardInterrupt(), {"probe_process": "UNKNOWN"}, id="popen-control"
+            ),
+        ],
+    )
+    def test_m5_4_creation_failure_or_control_retains_and_blocks_safe_exit(
+        stage: str, mechanism: str, error: BaseException | None, expected: dict[str, str]
+    ) -> None:
+        fake = ProbeOS()
+>       root = baseline(fake)
+               ^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main_t5.py:596:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main_t5.py:288: in baseline
+    root = m1.clean_root(fake)
+           ^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:646: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:561: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:554: in bound_root
+    root = new_root(fake)
+           ^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:549: in new_root
+    return ns["MainRoot"](fake.system(ns))
+                          ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_main_t5.ProbeOS object at 0x0000028C58D9E790>
+ns = {'__name__': '_lab_test', '__doc__': "W1 Oracle laboratory main, D2: root, bindings, containment and physical hold.\n\...teway's\nproduction shutdown policy. Object facts are not kernel proof.\n", '__package__': '', '__loader__': None, ...}
+
+    def system(self, ns: dict[str, Any]) -> Any:
+>       return ns["System"](**{name: getattr(self, name) for name in FIELDS22})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: System.__init__() got an unexpected keyword argument 'popen'
+
+tests\test_oracle9_w1_main_t5.py:186: TypeError
+_ test_m5_4_creation_failure_or_control_retains_and_blocks_safe_exit[pipe2-error] _
+
+stage = 'stdin', mechanism = 'pipe2', error = FakeOSError(5, 'SYNTHETIC')
+expected = {'probe_stdin_r': 'UNKNOWN', 'probe_stdin_w': 'UNKNOWN'}
+
+    @pytest.mark.parametrize(
+        ("stage", "mechanism", "error", "expected"),
+        [
+            pytest.param(
+                "pair",
+                "socketpair",
+                m1.FakeOSError(),
+                {"probe_parent": "UNKNOWN", "probe_child": "UNKNOWN"},
+                id="socketpair-error",
+            ),
+            pytest.param(
+                "pair",
+                "socketpair",
+                KeyboardInterrupt(),
+                {"probe_parent": "UNKNOWN", "probe_child": "UNKNOWN"},
+                id="socketpair-control",
+            ),
+            pytest.param(
+                "pair",
+                "set_inheritable",
+                None,
+                {"probe_parent": "OWNED", "probe_child": "OWNED"},
+                id="control-after-socketpair-return",
+            ),
+            pytest.param(
+                "stdin",
+                "pipe2",
+                m1.FakeOSError(),
+                {"probe_stdin_r": "UNKNOWN", "probe_stdin_w": "UNKNOWN"},
+                id="pipe2-error",
+            ),
+            pytest.param(
+                "stdin",
+                "set_blocking",
+                None,
+                {"probe_stdin_r": "OWNED", "probe_stdin_w": "OWNED"},
+                id="control-after-pipe2-return",
+            ),
+            pytest.param(
+                "spawn", "popen", m1.FakeOSError(), {"probe_process": "UNKNOWN"}, id="popen-error"
+            ),
+            pytest.param(
+                "spawn", "popen", KeyboardInterrupt(), {"probe_process": "UNKNOWN"}, id="popen-control"
+            ),
+        ],
+    )
+    def test_m5_4_creation_failure_or_control_retains_and_blocks_safe_exit(
+        stage: str, mechanism: str, error: BaseException | None, expected: dict[str, str]
+    ) -> None:
+        fake = ProbeOS()
+>       root = baseline(fake)
+               ^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main_t5.py:596:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main_t5.py:288: in baseline
+    root = m1.clean_root(fake)
+           ^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:646: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:561: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:554: in bound_root
+    root = new_root(fake)
+           ^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:549: in new_root
+    return ns["MainRoot"](fake.system(ns))
+                          ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_main_t5.ProbeOS object at 0x0000028C58FFA210>
+ns = {'__name__': '_lab_test', '__doc__': "W1 Oracle laboratory main, D2: root, bindings, containment and physical hold.\n\...teway's\nproduction shutdown policy. Object facts are not kernel proof.\n", '__package__': '', '__loader__': None, ...}
+
+    def system(self, ns: dict[str, Any]) -> Any:
+>       return ns["System"](**{name: getattr(self, name) for name in FIELDS22})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: System.__init__() got an unexpected keyword argument 'popen'
+
+tests\test_oracle9_w1_main_t5.py:186: TypeError
+_ test_m5_4_creation_failure_or_control_retains_and_blocks_safe_exit[control-after-pipe2-return] _
+
+stage = 'stdin', mechanism = 'set_blocking', error = None
+expected = {'probe_stdin_r': 'OWNED', 'probe_stdin_w': 'OWNED'}
+
+    @pytest.mark.parametrize(
+        ("stage", "mechanism", "error", "expected"),
+        [
+            pytest.param(
+                "pair",
+                "socketpair",
+                m1.FakeOSError(),
+                {"probe_parent": "UNKNOWN", "probe_child": "UNKNOWN"},
+                id="socketpair-error",
+            ),
+            pytest.param(
+                "pair",
+                "socketpair",
+                KeyboardInterrupt(),
+                {"probe_parent": "UNKNOWN", "probe_child": "UNKNOWN"},
+                id="socketpair-control",
+            ),
+            pytest.param(
+                "pair",
+                "set_inheritable",
+                None,
+                {"probe_parent": "OWNED", "probe_child": "OWNED"},
+                id="control-after-socketpair-return",
+            ),
+            pytest.param(
+                "stdin",
+                "pipe2",
+                m1.FakeOSError(),
+                {"probe_stdin_r": "UNKNOWN", "probe_stdin_w": "UNKNOWN"},
+                id="pipe2-error",
+            ),
+            pytest.param(
+                "stdin",
+                "set_blocking",
+                None,
+                {"probe_stdin_r": "OWNED", "probe_stdin_w": "OWNED"},
+                id="control-after-pipe2-return",
+            ),
+            pytest.param(
+                "spawn", "popen", m1.FakeOSError(), {"probe_process": "UNKNOWN"}, id="popen-error"
+            ),
+            pytest.param(
+                "spawn", "popen", KeyboardInterrupt(), {"probe_process": "UNKNOWN"}, id="popen-control"
+            ),
+        ],
+    )
+    def test_m5_4_creation_failure_or_control_retains_and_blocks_safe_exit(
+        stage: str, mechanism: str, error: BaseException | None, expected: dict[str, str]
+    ) -> None:
+        fake = ProbeOS()
+>       root = baseline(fake)
+               ^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main_t5.py:596:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main_t5.py:288: in baseline
+    root = m1.clean_root(fake)
+           ^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:646: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:561: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:554: in bound_root
+    root = new_root(fake)
+           ^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:549: in new_root
+    return ns["MainRoot"](fake.system(ns))
+                          ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_main_t5.ProbeOS object at 0x0000028C590E6850>
+ns = {'__name__': '_lab_test', '__doc__': "W1 Oracle laboratory main, D2: root, bindings, containment and physical hold.\n\...teway's\nproduction shutdown policy. Object facts are not kernel proof.\n", '__package__': '', '__loader__': None, ...}
+
+    def system(self, ns: dict[str, Any]) -> Any:
+>       return ns["System"](**{name: getattr(self, name) for name in FIELDS22})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: System.__init__() got an unexpected keyword argument 'popen'
+
+tests\test_oracle9_w1_main_t5.py:186: TypeError
+_ test_m5_4_creation_failure_or_control_retains_and_blocks_safe_exit[popen-error] _
+
+stage = 'spawn', mechanism = 'popen', error = FakeOSError(5, 'SYNTHETIC')
+expected = {'probe_process': 'UNKNOWN'}
+
+    @pytest.mark.parametrize(
+        ("stage", "mechanism", "error", "expected"),
+        [
+            pytest.param(
+                "pair",
+                "socketpair",
+                m1.FakeOSError(),
+                {"probe_parent": "UNKNOWN", "probe_child": "UNKNOWN"},
+                id="socketpair-error",
+            ),
+            pytest.param(
+                "pair",
+                "socketpair",
+                KeyboardInterrupt(),
+                {"probe_parent": "UNKNOWN", "probe_child": "UNKNOWN"},
+                id="socketpair-control",
+            ),
+            pytest.param(
+                "pair",
+                "set_inheritable",
+                None,
+                {"probe_parent": "OWNED", "probe_child": "OWNED"},
+                id="control-after-socketpair-return",
+            ),
+            pytest.param(
+                "stdin",
+                "pipe2",
+                m1.FakeOSError(),
+                {"probe_stdin_r": "UNKNOWN", "probe_stdin_w": "UNKNOWN"},
+                id="pipe2-error",
+            ),
+            pytest.param(
+                "stdin",
+                "set_blocking",
+                None,
+                {"probe_stdin_r": "OWNED", "probe_stdin_w": "OWNED"},
+                id="control-after-pipe2-return",
+            ),
+            pytest.param(
+                "spawn", "popen", m1.FakeOSError(), {"probe_process": "UNKNOWN"}, id="popen-error"
+            ),
+            pytest.param(
+                "spawn", "popen", KeyboardInterrupt(), {"probe_process": "UNKNOWN"}, id="popen-control"
+            ),
+        ],
+    )
+    def test_m5_4_creation_failure_or_control_retains_and_blocks_safe_exit(
+        stage: str, mechanism: str, error: BaseException | None, expected: dict[str, str]
+    ) -> None:
+        fake = ProbeOS()
+>       root = baseline(fake)
+               ^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main_t5.py:596:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main_t5.py:288: in baseline
+    root = m1.clean_root(fake)
+           ^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:646: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:561: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:554: in bound_root
+    root = new_root(fake)
+           ^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:549: in new_root
+    return ns["MainRoot"](fake.system(ns))
+                          ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_main_t5.ProbeOS object at 0x0000028C590AC450>
+ns = {'__name__': '_lab_test', '__doc__': "W1 Oracle laboratory main, D2: root, bindings, containment and physical hold.\n\...teway's\nproduction shutdown policy. Object facts are not kernel proof.\n", '__package__': '', '__loader__': None, ...}
+
+    def system(self, ns: dict[str, Any]) -> Any:
+>       return ns["System"](**{name: getattr(self, name) for name in FIELDS22})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: System.__init__() got an unexpected keyword argument 'popen'
+
+tests\test_oracle9_w1_main_t5.py:186: TypeError
+_ test_m5_4_creation_failure_or_control_retains_and_blocks_safe_exit[popen-control] _
+
+stage = 'spawn', mechanism = 'popen', error = KeyboardInterrupt()
+expected = {'probe_process': 'UNKNOWN'}
+
+    @pytest.mark.parametrize(
+        ("stage", "mechanism", "error", "expected"),
+        [
+            pytest.param(
+                "pair",
+                "socketpair",
+                m1.FakeOSError(),
+                {"probe_parent": "UNKNOWN", "probe_child": "UNKNOWN"},
+                id="socketpair-error",
+            ),
+            pytest.param(
+                "pair",
+                "socketpair",
+                KeyboardInterrupt(),
+                {"probe_parent": "UNKNOWN", "probe_child": "UNKNOWN"},
+                id="socketpair-control",
+            ),
+            pytest.param(
+                "pair",
+                "set_inheritable",
+                None,
+                {"probe_parent": "OWNED", "probe_child": "OWNED"},
+                id="control-after-socketpair-return",
+            ),
+            pytest.param(
+                "stdin",
+                "pipe2",
+                m1.FakeOSError(),
+                {"probe_stdin_r": "UNKNOWN", "probe_stdin_w": "UNKNOWN"},
+                id="pipe2-error",
+            ),
+            pytest.param(
+                "stdin",
+                "set_blocking",
+                None,
+                {"probe_stdin_r": "OWNED", "probe_stdin_w": "OWNED"},
+                id="control-after-pipe2-return",
+            ),
+            pytest.param(
+                "spawn", "popen", m1.FakeOSError(), {"probe_process": "UNKNOWN"}, id="popen-error"
+            ),
+            pytest.param(
+                "spawn", "popen", KeyboardInterrupt(), {"probe_process": "UNKNOWN"}, id="popen-control"
+            ),
+        ],
+    )
+    def test_m5_4_creation_failure_or_control_retains_and_blocks_safe_exit(
+        stage: str, mechanism: str, error: BaseException | None, expected: dict[str, str]
+    ) -> None:
+        fake = ProbeOS()
+>       root = baseline(fake)
+               ^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main_t5.py:596:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main_t5.py:288: in baseline
+    root = m1.clean_root(fake)
+           ^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:646: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:561: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:554: in bound_root
+    root = new_root(fake)
+           ^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:549: in new_root
+    return ns["MainRoot"](fake.system(ns))
+                          ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_main_t5.ProbeOS object at 0x0000028C5909F690>
+ns = {'__name__': '_lab_test', '__doc__': "W1 Oracle laboratory main, D2: root, bindings, containment and physical hold.\n\...teway's\nproduction shutdown policy. Object facts are not kernel proof.\n", '__package__': '', '__loader__': None, ...}
+
+    def system(self, ns: dict[str, Any]) -> Any:
+>       return ns["System"](**{name: getattr(self, name) for name in FIELDS22})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: System.__init__() got an unexpected keyword argument 'popen'
+
+tests\test_oracle9_w1_main_t5.py:186: TypeError
+_________ test_m5_5_writer_partial_writes_and_eagain_within_deadline __________
+
+    def test_m5_5_writer_partial_writes_and_eagain_within_deadline() -> None:
+        fake = ProbeOS()
+>       root = baseline(fake)
+               ^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main_t5.py:630:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main_t5.py:288: in baseline
+    root = m1.clean_root(fake)
+           ^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:646: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:561: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:554: in bound_root
+    root = new_root(fake)
+           ^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:549: in new_root
+    return ns["MainRoot"](fake.system(ns))
+                          ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_main_t5.ProbeOS object at 0x0000028C59493ED0>
+ns = {'__name__': '_lab_test', '__doc__': "W1 Oracle laboratory main, D2: root, bindings, containment and physical hold.\n\...teway's\nproduction shutdown policy. Object facts are not kernel proof.\n", '__package__': '', '__loader__': None, ...}
+
+    def system(self, ns: dict[str, Any]) -> Any:
+>       return ns["System"](**{name: getattr(self, name) for name in FIELDS22})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: System.__init__() got an unexpected keyword argument 'popen'
+
+tests\test_oracle9_w1_main_t5.py:186: TypeError
+____________ test_m5_5_writer_never_writes_after_absolute_deadline ____________
+
+    def test_m5_5_writer_never_writes_after_absolute_deadline() -> None:
+        fake = ProbeOS()
+>       root = baseline(fake)
+               ^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main_t5.py:643:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main_t5.py:288: in baseline
+    root = m1.clean_root(fake)
+           ^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:646: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:561: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:554: in bound_root
+    root = new_root(fake)
+           ^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:549: in new_root
+    return ns["MainRoot"](fake.system(ns))
+                          ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_main_t5.ProbeOS object at 0x0000028C58F1EA10>
+ns = {'__name__': '_lab_test', '__doc__': "W1 Oracle laboratory main, D2: root, bindings, containment and physical hold.\n\...teway's\nproduction shutdown policy. Object facts are not kernel proof.\n", '__package__': '', '__loader__': None, ...}
+
+    def system(self, ns: dict[str, Any]) -> Any:
+>       return ns["System"](**{name: getattr(self, name) for name in FIELDS22})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: System.__init__() got an unexpected keyword argument 'popen'
+
+tests\test_oracle9_w1_main_t5.py:186: TypeError
+_____ test_m5_5_ready_select_delivered_late_gets_zero_writes[at-deadline] _____
+
+late = 0.0
+
+    @pytest.mark.parametrize("late", [0.0, 0.5], ids=["at-deadline", "past-deadline"])
+    def test_m5_5_ready_select_delivered_late_gets_zero_writes(late: float) -> None:
+        fake = ProbeOS()
+>       root = baseline(fake)
+               ^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main_t5.py:659:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main_t5.py:288: in baseline
+    root = m1.clean_root(fake)
+           ^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:646: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:561: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:554: in bound_root
+    root = new_root(fake)
+           ^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:549: in new_root
+    return ns["MainRoot"](fake.system(ns))
+                          ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_main_t5.ProbeOS object at 0x0000028C59007450>
+ns = {'__name__': '_lab_test', '__doc__': "W1 Oracle laboratory main, D2: root, bindings, containment and physical hold.\n\...teway's\nproduction shutdown policy. Object facts are not kernel proof.\n", '__package__': '', '__loader__': None, ...}
+
+    def system(self, ns: dict[str, Any]) -> Any:
+>       return ns["System"](**{name: getattr(self, name) for name in FIELDS22})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: System.__init__() got an unexpected keyword argument 'popen'
+
+tests\test_oracle9_w1_main_t5.py:186: TypeError
+____ test_m5_5_ready_select_delivered_late_gets_zero_writes[past-deadline] ____
+
+late = 0.5
+
+    @pytest.mark.parametrize("late", [0.0, 0.5], ids=["at-deadline", "past-deadline"])
+    def test_m5_5_ready_select_delivered_late_gets_zero_writes(late: float) -> None:
+        fake = ProbeOS()
+>       root = baseline(fake)
+               ^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main_t5.py:659:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main_t5.py:288: in baseline
+    root = m1.clean_root(fake)
+           ^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:646: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:561: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:554: in bound_root
+    root = new_root(fake)
+           ^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:549: in new_root
+    return ns["MainRoot"](fake.system(ns))
+                          ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_main_t5.ProbeOS object at 0x0000028C58DEA8D0>
+ns = {'__name__': '_lab_test', '__doc__': "W1 Oracle laboratory main, D2: root, bindings, containment and physical hold.\n\...teway's\nproduction shutdown policy. Object facts are not kernel proof.\n", '__package__': '', '__loader__': None, ...}
+
+    def system(self, ns: dict[str, Any]) -> Any:
+>       return ns["System"](**{name: getattr(self, name) for name in FIELDS22})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: System.__init__() got an unexpected keyword argument 'popen'
+
+tests\test_oracle9_w1_main_t5.py:186: TypeError
+_ test_m5_5_partial_write_returning_after_deadline_gets_no_next_write[at-deadline] _
+
+late = 0.0
+
+    @pytest.mark.parametrize("late", [0.0, 0.5], ids=["at-deadline", "past-deadline"])
+    def test_m5_5_partial_write_returning_after_deadline_gets_no_next_write(late: float) -> None:
+        fake = ProbeOS()
+>       root = baseline(fake)
+               ^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main_t5.py:676:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main_t5.py:288: in baseline
+    root = m1.clean_root(fake)
+           ^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:646: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:561: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:554: in bound_root
+    root = new_root(fake)
+           ^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:549: in new_root
+    return ns["MainRoot"](fake.system(ns))
+                          ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_main_t5.ProbeOS object at 0x0000028C591A1810>
+ns = {'__name__': '_lab_test', '__doc__': "W1 Oracle laboratory main, D2: root, bindings, containment and physical hold.\n\...teway's\nproduction shutdown policy. Object facts are not kernel proof.\n", '__package__': '', '__loader__': None, ...}
+
+    def system(self, ns: dict[str, Any]) -> Any:
+>       return ns["System"](**{name: getattr(self, name) for name in FIELDS22})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: System.__init__() got an unexpected keyword argument 'popen'
+
+tests\test_oracle9_w1_main_t5.py:186: TypeError
+_ test_m5_5_partial_write_returning_after_deadline_gets_no_next_write[past-deadline] _
+
+late = 0.5
+
+    @pytest.mark.parametrize("late", [0.0, 0.5], ids=["at-deadline", "past-deadline"])
+    def test_m5_5_partial_write_returning_after_deadline_gets_no_next_write(late: float) -> None:
+        fake = ProbeOS()
+>       root = baseline(fake)
+               ^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main_t5.py:676:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main_t5.py:288: in baseline
+    root = m1.clean_root(fake)
+           ^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:646: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:561: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:554: in bound_root
+    root = new_root(fake)
+           ^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:549: in new_root
+    return ns["MainRoot"](fake.system(ns))
+                          ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_main_t5.ProbeOS object at 0x0000028C58DAAE50>
+ns = {'__name__': '_lab_test', '__doc__': "W1 Oracle laboratory main, D2: root, bindings, containment and physical hold.\n\...teway's\nproduction shutdown policy. Object facts are not kernel proof.\n", '__package__': '', '__loader__': None, ...}
+
+    def system(self, ns: dict[str, Any]) -> Any:
+>       return ns["System"](**{name: getattr(self, name) for name in FIELDS22})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: System.__init__() got an unexpected keyword argument 'popen'
+
+tests\test_oracle9_w1_main_t5.py:186: TypeError
+___________________ test_m5_5_raw_fd_close_contract[reader] ___________________
+
+end = 'reader'
+
+    @pytest.mark.parametrize("end", ["reader", "writer"])
+    def test_m5_5_raw_fd_close_contract(end: str) -> None:
+        fake = ProbeOS()
+>       root = baseline(fake)
+               ^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main_t5.py:693:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main_t5.py:288: in baseline
+    root = m1.clean_root(fake)
+           ^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:646: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:561: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:554: in bound_root
+    root = new_root(fake)
+           ^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:549: in new_root
+    return ns["MainRoot"](fake.system(ns))
+                          ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_main_t5.ProbeOS object at 0x0000028C58E3FCD0>
+ns = {'__name__': '_lab_test', '__doc__': "W1 Oracle laboratory main, D2: root, bindings, containment and physical hold.\n\...teway's\nproduction shutdown policy. Object facts are not kernel proof.\n", '__package__': '', '__loader__': None, ...}
+
+    def system(self, ns: dict[str, Any]) -> Any:
+>       return ns["System"](**{name: getattr(self, name) for name in FIELDS22})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: System.__init__() got an unexpected keyword argument 'popen'
+
+tests\test_oracle9_w1_main_t5.py:186: TypeError
+___________________ test_m5_5_raw_fd_close_contract[writer] ___________________
+
+end = 'writer'
+
+    @pytest.mark.parametrize("end", ["reader", "writer"])
+    def test_m5_5_raw_fd_close_contract(end: str) -> None:
+        fake = ProbeOS()
+>       root = baseline(fake)
+               ^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main_t5.py:693:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main_t5.py:288: in baseline
+    root = m1.clean_root(fake)
+           ^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:646: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:561: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:554: in bound_root
+    root = new_root(fake)
+           ^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:549: in new_root
+    return ns["MainRoot"](fake.system(ns))
+                          ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_main_t5.ProbeOS object at 0x0000028C591AE790>
+ns = {'__name__': '_lab_test', '__doc__': "W1 Oracle laboratory main, D2: root, bindings, containment and physical hold.\n\...teway's\nproduction shutdown policy. Object facts are not kernel proof.\n", '__package__': '', '__loader__': None, ...}
+
+    def system(self, ns: dict[str, Any]) -> Any:
+>       return ns["System"](**{name: getattr(self, name) for name in FIELDS22})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: System.__init__() got an unexpected keyword argument 'popen'
+
+tests\test_oracle9_w1_main_t5.py:186: TypeError
+_______ test_m5_6_only_exact_int_wait_result_clears_process[exact-zero] _______
+
+script = [0], reaped = 0
+
+    @pytest.mark.parametrize(
+        ("script", "reaped"),
+        [
+            pytest.param([0], 0, id="exact-zero"),
+            pytest.param([1], 1, id="exact-one"),
+            pytest.param([True], None, id="bool"),
+            pytest.param([IntZero(0)], None, id="int-subclass"),
+            pytest.param([0.0], None, id="float"),
+            pytest.param([m1.FakeOSError()], None, id="oserror"),
+        ],
+    )
+    def test_m5_6_only_exact_int_wait_result_clears_process(
+        script: list[object], reaped: int | None
+    ) -> None:
+        fake = ProbeOS()
+>       root = baseline(fake)
+               ^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main_t5.py:729:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main_t5.py:288: in baseline
+    root = m1.clean_root(fake)
+           ^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:646: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:561: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:554: in bound_root
+    root = new_root(fake)
+           ^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:549: in new_root
+    return ns["MainRoot"](fake.system(ns))
+                          ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_main_t5.ProbeOS object at 0x0000028C5909D7D0>
+ns = {'__name__': '_lab_test', '__doc__': "W1 Oracle laboratory main, D2: root, bindings, containment and physical hold.\n\...teway's\nproduction shutdown policy. Object facts are not kernel proof.\n", '__package__': '', '__loader__': None, ...}
+
+    def system(self, ns: dict[str, Any]) -> Any:
+>       return ns["System"](**{name: getattr(self, name) for name in FIELDS22})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: System.__init__() got an unexpected keyword argument 'popen'
+
+tests\test_oracle9_w1_main_t5.py:186: TypeError
+_______ test_m5_6_only_exact_int_wait_result_clears_process[exact-one] ________
+
+script = [1], reaped = 1
+
+    @pytest.mark.parametrize(
+        ("script", "reaped"),
+        [
+            pytest.param([0], 0, id="exact-zero"),
+            pytest.param([1], 1, id="exact-one"),
+            pytest.param([True], None, id="bool"),
+            pytest.param([IntZero(0)], None, id="int-subclass"),
+            pytest.param([0.0], None, id="float"),
+            pytest.param([m1.FakeOSError()], None, id="oserror"),
+        ],
+    )
+    def test_m5_6_only_exact_int_wait_result_clears_process(
+        script: list[object], reaped: int | None
+    ) -> None:
+        fake = ProbeOS()
+>       root = baseline(fake)
+               ^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main_t5.py:729:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main_t5.py:288: in baseline
+    root = m1.clean_root(fake)
+           ^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:646: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:561: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:554: in bound_root
+    root = new_root(fake)
+           ^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:549: in new_root
+    return ns["MainRoot"](fake.system(ns))
+                          ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_main_t5.ProbeOS object at 0x0000028C58DCCED0>
+ns = {'__name__': '_lab_test', '__doc__': "W1 Oracle laboratory main, D2: root, bindings, containment and physical hold.\n\...teway's\nproduction shutdown policy. Object facts are not kernel proof.\n", '__package__': '', '__loader__': None, ...}
+
+    def system(self, ns: dict[str, Any]) -> Any:
+>       return ns["System"](**{name: getattr(self, name) for name in FIELDS22})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: System.__init__() got an unexpected keyword argument 'popen'
+
+tests\test_oracle9_w1_main_t5.py:186: TypeError
+__________ test_m5_6_only_exact_int_wait_result_clears_process[bool] __________
+
+script = [True], reaped = None
+
+    @pytest.mark.parametrize(
+        ("script", "reaped"),
+        [
+            pytest.param([0], 0, id="exact-zero"),
+            pytest.param([1], 1, id="exact-one"),
+            pytest.param([True], None, id="bool"),
+            pytest.param([IntZero(0)], None, id="int-subclass"),
+            pytest.param([0.0], None, id="float"),
+            pytest.param([m1.FakeOSError()], None, id="oserror"),
+        ],
+    )
+    def test_m5_6_only_exact_int_wait_result_clears_process(
+        script: list[object], reaped: int | None
+    ) -> None:
+        fake = ProbeOS()
+>       root = baseline(fake)
+               ^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main_t5.py:729:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main_t5.py:288: in baseline
+    root = m1.clean_root(fake)
+           ^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:646: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:561: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:554: in bound_root
+    root = new_root(fake)
+           ^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:549: in new_root
+    return ns["MainRoot"](fake.system(ns))
+                          ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_main_t5.ProbeOS object at 0x0000028C591A0BD0>
+ns = {'__name__': '_lab_test', '__doc__': "W1 Oracle laboratory main, D2: root, bindings, containment and physical hold.\n\...teway's\nproduction shutdown policy. Object facts are not kernel proof.\n", '__package__': '', '__loader__': None, ...}
+
+    def system(self, ns: dict[str, Any]) -> Any:
+>       return ns["System"](**{name: getattr(self, name) for name in FIELDS22})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: System.__init__() got an unexpected keyword argument 'popen'
+
+tests\test_oracle9_w1_main_t5.py:186: TypeError
+______ test_m5_6_only_exact_int_wait_result_clears_process[int-subclass] ______
+
+script = [0], reaped = None
+
+    @pytest.mark.parametrize(
+        ("script", "reaped"),
+        [
+            pytest.param([0], 0, id="exact-zero"),
+            pytest.param([1], 1, id="exact-one"),
+            pytest.param([True], None, id="bool"),
+            pytest.param([IntZero(0)], None, id="int-subclass"),
+            pytest.param([0.0], None, id="float"),
+            pytest.param([m1.FakeOSError()], None, id="oserror"),
+        ],
+    )
+    def test_m5_6_only_exact_int_wait_result_clears_process(
+        script: list[object], reaped: int | None
+    ) -> None:
+        fake = ProbeOS()
+>       root = baseline(fake)
+               ^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main_t5.py:729:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main_t5.py:288: in baseline
+    root = m1.clean_root(fake)
+           ^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:646: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:561: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:554: in bound_root
+    root = new_root(fake)
+           ^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:549: in new_root
+    return ns["MainRoot"](fake.system(ns))
+                          ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_main_t5.ProbeOS object at 0x0000028C5945F910>
+ns = {'__name__': '_lab_test', '__doc__': "W1 Oracle laboratory main, D2: root, bindings, containment and physical hold.\n\...teway's\nproduction shutdown policy. Object facts are not kernel proof.\n", '__package__': '', '__loader__': None, ...}
+
+    def system(self, ns: dict[str, Any]) -> Any:
+>       return ns["System"](**{name: getattr(self, name) for name in FIELDS22})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: System.__init__() got an unexpected keyword argument 'popen'
+
+tests\test_oracle9_w1_main_t5.py:186: TypeError
+_________ test_m5_6_only_exact_int_wait_result_clears_process[float] __________
+
+script = [0.0], reaped = None
+
+    @pytest.mark.parametrize(
+        ("script", "reaped"),
+        [
+            pytest.param([0], 0, id="exact-zero"),
+            pytest.param([1], 1, id="exact-one"),
+            pytest.param([True], None, id="bool"),
+            pytest.param([IntZero(0)], None, id="int-subclass"),
+            pytest.param([0.0], None, id="float"),
+            pytest.param([m1.FakeOSError()], None, id="oserror"),
+        ],
+    )
+    def test_m5_6_only_exact_int_wait_result_clears_process(
+        script: list[object], reaped: int | None
+    ) -> None:
+        fake = ProbeOS()
+>       root = baseline(fake)
+               ^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main_t5.py:729:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main_t5.py:288: in baseline
+    root = m1.clean_root(fake)
+           ^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:646: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:561: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:554: in bound_root
+    root = new_root(fake)
+           ^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:549: in new_root
+    return ns["MainRoot"](fake.system(ns))
+                          ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_main_t5.ProbeOS object at 0x0000028C5909E3D0>
+ns = {'__name__': '_lab_test', '__doc__': "W1 Oracle laboratory main, D2: root, bindings, containment and physical hold.\n\...teway's\nproduction shutdown policy. Object facts are not kernel proof.\n", '__package__': '', '__loader__': None, ...}
+
+    def system(self, ns: dict[str, Any]) -> Any:
+>       return ns["System"](**{name: getattr(self, name) for name in FIELDS22})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: System.__init__() got an unexpected keyword argument 'popen'
+
+tests\test_oracle9_w1_main_t5.py:186: TypeError
+________ test_m5_6_only_exact_int_wait_result_clears_process[oserror] _________
+
+script = [FakeOSError(5, 'SYNTHETIC')], reaped = None
+
+    @pytest.mark.parametrize(
+        ("script", "reaped"),
+        [
+            pytest.param([0], 0, id="exact-zero"),
+            pytest.param([1], 1, id="exact-one"),
+            pytest.param([True], None, id="bool"),
+            pytest.param([IntZero(0)], None, id="int-subclass"),
+            pytest.param([0.0], None, id="float"),
+            pytest.param([m1.FakeOSError()], None, id="oserror"),
+        ],
+    )
+    def test_m5_6_only_exact_int_wait_result_clears_process(
+        script: list[object], reaped: int | None
+    ) -> None:
+        fake = ProbeOS()
+>       root = baseline(fake)
+               ^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main_t5.py:729:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main_t5.py:288: in baseline
+    root = m1.clean_root(fake)
+           ^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:646: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:561: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:554: in bound_root
+    root = new_root(fake)
+           ^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:549: in new_root
+    return ns["MainRoot"](fake.system(ns))
+                          ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_main_t5.ProbeOS object at 0x0000028C58FA6890>
+ns = {'__name__': '_lab_test', '__doc__': "W1 Oracle laboratory main, D2: root, bindings, containment and physical hold.\n\...teway's\nproduction shutdown policy. Object facts are not kernel proof.\n", '__package__': '', '__loader__': None, ...}
+
+    def system(self, ns: dict[str, Any]) -> Any:
+>       return ns["System"](**{name: getattr(self, name) for name in FIELDS22})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: System.__init__() got an unexpected keyword argument 'popen'
+
+tests\test_oracle9_w1_main_t5.py:186: TypeError
+______ test_m5_6_wait_uses_finite_slices_and_never_waits_after_deadline _______
+
+    def test_m5_6_wait_uses_finite_slices_and_never_waits_after_deadline() -> None:
+        fake = ProbeOS()
+>       root = baseline(fake)
+               ^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main_t5.py:744:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main_t5.py:288: in baseline
+    root = m1.clean_root(fake)
+           ^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:646: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:561: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:554: in bound_root
+    root = new_root(fake)
+           ^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:549: in new_root
+    return ns["MainRoot"](fake.system(ns))
+                          ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_main_t5.ProbeOS object at 0x0000028C58DCF250>
+ns = {'__name__': '_lab_test', '__doc__': "W1 Oracle laboratory main, D2: root, bindings, containment and physical hold.\n\...teway's\nproduction shutdown policy. Object facts are not kernel proof.\n", '__package__': '', '__loader__': None, ...}
+
+    def system(self, ns: dict[str, Any]) -> Any:
+>       return ns["System"](**{name: getattr(self, name) for name in FIELDS22})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: System.__init__() got an unexpected keyword argument 'popen'
+
+tests\test_oracle9_w1_main_t5.py:186: TypeError
+________________ test_m5_6_kill_alone_never_clears_the_process ________________
+
+    def test_m5_6_kill_alone_never_clears_the_process() -> None:
+        fake = ProbeOS()
+>       root = baseline(fake)
+               ^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main_t5.py:762:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main_t5.py:288: in baseline
+    root = m1.clean_root(fake)
+           ^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:646: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:561: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:554: in bound_root
+    root = new_root(fake)
+           ^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:549: in new_root
+    return ns["MainRoot"](fake.system(ns))
+                          ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_main_t5.ProbeOS object at 0x0000028C590D6990>
+ns = {'__name__': '_lab_test', '__doc__': "W1 Oracle laboratory main, D2: root, bindings, containment and physical hold.\n\...teway's\nproduction shutdown policy. Object facts are not kernel proof.\n", '__package__': '', '__loader__': None, ...}
+
+    def system(self, ns: dict[str, Any]) -> Any:
+>       return ns["System"](**{name: getattr(self, name) for name in FIELDS22})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: System.__init__() got an unexpected keyword argument 'popen'
+
+tests\test_oracle9_w1_main_t5.py:186: TypeError
+______ test_m5_7_parent_receives_through_rawchannel_with_finite_deadline ______
+
+    def test_m5_7_parent_receives_through_rawchannel_with_finite_deadline() -> None:
+        fake = ProbeOS()
+>       root = baseline(fake)
+               ^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main_t5.py:776:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main_t5.py:288: in baseline
+    root = m1.clean_root(fake)
+           ^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:646: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:561: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:554: in bound_root
+    root = new_root(fake)
+           ^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:549: in new_root
+    return ns["MainRoot"](fake.system(ns))
+                          ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_main_t5.ProbeOS object at 0x0000028C58F21810>
+ns = {'__name__': '_lab_test', '__doc__': "W1 Oracle laboratory main, D2: root, bindings, containment and physical hold.\n\...teway's\nproduction shutdown policy. Object facts are not kernel proof.\n", '__package__': '', '__loader__': None, ...}
+
+    def system(self, ns: dict[str, Any]) -> Any:
+>       return ns["System"](**{name: getattr(self, name) for name in FIELDS22})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: System.__init__() got an unexpected keyword argument 'popen'
+
+tests\test_oracle9_w1_main_t5.py:186: TypeError
+_________________ test_m5_7_nonce_is_exactly_32_urandom_bytes _________________
+
+    def test_m5_7_nonce_is_exactly_32_urandom_bytes() -> None:
+        fake = ProbeOS()
+>       root = baseline(fake)
+               ^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main_t5.py:798:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main_t5.py:288: in baseline
+    root = m1.clean_root(fake)
+           ^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:646: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:561: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:554: in bound_root
+    root = new_root(fake)
+           ^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:549: in new_root
+    return ns["MainRoot"](fake.system(ns))
+                          ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_main_t5.ProbeOS object at 0x0000028C590C6C10>
+ns = {'__name__': '_lab_test', '__doc__': "W1 Oracle laboratory main, D2: root, bindings, containment and physical hold.\n\...teway's\nproduction shutdown policy. Object facts are not kernel proof.\n", '__package__': '', '__loader__': None, ...}
+
+    def system(self, ns: dict[str, Any]) -> Any:
+>       return ns["System"](**{name: getattr(self, name) for name in FIELDS22})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: System.__init__() got an unexpected keyword argument 'popen'
+
+tests\test_oracle9_w1_main_t5.py:186: TypeError
+_ test_m5_7_wrong_nonce_type_or_length_is_closed_refusal[b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'] _
+
+bad = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+
+    @pytest.mark.parametrize("bad", [bytes(31), bytes(33), bytearray(32), "x" * 32, None], ids=str)
+    def test_m5_7_wrong_nonce_type_or_length_is_closed_refusal(bad: object) -> None:
+        fake = ProbeOS()
+>       root = baseline(fake)
+               ^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main_t5.py:807:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main_t5.py:288: in baseline
+    root = m1.clean_root(fake)
+           ^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:646: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:561: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:554: in bound_root
+    root = new_root(fake)
+           ^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:549: in new_root
+    return ns["MainRoot"](fake.system(ns))
+                          ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_main_t5.ProbeOS object at 0x0000028C58DCE850>
+ns = {'__name__': '_lab_test', '__doc__': "W1 Oracle laboratory main, D2: root, bindings, containment and physical hold.\n\...teway's\nproduction shutdown policy. Object facts are not kernel proof.\n", '__package__': '', '__loader__': None, ...}
+
+    def system(self, ns: dict[str, Any]) -> Any:
+>       return ns["System"](**{name: getattr(self, name) for name in FIELDS22})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: System.__init__() got an unexpected keyword argument 'popen'
+
+tests\test_oracle9_w1_main_t5.py:186: TypeError
+_ test_m5_7_wrong_nonce_type_or_length_is_closed_refusal[b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'] _
+
+bad = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+
+    @pytest.mark.parametrize("bad", [bytes(31), bytes(33), bytearray(32), "x" * 32, None], ids=str)
+    def test_m5_7_wrong_nonce_type_or_length_is_closed_refusal(bad: object) -> None:
+        fake = ProbeOS()
+>       root = baseline(fake)
+               ^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main_t5.py:807:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main_t5.py:288: in baseline
+    root = m1.clean_root(fake)
+           ^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:646: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:561: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:554: in bound_root
+    root = new_root(fake)
+           ^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:549: in new_root
+    return ns["MainRoot"](fake.system(ns))
+                          ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_main_t5.ProbeOS object at 0x0000028C59437F50>
+ns = {'__name__': '_lab_test', '__doc__': "W1 Oracle laboratory main, D2: root, bindings, containment and physical hold.\n\...teway's\nproduction shutdown policy. Object facts are not kernel proof.\n", '__package__': '', '__loader__': None, ...}
+
+    def system(self, ns: dict[str, Any]) -> Any:
+>       return ns["System"](**{name: getattr(self, name) for name in FIELDS22})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: System.__init__() got an unexpected keyword argument 'popen'
+
+tests\test_oracle9_w1_main_t5.py:186: TypeError
+_ test_m5_7_wrong_nonce_type_or_length_is_closed_refusal[bytearray(b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00')] _
+
+bad = bytearray(b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+
+    @pytest.mark.parametrize("bad", [bytes(31), bytes(33), bytearray(32), "x" * 32, None], ids=str)
+    def test_m5_7_wrong_nonce_type_or_length_is_closed_refusal(bad: object) -> None:
+        fake = ProbeOS()
+>       root = baseline(fake)
+               ^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main_t5.py:807:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main_t5.py:288: in baseline
+    root = m1.clean_root(fake)
+           ^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:646: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:561: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:554: in bound_root
+    root = new_root(fake)
+           ^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:549: in new_root
+    return ns["MainRoot"](fake.system(ns))
+                          ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_main_t5.ProbeOS object at 0x0000028C58F202D0>
+ns = {'__name__': '_lab_test', '__doc__': "W1 Oracle laboratory main, D2: root, bindings, containment and physical hold.\n\...teway's\nproduction shutdown policy. Object facts are not kernel proof.\n", '__package__': '', '__loader__': None, ...}
+
+    def system(self, ns: dict[str, Any]) -> Any:
+>       return ns["System"](**{name: getattr(self, name) for name in FIELDS22})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: System.__init__() got an unexpected keyword argument 'popen'
+
+tests\test_oracle9_w1_main_t5.py:186: TypeError
+_ test_m5_7_wrong_nonce_type_or_length_is_closed_refusal[xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx] _
+
+bad = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+
+    @pytest.mark.parametrize("bad", [bytes(31), bytes(33), bytearray(32), "x" * 32, None], ids=str)
+    def test_m5_7_wrong_nonce_type_or_length_is_closed_refusal(bad: object) -> None:
+        fake = ProbeOS()
+>       root = baseline(fake)
+               ^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main_t5.py:807:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main_t5.py:288: in baseline
+    root = m1.clean_root(fake)
+           ^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:646: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:561: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:554: in bound_root
+    root = new_root(fake)
+           ^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:549: in new_root
+    return ns["MainRoot"](fake.system(ns))
+                          ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_main_t5.ProbeOS object at 0x0000028C59492F50>
+ns = {'__name__': '_lab_test', '__doc__': "W1 Oracle laboratory main, D2: root, bindings, containment and physical hold.\n\...teway's\nproduction shutdown policy. Object facts are not kernel proof.\n", '__package__': '', '__loader__': None, ...}
+
+    def system(self, ns: dict[str, Any]) -> Any:
+>       return ns["System"](**{name: getattr(self, name) for name in FIELDS22})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: System.__init__() got an unexpected keyword argument 'popen'
+
+tests\test_oracle9_w1_main_t5.py:186: TypeError
+________ test_m5_7_wrong_nonce_type_or_length_is_closed_refusal[None] _________
+
+bad = None
+
+    @pytest.mark.parametrize("bad", [bytes(31), bytes(33), bytearray(32), "x" * 32, None], ids=str)
+    def test_m5_7_wrong_nonce_type_or_length_is_closed_refusal(bad: object) -> None:
+        fake = ProbeOS()
+>       root = baseline(fake)
+               ^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main_t5.py:807:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main_t5.py:288: in baseline
+    root = m1.clean_root(fake)
+           ^^^^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:646: in clean_root
+    root, link = linked(fake)
+                 ^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:561: in linked
+    root = bound_root(fake)
+           ^^^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:554: in bound_root
+    root = new_root(fake)
+           ^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:549: in new_root
+    return ns["MainRoot"](fake.system(ns))
+                          ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_main_t5.ProbeOS object at 0x0000028C58FA53D0>
+ns = {'__name__': '_lab_test', '__doc__': "W1 Oracle laboratory main, D2: root, bindings, containment and physical hold.\n\...teway's\nproduction shutdown policy. Object facts are not kernel proof.\n", '__package__': '', '__loader__': None, ...}
+
+    def system(self, ns: dict[str, Any]) -> Any:
+>       return ns["System"](**{name: getattr(self, name) for name in FIELDS22})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: System.__init__() got an unexpected keyword argument 'popen'
+
+tests\test_oracle9_w1_main_t5.py:186: TypeError
+_________ test_composition_public_driver_run_with_main_probe_binding __________
+
+    def test_composition_public_driver_run_with_main_probe_binding() -> None:
+        """Public driver.run + main ProbeChildren over fake OS; other cases use D1 fakes."""
+        world = d1.World()
+        fake = ProbeOS(clock=world.clock)
+>       root = m1.bound_root(fake)  # verified load_driver: same bytes, pinned SHA
+               ^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_main_t5.py:822:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_main.py:554: in bound_root
+    root = new_root(fake)
+           ^^^^^^^^^^^^^^
+tests\test_oracle9_w1_main.py:549: in new_root
+    return ns["MainRoot"](fake.system(ns))
+                          ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_main_t5.ProbeOS object at 0x0000028C59267390>
+ns = {'__name__': '_lab_test', '__doc__': "W1 Oracle laboratory main, D2: root, bindings, containment and physical hold.\n\...teway's\nproduction shutdown policy. Object facts are not kernel proof.\n", '__package__': '', '__loader__': None, ...}
+
+    def system(self, ns: dict[str, Any]) -> Any:
+>       return ns["System"](**{name: getattr(self, name) for name in FIELDS22})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: System.__init__() got an unexpected keyword argument 'popen'
+
+tests\test_oracle9_w1_main_t5.py:186: TypeError
+=========================== short test summary info ===========================
+FAILED tests/test_oracle9_w1_main_t5.py::test_m5_1_system_slots_pins_and_lazy_wrappers
+FAILED tests/test_oracle9_w1_main_t5.py::test_m5_1_pipe2_wrapper_is_the_only_lazy_os_pipe2_reference
+FAILED tests/test_oracle9_w1_main_t5.py::test_m5_1_build_ports_binds_probe_children_and_session_ids
+FAILED tests/test_oracle9_w1_main_t5.py::test_m5_2_pair_reserves_before_owns_after_then_noninheritable
+FAILED tests/test_oracle9_w1_main_t5.py::test_m5_2_stdin_pipe2_cloexec_and_only_writer_nonblocking
+FAILED tests/test_oracle9_w1_main_t5.py::test_m5_3_popen_after_four_owned_ends_with_exact_worker_arguments
+FAILED tests/test_oracle9_w1_main_t5.py::test_m5_3_spawn_refuses_foreign_ends_before_any_process[child]
+FAILED tests/test_oracle9_w1_main_t5.py::test_m5_3_spawn_refuses_foreign_ends_before_any_process[reader]
+FAILED tests/test_oracle9_w1_main_t5.py::test_m5_4_creation_failure_or_control_retains_and_blocks_safe_exit[socketpair-error]
+FAILED tests/test_oracle9_w1_main_t5.py::test_m5_4_creation_failure_or_control_retains_and_blocks_safe_exit[socketpair-control]
+FAILED tests/test_oracle9_w1_main_t5.py::test_m5_4_creation_failure_or_control_retains_and_blocks_safe_exit[control-after-socketpair-return]
+FAILED tests/test_oracle9_w1_main_t5.py::test_m5_4_creation_failure_or_control_retains_and_blocks_safe_exit[pipe2-error]
+FAILED tests/test_oracle9_w1_main_t5.py::test_m5_4_creation_failure_or_control_retains_and_blocks_safe_exit[control-after-pipe2-return]
+FAILED tests/test_oracle9_w1_main_t5.py::test_m5_4_creation_failure_or_control_retains_and_blocks_safe_exit[popen-error]
+FAILED tests/test_oracle9_w1_main_t5.py::test_m5_4_creation_failure_or_control_retains_and_blocks_safe_exit[popen-control]
+FAILED tests/test_oracle9_w1_main_t5.py::test_m5_5_writer_partial_writes_and_eagain_within_deadline
+FAILED tests/test_oracle9_w1_main_t5.py::test_m5_5_writer_never_writes_after_absolute_deadline
+FAILED tests/test_oracle9_w1_main_t5.py::test_m5_5_ready_select_delivered_late_gets_zero_writes[at-deadline]
+FAILED tests/test_oracle9_w1_main_t5.py::test_m5_5_ready_select_delivered_late_gets_zero_writes[past-deadline]
+FAILED tests/test_oracle9_w1_main_t5.py::test_m5_5_partial_write_returning_after_deadline_gets_no_next_write[at-deadline]
+FAILED tests/test_oracle9_w1_main_t5.py::test_m5_5_partial_write_returning_after_deadline_gets_no_next_write[past-deadline]
+FAILED tests/test_oracle9_w1_main_t5.py::test_m5_5_raw_fd_close_contract[reader]
+FAILED tests/test_oracle9_w1_main_t5.py::test_m5_5_raw_fd_close_contract[writer]
+FAILED tests/test_oracle9_w1_main_t5.py::test_m5_6_only_exact_int_wait_result_clears_process[exact-zero]
+FAILED tests/test_oracle9_w1_main_t5.py::test_m5_6_only_exact_int_wait_result_clears_process[exact-one]
+FAILED tests/test_oracle9_w1_main_t5.py::test_m5_6_only_exact_int_wait_result_clears_process[bool]
+FAILED tests/test_oracle9_w1_main_t5.py::test_m5_6_only_exact_int_wait_result_clears_process[int-subclass]
+FAILED tests/test_oracle9_w1_main_t5.py::test_m5_6_only_exact_int_wait_result_clears_process[float]
+FAILED tests/test_oracle9_w1_main_t5.py::test_m5_6_only_exact_int_wait_result_clears_process[oserror]
+FAILED tests/test_oracle9_w1_main_t5.py::test_m5_6_wait_uses_finite_slices_and_never_waits_after_deadline
+FAILED tests/test_oracle9_w1_main_t5.py::test_m5_6_kill_alone_never_clears_the_process
+FAILED tests/test_oracle9_w1_main_t5.py::test_m5_7_parent_receives_through_rawchannel_with_finite_deadline
+FAILED tests/test_oracle9_w1_main_t5.py::test_m5_7_nonce_is_exactly_32_urandom_bytes
+FAILED tests/test_oracle9_w1_main_t5.py::test_m5_7_wrong_nonce_type_or_length_is_closed_refusal[b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00']
+FAILED tests/test_oracle9_w1_main_t5.py::test_m5_7_wrong_nonce_type_or_length_is_closed_refusal[b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00']
+FAILED tests/test_oracle9_w1_main_t5.py::test_m5_7_wrong_nonce_type_or_length_is_closed_refusal[bytearray(b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00')]
+FAILED tests/test_oracle9_w1_main_t5.py::test_m5_7_wrong_nonce_type_or_length_is_closed_refusal[xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx]
+FAILED tests/test_oracle9_w1_main_t5.py::test_m5_7_wrong_nonce_type_or_length_is_closed_refusal[None]
+FAILED tests/test_oracle9_w1_main_t5.py::test_composition_public_driver_run_with_main_probe_binding

@@ -1,0 +1,93 @@
+{
+  "files": [
+    {
+      "path": "deploy/oracle9_w1_driver.py",
+      "sha256": "b54a8a9457a908e839d1f5870280644839478bc471e5e06cd4268bcdcff8c51f",
+      "bytes": 51913,
+      "lines": 1412
+    },
+    {
+      "path": "tests/test_oracle9_w1_driver_t5.py",
+      "sha256": "2b509c870292a30612953257565d8a705d23da11acbf62fad8ba40c7fbfeff0e",
+      "bytes": 50963,
+      "lines": 1292
+    },
+    {
+      "path": "tests/test_oracle9_w1_driver.py",
+      "sha256": "37848735f0a8687f227d1ef2c8449b92535a0255a911124ea9dc415d35b05850",
+      "bytes": 81023,
+      "lines": 2136
+    },
+    {
+      "path": "tests/test_oracle9_w1_driver_session.py",
+      "sha256": "e7c2a1c2c2606c59154719cfd1aece2127f443ef0e8a2a03d93f54c344e58b47",
+      "bytes": 45321,
+      "lines": 1279
+    },
+    {
+      "path": "tests/test_oracle9_w1_expect.py",
+      "sha256": "e24f80a58300a7835f5990f842ddb2e13415570a68141e929d2b69ea62844cca",
+      "bytes": 45520,
+      "lines": 1214
+    },
+    {
+      "path": "deploy/oracle9_w1_main.py",
+      "sha256": "372f342fe966217ed7bc7b03a7271e98eb2be708c2c319c7825551a904b690f1",
+      "bytes": 36213,
+      "lines": 1138
+    },
+    {
+      "path": "tests/test_oracle9_w1_main.py",
+      "sha256": "5abe4582908c5efe03222b26c2046e4607ab330d800186938151f6f5f443a463",
+      "bytes": 101669,
+      "lines": 2814
+    }
+  ],
+  "related": {
+    "exit_code": 0,
+    "suites": [
+      {
+        "name": "pytest",
+        "errors": "0",
+        "failures": "0",
+        "skipped": "0",
+        "tests": "645",
+        "time": "7.949",
+        "timestamp": "2026-11-10T09:57:45.673404-03:00",
+        "hostname": "SMTZDIBDN1954"
+      }
+    ],
+    "failures": []
+  },
+  "statics": [
+    {
+      "gate": "ruff",
+      "exit_code": 0,
+      "output": "All checks passed!\n"
+    },
+    {
+      "gate": "source-lint",
+      "exit_code": 0,
+      "output": "All checks passed!\n"
+    },
+    {
+      "gate": "format",
+      "exit_code": 0,
+      "output": "364 files already formatted\n"
+    },
+    {
+      "gate": "mypy311",
+      "exit_code": 0,
+      "output": "Success: no issues found in 363 source files\r\n"
+    },
+    {
+      "gate": "mypy314",
+      "exit_code": 0,
+      "output": "Success: no issues found in 363 source files\r\n"
+    }
+  ],
+  "test_ast_changes_exactly_authorized": true,
+  "native_effects": false,
+  "main_incompatible_old_pin": true,
+  "publication": "Not published, awaiting main tests/binding and combined gates."
+}

@@ -1,0 +1,12 @@
+[
+  {
+    "gate": "source-lint",
+    "exit_code": 0,
+    "output": "All checks passed!\n"
+  },
+  {
+    "gate": "source-format",
+    "exit_code": 0,
+    "output": "1 file already formatted\n"
+  }
+]

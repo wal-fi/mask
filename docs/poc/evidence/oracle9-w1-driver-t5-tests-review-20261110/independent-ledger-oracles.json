@@ -1,0 +1,11 @@
+{
+  "only_public_pure_ledger": true,
+  "native_effects": false,
+  "adopt_refusal": "STATE",
+  "retained_state": "HELD",
+  "release_outcome": "HELD",
+  "output_pinned": true,
+  "release_row_state": "HELD",
+  "pin_retained": true,
+  "first_probe_error": "Initial reviewer list comprehension did not exclude empty status slots, raised AttributeError on None; corrected probe filters None before kind. No product/test file changed."
+}

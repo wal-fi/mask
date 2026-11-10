@@ -1,0 +1,677 @@
+{
+  "exit": 1,
+  "suites": [
+    {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "132",
+      "skipped": "0",
+      "tests": "161",
+      "time": "37.578",
+      "timestamp": "2026-11-10T10:32:04.577768-03:00",
+      "hostname": "SMTZDIBDN1954"
+    }
+  ],
+  "failures": [
+    {
+      "name": "test_sanity_fixed_driver_and_pure_pins",
+      "type": "failure",
+      "message": "assert 51913 == 36956\n +  where 51913 = len(b'\"\"\"W1 Oracle laboratory driver, D1: definitions only over trusted deterministic ports.\\n\\nDRIVER-DESIGN v3 plus DRIV...ect: keep every reference, no further effect\\n        return DriverResult(\"RETAINED\", tuple(driver.verdicts), owner)\\n')"
+    },
+    {
+      "name": "test_sanity_fake_files_close_and_ebadf",
+      "type": "failure",
+      "message": "assert 51913 == 36956\n +  where 51913 = namespace(st_mode=33060, st_size=51913).st_size\n +    where namespace(st_mode=33060, st_size=51913) = fstat(20)\n +      where fstat = <tests.test_oracle9_w1_main.FakeOS object at 0x000001F3BDED1DD0>.fstat"
+    },
+    {
+      "name": "test_m01_import_is_definition_only_and_real_system_has_no_effect",
+      "type": "failure",
+      "message": "AssertionError: assert {'active_coun...notonic', ...} == frozenset({'a...otonic', ...})\n  \n  Extra items in the left set:\n  'pipe2'\n  'popen'\n  Use -v to get more diff"
+    },
+    {
+      "name": "test_m01_ast_top_level_has_only_definitions_and_one_main_guard",
+      "type": "failure",
+      "message": "AssertionError: assert {'__future__'...hashlib', ...} <= frozenset({'_...ashlib', ...})\n  \n  Extra items in the left set:\n  'maskgw.pgwire.result_frame'\n  'subprocess'"
+    },
+    {
+      "name": "test_m01_constants_are_the_fixed_public_pins",
+      "type": "failure",
+      "message": "AssertionError: assert ('/opt/maskgw...8c51f', 51913) == ('/opt/maskgw...d2794', 36956)\n  \n  At index 1 diff: 'b54a8a9457a908e839d1f5870280644839478bc471e5e06cd4268bcdcff8c51f' != '39a6890457c3bc9331fc371948fce896cbbc37e2d49f1584a5629490f43d2794'\n  Use -v to get more diff"
+    },
+    {
+      "name": "test_m02_root_exists_before_any_acquisition",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m03_ticket_unknown_before_open_exact_fd_one_verified_close",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m03_both_source_opens_use_literal_linux_flags",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m03_open_uncertainty_keeps_unknown_and_never_closes[nofollow]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m03_open_uncertainty_keeps_unknown_and_never_closes[control]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m03_close_uncertainty_retains_fd_once_and_returns_no_bytes[raise]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m03_close_uncertainty_retains_fd_once_and_returns_no_bytes[control]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m03_close_uncertainty_retains_fd_once_and_returns_no_bytes[lie]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m03_close_uncertainty_retains_fd_once_and_returns_no_bytes[thread]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m03_only_fixed_public_pairs_are_readable[/etc/passwd-10-11]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m03_only_fixed_public_pairs_are_readable[/opt/maskgw/lab/oracle9_w1_driver.py-22453-22454]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m03_only_fixed_public_pairs_are_readable[/opt/maskgw/lab/oracle9_w1_driver.py-36956-36958]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m03_only_fixed_public_pairs_are_readable[/opt/maskgw/lab/oracle9_w1_controller.py-36956-36957]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m03_only_fixed_public_pairs_are_readable[/opt/maskgw/lab/oracle9_w1_controller.py-22453-22453]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m04_validation_failure_closes_once_then_clean_load_failed[not-regular]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m04_validation_failure_closes_once_then_clean_load_failed[read]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m04_validation_failure_closes_once_then_clean_load_failed[sha]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m04_validation_failure_closes_once_then_clean_load_failed[size-minus]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m04_validation_failure_closes_once_then_clean_load_failed[size-plus]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m04_validation_failure_with_uncertain_close_holds[sha]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m04_validation_failure_with_uncertain_close_holds[not-regular]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m05_bind_once_with_exact_owner_and_cross_pins",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m06_bootstrap_order_and_guard_is_the_first_port",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m06_guard_precedes_pure_load_and_lab_init_secret",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m06_pure_open_failure_keeps_unknown_ticket_and_holds",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m06_build_ports_binds_exact_owned_objects",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m07_guard_binding_forwards_exact_arguments",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m07_signal_during_guard_is_only_marked_then_observed_cooperatively",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m08_read_init_owns_header_and_body_without_read_ahead",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m08_invalid_init_header_returns_only_the_header[magic]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m08_invalid_init_header_returns_only_the_header[length]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m08_partial_or_late_init_is_closed_and_poisons[eof-mid]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m08_partial_or_late_init_is_closed_and_poisons[expired-mid]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m08_partial_or_late_init_is_closed_and_poisons[late]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m08_eof_or_io_before_any_byte_returns_none",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m09_read_control_exact_sixteen_bytes",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m09_frame_completed_at_deadline_is_not_delivered",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m08_intruder_between_init_header_and_body_never_gets_or_gives_bytes",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m09_control_completed_after_deadline_is_closed_and_poisons",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m09_finite_eagain_and_eintr_are_retried_within_the_frame",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m10_invalid_lines_refused_without_io[empty]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m10_invalid_lines_refused_without_io[512]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m10_invalid_lines_refused_without_io[lf]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m10_invalid_lines_refused_without_io[cr]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m10_invalid_lines_refused_without_io[non-ascii]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m10_invalid_lines_refused_without_io[str]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m10_payload_511_plus_lf_and_56_line_cap",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m10_short_writes_complete_line",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m10_finite_eagain_and_eintr_writes_complete",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m10_write_completed_after_deadline_is_false_and_poisons",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m10_blocked_or_broken_write_poisons[blocked]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m10_blocked_or_broken_write_poisons[epipe]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m11_second_reader_poisons_in_flight_frame",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m11_poison_observed_during_write_never_returns_true",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m11_t4_handoff_one_frame_each_without_overlap",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m11_negative_watcher_join_keeps_reader_slot_and_blocks_exit",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m12_retire_refused_before_completion_preserves_slot_link_and_io[LINKED]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m12_retire_refused_before_completion_preserves_slot_link_and_io[RUNNING]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m12_contained_control_also_allows_retirement",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m12_retire_refused_while_reader_holds_the_frame",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m12_retire_clears_only_original_slot_and_stops_io",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m13_pair_reserves_both_slots_first_and_owns_exact_objects",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m13_pair_failures_keep_ownership",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m13_unverified_close_keeps_slot_owned[raise]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m13_unverified_close_keeps_slot_owned[lie]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m14_thread_owned_before_return_and_verified_join",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m14_finish_before_start_returns_and_target_control_contained",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m14_start_failure_and_occupied_slot_retain",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m14_stuck_join_times_out_and_retains",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m14_interrupted_join_retains_even_if_thread_looks_closed[error]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m14_interrupted_join_retains_even_if_thread_looks_closed[control]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m15_factory_returns_exact_worker_session_and_refuses_second_ledger",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m16_absolute_clock_and_session_ids",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m17_multi_slot_reservation_is_all_or_none_and_never_replaces",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m17_unsafe_facts_never_exit[bad-session]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m17_unsafe_facts_never_exit[foreign-result]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m17_unsafe_facts_never_exit[ledger-pinned]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m17_unsafe_facts_never_exit[ledger-session]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m17_unsafe_facts_never_exit[no-decision]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m17_unsafe_facts_never_exit[owner-endpoint]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m17_unsafe_facts_never_exit[owner-handle]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m17_unsafe_facts_never_exit[owner-session]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m17_unsafe_facts_never_exit[owner-token]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m17_unsafe_facts_never_exit[owner-unknown]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m17_unsafe_facts_never_exit[pair-unknown]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m17_unsafe_facts_never_exit[retained]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m17_unsafe_facts_never_exit[thread]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m17_unsafe_facts_never_exit[ticket]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m17_logical_generation_refs_and_control_stay_safe",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m17_unretired_link_and_live_session_are_unsafe",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m18_early_setup_failures_and_controls[signal-FakeOSError-64-SETUP_FAILED-None]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m18_early_setup_failures_and_controls[signal-KeyboardInterrupt-70-None-KeyboardInterrupt]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m18_early_setup_failures_and_controls[silence-FakeOSError-64-SETUP_FAILED-None]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m18_early_setup_failures_and_controls[silence-SystemExit-70-None-SystemExit]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m18_link_setup_after_state_change_holds_with_bound_root[error]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m18_link_setup_after_state_change_holds_with_bound_root[control]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m18_link_refused_after_reservation_stays_unknown_and_holds[tty]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m18_link_refused_after_reservation_stays_unknown_and_holds[regular]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m18_control_from_guard_port_is_contained_without_rerun",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m18_late_control_preserves_only_emitted_driver_prefix",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m19_permanent_handler_is_sticky_and_non_raising",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m19_main_signal_only_at_cooperative_boundaries[reader]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m19_main_signal_only_at_cooperative_boundaries[factory]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m19_main_signal_only_at_cooperative_boundaries[pair]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m19_main_signal_only_at_cooperative_boundaries[threads]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m19_main_signal_only_at_cooperative_boundaries[read_control]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m19_main_signal_only_at_cooperative_boundaries[read_init]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m19_main_signal_only_at_cooperative_boundaries[sleep_until]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m19_watcher_and_cleanup_paths_never_raise_main_signal",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m19_closed_refusals_never_chain_active_caller_errors",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m20_hold_step_pause_backoff_fault_and_saturation",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m20_hold_steps_preserve_a_populated_retained_root",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m20_entry_exit_wiring_is_finite_with_fake_os",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m21_pinned_driver_and_real_session_two_results_then_eof_exit_68",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_m22_retained_run_holds_same_root_owner_and_resources",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_r2_retire_reentered_during_write_is_refused_until_write_ends[select]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_r2_retire_reentered_during_write_is_refused_until_write_ends[os_write]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_r2_retire_reentered_during_failing_write_is_refused",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_r3_init_select_eintr_eagain_retried_within_frame",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_r3_control_select_eintr_eagain_retried_within_frame",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_r3_write_select_eintr_eagain_retried_before_cap",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_r3_select_oserror_before_any_byte_is_closed_io[init]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_r3_select_oserror_before_any_byte_is_closed_io[control]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_r3_init_select_oserror_after_header_poisons_and_stops_io",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_r3_control_select_oserror_after_partial_read_poisons_and_stops_io",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_r3_write_select_oserror_is_false_and_poisoned[first-select]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    },
+    {
+      "name": "test_r3_write_select_oserror_is_false_and_poisoned[after-partial-write]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() missing 2 required positional arguments: 'popen' and 'pipe2'"
+    }
+  ]
+}

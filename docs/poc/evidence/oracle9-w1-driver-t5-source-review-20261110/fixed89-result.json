@@ -1,0 +1,16 @@
+{
+  "exit_code": 0,
+  "suites": [
+    {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "89",
+      "time": "2.146",
+      "timestamp": "2026-11-10T09:39:20.259240-03:00",
+      "hostname": "SMTZDIBDN1954"
+    }
+  ],
+  "failures": []
+}

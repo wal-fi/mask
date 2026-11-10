@@ -1,0 +1,3852 @@
+......FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF..FFFFFFFFFF [  9%]
+FFFFFFFFFFF............................................................. [ 18%]
+........................................................................ [ 27%]
+........................................................................ [ 36%]
+........................................................................ [ 45%]
+........................................................................ [ 54%]
+........................................................................ [ 64%]
+........................................................................ [ 73%]
+........................................................................ [ 82%]
+........................................................................ [ 91%]
+...................................................................      [100%]
+================================== FAILURES ===================================
+________________________ test_d5_1_positive_probe_walk ________________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE648E5E90>
+
+    def test_d5_1_positive_probe_walk(monkeypatch: pytest.MonkeyPatch) -> None:
+        world = T5World()
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:665:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE6608A590>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE648E5E90>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+________________ test_d5_1_probe_ownership_before_each_effect _________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE660D34D0>
+
+    def test_d5_1_probe_ownership_before_each_effect(monkeypatch: pytest.MonkeyPatch) -> None:
+        world = T5World()
+>       world.run_t5(monkeypatch)
+
+tests\test_oracle9_w1_driver_t5.py:700:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE660D3350>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE660D34D0>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+_____________________ test_d5_16_probe_key_nonce_and_init _____________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE660D27D0>
+
+    def test_d5_16_probe_key_nonce_and_init(monkeypatch: pytest.MonkeyPatch) -> None:
+        world = T5World()
+>       world.run_t5(monkeypatch)
+
+tests\test_oracle9_w1_driver_t5.py:725:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE660D1F90>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE660D27D0>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+______________ test_d5_17_interrupt_after_real_adopt_keeps_token ______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65A491D0>
+
+    def test_d5_17_interrupt_after_real_adopt_keeps_token(monkeypatch: pytest.MonkeyPatch) -> None:
+        world = T5World(t5={"adopt_interrupt": True})
+        with pytest.raises(KeyboardInterrupt):
+>           world.run_t5(monkeypatch)
+
+tests\test_oracle9_w1_driver_t5.py:746:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE65A49C90>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65A491D0>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+____________ test_d5_f1_delayed_return_cannot_open_late_go_window _____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE660A1910>
+
+    def test_d5_f1_delayed_return_cannot_open_late_go_window(
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        script = {"write_delay": 10.0, "recv_delay": {"opened_header": 0.1}}
+        world = T5World(t5=script, go_delay={T5: 19.8})
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:761:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE660A18D0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE660A1910>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+_________________ test_d5_f1_delayed_return_reap_is_idle_late _________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65B00410>
+
+    def test_d5_f1_delayed_return_reap_is_idle_late(monkeypatch: pytest.MonkeyPatch) -> None:
+        script = {"write_delay": 10.0, "recv_delay": {"opened_header": 0.1}, "wait_at": 31.2}
+        world = T5World(t5=script, go_delay={T5: 16.0})
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:771:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE65B01290>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65B00410>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+___________ test_d5_wait_end_is_min_of_eof_cap_and_fence[0.0-10.0] ____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE648E5C90>
+go_delay = 0.0, wait_offset = 10.0
+
+    @pytest.mark.parametrize(("go_delay", "wait_offset"), [(0.0, 10.0), (5.0, 15.0), (19.0, 28.0)])
+    def test_d5_wait_end_is_min_of_eof_cap_and_fence(
+        monkeypatch: pytest.MonkeyPatch, go_delay: float, wait_offset: float
+    ) -> None:
+        world = T5World(go_delay={T5: go_delay})
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:783:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE65913110>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE648E5C90>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+___________ test_d5_wait_end_is_min_of_eof_cap_and_fence[5.0-15.0] ____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65956F90>
+go_delay = 5.0, wait_offset = 15.0
+
+    @pytest.mark.parametrize(("go_delay", "wait_offset"), [(0.0, 10.0), (5.0, 15.0), (19.0, 28.0)])
+    def test_d5_wait_end_is_min_of_eof_cap_and_fence(
+        monkeypatch: pytest.MonkeyPatch, go_delay: float, wait_offset: float
+    ) -> None:
+        world = T5World(go_delay={T5: go_delay})
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:783:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE659563D0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65956F90>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+___________ test_d5_wait_end_is_min_of_eof_cap_and_fence[19.0-28.0] ___________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE64916250>
+go_delay = 19.0, wait_offset = 28.0
+
+    @pytest.mark.parametrize(("go_delay", "wait_offset"), [(0.0, 10.0), (5.0, 15.0), (19.0, 28.0)])
+    def test_d5_wait_end_is_min_of_eof_cap_and_fence(
+        monkeypatch: pytest.MonkeyPatch, go_delay: float, wait_offset: float
+    ) -> None:
+        world = T5World(go_delay={T5: go_delay})
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:783:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE64916890>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE64916250>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+______________ test_d5_exit_classification[pass-before-wait-end] ______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE64915B90>
+script = {'rc': 0, 'wait_at': 9.9}, verdict = 'PASS', reason = None
+killed = False
+
+    @pytest.mark.parametrize(
+        ("script", "verdict", "reason", "killed"),
+        [
+            pytest.param({"rc": 0, "wait_at": 9.9}, "PASS", None, False, id="pass-before-wait-end"),
+            pytest.param({"rc": 0, "wait_at": 10.0}, "FAIL", "WAIT_LATE", False, id="at-wait-end"),
+            pytest.param({"rc": 0, "wait_at": 10.5}, "FAIL", "WAIT_LATE", False, id="phase-late"),
+            pytest.param({"rc": 0, "wait_at": 27.9}, "FAIL", "WAIT_LATE", False, id="pre-fence"),
+            pytest.param({"rc": 0, "wait_at": 28.0}, "FAIL", "EXIT_LATE", False, id="at-fence"),
+            pytest.param({"rc": 0, "wait_at": 31.0}, "FAIL", "EXIT_LATE", False, id="idle-late"),
+            pytest.param({"rc": 1}, "FAIL", "EXIT_NONZERO", False, id="rc1"),
+            pytest.param({"rc": -9}, "FAIL", "EXIT_NONZERO", False, id="signal-without-kill"),
+            pytest.param({"rc": 255}, "FAIL", "EXIT_NONZERO", False, id="rc255"),
+            pytest.param({"rc": None}, "FAIL", "NO_EXIT", True, id="timeout-kill-rc0"),
+            pytest.param({"rc": True}, "FAIL", "NO_EXIT", True, id="bool-true"),
+            pytest.param({"rc": False}, "FAIL", "NO_EXIT", True, id="bool-false"),
+            pytest.param({"rc": IntZero(0)}, "FAIL", "NO_EXIT", True, id="int-subclass"),
+            pytest.param({"rc": 0.0}, "FAIL", "NO_EXIT", True, id="float"),
+            pytest.param({"rc": "0"}, "FAIL", "NO_EXIT", True, id="text"),
+        ],
+    )
+    def test_d5_exit_classification(
+        monkeypatch: pytest.MonkeyPatch,
+        script: dict[str, Any],
+        verdict: str,
+        reason: str | None,
+        killed: bool,
+    ) -> None:
+        world = T5World(t5=script)
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:820:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE6491BA10>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE64915B90>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+__________________ test_d5_exit_classification[at-wait-end] ___________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE648EF7D0>
+script = {'rc': 0, 'wait_at': 10.0}, verdict = 'FAIL', reason = 'WAIT_LATE'
+killed = False
+
+    @pytest.mark.parametrize(
+        ("script", "verdict", "reason", "killed"),
+        [
+            pytest.param({"rc": 0, "wait_at": 9.9}, "PASS", None, False, id="pass-before-wait-end"),
+            pytest.param({"rc": 0, "wait_at": 10.0}, "FAIL", "WAIT_LATE", False, id="at-wait-end"),
+            pytest.param({"rc": 0, "wait_at": 10.5}, "FAIL", "WAIT_LATE", False, id="phase-late"),
+            pytest.param({"rc": 0, "wait_at": 27.9}, "FAIL", "WAIT_LATE", False, id="pre-fence"),
+            pytest.param({"rc": 0, "wait_at": 28.0}, "FAIL", "EXIT_LATE", False, id="at-fence"),
+            pytest.param({"rc": 0, "wait_at": 31.0}, "FAIL", "EXIT_LATE", False, id="idle-late"),
+            pytest.param({"rc": 1}, "FAIL", "EXIT_NONZERO", False, id="rc1"),
+            pytest.param({"rc": -9}, "FAIL", "EXIT_NONZERO", False, id="signal-without-kill"),
+            pytest.param({"rc": 255}, "FAIL", "EXIT_NONZERO", False, id="rc255"),
+            pytest.param({"rc": None}, "FAIL", "NO_EXIT", True, id="timeout-kill-rc0"),
+            pytest.param({"rc": True}, "FAIL", "NO_EXIT", True, id="bool-true"),
+            pytest.param({"rc": False}, "FAIL", "NO_EXIT", True, id="bool-false"),
+            pytest.param({"rc": IntZero(0)}, "FAIL", "NO_EXIT", True, id="int-subclass"),
+            pytest.param({"rc": 0.0}, "FAIL", "NO_EXIT", True, id="float"),
+            pytest.param({"rc": "0"}, "FAIL", "NO_EXIT", True, id="text"),
+        ],
+    )
+    def test_d5_exit_classification(
+        monkeypatch: pytest.MonkeyPatch,
+        script: dict[str, Any],
+        verdict: str,
+        reason: str | None,
+        killed: bool,
+    ) -> None:
+        world = T5World(t5=script)
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:820:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE648ECB10>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE648EF7D0>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+___________________ test_d5_exit_classification[phase-late] ___________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65BCCCD0>
+script = {'rc': 0, 'wait_at': 10.5}, verdict = 'FAIL', reason = 'WAIT_LATE'
+killed = False
+
+    @pytest.mark.parametrize(
+        ("script", "verdict", "reason", "killed"),
+        [
+            pytest.param({"rc": 0, "wait_at": 9.9}, "PASS", None, False, id="pass-before-wait-end"),
+            pytest.param({"rc": 0, "wait_at": 10.0}, "FAIL", "WAIT_LATE", False, id="at-wait-end"),
+            pytest.param({"rc": 0, "wait_at": 10.5}, "FAIL", "WAIT_LATE", False, id="phase-late"),
+            pytest.param({"rc": 0, "wait_at": 27.9}, "FAIL", "WAIT_LATE", False, id="pre-fence"),
+            pytest.param({"rc": 0, "wait_at": 28.0}, "FAIL", "EXIT_LATE", False, id="at-fence"),
+            pytest.param({"rc": 0, "wait_at": 31.0}, "FAIL", "EXIT_LATE", False, id="idle-late"),
+            pytest.param({"rc": 1}, "FAIL", "EXIT_NONZERO", False, id="rc1"),
+            pytest.param({"rc": -9}, "FAIL", "EXIT_NONZERO", False, id="signal-without-kill"),
+            pytest.param({"rc": 255}, "FAIL", "EXIT_NONZERO", False, id="rc255"),
+            pytest.param({"rc": None}, "FAIL", "NO_EXIT", True, id="timeout-kill-rc0"),
+            pytest.param({"rc": True}, "FAIL", "NO_EXIT", True, id="bool-true"),
+            pytest.param({"rc": False}, "FAIL", "NO_EXIT", True, id="bool-false"),
+            pytest.param({"rc": IntZero(0)}, "FAIL", "NO_EXIT", True, id="int-subclass"),
+            pytest.param({"rc": 0.0}, "FAIL", "NO_EXIT", True, id="float"),
+            pytest.param({"rc": "0"}, "FAIL", "NO_EXIT", True, id="text"),
+        ],
+    )
+    def test_d5_exit_classification(
+        monkeypatch: pytest.MonkeyPatch,
+        script: dict[str, Any],
+        verdict: str,
+        reason: str | None,
+        killed: bool,
+    ) -> None:
+        world = T5World(t5=script)
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:820:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE65BCC850>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65BCCCD0>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+___________________ test_d5_exit_classification[pre-fence] ____________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65FCB810>
+script = {'rc': 0, 'wait_at': 27.9}, verdict = 'FAIL', reason = 'WAIT_LATE'
+killed = False
+
+    @pytest.mark.parametrize(
+        ("script", "verdict", "reason", "killed"),
+        [
+            pytest.param({"rc": 0, "wait_at": 9.9}, "PASS", None, False, id="pass-before-wait-end"),
+            pytest.param({"rc": 0, "wait_at": 10.0}, "FAIL", "WAIT_LATE", False, id="at-wait-end"),
+            pytest.param({"rc": 0, "wait_at": 10.5}, "FAIL", "WAIT_LATE", False, id="phase-late"),
+            pytest.param({"rc": 0, "wait_at": 27.9}, "FAIL", "WAIT_LATE", False, id="pre-fence"),
+            pytest.param({"rc": 0, "wait_at": 28.0}, "FAIL", "EXIT_LATE", False, id="at-fence"),
+            pytest.param({"rc": 0, "wait_at": 31.0}, "FAIL", "EXIT_LATE", False, id="idle-late"),
+            pytest.param({"rc": 1}, "FAIL", "EXIT_NONZERO", False, id="rc1"),
+            pytest.param({"rc": -9}, "FAIL", "EXIT_NONZERO", False, id="signal-without-kill"),
+            pytest.param({"rc": 255}, "FAIL", "EXIT_NONZERO", False, id="rc255"),
+            pytest.param({"rc": None}, "FAIL", "NO_EXIT", True, id="timeout-kill-rc0"),
+            pytest.param({"rc": True}, "FAIL", "NO_EXIT", True, id="bool-true"),
+            pytest.param({"rc": False}, "FAIL", "NO_EXIT", True, id="bool-false"),
+            pytest.param({"rc": IntZero(0)}, "FAIL", "NO_EXIT", True, id="int-subclass"),
+            pytest.param({"rc": 0.0}, "FAIL", "NO_EXIT", True, id="float"),
+            pytest.param({"rc": "0"}, "FAIL", "NO_EXIT", True, id="text"),
+        ],
+    )
+    def test_d5_exit_classification(
+        monkeypatch: pytest.MonkeyPatch,
+        script: dict[str, Any],
+        verdict: str,
+        reason: str | None,
+        killed: bool,
+    ) -> None:
+        world = T5World(t5=script)
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:820:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE65FCBD50>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65FCB810>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+____________________ test_d5_exit_classification[at-fence] ____________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE658FA0D0>
+script = {'rc': 0, 'wait_at': 28.0}, verdict = 'FAIL', reason = 'EXIT_LATE'
+killed = False
+
+    @pytest.mark.parametrize(
+        ("script", "verdict", "reason", "killed"),
+        [
+            pytest.param({"rc": 0, "wait_at": 9.9}, "PASS", None, False, id="pass-before-wait-end"),
+            pytest.param({"rc": 0, "wait_at": 10.0}, "FAIL", "WAIT_LATE", False, id="at-wait-end"),
+            pytest.param({"rc": 0, "wait_at": 10.5}, "FAIL", "WAIT_LATE", False, id="phase-late"),
+            pytest.param({"rc": 0, "wait_at": 27.9}, "FAIL", "WAIT_LATE", False, id="pre-fence"),
+            pytest.param({"rc": 0, "wait_at": 28.0}, "FAIL", "EXIT_LATE", False, id="at-fence"),
+            pytest.param({"rc": 0, "wait_at": 31.0}, "FAIL", "EXIT_LATE", False, id="idle-late"),
+            pytest.param({"rc": 1}, "FAIL", "EXIT_NONZERO", False, id="rc1"),
+            pytest.param({"rc": -9}, "FAIL", "EXIT_NONZERO", False, id="signal-without-kill"),
+            pytest.param({"rc": 255}, "FAIL", "EXIT_NONZERO", False, id="rc255"),
+            pytest.param({"rc": None}, "FAIL", "NO_EXIT", True, id="timeout-kill-rc0"),
+            pytest.param({"rc": True}, "FAIL", "NO_EXIT", True, id="bool-true"),
+            pytest.param({"rc": False}, "FAIL", "NO_EXIT", True, id="bool-false"),
+            pytest.param({"rc": IntZero(0)}, "FAIL", "NO_EXIT", True, id="int-subclass"),
+            pytest.param({"rc": 0.0}, "FAIL", "NO_EXIT", True, id="float"),
+            pytest.param({"rc": "0"}, "FAIL", "NO_EXIT", True, id="text"),
+        ],
+    )
+    def test_d5_exit_classification(
+        monkeypatch: pytest.MonkeyPatch,
+        script: dict[str, Any],
+        verdict: str,
+        reason: str | None,
+        killed: bool,
+    ) -> None:
+        world = T5World(t5=script)
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:820:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE658FB4D0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE658FA0D0>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+___________________ test_d5_exit_classification[idle-late] ____________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE6591A9D0>
+script = {'rc': 0, 'wait_at': 31.0}, verdict = 'FAIL', reason = 'EXIT_LATE'
+killed = False
+
+    @pytest.mark.parametrize(
+        ("script", "verdict", "reason", "killed"),
+        [
+            pytest.param({"rc": 0, "wait_at": 9.9}, "PASS", None, False, id="pass-before-wait-end"),
+            pytest.param({"rc": 0, "wait_at": 10.0}, "FAIL", "WAIT_LATE", False, id="at-wait-end"),
+            pytest.param({"rc": 0, "wait_at": 10.5}, "FAIL", "WAIT_LATE", False, id="phase-late"),
+            pytest.param({"rc": 0, "wait_at": 27.9}, "FAIL", "WAIT_LATE", False, id="pre-fence"),
+            pytest.param({"rc": 0, "wait_at": 28.0}, "FAIL", "EXIT_LATE", False, id="at-fence"),
+            pytest.param({"rc": 0, "wait_at": 31.0}, "FAIL", "EXIT_LATE", False, id="idle-late"),
+            pytest.param({"rc": 1}, "FAIL", "EXIT_NONZERO", False, id="rc1"),
+            pytest.param({"rc": -9}, "FAIL", "EXIT_NONZERO", False, id="signal-without-kill"),
+            pytest.param({"rc": 255}, "FAIL", "EXIT_NONZERO", False, id="rc255"),
+            pytest.param({"rc": None}, "FAIL", "NO_EXIT", True, id="timeout-kill-rc0"),
+            pytest.param({"rc": True}, "FAIL", "NO_EXIT", True, id="bool-true"),
+            pytest.param({"rc": False}, "FAIL", "NO_EXIT", True, id="bool-false"),
+            pytest.param({"rc": IntZero(0)}, "FAIL", "NO_EXIT", True, id="int-subclass"),
+            pytest.param({"rc": 0.0}, "FAIL", "NO_EXIT", True, id="float"),
+            pytest.param({"rc": "0"}, "FAIL", "NO_EXIT", True, id="text"),
+        ],
+    )
+    def test_d5_exit_classification(
+        monkeypatch: pytest.MonkeyPatch,
+        script: dict[str, Any],
+        verdict: str,
+        reason: str | None,
+        killed: bool,
+    ) -> None:
+        world = T5World(t5=script)
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:820:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE6594A0D0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE6591A9D0>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+______________________ test_d5_exit_classification[rc1] _______________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE648F0C10>
+script = {'rc': 1}, verdict = 'FAIL', reason = 'EXIT_NONZERO', killed = False
+
+    @pytest.mark.parametrize(
+        ("script", "verdict", "reason", "killed"),
+        [
+            pytest.param({"rc": 0, "wait_at": 9.9}, "PASS", None, False, id="pass-before-wait-end"),
+            pytest.param({"rc": 0, "wait_at": 10.0}, "FAIL", "WAIT_LATE", False, id="at-wait-end"),
+            pytest.param({"rc": 0, "wait_at": 10.5}, "FAIL", "WAIT_LATE", False, id="phase-late"),
+            pytest.param({"rc": 0, "wait_at": 27.9}, "FAIL", "WAIT_LATE", False, id="pre-fence"),
+            pytest.param({"rc": 0, "wait_at": 28.0}, "FAIL", "EXIT_LATE", False, id="at-fence"),
+            pytest.param({"rc": 0, "wait_at": 31.0}, "FAIL", "EXIT_LATE", False, id="idle-late"),
+            pytest.param({"rc": 1}, "FAIL", "EXIT_NONZERO", False, id="rc1"),
+            pytest.param({"rc": -9}, "FAIL", "EXIT_NONZERO", False, id="signal-without-kill"),
+            pytest.param({"rc": 255}, "FAIL", "EXIT_NONZERO", False, id="rc255"),
+            pytest.param({"rc": None}, "FAIL", "NO_EXIT", True, id="timeout-kill-rc0"),
+            pytest.param({"rc": True}, "FAIL", "NO_EXIT", True, id="bool-true"),
+            pytest.param({"rc": False}, "FAIL", "NO_EXIT", True, id="bool-false"),
+            pytest.param({"rc": IntZero(0)}, "FAIL", "NO_EXIT", True, id="int-subclass"),
+            pytest.param({"rc": 0.0}, "FAIL", "NO_EXIT", True, id="float"),
+            pytest.param({"rc": "0"}, "FAIL", "NO_EXIT", True, id="text"),
+        ],
+    )
+    def test_d5_exit_classification(
+        monkeypatch: pytest.MonkeyPatch,
+        script: dict[str, Any],
+        verdict: str,
+        reason: str | None,
+        killed: bool,
+    ) -> None:
+        world = T5World(t5=script)
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:820:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE648F1390>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE648F0C10>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+______________ test_d5_exit_classification[signal-without-kill] _______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE648F0F10>
+script = {'rc': -9}, verdict = 'FAIL', reason = 'EXIT_NONZERO', killed = False
+
+    @pytest.mark.parametrize(
+        ("script", "verdict", "reason", "killed"),
+        [
+            pytest.param({"rc": 0, "wait_at": 9.9}, "PASS", None, False, id="pass-before-wait-end"),
+            pytest.param({"rc": 0, "wait_at": 10.0}, "FAIL", "WAIT_LATE", False, id="at-wait-end"),
+            pytest.param({"rc": 0, "wait_at": 10.5}, "FAIL", "WAIT_LATE", False, id="phase-late"),
+            pytest.param({"rc": 0, "wait_at": 27.9}, "FAIL", "WAIT_LATE", False, id="pre-fence"),
+            pytest.param({"rc": 0, "wait_at": 28.0}, "FAIL", "EXIT_LATE", False, id="at-fence"),
+            pytest.param({"rc": 0, "wait_at": 31.0}, "FAIL", "EXIT_LATE", False, id="idle-late"),
+            pytest.param({"rc": 1}, "FAIL", "EXIT_NONZERO", False, id="rc1"),
+            pytest.param({"rc": -9}, "FAIL", "EXIT_NONZERO", False, id="signal-without-kill"),
+            pytest.param({"rc": 255}, "FAIL", "EXIT_NONZERO", False, id="rc255"),
+            pytest.param({"rc": None}, "FAIL", "NO_EXIT", True, id="timeout-kill-rc0"),
+            pytest.param({"rc": True}, "FAIL", "NO_EXIT", True, id="bool-true"),
+            pytest.param({"rc": False}, "FAIL", "NO_EXIT", True, id="bool-false"),
+            pytest.param({"rc": IntZero(0)}, "FAIL", "NO_EXIT", True, id="int-subclass"),
+            pytest.param({"rc": 0.0}, "FAIL", "NO_EXIT", True, id="float"),
+            pytest.param({"rc": "0"}, "FAIL", "NO_EXIT", True, id="text"),
+        ],
+    )
+    def test_d5_exit_classification(
+        monkeypatch: pytest.MonkeyPatch,
+        script: dict[str, Any],
+        verdict: str,
+        reason: str | None,
+        killed: bool,
+    ) -> None:
+        world = T5World(t5=script)
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:820:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE658F3190>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE648F0F10>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+_____________________ test_d5_exit_classification[rc255] ______________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE660A2B90>
+script = {'rc': 255}, verdict = 'FAIL', reason = 'EXIT_NONZERO', killed = False
+
+    @pytest.mark.parametrize(
+        ("script", "verdict", "reason", "killed"),
+        [
+            pytest.param({"rc": 0, "wait_at": 9.9}, "PASS", None, False, id="pass-before-wait-end"),
+            pytest.param({"rc": 0, "wait_at": 10.0}, "FAIL", "WAIT_LATE", False, id="at-wait-end"),
+            pytest.param({"rc": 0, "wait_at": 10.5}, "FAIL", "WAIT_LATE", False, id="phase-late"),
+            pytest.param({"rc": 0, "wait_at": 27.9}, "FAIL", "WAIT_LATE", False, id="pre-fence"),
+            pytest.param({"rc": 0, "wait_at": 28.0}, "FAIL", "EXIT_LATE", False, id="at-fence"),
+            pytest.param({"rc": 0, "wait_at": 31.0}, "FAIL", "EXIT_LATE", False, id="idle-late"),
+            pytest.param({"rc": 1}, "FAIL", "EXIT_NONZERO", False, id="rc1"),
+            pytest.param({"rc": -9}, "FAIL", "EXIT_NONZERO", False, id="signal-without-kill"),
+            pytest.param({"rc": 255}, "FAIL", "EXIT_NONZERO", False, id="rc255"),
+            pytest.param({"rc": None}, "FAIL", "NO_EXIT", True, id="timeout-kill-rc0"),
+            pytest.param({"rc": True}, "FAIL", "NO_EXIT", True, id="bool-true"),
+            pytest.param({"rc": False}, "FAIL", "NO_EXIT", True, id="bool-false"),
+            pytest.param({"rc": IntZero(0)}, "FAIL", "NO_EXIT", True, id="int-subclass"),
+            pytest.param({"rc": 0.0}, "FAIL", "NO_EXIT", True, id="float"),
+            pytest.param({"rc": "0"}, "FAIL", "NO_EXIT", True, id="text"),
+        ],
+    )
+    def test_d5_exit_classification(
+        monkeypatch: pytest.MonkeyPatch,
+        script: dict[str, Any],
+        verdict: str,
+        reason: str | None,
+        killed: bool,
+    ) -> None:
+        world = T5World(t5=script)
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:820:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE660A06D0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE660A2B90>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+________________ test_d5_exit_classification[timeout-kill-rc0] ________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65922890>
+script = {'rc': None}, verdict = 'FAIL', reason = 'NO_EXIT', killed = True
+
+    @pytest.mark.parametrize(
+        ("script", "verdict", "reason", "killed"),
+        [
+            pytest.param({"rc": 0, "wait_at": 9.9}, "PASS", None, False, id="pass-before-wait-end"),
+            pytest.param({"rc": 0, "wait_at": 10.0}, "FAIL", "WAIT_LATE", False, id="at-wait-end"),
+            pytest.param({"rc": 0, "wait_at": 10.5}, "FAIL", "WAIT_LATE", False, id="phase-late"),
+            pytest.param({"rc": 0, "wait_at": 27.9}, "FAIL", "WAIT_LATE", False, id="pre-fence"),
+            pytest.param({"rc": 0, "wait_at": 28.0}, "FAIL", "EXIT_LATE", False, id="at-fence"),
+            pytest.param({"rc": 0, "wait_at": 31.0}, "FAIL", "EXIT_LATE", False, id="idle-late"),
+            pytest.param({"rc": 1}, "FAIL", "EXIT_NONZERO", False, id="rc1"),
+            pytest.param({"rc": -9}, "FAIL", "EXIT_NONZERO", False, id="signal-without-kill"),
+            pytest.param({"rc": 255}, "FAIL", "EXIT_NONZERO", False, id="rc255"),
+            pytest.param({"rc": None}, "FAIL", "NO_EXIT", True, id="timeout-kill-rc0"),
+            pytest.param({"rc": True}, "FAIL", "NO_EXIT", True, id="bool-true"),
+            pytest.param({"rc": False}, "FAIL", "NO_EXIT", True, id="bool-false"),
+            pytest.param({"rc": IntZero(0)}, "FAIL", "NO_EXIT", True, id="int-subclass"),
+            pytest.param({"rc": 0.0}, "FAIL", "NO_EXIT", True, id="float"),
+            pytest.param({"rc": "0"}, "FAIL", "NO_EXIT", True, id="text"),
+        ],
+    )
+    def test_d5_exit_classification(
+        monkeypatch: pytest.MonkeyPatch,
+        script: dict[str, Any],
+        verdict: str,
+        reason: str | None,
+        killed: bool,
+    ) -> None:
+        world = T5World(t5=script)
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:820:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE65EF6390>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65922890>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+___________________ test_d5_exit_classification[bool-true] ____________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE661CFCD0>
+script = {'rc': True}, verdict = 'FAIL', reason = 'NO_EXIT', killed = True
+
+    @pytest.mark.parametrize(
+        ("script", "verdict", "reason", "killed"),
+        [
+            pytest.param({"rc": 0, "wait_at": 9.9}, "PASS", None, False, id="pass-before-wait-end"),
+            pytest.param({"rc": 0, "wait_at": 10.0}, "FAIL", "WAIT_LATE", False, id="at-wait-end"),
+            pytest.param({"rc": 0, "wait_at": 10.5}, "FAIL", "WAIT_LATE", False, id="phase-late"),
+            pytest.param({"rc": 0, "wait_at": 27.9}, "FAIL", "WAIT_LATE", False, id="pre-fence"),
+            pytest.param({"rc": 0, "wait_at": 28.0}, "FAIL", "EXIT_LATE", False, id="at-fence"),
+            pytest.param({"rc": 0, "wait_at": 31.0}, "FAIL", "EXIT_LATE", False, id="idle-late"),
+            pytest.param({"rc": 1}, "FAIL", "EXIT_NONZERO", False, id="rc1"),
+            pytest.param({"rc": -9}, "FAIL", "EXIT_NONZERO", False, id="signal-without-kill"),
+            pytest.param({"rc": 255}, "FAIL", "EXIT_NONZERO", False, id="rc255"),
+            pytest.param({"rc": None}, "FAIL", "NO_EXIT", True, id="timeout-kill-rc0"),
+            pytest.param({"rc": True}, "FAIL", "NO_EXIT", True, id="bool-true"),
+            pytest.param({"rc": False}, "FAIL", "NO_EXIT", True, id="bool-false"),
+            pytest.param({"rc": IntZero(0)}, "FAIL", "NO_EXIT", True, id="int-subclass"),
+            pytest.param({"rc": 0.0}, "FAIL", "NO_EXIT", True, id="float"),
+            pytest.param({"rc": "0"}, "FAIL", "NO_EXIT", True, id="text"),
+        ],
+    )
+    def test_d5_exit_classification(
+        monkeypatch: pytest.MonkeyPatch,
+        script: dict[str, Any],
+        verdict: str,
+        reason: str | None,
+        killed: bool,
+    ) -> None:
+        world = T5World(t5=script)
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:820:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE661CCE10>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE661CFCD0>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+___________________ test_d5_exit_classification[bool-false] ___________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65A06ED0>
+script = {'rc': False}, verdict = 'FAIL', reason = 'NO_EXIT', killed = True
+
+    @pytest.mark.parametrize(
+        ("script", "verdict", "reason", "killed"),
+        [
+            pytest.param({"rc": 0, "wait_at": 9.9}, "PASS", None, False, id="pass-before-wait-end"),
+            pytest.param({"rc": 0, "wait_at": 10.0}, "FAIL", "WAIT_LATE", False, id="at-wait-end"),
+            pytest.param({"rc": 0, "wait_at": 10.5}, "FAIL", "WAIT_LATE", False, id="phase-late"),
+            pytest.param({"rc": 0, "wait_at": 27.9}, "FAIL", "WAIT_LATE", False, id="pre-fence"),
+            pytest.param({"rc": 0, "wait_at": 28.0}, "FAIL", "EXIT_LATE", False, id="at-fence"),
+            pytest.param({"rc": 0, "wait_at": 31.0}, "FAIL", "EXIT_LATE", False, id="idle-late"),
+            pytest.param({"rc": 1}, "FAIL", "EXIT_NONZERO", False, id="rc1"),
+            pytest.param({"rc": -9}, "FAIL", "EXIT_NONZERO", False, id="signal-without-kill"),
+            pytest.param({"rc": 255}, "FAIL", "EXIT_NONZERO", False, id="rc255"),
+            pytest.param({"rc": None}, "FAIL", "NO_EXIT", True, id="timeout-kill-rc0"),
+            pytest.param({"rc": True}, "FAIL", "NO_EXIT", True, id="bool-true"),
+            pytest.param({"rc": False}, "FAIL", "NO_EXIT", True, id="bool-false"),
+            pytest.param({"rc": IntZero(0)}, "FAIL", "NO_EXIT", True, id="int-subclass"),
+            pytest.param({"rc": 0.0}, "FAIL", "NO_EXIT", True, id="float"),
+            pytest.param({"rc": "0"}, "FAIL", "NO_EXIT", True, id="text"),
+        ],
+    )
+    def test_d5_exit_classification(
+        monkeypatch: pytest.MonkeyPatch,
+        script: dict[str, Any],
+        verdict: str,
+        reason: str | None,
+        killed: bool,
+    ) -> None:
+        world = T5World(t5=script)
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:820:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE65A06E10>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65A06ED0>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+__________________ test_d5_exit_classification[int-subclass] __________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65BCC050>
+script = {'rc': 0}, verdict = 'FAIL', reason = 'NO_EXIT', killed = True
+
+    @pytest.mark.parametrize(
+        ("script", "verdict", "reason", "killed"),
+        [
+            pytest.param({"rc": 0, "wait_at": 9.9}, "PASS", None, False, id="pass-before-wait-end"),
+            pytest.param({"rc": 0, "wait_at": 10.0}, "FAIL", "WAIT_LATE", False, id="at-wait-end"),
+            pytest.param({"rc": 0, "wait_at": 10.5}, "FAIL", "WAIT_LATE", False, id="phase-late"),
+            pytest.param({"rc": 0, "wait_at": 27.9}, "FAIL", "WAIT_LATE", False, id="pre-fence"),
+            pytest.param({"rc": 0, "wait_at": 28.0}, "FAIL", "EXIT_LATE", False, id="at-fence"),
+            pytest.param({"rc": 0, "wait_at": 31.0}, "FAIL", "EXIT_LATE", False, id="idle-late"),
+            pytest.param({"rc": 1}, "FAIL", "EXIT_NONZERO", False, id="rc1"),
+            pytest.param({"rc": -9}, "FAIL", "EXIT_NONZERO", False, id="signal-without-kill"),
+            pytest.param({"rc": 255}, "FAIL", "EXIT_NONZERO", False, id="rc255"),
+            pytest.param({"rc": None}, "FAIL", "NO_EXIT", True, id="timeout-kill-rc0"),
+            pytest.param({"rc": True}, "FAIL", "NO_EXIT", True, id="bool-true"),
+            pytest.param({"rc": False}, "FAIL", "NO_EXIT", True, id="bool-false"),
+            pytest.param({"rc": IntZero(0)}, "FAIL", "NO_EXIT", True, id="int-subclass"),
+            pytest.param({"rc": 0.0}, "FAIL", "NO_EXIT", True, id="float"),
+            pytest.param({"rc": "0"}, "FAIL", "NO_EXIT", True, id="text"),
+        ],
+    )
+    def test_d5_exit_classification(
+        monkeypatch: pytest.MonkeyPatch,
+        script: dict[str, Any],
+        verdict: str,
+        reason: str | None,
+        killed: bool,
+    ) -> None:
+        world = T5World(t5=script)
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:820:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE65F193D0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65BCC050>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+_____________________ test_d5_exit_classification[float] ______________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE6595A290>
+script = {'rc': 0.0}, verdict = 'FAIL', reason = 'NO_EXIT', killed = True
+
+    @pytest.mark.parametrize(
+        ("script", "verdict", "reason", "killed"),
+        [
+            pytest.param({"rc": 0, "wait_at": 9.9}, "PASS", None, False, id="pass-before-wait-end"),
+            pytest.param({"rc": 0, "wait_at": 10.0}, "FAIL", "WAIT_LATE", False, id="at-wait-end"),
+            pytest.param({"rc": 0, "wait_at": 10.5}, "FAIL", "WAIT_LATE", False, id="phase-late"),
+            pytest.param({"rc": 0, "wait_at": 27.9}, "FAIL", "WAIT_LATE", False, id="pre-fence"),
+            pytest.param({"rc": 0, "wait_at": 28.0}, "FAIL", "EXIT_LATE", False, id="at-fence"),
+            pytest.param({"rc": 0, "wait_at": 31.0}, "FAIL", "EXIT_LATE", False, id="idle-late"),
+            pytest.param({"rc": 1}, "FAIL", "EXIT_NONZERO", False, id="rc1"),
+            pytest.param({"rc": -9}, "FAIL", "EXIT_NONZERO", False, id="signal-without-kill"),
+            pytest.param({"rc": 255}, "FAIL", "EXIT_NONZERO", False, id="rc255"),
+            pytest.param({"rc": None}, "FAIL", "NO_EXIT", True, id="timeout-kill-rc0"),
+            pytest.param({"rc": True}, "FAIL", "NO_EXIT", True, id="bool-true"),
+            pytest.param({"rc": False}, "FAIL", "NO_EXIT", True, id="bool-false"),
+            pytest.param({"rc": IntZero(0)}, "FAIL", "NO_EXIT", True, id="int-subclass"),
+            pytest.param({"rc": 0.0}, "FAIL", "NO_EXIT", True, id="float"),
+            pytest.param({"rc": "0"}, "FAIL", "NO_EXIT", True, id="text"),
+        ],
+    )
+    def test_d5_exit_classification(
+        monkeypatch: pytest.MonkeyPatch,
+        script: dict[str, Any],
+        verdict: str,
+        reason: str | None,
+        killed: bool,
+    ) -> None:
+        world = T5World(t5=script)
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:820:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE65958CD0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE6595A290>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+______________________ test_d5_exit_classification[text] ______________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65958190>
+script = {'rc': '0'}, verdict = 'FAIL', reason = 'NO_EXIT', killed = True
+
+    @pytest.mark.parametrize(
+        ("script", "verdict", "reason", "killed"),
+        [
+            pytest.param({"rc": 0, "wait_at": 9.9}, "PASS", None, False, id="pass-before-wait-end"),
+            pytest.param({"rc": 0, "wait_at": 10.0}, "FAIL", "WAIT_LATE", False, id="at-wait-end"),
+            pytest.param({"rc": 0, "wait_at": 10.5}, "FAIL", "WAIT_LATE", False, id="phase-late"),
+            pytest.param({"rc": 0, "wait_at": 27.9}, "FAIL", "WAIT_LATE", False, id="pre-fence"),
+            pytest.param({"rc": 0, "wait_at": 28.0}, "FAIL", "EXIT_LATE", False, id="at-fence"),
+            pytest.param({"rc": 0, "wait_at": 31.0}, "FAIL", "EXIT_LATE", False, id="idle-late"),
+            pytest.param({"rc": 1}, "FAIL", "EXIT_NONZERO", False, id="rc1"),
+            pytest.param({"rc": -9}, "FAIL", "EXIT_NONZERO", False, id="signal-without-kill"),
+            pytest.param({"rc": 255}, "FAIL", "EXIT_NONZERO", False, id="rc255"),
+            pytest.param({"rc": None}, "FAIL", "NO_EXIT", True, id="timeout-kill-rc0"),
+            pytest.param({"rc": True}, "FAIL", "NO_EXIT", True, id="bool-true"),
+            pytest.param({"rc": False}, "FAIL", "NO_EXIT", True, id="bool-false"),
+            pytest.param({"rc": IntZero(0)}, "FAIL", "NO_EXIT", True, id="int-subclass"),
+            pytest.param({"rc": 0.0}, "FAIL", "NO_EXIT", True, id="float"),
+            pytest.param({"rc": "0"}, "FAIL", "NO_EXIT", True, id="text"),
+        ],
+    )
+    def test_d5_exit_classification(
+        monkeypatch: pytest.MonkeyPatch,
+        script: dict[str, Any],
+        verdict: str,
+        reason: str | None,
+        killed: bool,
+    ) -> None:
+        world = T5World(t5=script)
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:820:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE648EA050>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65958190>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+______________ test_d5_6_unconfirmed_fallback_retains[rc2-none] _______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE648EBC50>
+script = {'rc': None, 'rc2': None}
+
+    @pytest.mark.parametrize(
+        "script",
+        [
+            pytest.param({"rc": None, "rc2": None}, id="rc2-none"),
+            pytest.param({"rc": None, "rc2_delay": 1.0}, id="rc2-late"),
+            pytest.param({"rc": None, "rc2_raise": True}, id="rc2-raises"),
+            pytest.param({"rc": None, "rc2": True}, id="rc2-bool"),
+        ],
+    )
+    def test_d5_6_unconfirmed_fallback_retains(
+        monkeypatch: pytest.MonkeyPatch, script: dict[str, Any]
+    ) -> None:
+        world = T5World(t5=script)
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:844:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE65912290>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE648EBC50>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+______________ test_d5_6_unconfirmed_fallback_retains[rc2-late] _______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65D3A310>
+script = {'rc': None, 'rc2_delay': 1.0}
+
+    @pytest.mark.parametrize(
+        "script",
+        [
+            pytest.param({"rc": None, "rc2": None}, id="rc2-none"),
+            pytest.param({"rc": None, "rc2_delay": 1.0}, id="rc2-late"),
+            pytest.param({"rc": None, "rc2_raise": True}, id="rc2-raises"),
+            pytest.param({"rc": None, "rc2": True}, id="rc2-bool"),
+        ],
+    )
+    def test_d5_6_unconfirmed_fallback_retains(
+        monkeypatch: pytest.MonkeyPatch, script: dict[str, Any]
+    ) -> None:
+        world = T5World(t5=script)
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:844:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE65D39A50>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65D3A310>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+_____________ test_d5_6_unconfirmed_fallback_retains[rc2-raises] ______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE648E7B50>
+script = {'rc': None, 'rc2_raise': True}
+
+    @pytest.mark.parametrize(
+        "script",
+        [
+            pytest.param({"rc": None, "rc2": None}, id="rc2-none"),
+            pytest.param({"rc": None, "rc2_delay": 1.0}, id="rc2-late"),
+            pytest.param({"rc": None, "rc2_raise": True}, id="rc2-raises"),
+            pytest.param({"rc": None, "rc2": True}, id="rc2-bool"),
+        ],
+    )
+    def test_d5_6_unconfirmed_fallback_retains(
+        monkeypatch: pytest.MonkeyPatch, script: dict[str, Any]
+    ) -> None:
+        world = T5World(t5=script)
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:844:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE66069410>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE648E7B50>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+______________ test_d5_6_unconfirmed_fallback_retains[rc2-bool] _______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65961FD0>
+script = {'rc': None, 'rc2': True}
+
+    @pytest.mark.parametrize(
+        "script",
+        [
+            pytest.param({"rc": None, "rc2": None}, id="rc2-none"),
+            pytest.param({"rc": None, "rc2_delay": 1.0}, id="rc2-late"),
+            pytest.param({"rc": None, "rc2_raise": True}, id="rc2-raises"),
+            pytest.param({"rc": None, "rc2": True}, id="rc2-bool"),
+        ],
+    )
+    def test_d5_6_unconfirmed_fallback_retains(
+        monkeypatch: pytest.MonkeyPatch, script: dict[str, Any]
+    ) -> None:
+        world = T5World(t5=script)
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:844:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE65963E10>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65961FD0>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+_________ test_d5_8_uncertain_acquisition_retains_without_kill[pair] __________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE66188510>
+failing = 'pair_raise', marker = 'probe_pair', absent = 'stdin', held = ()
+
+    @pytest.mark.parametrize(
+        ("failing", "marker", "absent", "held"),
+        [
+            pytest.param("pair_raise", "probe_pair", "stdin", (), id="pair"),
+            pytest.param("stdin_raise", "probe_stdin", "spawn", ("parent", "child"), id="stdin"),
+            pytest.param(
+                "spawn_raise",
+                "probe_process",
+                "guard_header",
+                ("parent", "child", "reader", "writer"),
+                id="spawn",
+            ),
+        ],
+    )
+    def test_d5_8_uncertain_acquisition_retains_without_kill(
+        monkeypatch: pytest.MonkeyPatch,
+        failing: str,
+        marker: str,
+        absent: str,
+        held: tuple[str, ...],
+    ) -> None:
+        world = T5World(t5={failing: OSError("EFFECT_UNKNOWN")})
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:878:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE6618BA90>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE66188510>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+_________ test_d5_8_uncertain_acquisition_retains_without_kill[stdin] _________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE648EFA10>
+failing = 'stdin_raise', marker = 'probe_stdin', absent = 'spawn'
+held = ('parent', 'child')
+
+    @pytest.mark.parametrize(
+        ("failing", "marker", "absent", "held"),
+        [
+            pytest.param("pair_raise", "probe_pair", "stdin", (), id="pair"),
+            pytest.param("stdin_raise", "probe_stdin", "spawn", ("parent", "child"), id="stdin"),
+            pytest.param(
+                "spawn_raise",
+                "probe_process",
+                "guard_header",
+                ("parent", "child", "reader", "writer"),
+                id="spawn",
+            ),
+        ],
+    )
+    def test_d5_8_uncertain_acquisition_retains_without_kill(
+        monkeypatch: pytest.MonkeyPatch,
+        failing: str,
+        marker: str,
+        absent: str,
+        held: tuple[str, ...],
+    ) -> None:
+        world = T5World(t5={failing: OSError("EFFECT_UNKNOWN")})
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:878:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE648EF6D0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE648EFA10>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+_________ test_d5_8_uncertain_acquisition_retains_without_kill[spawn] _________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE648EF050>
+failing = 'spawn_raise', marker = 'probe_process', absent = 'guard_header'
+held = ('parent', 'child', 'reader', 'writer')
+
+    @pytest.mark.parametrize(
+        ("failing", "marker", "absent", "held"),
+        [
+            pytest.param("pair_raise", "probe_pair", "stdin", (), id="pair"),
+            pytest.param("stdin_raise", "probe_stdin", "spawn", ("parent", "child"), id="stdin"),
+            pytest.param(
+                "spawn_raise",
+                "probe_process",
+                "guard_header",
+                ("parent", "child", "reader", "writer"),
+                id="spawn",
+            ),
+        ],
+    )
+    def test_d5_8_uncertain_acquisition_retains_without_kill(
+        monkeypatch: pytest.MonkeyPatch,
+        failing: str,
+        marker: str,
+        absent: str,
+        held: tuple[str, ...],
+    ) -> None:
+        world = T5World(t5={failing: OSError("EFFECT_UNKNOWN")})
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:878:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE66069090>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE648EF050>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+____________ test_d5_9_handshake_failure_aborts_before_ready[pid] _____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE6607B790>
+script = {'guard': (4243, 1, 268435456)}, absent = 'write_all', retained = False
+
+    @pytest.mark.parametrize(
+        ("script", "absent", "retained"),
+        [
+            pytest.param({"guard": (PROC_PID + 1, 1, WORKER_AS)}, "write_all", False, id="pid"),
+            pytest.param({"guard": (PROC_PID, 2, WORKER_AS)}, "write_all", False, id="ppid"),
+            pytest.param({"guard": (PROC_PID, 1, 128 * MIB)}, "write_all", False, id="as"),
+            pytest.param(
+                {"first_frame": wire.encode_opened(bytes(32))}, "guard_body", False, id="kind"
+            ),
+            pytest.param({"first_frame": BIG_INIT_HEADER}, "guard_body", False, id="big-header"),
+            pytest.param({"opened": "bad_hmac"}, "READY24", False, id="hmac"),
+            pytest.param({"opened": "error"}, "READY24", False, id="error-reply"),
+            pytest.param({"write_ok": False}, "opened_header", False, id="write-false"),
+            pytest.param(
+                {"close": {"writer_close": False}}, "opened_header", True, id="writer-close-false"
+            ),
+        ],
+    )
+    def test_d5_9_handshake_failure_aborts_before_ready(
+        monkeypatch: pytest.MonkeyPatch, script: dict[str, Any], absent: str, retained: bool
+    ) -> None:
+        world = T5World(t5=script)
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:918:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE66078C50>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE6607B790>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+____________ test_d5_9_handshake_failure_aborts_before_ready[ppid] ____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE6595DF90>
+script = {'guard': (4242, 2, 268435456)}, absent = 'write_all', retained = False
+
+    @pytest.mark.parametrize(
+        ("script", "absent", "retained"),
+        [
+            pytest.param({"guard": (PROC_PID + 1, 1, WORKER_AS)}, "write_all", False, id="pid"),
+            pytest.param({"guard": (PROC_PID, 2, WORKER_AS)}, "write_all", False, id="ppid"),
+            pytest.param({"guard": (PROC_PID, 1, 128 * MIB)}, "write_all", False, id="as"),
+            pytest.param(
+                {"first_frame": wire.encode_opened(bytes(32))}, "guard_body", False, id="kind"
+            ),
+            pytest.param({"first_frame": BIG_INIT_HEADER}, "guard_body", False, id="big-header"),
+            pytest.param({"opened": "bad_hmac"}, "READY24", False, id="hmac"),
+            pytest.param({"opened": "error"}, "READY24", False, id="error-reply"),
+            pytest.param({"write_ok": False}, "opened_header", False, id="write-false"),
+            pytest.param(
+                {"close": {"writer_close": False}}, "opened_header", True, id="writer-close-false"
+            ),
+        ],
+    )
+    def test_d5_9_handshake_failure_aborts_before_ready(
+        monkeypatch: pytest.MonkeyPatch, script: dict[str, Any], absent: str, retained: bool
+    ) -> None:
+        world = T5World(t5=script)
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:918:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE6595F5D0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE6595DF90>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+_____________ test_d5_9_handshake_failure_aborts_before_ready[as] _____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE64915E90>
+script = {'guard': (4242, 1, 134217728)}, absent = 'write_all', retained = False
+
+    @pytest.mark.parametrize(
+        ("script", "absent", "retained"),
+        [
+            pytest.param({"guard": (PROC_PID + 1, 1, WORKER_AS)}, "write_all", False, id="pid"),
+            pytest.param({"guard": (PROC_PID, 2, WORKER_AS)}, "write_all", False, id="ppid"),
+            pytest.param({"guard": (PROC_PID, 1, 128 * MIB)}, "write_all", False, id="as"),
+            pytest.param(
+                {"first_frame": wire.encode_opened(bytes(32))}, "guard_body", False, id="kind"
+            ),
+            pytest.param({"first_frame": BIG_INIT_HEADER}, "guard_body", False, id="big-header"),
+            pytest.param({"opened": "bad_hmac"}, "READY24", False, id="hmac"),
+            pytest.param({"opened": "error"}, "READY24", False, id="error-reply"),
+            pytest.param({"write_ok": False}, "opened_header", False, id="write-false"),
+            pytest.param(
+                {"close": {"writer_close": False}}, "opened_header", True, id="writer-close-false"
+            ),
+        ],
+    )
+    def test_d5_9_handshake_failure_aborts_before_ready(
+        monkeypatch: pytest.MonkeyPatch, script: dict[str, Any], absent: str, retained: bool
+    ) -> None:
+        world = T5World(t5=script)
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:918:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE65969B50>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE64915E90>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+____________ test_d5_9_handshake_failure_aborts_before_ready[kind] ____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65FD0D10>
+script = {'first_frame': b'MGW2\x02\x03\x00\x00\x00\x00\x00 \x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'}
+absent = 'guard_body', retained = False
+
+    @pytest.mark.parametrize(
+        ("script", "absent", "retained"),
+        [
+            pytest.param({"guard": (PROC_PID + 1, 1, WORKER_AS)}, "write_all", False, id="pid"),
+            pytest.param({"guard": (PROC_PID, 2, WORKER_AS)}, "write_all", False, id="ppid"),
+            pytest.param({"guard": (PROC_PID, 1, 128 * MIB)}, "write_all", False, id="as"),
+            pytest.param(
+                {"first_frame": wire.encode_opened(bytes(32))}, "guard_body", False, id="kind"
+            ),
+            pytest.param({"first_frame": BIG_INIT_HEADER}, "guard_body", False, id="big-header"),
+            pytest.param({"opened": "bad_hmac"}, "READY24", False, id="hmac"),
+            pytest.param({"opened": "error"}, "READY24", False, id="error-reply"),
+            pytest.param({"write_ok": False}, "opened_header", False, id="write-false"),
+            pytest.param(
+                {"close": {"writer_close": False}}, "opened_header", True, id="writer-close-false"
+            ),
+        ],
+    )
+    def test_d5_9_handshake_failure_aborts_before_ready(
+        monkeypatch: pytest.MonkeyPatch, script: dict[str, Any], absent: str, retained: bool
+    ) -> None:
+        world = T5World(t5=script)
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:918:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE65FD0F10>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65FD0D10>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+_________ test_d5_9_handshake_failure_aborts_before_ready[big-header] _________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE6627BC50>
+script = {'first_frame': b'MGW2\x02\x02\x00\x00\x00\x00\x03\xe8'}
+absent = 'guard_body', retained = False
+
+    @pytest.mark.parametrize(
+        ("script", "absent", "retained"),
+        [
+            pytest.param({"guard": (PROC_PID + 1, 1, WORKER_AS)}, "write_all", False, id="pid"),
+            pytest.param({"guard": (PROC_PID, 2, WORKER_AS)}, "write_all", False, id="ppid"),
+            pytest.param({"guard": (PROC_PID, 1, 128 * MIB)}, "write_all", False, id="as"),
+            pytest.param(
+                {"first_frame": wire.encode_opened(bytes(32))}, "guard_body", False, id="kind"
+            ),
+            pytest.param({"first_frame": BIG_INIT_HEADER}, "guard_body", False, id="big-header"),
+            pytest.param({"opened": "bad_hmac"}, "READY24", False, id="hmac"),
+            pytest.param({"opened": "error"}, "READY24", False, id="error-reply"),
+            pytest.param({"write_ok": False}, "opened_header", False, id="write-false"),
+            pytest.param(
+                {"close": {"writer_close": False}}, "opened_header", True, id="writer-close-false"
+            ),
+        ],
+    )
+    def test_d5_9_handshake_failure_aborts_before_ready(
+        monkeypatch: pytest.MonkeyPatch, script: dict[str, Any], absent: str, retained: bool
+    ) -> None:
+        world = T5World(t5=script)
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:918:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE66279E90>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE6627BC50>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+____________ test_d5_9_handshake_failure_aborts_before_ready[hmac] ____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65B7C250>
+script = {'opened': 'bad_hmac'}, absent = 'READY24', retained = False
+
+    @pytest.mark.parametrize(
+        ("script", "absent", "retained"),
+        [
+            pytest.param({"guard": (PROC_PID + 1, 1, WORKER_AS)}, "write_all", False, id="pid"),
+            pytest.param({"guard": (PROC_PID, 2, WORKER_AS)}, "write_all", False, id="ppid"),
+            pytest.param({"guard": (PROC_PID, 1, 128 * MIB)}, "write_all", False, id="as"),
+            pytest.param(
+                {"first_frame": wire.encode_opened(bytes(32))}, "guard_body", False, id="kind"
+            ),
+            pytest.param({"first_frame": BIG_INIT_HEADER}, "guard_body", False, id="big-header"),
+            pytest.param({"opened": "bad_hmac"}, "READY24", False, id="hmac"),
+            pytest.param({"opened": "error"}, "READY24", False, id="error-reply"),
+            pytest.param({"write_ok": False}, "opened_header", False, id="write-false"),
+            pytest.param(
+                {"close": {"writer_close": False}}, "opened_header", True, id="writer-close-false"
+            ),
+        ],
+    )
+    def test_d5_9_handshake_failure_aborts_before_ready(
+        monkeypatch: pytest.MonkeyPatch, script: dict[str, Any], absent: str, retained: bool
+    ) -> None:
+        world = T5World(t5=script)
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:918:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE65B7CC90>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65B7C250>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+________ test_d5_9_handshake_failure_aborts_before_ready[error-reply] _________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65BB8410>
+script = {'opened': 'error'}, absent = 'READY24', retained = False
+
+    @pytest.mark.parametrize(
+        ("script", "absent", "retained"),
+        [
+            pytest.param({"guard": (PROC_PID + 1, 1, WORKER_AS)}, "write_all", False, id="pid"),
+            pytest.param({"guard": (PROC_PID, 2, WORKER_AS)}, "write_all", False, id="ppid"),
+            pytest.param({"guard": (PROC_PID, 1, 128 * MIB)}, "write_all", False, id="as"),
+            pytest.param(
+                {"first_frame": wire.encode_opened(bytes(32))}, "guard_body", False, id="kind"
+            ),
+            pytest.param({"first_frame": BIG_INIT_HEADER}, "guard_body", False, id="big-header"),
+            pytest.param({"opened": "bad_hmac"}, "READY24", False, id="hmac"),
+            pytest.param({"opened": "error"}, "READY24", False, id="error-reply"),
+            pytest.param({"write_ok": False}, "opened_header", False, id="write-false"),
+            pytest.param(
+                {"close": {"writer_close": False}}, "opened_header", True, id="writer-close-false"
+            ),
+        ],
+    )
+    def test_d5_9_handshake_failure_aborts_before_ready(
+        monkeypatch: pytest.MonkeyPatch, script: dict[str, Any], absent: str, retained: bool
+    ) -> None:
+        world = T5World(t5=script)
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:918:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE65BB9E10>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65BB8410>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+________ test_d5_9_handshake_failure_aborts_before_ready[write-false] _________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65A01DD0>
+script = {'write_ok': False}, absent = 'opened_header', retained = False
+
+    @pytest.mark.parametrize(
+        ("script", "absent", "retained"),
+        [
+            pytest.param({"guard": (PROC_PID + 1, 1, WORKER_AS)}, "write_all", False, id="pid"),
+            pytest.param({"guard": (PROC_PID, 2, WORKER_AS)}, "write_all", False, id="ppid"),
+            pytest.param({"guard": (PROC_PID, 1, 128 * MIB)}, "write_all", False, id="as"),
+            pytest.param(
+                {"first_frame": wire.encode_opened(bytes(32))}, "guard_body", False, id="kind"
+            ),
+            pytest.param({"first_frame": BIG_INIT_HEADER}, "guard_body", False, id="big-header"),
+            pytest.param({"opened": "bad_hmac"}, "READY24", False, id="hmac"),
+            pytest.param({"opened": "error"}, "READY24", False, id="error-reply"),
+            pytest.param({"write_ok": False}, "opened_header", False, id="write-false"),
+            pytest.param(
+                {"close": {"writer_close": False}}, "opened_header", True, id="writer-close-false"
+            ),
+        ],
+    )
+    def test_d5_9_handshake_failure_aborts_before_ready(
+        monkeypatch: pytest.MonkeyPatch, script: dict[str, Any], absent: str, retained: bool
+    ) -> None:
+        world = T5World(t5=script)
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:918:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE65A01E50>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65A01DD0>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+_____ test_d5_9_handshake_failure_aborts_before_ready[writer-close-false] _____
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65D39450>
+script = {'close': {'writer_close': False}}, absent = 'opened_header'
+retained = True
+
+    @pytest.mark.parametrize(
+        ("script", "absent", "retained"),
+        [
+            pytest.param({"guard": (PROC_PID + 1, 1, WORKER_AS)}, "write_all", False, id="pid"),
+            pytest.param({"guard": (PROC_PID, 2, WORKER_AS)}, "write_all", False, id="ppid"),
+            pytest.param({"guard": (PROC_PID, 1, 128 * MIB)}, "write_all", False, id="as"),
+            pytest.param(
+                {"first_frame": wire.encode_opened(bytes(32))}, "guard_body", False, id="kind"
+            ),
+            pytest.param({"first_frame": BIG_INIT_HEADER}, "guard_body", False, id="big-header"),
+            pytest.param({"opened": "bad_hmac"}, "READY24", False, id="hmac"),
+            pytest.param({"opened": "error"}, "READY24", False, id="error-reply"),
+            pytest.param({"write_ok": False}, "opened_header", False, id="write-false"),
+            pytest.param(
+                {"close": {"writer_close": False}}, "opened_header", True, id="writer-close-false"
+            ),
+        ],
+    )
+    def test_d5_9_handshake_failure_aborts_before_ready(
+        monkeypatch: pytest.MonkeyPatch, script: dict[str, Any], absent: str, retained: bool
+    ) -> None:
+        world = T5World(t5=script)
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:918:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE65B3AE90>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65D39450>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+_________ test_d5_10_late_opening_return_gets_no_next_io[pair-stdin] __________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE6617E490>
+late = 'pair', absent = 'stdin'
+
+    @pytest.mark.parametrize(
+        ("late", "absent"),
+        [
+            ("pair", "stdin"),
+            ("stdin", "spawn"),
+            ("spawn", "guard_header"),
+            ("child_close", "guard_header"),
+            ("reader_close", "guard_header"),
+            ("guard_header", "guard_body"),
+            ("guard_body", "nonce"),
+            ("nonce", "write_all"),
+            ("write_all", "opened_header"),
+            ("writer_close", "opened_header"),
+            ("opened_header", "opened_body"),
+            ("opened_body", "READY24"),
+        ],
+    )
+    def test_d5_10_late_opening_return_gets_no_next_io(
+        monkeypatch: pytest.MonkeyPatch, late: str, absent: str
+    ) -> None:
+        world = T5World(t5={"late": (late,)})
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:951:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE6617DBD0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE6617E490>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+_________ test_d5_10_late_opening_return_gets_no_next_io[stdin-spawn] _________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65A056D0>
+late = 'stdin', absent = 'spawn'
+
+    @pytest.mark.parametrize(
+        ("late", "absent"),
+        [
+            ("pair", "stdin"),
+            ("stdin", "spawn"),
+            ("spawn", "guard_header"),
+            ("child_close", "guard_header"),
+            ("reader_close", "guard_header"),
+            ("guard_header", "guard_body"),
+            ("guard_body", "nonce"),
+            ("nonce", "write_all"),
+            ("write_all", "opened_header"),
+            ("writer_close", "opened_header"),
+            ("opened_header", "opened_body"),
+            ("opened_body", "READY24"),
+        ],
+    )
+    def test_d5_10_late_opening_return_gets_no_next_io(
+        monkeypatch: pytest.MonkeyPatch, late: str, absent: str
+    ) -> None:
+        world = T5World(t5={"late": (late,)})
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:951:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE65A07750>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65A056D0>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+_____ test_d5_10_late_opening_return_gets_no_next_io[spawn-guard_header] ______
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65959590>
+late = 'spawn', absent = 'guard_header'
+
+    @pytest.mark.parametrize(
+        ("late", "absent"),
+        [
+            ("pair", "stdin"),
+            ("stdin", "spawn"),
+            ("spawn", "guard_header"),
+            ("child_close", "guard_header"),
+            ("reader_close", "guard_header"),
+            ("guard_header", "guard_body"),
+            ("guard_body", "nonce"),
+            ("nonce", "write_all"),
+            ("write_all", "opened_header"),
+            ("writer_close", "opened_header"),
+            ("opened_header", "opened_body"),
+            ("opened_body", "READY24"),
+        ],
+    )
+    def test_d5_10_late_opening_return_gets_no_next_io(
+        monkeypatch: pytest.MonkeyPatch, late: str, absent: str
+    ) -> None:
+        world = T5World(t5={"late": (late,)})
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:951:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE65F9BD10>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65959590>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+__ test_d5_10_late_opening_return_gets_no_next_io[child_close-guard_header] ___
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE648EBD50>
+late = 'child_close', absent = 'guard_header'
+
+    @pytest.mark.parametrize(
+        ("late", "absent"),
+        [
+            ("pair", "stdin"),
+            ("stdin", "spawn"),
+            ("spawn", "guard_header"),
+            ("child_close", "guard_header"),
+            ("reader_close", "guard_header"),
+            ("guard_header", "guard_body"),
+            ("guard_body", "nonce"),
+            ("nonce", "write_all"),
+            ("write_all", "opened_header"),
+            ("writer_close", "opened_header"),
+            ("opened_header", "opened_body"),
+            ("opened_body", "READY24"),
+        ],
+    )
+    def test_d5_10_late_opening_return_gets_no_next_io(
+        monkeypatch: pytest.MonkeyPatch, late: str, absent: str
+    ) -> None:
+        world = T5World(t5={"late": (late,)})
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:951:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE65961E50>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE648EBD50>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+__ test_d5_10_late_opening_return_gets_no_next_io[reader_close-guard_header] __
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65D21F50>
+late = 'reader_close', absent = 'guard_header'
+
+    @pytest.mark.parametrize(
+        ("late", "absent"),
+        [
+            ("pair", "stdin"),
+            ("stdin", "spawn"),
+            ("spawn", "guard_header"),
+            ("child_close", "guard_header"),
+            ("reader_close", "guard_header"),
+            ("guard_header", "guard_body"),
+            ("guard_body", "nonce"),
+            ("nonce", "write_all"),
+            ("write_all", "opened_header"),
+            ("writer_close", "opened_header"),
+            ("opened_header", "opened_body"),
+            ("opened_body", "READY24"),
+        ],
+    )
+    def test_d5_10_late_opening_return_gets_no_next_io(
+        monkeypatch: pytest.MonkeyPatch, late: str, absent: str
+    ) -> None:
+        world = T5World(t5={"late": (late,)})
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:951:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE65D22150>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65D21F50>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+___ test_d5_10_late_opening_return_gets_no_next_io[guard_header-guard_body] ___
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE6491B010>
+late = 'guard_header', absent = 'guard_body'
+
+    @pytest.mark.parametrize(
+        ("late", "absent"),
+        [
+            ("pair", "stdin"),
+            ("stdin", "spawn"),
+            ("spawn", "guard_header"),
+            ("child_close", "guard_header"),
+            ("reader_close", "guard_header"),
+            ("guard_header", "guard_body"),
+            ("guard_body", "nonce"),
+            ("nonce", "write_all"),
+            ("write_all", "opened_header"),
+            ("writer_close", "opened_header"),
+            ("opened_header", "opened_body"),
+            ("opened_body", "READY24"),
+        ],
+    )
+    def test_d5_10_late_opening_return_gets_no_next_io(
+        monkeypatch: pytest.MonkeyPatch, late: str, absent: str
+    ) -> None:
+        world = T5World(t5={"late": (late,)})
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:951:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE64919D10>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE6491B010>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+______ test_d5_10_late_opening_return_gets_no_next_io[guard_body-nonce] _______
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE64915E10>
+late = 'guard_body', absent = 'nonce'
+
+    @pytest.mark.parametrize(
+        ("late", "absent"),
+        [
+            ("pair", "stdin"),
+            ("stdin", "spawn"),
+            ("spawn", "guard_header"),
+            ("child_close", "guard_header"),
+            ("reader_close", "guard_header"),
+            ("guard_header", "guard_body"),
+            ("guard_body", "nonce"),
+            ("nonce", "write_all"),
+            ("write_all", "opened_header"),
+            ("writer_close", "opened_header"),
+            ("opened_header", "opened_body"),
+            ("opened_body", "READY24"),
+        ],
+    )
+    def test_d5_10_late_opening_return_gets_no_next_io(
+        monkeypatch: pytest.MonkeyPatch, late: str, absent: str
+    ) -> None:
+        world = T5World(t5={"late": (late,)})
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:951:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE65969890>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE64915E10>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+_______ test_d5_10_late_opening_return_gets_no_next_io[nonce-write_all] _______
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE661CF590>
+late = 'nonce', absent = 'write_all'
+
+    @pytest.mark.parametrize(
+        ("late", "absent"),
+        [
+            ("pair", "stdin"),
+            ("stdin", "spawn"),
+            ("spawn", "guard_header"),
+            ("child_close", "guard_header"),
+            ("reader_close", "guard_header"),
+            ("guard_header", "guard_body"),
+            ("guard_body", "nonce"),
+            ("nonce", "write_all"),
+            ("write_all", "opened_header"),
+            ("writer_close", "opened_header"),
+            ("opened_header", "opened_body"),
+            ("opened_body", "READY24"),
+        ],
+    )
+    def test_d5_10_late_opening_return_gets_no_next_io(
+        monkeypatch: pytest.MonkeyPatch, late: str, absent: str
+    ) -> None:
+        world = T5World(t5={"late": (late,)})
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:951:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE661CF350>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE661CF590>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+___ test_d5_10_late_opening_return_gets_no_next_io[write_all-opened_header] ___
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65986690>
+late = 'write_all', absent = 'opened_header'
+
+    @pytest.mark.parametrize(
+        ("late", "absent"),
+        [
+            ("pair", "stdin"),
+            ("stdin", "spawn"),
+            ("spawn", "guard_header"),
+            ("child_close", "guard_header"),
+            ("reader_close", "guard_header"),
+            ("guard_header", "guard_body"),
+            ("guard_body", "nonce"),
+            ("nonce", "write_all"),
+            ("write_all", "opened_header"),
+            ("writer_close", "opened_header"),
+            ("opened_header", "opened_body"),
+            ("opened_body", "READY24"),
+        ],
+    )
+    def test_d5_10_late_opening_return_gets_no_next_io(
+        monkeypatch: pytest.MonkeyPatch, late: str, absent: str
+    ) -> None:
+        world = T5World(t5={"late": (late,)})
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:951:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE65918450>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65986690>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+_ test_d5_10_late_opening_return_gets_no_next_io[writer_close-opened_header] __
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE64919D10>
+late = 'writer_close', absent = 'opened_header'
+
+    @pytest.mark.parametrize(
+        ("late", "absent"),
+        [
+            ("pair", "stdin"),
+            ("stdin", "spawn"),
+            ("spawn", "guard_header"),
+            ("child_close", "guard_header"),
+            ("reader_close", "guard_header"),
+            ("guard_header", "guard_body"),
+            ("guard_body", "nonce"),
+            ("nonce", "write_all"),
+            ("write_all", "opened_header"),
+            ("writer_close", "opened_header"),
+            ("opened_header", "opened_body"),
+            ("opened_body", "READY24"),
+        ],
+    )
+    def test_d5_10_late_opening_return_gets_no_next_io(
+        monkeypatch: pytest.MonkeyPatch, late: str, absent: str
+    ) -> None:
+        world = T5World(t5={"late": (late,)})
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:951:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE65D56B10>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE64919D10>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+__ test_d5_10_late_opening_return_gets_no_next_io[opened_header-opened_body] __
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE6619D150>
+late = 'opened_header', absent = 'opened_body'
+
+    @pytest.mark.parametrize(
+        ("late", "absent"),
+        [
+            ("pair", "stdin"),
+            ("stdin", "spawn"),
+            ("spawn", "guard_header"),
+            ("child_close", "guard_header"),
+            ("reader_close", "guard_header"),
+            ("guard_header", "guard_body"),
+            ("guard_body", "nonce"),
+            ("nonce", "write_all"),
+            ("write_all", "opened_header"),
+            ("writer_close", "opened_header"),
+            ("opened_header", "opened_body"),
+            ("opened_body", "READY24"),
+        ],
+    )
+    def test_d5_10_late_opening_return_gets_no_next_io(
+        monkeypatch: pytest.MonkeyPatch, late: str, absent: str
+    ) -> None:
+        world = T5World(t5={"late": (late,)})
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:951:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE6619F850>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE6619D150>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+_____ test_d5_10_late_opening_return_gets_no_next_io[opened_body-READY24] _____
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE66202250>
+late = 'opened_body', absent = 'READY24'
+
+    @pytest.mark.parametrize(
+        ("late", "absent"),
+        [
+            ("pair", "stdin"),
+            ("stdin", "spawn"),
+            ("spawn", "guard_header"),
+            ("child_close", "guard_header"),
+            ("reader_close", "guard_header"),
+            ("guard_header", "guard_body"),
+            ("guard_body", "nonce"),
+            ("nonce", "write_all"),
+            ("write_all", "opened_header"),
+            ("writer_close", "opened_header"),
+            ("opened_header", "opened_body"),
+            ("opened_body", "READY24"),
+        ],
+    )
+    def test_d5_10_late_opening_return_gets_no_next_io(
+        monkeypatch: pytest.MonkeyPatch, late: str, absent: str
+    ) -> None:
+        world = T5World(t5={"late": (late,)})
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:951:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE66201A50>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE66202250>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+____ test_d5_11_parent_close_unconfirmed_uses_fallback_and_retains[false] _____
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE6628DB90>
+outcome = False
+
+    @pytest.mark.parametrize(
+        "outcome", [pytest.param(False, id="false"), pytest.param(OSError("CLOSE"), id="raises")]
+    )
+    def test_d5_11_parent_close_unconfirmed_uses_fallback_and_retains(
+        monkeypatch: pytest.MonkeyPatch, outcome: object
+    ) -> None:
+        world = T5World(t5={"close": {"parent_close": outcome}})
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:968:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE6628F250>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE6628DB90>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+____ test_d5_11_parent_close_unconfirmed_uses_fallback_and_retains[raises] ____
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE648ED6D0>
+outcome = OSError('CLOSE')
+
+    @pytest.mark.parametrize(
+        "outcome", [pytest.param(False, id="false"), pytest.param(OSError("CLOSE"), id="raises")]
+    )
+    def test_d5_11_parent_close_unconfirmed_uses_fallback_and_retains(
+        monkeypatch: pytest.MonkeyPatch, outcome: object
+    ) -> None:
+        world = T5World(t5={"close": {"parent_close": outcome}})
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:968:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE6597DDD0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE648ED6D0>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+_______ test_d5_12_genuine_adopt_refusal_retains_token_without_effects ________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE6617DED0>
+
+    def test_d5_12_genuine_adopt_refusal_retains_token_without_effects(
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        world = T5World(t5={"adopt_refuse": True})
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:1023:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE6617DA90>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE6617DED0>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+_________ test_d5_12_genuine_held_release_keeps_token_process_and_pin _________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE648F1750>
+
+    def test_d5_12_genuine_held_release_keeps_token_process_and_pin(
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        world = T5World(t5={"release_held": True})
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:1038:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE661E2BD0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE648F1750>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+____________ test_d5_13_control_escapes_with_unsettled_owner[wait] ____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE66299750>
+script = {'wait_raise': KeyboardInterrupt()}, ends = (), marker = None
+
+    @pytest.mark.parametrize(
+        ("script", "ends", "marker"),
+        [
+            pytest.param({"wait_raise": KeyboardInterrupt()}, (), None, id="wait"),
+            pytest.param(
+                {"spawn_raise": KeyboardInterrupt()},
+                ("parent", "child", "reader", "writer"),
+                "probe_process",
+                id="spawn",
+            ),
+        ],
+    )
+    def test_d5_13_control_escapes_with_unsettled_owner(
+        monkeypatch: pytest.MonkeyPatch,
+        script: dict[str, Any],
+        ends: tuple[str, ...],
+        marker: str | None,
+    ) -> None:
+        world = T5World(t5=script)
+        with pytest.raises(KeyboardInterrupt):
+>           world.run_t5(monkeypatch)
+
+tests\test_oracle9_w1_driver_t5.py:1074:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE6629A710>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE66299750>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+___________ test_d5_13_control_escapes_with_unsettled_owner[spawn] ____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE66278B90>
+script = {'spawn_raise': KeyboardInterrupt()}
+ends = ('parent', 'child', 'reader', 'writer'), marker = 'probe_process'
+
+    @pytest.mark.parametrize(
+        ("script", "ends", "marker"),
+        [
+            pytest.param({"wait_raise": KeyboardInterrupt()}, (), None, id="wait"),
+            pytest.param(
+                {"spawn_raise": KeyboardInterrupt()},
+                ("parent", "child", "reader", "writer"),
+                "probe_process",
+                id="spawn",
+            ),
+        ],
+    )
+    def test_d5_13_control_escapes_with_unsettled_owner(
+        monkeypatch: pytest.MonkeyPatch,
+        script: dict[str, Any],
+        ends: tuple[str, ...],
+        marker: str | None,
+    ) -> None:
+        world = T5World(t5=script)
+        with pytest.raises(KeyboardInterrupt):
+>           world.run_t5(monkeypatch)
+
+tests\test_oracle9_w1_driver_t5.py:1074:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE6627ACD0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE66278B90>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+_________________ test_d5_14_invalid_clock_fails_closed[nan] __________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65D192D0>
+value = nan
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param(math.nan, id="nan"),
+            pytest.param(math.inf, id="inf"),
+            pytest.param(-math.inf, id="minus-inf"),
+            pytest.param(True, id="bool"),
+            pytest.param(None, id="none"),
+            pytest.param(object(), id="object"),
+        ],
+    )
+    def test_d5_14_invalid_clock_fails_closed(monkeypatch: pytest.MonkeyPatch, value: object) -> None:
+        world = T5World(t5={"bad_clock": ("spawn", value)})
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:1103:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE659281D0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65D192D0>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+_________________ test_d5_14_invalid_clock_fails_closed[inf] __________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE6618A010>
+value = inf
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param(math.nan, id="nan"),
+            pytest.param(math.inf, id="inf"),
+            pytest.param(-math.inf, id="minus-inf"),
+            pytest.param(True, id="bool"),
+            pytest.param(None, id="none"),
+            pytest.param(object(), id="object"),
+        ],
+    )
+    def test_d5_14_invalid_clock_fails_closed(monkeypatch: pytest.MonkeyPatch, value: object) -> None:
+        world = T5World(t5={"bad_clock": ("spawn", value)})
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:1103:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE66189A10>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE6618A010>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+______________ test_d5_14_invalid_clock_fails_closed[minus-inf] _______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE6590B110>
+value = -inf
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param(math.nan, id="nan"),
+            pytest.param(math.inf, id="inf"),
+            pytest.param(-math.inf, id="minus-inf"),
+            pytest.param(True, id="bool"),
+            pytest.param(None, id="none"),
+            pytest.param(object(), id="object"),
+        ],
+    )
+    def test_d5_14_invalid_clock_fails_closed(monkeypatch: pytest.MonkeyPatch, value: object) -> None:
+        world = T5World(t5={"bad_clock": ("spawn", value)})
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:1103:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE65908750>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE6590B110>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+_________________ test_d5_14_invalid_clock_fails_closed[bool] _________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE659ECD50>
+value = True
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param(math.nan, id="nan"),
+            pytest.param(math.inf, id="inf"),
+            pytest.param(-math.inf, id="minus-inf"),
+            pytest.param(True, id="bool"),
+            pytest.param(None, id="none"),
+            pytest.param(object(), id="object"),
+        ],
+    )
+    def test_d5_14_invalid_clock_fails_closed(monkeypatch: pytest.MonkeyPatch, value: object) -> None:
+        world = T5World(t5={"bad_clock": ("spawn", value)})
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:1103:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE659EC4D0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE659ECD50>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+_________________ test_d5_14_invalid_clock_fails_closed[none] _________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65BCCB50>
+value = None
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param(math.nan, id="nan"),
+            pytest.param(math.inf, id="inf"),
+            pytest.param(-math.inf, id="minus-inf"),
+            pytest.param(True, id="bool"),
+            pytest.param(None, id="none"),
+            pytest.param(object(), id="object"),
+        ],
+    )
+    def test_d5_14_invalid_clock_fails_closed(monkeypatch: pytest.MonkeyPatch, value: object) -> None:
+        world = T5World(t5={"bad_clock": ("spawn", value)})
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:1103:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE65BCC250>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65BCCB50>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+________________ test_d5_14_invalid_clock_fails_closed[object] ________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE661CED10>
+value = <object object at 0x000001DE604868F0>
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param(math.nan, id="nan"),
+            pytest.param(math.inf, id="inf"),
+            pytest.param(-math.inf, id="minus-inf"),
+            pytest.param(True, id="bool"),
+            pytest.param(None, id="none"),
+            pytest.param(object(), id="object"),
+        ],
+    )
+    def test_d5_14_invalid_clock_fails_closed(monkeypatch: pytest.MonkeyPatch, value: object) -> None:
+        world = T5World(t5={"bad_clock": ("spawn", value)})
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:1103:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE661CC3D0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE661CED10>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+_________ test_d5_16_bad_session_id_refused_before_reserve[duplicate] _________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE658F2BD0>
+value = b'\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01'
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param(bytes([1]) * 16, id="duplicate"),
+            pytest.param(bytes(15), id="15-bytes"),
+            pytest.param(bytes(17), id="17-bytes"),
+            pytest.param(bytearray(T5_ID), id="bytearray"),
+            pytest.param("x" * 16, id="text"),
+        ],
+    )
+    def test_d5_16_bad_session_id_refused_before_reserve(
+        monkeypatch: pytest.MonkeyPatch, value: object
+    ) -> None:
+        world = T5World(t5={"t5_id": value})
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:1128:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE65D06750>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE658F2BD0>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+_________ test_d5_16_bad_session_id_refused_before_reserve[15-bytes] __________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE66240410>
+value = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param(bytes([1]) * 16, id="duplicate"),
+            pytest.param(bytes(15), id="15-bytes"),
+            pytest.param(bytes(17), id="17-bytes"),
+            pytest.param(bytearray(T5_ID), id="bytearray"),
+            pytest.param("x" * 16, id="text"),
+        ],
+    )
+    def test_d5_16_bad_session_id_refused_before_reserve(
+        monkeypatch: pytest.MonkeyPatch, value: object
+    ) -> None:
+        world = T5World(t5={"t5_id": value})
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:1128:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE66242750>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE66240410>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+_________ test_d5_16_bad_session_id_refused_before_reserve[17-bytes] __________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65A02750>
+value = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param(bytes([1]) * 16, id="duplicate"),
+            pytest.param(bytes(15), id="15-bytes"),
+            pytest.param(bytes(17), id="17-bytes"),
+            pytest.param(bytearray(T5_ID), id="bytearray"),
+            pytest.param("x" * 16, id="text"),
+        ],
+    )
+    def test_d5_16_bad_session_id_refused_before_reserve(
+        monkeypatch: pytest.MonkeyPatch, value: object
+    ) -> None:
+        world = T5World(t5={"t5_id": value})
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:1128:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE65A01310>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65A02750>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+_________ test_d5_16_bad_session_id_refused_before_reserve[bytearray] _________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE6607F710>
+value = bytearray(b'\x06\x06\x06\x06\x06\x06\x06\x06\x06\x06\x06\x06\x06\x06\x06\x06')
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param(bytes([1]) * 16, id="duplicate"),
+            pytest.param(bytes(15), id="15-bytes"),
+            pytest.param(bytes(17), id="17-bytes"),
+            pytest.param(bytearray(T5_ID), id="bytearray"),
+            pytest.param("x" * 16, id="text"),
+        ],
+    )
+    def test_d5_16_bad_session_id_refused_before_reserve(
+        monkeypatch: pytest.MonkeyPatch, value: object
+    ) -> None:
+        world = T5World(t5={"t5_id": value})
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:1128:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE6607D090>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE6607F710>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+___________ test_d5_16_bad_session_id_refused_before_reserve[text] ____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE6621B310>
+value = 'xxxxxxxxxxxxxxxx'
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param(bytes([1]) * 16, id="duplicate"),
+            pytest.param(bytes(15), id="15-bytes"),
+            pytest.param(bytes(17), id="17-bytes"),
+            pytest.param(bytearray(T5_ID), id="bytearray"),
+            pytest.param("x" * 16, id="text"),
+        ],
+    )
+    def test_d5_16_bad_session_id_refused_before_reserve(
+        monkeypatch: pytest.MonkeyPatch, value: object
+    ) -> None:
+        world = T5World(t5={"t5_id": value})
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:1128:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE6621BE50>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE6621B310>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+_________________ test_d5_16_bad_nonce_never_reaches_init[31] _________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65A3EA90>
+value = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param(bytes(31), id="31"),
+            pytest.param(bytes(33), id="33"),
+            pytest.param(bytearray(32), id="bytearray"),
+            pytest.param("n" * 32, id="text"),
+            pytest.param(None, id="none"),
+        ],
+    )
+    def test_d5_16_bad_nonce_never_reaches_init(monkeypatch: pytest.MonkeyPatch, value: object) -> None:
+        world = T5World(t5={"nonce": value})
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:1146:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE65A3DED0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65A3EA90>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+_________________ test_d5_16_bad_nonce_never_reaches_init[33] _________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65960A10>
+value = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param(bytes(31), id="31"),
+            pytest.param(bytes(33), id="33"),
+            pytest.param(bytearray(32), id="bytearray"),
+            pytest.param("n" * 32, id="text"),
+            pytest.param(None, id="none"),
+        ],
+    )
+    def test_d5_16_bad_nonce_never_reaches_init(monkeypatch: pytest.MonkeyPatch, value: object) -> None:
+        world = T5World(t5={"nonce": value})
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:1146:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE6597EBD0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE65960A10>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+_____________ test_d5_16_bad_nonce_never_reaches_init[bytearray] ______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE661E0710>
+value = bytearray(b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param(bytes(31), id="31"),
+            pytest.param(bytes(33), id="33"),
+            pytest.param(bytearray(32), id="bytearray"),
+            pytest.param("n" * 32, id="text"),
+            pytest.param(None, id="none"),
+        ],
+    )
+    def test_d5_16_bad_nonce_never_reaches_init(monkeypatch: pytest.MonkeyPatch, value: object) -> None:
+        world = T5World(t5={"nonce": value})
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:1146:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE661E35D0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE661E0710>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+________________ test_d5_16_bad_nonce_never_reaches_init[text] ________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE6628F450>
+value = 'nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn'
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param(bytes(31), id="31"),
+            pytest.param(bytes(33), id="33"),
+            pytest.param(bytearray(32), id="bytearray"),
+            pytest.param("n" * 32, id="text"),
+            pytest.param(None, id="none"),
+        ],
+    )
+    def test_d5_16_bad_nonce_never_reaches_init(monkeypatch: pytest.MonkeyPatch, value: object) -> None:
+        world = T5World(t5={"nonce": value})
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:1146:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE6628E410>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE6628F450>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+________________ test_d5_16_bad_nonce_never_reaches_init[none] ________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE6596A150>
+value = None
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param(bytes(31), id="31"),
+            pytest.param(bytes(33), id="33"),
+            pytest.param(bytearray(32), id="bytearray"),
+            pytest.param("n" * 32, id="text"),
+            pytest.param(None, id="none"),
+        ],
+    )
+    def test_d5_16_bad_nonce_never_reaches_init(monkeypatch: pytest.MonkeyPatch, value: object) -> None:
+        world = T5World(t5={"nonce": value})
+>       result = world.run_t5(monkeypatch)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_t5.py:1146:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE6596AE50>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE6596A150>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+____________ test_d5_15_events_hide_secrets_and_keep_frame_limits _____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE66176150>
+
+    def test_d5_15_events_hide_secrets_and_keep_frame_limits(monkeypatch: pytest.MonkeyPatch) -> None:
+        world = T5World()
+>       world.run_t5(monkeypatch)
+
+tests\test_oracle9_w1_driver_t5.py:1158:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000001DE66174390>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DE66176150>
+
+    def run_t5(self, monkeypatch: pytest.MonkeyPatch) -> Any:
+        """The public ``run(ports, owner=...)`` with the matching loaded Owner."""
+        module = d1.driver()
+        monkeypatch.setitem(module["run"].__globals__, RECORDING_KEY, recording_ledger(self))
+        self.owner = module["Owner"]()
+>       ports = module["Ports"](
+            reader=d1.PureReader(self),
+            guard=d1.Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=T5Ids(self),
+            factory=d1.Factory(self),
+            pair=d1.Pair(self),
+            threads=d1.Threads(self),
+            children=ChildPort(self),
+        )
+E       TypeError: Ports.__init__() got an unexpected keyword argument 'children'
+
+tests\test_oracle9_w1_driver_t5.py:503: TypeError
+=========================== short test summary info ===========================
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_1_positive_probe_walk - Ty...
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_1_probe_ownership_before_each_effect
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_16_probe_key_nonce_and_init
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_17_interrupt_after_real_adopt_keeps_token
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_f1_delayed_return_cannot_open_late_go_window
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_f1_delayed_return_reap_is_idle_late
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_wait_end_is_min_of_eof_cap_and_fence[0.0-10.0]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_wait_end_is_min_of_eof_cap_and_fence[5.0-15.0]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_wait_end_is_min_of_eof_cap_and_fence[19.0-28.0]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_exit_classification[pass-before-wait-end]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_exit_classification[at-wait-end]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_exit_classification[phase-late]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_exit_classification[pre-fence]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_exit_classification[at-fence]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_exit_classification[idle-late]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_exit_classification[rc1]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_exit_classification[signal-without-kill]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_exit_classification[rc255]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_exit_classification[timeout-kill-rc0]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_exit_classification[bool-true]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_exit_classification[bool-false]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_exit_classification[int-subclass]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_exit_classification[float]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_exit_classification[text]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_6_unconfirmed_fallback_retains[rc2-none]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_6_unconfirmed_fallback_retains[rc2-late]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_6_unconfirmed_fallback_retains[rc2-raises]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_6_unconfirmed_fallback_retains[rc2-bool]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_8_uncertain_acquisition_retains_without_kill[pair]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_8_uncertain_acquisition_retains_without_kill[stdin]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_8_uncertain_acquisition_retains_without_kill[spawn]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_9_handshake_failure_aborts_before_ready[pid]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_9_handshake_failure_aborts_before_ready[ppid]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_9_handshake_failure_aborts_before_ready[as]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_9_handshake_failure_aborts_before_ready[kind]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_9_handshake_failure_aborts_before_ready[big-header]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_9_handshake_failure_aborts_before_ready[hmac]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_9_handshake_failure_aborts_before_ready[error-reply]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_9_handshake_failure_aborts_before_ready[write-false]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_9_handshake_failure_aborts_before_ready[writer-close-false]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_10_late_opening_return_gets_no_next_io[pair-stdin]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_10_late_opening_return_gets_no_next_io[stdin-spawn]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_10_late_opening_return_gets_no_next_io[spawn-guard_header]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_10_late_opening_return_gets_no_next_io[child_close-guard_header]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_10_late_opening_return_gets_no_next_io[reader_close-guard_header]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_10_late_opening_return_gets_no_next_io[guard_header-guard_body]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_10_late_opening_return_gets_no_next_io[guard_body-nonce]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_10_late_opening_return_gets_no_next_io[nonce-write_all]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_10_late_opening_return_gets_no_next_io[write_all-opened_header]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_10_late_opening_return_gets_no_next_io[writer_close-opened_header]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_10_late_opening_return_gets_no_next_io[opened_header-opened_body]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_10_late_opening_return_gets_no_next_io[opened_body-READY24]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_11_parent_close_unconfirmed_uses_fallback_and_retains[false]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_11_parent_close_unconfirmed_uses_fallback_and_retains[raises]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_12_genuine_adopt_refusal_retains_token_without_effects
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_12_genuine_held_release_keeps_token_process_and_pin
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_13_control_escapes_with_unsettled_owner[wait]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_13_control_escapes_with_unsettled_owner[spawn]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_14_invalid_clock_fails_closed[nan]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_14_invalid_clock_fails_closed[inf]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_14_invalid_clock_fails_closed[minus-inf]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_14_invalid_clock_fails_closed[bool]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_14_invalid_clock_fails_closed[none]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_14_invalid_clock_fails_closed[object]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_16_bad_session_id_refused_before_reserve[duplicate]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_16_bad_session_id_refused_before_reserve[15-bytes]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_16_bad_session_id_refused_before_reserve[17-bytes]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_16_bad_session_id_refused_before_reserve[bytearray]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_16_bad_session_id_refused_before_reserve[text]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_16_bad_nonce_never_reaches_init[31]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_16_bad_nonce_never_reaches_init[33]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_16_bad_nonce_never_reaches_init[bytearray]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_16_bad_nonce_never_reaches_init[text]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_16_bad_nonce_never_reaches_init[none]
+FAILED tests/test_oracle9_w1_driver_t5.py::test_d5_15_events_hide_secrets_and_keep_frame_limits

@@ -1,0 +1,25 @@
+{
+  "exit_code": 1,
+  "suites": [
+    {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "2",
+      "skipped": "0",
+      "tests": "645",
+      "time": "9.668",
+      "timestamp": "2026-11-10T09:51:07.231658-03:00",
+      "hostname": "SMTZDIBDN1954"
+    }
+  ],
+  "failures": [
+    {
+      "test": "test_sanity_pinned_collaborators_load",
+      "message": "assert 51913 == 36956\n +  where 51913 = len(b'\"\"\"W1 Oracle laboratory driver, D1: definitions only over trusted deterministic ports.\\n\\nDRIVER-DESIGN v3 plus DRIV...ect: keep every reference, no further effect\\n        return DriverResult(\"RETAINED\", tuple(driver.verdicts), owner)\\n')"
+    },
+    {
+      "test": "test_composition_validate_sink_and_canary_absence",
+      "message": "assert 51913 == 36956\n +  where 51913 = len(b'\"\"\"W1 Oracle laboratory driver, D1: definitions only over trusted deterministic ports.\\n\\nDRIVER-DESIGN v3 plus DRIV...ect: keep every reference, no further effect\\n        return DriverResult(\"RETAINED\", tuple(driver.verdicts), owner)\\n')"
+    }
+  ]
+}

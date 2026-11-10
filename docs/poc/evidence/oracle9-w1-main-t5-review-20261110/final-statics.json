@@ -1,0 +1,61 @@
+[
+  {
+    "command": [
+      "ruff",
+      "check",
+      "src",
+      "tests"
+    ],
+    "exit": 0,
+    "output": "All checks passed!\n"
+  },
+  {
+    "command": [
+      "ruff",
+      "check",
+      "--select",
+      "E9,F63,F7,F82",
+      "deploy/oracle9_w1_driver.py",
+      "deploy/oracle9_w1_main.py"
+    ],
+    "exit": 0,
+    "output": "All checks passed!\n"
+  },
+  {
+    "command": [
+      "ruff",
+      "format",
+      "--check",
+      "src",
+      "tests",
+      "deploy/oracle9_w1_driver.py",
+      "deploy/oracle9_w1_main.py"
+    ],
+    "exit": 0,
+    "output": "366 files already formatted\n"
+  },
+  {
+    "command": [
+      "mypy",
+      "--strict",
+      "--python-version",
+      "3.11",
+      "src",
+      "tests"
+    ],
+    "exit": 0,
+    "output": "Success: no issues found in 364 source files\r\n"
+  },
+  {
+    "command": [
+      "mypy",
+      "--strict",
+      "--python-version",
+      "3.14",
+      "src",
+      "tests"
+    ],
+    "exit": 0,
+    "output": "Success: no issues found in 364 source files\r\n"
+  }
+]

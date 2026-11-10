@@ -1,0 +1,222 @@
+{
+  "command": [
+    ".venv/Scripts/python.exe",
+    "-X",
+    "utf8",
+    "-m",
+    "pytest",
+    "tests\\test_oracle9_w1_main_t5.py",
+    "-q",
+    "--junitxml=docs\\poc\\evidence\\oracle9-w1-main-t5-review-20261110\\red-r1.xml"
+  ],
+  "exit_code": 1,
+  "suites": [
+    {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "39",
+      "skipped": "0",
+      "tests": "41",
+      "time": "12.232",
+      "timestamp": "2026-11-10T10:19:01.181358-03:00",
+      "hostname": "SMTZDIBDN1954"
+    }
+  ],
+  "failures": [
+    {
+      "name": "test_m5_1_system_slots_pins_and_lazy_wrappers",
+      "type": "failure",
+      "message": "AssertionError: assert (20 == 22)\n +  where 20 = len(['open', 'read', 'close', 'fstat', 'isatty', 'set_blocking', ...])"
+    },
+    {
+      "name": "test_m5_1_pipe2_wrapper_is_the_only_lazy_os_pipe2_reference",
+      "type": "failure",
+      "message": "assert 0 == 1\n +  where 0 = len([])"
+    },
+    {
+      "name": "test_m5_1_build_ports_binds_probe_children_and_session_ids",
+      "type": "failure",
+      "message": "TypeError: System.__init__() got an unexpected keyword argument 'popen'"
+    },
+    {
+      "name": "test_m5_2_pair_reserves_before_owns_after_then_noninheritable",
+      "type": "failure",
+      "message": "TypeError: System.__init__() got an unexpected keyword argument 'popen'"
+    },
+    {
+      "name": "test_m5_2_stdin_pipe2_cloexec_and_only_writer_nonblocking",
+      "type": "failure",
+      "message": "TypeError: System.__init__() got an unexpected keyword argument 'popen'"
+    },
+    {
+      "name": "test_m5_3_popen_after_four_owned_ends_with_exact_worker_arguments",
+      "type": "failure",
+      "message": "TypeError: System.__init__() got an unexpected keyword argument 'popen'"
+    },
+    {
+      "name": "test_m5_3_spawn_refuses_foreign_ends_before_any_process[child]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() got an unexpected keyword argument 'popen'"
+    },
+    {
+      "name": "test_m5_3_spawn_refuses_foreign_ends_before_any_process[reader]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() got an unexpected keyword argument 'popen'"
+    },
+    {
+      "name": "test_m5_4_creation_failure_or_control_retains_and_blocks_safe_exit[socketpair-error]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() got an unexpected keyword argument 'popen'"
+    },
+    {
+      "name": "test_m5_4_creation_failure_or_control_retains_and_blocks_safe_exit[socketpair-control]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() got an unexpected keyword argument 'popen'"
+    },
+    {
+      "name": "test_m5_4_creation_failure_or_control_retains_and_blocks_safe_exit[control-after-socketpair-return]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() got an unexpected keyword argument 'popen'"
+    },
+    {
+      "name": "test_m5_4_creation_failure_or_control_retains_and_blocks_safe_exit[pipe2-error]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() got an unexpected keyword argument 'popen'"
+    },
+    {
+      "name": "test_m5_4_creation_failure_or_control_retains_and_blocks_safe_exit[control-after-pipe2-return]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() got an unexpected keyword argument 'popen'"
+    },
+    {
+      "name": "test_m5_4_creation_failure_or_control_retains_and_blocks_safe_exit[popen-error]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() got an unexpected keyword argument 'popen'"
+    },
+    {
+      "name": "test_m5_4_creation_failure_or_control_retains_and_blocks_safe_exit[popen-control]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() got an unexpected keyword argument 'popen'"
+    },
+    {
+      "name": "test_m5_5_writer_partial_writes_and_eagain_within_deadline",
+      "type": "failure",
+      "message": "TypeError: System.__init__() got an unexpected keyword argument 'popen'"
+    },
+    {
+      "name": "test_m5_5_writer_never_writes_after_absolute_deadline",
+      "type": "failure",
+      "message": "TypeError: System.__init__() got an unexpected keyword argument 'popen'"
+    },
+    {
+      "name": "test_m5_5_ready_select_delivered_late_gets_zero_writes[at-deadline]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() got an unexpected keyword argument 'popen'"
+    },
+    {
+      "name": "test_m5_5_ready_select_delivered_late_gets_zero_writes[past-deadline]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() got an unexpected keyword argument 'popen'"
+    },
+    {
+      "name": "test_m5_5_partial_write_returning_after_deadline_gets_no_next_write[at-deadline]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() got an unexpected keyword argument 'popen'"
+    },
+    {
+      "name": "test_m5_5_partial_write_returning_after_deadline_gets_no_next_write[past-deadline]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() got an unexpected keyword argument 'popen'"
+    },
+    {
+      "name": "test_m5_5_raw_fd_close_contract[reader]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() got an unexpected keyword argument 'popen'"
+    },
+    {
+      "name": "test_m5_5_raw_fd_close_contract[writer]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() got an unexpected keyword argument 'popen'"
+    },
+    {
+      "name": "test_m5_6_only_exact_int_wait_result_clears_process[exact-zero]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() got an unexpected keyword argument 'popen'"
+    },
+    {
+      "name": "test_m5_6_only_exact_int_wait_result_clears_process[exact-one]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() got an unexpected keyword argument 'popen'"
+    },
+    {
+      "name": "test_m5_6_only_exact_int_wait_result_clears_process[bool]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() got an unexpected keyword argument 'popen'"
+    },
+    {
+      "name": "test_m5_6_only_exact_int_wait_result_clears_process[int-subclass]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() got an unexpected keyword argument 'popen'"
+    },
+    {
+      "name": "test_m5_6_only_exact_int_wait_result_clears_process[float]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() got an unexpected keyword argument 'popen'"
+    },
+    {
+      "name": "test_m5_6_only_exact_int_wait_result_clears_process[oserror]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() got an unexpected keyword argument 'popen'"
+    },
+    {
+      "name": "test_m5_6_wait_uses_finite_slices_and_never_waits_after_deadline",
+      "type": "failure",
+      "message": "TypeError: System.__init__() got an unexpected keyword argument 'popen'"
+    },
+    {
+      "name": "test_m5_6_kill_alone_never_clears_the_process",
+      "type": "failure",
+      "message": "TypeError: System.__init__() got an unexpected keyword argument 'popen'"
+    },
+    {
+      "name": "test_m5_7_parent_receives_through_rawchannel_with_finite_deadline",
+      "type": "failure",
+      "message": "TypeError: System.__init__() got an unexpected keyword argument 'popen'"
+    },
+    {
+      "name": "test_m5_7_nonce_is_exactly_32_urandom_bytes",
+      "type": "failure",
+      "message": "TypeError: System.__init__() got an unexpected keyword argument 'popen'"
+    },
+    {
+      "name": "test_m5_7_wrong_nonce_type_or_length_is_closed_refusal[b'\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00']",
+      "type": "failure",
+      "message": "TypeError: System.__init__() got an unexpected keyword argument 'popen'"
+    },
+    {
+      "name": "test_m5_7_wrong_nonce_type_or_length_is_closed_refusal[b'\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00']",
+      "type": "failure",
+      "message": "TypeError: System.__init__() got an unexpected keyword argument 'popen'"
+    },
+    {
+      "name": "test_m5_7_wrong_nonce_type_or_length_is_closed_refusal[bytearray(b'\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00')]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() got an unexpected keyword argument 'popen'"
+    },
+    {
+      "name": "test_m5_7_wrong_nonce_type_or_length_is_closed_refusal[xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() got an unexpected keyword argument 'popen'"
+    },
+    {
+      "name": "test_m5_7_wrong_nonce_type_or_length_is_closed_refusal[None]",
+      "type": "failure",
+      "message": "TypeError: System.__init__() got an unexpected keyword argument 'popen'"
+    },
+    {
+      "name": "test_composition_public_driver_run_with_main_probe_binding",
+      "type": "failure",
+      "message": "TypeError: System.__init__() got an unexpected keyword argument 'popen'"
+    }
+  ]
+}

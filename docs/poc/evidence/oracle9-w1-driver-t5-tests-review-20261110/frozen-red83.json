@@ -1,0 +1,50 @@
+{
+  "test_sha256": "3402d6818d424efe2a59372e9283d1e5f83070f0a5a1022c1e2567a031af2cbd",
+  "bytes": 45565,
+  "lines": 1165,
+  "original_test_ast_changed": [],
+  "source_fixed": "39a6890457c3bc9331fc371948fce896cbbc37e2d49f1584a5629490f43d2794",
+  "red": {
+    "exit_code": 1,
+    "suites": [
+      {
+        "name": "pytest",
+        "errors": "0",
+        "failures": "75",
+        "skipped": "0",
+        "tests": "83",
+        "time": "5.113",
+        "timestamp": "2026-11-10T09:06:53.222868-03:00",
+        "hostname": "SMTZDIBDN1954"
+      }
+    ],
+    "failure_types": [
+      "TypeError"
+    ],
+    "non_api_failures": []
+  },
+  "statics": [
+    {
+      "gate": "ruff",
+      "exit_code": 0,
+      "output": "All checks passed!\n"
+    },
+    {
+      "gate": "format",
+      "exit_code": 0,
+      "output": "363 files already formatted\n"
+    },
+    {
+      "gate": "mypy311",
+      "exit_code": 0,
+      "output": "Success: no issues found in 363 source files\r\n"
+    },
+    {
+      "gate": "mypy314",
+      "exit_code": 0,
+      "output": "Success: no issues found in 363 source files\r\n"
+    }
+  ],
+  "behavioral_proof": false,
+  "reason": "All75feature failures are Ports constructor TypeError for unsupported children; eight independent sanities pass. No feature temporal/cleanup behavior reached."
+}

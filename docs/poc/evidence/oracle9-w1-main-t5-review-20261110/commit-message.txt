@@ -1,0 +1,18 @@
+W1 Oracle: integra sonda EOF T5 com binding do main
+
+Driver e main coerentes sob SO simulado: posse das quatro pontas antes do
+spawn, cerca EOF/idle conservadora, espera finita e reap obrigatorio.
+Fixes apos REDs comportamentais; fixtures legadas migradas por contrato,
+sem remover assercoes. Evidencia inclui candidatas rejeitadas e red reais.
+
+849 testes relacionados passam, sem falhas/erros/skips; Ruff, format366 e
+mypy364 src/tests para3.11/3.14 limpos. Deploy fora do mypy. SDK/app124,
+puro, estado16 e tentativa consumida preservados. Nenhum efeito nativo,
+Docker, PG, SQL ou deploy; T5 fisico e gates de produto continuam abertos.
+
+Claude2 programou sozinho na sessao51ea0d85, opus5.5/medium; Codex revisou
+os deltas, reproduziu findings e executou QA. Continuidade sob delegacao,
+sem inventar aprovacao individual ou liberar producao.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Co-Authored-By: Codex <noreply@openai.com>

@@ -11,6 +11,13 @@ free of implicit physical effects, and Linux admission (VmSize, Threads: 1) is
 not measured here. LAB_INIT and the pure capture stay after the guard, inside
 the pinned driver. This is a one-attempt laboratory policy, not the Gateway's
 production shutdown policy. Object facts are not kernel proof.
+
+T5 binding (T5-DESIGN v3 §3): ``ProbeChildren`` creates the four probe ends and
+the worker process only through ``System`` (``socketpair``, ``pipe2``, ``popen``),
+each slot reserved UNKNOWN before the call and OWNED right after. The worker
+environment is a literal equal to the public ``child_environment()``; the main
+never imports ``worker_process``. Fd inheritance, close-on-exec, EOF delivery and
+waitpid stay native facts not proven by fakes.
 """
 
 from __future__ import annotations
@@ -23,6 +30,7 @@ import select
 import signal
 import socket
 import stat
+import subprocess
 import sys
 import threading
 import time
@@ -31,6 +39,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Final, NoReturn
 
+from maskgw.pgwire.result_frame import ResultDeadline
 from maskgw.pgwire.transport import RawChannel, TransportLimits
 from maskgw.runtime.budget import BudgetLedger, ReservationKind
 from maskgw.runtime.linux_guard import protect_process
@@ -38,8 +47,8 @@ from maskgw.runtime.worker_session import SessionState, WorkerSession
 
 MAIN_PATH: Final = "/opt/maskgw/lab/oracle9_w1_main.py"
 DRIVER_PATH: Final = "/opt/maskgw/lab/oracle9_w1_driver.py"
-DRIVER_SHA: Final = "39a6890457c3bc9331fc371948fce896cbbc37e2d49f1584a5629490f43d2794"
-DRIVER_BYTES: Final = 36956
+DRIVER_SHA: Final = "b54a8a9457a908e839d1f5870280644839478bc471e5e06cd4268bcdcff8c51f"
+DRIVER_BYTES: Final = 51913
 DRIVER_MODULE: Final = "_maskgw_w1_lab_driver"
 PURE_PATH: Final = "/opt/maskgw/lab/oracle9_w1_controller.py"
 PURE_SHA: Final = "4c155d76208f113852f95fec4c57253eef480c610aa390423fa6f82baf1f7bc7"
@@ -54,11 +63,32 @@ WRITE_CAP_S: Final = 2.0
 SLICE_S: Final = 0.25
 HOLD_BACKOFF_S: Final = 1.0
 HOLD_FAULTS_MAX: Final = 255
-SLOTS: Final = ("pair_writer", "pair_reader", "sink_thread", "watcher_thread", "link")
+SLOTS: Final = (
+    "pair_writer",
+    "pair_reader",
+    "sink_thread",
+    "watcher_thread",
+    "link",
+    "probe_parent",
+    "probe_child",
+    "probe_stdin_r",
+    "probe_stdin_w",
+    "probe_process",
+)
 TICKET: Final = "source_fd"
 HANDLED_SIGNALS: Final = (15, 2, 1)  # Linux SIGTERM, SIGINT, SIGHUP
+PIPE_FLAGS: Final = 0o2000000  # Linux x86-64 O_CLOEXEC literal; no host constant lookup
+WORKER_MODULE: Final = "maskgw.runtime.worker_process"
 
 _AF_UNIX: Final = 1  # Linux value; no host constant lookup
+_CHILD_ENV: Final = {  # literal equal to the public child_environment(); pinned by tests
+    "PATH": "/opt/maskgw/venv/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "LANG": "C.UTF-8",
+    "LC_ALL": "C.UTF-8",
+    "HOME": "/var/empty",
+    "TMPDIR": "/tmp",
+    "MALLOC_ARENA_MAX": "1",
+}
 _INIT_MAGIC: Final = b"MGI1"
 _SOURCES: Final = frozenset(
     {
@@ -198,6 +228,12 @@ class System:
     protect: Callable[..., Any]
     is_main_thread: Callable[..., Any]
     silence: Callable[..., Any]
+    popen: Callable[..., Any]
+    pipe2: Callable[..., Any]
+
+
+def _pipe2(flags: int) -> tuple[int, int]:
+    return os.pipe2(flags)  # Linux only; looked up solely when invoked
 
 
 def _set_blocking(fd: int, flag: bool) -> None:
@@ -252,6 +288,8 @@ def real_system() -> System:
         protect=_protect,
         is_main_thread=_is_main_thread,
         silence=_silence,
+        popen=subprocess.Popen,
+        pipe2=_pipe2,
     )
 
 
@@ -744,6 +782,12 @@ class SessionIds:
             _refuse(MainRefusal("IDS"))
         return value
 
+    def nonce(self) -> bytes:
+        value = self._root.system.urandom(32)
+        if type(value) is not bytes or len(value) != 32:
+            _refuse(MainRefusal("IDS"))
+        return value
+
 
 class SessionFactory:
     def __init__(self, root: MainRoot) -> None:
@@ -882,6 +926,269 @@ class ThreadPorts:
         return handle
 
 
+# ---------------------------------------------------------------- T5 probe children
+
+
+def _owns(root: MainRoot, name: str, facade: object) -> bool:
+    slot = root.slots[name]
+    return slot.state is SlotState.OWNED and slot.value is facade
+
+
+def _no_stop() -> bool:
+    return False
+
+
+def _deadline(system: System, deadline: Any) -> ResultDeadline | None:
+    try:
+        return ResultDeadline(expires_at=deadline, clock=system.monotonic)
+    except Exception:
+        return None
+
+
+def _close_socket(root: MainRoot, name: str, facade: object, sock: Any) -> bool:
+    """Positive only when the original socket reports fileno -1; else the slot stays."""
+    if not _owns(root, name, facade):
+        return False
+    try:
+        sock.close()
+        closed = sock.fileno() == -1
+    except Exception:
+        closed = False
+    if closed:
+        root.clear(name, facade)
+    return closed
+
+
+def _close_fd(root: MainRoot, name: str, facade: object, fd: Any) -> bool:
+    """os.close contract: a None return is the fact; OSError keeps the slot."""
+    if not _owns(root, name, facade):
+        return False
+    try:
+        closed = root.system.close(fd) is None
+    except Exception:
+        closed = False
+    if closed:
+        root.clear(name, facade)
+    return closed
+
+
+class ProbeParent:
+    """Receive-only parent end: no send, write, shutdown or channel path."""
+
+    def __init__(self, root: MainRoot, sock: Any) -> None:
+        self._root, self._sock = root, sock
+
+    def recv_exact(self, size: int, *, deadline: float) -> bytes:
+        root = self._root
+        _signal_point(root)
+        if not _owns(root, "probe_parent", self) or type(size) is not int or size < 0:
+            _refuse(MainRefusal("CHILDREN"))
+        limit = ResultDeadline(expires_at=deadline, clock=root.system.monotonic)
+        channel = RawChannel(self._sock, stop=_no_stop, limits=TransportLimits())
+        return channel.recv_exact(size, limit)
+
+    def close(self) -> bool:
+        return _close_socket(self._root, "probe_parent", self, self._sock)
+
+
+class ProbeChild:
+    """The parent's copy of the child end; only its fd is passed to the worker."""
+
+    def __init__(self, root: MainRoot, sock: Any) -> None:
+        self._root, self._sock = root, sock
+
+    @property
+    def fd(self) -> int:
+        value: int = self._sock.fileno()
+        return value
+
+    def close(self) -> bool:
+        return _close_socket(self._root, "probe_child", self, self._sock)
+
+
+class ProbeStdinReader:
+    def __init__(self, root: MainRoot, fd: int) -> None:
+        self._root, self.fd = root, fd
+
+    def close(self) -> bool:
+        return _close_fd(self._root, "probe_stdin_r", self, self.fd)
+
+
+class ProbeStdinWriter:
+    def __init__(self, root: MainRoot, fd: int) -> None:
+        self._root, self._fd = root, fd
+
+    def write_all(self, packet: bytes, *, deadline: float) -> bool:
+        """Non-blocking select/os_write within the absolute deadline; never a late write."""
+        root, system, fd = self._root, self._root.system, self._fd
+        if not _owns(root, "probe_stdin_w", self) or type(packet) is not bytes:
+            return False
+        limit = _deadline(system, deadline)
+        if limit is None:
+            return False
+        _signal_point(root)
+        offset = 0
+        while offset < len(packet):
+            remaining = limit.remaining()
+            if remaining <= 0:
+                return False
+            try:
+                ready = system.select([], [fd], [], min(remaining, SLICE_S))[1]
+            except (BlockingIOError, InterruptedError):
+                continue  # finite retry within the same absolute deadline
+            except OSError:
+                return False
+            if limit.remaining() <= 0:
+                return False
+            if not ready:
+                continue
+            try:
+                sent = system.os_write(fd, packet[offset:])
+            except (BlockingIOError, InterruptedError):
+                continue
+            except OSError:
+                return False
+            if type(sent) is not int or not 0 < sent <= len(packet) - offset:
+                return False
+            offset += sent
+            if limit.remaining() <= 0:
+                return False  # a write that returned late is never followed by another
+        return True
+
+    def close(self) -> bool:
+        return _close_fd(self._root, "probe_stdin_w", self, self._fd)
+
+
+class ProbeProcess:
+    def __init__(self, root: MainRoot, proc: Any) -> None:
+        self._root, self._proc = root, proc
+
+    @property
+    def pid(self) -> Any:
+        return self._proc.pid
+
+    def wait(self, *, deadline: float) -> int | None:
+        """Finite raw wait slices; only an exact int reap clears the process slot."""
+        root = self._root
+        if not _owns(root, "probe_process", self):
+            return None
+        limit = _deadline(root.system, deadline)
+        if limit is None:
+            return None
+        while True:
+            remaining = limit.remaining()
+            if remaining <= 0:
+                return None
+            try:
+                code = self._proc.wait(timeout=min(remaining, SLICE_S))
+            except subprocess.TimeoutExpired:
+                continue
+            except OSError:
+                return None
+            if type(code) is not int:
+                return None
+            root.clear("probe_process", self)
+            return code
+
+    def kill(self) -> bool:
+        """Signal only; the slot stays until an exact reap."""
+        if not _owns(self._root, "probe_process", self):
+            return False
+        try:
+            self._proc.kill()
+        except OSError:
+            return False
+        return True
+
+
+class ProbeChildren:
+    """T5 children port: four owned ends before the worker process is created."""
+
+    def __init__(self, root: MainRoot) -> None:
+        self._root = root
+
+    def pair(self) -> tuple[ProbeParent, ProbeChild]:
+        root = self._root
+        _signal_point(root)
+        root.reserve("probe_parent", "probe_child")  # both before the OS call
+        first, second = root.system.socketpair(_AF_UNIX, socket.SOCK_STREAM)
+        parent, child = ProbeParent(root, first), ProbeChild(root, second)
+        root.own("probe_parent", parent)
+        root.own("probe_child", child)
+        first.set_inheritable(False)
+        second.set_inheritable(False)
+        return parent, child
+
+    def stdin(self) -> tuple[ProbeStdinReader, ProbeStdinWriter]:
+        root = self._root
+        _signal_point(root)
+        root.reserve("probe_stdin_r", "probe_stdin_w")  # both before the OS call
+        read_fd, write_fd = root.system.pipe2(PIPE_FLAGS)
+        reader, writer = ProbeStdinReader(root, read_fd), ProbeStdinWriter(root, write_fd)
+        root.own("probe_stdin_r", reader)
+        root.own("probe_stdin_w", writer)
+        root.system.set_blocking(write_fd, False)  # the child sets its own fd 0
+        return reader, writer
+
+    def spawn(
+        self,
+        child: object,
+        reader: object,
+        *,
+        parent_pid: int,
+        address_bytes: int,
+        idle_ms: int,
+    ) -> ProbeProcess:
+        root = self._root
+        _signal_point(root)
+        if type(child) is not ProbeChild or type(reader) is not ProbeStdinReader:
+            _refuse(MainRefusal("CHILDREN"))  # only the owned facades, never a foreign end
+        parent = root.slots["probe_parent"].value
+        writer = root.slots["probe_stdin_w"].value
+        valid = (
+            _owns(root, "probe_child", child)
+            and _owns(root, "probe_stdin_r", reader)
+            and type(parent) is ProbeParent  # all four original ends still owned here
+            and _owns(root, "probe_parent", parent)
+            and type(writer) is ProbeStdinWriter
+            and _owns(root, "probe_stdin_w", writer)
+            and all(end._root is root for end in (child, reader, parent, writer))
+            and all(type(value) is int and value > 0 for value in (parent_pid, address_bytes))
+            and type(idle_ms) is int
+            and idle_ms > 0
+        )
+        if not valid:
+            _refuse(MainRefusal("CHILDREN"))
+        child_fd, stdin_fd = child.fd, reader.fd
+        if type(child_fd) is not int or child_fd < 0 or type(stdin_fd) is not int or stdin_fd < 0:
+            _refuse(MainRefusal("CHILDREN"))
+        argv = [
+            sys.executable,
+            "-I",
+            "-B",
+            "-m",
+            WORKER_MODULE,
+            str(child_fd),
+            str(parent_pid),
+            str(address_bytes),
+            str(idle_ms),
+        ]
+        root.reserve("probe_process")
+        proc = root.system.popen(
+            argv,
+            stdin=stdin_fd,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            env=dict(_CHILD_ENV),
+            close_fds=True,
+            pass_fds=(child_fd,),
+            bufsize=0,
+        )
+        process = ProbeProcess(root, proc)
+        root.own("probe_process", process)
+        return process
+
+
 def build_ports(root: MainRoot) -> Any:
     link = root.slots["link"].value
     if root.slots["link"].state is not SlotState.OWNED or type(link) is not HostLink:
@@ -895,6 +1202,7 @@ def build_ports(root: MainRoot) -> Any:
         factory=SessionFactory(root),
         pair=SocketPairs(root),
         threads=ThreadPorts(root),
+        children=ProbeChildren(root),
     )
 
 

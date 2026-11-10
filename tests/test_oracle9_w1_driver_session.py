@@ -24,6 +24,8 @@ Harness contract:
   local ``Any`` variable: no cast and no ignore.
 - The D1 port host (``tests.test_oracle9_w1_driver.World``: reader, guard, link,
   ids, threads, FakeSession) is reused for the deterministic driver ports only.
+- T5 migration: the ninth ``children`` port is the D1 fake probe child; it is not
+  the real WorkerSession and none of these cases reaches case 24.
 
 Owner contract for the FUTURE minimal driver API ``run(ports, *, owner=None)``
 (not implemented in driver e9d8de9b; the S-2..S-7 cases are the expected RED):
@@ -638,6 +640,7 @@ def ports_for(world: d1.World, **overrides: Any) -> Any:
         "factory": d1.Factory(world),
         "pair": d1.Pair(world),
         "threads": d1.Threads(world),
+        "children": d1.ProbeChildren(world),  # T5 migration: fake probe child, not the SDK
     }
     assert set(overrides) <= set(ports)
     ports.update(overrides)
@@ -658,7 +661,17 @@ def owner_state(owner: object) -> list[tuple[str, int, object]]:
     ]
 
 
-PORT_NAMES = ("reader", "guard", "clock", "link", "ids", "factory", "pair", "threads")
+PORT_NAMES = (
+    "reader",
+    "guard",
+    "clock",
+    "link",
+    "ids",
+    "factory",
+    "pair",
+    "threads",
+    "children",
+)
 
 
 class PortTrap:

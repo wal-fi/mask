@@ -1,0 +1,22 @@
+[
+  {
+    "gate": "ruff",
+    "exit_code": 0,
+    "output": "All checks passed!\n"
+  },
+  {
+    "gate": "format",
+    "exit_code": 1,
+    "output": "unformatted: File would be reformatted\n    --> tests\\test_oracle9_w1_driver_t5.py:571:26\n     |\n570  |     limits = ResultLimits(max_rows=1000, max_frame_bytes=16 * MIB)\n     -     world.packets.append(\n     -         wire.encode_init(wire.SecretInit(key, limits, 1012.0, NONCE, b\"SNAPSHOT\"))\n     -     )\n571  +     world.packets.append(wire.encode_init(wire.SecretInit(key, limits, 1012.0, NONCE, b\"SNAPSHOT\")))\n572  |     frame = world.opened_frame()\n--------------------------------------------------------------------------------\n1039 | )\n     - def test_d5_16_bad_nonce_never_reaches_init(\n     -     monkeypatch: pytest.MonkeyPatch, value: object\n     - ) -> None:\n1040 + def test_d5_16_bad_nonce_never_reaches_init(monkeypatch: pytest.MonkeyPatch, value: object) -> None:\n1041 |     world = T5World(t5={\"nonce\": value})\n     |\n\n1 file would be reformatted\n"
+  },
+  {
+    "gate": "mypy311",
+    "exit_code": 1,
+    "output": "tests\\test_oracle9_w1_driver_t5.py:414: error: \"Clock\" has no attribute \"bad\"  [attr-defined]\r\ntests\\test_oracle9_w1_driver_t5.py:497: error: Dict entry 0 has incompatible type \"str\": \"StdinReader | None\"; expected \"str\": \"ParentEnd | ChildEnd | None\"  [dict-item]\r\ntests\\test_oracle9_w1_driver_t5.py:497: error: Dict entry 1 has incompatible type \"str\": \"StdinWriter | None\"; expected \"str\": \"ParentEnd | ChildEnd | None\"  [dict-item]\r\nFound 3 errors in 1 file (checked 1 source file)\r\n"
+  },
+  {
+    "gate": "mypy314",
+    "exit_code": 1,
+    "output": "tests\\test_oracle9_w1_driver_t5.py:414: error: \"Clock\" has no attribute \"bad\"  [attr-defined]\r\ntests\\test_oracle9_w1_driver_t5.py:497: error: Dict entry 0 has incompatible type \"str\": \"StdinReader | None\"; expected \"str\": \"ParentEnd | ChildEnd | None\"  [dict-item]\r\ntests\\test_oracle9_w1_driver_t5.py:497: error: Dict entry 1 has incompatible type \"str\": \"StdinWriter | None\"; expected \"str\": \"ParentEnd | ChildEnd | None\"  [dict-item]\r\nFound 3 errors in 1 file (checked 1 source file)\r\n"
+  }
+]

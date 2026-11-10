@@ -1,0 +1,86 @@
+........................................................................ [ 11%]
+........................................................................ [ 22%]
+........................................................................ [ 33%]
+........................................................................ [ 44%]
+........................................................................ [ 55%]
+........................................................................ [ 66%]
+........................................................................ [ 78%]
+..........................F............................................. [ 89%]
+...............................................................F.....    [100%]
+================================== FAILURES ===================================
+____________________ test_sanity_pinned_collaborators_load ____________________
+
+    def test_sanity_pinned_collaborators_load() -> None:
+        assert callable(pure()["decode_init"])
+        assert callable(pure()["_lab_policy"])
+>       assert callable(driver()["sink_drain"])
+                        ^^^^^^^^
+
+tests\test_oracle9_w1_expect.py:621:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:237: in driver
+    return pinned(DRIVER_FILE, DRIVER_SHA, DRIVER_SIZE)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+path = WindowsPath('C:/Users/w.filho/Desktop/codes/mask/deploy/oracle9_w1_driver.py')
+sha = '39a6890457c3bc9331fc371948fce896cbbc37e2d49f1584a5629490f43d2794'
+size = 36956
+
+    def pinned(path: Path, sha: str, size: int) -> dict[str, Any]:
+        raw = path.read_bytes()
+>       assert len(raw) == size
+E       assert 51913 == 36956
+E        +  where 51913 = len(b'"""W1 Oracle laboratory driver, D1: definitions only over trusted deterministic ports.\n\nDRIVER-DESIGN v3 plus DRIV...ect: keep every reference, no further effect\n        return DriverResult("RETAINED", tuple(driver.verdicts), owner)\n')
+
+tests\test_oracle9_w1_expect.py:225: AssertionError
+______________ test_composition_validate_sink_and_canary_absence ______________
+
+    def test_composition_validate_sink_and_canary_absence() -> None:
+        """Sequential: header rebuilt here, public validate_result, pinned decode/sink."""
+        init = pure()["decode_init"](packet())
+        for job in RESULT_JOBS:
+            data = body(job)
+            record = records(KEY, CANARIES)[job - 1]
+            expected = init.expected[job - 1]
+            assert (record.bytes, record.sha256) == (len(data), hashlib.sha256(data).hexdigest())
+            assert (expected.bytes, expected.sha256) == (record.bytes, record.sha256)
+            for canary in CANARIES:
+                assert canary.encode("ascii") not in data
+            frame = frame_of(job, data)
+            validated = validate_result(
+                frame, expected=identity(job), limits=limits(), deadline=fixed_deadline()
+            )
+            assert (validated.rows, validated.columns, validated.truncated) == (
+                ROWS[job],
+                len(COLUMNS[job]),
+                job == 9,
+            )
+            del frame, validated
+>           sink = drain(data, expected.bytes, expected.sha256)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_expect.py:1105:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_expect.py:449: in drain
+    return driver()["sink_drain"](
+           ^^^^^^^^
+tests\test_oracle9_w1_expect.py:237: in driver
+    return pinned(DRIVER_FILE, DRIVER_SHA, DRIVER_SIZE)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+path = WindowsPath('C:/Users/w.filho/Desktop/codes/mask/deploy/oracle9_w1_driver.py')
+sha = '39a6890457c3bc9331fc371948fce896cbbc37e2d49f1584a5629490f43d2794'
+size = 36956
+
+    def pinned(path: Path, sha: str, size: int) -> dict[str, Any]:
+        raw = path.read_bytes()
+>       assert len(raw) == size
+E       assert 51913 == 36956
+E        +  where 51913 = len(b'"""W1 Oracle laboratory driver, D1: definitions only over trusted deterministic ports.\n\nDRIVER-DESIGN v3 plus DRIV...ect: keep every reference, no further effect\n        return DriverResult("RETAINED", tuple(driver.verdicts), owner)\n')
+
+tests\test_oracle9_w1_expect.py:225: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_oracle9_w1_expect.py::test_sanity_pinned_collaborators_load
+FAILED tests/test_oracle9_w1_expect.py::test_composition_validate_sink_and_canary_absence

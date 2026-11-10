@@ -1,0 +1,27 @@
+{
+  "exit": 1,
+  "suites": [
+    {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "2",
+      "skipped": "0",
+      "tests": "43",
+      "time": "1.374",
+      "timestamp": "2026-11-10T10:29:52.996030-03:00",
+      "hostname": "SMTZDIBDN1954"
+    }
+  ],
+  "failures": [
+    {
+      "name": "test_m5_3_spawn_refuses_after_a_parent_side_end_was_closed[parent]",
+      "type": "failure",
+      "message": "Failed: DID NOT RAISE MainRefusal"
+    },
+    {
+      "name": "test_m5_3_spawn_refuses_after_a_parent_side_end_was_closed[writer]",
+      "type": "failure",
+      "message": "Failed: DID NOT RAISE MainRefusal"
+    }
+  ]
+}

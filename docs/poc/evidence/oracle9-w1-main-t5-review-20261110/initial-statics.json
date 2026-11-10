@@ -1,0 +1,38 @@
+[
+  {
+    "command": [
+      ".venv/Scripts/python.exe",
+      "-m",
+      "ruff",
+      "check",
+      "tests\\test_oracle9_w1_main_t5.py"
+    ],
+    "exit": 1,
+    "output": "ARG001 Unused function argument: `fake`\n   --> tests\\test_oracle9_w1_main_t5.py:268:13\n    |\n268 | def acquire(fake: ProbeOS, root: Any) -> tuple[Any, Any, Any, Any, Any, Any]:\n    |             ^^^^\n269 |     children = ns()[\"ProbeChildren\"](root)\n270 |     parent, child = children.pair()\n    |\n\nFound 1 error.\n"
+  },
+  {
+    "command": [
+      ".venv/Scripts/python.exe",
+      "-m",
+      "ruff",
+      "format",
+      "--check",
+      "tests\\test_oracle9_w1_main_t5.py"
+    ],
+    "exit": 1,
+    "output": "unformatted: File would be reformatted\n   --> tests\\test_oracle9_w1_main_t5.py:272:27\n    |\n271 |     reader, writer = children.stdin()\n    -     proc = children.spawn(\n    -         child, reader, parent_pid=1, address_bytes=WORKER_AS, idle_ms=IDLE_MS\n    -     )\n272 +     proc = children.spawn(child, reader, parent_pid=1, address_bytes=WORKER_AS, idle_ms=IDLE_MS)\n273 |     return children, parent, child, reader, writer, proc\n--------------------------------------------------------------------------------\n380 |     everywhere = [\n    -         node\n    -         for node in ast.walk(tree)\n    -         if isinstance(node, ast.Attribute) and node.attr == \"pipe2\"\n381 +         node for node in ast.walk(tree) if isinstance(node, ast.Attribute) and node.attr == \"pipe2\"\n382 |     ]\n--------------------------------------------------------------------------------\n740 |\n    - @pytest.mark.parametrize(\n    -     \"bad\", [bytes(31), bytes(33), bytearray(32), \"x\" * 32, None], ids=str\n    - )\n741 + @pytest.mark.parametrize(\"bad\", [bytes(31), bytes(33), bytearray(32), \"x\" * 32, None], ids=str)\n742 | def test_m5_7_wrong_nonce_type_or_length_is_closed_refusal(bad: object) -> None:\n    |\n\n1 file would be reformatted\n"
+  },
+  {
+    "command": [
+      ".venv/Scripts/python.exe",
+      "-m",
+      "mypy",
+      "--strict",
+      "--python-version",
+      "3.11",
+      "tests\\test_oracle9_w1_main_t5.py"
+    ],
+    "exit": 1,
+    "output": "tests\\test_oracle9_w1_main_t5.py:240: error: Returning Any from function declared to return \"bytes\"  [no-any-return]\r\ntests\\test_oracle9_w1_main_t5.py:427: error: \"FakeSock\" has no attribute \"inheritable\"  [attr-defined]\r\nFound 2 errors in 1 file (checked 1 source file)\r\n"
+  }
+]

@@ -1,0 +1,3077 @@
+.................................FFFFFFFFFFFFFFFFFF........FFFFFFFFFFFFF [ 48%]
+FFFFFF........FFF..FFFFFFFFFF.FFFFFFFFFFFF.F.......FFF.FFFFFFFFFFFFFFFFF [ 96%]
+FFFFF                                                                    [100%]
+================================== FAILURES ===================================
+_________ test_d1_1_run_load_failure_aborts_after_guard_without_init __________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001EA9DF6FFD0>
+
+    def test_d1_1_run_load_failure_aborts_after_guard_without_init(
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        monkeypatch.delattr(builtins, "maskgw_w1_probe_executed", raising=False)
+        world = World(pure=probe_bytes(PURE_SIZE))
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1088:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9DF6F9D0>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+______ test_d1_2_order_guard_then_pinned_load_then_guard_event_then_init ______
+
+    def test_d1_2_order_guard_then_pinned_load_then_guard_event_then_init() -> None:
+        world = World(eof={(GO, 1)})
+>       world.run()
+
+tests\test_oracle9_w1_driver.py:1106:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9DD2C710>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+______________ test_d1_2_guard_failure_reads_and_writes_nothing _______________
+
+    def test_d1_2_guard_failure_reads_and_writes_nothing() -> None:
+        world = World(guard_fail=True)
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1116:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9D8DE090>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+__________ test_d1_3_full_walk_is_finite_and_never_global_pass[stop] __________
+
+forbidden = [], t4 = 2
+
+    @pytest.mark.parametrize("t4", [STOP, NOSTOP], ids=["stop", "nostop"])
+    def test_d1_3_full_walk_is_finite_and_never_global_pass(forbidden: list[str], t4: int) -> None:
+        world = World(t4=t4)
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1185:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9D955810>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+_________ test_d1_3_full_walk_is_finite_and_never_global_pass[nostop] _________
+
+forbidden = [], t4 = 3
+
+    @pytest.mark.parametrize("t4", [STOP, NOSTOP], ids=["stop", "nostop"])
+    def test_d1_3_full_walk_is_finite_and_never_global_pass(forbidden: list[str], t4: int) -> None:
+        world = World(t4=t4)
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1185:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9D8E4B10>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+______ test_d1_3_sessions_keys_profiles_and_snapshots_are_trusted_values ______
+
+    def test_d1_3_sessions_keys_profiles_and_snapshots_are_trusted_values() -> None:
+        world = World()
+>       world.run()
+
+tests\test_oracle9_w1_driver.py:1209:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9D8CDC90>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+_______ test_d1_14_t3_exempt_and_t6_live_window_then_clean_unkilled_end _______
+
+    def test_d1_14_t3_exempt_and_t6_live_window_then_clean_unkilled_end() -> None:
+        world = World()
+>       world.run()
+
+tests\test_oracle9_w1_driver.py:1236:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9D95DC10>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+______________ test_d1_14_frame_after_t6_armed_is_never_accepted ______________
+
+    def test_d1_14_frame_after_t6_armed_is_never_accepted() -> None:
+        world = World(after_armed=True)
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1249:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9D8E6210>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+_______________ test_d1_17_ledger_values_at_t6_and_g1_draining ________________
+
+    def test_d1_17_ledger_values_at_t6_and_g1_draining() -> None:
+        world = World()
+>       world.run()
+
+tests\test_oracle9_w1_driver.py:1260:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9DD47DD0>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+________ test_d1_5_watcher_wrong_frame_never_stops_and_aborts[seq-47] _________
+
+raw = b'MGL1\x01\x02\x00\x17\x00\x00\x00/\x00\x00\x00\x00'
+
+    @pytest.mark.parametrize(
+        "raw",
+        [
+            pytest.param(frame(STOP, T4, 47), id="seq-47"),
+            pytest.param(frame(STOP, T4, 45), id="replay-45"),
+            pytest.param(frame(STOP, 22, 46), id="case-22"),
+            pytest.param(frame(GO, T4, 46), id="go-kind"),
+            pytest.param(b"\x00" * 16, id="malformed"),
+        ],
+    )
+    def test_d1_5_watcher_wrong_frame_never_stops_and_aborts(raw: bytes) -> None:
+        world = World(frames={(STOP, T4): raw})
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1283:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9DD78F10>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+_______ test_d1_5_watcher_wrong_frame_never_stops_and_aborts[replay-45] _______
+
+raw = b'MGL1\x01\x02\x00\x17\x00\x00\x00-\x00\x00\x00\x00'
+
+    @pytest.mark.parametrize(
+        "raw",
+        [
+            pytest.param(frame(STOP, T4, 47), id="seq-47"),
+            pytest.param(frame(STOP, T4, 45), id="replay-45"),
+            pytest.param(frame(STOP, 22, 46), id="case-22"),
+            pytest.param(frame(GO, T4, 46), id="go-kind"),
+            pytest.param(b"\x00" * 16, id="malformed"),
+        ],
+    )
+    def test_d1_5_watcher_wrong_frame_never_stops_and_aborts(raw: bytes) -> None:
+        world = World(frames={(STOP, T4): raw})
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1283:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9D92BE10>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+________ test_d1_5_watcher_wrong_frame_never_stops_and_aborts[case-22] ________
+
+raw = b'MGL1\x01\x02\x00\x16\x00\x00\x00.\x00\x00\x00\x00'
+
+    @pytest.mark.parametrize(
+        "raw",
+        [
+            pytest.param(frame(STOP, T4, 47), id="seq-47"),
+            pytest.param(frame(STOP, T4, 45), id="replay-45"),
+            pytest.param(frame(STOP, 22, 46), id="case-22"),
+            pytest.param(frame(GO, T4, 46), id="go-kind"),
+            pytest.param(b"\x00" * 16, id="malformed"),
+        ],
+    )
+    def test_d1_5_watcher_wrong_frame_never_stops_and_aborts(raw: bytes) -> None:
+        world = World(frames={(STOP, T4): raw})
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1283:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9D9003D0>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+________ test_d1_5_watcher_wrong_frame_never_stops_and_aborts[go-kind] ________
+
+raw = b'MGL1\x01\x01\x00\x17\x00\x00\x00.\x00\x00\x00\x00'
+
+    @pytest.mark.parametrize(
+        "raw",
+        [
+            pytest.param(frame(STOP, T4, 47), id="seq-47"),
+            pytest.param(frame(STOP, T4, 45), id="replay-45"),
+            pytest.param(frame(STOP, 22, 46), id="case-22"),
+            pytest.param(frame(GO, T4, 46), id="go-kind"),
+            pytest.param(b"\x00" * 16, id="malformed"),
+        ],
+    )
+    def test_d1_5_watcher_wrong_frame_never_stops_and_aborts(raw: bytes) -> None:
+        world = World(frames={(STOP, T4): raw})
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1283:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9E082650>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+_______ test_d1_5_watcher_wrong_frame_never_stops_and_aborts[malformed] _______
+
+raw = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+
+    @pytest.mark.parametrize(
+        "raw",
+        [
+            pytest.param(frame(STOP, T4, 47), id="seq-47"),
+            pytest.param(frame(STOP, T4, 45), id="replay-45"),
+            pytest.param(frame(STOP, 22, 46), id="case-22"),
+            pytest.param(frame(GO, T4, 46), id="go-kind"),
+            pytest.param(b"\x00" * 16, id="malformed"),
+        ],
+    )
+    def test_d1_5_watcher_wrong_frame_never_stops_and_aborts(raw: bytes) -> None:
+        world = World(frames={(STOP, T4): raw})
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1283:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9D957B10>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+________________ test_d1_5_late_stop_is_fail_and_run_continues ________________
+
+    def test_d1_5_late_stop_is_fail_and_run_continues() -> None:
+        world = World(t4_timing="join")
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1293:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9E06AD10>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+_____ test_d1_5_watcher_registered_before_start_and_armed_published_after _____
+
+    def test_d1_5_watcher_registered_before_start_and_armed_published_after() -> None:
+        world = World()
+>       world.run()
+
+tests\test_oracle9_w1_driver.py:1304:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9DD2B4D0>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+_________ test_d1_6_watcher_join_failure_retains_owner_without_commit _________
+
+    def test_d1_6_watcher_join_failure_retains_owner_without_commit() -> None:
+        world = World(join_fail="watcher")
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1314:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9DE59910>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+_______ test_d1_9_watcher_start_failure_retains_handle_and_skips_query ________
+
+    def test_d1_9_watcher_start_failure_retains_handle_and_skips_query() -> None:
+        world = World(start_fail="watcher")
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1336:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9DD05E50>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+________ test_d1_8_body_mismatch_aborts_without_next_query_after_join _________
+
+    def test_d1_8_body_mismatch_aborts_without_next_query_after_join() -> None:
+        world = World(corrupt_job=2)
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1402:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9DE28E50>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+_________ test_d1_8_summary_mismatch_aborts_after_verified_join[rows] _________
+
+override = (4, False)
+
+    @pytest.mark.parametrize(
+        "override",
+        [pytest.param((4, False), id="rows"), pytest.param((3, True), id="truncated")],
+    )
+    def test_d1_8_summary_mismatch_aborts_after_verified_join(override: tuple[int, bool]) -> None:
+        world = World(summary_override={2: override})
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1423:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9DD55090>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+______ test_d1_8_summary_mismatch_aborts_after_verified_join[truncated] _______
+
+override = (3, True)
+
+    @pytest.mark.parametrize(
+        "override",
+        [pytest.param((4, False), id="rows"), pytest.param((3, True), id="truncated")],
+    )
+    def test_d1_8_summary_mismatch_aborts_after_verified_join(override: tuple[int, bool]) -> None:
+        world = World(summary_override={2: override})
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1423:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9D8CDC90>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+_ test_d1_8_unexpected_error_reply_aborts_without_next_query[wrong-category] __
+
+reply = (<WireFailure.QUERY: 1>, True), release = 'RELEASED'
+
+    @pytest.mark.parametrize(
+        ("reply", "release"),
+        [
+            pytest.param((WireFailure.QUERY, True), "RELEASED", id="wrong-category"),
+            pytest.param((WireFailure.LIMIT, False), "ALREADY_RELEASED", id="fatal-reply"),
+        ],
+    )
+    def test_d1_8_unexpected_error_reply_aborts_without_next_query(
+        reply: tuple[WireFailure, bool], release: str
+    ) -> None:
+        world = World(error_override={11: reply})
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1448:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9E1B5950>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+___ test_d1_8_unexpected_error_reply_aborts_without_next_query[fatal-reply] ___
+
+reply = (<WireFailure.LIMIT: 4>, False), release = 'ALREADY_RELEASED'
+
+    @pytest.mark.parametrize(
+        ("reply", "release"),
+        [
+            pytest.param((WireFailure.QUERY, True), "RELEASED", id="wrong-category"),
+            pytest.param((WireFailure.LIMIT, False), "ALREADY_RELEASED", id="fatal-reply"),
+        ],
+    )
+    def test_d1_8_unexpected_error_reply_aborts_without_next_query(
+        reply: tuple[WireFailure, bool], release: str
+    ) -> None:
+        world = World(error_override={11: reply})
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1448:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9E082B90>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+______________ test_d1_8_late_send_is_stopped_by_composed_window ______________
+
+    def test_d1_8_late_send_is_stopped_by_composed_window() -> None:
+        world = World(late_send_job=1)
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1465:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9D88BB50>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+__________ test_d1_8_sink_join_failure_retains_endpoints_and_session __________
+
+    def test_d1_8_sink_join_failure_retains_endpoints_and_session() -> None:
+        world = World(join_fail="sink")
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1475:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9DE14E50>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+_________ test_d1_9_sink_start_failure_retains_handle_before_any_send _________
+
+    def test_d1_9_sink_start_failure_retains_handle_before_any_send() -> None:
+        world = World(start_fail="sink")
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1488:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9DE0FA90>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+________ test_d1_9_sink_partial_start_exception_retains_started_handle ________
+
+    def test_d1_9_sink_partial_start_exception_retains_started_handle() -> None:
+        world = World(start_raise="sink")
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1497:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9E058710>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+______ test_d1_9_watcher_partial_start_exception_retains_started_handle _______
+
+    def test_d1_9_watcher_partial_start_exception_retains_started_handle() -> None:
+        world = World(start_raise="watcher")
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1511:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9DE38790>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+_____________ test_d1_10_pair_creation_unknown_effect_is_retained _____________
+
+    def test_d1_10_pair_creation_unknown_effect_is_retained() -> None:
+        world = World(pair_fail=1)
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1526:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9DF77990>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+___________ test_d1_11_factory_failure_retains_token_without_close ____________
+
+    def test_d1_11_factory_failure_retains_token_without_close() -> None:
+        world = World(create_fail=(0,))
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1542:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9D8CBED0>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+______ test_d1_11_open_failure_before_adoption_retains_and_never_closes _______
+
+    def test_d1_11_open_failure_before_adoption_retains_and_never_closes() -> None:
+        world = World(open_mode={0: "new"})
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1555:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9D95EF10>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+_ test_d1_11_open_failure_after_adoption_uses_one_session_close[second-cleanup-released] _
+
+close_held = (), outcome = 'ABORTED'
+
+    @pytest.mark.parametrize(
+        ("close_held", "outcome"),
+        [((), "ABORTED"), ((0,), "RETAINED")],
+        ids=["second-cleanup-released", "still-held"],
+    )
+    def test_d1_11_open_failure_after_adoption_uses_one_session_close(
+        close_held: tuple[int, ...], outcome: str
+    ) -> None:
+        world = World(open_mode={0: "held"}, close_held=close_held)
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1572:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9E0E4410>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+__ test_d1_11_open_failure_after_adoption_uses_one_session_close[still-held] __
+
+close_held = (0,), outcome = 'RETAINED'
+
+    @pytest.mark.parametrize(
+        ("close_held", "outcome"),
+        [((), "ABORTED"), ((0,), "RETAINED")],
+        ids=["second-cleanup-released", "still-held"],
+    )
+    def test_d1_11_open_failure_after_adoption_uses_one_session_close(
+        close_held: tuple[int, ...], outcome: str
+    ) -> None:
+        world = World(open_mode={0: "held"}, close_held=close_held)
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1572:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9E124B90>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+___________ test_d1_12_held_close_retains_and_reserves_nothing_more ___________
+
+    def test_d1_12_held_close_retains_and_reserves_nothing_more() -> None:
+        world = World(close_held=(0,))
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1580:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9D8B65D0>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+__________ test_d1_12_duplicate_session_id_is_refused_before_factory __________
+
+    def test_d1_12_duplicate_session_id_is_refused_before_factory() -> None:
+        world = World(duplicate_id=True)
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1592:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9E0D3FD0>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+___________ test_d1_13_ack_then_go_never_reset_the_aggregate_window ___________
+
+    def test_d1_13_ack_then_go_never_reset_the_aggregate_window() -> None:
+        world = World(ack_delay={1: 15.0}, go_delay={2: 15.0})
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1603:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9DEADFD0>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+_____________ test_d1_15_ledger_lock_never_held_across_port_calls _____________
+
+    def test_d1_15_ledger_lock_never_held_across_port_calls() -> None:
+        world = World()
+>       world.run()
+
+tests\test_oracle9_w1_driver.py:1621:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9E05AF90>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+___ test_d1_18_machine_refusal_aborts_cleans_session_and_reads_nothing_more ___
+
+    def test_d1_18_machine_refusal_aborts_cleans_session_and_reads_nothing_more() -> None:
+        world = World(frames={(GO, 1): frame(GO, 1, 2)})
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1682:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9E0ABD50>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+______________ test_d1_18_host_eof_aborts_without_further_query _______________
+
+    def test_d1_18_host_eof_aborts_without_further_query() -> None:
+        world = World(eof={(GO, 3)})
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1696:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9E174C50>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+_______________ test_d1_18_driver_result_is_frozen_and_redacted _______________
+
+    def test_d1_18_driver_result_is_frozen_and_redacted() -> None:
+        world = World(eof={(GO, 1)})
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1705:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9E0AAE50>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+___ test_r1_init_returned_after_deadline_aborts_before_factory[at-deadline] ___
+
+late = 0.0
+
+    @pytest.mark.parametrize("late", LATE)
+    def test_r1_init_returned_after_deadline_aborts_before_factory(late: float) -> None:
+        world = World(init_late=late)
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1749:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9DE8D950>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+__ test_r1_init_returned_after_deadline_aborts_before_factory[past-deadline] __
+
+late = 0.5
+
+    @pytest.mark.parametrize("late", LATE)
+    def test_r1_init_returned_after_deadline_aborts_before_factory(late: float) -> None:
+        world = World(init_late=late)
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1749:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9DD547D0>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+_ test_r1_first_go_returned_after_deadline_aborts_without_query[at-deadline] __
+
+late = 0.0
+
+    @pytest.mark.parametrize("late", LATE)
+    def test_r1_first_go_returned_after_deadline_aborts_without_query(late: float) -> None:
+        world = World(late_frames={frame(GO, 1, 1): late})
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1766:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9DD46D10>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+_ test_r1_first_go_returned_after_deadline_aborts_without_query[past-deadline] _
+
+late = 0.5
+
+    @pytest.mark.parametrize("late", LATE)
+    def test_r1_first_go_returned_after_deadline_aborts_without_query(late: float) -> None:
+        world = World(late_frames={frame(GO, 1, 1): late})
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1766:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9DD54C90>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+_ test_r1_watcher_stop_returned_after_deadline_never_stops_or_passes[at-deadline] _
+
+late = 0.0
+
+    @pytest.mark.parametrize("late", LATE)
+    def test_r1_watcher_stop_returned_after_deadline_never_stops_or_passes(late: float) -> None:
+        world = World(late_frames={frame(STOP, T4, 46): late})
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1784:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9E0D0AD0>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+_ test_r1_watcher_stop_returned_after_deadline_never_stops_or_passes[past-deadline] _
+
+late = 0.5
+
+    @pytest.mark.parametrize("late", LATE)
+    def test_r1_watcher_stop_returned_after_deadline_never_stops_or_passes(late: float) -> None:
+        world = World(late_frames={frame(STOP, T4, 46): late})
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1784:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9DD22050>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+___ test_r1_positive_join_after_budget_publishes_no_pass[sink-at-deadline] ____
+
+late = 0.0, name = 'sink', case = 1, queries = [0]
+
+    @pytest.mark.parametrize("late", LATE)
+    @pytest.mark.parametrize(
+        ("name", "case", "queries"),
+        [
+            pytest.param("sink", 1, [0], id="sink"),
+            pytest.param("watcher", T4, [0] * 19 + [1, 2, 3, 4], id="watcher"),
+        ],
+    )
+    def test_r1_positive_join_after_budget_publishes_no_pass(
+        late: float, name: str, case: int, queries: list[int]
+    ) -> None:
+        world = World(late_join={name: late})
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1809:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9DE39AD0>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+__ test_r1_positive_join_after_budget_publishes_no_pass[sink-past-deadline] ___
+
+late = 0.5, name = 'sink', case = 1, queries = [0]
+
+    @pytest.mark.parametrize("late", LATE)
+    @pytest.mark.parametrize(
+        ("name", "case", "queries"),
+        [
+            pytest.param("sink", 1, [0], id="sink"),
+            pytest.param("watcher", T4, [0] * 19 + [1, 2, 3, 4], id="watcher"),
+        ],
+    )
+    def test_r1_positive_join_after_budget_publishes_no_pass(
+        late: float, name: str, case: int, queries: list[int]
+    ) -> None:
+        world = World(late_join={name: late})
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1809:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9DF74ED0>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+__ test_r1_positive_join_after_budget_publishes_no_pass[watcher-at-deadline] __
+
+late = 0.0, name = 'watcher', case = 23, queries = [0, 0, 0, 0, 0, 0, ...]
+
+    @pytest.mark.parametrize("late", LATE)
+    @pytest.mark.parametrize(
+        ("name", "case", "queries"),
+        [
+            pytest.param("sink", 1, [0], id="sink"),
+            pytest.param("watcher", T4, [0] * 19 + [1, 2, 3, 4], id="watcher"),
+        ],
+    )
+    def test_r1_positive_join_after_budget_publishes_no_pass(
+        late: float, name: str, case: int, queries: list[int]
+    ) -> None:
+        world = World(late_join={name: late})
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1809:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9E044350>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+_ test_r1_positive_join_after_budget_publishes_no_pass[watcher-past-deadline] _
+
+late = 0.5, name = 'watcher', case = 23, queries = [0, 0, 0, 0, 0, 0, ...]
+
+    @pytest.mark.parametrize("late", LATE)
+    @pytest.mark.parametrize(
+        ("name", "case", "queries"),
+        [
+            pytest.param("sink", 1, [0], id="sink"),
+            pytest.param("watcher", T4, [0] * 19 + [1, 2, 3, 4], id="watcher"),
+        ],
+    )
+    def test_r1_positive_join_after_budget_publishes_no_pass(
+        late: float, name: str, case: int, queries: list[int]
+    ) -> None:
+        world = World(late_join={name: late})
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1809:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9E17A050>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+___ test_r2_inexact_summary_types_abort_before_result_metadata[rows-float] ____
+
+init = b'MGI1\x00\x00\n1{"expected":[{"bytes":69,"job":1,"kind":"RESULT","reason":null,"rows":3,"sha256":"bcefc6700fbd13ee572...23456789abcdef","target":{"database":"maskgw_lab","ip":"10.0.0.7","port":5432,"username":"maskgw_reader"},"version":1}'
+override = (3.0, False)
+
+    @pytest.mark.parametrize(
+        ("init", "override"),
+        [
+            pytest.param(PACKET, (3.0, False), id="rows-float"),
+            pytest.param(packet_with_rows(2, 1), (True, False), id="rows-bool-equal-one"),
+            pytest.param(PACKET, (3, 0), id="truncated-int-zero"),
+        ],
+    )
+    def test_r2_inexact_summary_types_abort_before_result_metadata(
+        init: bytes, override: tuple[object, object]
+    ) -> None:
+        world = World(init=init, summary_override={2: override})
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1866:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9E041090>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+_ test_r2_inexact_summary_types_abort_before_result_metadata[rows-bool-equal-one] _
+
+init = b'MGI1\x00\x00\n1{"expected":[{"bytes":69,"job":1,"kind":"RESULT","reason":null,"rows":3,"sha256":"bcefc6700fbd13ee572...23456789abcdef","target":{"database":"maskgw_lab","ip":"10.0.0.7","port":5432,"username":"maskgw_reader"},"version":1}'
+override = (True, False)
+
+    @pytest.mark.parametrize(
+        ("init", "override"),
+        [
+            pytest.param(PACKET, (3.0, False), id="rows-float"),
+            pytest.param(packet_with_rows(2, 1), (True, False), id="rows-bool-equal-one"),
+            pytest.param(PACKET, (3, 0), id="truncated-int-zero"),
+        ],
+    )
+    def test_r2_inexact_summary_types_abort_before_result_metadata(
+        init: bytes, override: tuple[object, object]
+    ) -> None:
+        world = World(init=init, summary_override={2: override})
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1866:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9DED8850>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+_ test_r2_inexact_summary_types_abort_before_result_metadata[truncated-int-zero] _
+
+init = b'MGI1\x00\x00\n1{"expected":[{"bytes":69,"job":1,"kind":"RESULT","reason":null,"rows":3,"sha256":"bcefc6700fbd13ee572...23456789abcdef","target":{"database":"maskgw_lab","ip":"10.0.0.7","port":5432,"username":"maskgw_reader"},"version":1}'
+override = (3, 0)
+
+    @pytest.mark.parametrize(
+        ("init", "override"),
+        [
+            pytest.param(PACKET, (3.0, False), id="rows-float"),
+            pytest.param(packet_with_rows(2, 1), (True, False), id="rows-bool-equal-one"),
+            pytest.param(PACKET, (3, 0), id="truncated-int-zero"),
+        ],
+    )
+    def test_r2_inexact_summary_types_abort_before_result_metadata(
+        init: bytes, override: tuple[object, object]
+    ) -> None:
+        world = World(init=init, summary_override={2: override})
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1866:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9DD2C8D0>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+______________ test_r2_exact_int_row_one_control_passes_job_two _______________
+
+    def test_r2_exact_int_row_one_control_passes_job_two() -> None:
+        world = World(init=packet_with_rows(2, 1), summary_override={2: (1, False)}, eof={(GO, 3)})
+>       world.run()
+
+tests\test_oracle9_w1_driver.py:1879:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9D942790>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+_ test_r3_guard_facts_outside_controller_profile_fail_before_any_read[role-worker] _
+
+facts = GuardFacts(<local bootstrap>)
+
+    @pytest.mark.parametrize(
+        "facts",
+        [
+            pytest.param(guard_facts(role=ProcessRole.WORKER), id="role-worker"),
+            pytest.param(guard_facts(pid=True), id="pid-bool"),
+            pytest.param(guard_facts(pid=2), id="pid-two"),
+            pytest.param(guard_facts(address_limit_bytes=256 * MIB), id="address-256"),
+            pytest.param(guard_facts(dumpable=1), id="dumpable-one"),
+            pytest.param(guard_facts(core=(0, 1)), id="core-nonzero"),
+            pytest.param(guard_facts(parent_death_signal=9), id="pdeathsig-nine"),
+            pytest.param(
+                guard_facts(role=ProcessRole.WORKER, pid=True, dumpable=1), id="worker-pidbool-dump"
+            ),
+        ],
+    )
+    def test_r3_guard_facts_outside_controller_profile_fail_before_any_read(
+        facts: GuardFacts,
+    ) -> None:
+        world = World(facts=facts)
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1922:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9DD2E590>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+_ test_r3_guard_facts_outside_controller_profile_fail_before_any_read[pid-bool] _
+
+facts = GuardFacts(<local bootstrap>)
+
+    @pytest.mark.parametrize(
+        "facts",
+        [
+            pytest.param(guard_facts(role=ProcessRole.WORKER), id="role-worker"),
+            pytest.param(guard_facts(pid=True), id="pid-bool"),
+            pytest.param(guard_facts(pid=2), id="pid-two"),
+            pytest.param(guard_facts(address_limit_bytes=256 * MIB), id="address-256"),
+            pytest.param(guard_facts(dumpable=1), id="dumpable-one"),
+            pytest.param(guard_facts(core=(0, 1)), id="core-nonzero"),
+            pytest.param(guard_facts(parent_death_signal=9), id="pdeathsig-nine"),
+            pytest.param(
+                guard_facts(role=ProcessRole.WORKER, pid=True, dumpable=1), id="worker-pidbool-dump"
+            ),
+        ],
+    )
+    def test_r3_guard_facts_outside_controller_profile_fail_before_any_read(
+        facts: GuardFacts,
+    ) -> None:
+        world = World(facts=facts)
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1922:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9DF4A250>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+_ test_r3_guard_facts_outside_controller_profile_fail_before_any_read[pid-two] _
+
+facts = GuardFacts(<local bootstrap>)
+
+    @pytest.mark.parametrize(
+        "facts",
+        [
+            pytest.param(guard_facts(role=ProcessRole.WORKER), id="role-worker"),
+            pytest.param(guard_facts(pid=True), id="pid-bool"),
+            pytest.param(guard_facts(pid=2), id="pid-two"),
+            pytest.param(guard_facts(address_limit_bytes=256 * MIB), id="address-256"),
+            pytest.param(guard_facts(dumpable=1), id="dumpable-one"),
+            pytest.param(guard_facts(core=(0, 1)), id="core-nonzero"),
+            pytest.param(guard_facts(parent_death_signal=9), id="pdeathsig-nine"),
+            pytest.param(
+                guard_facts(role=ProcessRole.WORKER, pid=True, dumpable=1), id="worker-pidbool-dump"
+            ),
+        ],
+    )
+    def test_r3_guard_facts_outside_controller_profile_fail_before_any_read(
+        facts: GuardFacts,
+    ) -> None:
+        world = World(facts=facts)
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1922:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9DD78F90>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+_ test_r3_guard_facts_outside_controller_profile_fail_before_any_read[address-256] _
+
+facts = GuardFacts(<local bootstrap>)
+
+    @pytest.mark.parametrize(
+        "facts",
+        [
+            pytest.param(guard_facts(role=ProcessRole.WORKER), id="role-worker"),
+            pytest.param(guard_facts(pid=True), id="pid-bool"),
+            pytest.param(guard_facts(pid=2), id="pid-two"),
+            pytest.param(guard_facts(address_limit_bytes=256 * MIB), id="address-256"),
+            pytest.param(guard_facts(dumpable=1), id="dumpable-one"),
+            pytest.param(guard_facts(core=(0, 1)), id="core-nonzero"),
+            pytest.param(guard_facts(parent_death_signal=9), id="pdeathsig-nine"),
+            pytest.param(
+                guard_facts(role=ProcessRole.WORKER, pid=True, dumpable=1), id="worker-pidbool-dump"
+            ),
+        ],
+    )
+    def test_r3_guard_facts_outside_controller_profile_fail_before_any_read(
+        facts: GuardFacts,
+    ) -> None:
+        world = World(facts=facts)
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1922:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9D884F50>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+_ test_r3_guard_facts_outside_controller_profile_fail_before_any_read[dumpable-one] _
+
+facts = GuardFacts(<local bootstrap>)
+
+    @pytest.mark.parametrize(
+        "facts",
+        [
+            pytest.param(guard_facts(role=ProcessRole.WORKER), id="role-worker"),
+            pytest.param(guard_facts(pid=True), id="pid-bool"),
+            pytest.param(guard_facts(pid=2), id="pid-two"),
+            pytest.param(guard_facts(address_limit_bytes=256 * MIB), id="address-256"),
+            pytest.param(guard_facts(dumpable=1), id="dumpable-one"),
+            pytest.param(guard_facts(core=(0, 1)), id="core-nonzero"),
+            pytest.param(guard_facts(parent_death_signal=9), id="pdeathsig-nine"),
+            pytest.param(
+                guard_facts(role=ProcessRole.WORKER, pid=True, dumpable=1), id="worker-pidbool-dump"
+            ),
+        ],
+    )
+    def test_r3_guard_facts_outside_controller_profile_fail_before_any_read(
+        facts: GuardFacts,
+    ) -> None:
+        world = World(facts=facts)
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1922:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9DD7A550>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+_ test_r3_guard_facts_outside_controller_profile_fail_before_any_read[core-nonzero] _
+
+facts = GuardFacts(<local bootstrap>)
+
+    @pytest.mark.parametrize(
+        "facts",
+        [
+            pytest.param(guard_facts(role=ProcessRole.WORKER), id="role-worker"),
+            pytest.param(guard_facts(pid=True), id="pid-bool"),
+            pytest.param(guard_facts(pid=2), id="pid-two"),
+            pytest.param(guard_facts(address_limit_bytes=256 * MIB), id="address-256"),
+            pytest.param(guard_facts(dumpable=1), id="dumpable-one"),
+            pytest.param(guard_facts(core=(0, 1)), id="core-nonzero"),
+            pytest.param(guard_facts(parent_death_signal=9), id="pdeathsig-nine"),
+            pytest.param(
+                guard_facts(role=ProcessRole.WORKER, pid=True, dumpable=1), id="worker-pidbool-dump"
+            ),
+        ],
+    )
+    def test_r3_guard_facts_outside_controller_profile_fail_before_any_read(
+        facts: GuardFacts,
+    ) -> None:
+        world = World(facts=facts)
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1922:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9D93B750>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+_ test_r3_guard_facts_outside_controller_profile_fail_before_any_read[pdeathsig-nine] _
+
+facts = GuardFacts(<local bootstrap>)
+
+    @pytest.mark.parametrize(
+        "facts",
+        [
+            pytest.param(guard_facts(role=ProcessRole.WORKER), id="role-worker"),
+            pytest.param(guard_facts(pid=True), id="pid-bool"),
+            pytest.param(guard_facts(pid=2), id="pid-two"),
+            pytest.param(guard_facts(address_limit_bytes=256 * MIB), id="address-256"),
+            pytest.param(guard_facts(dumpable=1), id="dumpable-one"),
+            pytest.param(guard_facts(core=(0, 1)), id="core-nonzero"),
+            pytest.param(guard_facts(parent_death_signal=9), id="pdeathsig-nine"),
+            pytest.param(
+                guard_facts(role=ProcessRole.WORKER, pid=True, dumpable=1), id="worker-pidbool-dump"
+            ),
+        ],
+    )
+    def test_r3_guard_facts_outside_controller_profile_fail_before_any_read(
+        facts: GuardFacts,
+    ) -> None:
+        world = World(facts=facts)
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1922:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9DFB2D90>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+_ test_r3_guard_facts_outside_controller_profile_fail_before_any_read[worker-pidbool-dump] _
+
+facts = GuardFacts(<local bootstrap>)
+
+    @pytest.mark.parametrize(
+        "facts",
+        [
+            pytest.param(guard_facts(role=ProcessRole.WORKER), id="role-worker"),
+            pytest.param(guard_facts(pid=True), id="pid-bool"),
+            pytest.param(guard_facts(pid=2), id="pid-two"),
+            pytest.param(guard_facts(address_limit_bytes=256 * MIB), id="address-256"),
+            pytest.param(guard_facts(dumpable=1), id="dumpable-one"),
+            pytest.param(guard_facts(core=(0, 1)), id="core-nonzero"),
+            pytest.param(guard_facts(parent_death_signal=9), id="pdeathsig-nine"),
+            pytest.param(
+                guard_facts(role=ProcessRole.WORKER, pid=True, dumpable=1), id="worker-pidbool-dump"
+            ),
+        ],
+    )
+    def test_r3_guard_facts_outside_controller_profile_fail_before_any_read(
+        facts: GuardFacts,
+    ) -> None:
+        world = World(facts=facts)
+>       result = world.run()
+                 ^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver.py:1922:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <tests.test_oracle9_w1_driver.World object at 0x000001EA9E07F950>
+
+    def run(self) -> Any:
+        module = driver()
+>       ports = module["Ports"](
+            reader=PureReader(self),
+            guard=Guard(self),
+            clock=self.clock,
+            link=self.link,
+            ids=Ids(self),
+            factory=Factory(self),
+            pair=Pair(self),
+            threads=Threads(self),
+        )
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver.py:821: TypeError
+______ test_sanity_port_trap_records_clock_and_link_reads_without_driver ______
+
+    def test_sanity_port_trap_records_clock_and_link_reads_without_driver():
+        operations: list[tuple[str, str]] = []
+>       ports = trap_ports(operations)
+                ^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_session.py:803:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operations = []
+
+    def trap_ports(operations: list[tuple[str, str]]) -> Any:
+>       return d1.driver()["Ports"](**{name: PortTrap(name, operations) for name in PORT_NAMES})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver_session.py:693: TypeError
+_________ test_i1_6_driver_runs_two_real_sdk_results_then_eof_on_go3 __________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001EA9DD06AD0>
+
+    def test_i1_6_driver_runs_two_real_sdk_results_then_eof_on_go3(monkeypatch):
+        packet = lab_packet()
+        world = d1.World(eof={(d1.GO, 3)}, init=packet)
+        hub = install(monkeypatch, world.clock, ("ok",))
+        factory, pair = RecordingFactory(hub), RawPair(world)
+>       result = d1.driver()["run"](ports_for(world, factory=factory, pair=pair))
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_session.py:954:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+world = <tests.test_oracle9_w1_driver.World object at 0x000001EA9DE16450>
+overrides = {'factory': <tests.test_oracle9_w1_driver_session.RecordingFactory object at 0x000001EA9D910C90>, 'pair': <tests.test_oracle9_w1_driver_session.RawPair object at 0x000001EA9DD06C90>}
+
+    def ports_for(world: d1.World, **overrides: Any) -> Any:
+        ports: dict[str, Any] = {
+            "reader": d1.PureReader(world),
+            "guard": d1.Guard(world),
+            "clock": world.clock,
+            "link": world.link,
+            "ids": d1.Ids(world),
+            "factory": d1.Factory(world),
+            "pair": d1.Pair(world),
+            "threads": d1.Threads(world),
+        }
+        assert set(overrides) <= set(ports)
+        ports.update(overrides)
+>       return d1.driver()["Ports"](**ports)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver_session.py:644: TypeError
+________ test_i1_7_control_inside_sdk_becomes_a_closed_session_failure ________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001EA9DEDB990>
+
+    def test_i1_7_control_inside_sdk_becomes_a_closed_session_failure(monkeypatch):
+        world = d1.World(init=lab_packet())
+        hub = install(monkeypatch, world.clock, ("interrupt",))
+        factory, pair = RecordingFactory(hub), RawPair(world)
+        escaped: list[BaseException] = []
+        result: Any = None
+        try:
+>           result = d1.driver()["run"](ports_for(world, factory=factory, pair=pair))
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_session.py:1035:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+world = <tests.test_oracle9_w1_driver.World object at 0x000001EA9D906410>
+overrides = {'factory': <tests.test_oracle9_w1_driver_session.RecordingFactory object at 0x000001EA9D955650>, 'pair': <tests.test_oracle9_w1_driver_session.RawPair object at 0x000001EA9D957CD0>}
+
+    def ports_for(world: d1.World, **overrides: Any) -> Any:
+        ports: dict[str, Any] = {
+            "reader": d1.PureReader(world),
+            "guard": d1.Guard(world),
+            "clock": world.clock,
+            "link": world.link,
+            "ids": d1.Ids(world),
+            "factory": d1.Factory(world),
+            "pair": d1.Pair(world),
+            "threads": d1.Threads(world),
+        }
+        assert set(overrides) <= set(ports)
+        ports.update(overrides)
+>       return d1.driver()["Ports"](**ports)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver_session.py:644: TypeError
+_______________ test_s1_default_path_without_owner_is_unchanged _______________
+
+    def test_s1_default_path_without_owner_is_unchanged():
+        world = d1.World(eof={(d1.GO, 1)})
+>       result = d1.driver()["run"](ports_for(world))
+                                    ^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_session.py:1070:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+world = <tests.test_oracle9_w1_driver.World object at 0x000001EA9DF6F950>
+overrides = {}
+
+    def ports_for(world: d1.World, **overrides: Any) -> Any:
+        ports: dict[str, Any] = {
+            "reader": d1.PureReader(world),
+            "guard": d1.Guard(world),
+            "clock": world.clock,
+            "link": world.link,
+            "ids": d1.Ids(world),
+            "factory": d1.Factory(world),
+            "pair": d1.Pair(world),
+            "threads": d1.Threads(world),
+        }
+        assert set(overrides) <= set(ports)
+        ports.update(overrides)
+>       return d1.driver()["Ports"](**ports)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver_session.py:644: TypeError
+_____________ test_s2_supplied_owner_is_the_exact_retained_owner ______________
+
+    def test_s2_supplied_owner_is_the_exact_retained_owner():
+        module = d1.driver()
+        owner = module["Owner"]()
+        world = d1.World(start_fail="sink")
+        guard = LatchGuard(world, owner)
+>       result = module["run"](ports_for(world, guard=guard), owner=owner)
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_session.py:1096:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+world = <tests.test_oracle9_w1_driver.World object at 0x000001EA9D95E150>
+overrides = {'guard': <tests.test_oracle9_w1_driver_session.LatchGuard object at 0x000001EA9D95E650>}
+
+    def ports_for(world: d1.World, **overrides: Any) -> Any:
+        ports: dict[str, Any] = {
+            "reader": d1.PureReader(world),
+            "guard": d1.Guard(world),
+            "clock": world.clock,
+            "link": world.link,
+            "ids": d1.Ids(world),
+            "factory": d1.Factory(world),
+            "pair": d1.Pair(world),
+            "threads": d1.Threads(world),
+        }
+        assert set(overrides) <= set(ports)
+        ports.update(overrides)
+>       return d1.driver()["Ports"](**ports)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver_session.py:644: TypeError
+_______________ test_s3_reused_owner_is_refused_before_any_port _______________
+
+    def test_s3_reused_owner_is_refused_before_any_port():
+        module = d1.driver()
+        owner = module["Owner"]()
+        first = d1.World(eof={(d1.GO, 1)})
+>       result = module["run"](ports_for(first), owner=owner)
+                               ^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_session.py:1111:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+world = <tests.test_oracle9_w1_driver.World object at 0x000001EA9DF9A610>
+overrides = {}
+
+    def ports_for(world: d1.World, **overrides: Any) -> Any:
+        ports: dict[str, Any] = {
+            "reader": d1.PureReader(world),
+            "guard": d1.Guard(world),
+            "clock": world.clock,
+            "link": world.link,
+            "ids": d1.Ids(world),
+            "factory": d1.Factory(world),
+            "pair": d1.Pair(world),
+            "threads": d1.Threads(world),
+        }
+        assert set(overrides) <= set(ports)
+        ports.update(overrides)
+>       return d1.driver()["Ports"](**ports)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver_session.py:644: TypeError
+____________ test_s4_foreign_owner_is_refused_before_guard[object] ____________
+
+kind = 'object'
+
+    @pytest.mark.parametrize("kind", ["object", "subclass", "namespace"])
+    def test_s4_foreign_owner_is_refused_before_guard(kind):
+>       assert_owner_refused(d1.World(), foreign_owner(kind))
+
+tests\test_oracle9_w1_driver_session.py:1132:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_driver_session.py:699: in assert_owner_refused
+    ports = trap_ports(operations)
+            ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operations = []
+
+    def trap_ports(operations: list[tuple[str, str]]) -> Any:
+>       return d1.driver()["Ports"](**{name: PortTrap(name, operations) for name in PORT_NAMES})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver_session.py:693: TypeError
+___________ test_s4_foreign_owner_is_refused_before_guard[subclass] ___________
+
+kind = 'subclass'
+
+    @pytest.mark.parametrize("kind", ["object", "subclass", "namespace"])
+    def test_s4_foreign_owner_is_refused_before_guard(kind):
+>       assert_owner_refused(d1.World(), foreign_owner(kind))
+
+tests\test_oracle9_w1_driver_session.py:1132:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_driver_session.py:699: in assert_owner_refused
+    ports = trap_ports(operations)
+            ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operations = []
+
+    def trap_ports(operations: list[tuple[str, str]]) -> Any:
+>       return d1.driver()["Ports"](**{name: PortTrap(name, operations) for name in PORT_NAMES})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver_session.py:693: TypeError
+__________ test_s4_foreign_owner_is_refused_before_guard[namespace] ___________
+
+kind = 'namespace'
+
+    @pytest.mark.parametrize("kind", ["object", "subclass", "namespace"])
+    def test_s4_foreign_owner_is_refused_before_guard(kind):
+>       assert_owner_refused(d1.World(), foreign_owner(kind))
+
+tests\test_oracle9_w1_driver_session.py:1132:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_driver_session.py:699: in assert_owner_refused
+    ports = trap_ports(operations)
+            ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operations = []
+
+    def trap_ports(operations: list[tuple[str, str]]) -> Any:
+>       return d1.driver()["Ports"](**{name: PortTrap(name, operations) for name in PORT_NAMES})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver_session.py:693: TypeError
+_________ test_s5_keyboard_interrupt_at_go1_escapes_with_owner_intact _________
+
+    def test_s5_keyboard_interrupt_at_go1_escapes_with_owner_intact():
+        module = d1.driver()
+        owner = module["Owner"]()
+        world = d1.World()
+        control = KeyboardInterrupt()
+        link = ControlLink(world, control)
+        with pytest.raises(KeyboardInterrupt) as caught:
+>           module["run"](ports_for(world, link=link), owner=owner)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_session.py:1142:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+world = <tests.test_oracle9_w1_driver.World object at 0x000001EA9DFBE810>
+overrides = {'link': <tests.test_oracle9_w1_driver_session.ControlLink object at 0x000001EA9DFBDAD0>}
+
+    def ports_for(world: d1.World, **overrides: Any) -> Any:
+        ports: dict[str, Any] = {
+            "reader": d1.PureReader(world),
+            "guard": d1.Guard(world),
+            "clock": world.clock,
+            "link": world.link,
+            "ids": d1.Ids(world),
+            "factory": d1.Factory(world),
+            "pair": d1.Pair(world),
+            "threads": d1.Threads(world),
+        }
+        assert set(overrides) <= set(ports)
+        ports.update(overrides)
+>       return d1.driver()["Ports"](**ports)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver_session.py:644: TypeError
+______ test_s6_system_exit_at_sink_start_escapes_with_handle_registered _______
+
+    def test_s6_system_exit_at_sink_start_escapes_with_handle_registered():
+        module = d1.driver()
+        owner = module["Owner"]()
+        world = d1.World()
+        control = SystemExit(CONTROL_EXIT)
+        threads = ControlThreads(world, control)
+        with pytest.raises(SystemExit) as caught:
+>           module["run"](ports_for(world, threads=threads), owner=owner)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_session.py:1163:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+world = <tests.test_oracle9_w1_driver.World object at 0x000001EA9DF483D0>
+overrides = {'threads': <tests.test_oracle9_w1_driver_session.ControlThreads object at 0x000001EA9DF49C50>}
+
+    def ports_for(world: d1.World, **overrides: Any) -> Any:
+        ports: dict[str, Any] = {
+            "reader": d1.PureReader(world),
+            "guard": d1.Guard(world),
+            "clock": world.clock,
+            "link": world.link,
+            "ids": d1.Ids(world),
+            "factory": d1.Factory(world),
+            "pair": d1.Pair(world),
+            "threads": d1.Threads(world),
+        }
+        assert set(overrides) <= set(ports)
+        ports.update(overrides)
+>       return d1.driver()["Ports"](**ports)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver_session.py:644: TypeError
+__ test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[latch-true] __
+
+mutate = <function latch_true at 0x000001EA9DCCCD60>
+
+    @pytest.mark.parametrize(
+        "mutate",
+        [
+            pytest.param(latch_true, id="latch-true"),
+            pytest.param(latch_zero, id="latch-zero"),
+            pytest.param(latch_none, id="latch-none"),
+            pytest.param(with_token, id="token"),
+            pytest.param(with_session, id="session"),
+            pytest.param(with_endpoint, id="endpoint"),
+            pytest.param(with_handle, id="handle"),
+            pytest.param(with_unknown, id="unknown"),
+            pytest.param(with_retained, id="retained"),
+        ],
+    )
+    def test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged(mutate):
+        owner = d1.driver()["Owner"]()
+        mutate(owner)
+>       assert_owner_refused(d1.World(), owner)
+
+tests\test_oracle9_w1_driver_session.py:1232:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_driver_session.py:699: in assert_owner_refused
+    ports = trap_ports(operations)
+            ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operations = []
+
+    def trap_ports(operations: list[tuple[str, str]]) -> Any:
+>       return d1.driver()["Ports"](**{name: PortTrap(name, operations) for name in PORT_NAMES})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver_session.py:693: TypeError
+__ test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[latch-zero] __
+
+mutate = <function latch_zero at 0x000001EA9DCCCE00>
+
+    @pytest.mark.parametrize(
+        "mutate",
+        [
+            pytest.param(latch_true, id="latch-true"),
+            pytest.param(latch_zero, id="latch-zero"),
+            pytest.param(latch_none, id="latch-none"),
+            pytest.param(with_token, id="token"),
+            pytest.param(with_session, id="session"),
+            pytest.param(with_endpoint, id="endpoint"),
+            pytest.param(with_handle, id="handle"),
+            pytest.param(with_unknown, id="unknown"),
+            pytest.param(with_retained, id="retained"),
+        ],
+    )
+    def test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged(mutate):
+        owner = d1.driver()["Owner"]()
+        mutate(owner)
+>       assert_owner_refused(d1.World(), owner)
+
+tests\test_oracle9_w1_driver_session.py:1232:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_driver_session.py:699: in assert_owner_refused
+    ports = trap_ports(operations)
+            ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operations = []
+
+    def trap_ports(operations: list[tuple[str, str]]) -> Any:
+>       return d1.driver()["Ports"](**{name: PortTrap(name, operations) for name in PORT_NAMES})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver_session.py:693: TypeError
+__ test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[latch-none] __
+
+mutate = <function latch_none at 0x000001EA9DCCCEA0>
+
+    @pytest.mark.parametrize(
+        "mutate",
+        [
+            pytest.param(latch_true, id="latch-true"),
+            pytest.param(latch_zero, id="latch-zero"),
+            pytest.param(latch_none, id="latch-none"),
+            pytest.param(with_token, id="token"),
+            pytest.param(with_session, id="session"),
+            pytest.param(with_endpoint, id="endpoint"),
+            pytest.param(with_handle, id="handle"),
+            pytest.param(with_unknown, id="unknown"),
+            pytest.param(with_retained, id="retained"),
+        ],
+    )
+    def test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged(mutate):
+        owner = d1.driver()["Owner"]()
+        mutate(owner)
+>       assert_owner_refused(d1.World(), owner)
+
+tests\test_oracle9_w1_driver_session.py:1232:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_driver_session.py:699: in assert_owner_refused
+    ports = trap_ports(operations)
+            ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operations = []
+
+    def trap_ports(operations: list[tuple[str, str]]) -> Any:
+>       return d1.driver()["Ports"](**{name: PortTrap(name, operations) for name in PORT_NAMES})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver_session.py:693: TypeError
+____ test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[token] _____
+
+mutate = <function with_token at 0x000001EA9DCCCF40>
+
+    @pytest.mark.parametrize(
+        "mutate",
+        [
+            pytest.param(latch_true, id="latch-true"),
+            pytest.param(latch_zero, id="latch-zero"),
+            pytest.param(latch_none, id="latch-none"),
+            pytest.param(with_token, id="token"),
+            pytest.param(with_session, id="session"),
+            pytest.param(with_endpoint, id="endpoint"),
+            pytest.param(with_handle, id="handle"),
+            pytest.param(with_unknown, id="unknown"),
+            pytest.param(with_retained, id="retained"),
+        ],
+    )
+    def test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged(mutate):
+        owner = d1.driver()["Owner"]()
+        mutate(owner)
+>       assert_owner_refused(d1.World(), owner)
+
+tests\test_oracle9_w1_driver_session.py:1232:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_driver_session.py:699: in assert_owner_refused
+    ports = trap_ports(operations)
+            ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operations = []
+
+    def trap_ports(operations: list[tuple[str, str]]) -> Any:
+>       return d1.driver()["Ports"](**{name: PortTrap(name, operations) for name in PORT_NAMES})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver_session.py:693: TypeError
+___ test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[session] ____
+
+mutate = <function with_session at 0x000001EA9DCCCFE0>
+
+    @pytest.mark.parametrize(
+        "mutate",
+        [
+            pytest.param(latch_true, id="latch-true"),
+            pytest.param(latch_zero, id="latch-zero"),
+            pytest.param(latch_none, id="latch-none"),
+            pytest.param(with_token, id="token"),
+            pytest.param(with_session, id="session"),
+            pytest.param(with_endpoint, id="endpoint"),
+            pytest.param(with_handle, id="handle"),
+            pytest.param(with_unknown, id="unknown"),
+            pytest.param(with_retained, id="retained"),
+        ],
+    )
+    def test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged(mutate):
+        owner = d1.driver()["Owner"]()
+        mutate(owner)
+>       assert_owner_refused(d1.World(), owner)
+
+tests\test_oracle9_w1_driver_session.py:1232:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_driver_session.py:699: in assert_owner_refused
+    ports = trap_ports(operations)
+            ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operations = []
+
+    def trap_ports(operations: list[tuple[str, str]]) -> Any:
+>       return d1.driver()["Ports"](**{name: PortTrap(name, operations) for name in PORT_NAMES})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver_session.py:693: TypeError
+___ test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[endpoint] ___
+
+mutate = <function with_endpoint at 0x000001EA9DCCD080>
+
+    @pytest.mark.parametrize(
+        "mutate",
+        [
+            pytest.param(latch_true, id="latch-true"),
+            pytest.param(latch_zero, id="latch-zero"),
+            pytest.param(latch_none, id="latch-none"),
+            pytest.param(with_token, id="token"),
+            pytest.param(with_session, id="session"),
+            pytest.param(with_endpoint, id="endpoint"),
+            pytest.param(with_handle, id="handle"),
+            pytest.param(with_unknown, id="unknown"),
+            pytest.param(with_retained, id="retained"),
+        ],
+    )
+    def test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged(mutate):
+        owner = d1.driver()["Owner"]()
+        mutate(owner)
+>       assert_owner_refused(d1.World(), owner)
+
+tests\test_oracle9_w1_driver_session.py:1232:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_driver_session.py:699: in assert_owner_refused
+    ports = trap_ports(operations)
+            ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operations = []
+
+    def trap_ports(operations: list[tuple[str, str]]) -> Any:
+>       return d1.driver()["Ports"](**{name: PortTrap(name, operations) for name in PORT_NAMES})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver_session.py:693: TypeError
+____ test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[handle] ____
+
+mutate = <function with_handle at 0x000001EA9DCCD120>
+
+    @pytest.mark.parametrize(
+        "mutate",
+        [
+            pytest.param(latch_true, id="latch-true"),
+            pytest.param(latch_zero, id="latch-zero"),
+            pytest.param(latch_none, id="latch-none"),
+            pytest.param(with_token, id="token"),
+            pytest.param(with_session, id="session"),
+            pytest.param(with_endpoint, id="endpoint"),
+            pytest.param(with_handle, id="handle"),
+            pytest.param(with_unknown, id="unknown"),
+            pytest.param(with_retained, id="retained"),
+        ],
+    )
+    def test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged(mutate):
+        owner = d1.driver()["Owner"]()
+        mutate(owner)
+>       assert_owner_refused(d1.World(), owner)
+
+tests\test_oracle9_w1_driver_session.py:1232:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_driver_session.py:699: in assert_owner_refused
+    ports = trap_ports(operations)
+            ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operations = []
+
+    def trap_ports(operations: list[tuple[str, str]]) -> Any:
+>       return d1.driver()["Ports"](**{name: PortTrap(name, operations) for name in PORT_NAMES})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver_session.py:693: TypeError
+___ test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[unknown] ____
+
+mutate = <function with_unknown at 0x000001EA9DCCD1C0>
+
+    @pytest.mark.parametrize(
+        "mutate",
+        [
+            pytest.param(latch_true, id="latch-true"),
+            pytest.param(latch_zero, id="latch-zero"),
+            pytest.param(latch_none, id="latch-none"),
+            pytest.param(with_token, id="token"),
+            pytest.param(with_session, id="session"),
+            pytest.param(with_endpoint, id="endpoint"),
+            pytest.param(with_handle, id="handle"),
+            pytest.param(with_unknown, id="unknown"),
+            pytest.param(with_retained, id="retained"),
+        ],
+    )
+    def test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged(mutate):
+        owner = d1.driver()["Owner"]()
+        mutate(owner)
+>       assert_owner_refused(d1.World(), owner)
+
+tests\test_oracle9_w1_driver_session.py:1232:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_driver_session.py:699: in assert_owner_refused
+    ports = trap_ports(operations)
+            ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operations = []
+
+    def trap_ports(operations: list[tuple[str, str]]) -> Any:
+>       return d1.driver()["Ports"](**{name: PortTrap(name, operations) for name in PORT_NAMES})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver_session.py:693: TypeError
+___ test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[retained] ___
+
+mutate = <function with_retained at 0x000001EA9DCCD260>
+
+    @pytest.mark.parametrize(
+        "mutate",
+        [
+            pytest.param(latch_true, id="latch-true"),
+            pytest.param(latch_zero, id="latch-zero"),
+            pytest.param(latch_none, id="latch-none"),
+            pytest.param(with_token, id="token"),
+            pytest.param(with_session, id="session"),
+            pytest.param(with_endpoint, id="endpoint"),
+            pytest.param(with_handle, id="handle"),
+            pytest.param(with_unknown, id="unknown"),
+            pytest.param(with_retained, id="retained"),
+        ],
+    )
+    def test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged(mutate):
+        owner = d1.driver()["Owner"]()
+        mutate(owner)
+>       assert_owner_refused(d1.World(), owner)
+
+tests\test_oracle9_w1_driver_session.py:1232:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_driver_session.py:699: in assert_owner_refused
+    ports = trap_ports(operations)
+            ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operations = []
+
+    def trap_ports(operations: list[tuple[str, str]]) -> Any:
+>       return d1.driver()["Ports"](**{name: PortTrap(name, operations) for name in PORT_NAMES})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver_session.py:693: TypeError
+_ test_s8_refusal_inside_active_caller_handler_has_no_context[runtime-error-foreign] _
+
+caller = <class 'RuntimeError'>, path = 'foreign'
+
+    @pytest.mark.parametrize("path", ["foreign", "latch", "reused"])
+    @pytest.mark.parametrize("caller", [RuntimeError, KeyError], ids=["runtime-error", "key-error"])
+    def test_s8_refusal_inside_active_caller_handler_has_no_context(caller, path):
+        owner = prepared_owner(path)
+        handled: list[BaseException] = []
+        try:
+>           raise caller(CALLER_CANARY)
+E           RuntimeError: SYNTHETIC-CALLER-CANARY-0001
+
+tests\test_oracle9_w1_driver_session.py:1259: RuntimeError
+
+During handling of the above exception, another exception occurred:
+
+caller = <class 'RuntimeError'>, path = 'foreign'
+
+    @pytest.mark.parametrize("path", ["foreign", "latch", "reused"])
+    @pytest.mark.parametrize("caller", [RuntimeError, KeyError], ids=["runtime-error", "key-error"])
+    def test_s8_refusal_inside_active_caller_handler_has_no_context(caller, path):
+        owner = prepared_owner(path)
+        handled: list[BaseException] = []
+        try:
+            raise caller(CALLER_CANARY)
+        except (RuntimeError, KeyError) as active:
+            handled.append(active)
+            assert sys.exc_info()[1] is active  # the caller exception IS active here
+            # Exact __context__ is None, not merely suppressed: checked by assert_closed.
+>           assert_owner_refused(d1.World(), owner)
+
+tests\test_oracle9_w1_driver_session.py:1264:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_driver_session.py:699: in assert_owner_refused
+    ports = trap_ports(operations)
+            ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operations = []
+
+    def trap_ports(operations: list[tuple[str, str]]) -> Any:
+>       return d1.driver()["Ports"](**{name: PortTrap(name, operations) for name in PORT_NAMES})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver_session.py:693: TypeError
+_ test_s8_refusal_inside_active_caller_handler_has_no_context[runtime-error-latch] _
+
+caller = <class 'RuntimeError'>, path = 'latch'
+
+    @pytest.mark.parametrize("path", ["foreign", "latch", "reused"])
+    @pytest.mark.parametrize("caller", [RuntimeError, KeyError], ids=["runtime-error", "key-error"])
+    def test_s8_refusal_inside_active_caller_handler_has_no_context(caller, path):
+        owner = prepared_owner(path)
+        handled: list[BaseException] = []
+        try:
+>           raise caller(CALLER_CANARY)
+E           RuntimeError: SYNTHETIC-CALLER-CANARY-0001
+
+tests\test_oracle9_w1_driver_session.py:1259: RuntimeError
+
+During handling of the above exception, another exception occurred:
+
+caller = <class 'RuntimeError'>, path = 'latch'
+
+    @pytest.mark.parametrize("path", ["foreign", "latch", "reused"])
+    @pytest.mark.parametrize("caller", [RuntimeError, KeyError], ids=["runtime-error", "key-error"])
+    def test_s8_refusal_inside_active_caller_handler_has_no_context(caller, path):
+        owner = prepared_owner(path)
+        handled: list[BaseException] = []
+        try:
+            raise caller(CALLER_CANARY)
+        except (RuntimeError, KeyError) as active:
+            handled.append(active)
+            assert sys.exc_info()[1] is active  # the caller exception IS active here
+            # Exact __context__ is None, not merely suppressed: checked by assert_closed.
+>           assert_owner_refused(d1.World(), owner)
+
+tests\test_oracle9_w1_driver_session.py:1264:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_driver_session.py:699: in assert_owner_refused
+    ports = trap_ports(operations)
+            ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operations = []
+
+    def trap_ports(operations: list[tuple[str, str]]) -> Any:
+>       return d1.driver()["Ports"](**{name: PortTrap(name, operations) for name in PORT_NAMES})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver_session.py:693: TypeError
+_ test_s8_refusal_inside_active_caller_handler_has_no_context[runtime-error-reused] _
+
+caller = <class 'RuntimeError'>, path = 'reused'
+
+    @pytest.mark.parametrize("path", ["foreign", "latch", "reused"])
+    @pytest.mark.parametrize("caller", [RuntimeError, KeyError], ids=["runtime-error", "key-error"])
+    def test_s8_refusal_inside_active_caller_handler_has_no_context(caller, path):
+>       owner = prepared_owner(path)
+                ^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_session.py:1256:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_driver_session.py:1247: in prepared_owner
+    result = module["run"](ports_for(d1.World(eof={(d1.GO, 1)})), owner=owner)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+world = <tests.test_oracle9_w1_driver.World object at 0x000001EA9DD2B110>
+overrides = {}
+
+    def ports_for(world: d1.World, **overrides: Any) -> Any:
+        ports: dict[str, Any] = {
+            "reader": d1.PureReader(world),
+            "guard": d1.Guard(world),
+            "clock": world.clock,
+            "link": world.link,
+            "ids": d1.Ids(world),
+            "factory": d1.Factory(world),
+            "pair": d1.Pair(world),
+            "threads": d1.Threads(world),
+        }
+        assert set(overrides) <= set(ports)
+        ports.update(overrides)
+>       return d1.driver()["Ports"](**ports)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver_session.py:644: TypeError
+_ test_s8_refusal_inside_active_caller_handler_has_no_context[key-error-foreign] _
+
+caller = <class 'KeyError'>, path = 'foreign'
+
+    @pytest.mark.parametrize("path", ["foreign", "latch", "reused"])
+    @pytest.mark.parametrize("caller", [RuntimeError, KeyError], ids=["runtime-error", "key-error"])
+    def test_s8_refusal_inside_active_caller_handler_has_no_context(caller, path):
+        owner = prepared_owner(path)
+        handled: list[BaseException] = []
+        try:
+>           raise caller(CALLER_CANARY)
+E           KeyError: 'SYNTHETIC-CALLER-CANARY-0001'
+
+tests\test_oracle9_w1_driver_session.py:1259: KeyError
+
+During handling of the above exception, another exception occurred:
+
+caller = <class 'KeyError'>, path = 'foreign'
+
+    @pytest.mark.parametrize("path", ["foreign", "latch", "reused"])
+    @pytest.mark.parametrize("caller", [RuntimeError, KeyError], ids=["runtime-error", "key-error"])
+    def test_s8_refusal_inside_active_caller_handler_has_no_context(caller, path):
+        owner = prepared_owner(path)
+        handled: list[BaseException] = []
+        try:
+            raise caller(CALLER_CANARY)
+        except (RuntimeError, KeyError) as active:
+            handled.append(active)
+            assert sys.exc_info()[1] is active  # the caller exception IS active here
+            # Exact __context__ is None, not merely suppressed: checked by assert_closed.
+>           assert_owner_refused(d1.World(), owner)
+
+tests\test_oracle9_w1_driver_session.py:1264:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_driver_session.py:699: in assert_owner_refused
+    ports = trap_ports(operations)
+            ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operations = []
+
+    def trap_ports(operations: list[tuple[str, str]]) -> Any:
+>       return d1.driver()["Ports"](**{name: PortTrap(name, operations) for name in PORT_NAMES})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver_session.py:693: TypeError
+_ test_s8_refusal_inside_active_caller_handler_has_no_context[key-error-latch] _
+
+caller = <class 'KeyError'>, path = 'latch'
+
+    @pytest.mark.parametrize("path", ["foreign", "latch", "reused"])
+    @pytest.mark.parametrize("caller", [RuntimeError, KeyError], ids=["runtime-error", "key-error"])
+    def test_s8_refusal_inside_active_caller_handler_has_no_context(caller, path):
+        owner = prepared_owner(path)
+        handled: list[BaseException] = []
+        try:
+>           raise caller(CALLER_CANARY)
+E           KeyError: 'SYNTHETIC-CALLER-CANARY-0001'
+
+tests\test_oracle9_w1_driver_session.py:1259: KeyError
+
+During handling of the above exception, another exception occurred:
+
+caller = <class 'KeyError'>, path = 'latch'
+
+    @pytest.mark.parametrize("path", ["foreign", "latch", "reused"])
+    @pytest.mark.parametrize("caller", [RuntimeError, KeyError], ids=["runtime-error", "key-error"])
+    def test_s8_refusal_inside_active_caller_handler_has_no_context(caller, path):
+        owner = prepared_owner(path)
+        handled: list[BaseException] = []
+        try:
+            raise caller(CALLER_CANARY)
+        except (RuntimeError, KeyError) as active:
+            handled.append(active)
+            assert sys.exc_info()[1] is active  # the caller exception IS active here
+            # Exact __context__ is None, not merely suppressed: checked by assert_closed.
+>           assert_owner_refused(d1.World(), owner)
+
+tests\test_oracle9_w1_driver_session.py:1264:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_driver_session.py:699: in assert_owner_refused
+    ports = trap_ports(operations)
+            ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operations = []
+
+    def trap_ports(operations: list[tuple[str, str]]) -> Any:
+>       return d1.driver()["Ports"](**{name: PortTrap(name, operations) for name in PORT_NAMES})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver_session.py:693: TypeError
+_ test_s8_refusal_inside_active_caller_handler_has_no_context[key-error-reused] _
+
+caller = <class 'KeyError'>, path = 'reused'
+
+    @pytest.mark.parametrize("path", ["foreign", "latch", "reused"])
+    @pytest.mark.parametrize("caller", [RuntimeError, KeyError], ids=["runtime-error", "key-error"])
+    def test_s8_refusal_inside_active_caller_handler_has_no_context(caller, path):
+>       owner = prepared_owner(path)
+                ^^^^^^^^^^^^^^^^^^^^
+
+tests\test_oracle9_w1_driver_session.py:1256:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_oracle9_w1_driver_session.py:1247: in prepared_owner
+    result = module["run"](ports_for(d1.World(eof={(d1.GO, 1)})), owner=owner)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+world = <tests.test_oracle9_w1_driver.World object at 0x000001EA9E01E1D0>
+overrides = {}
+
+    def ports_for(world: d1.World, **overrides: Any) -> Any:
+        ports: dict[str, Any] = {
+            "reader": d1.PureReader(world),
+            "guard": d1.Guard(world),
+            "clock": world.clock,
+            "link": world.link,
+            "ids": d1.Ids(world),
+            "factory": d1.Factory(world),
+            "pair": d1.Pair(world),
+            "threads": d1.Threads(world),
+        }
+        assert set(overrides) <= set(ports)
+        ports.update(overrides)
+>       return d1.driver()["Ports"](**ports)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: Ports.__init__() missing 1 required positional argument: 'children'
+
+tests\test_oracle9_w1_driver_session.py:644: TypeError
+=========================== short test summary info ===========================
+FAILED tests/test_oracle9_w1_driver.py::test_d1_1_run_load_failure_aborts_after_guard_without_init
+FAILED tests/test_oracle9_w1_driver.py::test_d1_2_order_guard_then_pinned_load_then_guard_event_then_init
+FAILED tests/test_oracle9_w1_driver.py::test_d1_2_guard_failure_reads_and_writes_nothing
+FAILED tests/test_oracle9_w1_driver.py::test_d1_3_full_walk_is_finite_and_never_global_pass[stop]
+FAILED tests/test_oracle9_w1_driver.py::test_d1_3_full_walk_is_finite_and_never_global_pass[nostop]
+FAILED tests/test_oracle9_w1_driver.py::test_d1_3_sessions_keys_profiles_and_snapshots_are_trusted_values
+FAILED tests/test_oracle9_w1_driver.py::test_d1_14_t3_exempt_and_t6_live_window_then_clean_unkilled_end
+FAILED tests/test_oracle9_w1_driver.py::test_d1_14_frame_after_t6_armed_is_never_accepted
+FAILED tests/test_oracle9_w1_driver.py::test_d1_17_ledger_values_at_t6_and_g1_draining
+FAILED tests/test_oracle9_w1_driver.py::test_d1_5_watcher_wrong_frame_never_stops_and_aborts[seq-47]
+FAILED tests/test_oracle9_w1_driver.py::test_d1_5_watcher_wrong_frame_never_stops_and_aborts[replay-45]
+FAILED tests/test_oracle9_w1_driver.py::test_d1_5_watcher_wrong_frame_never_stops_and_aborts[case-22]
+FAILED tests/test_oracle9_w1_driver.py::test_d1_5_watcher_wrong_frame_never_stops_and_aborts[go-kind]
+FAILED tests/test_oracle9_w1_driver.py::test_d1_5_watcher_wrong_frame_never_stops_and_aborts[malformed]
+FAILED tests/test_oracle9_w1_driver.py::test_d1_5_late_stop_is_fail_and_run_continues
+FAILED tests/test_oracle9_w1_driver.py::test_d1_5_watcher_registered_before_start_and_armed_published_after
+FAILED tests/test_oracle9_w1_driver.py::test_d1_6_watcher_join_failure_retains_owner_without_commit
+FAILED tests/test_oracle9_w1_driver.py::test_d1_9_watcher_start_failure_retains_handle_and_skips_query
+FAILED tests/test_oracle9_w1_driver.py::test_d1_8_body_mismatch_aborts_without_next_query_after_join
+FAILED tests/test_oracle9_w1_driver.py::test_d1_8_summary_mismatch_aborts_after_verified_join[rows]
+FAILED tests/test_oracle9_w1_driver.py::test_d1_8_summary_mismatch_aborts_after_verified_join[truncated]
+FAILED tests/test_oracle9_w1_driver.py::test_d1_8_unexpected_error_reply_aborts_without_next_query[wrong-category]
+FAILED tests/test_oracle9_w1_driver.py::test_d1_8_unexpected_error_reply_aborts_without_next_query[fatal-reply]
+FAILED tests/test_oracle9_w1_driver.py::test_d1_8_late_send_is_stopped_by_composed_window
+FAILED tests/test_oracle9_w1_driver.py::test_d1_8_sink_join_failure_retains_endpoints_and_session
+FAILED tests/test_oracle9_w1_driver.py::test_d1_9_sink_start_failure_retains_handle_before_any_send
+FAILED tests/test_oracle9_w1_driver.py::test_d1_9_sink_partial_start_exception_retains_started_handle
+FAILED tests/test_oracle9_w1_driver.py::test_d1_9_watcher_partial_start_exception_retains_started_handle
+FAILED tests/test_oracle9_w1_driver.py::test_d1_10_pair_creation_unknown_effect_is_retained
+FAILED tests/test_oracle9_w1_driver.py::test_d1_11_factory_failure_retains_token_without_close
+FAILED tests/test_oracle9_w1_driver.py::test_d1_11_open_failure_before_adoption_retains_and_never_closes
+FAILED tests/test_oracle9_w1_driver.py::test_d1_11_open_failure_after_adoption_uses_one_session_close[second-cleanup-released]
+FAILED tests/test_oracle9_w1_driver.py::test_d1_11_open_failure_after_adoption_uses_one_session_close[still-held]
+FAILED tests/test_oracle9_w1_driver.py::test_d1_12_held_close_retains_and_reserves_nothing_more
+FAILED tests/test_oracle9_w1_driver.py::test_d1_12_duplicate_session_id_is_refused_before_factory
+FAILED tests/test_oracle9_w1_driver.py::test_d1_13_ack_then_go_never_reset_the_aggregate_window
+FAILED tests/test_oracle9_w1_driver.py::test_d1_15_ledger_lock_never_held_across_port_calls
+FAILED tests/test_oracle9_w1_driver.py::test_d1_18_machine_refusal_aborts_cleans_session_and_reads_nothing_more
+FAILED tests/test_oracle9_w1_driver.py::test_d1_18_host_eof_aborts_without_further_query
+FAILED tests/test_oracle9_w1_driver.py::test_d1_18_driver_result_is_frozen_and_redacted
+FAILED tests/test_oracle9_w1_driver.py::test_r1_init_returned_after_deadline_aborts_before_factory[at-deadline]
+FAILED tests/test_oracle9_w1_driver.py::test_r1_init_returned_after_deadline_aborts_before_factory[past-deadline]
+FAILED tests/test_oracle9_w1_driver.py::test_r1_first_go_returned_after_deadline_aborts_without_query[at-deadline]
+FAILED tests/test_oracle9_w1_driver.py::test_r1_first_go_returned_after_deadline_aborts_without_query[past-deadline]
+FAILED tests/test_oracle9_w1_driver.py::test_r1_watcher_stop_returned_after_deadline_never_stops_or_passes[at-deadline]
+FAILED tests/test_oracle9_w1_driver.py::test_r1_watcher_stop_returned_after_deadline_never_stops_or_passes[past-deadline]
+FAILED tests/test_oracle9_w1_driver.py::test_r1_positive_join_after_budget_publishes_no_pass[sink-at-deadline]
+FAILED tests/test_oracle9_w1_driver.py::test_r1_positive_join_after_budget_publishes_no_pass[sink-past-deadline]
+FAILED tests/test_oracle9_w1_driver.py::test_r1_positive_join_after_budget_publishes_no_pass[watcher-at-deadline]
+FAILED tests/test_oracle9_w1_driver.py::test_r1_positive_join_after_budget_publishes_no_pass[watcher-past-deadline]
+FAILED tests/test_oracle9_w1_driver.py::test_r2_inexact_summary_types_abort_before_result_metadata[rows-float]
+FAILED tests/test_oracle9_w1_driver.py::test_r2_inexact_summary_types_abort_before_result_metadata[rows-bool-equal-one]
+FAILED tests/test_oracle9_w1_driver.py::test_r2_inexact_summary_types_abort_before_result_metadata[truncated-int-zero]
+FAILED tests/test_oracle9_w1_driver.py::test_r2_exact_int_row_one_control_passes_job_two
+FAILED tests/test_oracle9_w1_driver.py::test_r3_guard_facts_outside_controller_profile_fail_before_any_read[role-worker]
+FAILED tests/test_oracle9_w1_driver.py::test_r3_guard_facts_outside_controller_profile_fail_before_any_read[pid-bool]
+FAILED tests/test_oracle9_w1_driver.py::test_r3_guard_facts_outside_controller_profile_fail_before_any_read[pid-two]
+FAILED tests/test_oracle9_w1_driver.py::test_r3_guard_facts_outside_controller_profile_fail_before_any_read[address-256]
+FAILED tests/test_oracle9_w1_driver.py::test_r3_guard_facts_outside_controller_profile_fail_before_any_read[dumpable-one]
+FAILED tests/test_oracle9_w1_driver.py::test_r3_guard_facts_outside_controller_profile_fail_before_any_read[core-nonzero]
+FAILED tests/test_oracle9_w1_driver.py::test_r3_guard_facts_outside_controller_profile_fail_before_any_read[pdeathsig-nine]
+FAILED tests/test_oracle9_w1_driver.py::test_r3_guard_facts_outside_controller_profile_fail_before_any_read[worker-pidbool-dump]
+FAILED tests/test_oracle9_w1_driver_session.py::test_sanity_port_trap_records_clock_and_link_reads_without_driver
+FAILED tests/test_oracle9_w1_driver_session.py::test_i1_6_driver_runs_two_real_sdk_results_then_eof_on_go3
+FAILED tests/test_oracle9_w1_driver_session.py::test_i1_7_control_inside_sdk_becomes_a_closed_session_failure
+FAILED tests/test_oracle9_w1_driver_session.py::test_s1_default_path_without_owner_is_unchanged
+FAILED tests/test_oracle9_w1_driver_session.py::test_s2_supplied_owner_is_the_exact_retained_owner
+FAILED tests/test_oracle9_w1_driver_session.py::test_s3_reused_owner_is_refused_before_any_port
+FAILED tests/test_oracle9_w1_driver_session.py::test_s4_foreign_owner_is_refused_before_guard[object]
+FAILED tests/test_oracle9_w1_driver_session.py::test_s4_foreign_owner_is_refused_before_guard[subclass]
+FAILED tests/test_oracle9_w1_driver_session.py::test_s4_foreign_owner_is_refused_before_guard[namespace]
+FAILED tests/test_oracle9_w1_driver_session.py::test_s5_keyboard_interrupt_at_go1_escapes_with_owner_intact
+FAILED tests/test_oracle9_w1_driver_session.py::test_s6_system_exit_at_sink_start_escapes_with_handle_registered
+FAILED tests/test_oracle9_w1_driver_session.py::test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[latch-true]
+FAILED tests/test_oracle9_w1_driver_session.py::test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[latch-zero]
+FAILED tests/test_oracle9_w1_driver_session.py::test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[latch-none]
+FAILED tests/test_oracle9_w1_driver_session.py::test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[token]
+FAILED tests/test_oracle9_w1_driver_session.py::test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[session]
+FAILED tests/test_oracle9_w1_driver_session.py::test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[endpoint]
+FAILED tests/test_oracle9_w1_driver_session.py::test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[handle]
+FAILED tests/test_oracle9_w1_driver_session.py::test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[unknown]
+FAILED tests/test_oracle9_w1_driver_session.py::test_s7_invalid_latch_or_prefilled_owner_is_refused_unchanged[retained]
+FAILED tests/test_oracle9_w1_driver_session.py::test_s8_refusal_inside_active_caller_handler_has_no_context[runtime-error-foreign]
+FAILED tests/test_oracle9_w1_driver_session.py::test_s8_refusal_inside_active_caller_handler_has_no_context[runtime-error-latch]
+FAILED tests/test_oracle9_w1_driver_session.py::test_s8_refusal_inside_active_caller_handler_has_no_context[runtime-error-reused]
+FAILED tests/test_oracle9_w1_driver_session.py::test_s8_refusal_inside_active_caller_handler_has_no_context[key-error-foreign]
+FAILED tests/test_oracle9_w1_driver_session.py::test_s8_refusal_inside_active_caller_handler_has_no_context[key-error-latch]
+FAILED tests/test_oracle9_w1_driver_session.py::test_s8_refusal_inside_active_caller_handler_has_no_context[key-error-reused]

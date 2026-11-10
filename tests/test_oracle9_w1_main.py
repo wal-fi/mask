@@ -27,7 +27,7 @@ the code bound from decision_code. The finite entry test installs a test tripwir
 
 Minimal stable API expected from the runpy namespace (names fixed from the design):
 
-- Constants: DRIVER_PATH, DRIVER_SHA, DRIVER_BYTES 36956, DRIVER_MODULE
+- Constants: DRIVER_PATH, DRIVER_SHA, DRIVER_BYTES 51913, DRIVER_MODULE
   "_maskgw_w1_lab_driver", PURE_SHA, PURE_BYTES 22453, INIT_HEADER 8, INIT_BODY_MAX
   65536, CONTROL_BYTES 16, LINE_MAX 512 (LF included), LINES_MAX 56, WRITE_CAP_S,
   SLICE_S, HOLD_BACKOFF_S > 0, HOLD_FAULTS_MAX 255, SLOTS, TICKET "source_fd",
@@ -39,13 +39,15 @@ Minimal stable API expected from the runpy namespace (names fixed from the desig
   select(r, w, x, timeout); socketpair(family, type); thread_class(*, target, name,
   daemon) -> start()/join(timeout)/is_alive(); active_count(); signal(signum,
   handler); monotonic(); sleep(seconds); pause(); urandom(n); protect(*, role,
-  address_limit_bytes); is_main_thread(); silence().
+  address_limit_bytes); is_main_thread(); silence(); popen(argv, **kwargs);
+  pipe2(flags). The last two belong to the T5 probe (tests/test_oracle9_w1_main_t5.py);
+  here they are fail-fast stubs because these scenarios never reach case 24.
 - Enums compared by member name: SlotState EMPTY/UNKNOWN/OWNED; Phase BOOT/BOUND/
   LINKED/RUNNING/DECIDING/EXITING/HOLDING; MainOutcome SETUP_FAILED/LOAD_FAILED/
   LINK_FAILED/GUARD_FAILED/ABORTED/T6_UNKILLED/CONTROL; HoldStep WOKE/BACKOFF/FAULT;
   HostLink.state ACTIVE/POISONED/RETIRED; HostLink.status OK/EOF/EXPIRED/IO/
   POISONED/CONCURRENT/RETIRED.
-- MainRoot(system): fields system, phase, namespace, owner, slots (dict of the five
+- MainRoot(system): fields system, phase, namespace, owner, slots (dict of the ten
   SLOTS), ticket, ledger, sessions, result, control ("KeyboardInterrupt" |
   "SystemExit" | "MainSignal" | "OTHER" | None), failure (MainOutcome | None),
   signal_seen, hold_faults; methods reserve(*names), own(name, value),
@@ -101,8 +103,8 @@ REPO = Path(__file__).resolve().parents[1]
 MAIN_FILE = REPO / "deploy/oracle9_w1_main.py"
 DRIVER_SOURCE = (REPO / "deploy/oracle9_w1_driver.py").read_bytes()
 DRIVER_PATH = "/opt/maskgw/lab/oracle9_w1_driver.py"
-DRIVER_SHA = "39a6890457c3bc9331fc371948fce896cbbc37e2d49f1584a5629490f43d2794"
-DRIVER_SIZE = 36956
+DRIVER_SHA = "b54a8a9457a908e839d1f5870280644839478bc471e5e06cd4268bcdcff8c51f"
+DRIVER_SIZE = 51913
 DRIVER_MODULE = "_maskgw_w1_lab_driver"
 PURE_MODULE = "_maskgw_w1_lab_pure"
 PURE_SOURCE = d1.PURE_SOURCE
@@ -110,7 +112,18 @@ PURE_PATH = d1.PURE_PATH
 PURE_SHA = d1.PURE_SHA
 PURE_SIZE = d1.PURE_SIZE
 MIB = d1.MIB
-SLOTS = ("pair_writer", "pair_reader", "sink_thread", "watcher_thread", "link")
+SLOTS = (
+    "pair_writer",
+    "pair_reader",
+    "sink_thread",
+    "watcher_thread",
+    "link",
+    "probe_parent",
+    "probe_child",
+    "probe_stdin_r",
+    "probe_stdin_w",
+    "probe_process",
+)
 HANDLED = (15, 2, 1)
 SYSTEM_FIELDS = frozenset(
     {
@@ -134,6 +147,8 @@ SYSTEM_FIELDS = frozenset(
         "protect",
         "is_main_thread",
         "silence",
+        "popen",
+        "pipe2",
     }
 )
 EXPECTED_CODES = {
@@ -158,11 +173,13 @@ ALLOWED_IMPORTS = frozenset(
         "signal",
         "socket",
         "stat",
+        "subprocess",
         "sys",
         "threading",
         "time",
         "types",
         "typing",
+        "maskgw.pgwire.result_frame",
         "maskgw.pgwire.transport",
         "maskgw.runtime.budget",
         "maskgw.runtime.linux_guard",
@@ -523,6 +540,16 @@ class FakeOS:
 
     def silence(self) -> None:
         self.enter("silence", None)
+
+    def popen(self, argv: list[str], **kwargs: Any) -> object:
+        """Fail-fast stub: these scenarios stop before T5; ProbeOS overrides it."""
+        self.enter("popen", None, tuple(argv), tuple(sorted(kwargs)))
+        raise AssertionError("legacy FakeOS: popen is not modeled")
+
+    def pipe2(self, flags: int) -> tuple[int, int]:
+        """Fail-fast stub: these scenarios stop before T5; ProbeOS overrides it."""
+        self.enter("pipe2", None, flags)
+        raise AssertionError("legacy FakeOS: pipe2 is not modeled")
 
 
 # ---------------------------------------------------------------- helpers
@@ -1250,6 +1277,7 @@ def test_m06_build_ports_binds_exact_owned_objects() -> None:
         "factory": "SessionFactory",
         "pair": "SocketPairs",
         "threads": "ThreadPorts",
+        "children": "ProbeChildren",
     }
     for field, cls in expected.items():
         assert type(getattr(ports, field)) is ns[cls]

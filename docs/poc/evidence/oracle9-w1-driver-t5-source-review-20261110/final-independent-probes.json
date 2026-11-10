@@ -1,0 +1,26 @@
+{
+  "source_sha256": "b54a8a9457a908e839d1f5870280644839478bc471e5e06cd4268bcdcff8c51f",
+  "fake_only": true,
+  "native_effects": false,
+  "probes": {
+    "reserve_late": {
+      "outcome": "RETAINED",
+      "calls": [
+        "reserve",
+        "retain"
+      ],
+      "adopt_after_cap": false,
+      "token_retained": true
+    },
+    "verify_late": {
+      "outcome": "ABORTED",
+      "ready_at": null,
+      "results": []
+    },
+    "pid_late": {
+      "outcome": "ABORTED",
+      "guard_io": false,
+      "packets": 0
+    }
+  }
+}

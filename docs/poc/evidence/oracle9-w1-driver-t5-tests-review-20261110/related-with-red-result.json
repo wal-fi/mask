@@ -1,0 +1,36 @@
+{
+  "exit_code": 1,
+  "suites": [
+    {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "75",
+      "skipped": "0",
+      "tests": "787",
+      "time": "12.975",
+      "timestamp": "2026-11-10T09:08:16.273340-03:00",
+      "hostname": "SMTZDIBDN1954"
+    }
+  ],
+  "new": {
+    "tests": 83,
+    "failures": 75,
+    "errors": 0,
+    "skipped": 0
+  },
+  "old_related": {
+    "tests": 704,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "non_api_failures": [],
+  "targets": [
+    "tests/test_oracle9_w1_driver_t5.py",
+    "tests/test_oracle9_w1_expect.py",
+    "tests/test_oracle9_w1_main.py",
+    "tests/test_oracle9_w1_driver.py",
+    "tests/test_oracle9_w1_driver_session.py",
+    "tests/test_oracle9_w1_controller.py"
+  ]
+}

@@ -10,11 +10,18 @@ The pinned pure prefix is trusted SOURCE code: ``load_pure`` reads it once
 through the reader port, checks exact size and SHA-256 and executes those same
 bytes in a private module. A finite RETAINED result keeps a strong ``Owner``;
 the physical hold that must stop an operational exit is a D2 concern.
+
+Case 24 (T5-DESIGN v3) is an EOF probe through the ``children`` port only: a G2
+reservation rooted in the owner before adoption, four owned ends and the child
+registered before any later step, public worker codecs, a fence taken BEFORE the
+INIT write and PASS only for an exact natural exit 0 reaped before ``wait_end`` and
+the fence. A fallback kill is cleanup, never a PASS. Fakes are not native proof.
 """
 
 from __future__ import annotations
 
 import hashlib
+import hmac
 import json
 import math
 import sys
@@ -22,11 +29,18 @@ import threading
 import types
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Final
+from typing import Any, Final, NoReturn
 
 from maskgw.pgwire.result_frame import ResultLimits
 from maskgw.pgwire.result_receiver import ResultSummary
-from maskgw.runtime.budget import BudgetLedger, BudgetLimits, DatasourceCapacity, ReleaseOutcome
+from maskgw.runtime import worker_protocol as wire
+from maskgw.runtime.budget import (
+    BudgetLedger,
+    BudgetLimits,
+    CleanupConfirmation,
+    DatasourceCapacity,
+    ReleaseOutcome,
+)
 from maskgw.runtime.linux_guard import GuardFacts, ProcessRole
 from maskgw.runtime.worker_protocol import ErrorReply, SessionKey
 from maskgw.runtime.worker_session import (
@@ -60,6 +74,9 @@ SEND_CAP_S: Final = 30.0
 JOIN_EXTRA_S: Final = 3.0
 JOB_EXTRA_S: Final = 10.0
 LOCK_S: Final = 3.0
+OPEN_CAP_S: Final = 12.0  # T5 opening, same cap as the public WorkerSession opening
+EOF_WAIT_S: Final = 10.0
+KILL_REAP_S: Final = 0.75  # fallback cleanup only; never a PASS path
 
 _PURE_MODULE: Final = "_maskgw_w1_lab_pure"
 _MAX_ROWS: Final = 1000
@@ -76,6 +93,14 @@ _LIVE_MIN_MS: Final = 1000
 _LIVE_MAX_MS: Final = 30000
 _SETTLED: Final = (ReleaseOutcome.RELEASED, ReleaseOutcome.ALREADY_RELEASED)
 _PAIR: Final = 2
+_IDLE_S: Final = _IDLE_MS / 1000
+_CONTROL_MAX: Final = 256  # same bound the public WorkerSession applies before a body read
+_NONCE_BYTES: Final = 32
+_SESSION_ID_BYTES: Final = 16
+_PROBE_MARKS: Final = ("probe_pair", "probe_stdin", "probe_process")
+_FULL: Final = CleanupConfirmation(
+    processes=True, threads=True, pipes=True, handles=True, output=True
+)
 
 
 def _exact_int(value: object, low: int, high: int) -> bool:
@@ -117,6 +142,7 @@ class Ports:
     factory: Any
     pair: Any
     threads: Any
+    children: Any  # T5 probe: own socket ends, explicit stdin pipe ends and the child
 
 
 class Owner:
@@ -246,6 +272,20 @@ class CallState:
                 return False
             action()
             return True
+
+
+class _ProbeState:
+    """Names of the T5 probe originals; the Owner is what roots them."""
+
+    def __init__(self) -> None:
+        self.token: Any = None
+        self.adopted = False
+        self.parent: Any = None
+        self.child: Any = None
+        self.reader: Any = None
+        self.writer: Any = None
+        self.proc: Any = None
+        self.reaped = False
 
 
 # ---------------------------------------------------------------- pinned loader
@@ -932,10 +972,339 @@ class _Driver:
             stop_applied=applied,
         )
 
+    # ------------------------------------------------------------ T5 EOF probe (case 24)
+
     def t5(self) -> None:
+        """T5-DESIGN v3: own channel, owner before effects, natural exit 0 only after EOF."""
+        self.case = _T5
+        key = self.probe_key()
+        t_open = self.probe_now()
+        if t_open is None:
+            raise _Abort(_T5, "CASE", "SESSION")
+        open_end = t_open + OPEN_CAP_S
+        state = _ProbeState()
+        self.probe_reserve(state, open_end)
+        try:
+            expected, fence = self.probe_open(state, key, open_end)
+        except _Abort as stop:
+            self.probe_fail(state, stop)
         self.ready(_T5)
-        self.accept(GO_CAP_S, None)
-        self.result(ACK_CAP_S, None, verdict="FAIL", kind="PENDING", reason="T5_PENDING")
+        try:
+            self.accept(GO_CAP_S, fence)
+        except _Abort as stop:
+            self.probe_fail(state, stop)
+        del expected
+        reason = self.probe_eof(state, fence)
+        if not self.probe_cleanup(state):
+            raise _Abort(_T5, "CASE", "SESSION", retain=True)
+        self.result(
+            ACK_CAP_S,
+            None,
+            verdict="PASS" if reason is None else "FAIL",
+            kind="EOF",
+            reason=reason,
+            release="RELEASED",
+        )
+
+    def probe_now(self) -> float | None:
+        """Exact finite int/float reading or None; no hook of a foreign scalar is used."""
+        value: Any = None
+        try:
+            value = self.clock.monotonic()
+        except Exception:
+            return None
+        if type(value) is not float and type(value) is not int:
+            return None
+        if not math.isfinite(value):
+            return None
+        return float(value)
+
+    def probe_before(self, open_end: float) -> None:
+        now = self.probe_now()
+        if now is None or not now < open_end:
+            raise _Abort(_T5, "CASE", "SESSION")
+
+    def probe_key(self) -> SessionKey:
+        """Fresh exact 16-byte id, unique in the same set, G2 key; before any effect."""
+        session_id: Any = None
+        try:
+            session_id = self.ports.ids.session_id()
+        except Exception:
+            session_id = None
+        valid = type(session_id) is bytes and len(session_id) == _SESSION_ID_BYTES
+        if not valid or session_id in self.ids:
+            raise _Abort(_T5, "CASE", "SESSION")
+        self.ids.add(session_id)
+        return SessionKey(
+            session_id,
+            bytes.fromhex(self.pure.DATASOURCE_ID[4:]),
+            2,
+            self.pure.RECORD_REVISION,
+        )
+
+    def probe_reserve(self, state: _ProbeState, open_end: float) -> None:
+        ledger, gen_token = self.ledger, self.generations[2]
+        self.probe_before(open_end)
+        token = self.ledger_call(
+            lambda: ledger.reserve_session(
+                gen_token, worker_bytes=WORKER_BYTES, parent_bytes=PARENT_BYTES
+            ),
+            retain=False,
+        )
+        self.owner._session_token = token  # rooted in the original owner BEFORE adopt
+        state.token = token
+        now = self.probe_now()
+        if now is None or not now < open_end:  # late reserve: never adopt just to clean up
+            self.retain_token(token)
+            raise _Abort(_T5, "CASE", "SESSION", retain=True)
+        try:
+            self.ledger_call(lambda: ledger.adopt_session(token), retain=True)
+        except _Abort:
+            self.retain_token(token)
+            raise _Abort(_T5, "CASE", "SESSION", retain=True) from None
+        state.adopted = True
+        try:
+            self.probe_before(open_end)
+        except _Abort as stop:
+            self.probe_fail(state, stop)
+
+    def probe_acquire(self, mark: str, action: Callable[[], Any]) -> Any:
+        """Mark UNKNOWN before the port call; the caller roots the originals at once."""
+        self.owner._unknown.append(mark)
+        result: Any = None
+        failed = False
+        try:
+            result = action()
+        except Exception:
+            failed = True
+        if failed:
+            raise _Abort(_T5, "CASE", "SESSION", retain=True)  # effect unknown: keep mark
+        return result
+
+    def probe_settled(self, mark: str) -> None:
+        self.owner._unknown[:] = [item for item in self.owner._unknown if item != mark]
+
+    def probe_pair_ends(self, mark: str, result: Any) -> tuple[Any, Any]:
+        if type(result) is not tuple or len(result) != _PAIR:
+            raise _Abort(_T5, "CASE", "SESSION", retain=True)  # shape unknown: keep mark
+        first, second = result
+        self.owner._endpoints += [first, second]
+        self.probe_settled(mark)
+        return first, second
+
+    def probe_close(self, end: Any) -> bool:
+        """Only a positive close fact releases the original endpoint from the owner."""
+        closed = False
+        try:
+            closed = end.close() is True
+        except Exception:
+            closed = False
+        if closed:
+            self.owner._endpoints[:] = [item for item in self.owner._endpoints if item is not end]
+        return closed
+
+    def probe_open(
+        self, state: _ProbeState, key: SessionKey, open_end: float
+    ) -> tuple[bytes, float]:
+        children = self.ports.children
+        self.probe_before(open_end)
+        result = self.probe_acquire("probe_pair", children.pair)
+        state.parent, state.child = self.probe_pair_ends("probe_pair", result)
+        self.probe_before(open_end)
+        result = self.probe_acquire("probe_stdin", children.stdin)
+        state.reader, state.writer = self.probe_pair_ends("probe_stdin", result)
+        self.probe_before(open_end)
+        child, reader = state.child, state.reader
+        proc = self.probe_acquire(
+            "probe_process",
+            lambda: children.spawn(
+                child,
+                reader,
+                parent_pid=self.guard.pid,
+                address_bytes=WORKER_BYTES,
+                idle_ms=_IDLE_MS,
+            ),
+        )
+        self.owner._handles.append(proc)
+        state.proc = proc
+        self.probe_settled("probe_process")
+        for end in (state.child, state.reader):  # the parent's copies of the child's sides
+            self.probe_before(open_end)
+            if not self.probe_close(end):
+                raise _Abort(_T5, "CASE", "SESSION")
+        self.probe_before(open_end)
+        pid: Any = getattr(proc, "pid", None)
+        _, guard = self.probe_frame(state, (wire.Kind.GUARD_READY,), open_end)
+        facts: Any = None
+        try:
+            facts = wire.decode_guard(guard)
+        except Exception:
+            facts = None
+        if type(pid) is not int or facts != (pid, self.guard.pid, WORKER_BYTES):
+            raise _Abort(_T5, "CASE", "SESSION")  # never an INIT after a failed GUARD
+        self.probe_before(open_end)
+        nonce: Any = None
+        try:
+            nonce = self.ports.ids.nonce()
+        except Exception:
+            nonce = None
+        self.probe_before(open_end)
+        if type(nonce) is not bytes or len(nonce) != _NONCE_BYTES:
+            raise _Abort(_T5, "CASE", "SESSION")
+        snapshot = self.snapshots[2]
+        expected = hmac.digest(nonce, snapshot, "sha256")
+        packet = self.probe_packet(key, nonce, snapshot, open_end)
+        del nonce
+        t_pre = self.probe_now()  # BEFORE the write: lower bound of the child idle start
+        if t_pre is None or not t_pre < open_end:
+            raise _Abort(_T5, "CASE", "SESSION")
+        fence = t_pre + _IDLE_S - IDLE_MARGIN_S  # captured once, never rebased
+        written = False
+        try:
+            written = state.writer.write_all(packet, deadline=open_end) is True
+        except Exception:
+            written = False
+        del packet
+        self.probe_before(open_end)
+        if not written:
+            raise _Abort(_T5, "CASE", "SESSION")
+        if not self.probe_close(state.writer):
+            raise _Abort(_T5, "CASE", "SESSION")
+        self.probe_before(open_end)
+        kind, tag = self.probe_frame(state, (wire.Kind.OPENED, wire.Kind.ERROR), open_end)
+        opened: Any = None
+        if kind is wire.Kind.OPENED:
+            try:
+                opened = wire.decode_opened(tag)
+            except Exception:
+                opened = None
+        if type(opened) is not bytes or not hmac.compare_digest(opened, expected):
+            raise _Abort(_T5, "CASE", "SESSION")
+        self.probe_before(open_end)  # a true but late verification cannot open the probe
+        return expected, fence
+
+    def probe_packet(
+        self, key: SessionKey, nonce: bytes, snapshot: bytes, open_end: float
+    ) -> bytes:
+        packet: Any = None
+        try:
+            limits = ResultLimits(max_rows=_MAX_ROWS, max_frame_bytes=FRAME_LIMIT)
+            packet = wire.encode_init(
+                wire.SecretInit(key, limits, float(open_end), nonce, snapshot)
+            )
+        except Exception:
+            packet = None
+        if type(packet) is not bytes:
+            raise _Abort(_T5, "CASE", "SESSION")
+        return packet
+
+    def probe_frame(
+        self, state: _ProbeState, allowed: tuple[Any, ...], open_end: float
+    ) -> tuple[Any, bytes]:
+        """Header kind and size checked BEFORE any body read; deadline after each return."""
+        header = self.probe_recv(state, wire.HEADER_BYTES, open_end)
+        kind: Any = None
+        size: Any = None
+        try:
+            kind, size = wire.parse_header(header)
+        except Exception:
+            kind = None
+        if kind not in allowed or type(size) is not int or not 0 <= size <= _CONTROL_MAX:
+            raise _Abort(_T5, "CASE", "SESSION")
+        self.probe_before(open_end)
+        return kind, self.probe_recv(state, size, open_end)
+
+    def probe_recv(self, state: _ProbeState, size: int, open_end: float) -> bytes:
+        self.probe_before(open_end)  # never read a header/body after the opening cap
+        data: Any = None
+        try:
+            data = state.parent.recv_exact(size, deadline=open_end)
+        except Exception:
+            data = None
+        self.probe_before(open_end)
+        if type(data) is not bytes or len(data) != size:
+            raise _Abort(_T5, "CASE", "SESSION")
+        return data
+
+    def probe_eof(self, state: _ProbeState, fence: float) -> str | None:
+        """EOF only from a confirmed parent close; exact rc before wait_end AND fence."""
+        if not self.probe_close(state.parent):
+            self.probe_fail(state, _Abort(_T5, "CASE", "SESSION"))
+        t_eof = self.probe_now()
+        if t_eof is None or not t_eof < fence:
+            return "NO_EXIT"  # no timely wait possible: fallback cleanup only
+        wait_end = min(t_eof + EOF_WAIT_S, fence)  # captured once
+        rc: Any = None
+        try:
+            rc = state.proc.wait(deadline=wait_end)
+        except Exception:
+            rc = None
+        t_ret = self.probe_now()
+        if type(rc) is not int:
+            return "NO_EXIT"  # timeout or invalid returncode: fallback kill, never PASS
+        state.reaped = True
+        if t_ret is None or not t_ret < fence:
+            return "EXIT_LATE"  # not distinguishable from the idle exit
+        if not t_ret < wait_end:
+            return "WAIT_LATE"
+        return None if rc == 0 else "EXIT_NONZERO"
+
+    def probe_fail(self, state: _ProbeState, stop: _Abort) -> NoReturn:
+        """Uncertain acquisitions keep everything; otherwise cleanup decides retention."""
+        if stop.retain:
+            raise stop
+        cleaned = self.probe_cleanup(state)
+        raise _Abort(_T5, stop.phase, stop.reason, retain=not cleaned)
+
+    def probe_cleanup(self, state: _ProbeState) -> bool:
+        """Kill only as fallback; credits back only with reap, closes and a real RELEASED."""
+        owner = self.owner
+        if any(mark in owner._unknown for mark in _PROBE_MARKS):
+            return False  # unknown acquisition: no guessed kill, close or release
+        proc = state.proc
+        if proc is not None and not state.reaped:
+            try:
+                proc.kill()
+            except Exception:
+                pass  # the reap below is the only fact that counts
+            start = self.probe_now()
+            if start is None:
+                return False
+            deadline = start + KILL_REAP_S
+            rc: Any = None
+            try:
+                rc = proc.wait(deadline=deadline)
+            except Exception:
+                rc = None
+            after = self.probe_now()
+            if type(rc) is not int or after is None or not after < deadline:
+                return False
+            state.reaped = True
+        ends = (state.parent, state.child, state.reader, state.writer)
+        for end in ends:
+            if end is not None and any(item is end for item in owner._endpoints):
+                self.probe_close(end)
+        if any(any(item is end for item in owner._endpoints) for end in ends if end is not None):
+            return False  # an unconfirmed close keeps the original endpoint and the token
+        if not state.adopted:
+            return False
+        token, ledger = state.token, self.ledger
+        failed = False
+        outcome: Any = None
+        try:
+            outcome = self.ledger_call(
+                lambda: (ledger.begin_drain(token), ledger.release(token, _FULL))[1],
+                retain=True,
+            )
+        except _Abort:
+            failed = True
+        if failed or outcome is not ReleaseOutcome.RELEASED:
+            return False  # HELD keeps the original token and process
+        owner._session_token = None
+        if proc is not None:
+            owner._handles[:] = [item for item in owner._handles if item is not proc]
+        state.token = None
+        return True
 
     def summary(self) -> None:
         summary = self.machine_call(self.machine.summary)

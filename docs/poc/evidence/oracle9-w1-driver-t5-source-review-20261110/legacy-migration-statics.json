@@ -1,0 +1,22 @@
+[
+  {
+    "gate": "ruff",
+    "exit_code": 1,
+    "output": "ARG002 Unused method argument: `deadline`\n   --> tests\\test_oracle9_w1_driver.py:831:37\n    |\n829 |         self.inbox = bytearray()\n830 |\n831 |     def recv_exact(self, n: int, *, deadline: float) -> bytes:\n    |                                     ^^^^^^^^\n832 |         self.world.probe_calls.append(f\"recv:{n}\")\n833 |         if len(self.inbox) < n:\n    |\n\nARG002 Unused method argument: `deadline`\n   --> tests\\test_oracle9_w1_driver.py:850:43\n    |\n848 |         self.world, self.parent = world, parent\n849 |\n850 |     def write_all(self, packet: bytes, *, deadline: float) -> bool:\n    |                                           ^^^^^^^^\n851 |         self.world.probe_calls.append(\"write_all\")\n852 |         self.world.probe_packets.append(packet)\n    |\n\nARG002 Unused method argument: `deadline`\n   --> tests\\test_oracle9_w1_driver.py:871:23\n    |\n869 |         self.world = world\n870 |\n871 |     def wait(self, *, deadline: float) -> int:\n    |                       ^^^^^^^^\n872 |         self.world.probe_calls.append(\"wait\")\n873 |         return 0\n    |\n\nARG002 Unused method argument: `child`\n   --> tests\\test_oracle9_w1_driver.py:897:21\n    |\n895 |         return ProbeEnd(self.world, \"reader_close\", 12), ProbeWriter(self.world, self.parent)\n896 |\n897 |     def spawn(self, child: Any, reader: Any, **kwargs: Any) -> ProbeProcess:\n    |                     ^^^^^\n898 |         self.world.probe_calls.append(\"spawn\")\n899 |         self.world.probe_spawns.append(kwargs)\n    |\n\nARG002 Unused method argument: `reader`\n   --> tests\\test_oracle9_w1_driver.py:897:33\n    |\n895 |         return ProbeEnd(self.world, \"reader_close\", 12), ProbeWriter(self.world, self.parent)\n896 |\n897 |     def spawn(self, child: Any, reader: Any, **kwargs: Any) -> ProbeProcess:\n    |                                 ^^^^^^\n898 |         self.world.probe_calls.append(\"spawn\")\n899 |         self.world.probe_spawns.append(kwargs)\n    |\n\nFound 5 errors.\n"
+  },
+  {
+    "gate": "format",
+    "exit_code": 0,
+    "output": "364 files already formatted\n"
+  },
+  {
+    "gate": "mypy311",
+    "exit_code": 0,
+    "output": "Success: no issues found in 363 source files\r\n"
+  },
+  {
+    "gate": "mypy314",
+    "exit_code": 0,
+    "output": "Success: no issues found in 363 source files\r\n"
+  }
+]

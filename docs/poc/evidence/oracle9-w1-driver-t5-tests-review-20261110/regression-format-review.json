@@ -1,0 +1,9 @@
+{
+  "mechanical_qa_only": true,
+  "before_sha256": "2b509c870292a30612953257565d8a705d23da11acbf62fad8ba40c7fbfeff0e",
+  "after_sha256": "2b509c870292a30612953257565d8a705d23da11acbf62fad8ba40c7fbfeff0e",
+  "ast_identical": true,
+  "bytes": 50963,
+  "lines": 1292,
+  "formatter_output": "1 file left unchanged\n"
+}

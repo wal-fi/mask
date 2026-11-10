@@ -1,0 +1,78 @@
+........................................................................ [ 80%]
+............F.FF.                                                        [100%]
+================================== FAILURES ===================================
+____________ test_r1_late_reserve_return_never_adopts_and_retains _____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002E2882523D0>
+
+    def test_r1_late_reserve_return_never_adopts_and_retains(monkeypatch: pytest.MonkeyPatch) -> None:
+        world = T5World(t5={"late_reserve": True})
+        result = world.run_t5(monkeypatch)
+>       assert_aborted_24(world, result, world.aborts()[0]["reason"], retained=True)
+
+tests\test_oracle9_w1_driver_t5.py:1240:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+world = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000002E288419BD0>
+result = DriverResult(outcome=ABORTED, <redacted>), reason = 'SESSION'
+retained = True
+
+    def assert_aborted_24(world: T5World, result: Any, reason: str, *, retained: bool) -> None:
+        assert world.eof_results() == []
+        aborts = world.aborts()
+        assert len(aborts) == 1
+>       assert (aborts[0]["case"], aborts[0]["reason"], aborts[0]["retained"]) == (
+            T5,
+            reason,
+            retained,
+        )
+E       AssertionError: assert (24, 'SESSION', False) == (24, 'SESSION', True)
+E
+E         At index 2 diff: False != True
+E         Use -v to get more diff
+
+tests\test_oracle9_w1_driver_t5.py:575: AssertionError
+_______________ test_r1_late_opened_verification_is_not_a_pass ________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002E287F32010>
+
+    def test_r1_late_opened_verification_is_not_a_pass(monkeypatch: pytest.MonkeyPatch) -> None:
+        world = T5World()
+        monkeypatch.setitem(d1.driver()["run"].__globals__, "hmac", late_compare_observer(world))
+        result = world.run_t5(monkeypatch)
+        assert "compare_digest" in world.names()
+>       assert_aborted_24(world, result, "SESSION", retained=False)
+
+tests\test_oracle9_w1_driver_t5.py:1266:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+world = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000002E287F30A90>
+result = DriverResult(outcome=T6_UNKILLED, <redacted>), reason = 'SESSION'
+retained = False
+
+    def assert_aborted_24(world: T5World, result: Any, reason: str, *, retained: bool) -> None:
+>       assert world.eof_results() == []
+E       AssertionError: assert [{'bytes': No...: 'EOF', ...}] == []
+E
+E         Left contains one more item: {'bytes': None, 'case': 24, 'e': 'RESULT', 'kind': 'EOF', ...}
+E         Use -v to get more diff
+
+tests\test_oracle9_w1_driver_t5.py:572: AssertionError
+___________________ test_r1_late_pid_read_gets_no_guard_io ____________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002E288289510>
+
+    def test_r1_late_pid_read_gets_no_guard_io(monkeypatch: pytest.MonkeyPatch) -> None:
+        world = T5World(t5={"late_pid": True})
+        result = world.run_t5(monkeypatch)
+        assert "pid" in world.names()
+>       assert "guard_header" not in world.names()
+E       AssertionError: assert 'guard_header' not in ['reserve', 'adopt', 'pair', 'stdin', 'spawn', 'child_close', ...]
+E        +  where ['reserve', 'adopt', 'pair', 'stdin', 'spawn', 'child_close', ...] = names()
+E        +    where names = <tests.test_oracle9_w1_driver_t5.T5World object at 0x000002E287E22790>.names
+
+tests\test_oracle9_w1_driver_t5.py:1276: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_oracle9_w1_driver_t5.py::test_r1_late_reserve_return_never_adopts_and_retains
+FAILED tests/test_oracle9_w1_driver_t5.py::test_r1_late_opened_verification_is_not_a_pass
+FAILED tests/test_oracle9_w1_driver_t5.py::test_r1_late_pid_read_gets_no_guard_io

@@ -1,3 +1,152 @@
+## W1 Oracle: T5 integrado com fakes,849 verdes — 2026-11-10
+
+Claude2 único programador/sessão51ea0d85/claude-opus-5-5/medium; CLI82502/
+61444/9697/62793 recuperadas0 antes da próxima chamada. Root leu todos os
+deltas e conferiu AST. Driverb54a8a94/51913bytes, main89c99c65/46787bytes,
+testeT5driver2b509c87/89casos e testeT5main ec2df911/43casos. Fixtures
+antigas migradas só por contrato;161casos do main preservados, M06aditivo.
+849relacionados passaram em12,615s,0falhas/erros/skips. Ruff/lint restrito/
+format366/mypy364src/tests3.11/3.14 limpos, runtimeWindows3.11.3; deploy
+fora do mypy. App124/protegidos sem deltas não autorizados. REDs e verdes
+rejeitados preservados; SDK/puro/estado16 e tentativa consumida intactos.
+
+Coerência main/driver resolvida somente para laboratório fake. Fechar Git/
+publicação por ferramenta permitida e conferir HEAD real, sem guardaantiga.
+Ler T5-MAIN-REVIEW e main-t5-review-20261110/final-integrity.json. Próximo
+incremento seguro é reconciliar desenho público de readmissão nativa com
+os novos pins e pré-condições, antes de efeitos. Nenhum programador ativo,
+novo job ou quota observado; tarefa histórica sem próximo disparo.
+Não há Oracle/Docker/PG/SQL/socket/thread/processo/guard/sinal nativo do
+produto, runtime/config/privado/root operacional/deploy novo. T5 físico
+BLOCK_NATIVE/B1/B2/D090gate2/C1/ingressos/produção abertos; Gateway indisponível.
+
+## W1 Oracle: main43 verde; migração legada em andamento — 2026-11-10
+
+CLI9697 recuperada0; root leu fix mínimo. Fonte89c99c65/46787bytes/1446linhas,
+testeec2df911 fixo:43pass0,962s. Sondas independentes agora recusam spawn
+com parent/writer fechados, zero Popen. Ruff/lint restrito/format366/
+mypy364src/tests3.11/3.14 limpos. Reprovados anteriores preservados.
+
+Teste antigo antes da migração:161casos,29pass/132falhas,0erros/skips,
+37,578s. CLI62793, mesmo Claude2/sessão51ea0d85/claude-opus-5-5/medium,
+migra SOMENTE fixtures antigas de tests/test_oracle9_w1_main.py: pins,
+System22/SLOTS10/imports/stubs sem efeito e assert children adicional.
+Demais161oráculos preservados; root lê AST/diff e mede conjunto antes de
+publicar. Fonte89/testec2/driverb54/test2b/SDK/puro/app124/estado16/attempt
+fixos. Recuperar terminal antes de outra chamada; ativo só monitorar.
+Ler T5-MAIN-REVIEW. Nenhum novo job/quota/efeito nativo/Docker/PG/SQL/
+runtime/config/privado/deploy; gates abertos e Gateway indisponível.
+
+## W1 Oracle: main RED43 comportamental; fix em andamento — 2026-11-10
+
+CLI82502/61444 recuperadas0, zero escritor antes de cada nova chamada.
+Fontec2eddba4 passou41 fakes mas foi rejeitada: spawn permitia processo com
+parent/writer já fechados. Testeec2df911/36224bytes/895linhas congelado:
+43casos,41pass/2falhas,0erros/skips,1,374s; Ruff/format366/mypy364src/tests
+3.11/3.14 limpos. AST pipe2 corrigida para contar somente os.pipe2.
+
+CLI9697, mesmo Claude2/sessão51ea0d85/claude-opus-5-5/medium, corrige SOMENTE
+main: exigir quatro pontas possuídas antes de spawn e acesso diretoSystem.
+Recuperar terminal antes de outra chamada/revisão/gates; ativo só monitorar.
+Root lê delta e mede43 antes de migrar fixtures antigas5abe. Testeec2/driver
+b54/test2b/puro/app124/estado16/attempt fixos. Fonte parcial não publicada.
+Ler T5-MAIN-REVIEW e dados main-t5-review-20261110. Nenhum job/quota/efeito
+nativo/Docker/PG/SQL/runtime/config/privado/deploy; todos gates abertos.
+
+## W1 Oracle: main RED41 congelado; binding é próximo — 2026-11-10
+
+CLI5166/87602 recuperadas0, zero escritor. Root leu807linhas iniciais e
+correções. Teste6063c0e3/34736bytes/864linhas:41casos,2sanidades passam/
+39falhas de API,0erros/skips,12,232s. Ruff/format365/mypy364src/tests3.11/
+3.14 limpos. LoteA645verde histórico, driverb54/teste2b50 intactos.
+
+Próximo SOMENTE main372 para bindingT5/System22/SLOTS10/driverpinb54,
+mesmo Claude2/sessão51ea0d85/claude-opus-5-5/medium. Teste6063 e antigo5abe
+congelados; root lê delta e mede antes da migração dos helpers antigos.
+Conferir Git/zero escritor; ativo só monitorar, recuperar terminal antes
+de outra chamada. Fonte parcial não publicada. Ler T5-MAIN-REVIEW e dados
+main-t5-review-20261110. App124/SDK/puro/estado16/attempt fixos. Sem novo
+job/quota, Docker/PG/SQL/nativo/runtime/config/privado/deploy. T5/B1/B2/
+D090gate2/C1/ingressos/produção abertos; Gateway indisponível.
+
+## W1 Oracle: lote A verde645; teste do main é próximo — 2026-11-10
+
+CLI9390/35214 recuperadas0 e zero escritor. Root leu diffs/AST: D1 alterou
+somente3oráculos T5 autorizados; testes SDK/EXPECT sem mudança funcional.
+D1 37848735/81023bytes, SDK e7c2a1c2/45321bytes, EXPECTtest e24f80a5 (só
+pin SHA/tamanho do driver). Fonteb54a8a94 e teste2b509c87 fixos.645pass em
+7,949s,0falhas/erros/skips; Ruff/lint restrito/format364/mypy3633.11/3.14
+limpos. REDs/candidata rejeitada/pin antigo/lint inicial preservados.
+
+Integração NÃO publicada: main372f342f ainda tem hash/API antigos. Próximo
+SOMENTE tests/test_oracle9_w1_main_t5.py pelo mesmo Claude2/sessão51ea0d85/
+claude-opus-5-5/medium, oráculos lidos e RED antes de mudar main. Manter
+driverb54/test2b/D1/SDK/EXPECT/app124/puro/estado16/attempt fixos. Scope de
+main é FakeOS, System22/SLOTS10; nenhum efeito físico ou driver privado
+atalhado. Conferir Git atual/zero escritor; ativo só monitorar e recuperar
+terminal antes de nova chamada. Ler T5-SOURCE-REVIEW e dados source-review.
+Sem novo job/quota/Docker/PG/SQL/nativo/runtime/config/privado/deploy.
+T5/B1/B2/D090gate2/C1/ingressos/produção abertos. Histórico abaixo.
+
+## W1 Oracle: driver T5 verde em89 fakes; migração pendente — 2026-11-10
+
+CLI38482 recuperada0, zero escritor. Root leu fix de seis linhas: fonte
+b54a8a94/51913bytes/1412linhas, teste2b509c87 congelado.89pass2,146s,
+sem falhas/erros/skips; três sondas independentes corrigidas. Lint restrito/
+Ruff/format364/mypy363 src/tests3.11/3.14 limpos; deploy fora do mypy.
+RED89/86pass3falhas e candidata8c rejeitada preservados como dados.
+
+Legados antes da migração:149casos,61pass/88TypeError(children ausente),
+8,687s. Main ainda fixa hash/Ports antigos. Não publicar integração parcial.
+Próximo SOMENTE dois testes antigos driver e driver_session para fixtures,
+nona porta e oráculos T5/SUMMARY expressamente mudados pelo desenho.
+Fonteb54/teste novo2b50/main/puro/EXPECT/app124/estado16/attempt fixos;
+demais asserções intocadas. Root lê diff/AST e mede antes de publicar.
+Conferir Git atual/zero escritor; ativo só monitorar e recuperar terminal.
+Sem job novo/quota/nativo/Docker/PG/SQL/runtime/config/privado/deploy.
+T5/B1/B2/D090gate2/C1/ingressos/produção abertos. Histórico abaixo.
+
+## W1 Oracle: RED89 comportamental congelado; driver rejeitado — 2026-11-10
+
+Driver local8c67ee4e/51515bytes/1406linhas passou83 em1,519s, mas root leu
+delta completo e reproduziu três falhas de prazo com fakes, incluindo
+PASS indevido após abertura tardia. Candidata rejeitada, sem publicação.
+CLI30613/34179/24079 recuperadas0, zero escritor após cada chamada.
+
+Regressões aditivas revistas, AST dos83 anteriores preservada. Teste final
+2b509c87/50963bytes/1292linhas congelado:89casos,86pass/3falhas,0erros/skips,
+3,392s. Ruff/format364/mypy363 src/tests3.11/3.14 limpos. Anotação da união
+Proc/LatePidProc corrigida honestamente; Root format não mudou o arquivo.
+
+Próximo SOMENTE driver: guarda após reserva antes de adopt (reter token
+se tardia), guarda antes de recv após pid e guarda final de abertura antes
+de READY. Teste2b50 e demais26/app124/main/puro/EXPECT/SDK/estado16/attempt
+fixos. Ler T5-SOURCE-REVIEW/dados source-review-20261110. Conferir Git atual/
+zero escritor, ativo só monitorar e recuperar terminal antes de outra chamada.
+Código parcial NÃO publicar: main ainda usa hash/API antigos; migrações e
+binding terão lotes/gates próprios. Sem efeitos nativos/PG/SQL/Docker/deploy.
+T5/B1/B2/D090gate2/C1/ingressos/produção abertos. Histórico abaixo.
+
+## W1 Oracle: testes T5 lidos e RED83 congelado — 2026-11-10
+
+CLI43627/84916 recuperadas0, zero escritor. Mesmo Claude2/sessão51ea0d85/
+claude-opus-5-5/medium escreveu só o novo teste. Root leu1065linhas iniciais
+e delta final:3402d681/45565bytes/1165linhas, AST dos testes originais igual.
+RED83:8sanidades passam/75TypeError(children ausente),0erros/skips,5,113s.
+Conjunta787:712pass/75falhas,704anteriores verdes,12,975s. É RED de API,
+não prova comportamento temporal/limpeza. Ruff/format363/mypy3633.11/3.14
+limpos. D5-12 usa transições reais do ledger, não resultados inventados.
+
+Próximo lote: SOMENTE deploy/oracle9_w1_driver.py pelo mesmo Claude2,
+teste3402 congelado. Driver é única exceção prospectiva aos27 pins; outros26,
+app124/main/puro/EXPECT/SDK/estado16/attempt fixos. Root lê fonte antes
+de executar. Não publicar integração parcial: main ainda usa hash/Ports
+antigos; migração e binding exigem lotes/gates próprios. Conferir Git atual
+e zero escritor, ativo só monitorar/recolher terminal antes de nova chamada.
+Ler T5-TESTS-REVIEW e dados driver-t5-tests-review-20261110. Sem novo job/
+quota ou efeitos Docker/PG/SQL/native/runtime/config/binário/privado/deploy.
+T5/B1/B2/D090gate2/C1/ingressos/produção abertos. Históricos abaixo.
+
 ## W1 Oracle: desenho T5 revisto; implementação ausente — 2026-11-09
 
 Retomada21h55UTC executou0 e entregou esta conversa, sem próximo disparo.
