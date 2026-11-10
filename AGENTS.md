@@ -1,4 +1,22 @@
 
+## Reator host publicado; próximo desenho da ponte — 2026-11-10
+
+Checkpoint de CÓDIGO7ecf05623b385cd44f6d49778a275f624f371316 publicado por
+push normal, fetch confirmouHEAD/origin iguais0/0, rastreados limpos. Bytes
+dos dois blobs publicados idênticos aos arquivos testados (fontee86f8e32/
+testef177102a).1215PASS incluindo366próprios/18sondas, estáticos e limitações
+em HOST-VALIDATION. Este bloco/evidência são documentais posteriores; ler
+HEAD atual real antes de nova guarda, nunca assumir7ecf056 como HEAD eterno.
+
+Zero escritor após CLI60662; todos terminais recuperados. Próximo só desenho
+da ponte duplex/portas com mesmoC2/sessão51ea0d85/claude-opus-5-5/medium,
+sem segundo escritor; ativo só monitorar. Root revisa. Sem efeito Docker/
+PG/SQL/nativo/runtime/config/privado/binário/estado/root/nonce/comando/deploy.
+Pins/app124/estado16/attempt fixos. Nenhuma quota ou jobnovo neste lote.
+Gates nativos/produto e disponibilidade do Gateway continuam abertos.
+Histórico abaixo.
+
+
 ## Host: reator puro implementado/revisto — 2026-11-10
 
 C2 único programador/sessão51ea0d85/claude-opus-5-5/medium; root reviu toda

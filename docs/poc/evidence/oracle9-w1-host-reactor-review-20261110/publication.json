@@ -1,0 +1,25 @@
+{
+  "at": "2026-11-10T19:21:19.461555+00:00",
+  "code_checkpoint": "7ecf05623b385cd44f6d49778a275f624f371316",
+  "origin_equal": true,
+  "ahead_behind": "0/0",
+  "tracked_worktree_clean": true,
+  "files": [
+    {
+      "path": "docs/poc/oracle9_w1_host_reactor.py",
+      "sha256": "e86f8e325410a26efeb47de1c4e349e9099673de612c028eb30e01ceea5d91ae",
+      "published_bytes_equal_tested_worktree": true
+    },
+    {
+      "path": "tests/test_oracle9_w1_host_reactor.py",
+      "sha256": "f177102a1ea55e9c6a32d1fcd863f18a2c04800588bddeeab8ee0eb192816613",
+      "published_bytes_equal_tested_worktree": true
+    }
+  ],
+  "git_fsck_exit": 0,
+  "git_fsck_note": "dangling historical objects are informational; no pruning/deletion performed",
+  "active_writer_at_publication": 0,
+  "next": "design-only duplex bridge; inspect actual current Git after documentation commits; do not reuse code-checkpoint HEAD guard blindly",
+  "new_scheduler_task": false,
+  "quota_observed_this_lot": false
+}
