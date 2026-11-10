@@ -1,0 +1,13 @@
+{
+  "exit_code": 1,
+  "terminal_reason": "api_error",
+  "api_error_status": 429,
+  "session_id": "51ea0d85-05bb-4d24-ba9a-c9627c3f832f",
+  "duration_ms": 8582,
+  "permission_denials": [],
+  "is_error": true,
+  "result": "You've hit your session limit · resets 1:50pm (America/Sao_Paulo)",
+  "design_absent_after_call": true,
+  "reset_inferred_utc": "2026-11-10T16:50:00Z",
+  "reset_independently_observed": false
+}

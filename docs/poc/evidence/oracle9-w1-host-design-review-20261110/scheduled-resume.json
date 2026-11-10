@@ -1,0 +1,19 @@
+{
+  "Task": "Maskgw-Claude2-Resume-01a05804",
+  "State": "Ready",
+  "StartBoundary": "2026-11-10T13:55:00-03:00",
+  "NextRunLocal": "2026-11-10T13:55:00.0000000-03:00",
+  "ExpectedUtc": "2026-11-10T16:55:00Z",
+  "RunLevel": "Limited",
+  "LogonType": "Interactive",
+  "MultipleInstances": "IgnoreNew",
+  "StartWhenAvailable": true,
+  "ActionCount": 1,
+  "TriggerCount": 1,
+  "MessageMatches": true,
+  "Thread": "01a05804-2c07-71f2-bfef-7e3c90c06476",
+  "TaskCreatedNew": false,
+  "DeliveryObserved": false,
+  "QuotaResetObserved": false,
+  "Message": "Resume authorized Mask Gateway work in this same conversation. Read docs/CLAUDE2-PENDING-REVIEW.md and docs/CHECKPOINT-2026-10-30.md first. T5 code861969d and checkpoint9d49b55 are published; inspect actual HEAD after documentation commits, never reuse stale guards. Eight current files and app124 were verified intact,849 related tests remain historical green. Recover all existing agent terminals and confirm zero Claude2/Antigravity writers; if active monitor only, never start a second writer. Claude2 only session51ea0d85-05bb-4d24-ba9a-c9627c3f832f, claude-opus-5-5 effort medium. Read-only CLI16500 completed; host-design CLI26058 ended exit1/API429 BEFORE editing, design absent on Nov10. Reset displayed1:50pm America/Sao_Paulo, inferred2026-11-10T16:50:00Z, not independently observed; no retry before16:50UTC and no quota workaround. Current safe lot ONLY docs/PHASE-9-W1-ORACLE-HOST-DESIGN.md: pure host reactor plus future duplex contract, no source or tests before root review and frozen RED. Read HOST-DESIGN-REVIEW, read-only-reconciliation and exact pending notes. Three individual RO file binds; host verifies main89c99c65, which pins driverb54a8a94/pure4c155d76. No public control encoder; reuse decode/order, minimal16byte pack. Line512includingLF/56lines/50controls. Receipt after complete effect, SENT only local, UNKNOWN terminal. T6 fence based on host time BEFORE GO25, never receiveARMED+live_window_ms. Keep main/driver/pure/EXPECT/test pins,app124,state16 and consumed attempt fixed. Scoped Read/Edit/Write only the DESIGN, no programmer commands or execution. No Docker, PG, SQL, actual socket/thread/process/guard/signal/native, runtime/config/binary/private/environment reads, operational root/state/nonce/entry/command/deployment. Earlier Gemini consent covered only the four-file EXPECT payload; do not export additional payload without its applicable authorization or bypass a tool rejection. Publish only reviewed verified results, all native/product gates open. This scheduled message grants no additional permission."
+}

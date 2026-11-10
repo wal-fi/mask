@@ -1,0 +1,61 @@
+{
+  "state": "PREPARED_NOT_SENT",
+  "destination_if_authorized": "Antigravity/Gemini Argon High",
+  "model": "gemini-4-argon-high",
+  "effort": "high",
+  "purpose": "Write only prospective HOST-DESIGN.md in isolated public scratch; no source/tests/commands/execution or external reads",
+  "files": [
+    {
+      "source": "deploy/oracle9_w1_main.py",
+      "copy": "oracle9_w1_main.py.txt",
+      "sha256": "89c99c6587e7c51d86fc0abb460330780357121c28768883ed8ab9dc789ccdea",
+      "bytes": 46787
+    },
+    {
+      "source": "deploy/oracle9_w1_driver.py",
+      "copy": "oracle9_w1_driver.py.txt",
+      "sha256": "b54a8a9457a908e839d1f5870280644839478bc471e5e06cd4268bcdcff8c51f",
+      "bytes": 51913
+    },
+    {
+      "source": "deploy/oracle9_w1_controller.py",
+      "copy": "oracle9_w1_controller.py.txt",
+      "sha256": "4c155d76208f113852f95fec4c57253eef480c610aa390423fa6f82baf1f7bc7",
+      "bytes": 22453
+    },
+    {
+      "source": "docs/poc/oracle9_w1_expect.py",
+      "copy": "oracle9_w1_expect.py.txt",
+      "sha256": "ce6ff3896d44b7e27cbfe76ca4e1c63c5da87c7982ea7e591e8ef71517a06725",
+      "bytes": 22114
+    },
+    {
+      "source": "docs/PHASE-9-W1-ORACLE-NATIVE-PLAN.md",
+      "copy": "NATIVE-PLAN.md",
+      "sha256": "5db1c1f4b4693cf0794cb8b3882a26f61f6f90dda8a741f17051a96d628c975d",
+      "bytes": 33164
+    },
+    {
+      "source": "docs/PHASE-9-W1-ORACLE-T5-DESIGN.md",
+      "copy": "T5-DESIGN.md",
+      "sha256": "5eb14030f7100af00ad280681703c48d448a376833b01bc4620d06efdcc8173d",
+      "bytes": 22567
+    },
+    {
+      "source": "docs/PHASE-9-W1-ORACLE-HOST-DESIGN-REVIEW.md",
+      "copy": "HOST-DESIGN-REVIEW.md",
+      "sha256": "59b82f5f67f8abde9a9ce93241f6af4777de53634127cb0cdbf372dca75ef453",
+      "bytes": 3130
+    },
+    {
+      "source": "root-authored task brief, public contract only",
+      "copy": "TASK.md",
+      "sha256": "6e2a19bfc1abead8b9fd2fb2a735be22303ad37b17fe763e27cde05df7b4106d",
+      "bytes": 2675
+    }
+  ],
+  "total_bytes": 204803,
+  "excluded": "conversation history, credentials, private config, environment, runtime, binaries, state16 and operational artifacts",
+  "consent": "Earlier explicit consent covered only previous4-file EXPECT payload; no new export performed.",
+  "snapshot_note": "HOST-DESIGN-REVIEW copy is the reviewed initial scope before the quota/scheduler appendix; it is intentionally a frozen public snapshot. The live review begins with those exact bytes. Other public source copies match current files."
+}
