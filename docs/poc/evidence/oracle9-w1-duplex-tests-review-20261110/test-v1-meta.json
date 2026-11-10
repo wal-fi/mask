@@ -1,0 +1,8 @@
+{
+  "path": "tests/test_oracle9_w1_duplex_bridge.py",
+  "sha256": "cb5d50f448b1cc845fd25d2561c59563c5d37fdeedfa05da836b2a7018582108",
+  "bytes": 70435,
+  "lines": 1791,
+  "test_functions": 44,
+  "bridge_absent": true
+}

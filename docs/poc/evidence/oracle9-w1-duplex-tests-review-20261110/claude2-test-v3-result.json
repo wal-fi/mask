@@ -1,0 +1,13 @@
+{
+  "execution": 1542,
+  "cli_exit_code": 0,
+  "session_id": "51ea0d85-05bb-4d24-ba9a-c9627c3f832f",
+  "subtype": "success",
+  "is_error": false,
+  "api_error_status": null,
+  "terminal_reason": "completed",
+  "duration_ms": 12847,
+  "permission_denials": [],
+  "result": "Corrigi a tipagem de `fresh_tamper` em `tests/test_oracle9_w1_duplex_bridge.py`; não rodei mypy, Ruff nem pytest, então a correção ainda precisa ser medida.\n\nO mapeamento agora fica numa variável local anotada como `dict[str, dict[str, object]]`, e a função devolve `tampers[case]`. As entradas, os valores e os oráculos ficaram iguais. Não usei `cast`, `ignore` nem `Any`, e o restante do arquivo não mudou. A fonte da ponte continua ausente.",
+  "uuid": "9400ffca-fdc7-4588-be7d-4c937ebe420c"
+}

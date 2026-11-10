@@ -1,0 +1,10 @@
+{
+  "collected": 178,
+  "counts": {
+    "passed": 3,
+    "failure": 175
+  },
+  "failure_messages": {
+    "FileNotFoundError: [Errno 2] No such file or directory: 'C:\\\\Users\\\\w.filho\\\\Desktop\\\\codes\\\\mask\\\\docs\\\\poc\\\\oracle9_w1_duplex_bridge.py'": 175
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "initial_git_diff_check_exit": 2,
+  "whitespace_count_by_path": {
+    "docs/poc/evidence/oracle9-w1-duplex-tests-review-20261110/final-integrity.json": 82,
+    "docs/poc/evidence/oracle9-w1-duplex-tests-review-20261110/frozen-red195.json": 24,
+    "docs/poc/evidence/oracle9-w1-duplex-tests-review-20261110/test-v1-meta.json": 8,
+    "docs/poc/evidence/oracle9-w1-duplex-tests-review-20261110/test-v2-meta.json": 22,
+    "docs/poc/evidence/oracle9-w1-duplex-tests-review-20261110/v1-red-raw.json": 6,
+    "docs/poc/evidence/oracle9-w1-duplex-tests-review-20261110/v1-red-summary.json": 10,
+    "docs/poc/evidence/oracle9-w1-duplex-tests-review-20261110/v1-red-xml-raw.json": 5,
+    "docs/poc/evidence/oracle9-w1-duplex-tests-review-20261110/v1-red.log": 3143,
+    "docs/poc/evidence/oracle9-w1-duplex-tests-review-20261110/v1-red.xml": 2614,
+    "docs/poc/evidence/oracle9-w1-duplex-tests-review-20261110/v3-red-raw.json": 6,
+    "docs/poc/evidence/oracle9-w1-duplex-tests-review-20261110/v3-red-xml-raw.json": 5,
+    "docs/poc/evidence/oracle9-w1-duplex-tests-review-20261110/v3-red.log": 3442,
+    "docs/poc/evidence/oracle9-w1-duplex-tests-review-20261110/v3-red.xml": 2862
+  },
+  "normalized_CRLF_to_LF": [
+    "final-integrity.json",
+    "frozen-red195.json",
+    "test-v1-meta.json",
+    "test-v2-meta.json",
+    "v1-red-raw.json",
+    "v1-red-summary.json",
+    "v1-red-xml-raw.json",
+    "v1-red.log",
+    "v1-red.xml",
+    "v3-red-raw.json",
+    "v3-red-xml-raw.json",
+    "v3-red.log",
+    "v3-red.xml"
+  ],
+  "test_unchanged": true,
+  "raw_stdout_and_XML_preserved_compressed": true,
+  "json_semantics_unchanged": true
+}

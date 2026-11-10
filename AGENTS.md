@@ -1,4 +1,38 @@
 
+## Duplex: testes revistos e RED195 congelado — 2026-11-10
+
+Claude2, na mesma sessão 51ea0d85-05bb-4d24-ba9a-c9627c3f832f,
+claude-opus-5-5/medium, escreveu somente o novo teste. CLI40524/7575/1542
+terminaram 0/success e foram recuperadas; zero escritores após cada chamada.
+Nenhuma nova quota, fallback ou segunda sessão escritora neste lote.
+
+Root leu as 1791 linhas V1 e todos os deltas V2/V3. Final
+97c26fbfd2823e288a450fdde7ca3d7919ef7a5ec4843021bc3cb98bf585f671,
+76446 bytes/1935 linhas/49 funções. Ruff/format e mypy strict 3.11/3.14
+limpos. RED medido em Windows 3.11.3/pilha64MiB: 195 casos, 3 sanidades
+PASS/192 FileNotFound FAIL/0 erros/skips, 37,843s. Somente ausência do
+módulo; não é prova comportamental. V1/RED178 e falhas de tipagem
+preservados como dados. Ler DUPLEX-TEST-REVIEW e frozen-red195.json.
+
+R8 continua normativo. R9 da revisão: Done do modelo com read/wait vivos
+exige HELD/retained e os slots originais. Antes de feed e begin_* observar
+now novo, sem reutilizar instante antigo. Oráculos congelados; fonte
+docs/poc/oracle9_w1_duplex_bridge.py AUSENTE. Lote atual somente testes
+encerrado; futura fonte requer mesmo C2, leitura dos desenhos e de toda a
+revisão R8/R9, guarda Git atual/zero escritor e revisão antes de execução.
+Nunca reutilizar badd9fa como HEAD depois de novos commits documentais.
+
+13 protegidos/app124 intactos por SHA/tamanho. Estado16/attempt intocados.
+1215 verdes anteriores são históricos. Sem Docker/PG/SQL ou efeito nativo,
+runtime/config/privado/binário/root/nonce/deploy. Gateways e gates nativos/
+produto continuam indisponíveis/abertos. Este RED não é suíte verde nem
+integração publicável. Preservar o trabalho local sem publicar teste parcial.
+
+Tarefa existente entregou esta conversa em 10/11 às19h35SP/22h35UTC,
+LastResult0/NextRun null. Nenhum novo job; sem promessa de quota ou entrega
+futura. Recuperar terminal e confirmar zero escritor antes de nova chamada.
+Histórico abaixo.
+
 ## Duplex: desenho revisto para primeiros testes; retomadaC2 confirmada — 2026-11-10
 
 Claude2CLI65449 terminou1/API429 ANTES de editar, resultado recuperado;

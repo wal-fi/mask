@@ -1,0 +1,10 @@
+{
+  "test_sha256": "83c40e7776841eb42febb5f5bce4bd627a9046c7026428ac02831f2e121b5233",
+  "ruff_check_exit": 0,
+  "ruff_format_check_exit": 0,
+  "mypy_311_exit": 1,
+  "mypy_314_exit": 1,
+  "mypy_errors_each": ["816: fresh_tamper returns inferred object, expected dict[str, object]"],
+  "source_bridge_absent": true,
+  "not_frozen": true
+}

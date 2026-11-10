@@ -1,0 +1,1791 @@
+"""Duplex host bridge (DUPLEX-DESIGN a78d1de1 + DUPLEX-REVIEW R8) oracles D1-D6; RED-first.
+
+Contract for the FUTURE ``docs/poc/oracle9_w1_duplex_bridge.py``. The module stays
+absent until the root reviews these oracles; it is loaded lazily inside feature cases
+only (``bridge_module()``), so absence fails at execution, never at collection. The
+``test_sanity_*`` cases never load it: they only check this file's own fixtures against
+the published trusted core and the real reviewed HostReactor.
+
+The bridge drives the REAL HostReactor (e86f8e32) from the frozen host test namespace,
+bound into a plain ModuleType; shape is never an origin claim. Every port is a
+deterministic synchronous fake over ONE logical dyadic clock: nothing sleeps, reads a
+real clock or touches an event loop, socket, thread, process, signal, guard, Docker, PG
+or SQL. The fake peer is a static handshake script of the controller that reacts only
+to the fixture's own accepted writes/actions. R8 overrides the abbreviated V3 examples
+(constant redacted reprs, done() repeatable only while pending, poll without spurious
+returns, raw FIFO before Exited even with a model pending, overall checked before every
+feed/effect). A bridge ``Done`` is a protocol candidate only: nothing here models or
+proves release, quiescence or cleanup.
+"""
+
+from __future__ import annotations
+
+import ast
+import bisect
+import dataclasses
+import enum
+import functools
+import math
+import runpy
+import types
+from pathlib import Path
+from types import SimpleNamespace
+from typing import Any
+
+import pytest
+
+from tests import test_oracle9_w1_host_reactor as ht
+
+d1 = ht.d1
+core = ht.core  # frozen trusted-core fixture: the published load_pure over the pinned bytes
+
+REPO = Path(__file__).resolve().parents[1]
+BRIDGE_FILE = REPO / "docs/poc/oracle9_w1_duplex_bridge.py"
+PACKET = ht.PACKET
+GO, STOP, NOSTOP, ACK = ht.GO, ht.STOP, ht.NOSTOP, ht.ACK
+SECRET_TEXTS = (*ht.SECRETS, repr(PACKET))
+
+T0 = 100.0
+DT = 2.0**-6  # every fixture instant is an exact dyadic float
+SPAWN, SILENCE, DRAIN, OVERALL = 5.0, 10.0, 10.0, 120.0
+SLOT_NAMES = ("spawn", "read", "write", "act", "wait")
+READ_CHUNK = 4096
+LINE_CAP = 512
+QUEUE_CAP = 57
+MAX_STDOUT = 56 * 512  # admitted bytes; one more byte is only overflow detection
+BEGINS = frozenset({"spawn", "read", "write", "wait", "act"})
+HAPPY_ACTS = (
+    ("TERMINATE_ONE_BACKEND", 20),
+    ("PAUSE_PG", 21),
+    ("RESTORE_PG", 21),
+    ("OBSERVE_HEAVY", 23),
+    ("ZERO_BACKENDS", 24),
+    ("KILL_GATEWAY", 25),
+    ("ZERO_BACKENDS", 25),
+)
+REACTOR_CLASSES = (
+    "HostReactor",
+    "HostRefusal",
+    "HostPolicy",
+    "HostStatus",
+    "Line",
+    "Delivered",
+    "ActDone",
+    "Exited",
+    "Send",
+    "Act",
+    "Wait",
+    "Done",
+    "TerminateFacts",
+    "PauseFacts",
+    "RestoreFacts",
+    "ObserveFacts",
+    "ZeroFacts",
+    "KillFacts",
+    "Delivery",
+    "ActStatus",
+    "ExitStatus",
+    "Purpose",
+    "Verdict",
+    "Outcome",
+    "HostPhase",
+    "ActKind",
+)
+BRIDGE_DTOS: dict[str, tuple[str, ...]] = {
+    "DuplexBudget": ("spawn_s", "silence_s", "drain_s", "overall_s"),
+    "SpawnOutcome": ("ok", "process"),
+    "ReadOutcome": ("ok", "data"),
+    "WriteOutcome": ("delivery", "bytes_written"),
+    "ActOutcome": ("status", "facts"),
+    "WaitOutcome": ("status", "code", "reaped"),
+    "SlotView": ("name", "occupied", "op", "done", "outcome"),
+    "BridgeStatus": (
+        "phase",
+        "fault",
+        "reactor_refusal",
+        "reactor_status",
+        "attempt_consumed",
+        "retained",
+        "process",
+        "total_stdout_bytes",
+        "queued_lines",
+        "partial_bytes",
+        "overflow",
+        "trailing_partial",
+        "stdout_eof",
+        "reaped",
+        "exit_code",
+        "slots",
+    ),
+    "BridgeRunResult": ("done", "status"),
+}
+BRIDGE_ENUMS: dict[str, frozenset[str]] = {
+    "BridgePhase": frozenset({"NEW", "STARTING", "ACTIVE", "DRAINING", "DONE", "HELD", "REFUSED"}),
+    "BridgeFault": frozenset(
+        {
+            "REACTOR",
+            "BUDGET",
+            "PORT",
+            "REENTRY",
+            "SPAWN",
+            "STDOUT_LIMIT",
+            "SILENCE",
+            "OVERALL_DEADLINE",
+            "REACTOR_REFUSAL",
+            "CONTROL",
+        }
+    ),
+}
+FACTS: dict[str, Any] = {
+    "TERMINATE_ONE_BACKEND": lambda r: r.TerminateFacts(found=1, terminated=True),
+    "PAUSE_PG": lambda r: r.PauseFacts(paused=True),
+    "RESTORE_PG": lambda r: r.RestoreFacts(running=True, paused=False, ready=True),
+    "OBSERVE_HEAVY": lambda r: r.ObserveFacts(found=True, observations=3),
+    "ZERO_BACKENDS": lambda r: r.ZeroFacts(backends=0),
+    "KILL_GATEWAY": lambda r: r.KillFacts(stop_confirmed=True, oom_killed=False),
+}
+
+
+# ---------------------------------------------------------------- loading
+
+
+@functools.cache
+def _bridge_namespace() -> dict[str, Any]:
+    return runpy.run_path(str(BRIDGE_FILE), run_name="_duplex_bridge_test")
+
+
+def bridge_module() -> Any:
+    return SimpleNamespace(**_bridge_namespace())
+
+
+def reactor_variant(**changes: object) -> types.ModuleType:
+    """The reviewed reactor namespace bound into a plain ModuleType (caller-trusted)."""
+    module = types.ModuleType("_duplex_host_reactor")
+    module.__dict__.update(ht._reactor_namespace())
+    for name, value in changes.items():
+        if value is ht.DROP:
+            del module.__dict__[name]
+        else:
+            module.__dict__[name] = value
+    return module
+
+
+@functools.cache
+def reactor_mod() -> types.ModuleType:
+    return reactor_variant()
+
+
+def fresh(core: types.ModuleType, r: Any) -> Any:
+    return r.HostReactor(core, PACKET, ht.policy_for(r))
+
+
+def budget_of(b: Any, **changes: object) -> Any:
+    fields: dict[str, object] = {
+        "spawn_s": SPAWN,
+        "silence_s": SILENCE,
+        "drain_s": DRAIN,
+        "overall_s": OVERALL,
+    }
+    fields.update(changes)
+    return b.DuplexBudget(**fields)
+
+
+# ---------------------------------------------------------------- static peer script
+
+
+def respond(payload: bytes, live: int = ht.LIVE_MS) -> list[dict[str, object]]:
+    """Controller lines answering one accepted host write (b54 happy handshake)."""
+    if payload == PACKET:
+        return [ht.INIT_OK, ht.ready(1, 1)]
+    _, _, kind, case, _, _ = d1.CONTROL.unpack(payload)
+    if kind == GO:
+        armed = {23: ht.armed(23, 46, None), 25: ht.armed(25, 51, live)}
+        return [armed[case] if case in armed else ht.result(case)]
+    if kind in (STOP, NOSTOP):
+        return [ht.result(23)]
+    if case == 24:
+        return [ht.summary([]), ht.ready(25, 50)]
+    return [ht.ready(case + 1, ht.READY_SEQ[case + 1])]
+
+
+@dataclasses.dataclass
+class Script:
+    """Static handshake plus per-test overrides, all keyed by fixture events."""
+
+    early: bool = False
+    fragment: bool = False
+    exit_first: bool = True
+    live: int = ht.LIVE_MS
+    spawn: Any = None
+    writes: dict[int, Any] = dataclasses.field(default_factory=dict)
+    acts: dict[tuple[str, int], Any] = dataclasses.field(default_factory=dict)
+    faults: dict[str, object] = dataclasses.field(default_factory=dict)
+
+
+# ---------------------------------------------------------------- deterministic fakes
+
+
+class Op:
+    """Inert fake operation: completes only when the logical clock reaches its event."""
+
+    def __init__(self, world: World, role: str) -> None:
+        self.world = world
+        self.role = role
+        self.ready_at: float | None = None
+        self.result: object = None
+        self.fault: object = None
+        self.harvested = False
+        self.done_times: list[float] = []
+        self.outcome_calls = 0
+        world.ops.append(self)
+
+    def next_time(self) -> float | None:
+        return self.ready_at
+
+    def make(self) -> object:
+        return self.result
+
+    def done(self) -> object:
+        w = self.world
+        w.trace.append(("done", self.role, w.t))
+        if self.harvested:
+            w.violations.append("done-after-harvest:" + self.role)
+        self.done_times.append(w.t)
+        if self.fault == "done_raise":
+            w.mark()
+            raise RuntimeError("synthetic done fault")
+        if self.fault == "done_int":
+            w.mark()
+            return 1
+        when = self.next_time()
+        return when is not None and when <= w.t
+
+    def outcome(self) -> object:
+        w = self.world
+        w.trace.append(("outcome", self.role, w.t))
+        when = self.next_time()
+        if self.harvested or when is None or when > w.t:
+            w.violations.append("outcome-twice-or-before-done:" + self.role)
+        self.harvested = True
+        self.outcome_calls += 1
+        if self.fault == "outcome_raise":
+            w.mark()
+            raise RuntimeError("synthetic outcome fault")
+        if isinstance(self.fault, BaseException):
+            w.mark()
+            raise self.fault
+        return self.make()
+
+
+class ReadOp(Op):
+    def __init__(self, world: World, limit: object) -> None:
+        super().__init__(world, "read")
+        self.limit = limit
+
+    def next_time(self) -> float | None:
+        return self.world.readable_at()
+
+    def make(self) -> Any:
+        return self.world.b.ReadOutcome(ok=True, data=self.world.take(self.limit))
+
+
+class WaitOp(Op):
+    def __init__(self, world: World) -> None:
+        super().__init__(world, "wait")
+
+    def next_time(self) -> float | None:
+        return self.world.exit_at
+
+    def make(self) -> object:
+        return self.world.exit_outcome
+
+
+class Clock:
+    """Logical clock: poll returns at the first new completion or at the deadline."""
+
+    def __init__(self, world: World) -> None:
+        self.world = world
+        self.overshoot = False
+        self.on_now: Any = None
+        self.on_poll: Any = None
+        self.bridge: Any = None
+
+    def now(self) -> Any:
+        w = self.world
+        w.trace.append(("now", w.t))
+        if self.on_now is not None:
+            return self.on_now(self)
+        return w.t
+
+    def poll(self, watched: Any, deadline: Any) -> Any:
+        w = self.world
+        names = tuple(getattr(slot, "name", None) for slot in watched)
+        w.trace.append(("poll", names, deadline, w.t))
+        ops = self.check(watched)
+        if self.on_poll is not None:
+            forced = self.on_poll(self, watched, deadline)
+            if forced is not None:
+                return forced
+        times = [when for op in ops if (when := op.next_time()) is not None]
+        upcoming = min(times) if times else None
+        reached = upcoming is not None and (upcoming <= max(w.t, deadline) or self.overshoot)
+        target = upcoming if reached and upcoming is not None else deadline
+        w.t = max(w.t, target)
+        return w.t
+
+    def check(self, watched: Any) -> list[Op]:
+        """R7.2/R8.3: only occupied, never-harvested slots; never an empty tuple."""
+        w = self.world
+        if type(watched) is not tuple or not watched:
+            w.violations.append("poll-without-eligible-slot")
+            return []
+        ops: list[Op] = []
+        for slot in watched:
+            op = slot.op if type(slot) is w.b.OperationSlot else None
+            if not isinstance(op, Op) or slot.occupied is not True or op.harvested:
+                w.violations.append("poll-watches-ineligible-slot")
+            else:
+                ops.append(op)
+        return ops
+
+
+class Gateway:
+    def __init__(self, world: World) -> None:
+        self.world = world
+
+    def begin_spawn_into(self, slot: Any, deadline: Any) -> None:
+        w = self.world
+        w.trace.append(("spawn", deadline, w.t))
+        op = Op(w, "spawn")
+        w.attach("spawn", slot, op)
+        op.ready_at, op.result = w.on_spawn(w.t)
+
+
+class Process:
+    def __init__(self, world: World) -> None:
+        self.world = world
+
+    def begin_read_into(self, slot: Any, max_bytes: Any, deadline: Any) -> None:
+        w = self.world
+        w.trace.append(("read", max_bytes, deadline, w.t, w.consumed))
+        w.attach("read", slot, ReadOp(w, max_bytes))
+
+    def begin_write_into(self, slot: Any, payload: Any, deadline: Any) -> None:
+        w = self.world
+        w.trace.append(("write", payload, deadline, w.t, w.reactor.status().pending))
+        op = Op(w, "write")
+        w.attach("write", slot, op)
+        op.ready_at, op.result = w.on_write(payload, w.t, deadline)
+
+    def begin_wait_into(self, slot: Any, deadline: Any) -> None:
+        w = self.world
+        w.trace.append(("wait", deadline, w.t))
+        w.attach("wait", slot, WaitOp(w))
+
+
+class Acts:
+    def __init__(self, world: World) -> None:
+        self.world = world
+
+    def begin_act_into(self, slot: Any, act: Any, deadline: Any) -> None:
+        w = self.world
+        pending = w.reactor.status().pending
+        w.trace.append(("act", act.kind.name, act.case, deadline, w.t, act, pending))
+        op = Op(w, "act")
+        w.attach("act", slot, op)
+        op.ready_at, op.result = w.on_act(act, w.t, deadline)
+
+
+class World:
+    """One logical dyadic clock, the fake gateway stdout/exit and every fake operation."""
+
+    def __init__(self, b: Any, r: Any, script: Script) -> None:
+        self.b = b
+        self.r = r
+        self.script = script
+        self.t = T0
+        self.overall = T0 + OVERALL
+        self.reactor: Any = None
+        self.trace: list[tuple[Any, ...]] = []
+        self.violations: list[str] = []
+        self.ops: list[Op] = []
+        self.chunks: list[tuple[float, bytes]] = []
+        self.cursor = 0
+        self.offset = 0
+        self.consumed = 0
+        self.emitted = 0
+        self.eof_at: float | None = None
+        self.exit_at: float | None = None
+        self.exit_outcome: object = None
+        self.writes = 0
+        self.fault_at: int | None = None
+        self.clock = Clock(self)
+        self.gateway = Gateway(self)
+        self.process = Process(self)
+        self.acts = Acts(self)
+
+    def mark(self) -> None:
+        self.fault_at = len(self.trace)
+
+    # ------------------------------------------------------------ peer stdout / exit
+
+    def emit(self, at: float, data: bytes) -> None:
+        index = bisect.bisect_right([when for when, _ in self.chunks], at)
+        floor = self.cursor + 1 if self.offset else self.cursor  # never before consumed bytes
+        self.chunks.insert(max(index, floor), (at, data))
+        self.emitted += len(data)
+
+    def say(self, at: float, events: list[dict[str, object]]) -> None:
+        data = b"".join(ht.line_bytes(event) for event in events)
+        if self.script.fragment and len(data) > 1:
+            half = len(data) // 2
+            self.emit(at, data[:half])
+            self.emit(at + DT, data[half:])
+        else:
+            self.emit(at, data)
+
+    def finish(
+        self, at: float, code: int | None = None, *, eof: bool = True, outcome: object = None
+    ) -> None:
+        if eof:
+            self.eof_at = at
+        self.exit_at = at
+        if outcome is None:
+            outcome = self.b.WaitOutcome(status=self.r.ExitStatus.EXITED, code=code, reaped=True)
+        self.exit_outcome = outcome
+
+    def fail_later(self, at: float) -> None:
+        """The controller's own deadline: ABORT + TERMINAL ABORTED, then natural exit 68."""
+        self.say(at, [ht.abort(0, "CASE", "TIMEOUT", False), ht.terminal("ABORTED")])
+        self.finish(at + 0.5, code=68)
+
+    def readable_at(self) -> float | None:
+        if self.cursor < len(self.chunks):
+            return self.chunks[self.cursor][0]
+        return self.eof_at
+
+    def take(self, limit: object) -> bytes:
+        size = limit if type(limit) is int else 0
+        out = bytearray()
+        while self.cursor < len(self.chunks) and len(out) < size:
+            at, data = self.chunks[self.cursor]
+            if at > self.t:
+                break
+            piece = data[self.offset : self.offset + size - len(out)]
+            out += piece
+            self.offset += len(piece)
+            if self.offset == len(data):
+                self.cursor += 1
+                self.offset = 0
+        self.consumed += len(out)
+        return bytes(out)
+
+    # ------------------------------------------------------------ port reactions
+
+    def attach(self, role: str, slot: Any, op: Op) -> None:
+        """The port contract: bind the inert op into the ORIGINAL slot before any effect."""
+        fault = self.script.faults.pop(role, None)
+        if fault == "no_bind":
+            self.mark()
+            return
+        slot.bind(op)
+        if fault == "double_bind":
+            self.mark()
+            slot.bind(Op(self, role + "-second"))
+        if fault == "bind_raise":
+            self.mark()
+            raise RuntimeError("synthetic bind fault")
+        if isinstance(fault, tuple):
+            point, control = fault
+            if point == "begin":
+                self.mark()
+                raise control
+            op.fault = control
+        elif fault in ("done_raise", "done_int", "outcome_raise"):
+            op.fault = fault
+
+    def on_spawn(self, begin: float) -> Any:
+        if self.script.spawn is not None:
+            return self.script.spawn(self, begin)
+        ready = begin + DT
+        self.emit(ready + DT, ht.line_bytes(ht.GUARD))
+        return ready, self.b.SpawnOutcome(ok=True, process=self.process)
+
+    def on_write(self, payload: bytes, begin: float, deadline: Any) -> Any:
+        index = self.writes
+        self.writes += 1
+        plan = self.script.writes.get(index)
+        if plan is not None:
+            return plan(self, payload, begin, deadline)
+        ready = begin + 3 * DT
+        answer_at = begin + DT if self.script.early else ready + DT  # early: before completion
+        self.say(answer_at, respond(payload, self.script.live))
+        sent = self.b.WriteOutcome(delivery=self.r.Delivery.SENT, bytes_written=len(payload))
+        return ready, sent
+
+    def on_act(self, act: Any, begin: float, deadline: Any) -> Any:
+        kind = act.kind.name
+        plan = self.script.acts.get((kind, act.case))
+        if plan is not None:
+            return plan(self, act, begin, deadline)
+        ready = begin + 2 * DT
+        if kind == "KILL_GATEWAY":
+            self.finish(begin + DT if self.script.exit_first else ready + DT, code=137)
+        return ready, act_ok(self, kind)
+
+
+def act_ok(world: World, kind: str, facts: object = None) -> Any:
+    chosen = FACTS[kind](world.r) if facts is None else facts
+    return world.b.ActOutcome(status=world.r.ActStatus.OK, facts=chosen)
+
+
+def write_plan(mode: str, written: int = 0) -> Any:
+    def plan(world: World, _payload: bytes, begin: float, deadline: Any) -> tuple[Any, object]:
+        if mode == "LIVE":  # the peer never reads stdin: alive past the bridge deadline
+            world.fail_later(deadline + 1.0)
+            return None, None
+        ready = begin + 3 * DT
+        world.fail_later(ready + 0.5)
+        delivery = getattr(world.r.Delivery, mode)
+        return ready, world.b.WriteOutcome(delivery=delivery, bytes_written=written)
+
+    return plan
+
+
+def act_plan(mode: str) -> Any:
+    def plan(world: World, _act: Any, begin: float, deadline: Any) -> tuple[Any, object]:
+        if mode == "LIVE":
+            world.fail_later(deadline + 1.0)
+            return None, None
+        ready = begin + 2 * DT
+        world.fail_later(ready + 0.5)
+        return ready, world.b.ActOutcome(status=getattr(world.r.ActStatus, mode), facts=None)
+
+    return plan
+
+
+# ---------------------------------------------------------------- harness and views
+
+
+class Lab:
+    """One fresh reactor, one bridge, one fake world; status() purity checked on settle."""
+
+    def __init__(
+        self, core: types.ModuleType, script: Script | None = None, budget: Any = None
+    ) -> None:
+        self.b = bridge_module()
+        self.r = reactor_mod()
+        self.world = World(self.b, self.r, script if script is not None else Script())
+        self.reactor = fresh(core, self.r)
+        self.budget = budget if budget is not None else budget_of(self.b)
+        w = self.world
+        w.reactor = self.reactor
+        w.overall = T0 + self.budget.overall_s
+        self.bridge = self.b.DuplexBridge(
+            self.r, self.reactor, w.clock, w.gateway, w.acts, self.budget
+        )
+        w.clock.bridge = self.bridge
+
+    def run(self) -> Any:
+        result = self.bridge.run()
+        assert result.status == self.settle()
+        return result
+
+    def refuse(self, category: str, reactor_refusal: str | None = None) -> Any:
+        with pytest.raises(self.b.BridgeRefusal) as caught:
+            self.bridge.run()
+        closed(self.b, caught.value, category, reactor_refusal)
+        status = self.settle()
+        assert status.fault is getattr(self.b.BridgeFault, category)
+        assert status.reactor_refusal == reactor_refusal
+        assert status.retained is True  # a closed error is never cleanup
+        held = self.b.BridgePhase.REFUSED if reactor_refusal else self.b.BridgePhase.HELD
+        assert status.phase is held
+        return status
+
+    def settle(self) -> Any:
+        """Common invariants of every finished run; status() never calls a port/clock/op."""
+        w, r = self.world, self.r
+        assert w.violations == []
+        before = len(w.trace)
+        first, second = self.bridge.status(), self.bridge.status()
+        assert len(w.trace) == before and first == second
+        assert all(op.outcome_calls <= 1 for op in w.ops)
+        assert len(events(w, "spawn")) <= 1 and len(events(w, "wait")) <= 1
+        for _, deadline, _ in events(w, "spawn"):
+            assert deadline == min(T0 + self.budget.spawn_s, w.overall)
+        for _, max_bytes, deadline, _, consumed in events(w, "read"):
+            assert max_bytes == min(READ_CHUNK, MAX_STDOUT - consumed + 1)
+            assert deadline == w.overall
+        for _, deadline, _ in events(w, "wait"):
+            assert deadline == w.overall
+        for _, payload, deadline, _, pending in events(w, "write"):
+            assert type(pending) is r.Send and pending.payload == payload
+            assert deadline == min(pending.deadline, w.overall)
+        for _, _, _, deadline, _, act, pending in events(w, "act"):
+            assert type(act) is r.Act and act is pending
+            assert deadline == min(act.deadline, w.overall)
+        if w.fault_at is not None:  # no hidden effect after the first port/control fault
+            assert not any(event[0] in BEGINS for event in w.trace[w.fault_at :])
+        return first
+
+
+def closed(b: Any, error: BaseException, category: str, reactor_refusal: str | None = None) -> None:
+    refusal: Any = error
+    assert type(refusal) is b.BridgeRefusal
+    assert refusal.args == (category,)
+    assert refusal.category is getattr(b.BridgeFault, category)
+    assert refusal.reactor_refusal == reactor_refusal
+    assert refusal.__cause__ is None and refusal.__context__ is None
+    text = str(refusal) + repr(refusal)
+    assert all(secret not in text for secret in SECRET_TEXTS)
+
+
+def events(world: World, kind: str) -> list[tuple[Any, ...]]:
+    return [event for event in world.trace if event[0] == kind]
+
+
+def written(world: World) -> list[bytes]:
+    return [event[1] for event in events(world, "write")]
+
+
+def acted(world: World) -> list[tuple[str, int]]:
+    return [(event[1], event[2]) for event in events(world, "act")]
+
+
+def ops_of(world: World, role: str) -> list[Op]:
+    return [op for op in world.ops if op.role == role]
+
+
+def view(status: Any, name: str) -> Any:
+    assert tuple(item.name for item in status.slots) == SLOT_NAMES
+    return status.slots[SLOT_NAMES.index(name)]
+
+
+def verdicts_until(case: int) -> list[str]:
+    return ["PASS"] * (case - 1) + ["FAIL"] + ["NOT_RUN"] * (25 - case)
+
+
+def drained_during_every_write(world: World) -> bool:
+    """Each write saw a read harvest before its own completion (no stdin/stdout lock)."""
+    pending, seen, writes = False, False, 0
+    for event in world.trace:
+        if event[0] == "write":
+            pending, seen, writes = True, False, writes + 1
+        elif event[:2] == ("outcome", "read") and pending:
+            seen = True
+        elif event[:2] == ("outcome", "write"):
+            if not seen:
+                return False
+            pending = False
+    return writes == 51
+
+
+class Trap:
+    """Foreign value that fails if a repr/str/format or attribute inspection touches it."""
+
+    def __init__(self, touched: list[str]) -> None:
+        self.touched = touched
+
+    def __repr__(self) -> str:
+        self.touched.append("repr")
+        raise AssertionError("foreign value inspected")
+
+    def __str__(self) -> str:
+        self.touched.append("str")
+        raise AssertionError("foreign value inspected")
+
+    def __format__(self, _spec: str) -> str:
+        self.touched.append("format")
+        raise AssertionError("foreign value inspected")
+
+    def __getattr__(self, name: str) -> Any:
+        self.touched.append(name)
+        raise AssertionError("foreign value inspected")
+
+
+class InertOp:
+    """Op shape whose repr must never be invoked by the slot or its views."""
+
+    def done(self) -> bool:
+        return False
+
+    def outcome(self) -> object:
+        raise AssertionError("never harvested")
+
+    def __repr__(self) -> str:
+        raise AssertionError("op repr inspected")
+
+
+# ---------------------------------------------------------------- sanities (no bridge)
+
+
+def test_sanity_reactor_module_is_a_fresh_trusted_binding(core: types.ModuleType) -> None:
+    r = reactor_mod()
+    assert type(r) is types.ModuleType
+    assert all(isinstance(getattr(r, name), type) for name in REACTOR_CLASSES)
+    status = fresh(core, r).status()
+    assert type(status) is r.HostStatus and status.phase is r.HostPhase.AWAIT_GUARD
+    assert (status.lines, status.controls_sent, status.last_at) == (0, 0, None)
+    assert (status.pending, status.orphan, status.orphan_receipt) == (None, None, None)
+    assert status.refusal is None
+    assert status.verdicts == (r.Verdict.NOT_RUN,) * 25
+
+
+def test_sanity_peer_handshake_is_the_reviewed_54_line_transcript() -> None:
+    script: list[dict[str, object]] = [ht.GUARD, *respond(PACKET)]
+    for frame in ht.expected_frames():
+        script += respond(d1.frame(*frame))
+    raws = [ht.line_bytes(event) for event in script]
+    assert len(raws) == 54 and len(ht.expected_frames()) == 50
+    assert all(len(raw) <= LINE_CAP and raw.count(b"\n") == 1 for raw in raws)
+    kinds = [event["e"] for event in script]
+    assert (kinds.count("READY"), kinds.count("RESULT"), kinds.count("ARMED")) == (25, 24, 2)
+    assert script[-1] == ht.armed(25, 51, ht.LIVE_MS) and kinds.count("SUMMARY") == 1
+
+
+def test_sanity_logical_clock_arithmetic_is_exact() -> None:
+    assert sum([DT] * 640) == 10.0
+    assert ht.fence_of(T0, ht.LIVE_MS) == T0 + 7.4921875
+    assert MAX_STDOUT == 28672 and min(READ_CHUNK, MAX_STDOUT + 1) == READ_CHUNK
+
+
+# ---------------------------------------------------------------- D1 binding, budget, ports
+
+
+REACTOR_VARIANTS = (
+    "namespace",
+    "missing-ActKind",
+    "Wait-not-a-type",
+    "subclass-type",
+    "foreign-instance",
+    "not-fresh",
+    "refused",
+)
+
+
+@pytest.mark.parametrize("variant", REACTOR_VARIANTS)
+def test_d1_reactor_binding_is_exact_and_fresh(core: types.ModuleType, variant: str) -> None:
+    b, r = bridge_module(), reactor_mod()
+    world = World(b, r, Script())
+    reactor: Any = fresh(core, r)
+    module: object = r
+    if variant == "namespace":
+        module = SimpleNamespace(**ht._reactor_namespace())
+    elif variant == "missing-ActKind":
+        module = reactor_variant(ActKind=ht.DROP)
+    elif variant == "Wait-not-a-type":
+        module = reactor_variant(Wait=7)
+    elif variant == "subclass-type":  # the instance is not of the module's exact class
+        module = reactor_variant(HostReactor=type("Sub", (r.HostReactor,), {"__slots__": ()}))
+    elif variant == "foreign-instance":
+        reactor = object()
+    elif variant == "not-fresh":
+        reactor.feed(r.Line(raw=ht.line_bytes(ht.GUARD), at=T0))
+    else:
+        with pytest.raises(r.HostRefusal):
+            reactor.feed(object())
+    with pytest.raises(b.BridgeRefusal) as caught:
+        b.DuplexBridge(module, reactor, world.clock, world.gateway, world.acts, budget_of(b))
+    closed(b, caught.value, "REACTOR")
+    assert world.trace == []
+
+
+BAD_BUDGETS: list[tuple[str, object]] = [
+    ("spawn_s", 0.0),
+    ("spawn_s", -1.0),
+    ("spawn_s", 30.25),
+    ("spawn_s", True),
+    ("spawn_s", "5"),
+    ("spawn_s", math.nan),
+    ("spawn_s", math.inf),
+    ("spawn_s", 10**400),
+    ("spawn_s", ht.FloatSub(5.0)),
+    ("silence_s", 0.0),
+    ("silence_s", 60.25),
+    ("drain_s", 0.0),
+    ("drain_s", 30.25),
+    ("overall_s", SILENCE),
+    ("overall_s", 300.25),
+    ("overall_s", 10**400),
+    ("overall_s", -math.inf),
+]
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    BAD_BUDGETS,
+    ids=[f"{field}-{index}" for index, (field, _) in enumerate(BAD_BUDGETS)],
+)
+def test_d1_budget_is_exact_finite_and_bounded(
+    core: types.ModuleType, field: str, value: object
+) -> None:
+    b, r = bridge_module(), reactor_mod()
+    world = World(b, r, Script())
+    budget = budget_of(b, **{field: value})  # the carrier itself never refuses
+    with pytest.raises(b.BridgeRefusal) as caught:
+        b.DuplexBridge(r, fresh(core, r), world.clock, world.gateway, world.acts, budget)
+    closed(b, caught.value, "BUDGET")
+    assert world.trace == []
+
+
+def test_d1_budget_lookalike_refused_and_boundaries_accepted(core: types.ModuleType) -> None:
+    b, r = bridge_module(), reactor_mod()
+    world = World(b, r, Script())
+    lookalike = SimpleNamespace(spawn_s=SPAWN, silence_s=SILENCE, drain_s=DRAIN, overall_s=OVERALL)
+    with pytest.raises(b.BridgeRefusal) as caught:
+        b.DuplexBridge(r, fresh(core, r), world.clock, world.gateway, world.acts, lookalike)
+    closed(b, caught.value, "BUDGET")
+    tiny = 2.0**-10
+    for budget in (
+        b.DuplexBudget(spawn_s=30, silence_s=60, drain_s=30, overall_s=300),
+        b.DuplexBudget(spawn_s=tiny, silence_s=tiny, drain_s=tiny, overall_s=2 * tiny),
+    ):
+        bridge = b.DuplexBridge(r, fresh(core, r), world.clock, world.gateway, world.acts, budget)
+        assert bridge.status().phase is b.BridgePhase.NEW
+    assert world.trace == []
+
+
+PORT_SHAPES = (
+    "clock-without-poll",
+    "clock-poll-not-callable",
+    "clock-without-now",
+    "gateway-without-spawn",
+    "acts-without-act",
+)
+
+
+@pytest.mark.parametrize("shape", PORT_SHAPES)
+def test_d1_port_shapes_are_checked_before_any_call(core: types.ModuleType, shape: str) -> None:
+    b, r = bridge_module(), reactor_mod()
+    world = World(b, r, Script())
+    clock: object = world.clock
+    gateway: object = world.gateway
+    acts: object = world.acts
+    if shape == "clock-without-poll":
+        clock = SimpleNamespace(now=world.clock.now)
+    elif shape == "clock-poll-not-callable":
+        clock = SimpleNamespace(now=world.clock.now, poll=7)
+    elif shape == "clock-without-now":
+        clock = SimpleNamespace(poll=world.clock.poll)
+    elif shape == "gateway-without-spawn":
+        gateway = SimpleNamespace(spawn=world.gateway.begin_spawn_into)
+    else:
+        acts = SimpleNamespace(act=world.acts.begin_act_into)
+    with pytest.raises(b.BridgeRefusal) as caught:
+        b.DuplexBridge(r, fresh(core, r), clock, gateway, acts, budget_of(b))
+    closed(b, caught.value, "PORT")
+    assert world.trace == []
+
+
+def test_d1_fresh_status_is_exact_and_calls_nothing(core: types.ModuleType) -> None:
+    lab = Lab(core)
+    b, r = lab.b, lab.r
+    status = lab.bridge.status()
+    assert type(status) is b.BridgeStatus
+    assert (status.phase, status.fault, status.reactor_refusal) == (b.BridgePhase.NEW, None, None)
+    flags = (status.attempt_consumed, status.retained, status.overflow, status.trailing_partial)
+    assert flags == (False, False, False, False)
+    assert (status.stdout_eof, status.reaped, status.exit_code) == (False, False, None)
+    assert status.process is None
+    assert (status.total_stdout_bytes, status.queued_lines, status.partial_bytes) == (0, 0, 0)
+    assert status.reactor_status == lab.reactor.status()
+    assert status.reactor_status.verdicts == (r.Verdict.NOT_RUN,) * 25
+    for name in SLOT_NAMES:
+        item = view(status, name)
+        assert type(item) is b.SlotView
+        assert (item.occupied, item.op, item.done, item.outcome) == (False, None, False, None)
+    assert lab.world.trace == []
+
+
+def test_d1_attempt_is_consumed_before_the_first_clock_callback(core: types.ModuleType) -> None:
+    lab = Lab(core)
+    seen: list[object] = []
+
+    def first_now(clock: Clock) -> object:
+        if not seen:
+            status = clock.bridge.status()  # pure read from inside the callback
+            seen.append((status.attempt_consumed, status.phase.name))
+            with pytest.raises(lab.b.BridgeRefusal) as inner:
+                clock.bridge.run()
+            seen.append(inner.value.args)
+        return clock.world.t
+
+    lab.world.clock.on_now = first_now
+    result = lab.run()
+    assert seen == [(True, "STARTING"), ("REENTRY",)]
+    assert result.done.outcome.name == "COMPLETE_CANDIDATE"
+
+
+def test_d1_run_is_one_shot_and_the_first_fault_is_sticky(core: types.ModuleType) -> None:
+    lab = Lab(core)
+    first = lab.run()
+    count = len(lab.world.trace)
+    with pytest.raises(lab.b.BridgeRefusal) as again:
+        lab.bridge.run()
+    closed(lab.b, again.value, "REENTRY")
+    after = lab.bridge.status()
+    assert len(lab.world.trace) == count
+    assert after.slots == first.status.slots
+    assert after.reactor_status == first.status.reactor_status
+    assert first.done.outcome.name == "COMPLETE_CANDIDATE"
+
+    other = Lab(core, Script(faults={"read": "done_raise"}))
+    other.refuse("PORT")
+    count = len(other.world.trace)
+    with pytest.raises(other.b.BridgeRefusal) as reentry:
+        other.bridge.run()
+    closed(other.b, reentry.value, "REENTRY")
+    assert len(other.world.trace) == count
+    assert other.bridge.status().fault is other.b.BridgeFault.PORT  # the first fault stays
+
+
+def test_d1_operation_slot_binds_once_and_offers_no_clear() -> None:
+    b = bridge_module()
+    slot = b.OperationSlot("read")
+    assert (slot.name, slot.op, slot.occupied) == ("read", None, False)
+    public = sorted(name for name in dir(slot) if not name.startswith("_"))
+    assert public == ["bind", "name", "occupied", "op"]
+    shapeless = (
+        object(),
+        SimpleNamespace(done=True, outcome=InertOp().outcome),
+        SimpleNamespace(done=InertOp().done),
+    )
+    for bad in shapeless:
+        with pytest.raises(b.BridgeRefusal) as caught:
+            slot.bind(bad)
+        closed(b, caught.value, "PORT")
+        assert (slot.op, slot.occupied) == (None, False)
+    first = InertOp()
+    slot.bind(first)
+    with pytest.raises(b.BridgeRefusal) as occupied:
+        slot.bind(InertOp())
+    closed(b, occupied.value, "PORT")
+    assert slot.op is first and slot.occupied is True  # never replaced
+    assert isinstance(repr(slot), str)  # never invokes the op repr
+
+
+FAULT_POINTS = ("no_bind", "bind_raise", "double_bind", "done_raise", "done_int", "outcome_raise")
+
+
+def exit_with_guard(code: int) -> Any:
+    def spawn(world: World, begin: float) -> tuple[float | None, object]:
+        ready = begin + DT
+        world.emit(ready + DT, ht.line_bytes(ht.GUARD))
+        world.finish(ready + DT, code=code)
+        return ready, world.b.SpawnOutcome(ok=True, process=world.process)
+
+    return spawn
+
+
+@pytest.mark.parametrize("point", FAULT_POINTS)
+@pytest.mark.parametrize("role", SLOT_NAMES)
+def test_d1_fault_at_each_port_boundary_retains_the_original(
+    core: types.ModuleType, role: str, point: str
+) -> None:
+    script = Script(faults={role: point})
+    if role == "wait":
+        script.spawn = exit_with_guard(68)
+    lab = Lab(core, script)
+    status = lab.refuse("PORT")
+    w = lab.world
+    item, original = view(status, role), ops_of(w, role)[0]
+    if point == "no_bind":
+        assert (item.occupied, item.op) == (False, None)
+    else:
+        assert item.occupied is True and item.op is original
+    assert status.process is (None if role == "spawn" else w.process)
+    pending = status.reactor_status.pending
+    if role == "write":
+        assert pending.purpose.name == "INIT" and status.reactor_status.controls_sent == 0
+    if role == "act":
+        assert (pending.kind.name, pending.case) == ("TERMINATE_ONE_BACKEND", 20)
+
+
+SPAWN_CASES = (
+    "live",
+    "failed-with-process",
+    "failed-without-process",
+    "ok-shapeless-process",
+    "ok-text",
+    "not-an-outcome",
+)
+
+
+@pytest.mark.parametrize("case", SPAWN_CASES)
+def test_d1_spawn_outcome_adopts_the_process_before_refusing(
+    core: types.ModuleType, case: str
+) -> None:
+    shapeless = object()
+
+    def spawn(world: World, begin: float) -> tuple[float | None, object]:
+        b, proc = world.b, world.process
+        if case == "live":
+            return None, None
+        made: object = {
+            "failed-with-process": lambda: b.SpawnOutcome(ok=False, process=proc),
+            "failed-without-process": lambda: b.SpawnOutcome(ok=False, process=None),
+            "ok-shapeless-process": lambda: b.SpawnOutcome(ok=True, process=shapeless),
+            "ok-text": lambda: b.SpawnOutcome(ok="yes", process=proc),
+            "not-an-outcome": object,
+        }[case]()
+        return begin + DT, made
+
+    lab = Lab(core, Script(spawn=spawn))
+    spawn_fault = case in ("live", "failed-with-process", "failed-without-process")
+    status = lab.refuse("SPAWN" if spawn_fault else "PORT")
+    w = lab.world
+    adopted = {  # adopted from the cached outcome BEFORE ok/shape validation
+        "failed-with-process": w.process,
+        "ok-shapeless-process": shapeless,
+        "ok-text": w.process,
+    }
+    assert status.process is adopted.get(case)
+    item, op = view(status, "spawn"), ops_of(w, "spawn")[0]
+    assert item.occupied is True and item.op is op and item.done is (case != "live")
+    assert item.outcome is (None if case == "live" else op.result)
+    assert events(w, "read") == [] and events(w, "wait") == []
+    if case == "live":
+        assert w.t == T0 + SPAWN
+
+
+@pytest.mark.parametrize("name", sorted(BRIDGE_DTOS))
+def test_d1_dtos_are_frozen_slotted_with_exact_fields(name: str) -> None:
+    cls = getattr(bridge_module(), name)
+    namespace: dict[str, Any] = dict(vars(cls))
+    assert dataclasses.is_dataclass(cls)
+    assert tuple(field.name for field in dataclasses.fields(cls)) == BRIDGE_DTOS[name]
+    assert namespace["__dataclass_params__"].frozen is True
+    assert "__slots__" in namespace
+
+
+@pytest.mark.parametrize("name", sorted(BRIDGE_ENUMS))
+def test_d1_bridge_enums_are_closed(name: str) -> None:
+    cls = getattr(bridge_module(), name)
+    assert isinstance(cls, type) and issubclass(cls, enum.Enum)
+    assert {member.name for member in cls} == BRIDGE_ENUMS[name]
+
+
+def test_d1_refusal_is_a_closed_exception() -> None:
+    b = bridge_module()
+    error = b.BridgeRefusal(b.BridgeFault.PORT)
+    assert isinstance(error, Exception)
+    assert (error.args, error.category, error.reactor_refusal) == (
+        ("PORT",),
+        b.BridgeFault.PORT,
+        None,
+    )
+    host = b.BridgeRefusal(b.BridgeFault.REACTOR_REFUSAL, "LINE")
+    assert (host.args, host.reactor_refusal) == (("REACTOR_REFUSAL",), "LINE")
+
+
+@pytest.mark.parametrize("name", sorted(BRIDGE_DTOS))
+def test_d1_every_repr_is_safe_against_foreign_values(name: str) -> None:
+    cls = getattr(bridge_module(), name)
+    touched: list[str] = []
+    item = cls(**{field: Trap(touched) for field in BRIDGE_DTOS[name]})  # carriers never refuse
+    assert isinstance(repr(item), str) and isinstance(str(item), str)
+    assert touched == []
+
+
+def test_d1_bytes_bearing_outcomes_are_redacted() -> None:
+    b, r = bridge_module(), reactor_mod()
+    items = (
+        b.ReadOutcome(ok=True, data=PACKET),
+        b.WriteOutcome(delivery=r.Delivery.SENT, bytes_written=len(PACKET)),
+        b.SpawnOutcome(ok=True, process=PACKET),
+    )
+    for item in items:
+        text = repr(item) + str(item)
+        assert all(secret not in text for secret in SECRET_TEXTS)
+
+
+# ---------------------------------------------------------------- D2 full transcript
+
+
+@pytest.mark.parametrize(
+    ("early", "fragment", "exit_first"),
+    [(False, False, False), (True, False, True), (False, True, True), (True, True, False)],
+    ids=["prompt", "early-exit-first", "fragmented-exit-first", "early-fragmented"],
+)
+def test_d2_full_transcript_through_the_real_reactor(
+    core: types.ModuleType, early: bool, fragment: bool, exit_first: bool
+) -> None:
+    lab = Lab(core, Script(early=early, fragment=fragment, exit_first=exit_first))
+    result = lab.run()
+    b, r, w = lab.b, lab.r, lab.world
+    done, status = result.done, result.status
+    assert type(result) is b.BridgeRunResult and type(done) is r.Done
+    assert done.outcome is r.Outcome.COMPLETE_CANDIDATE
+    assert ht.names(done.verdicts) == ["PASS"] * 25
+    assert (done.controller_retained, done.orphan) == (False, None)
+    # one INIT with the exact packet, then the 50 reviewed frames; no frame 51
+    assert written(w) == [PACKET, *(d1.frame(*frame) for frame in ht.expected_frames())]
+    assert acted(w) == list(HAPPY_ACTS)
+    host = status.reactor_status
+    assert (host.phase, host.lines, host.controls_sent) == (r.HostPhase.DONE, 54, 50)
+    assert host.last_at == w.t  # the last serialized owner observation
+    assert (status.phase, status.fault, status.reactor_refusal) == (b.BridgePhase.DONE, None, None)
+    assert (status.attempt_consumed, status.retained, status.process) == (True, False, w.process)
+    assert (status.total_stdout_bytes, status.queued_lines, status.partial_bytes) == (
+        w.emitted,
+        0,
+        0,
+    )
+    assert (status.overflow, status.trailing_partial, status.stdout_eof) == (False, False, True)
+    assert (status.reaped, status.exit_code) == (True, 137)
+    assert [(item.occupied, item.op) for item in status.slots] == [(False, None)] * 5
+    assert all(op.outcome_calls == 1 for op in w.ops)  # every known outcome harvested once
+    go25, (kill, zero) = events(w, "write")[-1], events(w, "act")[-2:]
+    assert kill[3] == ht.fence_of(go25[3], ht.LIVE_MS)  # fence from GO25 pre, never extended
+    assert w.exit_at is not None and zero[4] >= w.exit_at  # ZERO25 runs with exit known
+    if exit_first:
+        assert w.exit_at < ops_of(w, "act")[-2].ready_at  # exit seen before the kill receipt
+    if early:
+        assert drained_during_every_write(w)  # stdout drained while each write was pending
+    for text in (repr(result), repr(status), str(status)):
+        assert all(secret not in text for secret in SECRET_TEXTS)
+
+
+# ---------------------------------------------------------------- D3 uncertain effects
+
+
+@pytest.mark.parametrize(
+    ("mode", "count"), [("NOT_SENT", 0), ("UNKNOWN", 0), ("UNKNOWN", 7), ("LIVE", 0)]
+)
+def test_d3_uncertain_go_write_drains_without_retry(
+    core: types.ModuleType, mode: str, count: int
+) -> None:
+    lab = Lab(core, Script(writes={1: write_plan(mode, count)}))
+    result = lab.run()
+    w, status, done = lab.world, result.status, result.done
+    assert (done.outcome.name, done.controller_retained) == ("ABORTED", False)
+    assert ht.names(done.verdicts) == ["NOT_RUN"] * 25
+    assert written(w) == [PACKET, d1.frame(GO, 1, 1)]  # never a retry or rebased seq
+    assert status.reactor_status.controls_sent == 0  # SENT local is the only advance
+    item, op = view(status, "write"), ops_of(w, "write")[1]
+    if mode == "NOT_SENT":
+        assert (status.phase.name, status.retained, item.occupied) == ("DONE", False, False)
+    else:
+        assert (status.phase.name, status.retained) == ("HELD", True)
+        assert item.occupied is True and item.op is op
+        assert item.done is (mode == "UNKNOWN")
+        assert item.outcome is (op.result if mode == "UNKNOWN" else None)
+    if mode == "LIVE":
+        deadline = events(w, "write")[1][2]
+        assert all(when <= deadline for when in op.done_times)
+        late = [event for event in events(w, "poll") if event[3] >= deadline]
+        assert late and all("write" not in event[1] for event in late)
+
+
+BAD_WRITES: dict[str, tuple[str, object]] = {  # (delivery spec, bytes_written) for GO1
+    "not-sent-with-bytes": ("NOT_SENT", 3),
+    "sent-short": ("SENT", 15),
+    "sent-bool-count": ("SENT", True),
+    "unknown-over": ("UNKNOWN", 17),
+    "unknown-negative": ("UNKNOWN", -1),
+    "text-delivery": ("text", 16),
+    "foreign-enum": ("foreign", 16),
+    "not-an-outcome": ("object", 0),
+}
+
+
+def bad_write(world: World, spec: str, count: object) -> object:
+    if spec == "object":
+        return object()
+    if spec == "text":
+        delivery: object = "SENT"
+    elif spec == "foreign":
+        delivery = world.r.ActStatus.OK
+    else:
+        delivery = getattr(world.r.Delivery, spec)
+    return world.b.WriteOutcome(delivery=delivery, bytes_written=count)
+
+
+@pytest.mark.parametrize("case", sorted(BAD_WRITES))
+def test_d3_malformed_write_outcome_is_port_and_retained(core: types.ModuleType, case: str) -> None:
+    def plan(world: World, _payload: bytes, begin: float, _deadline: Any) -> tuple[Any, object]:
+        return begin + 3 * DT, bad_write(world, *BAD_WRITES[case])
+
+    lab = Lab(core, Script(writes={1: plan}))
+    status = lab.refuse("PORT")
+    item, op = view(status, "write"), ops_of(lab.world, "write")[1]
+    assert item.occupied is True and item.op is op and item.done is True
+    assert item.outcome is op.result  # the first cached outcome, never re-requested
+    host = status.reactor_status
+    assert host.pending.purpose.name == "GO" and host.controls_sent == 0  # no synthetic receipt
+
+
+EFFECTS = (
+    ("TERMINATE_ONE_BACKEND", 20),
+    ("PAUSE_PG", 21),
+    ("RESTORE_PG", 21),
+    ("OBSERVE_HEAVY", 23),
+    ("ZERO_BACKENDS", 24),
+)
+
+
+@pytest.mark.parametrize("mode", ["FAILED", "UNKNOWN", "LIVE"])
+@pytest.mark.parametrize(("kind", "case"), EFFECTS)
+def test_d3_failed_unknown_or_late_effect_fails_its_case_and_drains(
+    core: types.ModuleType, kind: str, case: int, mode: str
+) -> None:
+    lab = Lab(core, Script(acts={(kind, case): act_plan(mode)}))
+    result = lab.run()
+    w, status, done = lab.world, result.status, result.done
+    assert (done.outcome.name, done.controller_retained) == ("ABORTED", False)
+    assert ht.names(done.verdicts) == verdicts_until(case)  # an earlier RESULT PASS is replaced
+    start = next(i for i, e in enumerate(w.trace) if e[0] == "act" and e[1:3] == (kind, case))
+    assert not any(event[0] in ("write", "act") for event in w.trace[start + 1 :])
+    item, op = view(status, "act"), ops_of(w, "act")[-1]
+    if mode == "FAILED":
+        assert (status.phase.name, status.retained, item.occupied) == ("DONE", False, False)
+    else:
+        assert (status.phase.name, status.retained) == ("HELD", True)
+        assert item.occupied is True and item.op is op and item.done is (mode == "UNKNOWN")
+
+
+BAD_ACTS: dict[str, tuple[str, str, str | None]] = {  # (status, facts, reactor refusal)
+    "not-an-outcome": ("object", "none", None),
+    "text-status": ("text", "terminate", None),
+    "foreign-status": ("foreign", "none", None),
+    "ok-without-facts": ("OK", "none", "RECEIPT"),
+    "incoherent-facts": ("OK", "two-backends", "RECEIPT"),
+    "wrong-kind-facts": ("OK", "pause", "RECEIPT"),
+    "failed-with-facts": ("FAILED", "terminate", "RECEIPT"),
+}
+
+
+def bad_act(world: World, spec: str, facts_spec: str) -> object:
+    r = world.r
+    if spec == "object":
+        return object()
+    facts = {
+        "none": None,
+        "terminate": r.TerminateFacts(found=1, terminated=True),
+        "two-backends": r.TerminateFacts(found=2, terminated=True),
+        "pause": r.PauseFacts(paused=True),
+    }[facts_spec]
+    if spec == "text":
+        status: object = "OK"
+    elif spec == "foreign":
+        status = r.Delivery.SENT
+    else:
+        status = getattr(r.ActStatus, spec)
+    return world.b.ActOutcome(status=status, facts=facts)
+
+
+@pytest.mark.parametrize("case", sorted(BAD_ACTS))
+def test_d3_malformed_or_refused_act_outcome_retains_the_cache(
+    core: types.ModuleType, case: str
+) -> None:
+    spec, facts_spec, receipt = BAD_ACTS[case]
+
+    def plan(world: World, _act: Any, begin: float, _deadline: Any) -> tuple[Any, object]:
+        return begin + 2 * DT, bad_act(world, spec, facts_spec)
+
+    lab = Lab(core, Script(acts={("TERMINATE_ONE_BACKEND", 20): plan}))
+    status = lab.refuse("REACTOR_REFUSAL" if receipt else "PORT", receipt)
+    item, op = view(status, "act"), ops_of(lab.world, "act")[0]
+    assert item.occupied is True and item.op is op and item.done is True
+    assert item.outcome is op.result
+    pending = status.reactor_status.pending
+    assert (pending.kind.name, pending.case) == ("TERMINATE_ONE_BACKEND", 20)
+    assert written(lab.world)[-1] == d1.frame(ACK, 19, 38)  # GO20 is never written
+
+
+# ---------------------------------------------------------------- D4 stdout policy
+
+GUARD_LINE = ht.line_bytes(ht.GUARD)
+
+
+def spawn_emitting(raw: bytes, *, exit_at: float | None = None) -> Any:
+    def spawn(world: World, begin: float) -> tuple[float | None, object]:
+        ready = begin + DT
+        world.emit(ready + DT, raw)
+        if exit_at is not None:
+            world.finish(ready + exit_at, code=67)
+        return ready, world.b.SpawnOutcome(ok=True, process=world.process)
+
+    return spawn
+
+
+@pytest.mark.parametrize(
+    ("raw", "refusal", "overflow"),
+    [
+        pytest.param(b"x" * 511 + b"\n", "EVENT", False, id="512-including-LF-is-framed"),
+        pytest.param(b"x" * 512 + b"\n", "LINE", True, id="513-diagnostic"),
+        pytest.param(b"x" * 600 + b"\n" + GUARD_LINE, "LINE", True, id="600-then-guard"),
+        pytest.param(b"x" * READ_CHUNK, "LINE", True, id="4096-without-LF"),
+    ],
+)
+def test_d4_line_assembly_is_bounded_and_fed_closed(
+    core: types.ModuleType, raw: bytes, refusal: str, overflow: bool
+) -> None:
+    lab = Lab(core, Script(spawn=spawn_emitting(raw)))
+    status = lab.refuse("REACTOR_REFUSAL", refusal)
+    assert (status.overflow, status.partial_bytes, status.total_stdout_bytes) == (
+        overflow,
+        0,
+        len(raw),
+    )
+    assert (status.reactor_status.lines, status.reactor_status.refusal) == (0, refusal)
+
+
+def flood_during_init(data: bytes) -> Any:
+    def plan(world: World, _payload: bytes, begin: float, _deadline: Any) -> tuple[Any, object]:
+        world.emit(begin + DT, data)
+        return None, None  # the peer never consumes stdin: the write stays pending
+
+    return plan
+
+
+@pytest.mark.parametrize(
+    ("count", "category", "refusal"),
+    [(QUEUE_CAP, "REACTOR_REFUSAL", "EVENT"), (QUEUE_CAP + 1, "STDOUT_LIMIT", None)],
+)
+def test_d4_queue_cap_is_central_while_a_write_is_pending(
+    core: types.ModuleType, count: int, category: str, refusal: str | None
+) -> None:
+    lab = Lab(core, Script(writes={0: flood_during_init(b"{}\n" * count)}))
+    status = lab.refuse(category, refusal)
+    host = status.reactor_status
+    assert host.lines == 1  # only GUARD reached the model
+    if count > QUEUE_CAP:
+        assert (status.queued_lines, status.overflow) == (QUEUE_CAP, True)
+        assert host.pending.purpose.name == "INIT"  # no receipt was invented
+        item = view(status, "write")
+        assert item.occupied is True and item.done is False
+    else:
+        assert status.overflow is False  # 57 queued fit; the model then refuses '{}'
+
+
+def test_d4_total_stdout_cap_has_one_detection_byte(core: types.ModuleType) -> None:
+    lab = Lab(core, Script(writes={0: flood_during_init((b"x" * 511 + b"\n") * QUEUE_CAP)}))
+    status = lab.refuse("STDOUT_LIMIT")
+    whole = (MAX_STDOUT - len(GUARD_LINE)) // READ_CHUNK
+    assert status.total_stdout_bytes == MAX_STDOUT + 1
+    assert (status.queued_lines, status.partial_bytes, status.overflow) == (
+        whole * READ_CHUNK // LINE_CAP,
+        0,
+        True,
+    )
+    last = events(lab.world, "read")[-1]
+    assert last[1] == MAX_STDOUT - len(GUARD_LINE) - whole * READ_CHUNK + 1
+    item = view(status, "read")
+    assert item.occupied is True and item.done is True  # the overflowing block stays cached
+    assert status.reactor_status.lines == 1
+
+
+def test_d4_eof_trailing_partial_is_queued_and_refused(core: types.ModuleType) -> None:
+    partial = b'{"e":"GUARD"'
+    lab = Lab(core, Script(spawn=spawn_emitting(partial, exit_at=2 * DT)))
+    status = lab.refuse("REACTOR_REFUSAL", "LINE")
+    assert (status.trailing_partial, status.stdout_eof, status.partial_bytes) == (True, True, 0)
+    assert status.total_stdout_bytes == len(partial)
+
+
+def test_d4_fifty_seventh_model_line_is_line_before_order(core: types.ModuleType) -> None:
+    def kill(world: World, _act: Any, begin: float, _deadline: Any) -> tuple[Any, object]:
+        tail = [ht.abort(25, "CASE", "PHASE", False), ht.terminal("ABORTED")]
+        world.emit(begin + DT, b"".join(ht.line_bytes(event) for event in tail) + b"{}\n")
+        return begin + 2 * DT, act_ok(world, "KILL_GATEWAY")
+
+    lab = Lab(core, Script(acts={("KILL_GATEWAY", 25): kill}))
+    status = lab.refuse("REACTOR_REFUSAL", "LINE")
+    assert status.reactor_status.lines == 56
+
+
+# ---------------------------------------------------------------- D5 deadlines, EOF, Exited
+
+
+@pytest.mark.parametrize(
+    ("late", "overshoot"),
+    [("write", False), ("write", True), ("line", True)],
+    ids=["write-at-deadline", "write-overshoot", "line-overshoot"],
+)
+def test_d5_overall_deadline_precedes_any_feed_of_a_known_late_result(
+    core: types.ModuleType, late: str, overshoot: bool
+) -> None:
+    b = bridge_module()
+    budget = b.DuplexBudget(spawn_s=1.0, silence_s=2.0, drain_s=2.0, overall_s=3.0)
+    end = T0 + 3.0
+
+    def plan(world: World, payload: bytes, _begin: float, _deadline: Any) -> tuple[Any, object]:
+        if late == "line":
+            world.emit(end + 0.25, ht.line_bytes(ht.INIT_OK))
+            return None, None
+        sent = world.b.WriteOutcome(delivery=world.r.Delivery.SENT, bytes_written=len(payload))
+        return end + 0.25, sent
+
+    lab = Lab(core, Script(writes={0: plan}), budget)
+    lab.world.clock.overshoot = overshoot
+    status = lab.refuse("OVERALL_DEADLINE")
+    host = status.reactor_status
+    assert (host.lines, host.controls_sent, host.last_at) == (1, 0, T0 + 2 * DT)
+    assert host.pending.purpose.name == "INIT"  # the original pending is kept
+    assert lab.world.t == end + (0.25 if overshoot else 0.0)
+    item, op = view(status, "write"), ops_of(lab.world, "write")[0]
+    assert item.occupied is True and item.op is op
+    if late == "write":
+        assert item.done is overshoot  # the true late outcome is cached, never fed
+        assert item.outcome is (op.result if overshoot else None)
+
+
+BAD_POLLS: dict[str, Any] = {
+    "early-without-completion": lambda now: now + DT / 2,
+    "regressive": lambda now: now - DT,
+    "bool": lambda _now: True,
+    "nan": lambda _now: math.nan,
+    "infinite": lambda _now: math.inf,
+    "text": lambda _now: "100.5",
+}
+
+
+@pytest.mark.parametrize("case", sorted(BAD_POLLS))
+def test_d5_poll_return_is_closed_and_never_a_busy_loop(core: types.ModuleType, case: str) -> None:
+    lab = Lab(core)
+
+    def bad(clock: Clock, _watched: Any, _deadline: Any) -> Any:
+        return BAD_POLLS[case](clock.world.t)
+
+    lab.world.clock.on_poll = bad
+    status = lab.refuse("PORT")
+    assert len(events(lab.world, "poll")) == 1
+    item = view(status, "spawn")
+    assert item.occupied is True and item.op is ops_of(lab.world, "spawn")[0]
+    assert status.process is None and events(lab.world, "read") == []
+
+
+@pytest.mark.parametrize("case", ["bool-first", "regress-after-spawn"])
+def test_d5_now_is_exact_and_nondecreasing(core: types.ModuleType, case: str) -> None:
+    lab = Lab(core)
+
+    def bad_now(clock: Clock) -> object:
+        w = clock.world
+        if case == "bool-first":
+            return True
+        if any(event[:2] == ("outcome", "spawn") for event in w.trace):
+            return w.t - 1.0
+        return w.t
+
+    lab.world.clock.on_now = bad_now
+    status = lab.refuse("PORT")
+    assert status.attempt_consumed is True and status.reactor_status.lines == 0
+    if case == "bool-first":
+        assert events(lab.world, "spawn") == []
+
+
+@pytest.mark.parametrize("partial", [b"", b'{"e"'], ids=["quiet", "partial-wakeup"])
+def test_d5_silence_anchors_once_without_rebase(core: types.ModuleType, partial: bytes) -> None:
+    b = bridge_module()
+    budget = b.DuplexBudget(spawn_s=1.0, silence_s=2.0, drain_s=2.0, overall_s=10.0)
+
+    def spawn(world: World, begin: float) -> tuple[float | None, object]:
+        ready = begin + DT
+        if partial:
+            world.emit(ready + 1.0, partial)
+        return ready, world.b.SpawnOutcome(ok=True, process=world.process)
+
+    lab = Lab(core, Script(spawn=spawn), budget)
+    status = lab.refuse("SILENCE")
+    assert lab.world.t == T0 + DT + 2.0  # anchored once at the first wait, not at the wakeup
+    assert (status.partial_bytes, status.reactor_status.lines) == (len(partial), 0)
+    assert view(status, "read").occupied is True and view(status, "wait").occupied is True
+
+
+def init_not_sent(lines: list[tuple[float, dict[str, object]]], alive_at: float | None) -> Any:
+    def plan(world: World, _payload: bytes, begin: float, _deadline: Any) -> tuple[Any, object]:
+        ready = begin + 3 * DT
+        for offset, event in lines:
+            world.say(ready + offset, [event])
+        if alive_at is not None:  # the port positively reports a live process
+            alive = world.b.WaitOutcome(status=world.r.ExitStatus.NO_EXIT, code=None, reaped=False)
+            world.finish(ready + alive_at, eof=False, outcome=alive)
+        return ready, world.b.WriteOutcome(delivery=world.r.Delivery.NOT_SENT, bytes_written=0)
+
+    return plan
+
+
+@pytest.mark.parametrize("terminal", ["ABORTED", "RETAINED"])
+def test_d5_drain_anchors_once_and_exit_status_needs_port_proof(
+    core: types.ModuleType, terminal: str
+) -> None:
+    b = bridge_module()
+    budget = b.DuplexBudget(spawn_s=1.0, silence_s=5.0, drain_s=2.0, overall_s=60.0)
+    retained = terminal == "RETAINED"
+    lines = [(0.5, ht.abort(0, "INIT", "TIMEOUT", retained)), (1.0, ht.terminal(terminal))]
+    script = Script(writes={0: init_not_sent(lines, 1.5 if retained else None)})
+    lab = Lab(core, script, budget)
+    result = lab.run()
+    w, status, done = lab.world, result.status, result.done
+    post = events(w, "write")[0][3] + 3 * DT
+    assert status.reactor_status.last_at == post + 2.0  # one drain anchor; lines never renew it
+    expected = "RETAINED" if retained else "ENDED_UNKNOWN"  # pending wait is UNKNOWN, not NO_EXIT
+    assert (done.outcome.name, done.controller_retained) == (expected, True)
+    assert (status.phase.name, status.retained, status.stdout_eof) == ("HELD", True, False)
+    wait = view(status, "wait")
+    assert wait.occupied is True and wait.op is ops_of(w, "wait")[0]
+    if retained:
+        assert wait.done is True and wait.outcome is w.exit_outcome
+    else:
+        assert (wait.done, wait.outcome, status.reaped, status.exit_code) == (
+            False,
+            None,
+            False,
+            None,
+        )
+
+
+BAD_WAITS: dict[str, tuple[str, object, object]] = {  # (status spec, code, reaped)
+    "exited-unreaped": ("EXITED", 68, False),
+    "exited-without-code": ("EXITED", None, True),
+    "exited-code-256": ("EXITED", 256, True),
+    "exited-code-bool": ("EXITED", True, True),
+    "no-exit-with-code": ("NO_EXIT", 0, False),
+    "unknown-reaped": ("UNKNOWN", None, True),
+    "text-status": ("text", 68, True),
+    "not-an-outcome": ("object", None, False),
+}
+
+
+def bad_wait(world: World, spec: str, code: object, reaped: object) -> object:
+    if spec == "object":
+        return object()
+    status: object = "EXITED" if spec == "text" else getattr(world.r.ExitStatus, spec)
+    return world.b.WaitOutcome(status=status, code=code, reaped=reaped)
+
+
+@pytest.mark.parametrize("case", sorted(BAD_WAITS))
+def test_d5_malformed_wait_outcome_is_port_and_retained(core: types.ModuleType, case: str) -> None:
+    def spawn(world: World, begin: float) -> tuple[float | None, object]:
+        ready = begin + DT
+        world.finish(ready + DT, eof=False, outcome=bad_wait(world, *BAD_WAITS[case]))
+        return ready, world.b.SpawnOutcome(ok=True, process=world.process)
+
+    lab = Lab(core, Script(spawn=spawn))
+    status = lab.refuse("PORT")
+    item, op = view(status, "wait"), ops_of(lab.world, "wait")[0]
+    assert item.occupied is True and item.op is op and item.done is True
+    assert item.outcome is lab.world.exit_outcome
+    assert status.reactor_status.lines == 0
+
+
+def crash_after_result(extra: list[dict[str, object]]) -> Any:
+    def plan(world: World, payload: bytes, begin: float, _deadline: Any) -> tuple[Any, object]:
+        ready = begin + 3 * DT
+        tail = [ht.abort(1, "CASE", "TIMEOUT", False), ht.terminal("ABORTED")]
+        world.say(ready + DT, [ht.result(1), *extra, *tail])
+        world.finish(ready + DT, code=68)  # stdout and exit observed together
+        sent = world.b.WriteOutcome(delivery=world.r.Delivery.SENT, bytes_written=len(payload))
+        return ready, sent
+
+    return plan
+
+
+def test_d5_cached_exit_before_a_new_send_feeds_every_raw_line_first(
+    core: types.ModuleType,
+) -> None:
+    lab = Lab(core, Script(writes={1: crash_after_result([])}))
+    result = lab.run()
+    done, status = result.done, result.status
+    assert (done.outcome.name, done.controller_retained) == ("ABORTED", False)
+    assert done.orphan.purpose.name == "ACK" and done.orphan.payload == d1.frame(ACK, 1, 2)
+    assert written(lab.world) == [PACKET, d1.frame(GO, 1, 1)]  # no effect for an exited peer
+    assert ht.names(done.verdicts)[:2] == ["PASS", "NOT_RUN"]
+    assert status.reactor_status.lines == 6  # GUARD, INIT_OK, READY, RESULT, ABORT, TERMINAL
+    assert (status.phase.name, status.retained) == ("DONE", False)
+    assert (status.stdout_eof, status.reaped, status.exit_code) == (True, True, 68)
+
+
+def test_d5_raw_lines_are_never_skipped_to_reach_done(core: types.ModuleType) -> None:
+    lab = Lab(core, Script(writes={1: crash_after_result([ht.ready(2, 3)])}))
+    status = lab.refuse("REACTOR_REFUSAL", "ORDER")
+    assert status.reactor_status.lines == 4
+    assert written(lab.world) == [PACKET, d1.frame(GO, 1, 1)]
+
+
+def test_d5_exit_cached_before_init_never_sends_the_packet(core: types.ModuleType) -> None:
+    lab = Lab(core, Script(spawn=exit_with_guard(67)))
+    result = lab.run()
+    done = result.done
+    assert (done.outcome.name, done.controller_retained) == ("BROKEN", False)
+    assert done.orphan.purpose.name == "INIT" and written(lab.world) == []
+    assert (result.status.exit_code, result.status.reactor_status.lines) == (67, 1)
+
+
+def test_d5_exit_without_eof_after_kill_feeds_real_facts(core: types.ModuleType) -> None:
+    def kill(world: World, _act: Any, begin: float, _deadline: Any) -> tuple[Any, object]:
+        ready = begin + 2 * DT
+        world.finish(ready + DT, code=137, eof=False)
+        return ready, act_ok(world, "KILL_GATEWAY")
+
+    lab = Lab(core, Script(acts={("KILL_GATEWAY", 25): kill}))
+    result = lab.run()
+    w, status, done = lab.world, result.status, result.done
+    assert (done.outcome.name, done.controller_retained) == ("ENDED_UNKNOWN", True)
+    assert ht.names(done.verdicts) == ["PASS"] * 24 + ["FAIL"]
+    receipt = events(w, "act")[-1][4] + 2 * DT
+    assert status.reactor_status.last_at == receipt + DRAIN  # eof stays False, never fabricated
+    assert acted(w)[-1] == ("KILL_GATEWAY", 25)  # no ZERO_BACKENDS without EOF
+    assert (status.phase.name, status.stdout_eof, status.reaped, status.exit_code) == (
+        "HELD",
+        False,
+        True,
+        137,
+    )
+    assert view(status, "read").occupied is True
+
+
+# ---------------------------------------------------------------- D6 T6, control, statics
+
+
+def test_d6_late_kill_stops_at_the_go25_pre_fence(core: types.ModuleType) -> None:
+    def kill(world: World, _act: Any, _begin: float, deadline: Any) -> tuple[Any, object]:
+        world.finish(deadline + 1.0 + DT, code=137)
+        return deadline + 1.0, act_ok(world, "KILL_GATEWAY")
+
+    lab = Lab(core, Script(acts={("KILL_GATEWAY", 25): kill}))
+    result = lab.run()
+    w, status = lab.world, result.status
+    go25, kill_event = events(w, "write")[-1], events(w, "act")[-1]
+    fence = ht.fence_of(go25[3], ht.LIVE_MS)
+    assert go25[1] == d1.frame(GO, 25, 50) and kill_event[3] == fence  # never extended
+    assert result.done.outcome.name == "T6_FAILED"
+    assert ht.names(result.done.verdicts) == ["PASS"] * 24 + ["FAIL"]
+    op = ops_of(w, "act")[-1]
+    assert all(when <= fence for when in op.done_times) and op.outcome_calls == 0
+    item = view(status, "act")
+    assert (item.occupied, item.done) == (True, False) and item.op is op
+    assert (status.phase.name, status.retained) == ("HELD", True)
+    assert acted(w)[-1] == ("KILL_GATEWAY", 25)
+
+
+@pytest.mark.parametrize("code", [137, 0])
+def test_d6_exit_code_alone_is_never_a_kill(core: types.ModuleType, code: int) -> None:
+    def kill(world: World, _act: Any, begin: float, _deadline: Any) -> tuple[Any, object]:
+        ready = begin + 2 * DT
+        world.finish(ready + DT, code=code)
+        return ready, world.b.ActOutcome(status=world.r.ActStatus.FAILED, facts=None)
+
+    lab = Lab(core, Script(acts={("KILL_GATEWAY", 25): kill}))
+    result = lab.run()
+    status = result.status
+    assert result.done.outcome.name == "T6_FAILED"
+    assert ht.names(result.done.verdicts)[24] == "FAIL"
+    assert acted(lab.world)[-1] == ("KILL_GATEWAY", 25)
+    assert (status.exit_code, status.phase.name, status.retained) == (code, "DONE", False)
+
+
+def test_d6_oom_is_not_a_kill_receipt(core: types.ModuleType) -> None:
+    def kill(world: World, _act: Any, begin: float, _deadline: Any) -> tuple[Any, object]:
+        world.finish(begin + DT, code=137)
+        facts = world.r.KillFacts(stop_confirmed=True, oom_killed=True)
+        return begin + 2 * DT, act_ok(world, "KILL_GATEWAY", facts)
+
+    lab = Lab(core, Script(acts={("KILL_GATEWAY", 25): kill}))
+    status = lab.refuse("REACTOR_REFUSAL", "RECEIPT")
+    item = view(status, "act")
+    assert item.occupied is True and item.done is True
+    assert acted(lab.world)[-1] == ("KILL_GATEWAY", 25)
+
+
+def test_d6_insufficient_kill_budget_never_starts_a_kill(core: types.ModuleType) -> None:
+    lab = Lab(core, Script(live=1000))
+    result = lab.run()
+    status = result.status
+    assert result.done.outcome.name == "T6_FAILED"
+    assert ("KILL_GATEWAY", 25) not in acted(lab.world)
+    assert view(status, "read").occupied is True and view(status, "wait").occupied is True
+    assert status.reaped is False  # the gateway is alive: nothing released
+
+
+def interrupt_on(role: str, control: BaseException) -> Any:
+    def hook(clock: Clock, watched: Any, _deadline: Any) -> object:
+        if any(getattr(slot, "name", None) == role for slot in watched):
+            clock.world.mark()
+            raise control
+        return None
+
+    return hook
+
+
+CONTROL_POINTS = ("poll-during-write", "begin-act-after-bind", "spawn-outcome")
+
+
+@pytest.mark.parametrize("where", CONTROL_POINTS)
+def test_d6_first_control_is_relaunched_intact_without_new_callbacks(
+    core: types.ModuleType, where: str
+) -> None:
+    control: BaseException = KeyboardInterrupt()
+    if where == "begin-act-after-bind":
+        control = SystemExit(3)
+    script = Script()
+    if where == "begin-act-after-bind":
+        script.faults["act"] = ("begin", control)
+    elif where == "spawn-outcome":
+        script.faults["spawn"] = ("outcome", control)
+    lab = Lab(core, script)
+    if where == "poll-during-write":
+        lab.world.clock.on_poll = interrupt_on("write", control)
+    with pytest.raises(type(control)) as caught:
+        lab.bridge.run()
+    w, b = lab.world, lab.b
+    assert caught.value is control  # the same instance, never a replacement
+    assert len(w.trace) == w.fault_at  # no done/outcome/clock/port callback in the handler
+    status = lab.settle()
+    assert (status.fault, status.phase, status.retained) == (
+        b.BridgeFault.CONTROL,
+        b.BridgePhase.HELD,
+        True,
+    )
+    role = {"poll-during-write": "write", "begin-act-after-bind": "act"}.get(where, "spawn")
+    item = view(status, role)
+    assert item.occupied is True and item.op is ops_of(w, role)[0]
+    assert status.process is (None if role == "spawn" else w.process)
+    with pytest.raises(b.BridgeRefusal) as again:
+        lab.bridge.run()
+    closed(b, again.value, "REENTRY")
+    assert len(w.trace) == w.fault_at and lab.bridge.status().fault is b.BridgeFault.CONTROL
+
+
+CLEANUP_WORDS = ("quiesce", "ticket", "nonce", "released", "cleanup", "absent")
+CLEANUP_ATTRS = frozenset(
+    {"close", "kill", "terminate", "cancel", "communicate", "wait_for", "send_signal"}
+)
+SOURCE_NAMES = (
+    "w1_bootstrap_channel",
+    "oracle9_w1_run",
+    "host_reactor",
+    "driver",
+    "oracle9_w1_main",
+    "oracle9_w1_controller",
+)
+
+
+def test_d6_module_is_pure_and_offers_no_cleanup_api() -> None:
+    tree = ast.parse(BRIDGE_FILE.read_text(encoding="utf-8"))
+    identifiers: list[str] = []
+    for node in ast.walk(tree):
+        imported: list[str] = []
+        if isinstance(node, ast.Import):
+            imported = [alias.name for alias in node.names]
+        elif isinstance(node, ast.ImportFrom):
+            imported = [node.module or ""]
+            identifiers += [alias.name for alias in node.names]
+        for name in imported:
+            assert name.split(".")[0] not in ht.FORBIDDEN_IMPORTS
+            assert not any(part in name for part in SOURCE_NAMES)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+            assert node.func.id not in ht.FORBIDDEN_CALLS | {"compile"}
+        if isinstance(node, ast.Attribute):
+            assert node.attr not in ht.CLOCK_ATTRS | CLEANUP_ATTRS
+            identifiers.append(node.attr)
+        elif isinstance(node, ast.Name):
+            identifiers.append(node.id)
+        elif isinstance(node, ast.FunctionDef | ast.ClassDef):
+            identifiers.append(node.name)
+        elif isinstance(node, ast.arg):
+            identifiers.append(node.arg)
+    flagged = [name for name in identifiers if any(word in name.lower() for word in CLEANUP_WORDS)]
+    assert flagged == []

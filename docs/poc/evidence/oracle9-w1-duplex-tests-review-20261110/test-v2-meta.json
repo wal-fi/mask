@@ -1,0 +1,22 @@
+{
+  "path": "tests/test_oracle9_w1_duplex_bridge.py",
+  "sha256": "83c40e7776841eb42febb5f5bce4bd627a9046c7026428ac02831f2e121b5233",
+  "bytes": 76394,
+  "lines": 1934,
+  "test_functions": 49,
+  "original_test_functions": 44,
+  "removed_originals": [],
+  "changed_originals": [
+    "test_d1_refusal_is_a_closed_exception",
+    "test_d2_full_transcript_through_the_real_reactor",
+    "test_d6_insufficient_kill_budget_never_starts_a_kill"
+  ],
+  "added": [
+    "test_d1_fresh_binding_needs_exact_counts_and_25_not_run",
+    "test_d4_eof_partial_after_a_full_queue_is_the_58th_enqueue",
+    "test_d4_malformed_or_failed_read_outcome_is_port_and_retained",
+    "test_d5_overall_crossed_before_a_model_act_starts_no_action",
+    "test_d5_overall_crossed_between_harvest_and_feed_feeds_nothing"
+  ],
+  "bridge_absent": true
+}

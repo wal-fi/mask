@@ -1,0 +1,15 @@
+{
+  "test_sha256": "cb5d50f448b1cc845fd25d2561c59563c5d37fdeedfa05da836b2a7018582108",
+  "ruff_check_exit": 0,
+  "ruff_format_check_exit": 0,
+  "mypy_311_exit": 1,
+  "mypy_314_exit": 1,
+  "mypy_errors_each": [
+    "39: tests.test_oracle9_w1_host_reactor does not explicitly export d1",
+    "1073: Exception has no category attribute",
+    "1073: Exception has no reactor_refusal attribute",
+    "1143: unsupported comparison float < (float | None)"
+  ],
+  "source_bridge_absent": true,
+  "not_frozen": true
+}

@@ -1,0 +1,82 @@
+{
+  "test_sha256": "97c26fbfd2823e288a450fdde7ca3d7919ef7a5ec4843021bc3cb98bf585f671",
+  "bytes": 76446,
+  "lines": 1935,
+  "test_functions": 49,
+  "bridge_absent": true,
+  "protected_files": [
+    {
+      "path": "deploy/oracle9_w1_driver.py",
+      "sha256": "b54a8a9457a908e839d1f5870280644839478bc471e5e06cd4268bcdcff8c51f",
+      "bytes": 51913
+    },
+    {
+      "path": "deploy/oracle9_w1_main.py",
+      "sha256": "89c99c6587e7c51d86fc0abb460330780357121c28768883ed8ab9dc789ccdea",
+      "bytes": 46787
+    },
+    {
+      "path": "tests/test_oracle9_w1_driver.py",
+      "sha256": "37848735f0a8687f227d1ef2c8449b92535a0255a911124ea9dc415d35b05850",
+      "bytes": 81023
+    },
+    {
+      "path": "tests/test_oracle9_w1_driver_session.py",
+      "sha256": "e7c2a1c2c2606c59154719cfd1aece2127f443ef0e8a2a03d93f54c344e58b47",
+      "bytes": 45321
+    },
+    {
+      "path": "tests/test_oracle9_w1_expect.py",
+      "sha256": "e24f80a58300a7835f5990f842ddb2e13415570a68141e929d2b69ea62844cca",
+      "bytes": 45520
+    },
+    {
+      "path": "tests/test_oracle9_w1_main.py",
+      "sha256": "0e6e07f05d4388f52ff7469e9f4bf2713636e274f53d460a3decd65f7256e234",
+      "bytes": 102644
+    },
+    {
+      "path": "tests/test_oracle9_w1_driver_t5.py",
+      "sha256": "2b509c870292a30612953257565d8a705d23da11acbf62fad8ba40c7fbfeff0e",
+      "bytes": 50963
+    },
+    {
+      "path": "tests/test_oracle9_w1_main_t5.py",
+      "sha256": "ec2df9113c8c3c78eb22512144a6dd41b3e3c6e43b07dcbc3773ee76d2a3dc69",
+      "bytes": 36224
+    },
+    {
+      "path": "deploy/oracle9_w1_controller.py",
+      "sha256": "4c155d76208f113852f95fec4c57253eef480c610aa390423fa6f82baf1f7bc7",
+      "bytes": 22453
+    },
+    {
+      "path": "tests/test_oracle9_w1_controller.py",
+      "sha256": "084d62cd2a567a0710a7e13b5e9b33896c255ee743fa58e3cc0dab08135b9039",
+      "bytes": 44298
+    },
+    {
+      "path": "docs/poc/oracle9_w1_expect.py",
+      "sha256": "ce6ff3896d44b7e27cbfe76ca4e1c63c5da87c7982ea7e591e8ef71517a06725",
+      "bytes": 22114
+    },
+    {
+      "path": "docs/poc/oracle9_w1_host_reactor.py",
+      "sha256": "e86f8e325410a26efeb47de1c4e349e9099673de612c028eb30e01ceea5d91ae",
+      "bytes": 38610
+    },
+    {
+      "path": "tests/test_oracle9_w1_host_reactor.py",
+      "sha256": "f177102a1ea55e9c6a32d1fcd863f18a2c04800588bddeeab8ee0eb192816613",
+      "bytes": 77736
+    }
+  ],
+  "app124_verified": 124,
+  "ruff_check": true,
+  "ruff_format": true,
+  "mypy_strict_311": true,
+  "mypy_strict_314": true,
+  "runtime_platform": "win32",
+  "runtime_python": "3.11.3",
+  "native_gate_closed": false
+}
