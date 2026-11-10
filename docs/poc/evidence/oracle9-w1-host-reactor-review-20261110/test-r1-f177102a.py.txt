@@ -1,0 +1,2144 @@
+"""Pure W1 host reactor (HOST-DESIGN v2 + R6, aed85ad4) oracles H1-H17; RED-first.
+
+Contract for the FUTURE ``docs/poc/oracle9_w1_host_reactor.py``. The module stays absent
+until the root reviews these oracles; it is loaded lazily inside feature cases only
+(``reactor_module()``), so absence fails at execution, never at collection. The
+``test_sanity_*`` cases never load it: they only check this file's own oracle tables
+against the published trusted core.
+
+The trusted core is the published pure controller (4c155d76) loaded through the
+published driver's public ``load_pure`` over the pinned bytes; ModuleType alone is not
+origin authentication. The LAB_INIT packet is the frozen synthetic D1 fixture. Every
+time is an injected host monotonic value (exact dyadic floats, so fence arithmetic is
+exact); nothing here sleeps, reads a clock or touches an OS, Docker, PG or SQL. A model
+``Done`` is a protocol candidate only: no release, cleanup, kernel, PG or native proof.
+"""
+
+from __future__ import annotations
+
+import ast
+import dataclasses
+import enum
+import functools
+import json
+import math
+import runpy
+import sys
+import types
+from pathlib import Path
+from types import SimpleNamespace
+from typing import Any
+
+import pytest
+
+from maskgw.runtime.budget import ReleaseOutcome
+from tests import test_oracle9_w1_driver as d1
+
+REPO = Path(__file__).resolve().parents[1]
+REACTOR_FILE = REPO / "docs/poc/oracle9_w1_host_reactor.py"
+PURE_MODULE = "_maskgw_w1_lab_pure"
+PACKET = d1.PACKET
+MIB = d1.MIB
+GO, STOP, NOSTOP, ACK = 1, 2, 3, 4
+
+INIT_S, GO_S, ACK_S, FATAL_ACK_S, ACT_S, T4_WINDOW_S = 5.0, 10.0, 10.0, 60.0, 2.0, 10.0
+EPS, MARGIN, KILL_MIN = 2.0**-10, 0.5, 1.0
+LIVE_MS = 8000
+REL = (ReleaseOutcome.RELEASED.value, ReleaseOutcome.ALREADY_RELEASED.value)
+RECORDS = {record["job"]: record for record in d1.expected_records()}
+SECRETS = (d1.HMAC_KEY, d1.READONLY_HEX, d1.CANARY)
+
+READY_SEQ = {**{case: 2 * case - 1 for case in range(1, 23)}, 23: 45, 24: 48, 25: 50}
+RESULT_SEQ = {**{case: 2 * case for case in range(1, 23)}, 23: 47, 24: 49}
+ARMED_SEQ = {23: 46, 25: 51}
+RESULT_KEYS = (
+    "bytes",
+    "case",
+    "e",
+    "kind",
+    "next_seq",
+    "reason",
+    "release",
+    "rows",
+    "sink",
+    "stop_applied",
+    "truncated",
+    "verdict",
+)
+ABORT_PHASES = ("LOAD", "INIT", "CAPTURE", "LEDGER", "CASE", "CLEANUP")
+ABORT_REASONS = (
+    "LOAD",
+    "INIT",
+    "CAPTURE",
+    "LEDGER",
+    "SESSION",
+    "OUTPUT",
+    "IDLE_WINDOW",
+    "EOF",
+    "TIMEOUT",
+    "SINK",
+    "JOIN",
+    "WATCHER",
+    "EXPECTATION",
+    "PHASE",
+    "CONTROL",
+    "SQL",
+    "DESTINATION",
+)
+DROP = object()
+
+
+class IntSub(int):
+    """int subclass: never an exact int/time."""
+
+
+class FloatSub(float):
+    """float subclass: never an exact time."""
+
+
+ENUMS: dict[str, frozenset[str]] = {
+    "Delivery": frozenset({"NOT_SENT", "SENT", "UNKNOWN"}),
+    "ActStatus": frozenset({"OK", "FAILED", "UNKNOWN"}),
+    "ExitStatus": frozenset({"EXITED", "NO_EXIT", "UNKNOWN"}),
+    "Purpose": frozenset({"INIT", "GO", "ACK", "STOP", "NOSTOP"}),
+    "Verdict": frozenset({"PASS", "FAIL", "NOT_RUN"}),
+    "Outcome": frozenset(
+        {
+            "COMPLETE_CANDIDATE",
+            "T6_FAILED",
+            "ABORTED",
+            "RETAINED",
+            "GUARD_FAILED",
+            "SETUP_FAILED",
+            "LOAD_FAILED",
+            "LINK_FAILED",
+            "CONTROL",
+            "BROKEN",
+            "ENDED_UNKNOWN",
+        }
+    ),
+    "HostPhase": frozenset(
+        {"AWAIT_GUARD", "AWAIT_INIT_OK", "RUNNING", "DRAINING", "ENDING", "DONE", "REFUSED"}
+    ),
+    "ActKind": frozenset(
+        {
+            "TERMINATE_ONE_BACKEND",
+            "PAUSE_PG",
+            "RESTORE_PG",
+            "OBSERVE_HEAVY",
+            "ZERO_BACKENDS",
+            "KILL_GATEWAY",
+        }
+    ),
+}
+DTO_FIELDS: dict[str, tuple[str, ...]] = {
+    "Line": ("raw", "at"),
+    "Delivered": ("token", "delivery", "pre", "post"),
+    "ActDone": ("token", "kind", "status", "facts", "at"),
+    "Exited": ("at", "status", "code", "eof", "reaped"),
+    "TerminateFacts": ("found", "terminated"),
+    "PauseFacts": ("paused",),
+    "RestoreFacts": ("running", "paused", "ready"),
+    "ObserveFacts": ("found", "observations"),
+    "ZeroFacts": ("backends",),
+    "KillFacts": ("stop_confirmed", "oom_killed"),
+    "Send": ("token", "purpose", "payload", "issued_at", "deadline"),
+    "Act": ("token", "kind", "case", "issued_at", "deadline"),
+    "Wait": (),
+    "Done": ("outcome", "verdicts", "controller_retained", "orphan"),
+    "HostStatus": (
+        "phase",
+        "lines",
+        "controls_sent",
+        "last_at",
+        "pending",
+        "orphan",
+        "orphan_receipt",
+        "refusal",
+        "verdicts",
+    ),
+    "HostPolicy": (
+        "init_s",
+        "go_s",
+        "ack_s",
+        "fatal_ack_s",
+        "act_s",
+        "t4_window_s",
+        "t6_epsilon",
+        "t6_margin_s",
+        "t6_kill_min_s",
+    ),
+}
+
+
+def expected_frames() -> list[tuple[int, int, int]]:
+    """Exact host control order of the happy path (HOST-DESIGN §5 table)."""
+    frames: list[tuple[int, int, int]] = []
+    for case in range(1, 23):
+        frames += [(GO, case, READY_SEQ[case]), (ACK, case, RESULT_SEQ[case])]
+    frames += [(GO, 23, 45), (STOP, 23, 46), (ACK, 23, 47), (GO, 24, 48), (ACK, 24, 49)]
+    return [*frames, (GO, 25, 50)]
+
+
+# ---------------------------------------------------------------- loading
+
+
+@functools.cache
+def _reactor_namespace() -> dict[str, Any]:
+    return runpy.run_path(str(REACTOR_FILE), run_name="_host_reactor_test")
+
+
+def reactor_module() -> Any:
+    return SimpleNamespace(**_reactor_namespace())
+
+
+class PinnedReader:
+    """Reader port over the published pinned pure bytes, for the public load_pure."""
+
+    def read(self, path: str, limit: int) -> bytes:
+        assert (path, limit) == (d1.PURE_PATH, d1.PURE_SIZE + 1)
+        return d1.PURE_SOURCE
+
+
+@pytest.fixture
+def core(monkeypatch: pytest.MonkeyPatch) -> types.ModuleType:
+    """Trusted core loaded by the published driver loader; sys.modules restored after."""
+    monkeypatch.setitem(sys.modules, PURE_MODULE, types.ModuleType(PURE_MODULE))
+    monkeypatch.delitem(sys.modules, PURE_MODULE)
+    loaded = d1.driver()["load_pure"](PinnedReader())
+    assert type(loaded) is types.ModuleType
+    return loaded
+
+
+def core_copy(core: types.ModuleType, **changes: object) -> types.ModuleType:
+    variant = types.ModuleType("_host_core_variant")
+    variant.__dict__.update(core.__dict__)
+    for name, value in changes.items():
+        if value is DROP:
+            del variant.__dict__[name]
+        else:
+            variant.__dict__[name] = value
+    return variant
+
+
+def policy_fields(**changes: object) -> dict[str, object]:
+    fields: dict[str, object] = {
+        "init_s": INIT_S,
+        "go_s": GO_S,
+        "ack_s": ACK_S,
+        "fatal_ack_s": FATAL_ACK_S,
+        "act_s": ACT_S,
+        "t4_window_s": T4_WINDOW_S,
+        "t6_epsilon": EPS,
+        "t6_margin_s": MARGIN,
+        "t6_kill_min_s": KILL_MIN,
+    }
+    fields.update(changes)
+    return fields
+
+
+def policy_for(r: Any, **changes: object) -> Any:
+    return r.HostPolicy(**policy_fields(**changes))
+
+
+def fence_of(pre: float, live_ms: int, *, eps: float = EPS, margin: float = MARGIN) -> float:
+    return pre + (live_ms / 1000) * (1 - eps) - margin
+
+
+# ---------------------------------------------------------------- events
+
+
+def line_bytes(event: dict[str, object]) -> bytes:
+    return d1.canonical(event) + b"\n"
+
+
+GUARD: dict[str, object] = {
+    "as": 384 * MIB,
+    "dumpable": 0,
+    "e": "GUARD",
+    "pdeathsig": 0,
+    "pid": 1,
+}
+INIT_OK: dict[str, object] = {"e": "INIT_OK"}
+
+
+def ready(case: object, seq: object) -> dict[str, object]:
+    return {"case": case, "e": "READY", "next_seq": seq}
+
+
+def armed(case: int, seq: int, live: object) -> dict[str, object]:
+    return {"case": case, "e": "ARMED", "live_window_ms": live, "next_seq": seq}
+
+
+def summary(failed: list[int], **changes: object) -> dict[str, object]:
+    event: dict[str, object] = {
+        "e": "SUMMARY",
+        "failed": failed,
+        "global_pass": False,
+        "prefix_cases": 24,
+    }
+    event.update(changes)
+    return event
+
+
+def abort(case: object, phase: object, reason: object, retained: object) -> dict[str, object]:
+    return {"case": case, "e": "ABORT", "phase": phase, "reason": reason, "retained": retained}
+
+
+def terminal(outcome: str) -> dict[str, object]:
+    return {"e": "TERMINAL", "outcome": outcome}
+
+
+def result(case: int, over: dict[str, object] | None = None) -> dict[str, object]:
+    """Exact b54 RESULT event (12 keys) for a passing case, then explicit mutations."""
+    fields: dict[str, object] = dict.fromkeys(RESULT_KEYS)
+    fields.update({"case": case, "e": "RESULT", "next_seq": RESULT_SEQ[case], "verdict": "PASS"})
+    if case <= 19:
+        record = RECORDS[case]
+        if record["kind"] == "RESULT":
+            fields.update(
+                kind="RESULT",
+                rows=record["rows"],
+                bytes=record["bytes"],
+                truncated=case == 9,
+                sink="OK",
+            )
+        else:
+            fields.update(kind="ERROR", reason=record["reason"])
+    elif case <= 23:
+        fields.update(kind="FATAL", reason="CONNECTION" if case == 20 else "JOB", release=REL[0])
+        if case == 23:
+            fields["stop_applied"] = True
+    else:
+        fields.update(kind="EOF", release="RELEASED")
+    for key, value in (over or {}).items():
+        if value is DROP:
+            del fields[key]
+        else:
+            fields[key] = value
+    return fields
+
+
+# ---------------------------------------------------------------- driving harness
+
+
+class Run:
+    """Feeds one reactor with exact dyadic times; records the delivered control frames."""
+
+    def __init__(
+        self, core: types.ModuleType, *, packet: bytes = PACKET, policy: Any = None
+    ) -> None:
+        self.r = reactor_module()
+        self.core = core
+        self.packet = packet
+        chosen = policy if policy is not None else policy_for(self.r)
+        self.reactor = self.r.HostReactor(core, packet, chosen)
+        self.t = 100.0
+        self.frames: list[bytes] = []
+        self.tokens: list[object] = []
+        self.last_pre = 0.0
+
+    def now(self, dt: float = 0.25) -> float:
+        self.t += dt
+        return self.t
+
+    def feed(self, item: object) -> Any:
+        return self.reactor.feed(item)
+
+    def line(
+        self, event: dict[str, object] | None = None, *, raw: bytes | None = None, at: Any = None
+    ) -> Any:
+        when = self.now() if at is None else at
+        if isinstance(when, float) and math.isfinite(when):
+            self.t = max(self.t, when)
+        payload = raw if raw is not None else line_bytes(event or {})
+        return self.feed(self.r.Line(raw=payload, at=when))
+
+    def deliver(self, send: Any, delivery: str = "SENT", *, post: float | None = None) -> Any:
+        pre = self.now()
+        end = self.now() if post is None else post
+        self.t = max(self.t, end)
+        self.last_pre = pre
+        item = self.r.Delivered(
+            token=send.token, delivery=getattr(self.r.Delivery, delivery), pre=pre, post=end
+        )
+        step = self.feed(item)
+        if delivery == "SENT" and send.purpose.name != "INIT":
+            self.frames.append(send.payload)
+        return step
+
+    def act_done(
+        self, act: Any, status: str = "OK", facts: object = None, *, at: float | None = None
+    ) -> Any:
+        when = self.now() if at is None else at
+        self.t = max(self.t, when)
+        item = self.r.ActDone(
+            token=act.token,
+            kind=act.kind,
+            status=getattr(self.r.ActStatus, status),
+            facts=facts,
+            at=when,
+        )
+        return self.feed(item)
+
+    def exited(
+        self,
+        status: str = "EXITED",
+        code: int | None = 137,
+        *,
+        eof: bool = True,
+        reaped: bool = True,
+    ) -> Any:
+        item = self.r.Exited(
+            at=self.now(),
+            status=getattr(self.r.ExitStatus, status),
+            code=code if status == "EXITED" else None,
+            eof=eof,
+            reaped=reaped,
+        )
+        return self.feed(item)
+
+
+def expect_send(run: Run, step: Any, purpose: str, frame: tuple[int, int, int] | None) -> Any:
+    assert isinstance(step, run.r.Send)
+    assert step.purpose.name == purpose
+    run.tokens.append(step.token)
+    if frame is not None:
+        control = run.core.decode_control(step.payload)
+        assert (control.kind, control.case, control.seq) == frame  # fields, never Control==tuple
+        assert step.payload == d1.frame(*frame)
+    return step
+
+
+def expect_act(run: Run, step: Any, kind: str, case: int) -> Any:
+    assert isinstance(step, run.r.Act)
+    assert (step.kind.name, step.case) == (kind, case)
+    run.tokens.append(step.token)
+    return step
+
+
+def expect_wait(run: Run, step: Any) -> None:
+    assert isinstance(step, run.r.Wait)
+
+
+def expect_done(run: Run, step: Any, outcome: str) -> Any:
+    assert isinstance(step, run.r.Done)
+    assert step.outcome.name == outcome
+    assert len(step.verdicts) == 25
+    return step
+
+
+def names(verdicts: tuple[Any, ...]) -> list[str]:
+    return [verdict.name for verdict in verdicts]
+
+
+def refused(run: Run, item: object, category: str) -> None:
+    """Closed refusal, then sticky: the same category for any later feed."""
+    with pytest.raises(run.r.HostRefusal) as caught:
+        run.feed(item)
+    d1.assert_closed(caught.value, category)
+    assert caught.value.category == category
+    status = run.reactor.status()
+    assert status.phase.name == "REFUSED" and status.refusal == category
+    with pytest.raises(run.r.HostRefusal) as again:
+        run.feed(run.r.Line(raw=line_bytes(INIT_OK), at=run.t + 1000.0))
+    d1.assert_closed(again.value, category)
+
+
+def start(run: Run) -> None:
+    assert run.reactor.status().phase.name == "AWAIT_GUARD"
+    guard_at = run.now()
+    send = expect_send(run, run.line(GUARD, at=guard_at), "INIT", None)
+    assert send.payload == run.packet  # the same packet the expectations come from
+    assert (send.issued_at, send.deadline) == (guard_at, guard_at + INIT_S)
+    expect_wait(run, run.deliver(send))
+    assert run.reactor.status().phase.name == "AWAIT_INIT_OK"
+    expect_wait(run, run.line(INIT_OK))
+    assert run.reactor.status().phase.name == "RUNNING"
+
+
+def go_case(run: Run, case: int) -> Any:
+    step = run.line(ready(case, READY_SEQ[case]))
+    ready_at = run.t
+    if case in (20, 21):
+        kind, facts = (
+            ("TERMINATE_ONE_BACKEND", run.r.TerminateFacts(found=1, terminated=True))
+            if case == 20
+            else ("PAUSE_PG", run.r.PauseFacts(paused=True))
+        )
+        act = expect_act(run, step, kind, case)
+        assert (act.issued_at, act.deadline) == (ready_at, ready_at + ACT_S)
+        step = run.act_done(act, facts=facts)
+        done_at = run.t
+        send = expect_send(run, step, "GO", (GO, case, READY_SEQ[case]))
+        assert send.issued_at == done_at
+    else:
+        send = expect_send(run, step, "GO", (GO, case, READY_SEQ[case]))
+        assert send.issued_at == ready_at
+    assert send.deadline == ready_at + GO_S  # the original trigger deadline, never rebased
+    expect_wait(run, run.deliver(send))
+    return send
+
+
+def t4_middle(run: Run, *, found: bool = True) -> None:
+    act = expect_act(run, run.line(armed(23, 46, None)), "OBSERVE_HEAVY", 23)
+    assert act.deadline == act.issued_at + T4_WINDOW_S
+    step = run.act_done(act, facts=run.r.ObserveFacts(found=found, observations=3))
+    purpose, kind = ("STOP", STOP) if found else ("NOSTOP", NOSTOP)
+    send = expect_send(run, step, purpose, (kind, 23, 46))
+    assert send.deadline == act.deadline  # the original observation window, never renewed
+    expect_wait(run, run.deliver(send))
+
+
+def finish_case(run: Run, case: int, over: dict[str, object] | None = None) -> None:
+    step = run.line(result(case, over))
+    result_at = run.t
+    budget = FATAL_ACK_S if 20 <= case <= 23 else ACK_S
+    if case in (21, 24):
+        kind, facts = (
+            ("RESTORE_PG", run.r.RestoreFacts(running=True, paused=False, ready=True))
+            if case == 21
+            else ("ZERO_BACKENDS", run.r.ZeroFacts(backends=0))
+        )
+        act = expect_act(run, step, kind, case)
+        assert act.deadline == result_at + ACT_S
+        step = run.act_done(act, facts=facts)
+    send = expect_send(run, step, "ACK", (ACK, case, RESULT_SEQ[case]))
+    assert send.deadline == result_at + budget
+    expect_wait(run, run.deliver(send))
+
+
+def run_case(
+    run: Run, case: int, over: dict[str, object] | None = None, *, found: bool = True
+) -> None:
+    go_case(run, case)
+    if case == 23:
+        t4_middle(run, found=found)
+    finish_case(run, case, over)
+
+
+def prefix(
+    run: Run,
+    until: int,
+    *,
+    found: bool = True,
+    overs: dict[int, dict[str, object]] | None = None,
+    failed: list[int] | None = None,
+) -> None:
+    """Cases 1..until-1 complete (per-case RESULT overrides); until 25 adds SUMMARY."""
+    start(run)
+    for case in range(1, min(until, 25)):
+        run_case(run, case, (overs or {}).get(case), found=found)
+    if until >= 25:
+        expect_wait(run, run.line(summary(failed if failed is not None else [])))
+
+
+def t6_arm(run: Run, *, live: int = LIVE_MS, armed_dt: float = 0.25) -> tuple[float, Any]:
+    go_case(run, 25)
+    pre = run.last_pre
+    return pre, run.line(armed(25, 51, live), at=run.now(armed_dt))
+
+
+def kill_ok(run: Run, act: Any, *, at: float | None = None) -> Any:
+    return run.act_done(act, facts=run.r.KillFacts(stop_confirmed=True, oom_killed=False), at=at)
+
+
+# ---------------------------------------------------------------- sanities (no reactor)
+
+
+def test_sanity_trusted_core_and_packet(core: types.ModuleType) -> None:
+    for name in ("decode_init", "decode_control", "ControlMachine"):
+        assert callable(getattr(core, name))
+    constants = (core.GO, core.STOP, core.NOSTOP, core.ACK, core.T4_CASE, core.T5_CASE)
+    assert constants == (1, 2, 3, 4, 23, 24)
+    assert (core.T6_CASE, core.MAX_HOST_FRAMES, core.JOBS, core.CASES) == (25, 50, 19, 25)
+    assert core.PREFIX_CASES == 24
+    init = core.decode_init(PACKET)
+    assert [job.job for job in init.expected] == list(range(1, 20))
+    for kind, case, seq in [(GO, 1, 1), (ACK, 24, 49), (NOSTOP, 23, 46)]:
+        control = core.decode_control(d1.frame(kind, case, seq))
+        assert (control.kind, control.case, control.seq) == (kind, case, seq)
+
+
+def test_sanity_oracle_seq_table_matches_the_real_control_machine(
+    core: types.ModuleType,
+) -> None:
+    machine = core.ControlMachine()
+    for case in range(1, 26):
+        assert machine.emit("READY", case) == READY_SEQ[case]
+        machine.accept(d1.frame(GO, case, READY_SEQ[case]))
+        if case == 25:
+            assert machine.emit("ARMED", 25) == ARMED_SEQ[25] == 51
+            break
+        if case == 23:
+            assert machine.emit("ARMED", 23) == ARMED_SEQ[23]
+            machine.handoff()
+            machine.join(d1.frame(STOP, 23, 46))
+        assert machine.emit("RESULT", case) == RESULT_SEQ[case]
+        machine.accept(d1.frame(ACK, case, RESULT_SEQ[case]))
+        if case == 24:
+            assert machine.summary().failed_cases == ()
+    assert machine.accepted == 50 == len(expected_frames())
+
+
+def test_sanity_event_builders_are_canonical_b54_shapes() -> None:
+    events = [GUARD, INIT_OK, ready(1, 1), armed(23, 46, None), armed(25, 51, LIVE_MS)]
+    events += [summary([]), abort(0, "INIT", "TIMEOUT", False), terminal("ABORTED")]
+    events += [result(case) for case in range(1, 25)]
+    for event in events:
+        raw = line_bytes(event)
+        assert len(raw) <= 512 and raw.endswith(b"\n") and raw.count(b"\n") == 1
+        assert d1.canonical(json.loads(raw)) == raw[:-1]
+    assert all(tuple(sorted(result(case))) == RESULT_KEYS for case in range(1, 25))
+    assert "Threads" not in GUARD and "sha256" not in result(1)
+    pre = 200.0
+    assert fence_of(pre, LIVE_MS) == 207.4921875  # exact dyadic arithmetic
+
+
+# ---------------------------------------------------------------- H1/H14 encoder
+
+
+@pytest.mark.parametrize("frame", [(GO, 1, 1), (STOP, 23, 46), (NOSTOP, 23, 46), (ACK, 25, 50)])
+def test_h1_pack_control_round_trips_through_the_public_decoder(
+    core: types.ModuleType, frame: tuple[int, int, int]
+) -> None:
+    r = reactor_module()
+    kind, case, seq = frame
+    packed = r.pack_control(core, kind=kind, case=case, seq=seq)
+    assert type(packed) is bytes and packed == d1.frame(kind, case, seq)
+    control = core.decode_control(packed)
+    assert (control.kind, control.case, control.seq) == frame
+
+
+@pytest.mark.parametrize(
+    "primitive",
+    [
+        {"kind": 0},
+        {"kind": 5},
+        {"kind": True},
+        {"kind": 1.0},
+        {"case": 0},
+        {"case": 26},
+        {"case": True},
+        {"seq": 0},
+        {"seq": 51},
+        {"seq": "1"},
+        {"kind": IntSub(1)},
+        {"case": IntSub(1)},
+        {"seq": IntSub(1)},
+    ],
+    ids=repr,
+)
+def test_h1_pack_control_primitive_domains_are_sequence_refusals(
+    core: types.ModuleType, primitive: dict[str, object]
+) -> None:
+    r = reactor_module()
+    values: dict[str, object] = {"kind": GO, "case": 1, "seq": 1, **primitive}
+    with pytest.raises(r.HostRefusal) as caught:
+        r.pack_control(core, **values)
+    d1.assert_closed(caught.value, "SEQUENCE")
+
+
+def test_h14_pack_control_core_binding_is_core_refusal(core: types.ModuleType) -> None:
+    r = reactor_module()
+
+    def shifted(frame: bytes) -> Any:
+        control = core.decode_control(frame)
+        return core.Control(kind=control.kind, case=control.case, seq=control.seq + 1)
+
+    def refusing(_frame: bytes) -> Any:
+        raise core.LabRefusal("CONTROL")
+
+    bad_cores: list[object] = [
+        SimpleNamespace(**core.__dict__),
+        core_copy(core, decode_control=DROP),
+        core_copy(core, decode_control=7),
+        core_copy(core, decode_control=shifted),
+        core_copy(core, decode_control=refusing),
+    ]
+    for bad in bad_cores:
+        with pytest.raises(r.HostRefusal) as caught:
+            r.pack_control(bad, kind=GO, case=1, seq=1)
+        d1.assert_closed(caught.value, "CORE")
+
+
+def test_h14_pack_control_never_creates_or_advances_a_control_machine(
+    core: types.ModuleType,
+) -> None:
+    r = reactor_module()
+    created: list[object] = []
+
+    def counting_machine() -> Any:
+        machine = core.ControlMachine()
+        created.append(machine)
+        return machine
+
+    counted = core_copy(core, ControlMachine=counting_machine)
+    assert r.pack_control(counted, kind=ACK, case=3, seq=6) == d1.frame(ACK, 3, 6)
+    assert created == []
+    run = Run(core)
+    start(run)
+    before = run.reactor.status()
+    r.pack_control(core, kind=GO, case=1, seq=1)
+    after = run.reactor.status()
+    assert (after.controls_sent, after.lines, after.phase) == (
+        before.controls_sent,
+        before.lines,
+        before.phase,
+    )
+    expect_send(run, run.line(ready(1, 1)), "GO", (GO, 1, 1))  # mirror still at case 1
+
+
+# ---------------------------------------------------------------- H2 framing and schema
+
+GUARD_KEYS_ORDER = b'{"e":"GUARD","as":402653184,"dumpable":0,"pdeathsig":0,"pid":1}\n'
+
+
+@pytest.mark.parametrize(
+    ("raw", "category"),
+    [
+        pytest.param(b"x" * 511 + b"\n", "EVENT", id="512-incl-LF-framed-then-not-json"),
+        pytest.param(b"x" * 512 + b"\n", "LINE", id="513-bytes"),
+        pytest.param(d1.canonical(GUARD), "LINE", id="no-LF"),
+        pytest.param(line_bytes(GUARD) + b"\n", "LINE", id="two-final-LF"),
+        pytest.param(d1.canonical(GUARD) + b"\r\n", "LINE", id="CR"),
+        pytest.param(b'{"e":\n"GUARD"}\n', "LINE", id="inner-LF"),
+        pytest.param(b'{"e":"GU\xc3\x81RD"}\n', "LINE", id="non-ascii"),
+        pytest.param(bytearray(line_bytes(GUARD)), "LINE", id="bytearray"),
+        pytest.param(line_bytes(GUARD).decode("ascii"), "LINE", id="str"),
+    ],
+)
+def test_h2_framing_is_checked_before_parse(
+    core: types.ModuleType, raw: object, category: str
+) -> None:
+    run = Run(core)
+    refused(run, run.r.Line(raw=raw, at=run.now()), category)
+    assert run.reactor.status().pending is None
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        pytest.param(
+            b'{"as":402653184,"as":402653184,"dumpable":0,"e":"GUARD","pdeathsig":0,"pid":1}\n',
+            id="duplicate-key",
+        ),
+        pytest.param(b'{"as":NaN,"dumpable":0,"e":"GUARD","pdeathsig":0,"pid":1}\n', id="nan"),
+        pytest.param(
+            b'{"as":Infinity,"dumpable":0,"e":"GUARD","pdeathsig":0,"pid":1}\n', id="infinity"
+        ),
+        pytest.param(
+            b'{"as":-Infinity,"dumpable":0,"e":"GUARD","pdeathsig":0,"pid":1}\n', id="-infinity"
+        ),
+        pytest.param(GUARD_KEYS_ORDER, id="non-canonical-order"),
+        pytest.param(
+            b'{"as": 402653184,"dumpable":0,"e":"GUARD","pdeathsig":0,"pid":1}\n', id="space"
+        ),
+        pytest.param(line_bytes({**GUARD, "Threads": 1}), id="extra-threads-key"),
+        pytest.param(
+            line_bytes({key: value for key, value in GUARD.items() if key != "pdeathsig"}),
+            id="missing-key",
+        ),
+        pytest.param(line_bytes({**GUARD, "pid": True}), id="bool-as-int"),
+        pytest.param(line_bytes({**GUARD, "dumpable": False}), id="bool-as-zero"),
+        pytest.param(line_bytes({**GUARD, "pid": 1.0}), id="float-as-int"),
+        pytest.param(line_bytes({**GUARD, "as": 256 * MIB}), id="wrong-value"),
+        pytest.param(b"[]\n", id="not-object"),
+    ],
+)
+def test_h2_guard_schema_is_exact_event_refusal(core: types.ModuleType, raw: bytes) -> None:
+    run = Run(core)
+    refused(run, run.r.Line(raw=raw, at=run.now()), "EVENT")
+
+
+@pytest.mark.parametrize(
+    ("event", "category"),
+    [
+        pytest.param(ready(True, 1), "EVENT", id="bool-case"),
+        pytest.param(ready(1, True), "EVENT", id="bool-seq"),
+        pytest.param({**ready(1, 2), "extra": 0}, "EVENT", id="event-before-sequence"),
+        pytest.param(ready(1, 2), "SEQUENCE", id="wrong-next-seq"),
+        pytest.param(ready(2, 1), "SEQUENCE", id="valid-case-out-of-order"),
+        pytest.param(ready(26, 1), "EVENT", id="case-above-domain"),
+        pytest.param(ready(0, 1), "EVENT", id="case-below-domain"),
+        pytest.param(ready(1.0, 1), "EVENT", id="float-case"),
+    ],
+)
+def test_h2_ready_schema_and_sequence(
+    core: types.ModuleType, event: dict[str, object], category: str
+) -> None:
+    run = Run(core)
+    start(run)
+    refused(run, run.r.Line(raw=line_bytes(event), at=run.now()), category)
+
+
+def test_h2_fifty_seventh_line_is_refused_before_parse(core: types.ModuleType) -> None:
+    run = Run(core)
+    prefix(run, 25)
+    _, step = t6_arm(run)
+    expect_act(run, step, "KILL_GATEWAY", 25)
+    assert run.reactor.status().lines == 54
+    expect_wait(run, run.line(abort(25, "CASE", "PHASE", False)))
+    expect_wait(run, run.line(terminal("ABORTED")))
+    assert run.reactor.status().lines == 56
+    refused(run, run.r.Line(raw=b"{}\n", at=run.now()), "LINE")
+
+
+# ---------------------------------------------------------------- H3 constructor
+
+
+CORE_VARIANTS = (
+    "namespace",
+    "no-decode-init",
+    "no-control-machine",
+    "decode-control-not-callable",
+    "GO",
+    "T6_CASE",
+    "MAX_HOST_FRAMES",
+    "PREFIX_CASES",
+    "GO-float",
+    "GO-bool",
+    "MAX_HOST_FRAMES-float",
+)
+
+
+@pytest.mark.parametrize("variant", CORE_VARIANTS)
+def test_h3_constructor_refuses_untrusted_core_shape(core: types.ModuleType, variant: str) -> None:
+    r = reactor_module()
+    bad: dict[str, object] = {
+        "namespace": SimpleNamespace(**core.__dict__),
+        "no-decode-init": core_copy(core, decode_init=DROP),
+        "no-control-machine": core_copy(core, ControlMachine=DROP),
+        "decode-control-not-callable": core_copy(core, decode_control=7),
+        "GO": core_copy(core, GO=9),
+        "T6_CASE": core_copy(core, T6_CASE=26),
+        "MAX_HOST_FRAMES": core_copy(core, MAX_HOST_FRAMES=51),
+        "PREFIX_CASES": core_copy(core, PREFIX_CASES=25),
+        "GO-float": core_copy(core, GO=1.0),
+        "GO-bool": core_copy(core, GO=True),
+        "MAX_HOST_FRAMES-float": core_copy(core, MAX_HOST_FRAMES=50.0),
+    }
+    with pytest.raises(r.HostRefusal) as caught:
+        r.HostReactor(bad[variant], PACKET, policy_for(r))
+    d1.assert_closed(caught.value, "CORE")
+
+
+@pytest.mark.parametrize(
+    ("packet", "parsed"),
+    [
+        pytest.param(bytearray(PACKET), 0, id="bytearray"),
+        pytest.param(PACKET.decode("ascii"), 0, id="str"),
+        pytest.param(PACKET[:8], 0, id="header-only"),
+        pytest.param(b"\x00" * (8 + 65536 + 1), 0, id="oversize"),
+        pytest.param(PACKET[:-1] + b" ", 1, id="core-refuses"),
+    ],
+)
+def test_h3_packet_is_bounded_before_one_core_parse(
+    core: types.ModuleType, packet: object, parsed: int
+) -> None:
+    r = reactor_module()
+    calls: list[object] = []
+
+    def counting_init(raw: object) -> Any:
+        calls.append(raw)
+        return core.decode_init(raw)
+
+    counted = core_copy(core, decode_init=counting_init)
+    with pytest.raises(r.HostRefusal) as caught:
+        r.HostReactor(counted, packet, policy_for(r))
+    d1.assert_closed(caught.value, "INIT")
+    assert len(calls) == parsed
+    r.HostReactor(counted, PACKET, policy_for(r))
+    assert len(calls) == parsed + 1  # exactly one decode of the accepted packet
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        {"init_s": 10.0},
+        {"init_s": 0.0},
+        {"go_s": 19.0},
+        {"ack_s": 20.0},
+        {"fatal_ack_s": 90.0},
+        {"act_s": GO_S},
+        {"ack_s": ACT_S},
+        {"fatal_ack_s": 1.5},
+        {"t4_window_s": 0.0},
+        {"t4_window_s": 10.5},
+        {"t6_epsilon": 0.01},
+        {"t6_epsilon": -(2.0**-10)},
+        {"t6_margin_s": -0.5},
+        {"t6_kill_min_s": 0.0},
+        {"init_s": True},
+        {"go_s": math.nan},
+        {"ack_s": math.inf},
+        {"fatal_ack_s": "60"},
+    ],
+    ids=str,
+)
+def test_h3_policy_is_a_carrier_validated_by_the_constructor(
+    core: types.ModuleType, change: dict[str, object]
+) -> None:
+    r = reactor_module()
+    policy = policy_for(r, **change)  # constructing the carrier never raises
+    with pytest.raises(r.HostRefusal) as caught:
+        r.HostReactor(core, PACKET, policy)
+    d1.assert_closed(caught.value, "POLICY")
+    lookalike = SimpleNamespace(**policy_fields())  # same fields, not a HostPolicy
+    with pytest.raises(r.HostRefusal) as foreign:
+        r.HostReactor(core, PACKET, lookalike)
+    d1.assert_closed(foreign.value, "POLICY")
+
+
+def packet_with_rows(job: int, rows: int) -> bytes:
+    body = json.loads(d1.INIT_BODY)
+    for record in body["expected"]:
+        if record["job"] == job:
+            record["rows"] = rows
+    raw = d1.canonical(body)
+    return d1.INIT_HEADER.pack(b"MGI1", len(raw)) + raw
+
+
+@pytest.mark.parametrize(("rows", "accepted"), [(7, True), (3, False)])
+def test_h3_expectations_come_only_from_the_same_init_packet(
+    core: types.ModuleType, rows: int, accepted: bool
+) -> None:
+    run = Run(core, packet=packet_with_rows(2, 7))
+    prefix(run, 2)
+    go_case(run, 2)
+    if accepted:
+        finish_case(run, 2, {"rows": rows})
+    else:
+        raw = line_bytes(result(2, {"rows": rows}))
+        refused(run, run.r.Line(raw=raw, at=run.now()), "EVENT")
+
+
+# ---------------------------------------------------------------- H4 full trace
+
+
+def test_h4_full_trace_54_lines_50_controls_and_complete_candidate(
+    core: types.ModuleType,
+) -> None:
+    run = Run(core)
+    prefix(run, 25)
+    pre, step = t6_arm(run)
+    armed_at = run.t
+    status = run.reactor.status()
+    assert (status.lines, status.controls_sent) == (54, 50)
+    decoded = [run.core.decode_control(frame) for frame in run.frames]
+    assert [(c.kind, c.case, c.seq) for c in decoded] == expected_frames()
+    act = expect_act(run, step, "KILL_GATEWAY", 25)
+    assert (act.issued_at, act.deadline) == (armed_at, fence_of(pre, LIVE_MS))
+    expect_wait(run, kill_ok(run, act))
+    zero = expect_act(run, run.exited(code=137), "ZERO_BACKENDS", 25)
+    assert zero.deadline == zero.issued_at + ACT_S
+    assert names(run.reactor.status().verdicts)[24] == "NOT_RUN"  # no PASS before ZERO OK
+    final = run.act_done(zero, facts=run.r.ZeroFacts(backends=0))
+    done = expect_done(run, final, "COMPLETE_CANDIDATE")
+    assert names(done.verdicts) == ["PASS"] * 25
+    assert (done.controller_retained, done.orphan) == (False, None)
+    assert len(run.frames) == 50 and run.reactor.status().phase.name == "DONE"
+    assert run.reactor.status().last_at == run.t  # the last serialized observation
+    assert run.tokens == list(range(1, 59))  # INIT + 50 controls + 7 actions, contiguous
+    again = run.r.Exited(
+        at=run.now(), status=run.r.ExitStatus.EXITED, code=0, eof=True, reaped=True
+    )
+    refused(run, again, "ORDER")
+    assert done.outcome.name == "COMPLETE_CANDIDATE"  # the returned Done never changes
+
+
+# ---------------------------------------------------------------- H5 RESULT domains
+
+ENTRY = "EVENT"
+
+
+@pytest.mark.parametrize(
+    ("case", "over", "category"),
+    [
+        (2, {"rows": 4}, ENTRY),
+        (2, {"bytes": RECORDS[2]["bytes"] + 1}, ENTRY),
+        (2, {"sink": "MISMATCH"}, ENTRY),
+        (2, {"sink": DROP}, ENTRY),
+        (2, {"sha256": "0" * 64}, ENTRY),
+        (2, {"reason": "QUERY"}, ENTRY),
+        (2, {"verdict": "FAIL"}, ENTRY),
+        (2, {"release": REL[0]}, ENTRY),
+        (1, {"truncated": True}, ENTRY),
+        (9, {"truncated": False}, ENTRY),
+        (2, {"truncated": 0}, ENTRY),
+        (2, {"rows": 3.0}, ENTRY),
+        (2, {"bytes": float(RECORDS[2]["bytes"])}, ENTRY),
+        (11, {"reason": "QUERY"}, ENTRY),
+        (11, {"rows": 0}, ENTRY),
+        (13, {"kind": "RESULT"}, ENTRY),
+        (20, {"reason": "JOB"}, ENTRY),
+        (20, {"release": "HELD"}, ENTRY),
+        (20, {"release": None}, ENTRY),
+        (21, {"reason": "CONNECTION"}, ENTRY),
+        (22, {"stop_applied": False}, ENTRY),
+        (22, {"verdict": "FAIL"}, ENTRY),
+        (23, {"stop_applied": False}, ENTRY),
+        (23, {"stop_applied": None}, ENTRY),
+        (24, {"release": REL[1]}, ENTRY),
+        (24, {"reason": "KILLED"}, ENTRY),
+        (24, {"verdict": "FAIL"}, ENTRY),
+        (24, {"reason": "NO_EXIT"}, ENTRY),
+        (24, {"kind": "FATAL"}, ENTRY),
+        (24, {"rows": 0}, ENTRY),
+        (2, {"next_seq": 5}, "SEQUENCE"),
+    ],
+    ids=str,
+)
+def test_h5_result_fields_are_exact_per_case(
+    core: types.ModuleType, case: int, over: dict[str, object], category: str
+) -> None:
+    run = Run(core)
+    prefix(run, case)
+    go_case(run, case)
+    if case == 23:
+        t4_middle(run)
+    refused(run, run.r.Line(raw=line_bytes(result(case, over)), at=run.now()), category)
+
+
+@pytest.mark.parametrize("reason", [None, "EXIT_NONZERO", "EXIT_LATE", "WAIT_LATE", "NO_EXIT"])
+def test_h5_t5_reasons_and_verdict(core: types.ModuleType, reason: str | None) -> None:
+    verdict = "PASS" if reason is None else "FAIL"
+    failed = [] if reason is None else [24]
+    run = Run(core)
+    prefix(run, 25, overs={24: {"reason": reason, "verdict": verdict}}, failed=failed)
+    assert names(run.reactor.status().verdicts)[23] == verdict
+
+
+def test_h5_t4_stop_not_applied_is_a_legitimate_fail(core: types.ModuleType) -> None:
+    run = Run(core)
+    prefix(run, 25, overs={23: {"stop_applied": False, "verdict": "FAIL"}}, failed=[23])
+    assert names(run.reactor.status().verdicts)[22] == "FAIL"
+
+
+# ---------------------------------------------------------------- H6 pending and receipts
+
+
+def test_h6_receipt_token_type_and_kind_bind_to_the_exact_pending(
+    core: types.ModuleType,
+) -> None:
+    run = Run(core)
+    send = run.line(GUARD)
+    item = run.r.Delivered(
+        token=send.token + 1, delivery=run.r.Delivery.SENT, pre=run.now(), post=run.now()
+    )
+    refused(run, item, "RECEIPT")
+    assert run.reactor.status().pending is send
+
+    other = Run(core)
+    send = other.line(GUARD)
+    wrong_type = other.r.ActDone(
+        token=send.token,
+        kind=other.r.ActKind.PAUSE_PG,
+        status=other.r.ActStatus.OK,
+        facts=other.r.PauseFacts(paused=True),
+        at=other.now(),
+    )
+    refused(other, wrong_type, "RECEIPT")
+    assert other.reactor.status().pending is send
+
+    third = Run(core)
+    prefix(third, 20)
+    act = expect_act(third, third.line(ready(20, 39)), "TERMINATE_ONE_BACKEND", 20)
+    wrong_kind = third.r.ActDone(
+        token=act.token,
+        kind=third.r.ActKind.PAUSE_PG,
+        status=third.r.ActStatus.OK,
+        facts=third.r.PauseFacts(paused=True),
+        at=third.now(),
+    )
+    refused(third, wrong_kind, "RECEIPT")
+    assert third.reactor.status().pending is act
+
+
+def test_h6_non_terminal_line_while_pending_is_order(core: types.ModuleType) -> None:
+    run = Run(core)
+    send = run.line(GUARD)
+    refused(run, run.r.Line(raw=line_bytes(INIT_OK), at=run.now()), "ORDER")
+    status = run.reactor.status()
+    assert status.pending is send and status.orphan is None
+
+
+def test_h6_tokens_increase_one_per_output(core: types.ModuleType) -> None:
+    run = Run(core)
+    first = run.line(GUARD)
+    expect_wait(run, run.deliver(first))
+    expect_wait(run, run.line(INIT_OK))
+    second = run.line(ready(1, 1))
+    assert (type(first.token), first.token, second.token) == (int, 1, 2)
+
+
+# ---------------------------------------------------------------- H7 delivery failure
+
+
+@pytest.mark.parametrize("mode", ["NOT_SENT", "UNKNOWN", "LATE"])
+def test_h7_failed_or_late_delivery_drains_without_retry(core: types.ModuleType, mode: str) -> None:
+    run = Run(core)
+    start(run)
+    send = expect_send(run, run.line(ready(1, 1)), "GO", (GO, 1, 1))
+    if mode == "LATE":
+        step = run.deliver(send, "SENT", post=send.deadline)
+    else:
+        step = run.deliver(send, mode)
+    expect_wait(run, step)
+    status = run.reactor.status()
+    assert status.phase.name == "DRAINING" and status.pending is None
+    refused(run, run.r.Line(raw=line_bytes(result(1)), at=run.now()), "ORDER")
+
+
+@pytest.mark.parametrize("mode", ["NOT_SENT", "UNKNOWN"])
+def test_h7_draining_ends_only_by_controller_terminal_and_exit(
+    core: types.ModuleType, mode: str
+) -> None:
+    run = Run(core)
+    start(run)
+    send = expect_send(run, run.line(ready(1, 1)), "GO", (GO, 1, 1))
+    expect_wait(run, run.deliver(send, mode))
+    expect_wait(run, run.line(abort(1, "CASE", "TIMEOUT", False)))
+    expect_wait(run, run.line(terminal("ABORTED")))
+    done = expect_done(run, run.exited(code=68), "ABORTED")
+    assert names(done.verdicts) == ["NOT_RUN"] * 25 and done.controller_retained is False
+    assert run.reactor.status().controls_sent <= 1
+
+
+# ---------------------------------------------------------------- H8 time
+
+
+BAD_TIMES: tuple[object, ...] = (
+    True,
+    False,
+    math.nan,
+    math.inf,
+    -math.inf,
+    -0.25,
+    IntSub(101),
+    FloatSub(101.0),
+    "101",
+    None,
+)
+
+
+@pytest.mark.parametrize("bad", BAD_TIMES, ids=repr)
+def test_h8_time_domain_is_exact_finite_nonnegative(core: types.ModuleType, bad: object) -> None:
+    run = Run(core)
+    refused(run, run.r.Line(raw=line_bytes(GUARD), at=bad), "TIME")
+
+
+def test_h8_times_are_nondecreasing_serialized_post_observations(
+    core: types.ModuleType,
+) -> None:
+    def delivered(run: Run, token: int, pre: float, post: float) -> Any:
+        return run.r.Delivered(token=token, delivery=run.r.Delivery.SENT, pre=pre, post=post)
+
+    run = Run(core)
+    send = run.line(GUARD, at=101.0)
+    refused(run, delivered(run, send.token, 100.75, 101.25), "TIME")  # pre before the issue
+
+    run = Run(core)
+    send = run.line(GUARD, at=101.0)
+    refused(run, delivered(run, send.token, 101.5, 101.25), "TIME")  # post before pre
+
+    run = Run(core)
+    send = run.line(GUARD, at=101.0)
+    expect_wait(run, run.feed(delivered(run, send.token, 101.25, 102.0)))
+    refused(run, run.r.Line(raw=line_bytes(INIT_OK), at=101.5), "TIME")  # prefetched pump time
+
+    run = Run(core)
+    send = run.line(GUARD, at=101.0)
+    expect_wait(run, run.feed(delivered(run, send.token, 101.25, 102.0)))
+    expect_wait(run, run.line(INIT_OK, at=102.0))  # equal time is nondecreasing
+    item = run.r.Exited(at=101.75, status=run.r.ExitStatus.EXITED, code=68, eof=True, reaped=True)
+    refused(run, item, "TIME")
+
+
+def test_h8_late_act_receipt_is_a_failed_effect_even_with_ok_facts(
+    core: types.ModuleType,
+) -> None:
+    run = Run(core)
+    prefix(run, 20)
+    act = expect_act(run, run.line(ready(20, 39)), "TERMINATE_ONE_BACKEND", 20)
+    before = run.reactor.status().controls_sent
+    facts = run.r.TerminateFacts(found=1, terminated=True)
+    expect_wait(run, run.act_done(act, facts=facts, at=act.deadline))
+    status = run.reactor.status()
+    assert status.phase.name == "DRAINING" and status.controls_sent == before
+
+
+# ---------------------------------------------------------------- H9 actions and facts
+
+
+def pending_act(run: Run, which: str) -> Any:
+    if which == "T1":
+        prefix(run, 20)
+        return expect_act(run, run.line(ready(20, 39)), "TERMINATE_ONE_BACKEND", 20)
+    if which == "T2-pause":
+        prefix(run, 21)
+        return expect_act(run, run.line(ready(21, 41)), "PAUSE_PG", 21)
+    if which == "T2-restore":
+        prefix(run, 21)
+        go_case(run, 21)
+        return expect_act(run, run.line(result(21)), "RESTORE_PG", 21)
+    prefix(run, 24)
+    go_case(run, 24)
+    return expect_act(run, run.line(result(24)), "ZERO_BACKENDS", 24)
+
+
+@pytest.mark.parametrize(
+    ("which", "status", "facts"),
+    [
+        ("T1", "OK", lambda r: r.TerminateFacts(found=2, terminated=True)),
+        ("T1", "OK", lambda r: r.TerminateFacts(found=0, terminated=True)),
+        ("T1", "OK", lambda r: r.TerminateFacts(found=1, terminated=False)),
+        ("T1", "OK", lambda r: r.TerminateFacts(found=True, terminated=True)),
+        ("T1", "OK", lambda r: r.TerminateFacts(found=1, terminated=1)),
+        ("T1", "OK", lambda r: r.PauseFacts(paused=True)),
+        ("T1", "OK", lambda _r: None),
+        ("T1", "FAILED", lambda r: r.TerminateFacts(found=1, terminated=True)),
+        ("T2-pause", "OK", lambda r: r.PauseFacts(paused=False)),
+        ("T2-restore", "OK", lambda r: r.RestoreFacts(running=True, paused=True, ready=True)),
+        ("T2-restore", "OK", lambda r: r.RestoreFacts(running=False, paused=False, ready=True)),
+        ("T2-restore", "OK", lambda r: r.RestoreFacts(running=True, paused=False, ready=False)),
+        ("T5", "OK", lambda r: r.ZeroFacts(backends=1)),
+        ("T5", "OK", lambda r: r.ZeroFacts(backends=False)),
+        ("T5", "UNKNOWN", lambda r: r.ZeroFacts(backends=0)),
+    ],
+)
+def test_h9_facts_are_closed_per_kind_and_coherent_with_status(
+    core: types.ModuleType, which: str, status: str, facts: Any
+) -> None:
+    run = Run(core)
+    act = pending_act(run, which)
+    item = run.r.ActDone(
+        token=act.token,
+        kind=act.kind,
+        status=getattr(run.r.ActStatus, status),
+        facts=facts(run.r),
+        at=run.now(),
+    )
+    refused(run, item, "RECEIPT")
+    assert run.reactor.status().pending is act
+
+
+@pytest.mark.parametrize("which", ["T1", "T2-pause", "T2-restore", "T5"])
+@pytest.mark.parametrize("status", ["FAILED", "UNKNOWN"])
+def test_h9_failed_action_drains_without_next_send(
+    core: types.ModuleType, which: str, status: str
+) -> None:
+    run = Run(core)
+    act = pending_act(run, which)
+    before = run.reactor.status().controls_sent
+    expect_wait(run, run.act_done(act, status))
+    after = run.reactor.status()
+    assert after.phase.name == "DRAINING" and after.controls_sent == before
+    assert after.pending is None
+
+
+# ---------------------------------------------------------------- H10 T4
+
+
+def test_h10_not_found_sends_nostop_and_t4_fails_legitimately(core: types.ModuleType) -> None:
+    run = Run(core)
+    t4_fail = {"stop_applied": False, "verdict": "FAIL"}
+    prefix(run, 25, found=False, overs={23: t4_fail}, failed=[23])
+    decoded = run.core.decode_control(run.frames[45])
+    assert (decoded.kind, decoded.case, decoded.seq) == (NOSTOP, 23, 46)
+    assert names(run.reactor.status().verdicts)[22] == "FAIL"
+
+
+def test_h10_nostop_with_stop_applied_true_is_event(core: types.ModuleType) -> None:
+    run = Run(core)
+    prefix(run, 23)
+    go_case(run, 23)
+    t4_middle(run, found=False)
+    refused(run, run.r.Line(raw=line_bytes(result(23)), at=run.now()), "EVENT")
+
+
+@pytest.mark.parametrize("status", ["FAILED", "UNKNOWN"])
+def test_h10_failed_observation_drains_without_frame(core: types.ModuleType, status: str) -> None:
+    run = Run(core)
+    prefix(run, 23)
+    go_case(run, 23)
+    act = expect_act(run, run.line(armed(23, 46, None)), "OBSERVE_HEAVY", 23)
+    expect_wait(run, run.act_done(act, status))
+    assert run.reactor.status().phase.name == "DRAINING" and len(run.frames) == 45
+
+
+@pytest.mark.parametrize("observations", [0, 21, True])
+def test_h10_observation_count_domain(core: types.ModuleType, observations: object) -> None:
+    run = Run(core)
+    prefix(run, 23)
+    go_case(run, 23)
+    act = expect_act(run, run.line(armed(23, 46, None)), "OBSERVE_HEAVY", 23)
+    facts = run.r.ObserveFacts(found=True, observations=observations)
+    item = run.r.ActDone(
+        token=act.token, kind=act.kind, status=run.r.ActStatus.OK, facts=facts, at=run.now()
+    )
+    refused(run, item, "RECEIPT")
+
+
+@pytest.mark.parametrize("live", [None, 999, 30001, True])
+def test_h10_armed_live_window_domain(core: types.ModuleType, live: object) -> None:
+    run = Run(core)
+    prefix(run, 25)
+    go_case(run, 25)
+    refused(run, run.r.Line(raw=line_bytes(armed(25, 51, live)), at=run.now()), "EVENT")
+
+
+# ---------------------------------------------------------------- H11 T6 fence
+
+
+@pytest.mark.parametrize(("offset", "complete"), [(-(2.0**-7), True), (0.0, False), (0.25, False)])
+def test_h11_kill_receipt_time_against_the_fence(
+    core: types.ModuleType, offset: float, complete: bool
+) -> None:
+    run = Run(core)
+    prefix(run, 25)
+    pre, step = t6_arm(run)
+    act = expect_act(run, step, "KILL_GATEWAY", 25)
+    fence = fence_of(pre, LIVE_MS)
+    expect_wait(run, kill_ok(run, act, at=fence + offset))
+    step = run.exited(code=137)
+    if complete:
+        zero = expect_act(run, step, "ZERO_BACKENDS", 25)
+        final = run.act_done(zero, facts=run.r.ZeroFacts(backends=0))
+        expect_done(run, final, "COMPLETE_CANDIDATE")
+    else:
+        done = expect_done(run, step, "T6_FAILED")
+        assert names(done.verdicts) == ["PASS"] * 24 + ["FAIL"]
+
+
+def test_h11_fence_starts_at_go_pre_never_at_armed_receipt(core: types.ModuleType) -> None:
+    run = Run(core, policy=policy_for(reactor_module(), t6_kill_min_s=0.25))
+    prefix(run, 25)
+    pre, step = t6_arm(run, armed_dt=5.0)
+    act = expect_act(run, step, "KILL_GATEWAY", 25)
+    fence = fence_of(pre, LIVE_MS)
+    assert act.deadline == fence and act.deadline < act.issued_at + LIVE_MS / 1000 - MARGIN
+    expect_wait(run, kill_ok(run, act, at=fence + 1.0))  # after fence, before receipt+live
+    expect_done(run, run.exited(code=137), "T6_FAILED")
+
+
+def test_h11_no_kill_budget_means_no_act(core: types.ModuleType) -> None:
+    run = Run(core)
+    prefix(run, 25)
+    pre, step = t6_arm(run, live=1000)
+    assert fence_of(pre, 1000) - run.t < KILL_MIN
+    done = expect_done(run, step, "T6_FAILED")
+    assert names(done.verdicts)[24] == "FAIL" and run.reactor.status().controls_sent == 50
+
+
+@pytest.mark.parametrize("status", ["FAILED", "UNKNOWN"])
+@pytest.mark.parametrize("code", [0, 137])
+def test_h11_exit_code_alone_is_never_a_kill(
+    core: types.ModuleType, code: int, status: str
+) -> None:
+    run = Run(core)
+    prefix(run, 25)
+    _, step = t6_arm(run)
+    act = expect_act(run, step, "KILL_GATEWAY", 25)
+    expect_wait(run, run.act_done(act, status))
+    assert names(run.reactor.status().verdicts)[24] == "FAIL"  # the T6 failure is kept
+    assert run.reactor.status().pending is None
+    expect_done(run, run.exited(code=code), "T6_FAILED")
+
+
+@pytest.mark.parametrize(("stop_confirmed", "oom_killed"), [(True, True), (False, False)])
+def test_h11_oom_or_unconfirmed_kill_is_not_ok(
+    core: types.ModuleType, stop_confirmed: bool, oom_killed: bool
+) -> None:
+    run = Run(core)
+    prefix(run, 25)
+    _, step = t6_arm(run)
+    act = expect_act(run, step, "KILL_GATEWAY", 25)
+    facts = run.r.KillFacts(stop_confirmed=stop_confirmed, oom_killed=oom_killed)
+    item = run.r.ActDone(
+        token=act.token, kind=act.kind, status=run.r.ActStatus.OK, facts=facts, at=run.now()
+    )
+    refused(run, item, "RECEIPT")
+
+
+def test_h11_code_69_or_any_line_after_armed_fails_t6(core: types.ModuleType) -> None:
+    run = Run(core)
+    prefix(run, 25)
+    _, step = t6_arm(run)
+    expect_wait(run, kill_ok(run, expect_act(run, step, "KILL_GATEWAY", 25)))
+    expect_done(run, run.exited(code=69), "T6_FAILED")
+
+    run = Run(core)
+    prefix(run, 25)
+    _, step = t6_arm(run)
+    expect_wait(run, kill_ok(run, expect_act(run, step, "KILL_GATEWAY", 25)))
+    expect_wait(run, run.line(terminal("T6_UNKILLED")))
+    assert names(run.reactor.status().verdicts)[24] == "FAIL"  # before any exit code
+    expect_done(run, run.exited(code=69), "T6_FAILED")
+
+
+def test_h11_abort_after_armed_never_becomes_candidate(core: types.ModuleType) -> None:
+    run = Run(core)
+    prefix(run, 25)
+    _, step = t6_arm(run)
+    expect_wait(run, kill_ok(run, expect_act(run, step, "KILL_GATEWAY", 25)))
+    expect_wait(run, run.line(abort(25, "CASE", "PHASE", False)))
+    assert names(run.reactor.status().verdicts)[24] == "FAIL"
+    expect_wait(run, run.line(terminal("ABORTED")))
+    done = expect_done(run, run.exited(code=68), "ABORTED")
+    assert names(done.verdicts)[24] == "FAIL" and done.outcome.name != "COMPLETE_CANDIDATE"
+
+
+@pytest.mark.parametrize("mode", ["FAILED", "UNKNOWN", "LATE", "INCOHERENT"])
+def test_h11_zero_backends_after_exit_is_required(core: types.ModuleType, mode: str) -> None:
+    run = Run(core)
+    prefix(run, 25)
+    _, step = t6_arm(run)
+    expect_wait(run, kill_ok(run, expect_act(run, step, "KILL_GATEWAY", 25)))
+    zero = expect_act(run, run.exited(code=137), "ZERO_BACKENDS", 25)
+    if mode == "INCOHERENT":
+        item = run.r.ActDone(
+            token=zero.token,
+            kind=zero.kind,
+            status=run.r.ActStatus.OK,
+            facts=run.r.ZeroFacts(backends=2),
+            at=run.now(),
+        )
+        refused(run, item, "RECEIPT")
+        return
+    if mode == "LATE":
+        step = run.act_done(zero, facts=run.r.ZeroFacts(backends=0), at=zero.deadline)
+    else:
+        step = run.act_done(zero, mode)
+    done = expect_done(run, step, "T6_FAILED")
+    assert names(done.verdicts)[24] == "FAIL"
+
+
+@pytest.mark.parametrize(("eof", "reaped"), [(False, True), (True, False)])
+def test_h11_exit_without_eof_or_reap_is_never_complete(
+    core: types.ModuleType, eof: bool, reaped: bool
+) -> None:
+    run = Run(core)
+    prefix(run, 25)
+    _, step = t6_arm(run)
+    expect_wait(run, kill_ok(run, expect_act(run, step, "KILL_GATEWAY", 25)))
+    done = expect_done(run, run.exited(code=137, eof=eof, reaped=reaped), "ENDED_UNKNOWN")
+    assert done.controller_retained is True and names(done.verdicts)[24] == "FAIL"
+
+
+# ---------------------------------------------------------------- H12 terminal and exit map
+
+
+@pytest.mark.parametrize(
+    ("code", "outcome"),
+    [
+        (64, "SETUP_FAILED"),
+        (65, "LOAD_FAILED"),
+        (66, "LINK_FAILED"),
+        (67, "GUARD_FAILED"),
+        (70, "CONTROL"),
+    ],
+)
+def test_h12_exit_before_any_line(core: types.ModuleType, code: int, outcome: str) -> None:
+    run = Run(core)
+    done = expect_done(run, run.exited(code=code), outcome)
+    assert names(done.verdicts) == ["NOT_RUN"] * 25 and done.controller_retained is False
+
+
+@pytest.mark.parametrize("code", [0, 68, 69])
+def test_h12_incoherent_exit_before_any_line(core: types.ModuleType, code: int) -> None:
+    run = Run(core)
+    item = run.r.Exited(
+        at=run.now(), status=run.r.ExitStatus.EXITED, code=code, eof=True, reaped=True
+    )
+    refused(run, item, "EXIT")
+
+
+@pytest.mark.parametrize("started", [False, True])
+@pytest.mark.parametrize(
+    ("status", "outcome"), [("NO_EXIT", "RETAINED"), ("UNKNOWN", "ENDED_UNKNOWN")]
+)
+def test_h12_no_exit_or_unknown_without_terminal_is_retained(
+    core: types.ModuleType, started: bool, status: str, outcome: str
+) -> None:
+    run = Run(core)
+    if started:
+        start(run)
+    done = expect_done(run, run.exited(status), outcome)
+    assert done.controller_retained is True
+
+
+MapScenario = tuple[bool, str, str, int | None, str, bool]
+
+
+@pytest.mark.parametrize(
+    "scenario",
+    [
+        (False, "ABORTED", "EXITED", 68, "ABORTED", False),
+        (False, "ABORTED", "NO_EXIT", None, "RETAINED", True),
+        (True, "RETAINED", "NO_EXIT", None, "RETAINED", True),
+    ],
+    ids=str,
+)
+def test_h12_abort_terminal_exit_map(core: types.ModuleType, scenario: MapScenario) -> None:
+    retained, outcome_line, status, code, outcome, kept = scenario
+    run = Run(core)
+    start(run)
+    expect_wait(run, run.line(abort(1, "CASE", "TIMEOUT", retained)))
+    expect_wait(run, run.line(terminal(outcome_line)))
+    done = expect_done(run, run.exited(status, code), outcome)
+    assert done.controller_retained is kept
+
+
+def test_h12_retained_terminal_never_exits(core: types.ModuleType) -> None:
+    run = Run(core)
+    start(run)
+    expect_wait(run, run.line(abort(1, "CASE", "SESSION", True)))
+    expect_wait(run, run.line(terminal("RETAINED")))
+    item = run.r.Exited(
+        at=run.now(), status=run.r.ExitStatus.EXITED, code=68, eof=True, reaped=True
+    )
+    refused(run, item, "EXIT")
+
+
+def test_h12_terminal_without_abort_and_t6_unkilled(core: types.ModuleType) -> None:
+    run = Run(core)
+    start(run)
+    expect_wait(run, run.line(terminal("ABORTED")))
+    expect_done(run, run.exited(code=68), "ABORTED")
+
+    run = Run(core)
+    prefix(run, 25)
+    _, step = t6_arm(run)
+    act = expect_act(run, step, "KILL_GATEWAY", 25)
+    expect_wait(run, run.line(terminal("T6_UNKILLED")))
+    done = expect_done(run, run.exited(code=69), "T6_FAILED")
+    assert done.orphan is act
+
+
+@pytest.mark.parametrize("mode", ["EXIT_70", "OTHER"])
+def test_h12_draining_without_terminal(core: types.ModuleType, mode: str) -> None:
+    run = Run(core)
+    start(run)
+    send = expect_send(run, run.line(ready(1, 1)), "GO", (GO, 1, 1))
+    expect_wait(run, run.deliver(send, "NOT_SENT"))
+    if mode == "OTHER":
+        expect_done(run, run.exited(code=1), "BROKEN")
+    else:
+        expect_done(run, run.exited(code=70), "CONTROL")
+
+
+@pytest.mark.parametrize(
+    "event",
+    [
+        abort(26, "CASE", "TIMEOUT", False),
+        abort(True, "CASE", "TIMEOUT", False),
+        abort(1, "BOOT", "TIMEOUT", False),
+        abort(1, "CASE", "OTHER", False),
+        abort(1, "CASE", "TIMEOUT", 0),
+        terminal("PASS"),
+        terminal("T6_UNKILLED"),
+    ],
+    ids=str,
+)
+def test_h12_abort_and_terminal_domains(core: types.ModuleType, event: dict[str, object]) -> None:
+    run = Run(core)
+    start(run)
+    refused(run, run.r.Line(raw=line_bytes(event), at=run.now()), "EVENT")
+
+
+@pytest.mark.parametrize(("retained", "outcome_line"), [(False, "RETAINED"), (True, "ABORTED")])
+def test_h12_abort_retention_must_match_terminal(
+    core: types.ModuleType, retained: bool, outcome_line: str
+) -> None:
+    run = Run(core)
+    start(run)
+    expect_wait(run, run.line(abort(1, "CASE", "TIMEOUT", retained)))
+    refused(run, run.r.Line(raw=line_bytes(terminal(outcome_line)), at=run.now()), "EVENT")
+
+
+@pytest.mark.parametrize(
+    ("event", "category"),
+    [
+        (summary([24]), "SUMMARY"),
+        (summary([23]), "SUMMARY"),
+        (summary([], global_pass=True), "EVENT"),
+        (summary([], prefix_cases=25), "EVENT"),
+        (summary([25]), "EVENT"),
+    ],
+    ids=str,
+)
+def test_h12_summary_must_match_verdicts_and_mirror(
+    core: types.ModuleType, event: dict[str, object], category: str
+) -> None:
+    run = Run(core)
+    prefix(run, 24)
+    run_case(run, 24)
+    refused(run, run.r.Line(raw=line_bytes(event), at=run.now()), category)
+
+
+def test_h12_summary_after_nostop_needs_case_23(core: types.ModuleType) -> None:
+    nostop: dict[int, dict[str, object]] = {23: {"stop_applied": False, "verdict": "FAIL"}}
+    run = Run(core)
+    prefix(run, 24, found=False, overs=nostop)
+    run_case(run, 24)
+    refused(run, run.r.Line(raw=line_bytes(summary([])), at=run.now()), "SUMMARY")
+    other = Run(core)
+    prefix(other, 24, found=False, overs=nostop)
+    run_case(other, 24)
+    refused(other, other.r.Line(raw=line_bytes(summary([23, 23])), at=other.now()), "EVENT")
+
+
+# ---------------------------------------------------------------- H13 statics, repr, retention
+
+FORBIDDEN_IMPORTS = frozenset(
+    {
+        "time",
+        "os",
+        "socket",
+        "threading",
+        "subprocess",
+        "select",
+        "signal",
+        "asyncio",
+        "datetime",
+        "multiprocessing",
+        "pathlib",
+        "io",
+        "shutil",
+        "tempfile",
+        "ctypes",
+        "runpy",
+        "importlib",
+    }
+)
+FORBIDDEN_CALLS = frozenset({"open", "print", "input", "exec", "eval", "__import__"})
+CLOCK_ATTRS = frozenset({"monotonic", "monotonic_ns", "perf_counter", "time_ns", "sleep"})
+
+
+def test_h13_module_has_no_io_clock_or_driver_import() -> None:
+    tree = ast.parse(REACTOR_FILE.read_text(encoding="utf-8"))
+    imported: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            imported.update(alias.name for alias in node.names)
+        elif isinstance(node, ast.ImportFrom):
+            imported.add(node.module or "")
+        elif isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+            assert node.func.id not in FORBIDDEN_CALLS
+        elif isinstance(node, ast.Attribute):
+            assert node.attr not in CLOCK_ATTRS
+    for name in imported:
+        assert name.split(".")[0] not in FORBIDDEN_IMPORTS
+        assert "driver" not in name and "oracle9_w1_main" not in name
+
+
+def walk_retained(root: object) -> list[object]:
+    """Bounded reachable-object walk of the reactor state (no modules/types/callables)."""
+    seen: set[int] = set()
+    found: list[object] = []
+    stack: list[tuple[object, int]] = [(root, 0)]
+    skip = (
+        types.ModuleType,
+        type,
+        types.FunctionType,
+        types.BuiltinFunctionType,
+        types.MethodType,
+    )
+    while stack:
+        item, depth = stack.pop()
+        if id(item) in seen or depth > 8 or isinstance(item, skip):
+            continue
+        seen.add(id(item))
+        found.append(item)
+        if isinstance(item, (str, bytes, bytearray, int, float, enum.Enum)) or item is None:
+            continue
+        if isinstance(item, dict):
+            stack += [(value, depth + 1) for pair in item.items() for value in pair]
+            continue
+        if isinstance(item, (list, tuple, set, frozenset)):
+            stack += [(value, depth + 1) for value in item]
+            continue
+        values = list(getattr(item, "__dict__", {}).values())
+        for cls in type(item).__mro__:
+            for slot in getattr(cls, "__slots__", ()):
+                if isinstance(slot, str) and hasattr(item, slot):
+                    values.append(getattr(item, slot))
+        stack += [(value, depth + 1) for value in values]
+    return found
+
+
+def test_h13_redacted_repr_and_no_decoded_secret_retention(core: types.ModuleType) -> None:
+    run = Run(core)
+    send = run.line(GUARD)
+    assert send.payload == PACKET  # the required private packet is the INIT payload
+    texts = [repr(run.reactor), repr(run.reactor.status()), repr(send), str(send)]
+    for text in texts:
+        assert all(secret not in text for secret in SECRETS)
+        assert repr(PACKET) not in text
+    for item in walk_retained(run.reactor):
+        assert type(item).__name__ != "LabInit"
+        if isinstance(item, str):
+            assert all(secret not in item for secret in SECRETS)
+
+
+# ---------------------------------------------------------------- H15 carriers
+
+
+def test_h15_carriers_accept_anything_and_feed_refuses_sticky(core: types.ModuleType) -> None:
+    r = reactor_module()
+    text = "1"  # a str where an exact int is required
+    carriers = [
+        r.Line(raw=None, at=None),
+        r.Delivered(token=text, delivery=None, pre=None, post=None),
+        r.ActDone(token=None, kind="KILL_GATEWAY", status="OK", facts=object(), at=None),
+        r.Exited(at=None, status="EXITED", code=-1, eof=1, reaped=None),
+    ]
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        carriers[0].at = 1.0
+    run = Run(core)
+    refused(run, object(), "INPUT")
+    run = Run(core)
+    refused(run, r.Line(raw=123, at=run.now()), "LINE")
+    run = Run(core)
+    refused(run, r.Line(raw=123, at="x"), "TIME")  # TIME precedes LINE
+    run = Run(core)
+    send = run.line(GUARD)
+    text_token = r.Delivered(
+        token=str(send.token), delivery=r.Delivery.SENT, pre=run.now(), post=run.now()
+    )
+    refused(run, text_token, "RECEIPT")
+    run = Run(core)
+    send = run.line(GUARD)
+    regress = r.Delivered(token=send.token + 9, delivery=r.Delivery.SENT, pre=50.0, post=50.0)
+    refused(run, regress, "TIME")  # TIME precedes RECEIPT
+    run = Run(core)
+    prefix(run, 20)
+    act = expect_act(run, run.line(ready(20, 39)), "TERMINATE_ONE_BACKEND", 20)
+    item = r.ActDone(
+        token=act.token,
+        kind="TERMINATE_ONE_BACKEND",
+        status=r.ActStatus.OK,
+        facts=r.TerminateFacts(found=1, terminated=True),
+        at=run.now(),
+    )
+    refused(run, item, "RECEIPT")
+    assert run.reactor.status().pending is act
+
+
+# ---------------------------------------------------------------- H16 orphan and Done
+
+
+def test_h16_terminal_line_turns_pending_into_one_recorded_orphan(
+    core: types.ModuleType,
+) -> None:
+    run = Run(core)
+    send = run.line(GUARD)
+    expect_wait(run, run.line(abort(0, "INIT", "TIMEOUT", False)))
+    status = run.reactor.status()
+    assert (status.phase.name, status.pending) == ("ENDING", None)
+    assert status.orphan is send and status.orphan_receipt is None
+    receipt = sent_receipt(run, send.token)
+    expect_wait(run, run.feed(receipt))
+    status = run.reactor.status()
+    assert status.orphan_receipt is receipt and status.controls_sent == 0
+    expect_wait(run, run.line(terminal("ABORTED")))
+    done = expect_done(run, run.exited(code=68), "ABORTED")
+    assert done.orphan is send and done.controller_retained is False
+    refused(run, run.r.Line(raw=line_bytes(INIT_OK), at=run.now()), "ORDER")
+    assert done.orphan is send and run.reactor.status().orphan is send
+
+
+def test_h16_second_or_foreign_orphan_receipt_is_refused(core: types.ModuleType) -> None:
+    run = Run(core)
+    send = run.line(GUARD)
+    expect_wait(run, run.line(abort(0, "INIT", "TIMEOUT", False)))
+    first = sent_receipt(run, send.token)
+    expect_wait(run, run.feed(first))
+    refused(run, sent_receipt(run, send.token), "RECEIPT")
+    assert run.reactor.status().orphan_receipt is first
+
+    other = Run(core)
+    send = other.line(GUARD)
+    expect_wait(other, other.line(abort(0, "INIT", "TIMEOUT", False)))
+    refused(other, sent_receipt(other, send.token + 1), "RECEIPT")
+
+
+def sent_receipt(run: Run, token: int) -> Any:
+    pre = run.now()
+    return run.r.Delivered(token=token, delivery=run.r.Delivery.SENT, pre=pre, post=run.now())
+
+
+# ---------------------------------------------------------------- H17 T6 exit precedence
+
+
+@pytest.mark.parametrize(
+    ("status", "outcome"),
+    [("EXITED", "T6_FAILED"), ("NO_EXIT", "ENDED_UNKNOWN"), ("UNKNOWN", "ENDED_UNKNOWN")],
+)
+def test_h17_exit_while_kill_pending_never_becomes_success(
+    core: types.ModuleType, status: str, outcome: str
+) -> None:
+    run = Run(core)
+    prefix(run, 25)
+    _, step = t6_arm(run)
+    act = expect_act(run, step, "KILL_GATEWAY", 25)
+    done = expect_done(run, run.exited(status), outcome)
+    assert done.orphan is act and names(done.verdicts)[24] == "FAIL"
+    assert done.controller_retained is (status != "EXITED")
+    late = run.r.ActDone(
+        token=act.token,
+        kind=act.kind,
+        status=run.r.ActStatus.OK,
+        facts=run.r.KillFacts(stop_confirmed=True, oom_killed=False),
+        at=run.now(),
+    )
+    refused(run, late, "ORDER")
+    assert done.outcome.name == outcome and done.orphan is act
+
+
+def test_h17_timely_kill_then_exit_returns_zero_backends_act(core: types.ModuleType) -> None:
+    run = Run(core)
+    prefix(run, 25)
+    _, step = t6_arm(run)
+    expect_wait(run, kill_ok(run, expect_act(run, step, "KILL_GATEWAY", 25)))
+    exit_at = run.t + 0.25
+    zero = expect_act(run, run.exited(code=137), "ZERO_BACKENDS", 25)
+    assert (zero.issued_at, zero.deadline) == (exit_at, exit_at + ACT_S)
+    assert not isinstance(zero, run.r.Done)
+
+
+@pytest.mark.parametrize("stage", ["fresh", "started", "aborted", "armed"])
+def test_h17_unknown_exit_is_always_retained(core: types.ModuleType, stage: str) -> None:
+    run = Run(core)
+    if stage == "started":
+        start(run)
+    elif stage == "aborted":
+        start(run)
+        expect_wait(run, run.line(abort(1, "CASE", "TIMEOUT", False)))
+        expect_wait(run, run.line(terminal("ABORTED")))
+    elif stage == "armed":
+        prefix(run, 25)
+        _, step = t6_arm(run)
+        expect_wait(run, kill_ok(run, expect_act(run, step, "KILL_GATEWAY", 25)))
+    step = run.exited("UNKNOWN")
+    assert isinstance(step, run.r.Done)
+    assert step.controller_retained is True and step.outcome.name != "COMPLETE_CANDIDATE"
+
+
+# ---------------------------------------------------------------- review V2 precisions
+
+
+@pytest.mark.parametrize(
+    ("raw", "category"),
+    [
+        pytest.param(b"x" * 600 + b"\n", "ORDER", id="oversize-while-pending"),
+        pytest.param(b"not json\n", "ORDER", id="unparseable-while-pending"),
+        pytest.param(line_bytes(INIT_OK), "ORDER", id="non-terminal-while-pending"),
+        pytest.param(line_bytes(abort(0, "INIT", "OTHER", False)), "EVENT", id="bad-abort"),
+    ],
+)
+def test_h6_pending_line_precedence_below_the_cap(
+    core: types.ModuleType, raw: bytes, category: str
+) -> None:
+    run = Run(core)
+    send = run.line(GUARD)
+    refused(run, run.r.Line(raw=raw, at=run.now()), category)
+    assert run.reactor.status().pending is send
+
+
+class RecordingMachine:
+    """Delegates every call to ONE real core ControlMachine and records method names."""
+
+    def __init__(self, real: Any, calls: list[str]) -> None:
+        self.real = real
+        self.calls = calls
+
+    def __getattr__(self, name: str) -> Any:
+        value = getattr(self.real, name)
+        if not callable(value):
+            return value
+
+        def recorded(*args: Any) -> Any:
+            self.calls.append(name)
+            return value(*args)
+
+        return recorded
+
+
+def recording_core(core: types.ModuleType) -> tuple[types.ModuleType, list[Any], list[str]]:
+    machines: list[Any] = []
+    calls: list[str] = []
+
+    def factory() -> Any:
+        real = core.ControlMachine()
+        machines.append(real)
+        return RecordingMachine(real, calls)
+
+    return core_copy(core, ControlMachine=factory), machines, calls
+
+
+@pytest.mark.parametrize("purpose", ["GO", "ACK", "STOP"])
+@pytest.mark.parametrize("mode", ["NOT_SENT", "UNKNOWN", "LATE"])
+def test_h7_uncertain_delivery_never_advances_the_real_mirror(
+    core: types.ModuleType, purpose: str, mode: str
+) -> None:
+    variant, machines, calls = recording_core(core)
+    run = Run(variant)
+    if purpose == "GO":
+        start(run)
+        step = run.line(ready(1, 1))
+    elif purpose == "ACK":
+        start(run)
+        go_case(run, 1)
+        step = run.line(result(1))
+    else:
+        prefix(run, 23)
+        go_case(run, 23)
+        act = expect_act(run, run.line(armed(23, 46, None)), "OBSERVE_HEAVY", 23)
+        step = run.act_done(act, facts=run.r.ObserveFacts(found=True, observations=3))
+    send = expect_send(run, step, purpose, None)
+    assert len(machines) == 1
+    real = machines[0]
+    if purpose != "GO":
+        assert "accept" in calls  # the delegation is genuinely observed
+    before = (real.accepted, list(calls))
+    if mode == "LATE":
+        expect_wait(run, run.deliver(send, "SENT", post=send.deadline))
+    else:
+        expect_wait(run, run.deliver(send, mode))
+    assert (real.accepted, calls) == before  # no accept/join/advance after uncertainty
+    assert run.reactor.status().phase.name == "DRAINING"
+
+
+@pytest.mark.parametrize("name", sorted(DTO_FIELDS))
+def test_h13_dtos_are_frozen_slotted_with_exact_public_fields(name: str) -> None:
+    cls = getattr(reactor_module(), name)
+    namespace: dict[str, Any] = dict(vars(cls))
+    assert dataclasses.is_dataclass(cls)
+    assert tuple(field.name for field in dataclasses.fields(cls)) == DTO_FIELDS[name]
+    assert namespace["__dataclass_params__"].frozen is True
+    assert "__slots__" in namespace
+
+
+@pytest.mark.parametrize("name", sorted(ENUMS))
+def test_h13_contract_enums_are_closed(name: str) -> None:
+    cls = getattr(reactor_module(), name)
+    assert isinstance(cls, type) and issubclass(cls, enum.Enum)
+    assert {member.name for member in cls} == ENUMS[name]
+
+
+def test_h13_refusal_is_a_closed_exception() -> None:
+    r = reactor_module()
+    assert issubclass(r.HostRefusal, Exception)
+    error = r.HostRefusal("LINE")
+    assert (error.args, error.category) == (("LINE",), "LINE")
+
+
+CARRIER_CASES: list[tuple[str, Any, str]] = [
+    ("Delivered", lambda _r: {"pre": True}, "TIME"),
+    ("Delivered", lambda _r: {"post": math.nan}, "TIME"),
+    ("Delivered", lambda _r: {"post": FloatSub(1000.0)}, "TIME"),
+    ("Delivered", lambda _r: {"delivery": "SENT"}, "RECEIPT"),
+    ("Delivered", lambda r: {"delivery": r.ActStatus.OK}, "RECEIPT"),
+    ("Delivered", lambda _r: {"token": True}, "RECEIPT"),
+    ("Delivered", lambda _r: {"token": IntSub(1)}, "RECEIPT"),
+    ("Delivered", lambda _r: {"token": True, "pre": math.nan}, "TIME"),
+    ("ActDone", lambda _r: {"at": True}, "TIME"),
+    ("ActDone", lambda _r: {"at": math.inf}, "TIME"),
+    ("ActDone", lambda _r: {"status": "OK"}, "RECEIPT"),
+    ("ActDone", lambda r: {"status": r.Delivery.SENT}, "RECEIPT"),
+    ("ActDone", lambda r: {"kind": r.ActStatus.OK}, "RECEIPT"),
+    ("ActDone", lambda _r: {"status": "OK", "at": math.nan}, "TIME"),
+    ("Exited", lambda _r: {"at": True}, "TIME"),
+    ("Exited", lambda _r: {"at": -1.0}, "TIME"),
+    ("Exited", lambda _r: {"status": "EXITED"}, "EXIT"),
+    ("Exited", lambda r: {"status": r.Delivery.SENT}, "EXIT"),
+    ("Exited", lambda _r: {"code": True}, "EXIT"),
+    ("Exited", lambda _r: {"code": 70.0}, "EXIT"),
+    ("Exited", lambda _r: {"code": 256}, "EXIT"),
+    ("Exited", lambda _r: {"code": -1}, "EXIT"),
+    ("Exited", lambda r: {"status": r.ExitStatus.NO_EXIT}, "EXIT"),
+    ("Exited", lambda r: {"status": r.ExitStatus.UNKNOWN, "code": 0}, "EXIT"),
+    ("Exited", lambda _r: {"eof": 1}, "EXIT"),
+    ("Exited", lambda _r: {"reaped": None}, "EXIT"),
+    ("Exited", lambda _r: {"status": "EXITED", "at": math.nan}, "TIME"),
+]
+
+
+def carrier_baseline(run: Run, kind: str) -> dict[str, object]:
+    r = run.r
+    if kind == "Delivered":
+        send = run.line(GUARD)
+        pre = run.now()
+        return {"token": send.token, "delivery": r.Delivery.SENT, "pre": pre, "post": run.now()}
+    if kind == "ActDone":
+        prefix(run, 20)
+        act = expect_act(run, run.line(ready(20, 39)), "TERMINATE_ONE_BACKEND", 20)
+        return {
+            "token": act.token,
+            "kind": act.kind,
+            "status": r.ActStatus.OK,
+            "facts": r.TerminateFacts(found=1, terminated=True),
+            "at": run.now(),
+        }
+    return {
+        "at": run.now(),
+        "status": r.ExitStatus.EXITED,
+        "code": 70,
+        "eof": True,
+        "reaped": True,
+    }
+
+
+@pytest.mark.parametrize(("kind", "change", "category"), CARRIER_CASES)
+def test_h15_carrier_fields_are_validated_in_feed_before_any_update(
+    core: types.ModuleType, kind: str, change: Any, category: str
+) -> None:
+    run = Run(core)
+    fields = carrier_baseline(run, kind)
+    fields.update(change(run.r))
+    item = getattr(run.r, kind)(**fields)  # the carrier itself never refuses
+    before = run.reactor.status()
+    refused(run, item, category)
+    after = run.reactor.status()
+    assert (after.last_at, after.lines, after.controls_sent) == (
+        before.last_at,
+        before.lines,
+        before.controls_sent,
+    )
+    assert after.pending is before.pending
+
+
+ABORT_PAIRS = [(phase, "TIMEOUT") for phase in ABORT_PHASES if phase != "CASE"]
+ABORT_PAIRS += [("CASE", reason) for reason in ABORT_REASONS]
+
+
+@pytest.mark.parametrize(("phase", "reason"), ABORT_PAIRS)
+def test_h12_every_valid_abort_phase_and_reason_is_accepted(
+    core: types.ModuleType, phase: str, reason: str
+) -> None:
+    run = Run(core)
+    start(run)
+    expect_wait(run, run.line(abort(1, phase, reason, False)))
+    expect_wait(run, run.line(terminal("ABORTED")))
+    expect_done(run, run.exited(code=68), "ABORTED")
+
+
+def test_h12_summary_out_of_phase_is_order(core: types.ModuleType) -> None:
+    run = Run(core)
+    start(run)
+    refused(run, run.r.Line(raw=line_bytes(summary([])), at=run.now()), "ORDER")
+
+
+# ---------------------------------------------------------------- source review R1 regressions
+
+HUGE = 10**400  # exact int, never representable as a finite float duration/instant
+
+
+@pytest.mark.parametrize(
+    ("kind", "field"),
+    [
+        ("Line", "at"),
+        ("Delivered", "pre"),
+        ("Delivered", "post"),
+        ("ActDone", "at"),
+        ("Exited", "at"),
+    ],
+)
+def test_r1_huge_exact_int_time_is_closed_time_before_any_update(
+    core: types.ModuleType, kind: str, field: str
+) -> None:
+    run = Run(core)
+    if kind == "Line":
+        fields: dict[str, object] = {"raw": line_bytes(GUARD), "at": run.now()}
+    else:
+        fields = carrier_baseline(run, kind)
+    fields[field] = HUGE
+    item = getattr(run.r, kind)(**fields)
+    before = run.reactor.status()
+    refused(run, item, "TIME")
+    after = run.reactor.status()
+    assert (after.last_at, after.lines, after.controls_sent) == (
+        before.last_at,
+        before.lines,
+        before.controls_sent,
+    )
+    assert after.pending is before.pending
+
+
+@pytest.mark.parametrize("name", DTO_FIELDS["HostPolicy"])
+def test_r1_huge_exact_int_policy_field_is_closed_policy(core: types.ModuleType, name: str) -> None:
+    r = reactor_module()
+    policy = policy_for(r, **{name: HUGE})  # the carrier itself never refuses
+    with pytest.raises(r.HostRefusal) as caught:
+        r.HostReactor(core, PACKET, policy)
+    d1.assert_closed(caught.value, "POLICY")
+
+
+def test_r1_line_repr_never_reveals_packet_or_secrets() -> None:
+    r = reactor_module()
+    item = r.Line(raw=PACKET, at=1.0)
+    for text in (repr(item), str(item)):
+        assert repr(PACKET) not in text
+        assert all(secret not in text for secret in SECRETS)
+
+
+EFFECTS: dict[str, tuple[int, Any]] = {
+    "T1": (20, lambda r: r.TerminateFacts(found=1, terminated=True)),
+    "T2-pause": (21, lambda r: r.PauseFacts(paused=True)),
+    "T2-restore": (21, lambda r: r.RestoreFacts(running=True, paused=False, ready=True)),
+    "T4-observe": (23, lambda r: r.ObserveFacts(found=True, observations=3)),
+    "T5": (24, lambda r: r.ZeroFacts(backends=0)),
+}
+
+
+def effect_act(run: Run, which: str) -> Any:
+    if which == "T4-observe":
+        prefix(run, 23)
+        go_case(run, 23)
+        return expect_act(run, run.line(armed(23, 46, None)), "OBSERVE_HEAVY", 23)
+    return pending_act(run, which)
+
+
+@pytest.mark.parametrize("which", sorted(EFFECTS))
+@pytest.mark.parametrize("mode", ["FAILED", "UNKNOWN", "LATE"])
+def test_r1_failed_or_late_effect_fails_its_case_and_drains(
+    core: types.ModuleType, which: str, mode: str
+) -> None:
+    case, facts = EFFECTS[which]
+    run = Run(core)
+    act = effect_act(run, which)
+    before = run.reactor.status()
+    if mode == "LATE":
+        step = run.act_done(act, facts=facts(run.r), at=act.deadline)  # tardy OK
+    else:
+        step = run.act_done(act, mode)
+    expect_wait(run, step)  # never a new Send/Act
+    after = run.reactor.status()
+    assert after.phase.name == "DRAINING" and after.pending is None
+    assert after.controls_sent == before.controls_sent
+    expected = list(names(before.verdicts))
+    expected[case - 1] = "FAIL"  # an earlier RESULT PASS (21, 24) is invalidated
+    assert names(after.verdicts) == expected
+    expect_wait(run, run.line(abort(case, "CASE", "TIMEOUT", False)))
+    expect_wait(run, run.line(terminal("ABORTED")))
+    done = expect_done(run, run.exited(code=68), "ABORTED")
+    assert names(done.verdicts) == expected  # the FAIL survives ABORT/TERMINAL/EXIT 68
+    assert names(run.reactor.status().verdicts) == expected
+
+
+def test_r1_second_exit_while_zero25_pending_is_order(core: types.ModuleType) -> None:
+    run = Run(core)
+    prefix(run, 25)
+    _, step = t6_arm(run)
+    expect_wait(run, kill_ok(run, expect_act(run, step, "KILL_GATEWAY", 25)))
+    zero = expect_act(run, run.exited(code=137), "ZERO_BACKENDS", 25)
+    again = run.r.Exited(
+        at=run.now(), status=run.r.ExitStatus.EXITED, code=137, eof=True, reaped=True
+    )
+    before = run.reactor.status()
+    refused(run, again, "ORDER")
+    after = run.reactor.status()
+    assert after.pending is zero and after.last_at == before.last_at
+    assert names(after.verdicts)[24] == "NOT_RUN"

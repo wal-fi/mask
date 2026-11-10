@@ -1,5 +1,50 @@
 # Checkpoint para continuidade em outro local
 
+## Host: reator puro implementado/revisto — 2026-11-10
+
+C2 único programador/sessão51ea0d85/claude-opus-5-5/medium; root reviu toda
+fonte e deltas. CLI77325/56251/97378/76400/60662 recuperadas0, zero escritor.
+Fontee86f8e32/38610bytes/1104linhas, testef177102a/77736bytes/2144linhas.
+1215relacionados incluindo366próprios PASS/0falhas/erros/skips em21,578s;
+18sondas passaram. Ruff/format370/mypy365alvos3.11/3.14 limpos; runtime só
+Windows3.11.3, PoC fora do mypy.11upstream eapp124 intactos por SHA/tamanho.
+
+Três findings corrigidos após RED366/336PASS/30FAIL: OverflowError numérico,
+reprLine com raw e veredito de efeito falho. Prefixo335 intacto; candidatos
+e REDs anteriores preservados como dados. HOST-VALIDATION/HOST-SOURCE-REVIEW
+descrevem limites, decisões sob delegação e evidências. Done só candidato de
+protocolo, nunca release/limpeza física ou gate de produto.
+
+Próximo incremento SOMENTE desenho da ponte duplex/portas, antes de teste/
+fonte/efeitos. Mesmo únicoC2/sessão/modelo/medium, HEAD real/zeroescritor;
+ativo só monitorar e recuperar terminal antes de nova chamada. Não reutilizar
+guarda24e567c após publicar este lote. Fontes/testes/pins/app124/estado16/
+attempt fixos. Sem Docker/PG/SQL/nativo/runtime/config/privado/binário/
+root/nonce/comando/deploy. Nenhuma nova quota/reset/job. GateT5 físico/B1/B2/
+D090gate2/C1/ingressos/TLS/IDE/produção abertos; Gateway indisponível.
+Histórico abaixo.
+
+
+## Host: teste335 revisto/RED congelado; fonte privada como próximo incremento — 2026-11-10
+
+CLI77325/56251 recuperadas0, zero escritor antes de próxima chamada. C2
+único programador/sessão51ea0d85/claude-opus-5-5/medium. Root leu todaV1 e
+deltaV2: testec595c426/73515bytes/2031linhas, congelado. RED335 medido em
+Windows3.11.3/pilha64MiB:3sanidades PASS/332FileNotFoundFAIL/0erros/skips,
+64,156s. Ausência não é evidência comportamental. Ruff/format e mypy1teste
+3.11/3.14 limpos. V1/RED228/falhas de estilo preservados como dados.
+
+Precisões em HOST-TEST-REVIEW fecham precedência/tipos/recibos, janelaSTOP
+sem rebase, ZERO25, retenção e T6 sem falso sucesso. Oito upstream/app124
+intactos; estado16/attempt intocados. Próximo sob delegação: mesmo únicoC2
+escreve só docs/poc/oracle9_w1_host_reactor.py, teste congelado, root lê e
+mede antes de publicar. Conferir Git/zero escritor e recuperar terminal;
+ativo implica só monitorar. Módulo ausente neste checkpoint; nenhum novo
+job/quota ou efeito Docker/PG/SQL/nativo/privado/runtime/config/binary/
+root/nonce/comando/deploy. Gates produto/nativos abertos; Gateway indisponível.
+Ler HOST-TEST-REVIEW/frozen-red335.json. Histórico abaixo.
+
+
 Criado por solicitação do usuário em2026-10-30. Inclui o trabalho acumulado
 após4a5e556, preservando resultados históricos e tentativas reprovadas. É
 checkpoint de desenvolvimento incompleto da Fase9, não release de produção.

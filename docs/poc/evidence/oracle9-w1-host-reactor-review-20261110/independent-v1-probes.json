@@ -1,0 +1,63 @@
+{
+  "source_sha256": "f7de78b2180dcb2763fe6a7ace83b19095972a9ed5b3acf181e15b480c03d234",
+  "probes": [
+    {
+      "probe": "huge-exact-int-time",
+      "exception": "OverflowError",
+      "category": null,
+      "phase": "AWAIT_GUARD",
+      "cause": null,
+      "context": null
+    },
+    {
+      "probe": "huge-policy-init_s",
+      "exception": "OverflowError",
+      "category": null
+    },
+    {
+      "probe": "huge-policy-t6_margin_s",
+      "exception": "OverflowError",
+      "category": null
+    },
+    {
+      "probe": "raw-Line-repr",
+      "contains_synthetic_secret": true,
+      "contains_packet_repr": true
+    },
+    {
+      "probe": "failed-action-T1",
+      "step": "Wait",
+      "phase": "DRAINING",
+      "case": 20,
+      "verdict": "NOT_RUN"
+    },
+    {
+      "probe": "failed-action-T2-pause",
+      "step": "Wait",
+      "phase": "DRAINING",
+      "case": 21,
+      "verdict": "NOT_RUN"
+    },
+    {
+      "probe": "failed-action-T2-restore",
+      "step": "Wait",
+      "phase": "DRAINING",
+      "case": 21,
+      "verdict": "PASS"
+    },
+    {
+      "probe": "failed-action-T5",
+      "step": "Wait",
+      "phase": "DRAINING",
+      "case": 24,
+      "verdict": "PASS"
+    },
+    {
+      "probe": "duplicate-Exited-with-ZERO25-pending",
+      "exception": "HostRefusal",
+      "category": "ORDER",
+      "pending_original": true
+    }
+  ],
+  "pure_only": true
+}

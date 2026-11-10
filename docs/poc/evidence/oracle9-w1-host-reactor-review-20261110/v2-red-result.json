@@ -1,0 +1,21 @@
+{
+  "exit_code": 1,
+  "seconds": 64.156,
+  "suites": [
+    {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "332",
+      "skipped": "0",
+      "tests": "335",
+      "time": "62.470",
+      "timestamp": "2026-11-10T15:51:22.994925-03:00",
+      "hostname": "SMTZDIBDN1954"
+    }
+  ],
+  "missing_module_failures": 332,
+  "runtime": "3.11.3 (tags/v3.11.3:f3909b8, Apr  4 2023, 23:49:59) [MSC v.1934 64 bit (AMD64)]",
+  "source_absent": true,
+  "test_sha256": "c595c426e1d4aa427efbc57cf9aaf9476f44fde55d11fea1e1f73631b6306a3b",
+  "statics_all_passed": true
+}

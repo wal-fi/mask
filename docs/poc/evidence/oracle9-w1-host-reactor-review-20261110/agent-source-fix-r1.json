@@ -1,0 +1,13 @@
+{
+  "execution": 60662,
+  "exit_code": 0,
+  "session_id": "51ea0d85-05bb-4d24-ba9a-c9627c3f832f",
+  "subtype": "success",
+  "is_error": false,
+  "duration_ms": 27545,
+  "permission_denials": [],
+  "result": "Fiz só as quatro edições pedidas, todas em `docs/poc/oracle9_w1_host_reactor.py`. Não rodei nada (Python, pytest, Ruff, format ou mypy), então não declaro nenhum verde. O teste f177102a e os demais arquivos ficaram intactos.\n\n1. **Números enormes:** em `_finite_or_none`, a chamada `math.isfinite(value)` agora fica dentro de um `try`, e um `OverflowError` faz a função devolver `None`.\n   - Nada é levantado dentro do `except`. Por isso `feed` recusa com TIME pegajoso e sem atualizar o estado, e o construtor recusa com POLICY fechado; nos dois casos a recusa sai fora de handler, sem cause nem context.\n   - Não acrescentei teto operacional nem coerção. A exigência de `int`/`float` exatos, sem bool nem subclasses, continua igual.\n2. **Repr de `Line`:** passou a `repr=False`, com `__repr__` próprio que mostra `Line(raw=<redacted>, at=...)`. Como `str` usa o mesmo `__repr__`, também sai redigido. O DTO continua frozen e com slots, aceita qualquer valor e não valida nada antes do `feed`.\n   - `Line` e `Send` eram os únicos DTOs com campo de bytes.\n3. **Veredito de ação falha:** no ramo de falha de `_after_act`, o caso da própria ação (`act.case`) recebe FAIL antes de DRAINING.\n   - O FAIL substitui o PASS que o RESULT já tinha registrado no restore do caso 21 e no zero do caso 24.\n   - Os outros vereditos não mudam e nenhum Send ou Act novo é emitido.\n   - Os ramos do T6 (KILL e ZERO25) já são tratados antes desse ponto e não mudaram.\n4. **Estilo:** juntei a assinatura de `_expectations` numa só linha, com 99 colunas pela minha contagem.\n\nNão há outra refatoração no delta. Falta você reler o delta inteiro e medir os 366 testes, os relacionados, os estáticos e as sondas antes de publicar.",
+  "result_redactions": [
+    "Unverified non-project approval-policy claim excluded; no such instruction incorporated."
+  ]
+}

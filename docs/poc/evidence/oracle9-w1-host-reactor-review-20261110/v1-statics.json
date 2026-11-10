@@ -1,0 +1,47 @@
+[
+  {
+    "command": [
+      "ruff",
+      "check",
+      "tests/test_oracle9_w1_host_reactor.py"
+    ],
+    "exit_code": 1,
+    "seconds": 0.61,
+    "output": "PLR0913 Too many arguments in function definition (6 > 5)\n   --> tests\\test_oracle9_w1_host_reactor.py:434:5\n    |\n434 | def prefix(\n    |     ^^^^^^\n435 |     run: Run,\n436 |     until: int,\n    |\n\nPLR0913 Too many arguments in function definition (7 > 5)\n    --> tests\\test_oracle9_w1_host_reactor.py:1371:5\n     |\n1369 |     ],\n1370 | )\n1371 | def test_h12_abort_terminal_exit_map(\n     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n1372 |     core: types.ModuleType,\n1373 |     retained: bool,\n     |\n\nPLR0917 Too many positional arguments (7 > 5)\n    --> tests\\test_oracle9_w1_host_reactor.py:1371:5\n     |\n1369 |     ],\n1370 | )\n1371 | def test_h12_abort_terminal_exit_map(\n     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n1372 |     core: types.ModuleType,\n1373 |     retained: bool,\n     |\n\nS106 Possible hardcoded password assigned to argument: \"token\"\n    --> tests\\test_oracle9_w1_host_reactor.py:1588:21\n     |\n1586 |     carriers = [\n1587 |         r.Line(raw=None, at=None),\n1588 |         r.Delivered(token=\"1\", delivery=None, pre=None, post=None),\n     |                     ^^^^^^^^^\n1589 |         r.ActDone(token=None, kind=\"KILL_GATEWAY\", status=\"OK\", facts=object(), at=None),\n1590 |         r.Exited(at=None, status=\"EXITED\", code=-1, eof=1, reaped=None),\n     |\n\nFound 4 errors.\n"
+  },
+  {
+    "command": [
+      "ruff",
+      "format",
+      "--check",
+      "tests/test_oracle9_w1_host_reactor.py"
+    ],
+    "exit_code": 1,
+    "seconds": 0.39,
+    "output": "unformatted: File would be reformatted\n    --> tests\\test_oracle9_w1_host_reactor.py:705:54\n     |\n704  | @pytest.mark.parametrize(\"variant\", CORE_VARIANTS)\n     - def test_h3_constructor_refuses_untrusted_core_shape(\n     -     core: types.ModuleType, variant: str\n     - ) -> None:\n705  + def test_h3_constructor_refuses_untrusted_core_shape(core: types.ModuleType, variant: str) -> None:\n706  |     r = reactor_module()\n--------------------------------------------------------------------------------\n967  | @pytest.mark.parametrize(\"mode\", [\"NOT_SENT\", \"UNKNOWN\", \"LATE\"])\n     - def test_h7_failed_or_late_delivery_drains_without_retry(\n     -     core: types.ModuleType, mode: str\n     - ) -> None:\n968  + def test_h7_failed_or_late_delivery_drains_without_retry(core: types.ModuleType, mode: str) -> None:\n969  |     run = Run(core)\n--------------------------------------------------------------------------------\n1022 | @pytest.mark.parametrize(\"bad\", BAD_TIMES, ids=repr)\n     - def test_h8_time_domain_is_exact_finite_nonnegative(\n     -     core: types.ModuleType, bad: object\n     - ) -> None:\n1023 + def test_h8_time_domain_is_exact_finite_nonnegative(core: types.ModuleType, bad: object) -> None:\n1024 |     run = Run(core)\n--------------------------------------------------------------------------------\n1050 |     expect_wait(run, run.line(INIT_OK, at=102.0))  # equal time is nondecreasing\n     -     item = run.r.Exited(\n     -         at=101.75, status=run.r.ExitStatus.EXITED, code=68, eof=True, reaped=True\n     -     )\n1051 +     item = run.r.Exited(at=101.75, status=run.r.ExitStatus.EXITED, code=68, eof=True, reaped=True)\n1052 |     refused(run, item, \"TIME\")\n--------------------------------------------------------------------------------\n1157 | @pytest.mark.parametrize(\"status\", [\"FAILED\", \"UNKNOWN\"])\n     - def test_h10_failed_observation_drains_without_frame(\n     -     core: types.ModuleType, status: str\n     - ) -> None:\n1158 + def test_h10_failed_observation_drains_without_frame(core: types.ModuleType, status: str) -> None:\n1159 |     run = Run(core)\n--------------------------------------------------------------------------------\n1190 |\n     - @pytest.mark.parametrize(\n     -     (\"offset\", \"complete\"), [(-(2.0**-7), True), (0.0, False), (0.25, False)]\n     - )\n1191 + @pytest.mark.parametrize((\"offset\", \"complete\"), [(-(2.0**-7), True), (0.0, False), (0.25, False)])\n1192 | def test_h11_kill_receipt_time_against_the_fence(\n--------------------------------------------------------------------------------\n1426 | )\n     - def test_h12_abort_and_terminal_domains(\n     -     core: types.ModuleType, event: dict[str, object]\n     - ) -> None:\n1427 + def test_h12_abort_and_terminal_domains(core: types.ModuleType, event: dict[str, object]) -> None:\n1428 |     run = Run(core)\n     |\n\n1 file would be reformatted\n"
+  },
+  {
+    "command": [
+      "mypy",
+      "--strict",
+      "--python-version",
+      "3.11",
+      "tests/test_oracle9_w1_host_reactor.py"
+    ],
+    "exit_code": 0,
+    "seconds": 1.406,
+    "output": "Success: no issues found in 1 source file\r\n"
+  },
+  {
+    "command": [
+      "mypy",
+      "--strict",
+      "--python-version",
+      "3.14",
+      "tests/test_oracle9_w1_host_reactor.py"
+    ],
+    "exit_code": 0,
+    "seconds": 1.125,
+    "output": "Success: no issues found in 1 source file\r\n"
+  }
+]

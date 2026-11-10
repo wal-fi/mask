@@ -1,0 +1,32 @@
+{
+  "at": "2026-11-10T19:13:40.739257+00:00",
+  "test_sha256": "f177102a1ea55e9c6a32d1fcd863f18a2c04800588bddeeab8ee0eb192816613",
+  "bytes": 77736,
+  "lines": 2144,
+  "frozen335_prefix_preserved": true,
+  "source_fixed_during_red": "f7de78b2180dcb2763fe6a7ace83b19095972a9ed5b3acf181e15b480c03d234",
+  "red": {
+    "exit_code": 1,
+    "seconds": 11.672,
+    "suites": [
+      {
+        "name": "pytest",
+        "errors": "0",
+        "failures": "30",
+        "skipped": "0",
+        "tests": "366",
+        "time": "10.179",
+        "timestamp": "2026-11-10T16:12:49.109107-03:00",
+        "hostname": "SMTZDIBDN1954"
+      }
+    ],
+    "failure_types": {
+      "OverflowError": 14,
+      "assert 'b\\'MGI1\\\\x0...ersion\"": 1,
+      "AssertionError": 15
+    },
+    "statics_all_passed": true,
+    "frozen335_prefix_preserved": true
+  },
+  "next": "same single C2; only source fixes for 3 reproduced findings and one formatting signature; tests frozen"
+}

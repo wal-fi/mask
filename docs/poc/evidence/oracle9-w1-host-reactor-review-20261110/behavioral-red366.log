@@ -1,0 +1,428 @@
+........................................................................ [ 19%]
+........................................................................ [ 39%]
+........................................................................ [ 59%]
+........................................................................ [ 78%]
+...............................................FFFFFFFFFFFFFFFFFFFFFFFFF [ 98%]
+FFFFF.                                                                   [100%]
+================================== FAILURES ===================================
+____ test_r1_huge_exact_int_time_is_closed_time_before_any_update[Line-at] ____
+tests\test_oracle9_w1_host_reactor.py:2060: in test_r1_huge_exact_int_time_is_closed_time_before_any_update
+    refused(run, item, "TIME")
+tests\test_oracle9_w1_host_reactor.py:438: in refused
+    run.feed(item)
+tests\test_oracle9_w1_host_reactor.py:346: in feed
+    return self.reactor.feed(item)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:640: in feed
+    return self._step(item)
+           ^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:656: in _step
+    return self._line(item)
+           ^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:720: in _line
+    at = self._checked_at(item.at)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:666: in _checked_at
+    moment = _time_or_none(value)
+             ^^^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:389: in _time_or_none
+    moment = _finite_or_none(value)
+             ^^^^^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:385: in _finite_or_none
+    return value if math.isfinite(value) else None
+                    ^^^^^^^^^^^^^^^^^^^^
+E   OverflowError: int too large to convert to float
+_ test_r1_huge_exact_int_time_is_closed_time_before_any_update[Delivered-pre] _
+tests\test_oracle9_w1_host_reactor.py:2060: in test_r1_huge_exact_int_time_is_closed_time_before_any_update
+    refused(run, item, "TIME")
+tests\test_oracle9_w1_host_reactor.py:438: in refused
+    run.feed(item)
+tests\test_oracle9_w1_host_reactor.py:346: in feed
+    return self.reactor.feed(item)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:640: in feed
+    return self._step(item)
+           ^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:658: in _step
+    return self._delivered(item)
+           ^^^^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:958: in _delivered
+    pre = self._checked_at(item.pre)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:666: in _checked_at
+    moment = _time_or_none(value)
+             ^^^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:389: in _time_or_none
+    moment = _finite_or_none(value)
+             ^^^^^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:385: in _finite_or_none
+    return value if math.isfinite(value) else None
+                    ^^^^^^^^^^^^^^^^^^^^
+E   OverflowError: int too large to convert to float
+_ test_r1_huge_exact_int_time_is_closed_time_before_any_update[Delivered-post] _
+tests\test_oracle9_w1_host_reactor.py:2060: in test_r1_huge_exact_int_time_is_closed_time_before_any_update
+    refused(run, item, "TIME")
+tests\test_oracle9_w1_host_reactor.py:438: in refused
+    run.feed(item)
+tests\test_oracle9_w1_host_reactor.py:346: in feed
+    return self.reactor.feed(item)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:640: in feed
+    return self._step(item)
+           ^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:658: in _step
+    return self._delivered(item)
+           ^^^^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:959: in _delivered
+    post = _time_or_none(item.post)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:389: in _time_or_none
+    moment = _finite_or_none(value)
+             ^^^^^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:385: in _finite_or_none
+    return value if math.isfinite(value) else None
+                    ^^^^^^^^^^^^^^^^^^^^
+E   OverflowError: int too large to convert to float
+__ test_r1_huge_exact_int_time_is_closed_time_before_any_update[ActDone-at] ___
+tests\test_oracle9_w1_host_reactor.py:2060: in test_r1_huge_exact_int_time_is_closed_time_before_any_update
+    refused(run, item, "TIME")
+tests\test_oracle9_w1_host_reactor.py:438: in refused
+    run.feed(item)
+tests\test_oracle9_w1_host_reactor.py:346: in feed
+    return self.reactor.feed(item)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:640: in feed
+    return self._step(item)
+           ^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:660: in _step
+    return self._act_done(item)
+           ^^^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:995: in _act_done
+    at = self._checked_at(item.at)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:666: in _checked_at
+    moment = _time_or_none(value)
+             ^^^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:389: in _time_or_none
+    moment = _finite_or_none(value)
+             ^^^^^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:385: in _finite_or_none
+    return value if math.isfinite(value) else None
+                    ^^^^^^^^^^^^^^^^^^^^
+E   OverflowError: int too large to convert to float
+___ test_r1_huge_exact_int_time_is_closed_time_before_any_update[Exited-at] ___
+tests\test_oracle9_w1_host_reactor.py:2060: in test_r1_huge_exact_int_time_is_closed_time_before_any_update
+    refused(run, item, "TIME")
+tests\test_oracle9_w1_host_reactor.py:438: in refused
+    run.feed(item)
+tests\test_oracle9_w1_host_reactor.py:346: in feed
+    return self.reactor.feed(item)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:640: in feed
+    return self._step(item)
+           ^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:662: in _step
+    return self._exited(item)
+           ^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:1046: in _exited
+    at = self._checked_at(item.at)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:666: in _checked_at
+    moment = _time_or_none(value)
+             ^^^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:389: in _time_or_none
+    moment = _finite_or_none(value)
+             ^^^^^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:385: in _finite_or_none
+    return value if math.isfinite(value) else None
+                    ^^^^^^^^^^^^^^^^^^^^
+E   OverflowError: int too large to convert to float
+________ test_r1_huge_exact_int_policy_field_is_closed_policy[init_s] _________
+tests\test_oracle9_w1_host_reactor.py:2075: in test_r1_huge_exact_int_policy_field_is_closed_policy
+    r.HostReactor(core, PACKET, policy)
+docs\poc\oracle9_w1_host_reactor.py:581: in __init__
+    if not isinstance(policy, HostPolicy) or not _policy_ok(policy):
+                                                 ^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:466: in _policy_ok
+    if any(_finite_or_none(value) is None for value in values):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:466: in <genexpr>
+    if any(_finite_or_none(value) is None for value in values):
+           ^^^^^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:385: in _finite_or_none
+    return value if math.isfinite(value) else None
+                    ^^^^^^^^^^^^^^^^^^^^
+E   OverflowError: int too large to convert to float
+_________ test_r1_huge_exact_int_policy_field_is_closed_policy[go_s] __________
+tests\test_oracle9_w1_host_reactor.py:2075: in test_r1_huge_exact_int_policy_field_is_closed_policy
+    r.HostReactor(core, PACKET, policy)
+docs\poc\oracle9_w1_host_reactor.py:581: in __init__
+    if not isinstance(policy, HostPolicy) or not _policy_ok(policy):
+                                                 ^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:466: in _policy_ok
+    if any(_finite_or_none(value) is None for value in values):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:466: in <genexpr>
+    if any(_finite_or_none(value) is None for value in values):
+           ^^^^^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:385: in _finite_or_none
+    return value if math.isfinite(value) else None
+                    ^^^^^^^^^^^^^^^^^^^^
+E   OverflowError: int too large to convert to float
+_________ test_r1_huge_exact_int_policy_field_is_closed_policy[ack_s] _________
+tests\test_oracle9_w1_host_reactor.py:2075: in test_r1_huge_exact_int_policy_field_is_closed_policy
+    r.HostReactor(core, PACKET, policy)
+docs\poc\oracle9_w1_host_reactor.py:581: in __init__
+    if not isinstance(policy, HostPolicy) or not _policy_ok(policy):
+                                                 ^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:466: in _policy_ok
+    if any(_finite_or_none(value) is None for value in values):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:466: in <genexpr>
+    if any(_finite_or_none(value) is None for value in values):
+           ^^^^^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:385: in _finite_or_none
+    return value if math.isfinite(value) else None
+                    ^^^^^^^^^^^^^^^^^^^^
+E   OverflowError: int too large to convert to float
+______ test_r1_huge_exact_int_policy_field_is_closed_policy[fatal_ack_s] ______
+tests\test_oracle9_w1_host_reactor.py:2075: in test_r1_huge_exact_int_policy_field_is_closed_policy
+    r.HostReactor(core, PACKET, policy)
+docs\poc\oracle9_w1_host_reactor.py:581: in __init__
+    if not isinstance(policy, HostPolicy) or not _policy_ok(policy):
+                                                 ^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:466: in _policy_ok
+    if any(_finite_or_none(value) is None for value in values):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:466: in <genexpr>
+    if any(_finite_or_none(value) is None for value in values):
+           ^^^^^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:385: in _finite_or_none
+    return value if math.isfinite(value) else None
+                    ^^^^^^^^^^^^^^^^^^^^
+E   OverflowError: int too large to convert to float
+_________ test_r1_huge_exact_int_policy_field_is_closed_policy[act_s] _________
+tests\test_oracle9_w1_host_reactor.py:2075: in test_r1_huge_exact_int_policy_field_is_closed_policy
+    r.HostReactor(core, PACKET, policy)
+docs\poc\oracle9_w1_host_reactor.py:581: in __init__
+    if not isinstance(policy, HostPolicy) or not _policy_ok(policy):
+                                                 ^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:466: in _policy_ok
+    if any(_finite_or_none(value) is None for value in values):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:466: in <genexpr>
+    if any(_finite_or_none(value) is None for value in values):
+           ^^^^^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:385: in _finite_or_none
+    return value if math.isfinite(value) else None
+                    ^^^^^^^^^^^^^^^^^^^^
+E   OverflowError: int too large to convert to float
+______ test_r1_huge_exact_int_policy_field_is_closed_policy[t4_window_s] ______
+tests\test_oracle9_w1_host_reactor.py:2075: in test_r1_huge_exact_int_policy_field_is_closed_policy
+    r.HostReactor(core, PACKET, policy)
+docs\poc\oracle9_w1_host_reactor.py:581: in __init__
+    if not isinstance(policy, HostPolicy) or not _policy_ok(policy):
+                                                 ^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:466: in _policy_ok
+    if any(_finite_or_none(value) is None for value in values):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:466: in <genexpr>
+    if any(_finite_or_none(value) is None for value in values):
+           ^^^^^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:385: in _finite_or_none
+    return value if math.isfinite(value) else None
+                    ^^^^^^^^^^^^^^^^^^^^
+E   OverflowError: int too large to convert to float
+______ test_r1_huge_exact_int_policy_field_is_closed_policy[t6_epsilon] _______
+tests\test_oracle9_w1_host_reactor.py:2075: in test_r1_huge_exact_int_policy_field_is_closed_policy
+    r.HostReactor(core, PACKET, policy)
+docs\poc\oracle9_w1_host_reactor.py:581: in __init__
+    if not isinstance(policy, HostPolicy) or not _policy_ok(policy):
+                                                 ^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:466: in _policy_ok
+    if any(_finite_or_none(value) is None for value in values):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:466: in <genexpr>
+    if any(_finite_or_none(value) is None for value in values):
+           ^^^^^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:385: in _finite_or_none
+    return value if math.isfinite(value) else None
+                    ^^^^^^^^^^^^^^^^^^^^
+E   OverflowError: int too large to convert to float
+______ test_r1_huge_exact_int_policy_field_is_closed_policy[t6_margin_s] ______
+tests\test_oracle9_w1_host_reactor.py:2075: in test_r1_huge_exact_int_policy_field_is_closed_policy
+    r.HostReactor(core, PACKET, policy)
+docs\poc\oracle9_w1_host_reactor.py:581: in __init__
+    if not isinstance(policy, HostPolicy) or not _policy_ok(policy):
+                                                 ^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:466: in _policy_ok
+    if any(_finite_or_none(value) is None for value in values):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:466: in <genexpr>
+    if any(_finite_or_none(value) is None for value in values):
+           ^^^^^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:385: in _finite_or_none
+    return value if math.isfinite(value) else None
+                    ^^^^^^^^^^^^^^^^^^^^
+E   OverflowError: int too large to convert to float
+_____ test_r1_huge_exact_int_policy_field_is_closed_policy[t6_kill_min_s] _____
+tests\test_oracle9_w1_host_reactor.py:2075: in test_r1_huge_exact_int_policy_field_is_closed_policy
+    r.HostReactor(core, PACKET, policy)
+docs\poc\oracle9_w1_host_reactor.py:581: in __init__
+    if not isinstance(policy, HostPolicy) or not _policy_ok(policy):
+                                                 ^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:466: in _policy_ok
+    if any(_finite_or_none(value) is None for value in values):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:466: in <genexpr>
+    if any(_finite_or_none(value) is None for value in values):
+           ^^^^^^^^^^^^^^^^^^^^^^
+docs\poc\oracle9_w1_host_reactor.py:385: in _finite_or_none
+    return value if math.isfinite(value) else None
+                    ^^^^^^^^^^^^^^^^^^^^
+E   OverflowError: int too large to convert to float
+______________ test_r1_line_repr_never_reveals_packet_or_secrets ______________
+tests\test_oracle9_w1_host_reactor.py:2083: in test_r1_line_repr_never_reveals_packet_or_secrets
+    assert repr(PACKET) not in text
+E   assert 'b\'MGI1\\x0...ersion":1}\'' not in "Line(raw=b'...1}', at=1.0)"
+E
+E     'b\'MGI1\\x00\\x00\...er"},"version":1}\'' is contained here:
+E       Line(raw=b'MGI1\x00\x00\n1{"expected":[{"bytes":69,"job":1,"kind":"RESULT","reason":null,"rows":3,"sha256":"bcefc6700fbd13ee572991c21be6cce498f871b45ef158c04c87db0fb32eaa03"},{"bytes":92,"job":2,"kind":"RESULT","reason":null,"rows":3,"sha256":"f906711f9491f17d6dd702159b1fc929fe6bc7afd7a78bac83f20fcb1821a5be"},{"bytes":115,"job":3,"kind":"RESULT","reason":null,"rows":3,"sha256":"03a6c9a9fbd8d26115eaea08cc309f58ba0baf81f50d64c233a0771bc49d5aa3"},{"bytes":138,"job":4,"kind":"RESULT","reason":null,"rows":3,"sha2...
+E
+E     ...Full output truncated (1 line hidden), use '-vv' to show
+_____ test_r1_failed_or_late_effect_fails_its_case_and_drains[FAILED-T1] ______
+tests\test_oracle9_w1_host_reactor.py:2123: in test_r1_failed_or_late_effect_fails_its_case_and_drains
+    assert names(after.verdicts) == expected
+E   AssertionError: assert ['PASS', 'PAS..., 'PASS', ...] == ['PASS', 'PAS..., 'PASS', ...]
+E
+E     At index 19 diff: 'NOT_RUN' != 'FAIL'
+E     Use -v to get more diff
+__ test_r1_failed_or_late_effect_fails_its_case_and_drains[FAILED-T2-pause] ___
+tests\test_oracle9_w1_host_reactor.py:2123: in test_r1_failed_or_late_effect_fails_its_case_and_drains
+    assert names(after.verdicts) == expected
+E   AssertionError: assert ['PASS', 'PAS..., 'PASS', ...] == ['PASS', 'PAS..., 'PASS', ...]
+E
+E     At index 20 diff: 'NOT_RUN' != 'FAIL'
+E     Use -v to get more diff
+_ test_r1_failed_or_late_effect_fails_its_case_and_drains[FAILED-T2-restore] __
+tests\test_oracle9_w1_host_reactor.py:2123: in test_r1_failed_or_late_effect_fails_its_case_and_drains
+    assert names(after.verdicts) == expected
+E   AssertionError: assert ['PASS', 'PAS..., 'PASS', ...] == ['PASS', 'PAS..., 'PASS', ...]
+E
+E     At index 20 diff: 'PASS' != 'FAIL'
+E     Use -v to get more diff
+_ test_r1_failed_or_late_effect_fails_its_case_and_drains[FAILED-T4-observe] __
+tests\test_oracle9_w1_host_reactor.py:2123: in test_r1_failed_or_late_effect_fails_its_case_and_drains
+    assert names(after.verdicts) == expected
+E   AssertionError: assert ['PASS', 'PAS..., 'PASS', ...] == ['PASS', 'PAS..., 'PASS', ...]
+E
+E     At index 22 diff: 'NOT_RUN' != 'FAIL'
+E     Use -v to get more diff
+_____ test_r1_failed_or_late_effect_fails_its_case_and_drains[FAILED-T5] ______
+tests\test_oracle9_w1_host_reactor.py:2123: in test_r1_failed_or_late_effect_fails_its_case_and_drains
+    assert names(after.verdicts) == expected
+E   AssertionError: assert ['PASS', 'PAS..., 'PASS', ...] == ['PASS', 'PAS..., 'PASS', ...]
+E
+E     At index 23 diff: 'PASS' != 'FAIL'
+E     Use -v to get more diff
+_____ test_r1_failed_or_late_effect_fails_its_case_and_drains[UNKNOWN-T1] _____
+tests\test_oracle9_w1_host_reactor.py:2123: in test_r1_failed_or_late_effect_fails_its_case_and_drains
+    assert names(after.verdicts) == expected
+E   AssertionError: assert ['PASS', 'PAS..., 'PASS', ...] == ['PASS', 'PAS..., 'PASS', ...]
+E
+E     At index 19 diff: 'NOT_RUN' != 'FAIL'
+E     Use -v to get more diff
+__ test_r1_failed_or_late_effect_fails_its_case_and_drains[UNKNOWN-T2-pause] __
+tests\test_oracle9_w1_host_reactor.py:2123: in test_r1_failed_or_late_effect_fails_its_case_and_drains
+    assert names(after.verdicts) == expected
+E   AssertionError: assert ['PASS', 'PAS..., 'PASS', ...] == ['PASS', 'PAS..., 'PASS', ...]
+E
+E     At index 20 diff: 'NOT_RUN' != 'FAIL'
+E     Use -v to get more diff
+_ test_r1_failed_or_late_effect_fails_its_case_and_drains[UNKNOWN-T2-restore] _
+tests\test_oracle9_w1_host_reactor.py:2123: in test_r1_failed_or_late_effect_fails_its_case_and_drains
+    assert names(after.verdicts) == expected
+E   AssertionError: assert ['PASS', 'PAS..., 'PASS', ...] == ['PASS', 'PAS..., 'PASS', ...]
+E
+E     At index 20 diff: 'PASS' != 'FAIL'
+E     Use -v to get more diff
+_ test_r1_failed_or_late_effect_fails_its_case_and_drains[UNKNOWN-T4-observe] _
+tests\test_oracle9_w1_host_reactor.py:2123: in test_r1_failed_or_late_effect_fails_its_case_and_drains
+    assert names(after.verdicts) == expected
+E   AssertionError: assert ['PASS', 'PAS..., 'PASS', ...] == ['PASS', 'PAS..., 'PASS', ...]
+E
+E     At index 22 diff: 'NOT_RUN' != 'FAIL'
+E     Use -v to get more diff
+_____ test_r1_failed_or_late_effect_fails_its_case_and_drains[UNKNOWN-T5] _____
+tests\test_oracle9_w1_host_reactor.py:2123: in test_r1_failed_or_late_effect_fails_its_case_and_drains
+    assert names(after.verdicts) == expected
+E   AssertionError: assert ['PASS', 'PAS..., 'PASS', ...] == ['PASS', 'PAS..., 'PASS', ...]
+E
+E     At index 23 diff: 'PASS' != 'FAIL'
+E     Use -v to get more diff
+______ test_r1_failed_or_late_effect_fails_its_case_and_drains[LATE-T1] _______
+tests\test_oracle9_w1_host_reactor.py:2123: in test_r1_failed_or_late_effect_fails_its_case_and_drains
+    assert names(after.verdicts) == expected
+E   AssertionError: assert ['PASS', 'PAS..., 'PASS', ...] == ['PASS', 'PAS..., 'PASS', ...]
+E
+E     At index 19 diff: 'NOT_RUN' != 'FAIL'
+E     Use -v to get more diff
+___ test_r1_failed_or_late_effect_fails_its_case_and_drains[LATE-T2-pause] ____
+tests\test_oracle9_w1_host_reactor.py:2123: in test_r1_failed_or_late_effect_fails_its_case_and_drains
+    assert names(after.verdicts) == expected
+E   AssertionError: assert ['PASS', 'PAS..., 'PASS', ...] == ['PASS', 'PAS..., 'PASS', ...]
+E
+E     At index 20 diff: 'NOT_RUN' != 'FAIL'
+E     Use -v to get more diff
+__ test_r1_failed_or_late_effect_fails_its_case_and_drains[LATE-T2-restore] ___
+tests\test_oracle9_w1_host_reactor.py:2123: in test_r1_failed_or_late_effect_fails_its_case_and_drains
+    assert names(after.verdicts) == expected
+E   AssertionError: assert ['PASS', 'PAS..., 'PASS', ...] == ['PASS', 'PAS..., 'PASS', ...]
+E
+E     At index 20 diff: 'PASS' != 'FAIL'
+E     Use -v to get more diff
+__ test_r1_failed_or_late_effect_fails_its_case_and_drains[LATE-T4-observe] ___
+tests\test_oracle9_w1_host_reactor.py:2123: in test_r1_failed_or_late_effect_fails_its_case_and_drains
+    assert names(after.verdicts) == expected
+E   AssertionError: assert ['PASS', 'PAS..., 'PASS', ...] == ['PASS', 'PAS..., 'PASS', ...]
+E
+E     At index 22 diff: 'NOT_RUN' != 'FAIL'
+E     Use -v to get more diff
+______ test_r1_failed_or_late_effect_fails_its_case_and_drains[LATE-T5] _______
+tests\test_oracle9_w1_host_reactor.py:2123: in test_r1_failed_or_late_effect_fails_its_case_and_drains
+    assert names(after.verdicts) == expected
+E   AssertionError: assert ['PASS', 'PAS..., 'PASS', ...] == ['PASS', 'PAS..., 'PASS', ...]
+E
+E     At index 23 diff: 'PASS' != 'FAIL'
+E     Use -v to get more diff
+=========================== short test summary info ===========================
+FAILED tests/test_oracle9_w1_host_reactor.py::test_r1_huge_exact_int_time_is_closed_time_before_any_update[Line-at]
+FAILED tests/test_oracle9_w1_host_reactor.py::test_r1_huge_exact_int_time_is_closed_time_before_any_update[Delivered-pre]
+FAILED tests/test_oracle9_w1_host_reactor.py::test_r1_huge_exact_int_time_is_closed_time_before_any_update[Delivered-post]
+FAILED tests/test_oracle9_w1_host_reactor.py::test_r1_huge_exact_int_time_is_closed_time_before_any_update[ActDone-at]
+FAILED tests/test_oracle9_w1_host_reactor.py::test_r1_huge_exact_int_time_is_closed_time_before_any_update[Exited-at]
+FAILED tests/test_oracle9_w1_host_reactor.py::test_r1_huge_exact_int_policy_field_is_closed_policy[init_s]
+FAILED tests/test_oracle9_w1_host_reactor.py::test_r1_huge_exact_int_policy_field_is_closed_policy[go_s]
+FAILED tests/test_oracle9_w1_host_reactor.py::test_r1_huge_exact_int_policy_field_is_closed_policy[ack_s]
+FAILED tests/test_oracle9_w1_host_reactor.py::test_r1_huge_exact_int_policy_field_is_closed_policy[fatal_ack_s]
+FAILED tests/test_oracle9_w1_host_reactor.py::test_r1_huge_exact_int_policy_field_is_closed_policy[act_s]
+FAILED tests/test_oracle9_w1_host_reactor.py::test_r1_huge_exact_int_policy_field_is_closed_policy[t4_window_s]
+FAILED tests/test_oracle9_w1_host_reactor.py::test_r1_huge_exact_int_policy_field_is_closed_policy[t6_epsilon]
+FAILED tests/test_oracle9_w1_host_reactor.py::test_r1_huge_exact_int_policy_field_is_closed_policy[t6_margin_s]
+FAILED tests/test_oracle9_w1_host_reactor.py::test_r1_huge_exact_int_policy_field_is_closed_policy[t6_kill_min_s]
+FAILED tests/test_oracle9_w1_host_reactor.py::test_r1_line_repr_never_reveals_packet_or_secrets
+FAILED tests/test_oracle9_w1_host_reactor.py::test_r1_failed_or_late_effect_fails_its_case_and_drains[FAILED-T1]
+FAILED tests/test_oracle9_w1_host_reactor.py::test_r1_failed_or_late_effect_fails_its_case_and_drains[FAILED-T2-pause]
+FAILED tests/test_oracle9_w1_host_reactor.py::test_r1_failed_or_late_effect_fails_its_case_and_drains[FAILED-T2-restore]
+FAILED tests/test_oracle9_w1_host_reactor.py::test_r1_failed_or_late_effect_fails_its_case_and_drains[FAILED-T4-observe]
+FAILED tests/test_oracle9_w1_host_reactor.py::test_r1_failed_or_late_effect_fails_its_case_and_drains[FAILED-T5]
+FAILED tests/test_oracle9_w1_host_reactor.py::test_r1_failed_or_late_effect_fails_its_case_and_drains[UNKNOWN-T1]
+FAILED tests/test_oracle9_w1_host_reactor.py::test_r1_failed_or_late_effect_fails_its_case_and_drains[UNKNOWN-T2-pause]
+FAILED tests/test_oracle9_w1_host_reactor.py::test_r1_failed_or_late_effect_fails_its_case_and_drains[UNKNOWN-T2-restore]
+FAILED tests/test_oracle9_w1_host_reactor.py::test_r1_failed_or_late_effect_fails_its_case_and_drains[UNKNOWN-T4-observe]
+FAILED tests/test_oracle9_w1_host_reactor.py::test_r1_failed_or_late_effect_fails_its_case_and_drains[UNKNOWN-T5]
+FAILED tests/test_oracle9_w1_host_reactor.py::test_r1_failed_or_late_effect_fails_its_case_and_drains[LATE-T1]
+FAILED tests/test_oracle9_w1_host_reactor.py::test_r1_failed_or_late_effect_fails_its_case_and_drains[LATE-T2-pause]
+FAILED tests/test_oracle9_w1_host_reactor.py::test_r1_failed_or_late_effect_fails_its_case_and_drains[LATE-T2-restore]
+FAILED tests/test_oracle9_w1_host_reactor.py::test_r1_failed_or_late_effect_fails_its_case_and_drains[LATE-T4-observe]
+FAILED tests/test_oracle9_w1_host_reactor.py::test_r1_failed_or_late_effect_fails_its_case_and_drains[LATE-T5]

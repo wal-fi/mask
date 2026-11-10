@@ -1,0 +1,16 @@
+W1 Oracle: adiciona reator puro do host com recibos e conclusao conservadora
+
+Implementa modelo privado HostReactor sobre core pinado, pacote INIT unico,
+maquina de controles real e DTOs imutaveis. Trata prazos, pendencias e orfaos
+sem efeitos nativos; COMPLETE_CANDIDATE exige a sequencia T6 completa.
+
+Corrige tres findings apos RED: numeros nao representaveis, repr de Line e
+veredictos de acoes falhas. Evidencias preservam REDs e candidatas reprovadas.
+
+Validacao: 1215 testes relacionados (366 proprios), 18 sondas independentes,
+Ruff/format370/mypy365 nos alvos3.11/3.14, integridade11upstream/app124.
+Runtime Windows3.11.3; componente privado fora do pacote e do mypy.
+Gates nativos e produto continuam abertos; sem Docker/PG/SQL ou deploy.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Co-Authored-By: Codex <noreply@openai.com>

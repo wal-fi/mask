@@ -1,0 +1,22 @@
+{
+  "files": [
+    {
+      "path": "docs/poc/oracle9_w1_host_reactor.py",
+      "sha256": "e86f8e325410a26efeb47de1c4e349e9099673de612c028eb30e01ceea5d91ae",
+      "bytes": 38610,
+      "lines": 1104
+    },
+    {
+      "path": "tests/test_oracle9_w1_host_reactor.py",
+      "sha256": "f177102a1ea55e9c6a32d1fcd863f18a2c04800588bddeeab8ee0eb192816613",
+      "bytes": 77736,
+      "lines": 2144
+    }
+  ],
+  "protected8_intact": true,
+  "extra3_intact": true,
+  "app124_intact": 124,
+  "state16": "not touched/read; unchanged by scoped edits",
+  "native_product_gates": "OPEN",
+  "runtime": "Windows CPython3.11.3 only; static mypy targets3.11/3.14; PoC outside mypy"
+}

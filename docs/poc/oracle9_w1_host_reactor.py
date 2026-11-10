@@ -1,0 +1,1104 @@
+"""Pure W1 host reactor (HOST-DESIGN aed85ad4 + HOST-TEST-REVIEW). Definitions only.
+
+The caller supplies the trusted core already loaded (the published pure controller,
+through the published driver loader), the LAB_INIT packet and an explicit policy;
+every input is an injected, serialized observation of the bridge owner. The reactor
+never reads a clock, the environment or a file and never touches a socket, thread,
+process, signal, guard, Docker, PostgreSQL or SQL. It only decides the next
+``Send``/``Act``/``Wait``/``Done`` of the modeled protocol.
+
+Every refusal is a closed ``HostRefusal(category)`` raised outside any exception
+handler and sticky on the instance. Only the expectations and the packet bytes needed
+for the INIT payload are kept (redacted repr); no zeroization is promised. A ``Done``
+is a protocol candidate only: it grants no release, kill, cleanup or removal and
+proves no kernel, PG, freshness or native fact.
+"""
+
+from __future__ import annotations
+
+import enum
+import json
+import math
+import struct
+import types
+from dataclasses import dataclass
+from typing import Final, NoReturn
+
+from maskgw.runtime.budget import ReleaseOutcome
+
+_GO: Final = 1
+_STOP: Final = 2
+_NOSTOP: Final = 3
+_ACK: Final = 4
+_JOBS: Final = 19
+_CASES: Final = 25
+_T1: Final = 20
+_T2: Final = 21
+_T4: Final = 23
+_T5: Final = 24
+_T6: Final = 25
+_PREFIX_CASES: Final = 24
+_MAX_FRAMES: Final = 50
+_MAX_SEQ: Final = 51
+_TRUNCATED_JOB: Final = 9
+
+_CONTROL: Final = struct.Struct(">4sBBHII")
+_CONTROL_MAGIC: Final = b"MGL1"
+_CONTROL_VERSION: Final = 1
+_INIT_HEADER: Final = 8
+_MAX_INIT_BODY: Final = 65536
+_LINE_LIMIT: Final = 512
+_MAX_LINES: Final = 56
+_CORE_CALLABLES: Final = ("decode_init", "decode_control", "ControlMachine")
+_CORE_CONSTANTS: Final = {
+    "GO": _GO,
+    "STOP": _STOP,
+    "NOSTOP": _NOSTOP,
+    "ACK": _ACK,
+    "T4_CASE": _T4,
+    "T5_CASE": _T5,
+    "T6_CASE": _T6,
+    "MAX_HOST_FRAMES": _MAX_FRAMES,
+    "JOBS": _JOBS,
+    "CASES": _CASES,
+    "PREFIX_CASES": _PREFIX_CASES,
+}
+
+_INPUT: Final = "INPUT"
+_TIME: Final = "TIME"
+_RECEIPT: Final = "RECEIPT"
+_ORDER: Final = "ORDER"
+_LINE: Final = "LINE"
+_EVENT: Final = "EVENT"
+_SEQUENCE: Final = "SEQUENCE"
+_SUMMARY: Final = "SUMMARY"
+_EXIT: Final = "EXIT"
+_CORE: Final = "CORE"
+_INIT: Final = "INIT"
+_POLICY: Final = "POLICY"
+
+_GUARD_VALUES: Final = {"as": 384 * 1024 * 1024, "dumpable": 0, "pdeathsig": 0, "pid": 1}
+_GUARD_KEYS: Final = frozenset({"e", *_GUARD_VALUES})
+_INIT_OK_KEYS: Final = frozenset({"e"})
+_READY_KEYS: Final = frozenset({"case", "e", "next_seq"})
+_ARMED_KEYS: Final = frozenset({"case", "e", "live_window_ms", "next_seq"})
+_BODY: Final = ("rows", "bytes", "truncated", "sink")
+_RESULT_KEYS: Final = frozenset(
+    {"case", "e", "kind", "next_seq", "reason", "release", "stop_applied", "verdict", *_BODY}
+)
+_SUMMARY_KEYS: Final = frozenset({"e", "failed", "global_pass", "prefix_cases"})
+_ABORT_KEYS: Final = frozenset({"case", "e", "phase", "reason", "retained"})
+_TERMINAL_KEYS: Final = frozenset({"e", "outcome"})
+_REL: Final = (ReleaseOutcome.RELEASED.value, ReleaseOutcome.ALREADY_RELEASED.value)
+_EOF_REASONS: Final = ("EXIT_NONZERO", "EXIT_LATE", "WAIT_LATE", "NO_EXIT")
+_ABORT_PHASES: Final = ("LOAD", "INIT", "CAPTURE", "LEDGER", "CASE", "CLEANUP")
+_ABORT_REASONS: Final = (
+    "LOAD",
+    "INIT",
+    "CAPTURE",
+    "LEDGER",
+    "SESSION",
+    "OUTPUT",
+    "IDLE_WINDOW",
+    "EOF",
+    "TIMEOUT",
+    "SINK",
+    "JOIN",
+    "WATCHER",
+    "EXPECTATION",
+    "PHASE",
+    "CONTROL",
+    "SQL",
+    "DESTINATION",
+)
+_TERMINALS: Final = ("ABORTED", "RETAINED", "T6_UNKILLED")
+
+
+class HostRefusal(Exception):
+    """Closed category only; never input values, original exceptions or chains."""
+
+    def __init__(self, category: str) -> None:
+        super().__init__(category)
+        self.category = category
+
+
+class _Refused(Exception):
+    """Private step signal; always converted to a closed refusal outside handlers."""
+
+    def __init__(self, category: str) -> None:
+        super().__init__(category)
+        self.category = category
+
+
+# ---------------------------------------------------------------- closed enums
+
+
+class Delivery(enum.Enum):
+    NOT_SENT = "NOT_SENT"
+    SENT = "SENT"
+    UNKNOWN = "UNKNOWN"
+
+
+class ActStatus(enum.Enum):
+    OK = "OK"
+    FAILED = "FAILED"
+    UNKNOWN = "UNKNOWN"
+
+
+class ExitStatus(enum.Enum):
+    EXITED = "EXITED"
+    NO_EXIT = "NO_EXIT"
+    UNKNOWN = "UNKNOWN"
+
+
+class Purpose(enum.Enum):
+    INIT = "INIT"
+    GO = "GO"
+    ACK = "ACK"
+    STOP = "STOP"
+    NOSTOP = "NOSTOP"
+
+
+class Verdict(enum.Enum):
+    PASS = "PASS"
+    FAIL = "FAIL"
+    NOT_RUN = "NOT_RUN"
+
+
+class Outcome(enum.Enum):
+    COMPLETE_CANDIDATE = "COMPLETE_CANDIDATE"
+    T6_FAILED = "T6_FAILED"
+    ABORTED = "ABORTED"
+    RETAINED = "RETAINED"
+    GUARD_FAILED = "GUARD_FAILED"
+    SETUP_FAILED = "SETUP_FAILED"
+    LOAD_FAILED = "LOAD_FAILED"
+    LINK_FAILED = "LINK_FAILED"
+    CONTROL = "CONTROL"
+    BROKEN = "BROKEN"
+    ENDED_UNKNOWN = "ENDED_UNKNOWN"
+
+
+class HostPhase(enum.Enum):
+    AWAIT_GUARD = "AWAIT_GUARD"
+    AWAIT_INIT_OK = "AWAIT_INIT_OK"
+    RUNNING = "RUNNING"
+    DRAINING = "DRAINING"
+    ENDING = "ENDING"
+    DONE = "DONE"
+    REFUSED = "REFUSED"
+
+
+class ActKind(enum.Enum):
+    TERMINATE_ONE_BACKEND = "TERMINATE_ONE_BACKEND"
+    PAUSE_PG = "PAUSE_PG"
+    RESTORE_PG = "RESTORE_PG"
+    OBSERVE_HEAVY = "OBSERVE_HEAVY"
+    ZERO_BACKENDS = "ZERO_BACKENDS"
+    KILL_GATEWAY = "KILL_GATEWAY"
+
+
+_SETUP_EXITS: Final = {
+    64: Outcome.SETUP_FAILED,
+    65: Outcome.LOAD_FAILED,
+    66: Outcome.LINK_FAILED,
+    67: Outcome.GUARD_FAILED,
+    70: Outcome.CONTROL,
+}
+
+
+# ---------------------------------------------------------------- carriers (validated by feed)
+
+
+@dataclass(frozen=True, slots=True, repr=False)
+class Line:
+    raw: bytes
+    at: float
+
+    def __repr__(self) -> str:
+        return f"Line(raw=<redacted>, at={self.at!r})"
+
+
+@dataclass(frozen=True, slots=True)
+class Delivered:
+    token: int
+    delivery: Delivery
+    pre: float
+    post: float
+
+
+@dataclass(frozen=True, slots=True)
+class TerminateFacts:
+    found: int
+    terminated: bool
+
+
+@dataclass(frozen=True, slots=True)
+class PauseFacts:
+    paused: bool
+
+
+@dataclass(frozen=True, slots=True)
+class RestoreFacts:
+    running: bool
+    paused: bool
+    ready: bool
+
+
+@dataclass(frozen=True, slots=True)
+class ObserveFacts:
+    found: bool
+    observations: int
+
+
+@dataclass(frozen=True, slots=True)
+class ZeroFacts:
+    backends: int
+
+
+@dataclass(frozen=True, slots=True)
+class KillFacts:
+    stop_confirmed: bool
+    oom_killed: bool
+
+
+ActFacts = TerminateFacts | PauseFacts | RestoreFacts | ObserveFacts | ZeroFacts | KillFacts
+_FACT_TYPES: Final = {
+    ActKind.TERMINATE_ONE_BACKEND: TerminateFacts,
+    ActKind.PAUSE_PG: PauseFacts,
+    ActKind.RESTORE_PG: RestoreFacts,
+    ActKind.OBSERVE_HEAVY: ObserveFacts,
+    ActKind.ZERO_BACKENDS: ZeroFacts,
+    ActKind.KILL_GATEWAY: KillFacts,
+}
+
+
+@dataclass(frozen=True, slots=True)
+class ActDone:
+    token: int
+    kind: ActKind
+    status: ActStatus
+    facts: ActFacts | None
+    at: float
+
+
+@dataclass(frozen=True, slots=True)
+class Exited:
+    at: float
+    status: ExitStatus
+    code: int | None
+    eof: bool
+    reaped: bool
+
+
+# ---------------------------------------------------------------- outputs and views
+
+
+@dataclass(frozen=True, slots=True, repr=False)
+class Send:
+    token: int
+    purpose: Purpose
+    payload: bytes
+    issued_at: float
+    deadline: float
+
+    def __repr__(self) -> str:
+        return (
+            f"Send(token={self.token!r}, purpose={self.purpose.name}, payload=<redacted>, "
+            f"issued_at={self.issued_at!r}, deadline={self.deadline!r})"
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class Act:
+    token: int
+    kind: ActKind
+    case: int
+    issued_at: float
+    deadline: float
+
+
+@dataclass(frozen=True, slots=True)
+class Wait:
+    """No output: wait for the next serialized observation."""
+
+
+@dataclass(frozen=True, slots=True)
+class Done:
+    """Modeled protocol candidate only; never a release or physical cleanup permission."""
+
+    outcome: Outcome
+    verdicts: tuple[Verdict, ...]
+    controller_retained: bool
+    orphan: Send | Act | None
+
+
+@dataclass(frozen=True, slots=True)
+class HostStatus:
+    phase: HostPhase
+    lines: int
+    controls_sent: int
+    last_at: float | None
+    pending: Send | Act | None
+    orphan: Send | Act | None
+    orphan_receipt: Delivered | ActDone | None
+    refusal: str | None
+    verdicts: tuple[Verdict, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class HostPolicy:
+    """Explicit carrier; its domains are validated by the HostReactor constructor."""
+
+    init_s: float
+    go_s: float
+    ack_s: float
+    fatal_ack_s: float
+    act_s: float
+    t4_window_s: float
+    t6_epsilon: float
+    t6_margin_s: float
+    t6_kill_min_s: float
+
+
+# ---------------------------------------------------------------- closed scalars
+
+
+def _int_or_none(value: object, low: int, high: int) -> int | None:
+    if not isinstance(value, int) or type(value) is not int or not low <= value <= high:
+        return None
+    return value
+
+
+def _same_int(value: object, expected: object) -> bool:
+    return type(value) is int and value == expected
+
+
+def _text(value: object, allowed: tuple[object, ...]) -> bool:
+    return type(value) is str and value in allowed
+
+
+def _nulls(event: dict[str, object], names: tuple[str, ...]) -> bool:
+    return all(event[name] is None for name in names)
+
+
+def _finite_or_none(value: object) -> float | None:
+    if not isinstance(value, (int, float)) or type(value) not in (int, float):
+        return None
+    try:
+        finite = math.isfinite(value)  # an exact int may not fit in a float
+    except OverflowError:
+        return None
+    return value if finite else None
+
+
+def _time_or_none(value: object) -> float | None:
+    moment = _finite_or_none(value)
+    return moment if moment is not None and moment >= 0 else None
+
+
+def _decoded(raw: object) -> dict[str, object] | str:
+    """Framed, canonical JSON object or the closed LINE/EVENT category."""
+    if not isinstance(raw, bytes) or type(raw) is not bytes:
+        return _LINE
+    framed = (
+        len(raw) <= _LINE_LIMIT
+        and raw.endswith(b"\n")
+        and raw.count(b"\n") == 1
+        and b"\r" not in raw
+        and raw.isascii()
+    )
+    if not framed:
+        return _LINE
+    text = raw[:-1].decode("ascii")
+    try:
+        value = json.loads(text)
+        canonical = json.dumps(
+            value, sort_keys=True, separators=(",", ":"), ensure_ascii=True, allow_nan=False
+        )
+    except (ValueError, RecursionError):  # NaN/Infinity and invalid JSON are EVENT
+        return _EVENT
+    # Duplicate keys, spacing and key order all differ from the canonical re-dump.
+    if not isinstance(value, dict) or canonical != text:
+        return _EVENT
+    return value
+
+
+def _failed_or_none(value: object) -> list[int] | None:
+    if not isinstance(value, list) or type(value) is not list:
+        return None
+    cases = [_int_or_none(item, 1, _T5) for item in value]
+    numbers = [case for case in cases if case is not None]
+    if len(numbers) != len(value) or any(a >= b for a, b in zip(numbers, numbers[1:])):
+        return None
+    return numbers
+
+
+def _facts_ok(kind: ActKind, status: ActStatus, facts: object) -> bool:
+    """Facts closed per kind; OK requires coherent facts, FAILED/UNKNOWN requires None."""
+    if status is not ActStatus.OK:
+        return facts is None
+    if type(facts) is not _FACT_TYPES[kind]:
+        return False
+    if isinstance(facts, TerminateFacts):
+        return _same_int(facts.found, 1) and facts.terminated is True
+    if isinstance(facts, PauseFacts):
+        return facts.paused is True
+    if isinstance(facts, RestoreFacts):
+        return facts.running is True and facts.paused is False and facts.ready is True
+    if isinstance(facts, ObserveFacts):
+        found_ok = type(facts.found) is bool
+        return found_ok and _int_or_none(facts.observations, 1, 20) is not None
+    if isinstance(facts, ZeroFacts):
+        return _same_int(facts.backends, 0)
+    if isinstance(facts, KillFacts):
+        return facts.stop_confirmed is True and facts.oom_killed is False
+    return False
+
+
+def _policy_ok(policy: object) -> bool:
+    if not isinstance(policy, HostPolicy) or type(policy) is not HostPolicy:
+        return False
+    values = [
+        policy.init_s,
+        policy.go_s,
+        policy.ack_s,
+        policy.fatal_ack_s,
+        policy.act_s,
+        policy.t4_window_s,
+        policy.t6_epsilon,
+        policy.t6_margin_s,
+        policy.t6_kill_min_s,
+    ]
+    if any(_finite_or_none(value) is None for value in values):
+        return False
+    p = policy
+    return (
+        0 < p.init_s < 10
+        and 0 < p.go_s < 19
+        and 0 < p.ack_s < 20
+        and 0 < p.fatal_ack_s < 90
+        and 0 < p.act_s < min(p.go_s, p.ack_s, p.fatal_ack_s)
+        and 0 < p.t4_window_s <= 10
+        and 0 <= p.t6_epsilon < 0.01
+        and p.t6_margin_s >= 0
+        and p.t6_kill_min_s > 0
+    )
+
+
+def _trusted_core(core: object) -> bool:
+    """Shape only; ModuleType does not authenticate origin (the caller pins it)."""
+    if not isinstance(core, types.ModuleType) or type(core) is not types.ModuleType:
+        return False
+    if not all(callable(getattr(core, name, None)) for name in _CORE_CALLABLES):
+        return False
+    return all(
+        _same_int(getattr(core, name, None), value) for name, value in _CORE_CONSTANTS.items()
+    )
+
+
+def _expectations(core: types.ModuleType, packet: object) -> tuple[tuple[object, ...], ...] | None:
+    """Bounded packet, ONE core parse; keeps only kind/rows/bytes/reason per job."""
+    if not isinstance(packet, bytes) or type(packet) is not bytes:
+        return None
+    if not _INIT_HEADER < len(packet) <= _INIT_HEADER + _MAX_INIT_BODY:
+        return None
+    try:
+        jobs = core.decode_init(packet).expected  # the LabInit itself is never retained
+        expected = tuple((job.kind, job.rows, job.bytes, job.reason) for job in jobs)
+    except Exception:  # converted to one closed category by the caller
+        return None
+    return expected if len(expected) == _JOBS else None
+
+
+def _frame_or_none(core: object, kind: int, case: int, seq: int) -> bytes | None:
+    """Pack, then confirm the round trip through the public decoder of THIS core."""
+    if not isinstance(core, types.ModuleType) or type(core) is not types.ModuleType:
+        return None
+    decode = getattr(core, "decode_control", None)
+    if not callable(decode):
+        return None
+    frame = _CONTROL.pack(_CONTROL_MAGIC, _CONTROL_VERSION, kind, case, seq, 0)
+    try:
+        control = decode(frame)
+        same = (control.kind, control.case, control.seq) == (kind, case, seq)
+    except Exception:  # converted to one closed category by the caller
+        return None
+    return frame if same is True else None
+
+
+def pack_control(core: object, *, kind: object, case: object, seq: object) -> bytes:
+    """16-byte control frame, checked by ``core.decode_control``; no ControlMachine."""
+    number = _int_or_none(kind, _GO, _ACK)
+    target = _int_or_none(case, 1, _CASES)
+    order = _int_or_none(seq, 1, _MAX_FRAMES)
+    if number is None or target is None or order is None:
+        raise HostRefusal(_SEQUENCE)
+    frame = _frame_or_none(core, number, target, order)
+    if frame is None:
+        raise HostRefusal(_CORE)
+    return frame
+
+
+# ---------------------------------------------------------------- reactor
+
+
+class HostReactor:
+    """Pure host side of the W1 protocol: one pending output, sticky refusals.
+
+    The mirror is one ``core.ControlMachine()``; it advances only on the line events
+    and on a complete, timely SENT. ``Done`` is final and never mutated.
+    """
+
+    __slots__ = (
+        "_abort",
+        "_armed25",
+        "_case",
+        "_core",
+        "_deadline",
+        "_exit_seen",
+        "_expected",
+        "_go_pre",
+        "_kill_ok",
+        "_last_at",
+        "_lines",
+        "_mirror",
+        "_orphan",
+        "_orphan_receipt",
+        "_packet",
+        "_pending",
+        "_phase",
+        "_policy",
+        "_refusal",
+        "_sent",
+        "_seq",
+        "_summary_due",
+        "_t4_kind",
+        "_t6_line",
+        "_terminal",
+        "_token",
+        "_verdicts",
+    )
+
+    def __init__(self, core: object, init_packet: object, policy: object) -> None:
+        if not isinstance(core, types.ModuleType) or not _trusted_core(core):
+            raise HostRefusal(_CORE)
+        if not isinstance(policy, HostPolicy) or not _policy_ok(policy):
+            raise HostRefusal(_POLICY)
+        expected = _expectations(core, init_packet)
+        if expected is None or not isinstance(init_packet, bytes):
+            raise HostRefusal(_INIT)
+        try:
+            mirror = core.ControlMachine()
+        except Exception:  # converted to one closed category below
+            mirror = None
+        if mirror is None:
+            raise HostRefusal(_CORE)
+        self._core = core
+        self._mirror = mirror
+        self._packet = init_packet
+        self._expected = expected
+        self._policy = policy
+        self._phase = HostPhase.AWAIT_GUARD
+        self._lines = 0
+        self._sent = 0
+        self._last_at: float | None = None
+        self._pending: Send | Act | None = None
+        self._orphan: Send | Act | None = None
+        self._orphan_receipt: Delivered | ActDone | None = None
+        self._refusal: str | None = None
+        self._verdicts = [Verdict.NOT_RUN] * _CASES
+        self._token = 0
+        self._case = 0
+        self._seq = 0
+        self._deadline = 0.0
+        self._summary_due = False
+        self._t4_kind = 0
+        self._go_pre: float | None = None
+        self._armed25 = False
+        self._kill_ok = False
+        self._t6_line = False
+        self._exit_seen = False
+        self._abort: bool | None = None
+        self._terminal: str | None = None
+
+    def __repr__(self) -> str:
+        return f"HostReactor(phase={self._phase.name}, lines={self._lines}, <redacted>)"
+
+    def status(self) -> HostStatus:
+        return HostStatus(
+            phase=self._phase,
+            lines=self._lines,
+            controls_sent=self._sent,
+            last_at=self._last_at,
+            pending=self._pending,
+            orphan=self._orphan,
+            orphan_receipt=self._orphan_receipt,
+            refusal=self._refusal,
+            verdicts=tuple(self._verdicts),
+        )
+
+    def feed(self, item: object) -> Send | Act | Wait | Done:
+        if self._refusal is not None:
+            raise HostRefusal(self._refusal)
+        try:
+            return self._step(item)
+        except _Refused as refused:
+            category = refused.category
+        self._refuse(category)
+
+    # ------------------------------------------------------------ dispatch
+
+    def _refuse(self, category: str) -> NoReturn:
+        self._phase = HostPhase.REFUSED
+        self._refusal = category
+        raise HostRefusal(category)
+
+    def _step(self, item: object) -> Send | Act | Wait | Done:
+        if self._phase is HostPhase.DONE:
+            raise _Refused(_ORDER)
+        if isinstance(item, Line) and type(item) is Line:
+            return self._line(item)
+        if isinstance(item, Delivered) and type(item) is Delivered:
+            return self._delivered(item)
+        if isinstance(item, ActDone) and type(item) is ActDone:
+            return self._act_done(item)
+        if isinstance(item, Exited) and type(item) is Exited:
+            return self._exited(item)
+        raise _Refused(_INPUT)
+
+    def _checked_at(self, value: object) -> float:
+        moment = _time_or_none(value)
+        if moment is None or (self._last_at is not None and moment < self._last_at):
+            raise _Refused(_TIME)
+        return moment
+
+    def _receipt_target(self) -> tuple[Send | Act | None, bool]:
+        if self._pending is not None:
+            return self._pending, False
+        ending = self._phase is HostPhase.ENDING and self._orphan_receipt is None
+        return (self._orphan, True) if ending and self._orphan is not None else (None, False)
+
+    def _frame(self, kind: int, case: int, seq: int) -> bytes:
+        frame = _frame_or_none(self._core, kind, case, seq)
+        if frame is None:
+            raise _Refused(_CORE)
+        return frame
+
+    def _send(self, purpose: Purpose, payload: bytes, issued_at: float, deadline: float) -> Send:
+        self._token += 1
+        send = Send(self._token, purpose, payload, issued_at, deadline)
+        self._pending = send
+        return send
+
+    def _act(self, kind: ActKind, case: int, issued_at: float, deadline: float) -> Act:
+        self._token += 1
+        act = Act(self._token, kind, case, issued_at, deadline)
+        self._pending = act
+        return act
+
+    def _finish(self, outcome: Outcome, retained: bool) -> Done:
+        done = Done(outcome, tuple(self._verdicts), retained, self._orphan)
+        self._phase = HostPhase.DONE
+        return done
+
+    # ------------------------------------------------------------ mirror
+
+    def _emit(self, name: str, case: int, seq: int) -> None:
+        try:
+            expected = self._mirror.emit(name, case)
+        except Exception:  # LabRefusal of the mirror is SEQUENCE
+            expected = None
+        if not _same_int(expected, seq):
+            raise _Refused(_SEQUENCE)
+
+    def _mirror_ok(self, method: str, *args: object) -> bool:
+        try:
+            getattr(self._mirror, method)(*args)
+        except Exception:  # LabRefusal of the mirror is SEQUENCE
+            return False
+        return True
+
+    # ------------------------------------------------------------ lines
+
+    def _line(self, item: Line) -> Send | Act | Wait | Done:
+        at = self._checked_at(item.at)
+        if self._lines >= _MAX_LINES:
+            raise _Refused(_LINE)
+        event = _decoded(item.raw)
+        name = event.get("e") if isinstance(event, dict) else None
+        ending = name == "ABORT" or name == "TERMINAL"
+        if self._pending is not None and not ending:
+            raise _Refused(_ORDER)
+        if isinstance(event, str):
+            raise _Refused(event)
+        step = self._dispatch(name, event, at)
+        self._lines += 1
+        self._last_at = at
+        return step
+
+    def _dispatch(
+        self, name: object, event: dict[str, object], at: float
+    ) -> Send | Act | Wait | Done:
+        if name == "GUARD":
+            return self._guard(event, at)
+        if name == "INIT_OK":
+            return self._init_ok(event)
+        if name == "READY":
+            return self._ready(event, at)
+        if name == "ARMED":
+            return self._armed(event, at)
+        if name == "RESULT":
+            return self._result(event, at)
+        if name == "SUMMARY":
+            return self._summary(event)
+        if name == "ABORT":
+            return self._abort_line(event)
+        if name == "TERMINAL":
+            return self._terminal_line(event)
+        raise _Refused(_EVENT)
+
+    def _running(self) -> None:
+        if self._phase is not HostPhase.RUNNING:
+            raise _Refused(_ORDER)
+
+    def _guard(self, event: dict[str, object], at: float) -> Send:
+        if self._phase is not HostPhase.AWAIT_GUARD:
+            raise _Refused(_ORDER)
+        exact = all(_same_int(event.get(key), value) for key, value in _GUARD_VALUES.items())
+        if frozenset(event) != _GUARD_KEYS or not exact:
+            raise _Refused(_EVENT)
+        return self._send(Purpose.INIT, self._packet, at, at + self._policy.init_s)
+
+    def _init_ok(self, event: dict[str, object]) -> Wait:
+        if self._phase is not HostPhase.AWAIT_INIT_OK:
+            raise _Refused(_ORDER)
+        if frozenset(event) != _INIT_OK_KEYS:
+            raise _Refused(_EVENT)
+        self._phase = HostPhase.RUNNING
+        return Wait()
+
+    def _ready(self, event: dict[str, object], at: float) -> Send | Act:
+        self._running()
+        if frozenset(event) != _READY_KEYS:
+            raise _Refused(_EVENT)
+        case = _int_or_none(event["case"], 1, _CASES)
+        seq = _int_or_none(event["next_seq"], 1, _MAX_SEQ)
+        if case is None or seq is None:
+            raise _Refused(_EVENT)
+        self._emit("READY", case, seq)
+        policy = self._policy
+        if case in (_T1, _T2):
+            kind = ActKind.TERMINATE_ONE_BACKEND if case == _T1 else ActKind.PAUSE_PG
+            self._case, self._seq, self._deadline = case, seq, at + policy.go_s
+            return self._act(kind, case, at, at + policy.act_s)
+        frame = self._frame(_GO, case, seq)
+        self._case, self._seq = case, seq
+        return self._send(Purpose.GO, frame, at, at + policy.go_s)
+
+    def _armed(self, event: dict[str, object], at: float) -> Act | Done:
+        self._running()
+        if frozenset(event) != _ARMED_KEYS:
+            raise _Refused(_EVENT)
+        case = _int_or_none(event["case"], _T4, _T6)
+        seq = _int_or_none(event["next_seq"], 1, _MAX_SEQ)
+        live = event["live_window_ms"]
+        window = _int_or_none(live, 1000, 30000)
+        valid = (case == _T4 and live is None) or (case == _T6 and window is not None)
+        if case is None or seq is None or not valid:
+            raise _Refused(_EVENT)
+        self._emit("ARMED", case, seq)
+        policy = self._policy
+        if case == _T4:
+            if not self._mirror_ok("handoff"):
+                raise _Refused(_SEQUENCE)
+            self._seq = seq
+            return self._act(ActKind.OBSERVE_HEAVY, _T4, at, at + policy.t4_window_s)
+        if self._go_pre is None or window is None:
+            raise _Refused(_SEQUENCE)
+        # Fence from the host instant before GO25 was written; captured once (§7).
+        fence = self._go_pre + (window / 1000) * (1 - policy.t6_epsilon) - policy.t6_margin_s
+        self._armed25 = True
+        if fence - at < policy.t6_kill_min_s:
+            self._verdicts[_T6 - 1] = Verdict.FAIL
+            return self._finish(Outcome.T6_FAILED, False)
+        return self._act(ActKind.KILL_GATEWAY, _T6, at, fence)
+
+    def _result(self, event: dict[str, object], at: float) -> Send | Act:
+        self._running()
+        if frozenset(event) != _RESULT_KEYS:
+            raise _Refused(_EVENT)
+        case = _int_or_none(event["case"], 1, _T5)
+        seq = _int_or_none(event["next_seq"], 1, _MAX_SEQ)
+        verdict = None if case is None else self._result_verdict(case, event)
+        if case is None or seq is None or verdict is None:
+            raise _Refused(_EVENT)
+        self._emit("RESULT", case, seq)
+        policy = self._policy
+        budget = policy.fatal_ack_s if _T1 <= case <= _T4 else policy.ack_s
+        if case in (_T2, _T5):
+            kind = ActKind.RESTORE_PG if case == _T2 else ActKind.ZERO_BACKENDS
+            self._verdicts[case - 1] = verdict
+            self._seq, self._deadline = seq, at + budget
+            return self._act(kind, case, at, at + policy.act_s)
+        frame = self._frame(_ACK, case, seq)
+        self._verdicts[case - 1] = verdict
+        self._seq = seq
+        return self._send(Purpose.ACK, frame, at, at + budget)
+
+    def _result_verdict(self, case: int, event: dict[str, object]) -> Verdict | None:
+        """Exact per-case RESULT domain (HOST-DESIGN §6.1); None is an EVENT refusal."""
+        kind, reason, release = event["kind"], event["reason"], event["release"]
+        wanted = "PASS"
+        if case <= _JOBS:
+            job_kind, rows, size, expected_reason = self._expected[case - 1]
+            if job_kind == "RESULT":
+                ok = (
+                    kind == "RESULT"
+                    and _same_int(event["rows"], rows)
+                    and _same_int(event["bytes"], size)
+                    and event["truncated"] is (case == _TRUNCATED_JOB)
+                    and event["sink"] == "OK"
+                    and _nulls(event, ("reason", "release", "stop_applied"))
+                )
+            else:
+                ok = (
+                    kind == "ERROR"
+                    and _text(reason, (expected_reason,))
+                    and _nulls(event, (*_BODY, "release", "stop_applied"))
+                )
+        elif case == _T5:
+            ok = (
+                kind == "EOF"
+                and release == "RELEASED"
+                and (reason is None or _text(reason, _EOF_REASONS))
+                and _nulls(event, (*_BODY, "stop_applied"))
+            )
+            wanted = "PASS" if reason is None else "FAIL"
+        else:
+            reasons = ("CONNECTION", "INTERNAL") if case == _T1 else ("JOB",)
+            ok = (
+                kind == "FATAL"
+                and _text(reason, reasons)
+                and _text(release, _REL)
+                and _nulls(event, _BODY)
+            )
+            applied = event["stop_applied"]
+            if case == _T4:
+                # The watcher only applies STOP: NOSTOP with stop_applied true is incoherent.
+                coherent = not (applied is True and self._t4_kind == _NOSTOP)
+                ok = ok and type(applied) is bool and coherent
+                wanted = "PASS" if applied is True else "FAIL"
+            else:
+                ok = ok and applied is None
+        if not ok or event["verdict"] != wanted:
+            return None
+        return Verdict.PASS if wanted == "PASS" else Verdict.FAIL
+
+    def _summary(self, event: dict[str, object]) -> Wait:
+        if self._phase is not HostPhase.RUNNING or not self._summary_due:
+            raise _Refused(_ORDER)
+        if frozenset(event) != _SUMMARY_KEYS:
+            raise _Refused(_EVENT)
+        failed = _failed_or_none(event["failed"])
+        prefix = _int_or_none(event["prefix_cases"], _PREFIX_CASES, _PREFIX_CASES)
+        if failed is None or event["global_pass"] is not False or prefix is None:
+            raise _Refused(_EVENT)
+        try:
+            mirrored: tuple[int, ...] | None = tuple(self._mirror.summary().failed_cases)
+        except Exception:  # LabRefusal of the mirror is SEQUENCE
+            mirrored = None
+        if mirrored is None:
+            raise _Refused(_SEQUENCE)
+        own = {case for case in range(1, _T5 + 1) if self._verdicts[case - 1] is Verdict.FAIL}
+        if failed != sorted(own | set(mirrored)):
+            raise _Refused(_SUMMARY)
+        self._summary_due = False
+        return Wait()
+
+    def _abort_line(self, event: dict[str, object]) -> Wait:
+        if self._abort is not None or self._terminal is not None:
+            raise _Refused(_ORDER)
+        retained = event.get("retained")
+        valid = (
+            frozenset(event) == _ABORT_KEYS
+            and _int_or_none(event["case"], 0, _CASES) is not None
+            and _text(event["phase"], _ABORT_PHASES)
+            and _text(event["reason"], _ABORT_REASONS)
+            and type(retained) is bool
+        )
+        if not valid:
+            raise _Refused(_EVENT)
+        self._abort = retained is True
+        return self._ending()
+
+    def _terminal_line(self, event: dict[str, object]) -> Wait:
+        if self._terminal is not None:
+            raise _Refused(_ORDER)
+        outcome = event.get("outcome")
+        valid = frozenset(event) == _TERMINAL_KEYS and _text(outcome, _TERMINALS)
+        if outcome == "T6_UNKILLED" and not self._armed25:
+            valid = False
+        if self._abort is not None and outcome != ("RETAINED" if self._abort else "ABORTED"):
+            valid = False
+        if not valid or not isinstance(outcome, str):
+            raise _Refused(_EVENT)
+        self._terminal = outcome
+        return self._ending()
+
+    def _ending(self) -> Wait:
+        """ABORT/TERMINAL: pending becomes the orphan; any line after ARMED25 fails T6."""
+        if self._pending is not None:
+            self._orphan, self._pending = self._pending, None
+        if self._armed25:
+            self._t6_line = True
+            self._verdicts[_T6 - 1] = Verdict.FAIL
+        self._phase = HostPhase.ENDING
+        return Wait()
+
+    # ------------------------------------------------------------ receipts
+
+    def _delivered(self, item: Delivered) -> Wait:
+        target, orphaned = self._receipt_target()
+        pre = self._checked_at(item.pre)
+        post = _time_or_none(item.post)
+        if post is None or post < pre or (isinstance(target, Send) and pre < target.issued_at):
+            raise _Refused(_TIME)
+        bound = isinstance(target, Send) and _same_int(item.token, target.token)
+        if not isinstance(target, Send) or not bound or type(item.delivery) is not Delivery:
+            raise _Refused(_RECEIPT)
+        if orphaned:
+            self._orphan_receipt = item
+            self._last_at = post
+            return Wait()
+        if item.delivery is Delivery.SENT and post < target.deadline:
+            self._advance(target, pre)
+        else:
+            self._phase = HostPhase.DRAINING  # no retry, no rebase of seq or deadline
+        self._pending = None
+        self._last_at = post
+        return Wait()
+
+    def _advance(self, send: Send, pre: float) -> None:
+        purpose = send.purpose
+        if purpose is Purpose.INIT:
+            self._phase = HostPhase.AWAIT_INIT_OK
+            return
+        method = "accept" if purpose in (Purpose.GO, Purpose.ACK) else "join"
+        if not self._mirror_ok(method, send.payload):
+            raise _Refused(_SEQUENCE)
+        self._sent += 1
+        if purpose is Purpose.GO and self._case == _T6:
+            self._go_pre = pre
+        elif purpose is Purpose.ACK and self._case == _T5:
+            self._summary_due = True
+        elif purpose in (Purpose.STOP, Purpose.NOSTOP):
+            self._t4_kind = _STOP if purpose is Purpose.STOP else _NOSTOP
+
+    def _act_done(self, item: ActDone) -> Send | Wait | Done:
+        target, orphaned = self._receipt_target()
+        at = self._checked_at(item.at)
+        bound = (
+            isinstance(target, Act)
+            and _same_int(item.token, target.token)
+            and item.kind is target.kind
+            and type(item.status) is ActStatus
+        )
+        if not isinstance(target, Act) or not bound:
+            raise _Refused(_RECEIPT)
+        if not _facts_ok(target.kind, item.status, item.facts):
+            raise _Refused(_RECEIPT)
+        if orphaned:
+            self._orphan_receipt = item
+            self._last_at = at
+            return Wait()
+        ok = item.status is ActStatus.OK and at < target.deadline  # late is a failed effect
+        step = self._after_act(target, ok, item.facts, at)
+        self._last_at = at
+        return step
+
+    def _after_act(self, act: Act, ok: bool, facts: object, at: float) -> Send | Wait | Done:
+        kind = act.kind
+        if kind is ActKind.KILL_GATEWAY:
+            self._pending = None
+            if ok:
+                self._kill_ok = True
+            else:
+                self._verdicts[_T6 - 1] = Verdict.FAIL
+                self._phase = HostPhase.DRAINING
+            return Wait()
+        if kind is ActKind.ZERO_BACKENDS and act.case == _T6:
+            self._pending = None
+            self._verdicts[_T6 - 1] = Verdict.PASS if ok else Verdict.FAIL
+            return self._finish(Outcome.COMPLETE_CANDIDATE if ok else Outcome.T6_FAILED, False)
+        if not ok:
+            self._verdicts[act.case - 1] = Verdict.FAIL  # replaces an earlier RESULT PASS
+            self._pending = None
+            self._phase = HostPhase.DRAINING
+            return Wait()
+        if kind is ActKind.OBSERVE_HEAVY:
+            found = isinstance(facts, ObserveFacts) and facts.found is True
+            purpose, control = (Purpose.STOP, _STOP) if found else (Purpose.NOSTOP, _NOSTOP)
+            frame = self._frame(control, _T4, self._seq)
+            return self._send(purpose, frame, at, act.deadline)  # the original window
+        pre_go = kind in (ActKind.TERMINATE_ONE_BACKEND, ActKind.PAUSE_PG)
+        purpose, control = (Purpose.GO, _GO) if pre_go else (Purpose.ACK, _ACK)
+        frame = self._frame(control, act.case, self._seq)
+        return self._send(purpose, frame, at, self._deadline)  # the trigger deadline
+
+    # ------------------------------------------------------------ exit
+
+    def _exited(self, item: Exited) -> Act | Done:
+        at = self._checked_at(item.at)
+        if self._exit_seen:
+            raise _Refused(_ORDER)
+        status, code = item.status, item.code
+        exited = status is ExitStatus.EXITED
+        shaped = (
+            type(status) is ExitStatus
+            and type(item.eof) is bool
+            and type(item.reaped) is bool
+            and (_int_or_none(code, 0, 255) is not None if exited else code is None)
+        )
+        if not shaped:
+            raise _Refused(_EXIT)
+        decided = self._exit_outcome(status, code, item.eof is True and item.reaped is True)
+        self._last_at = at
+        if decided is None:
+            # T6 positive path only: exit after a timely kill OK asks for ZERO_BACKENDS.
+            self._exit_seen = True
+            return self._act(ActKind.ZERO_BACKENDS, _T6, at, at + self._policy.act_s)
+        if self._pending is not None:
+            self._orphan, self._pending = self._pending, None
+        if self._armed25:
+            self._verdicts[_T6 - 1] = Verdict.FAIL
+        return self._finish(*decided)
+
+    def _exit_outcome(
+        self, status: ExitStatus, code: object, clean: bool
+    ) -> tuple[Outcome, bool] | None:
+        """Exit map (HOST-DESIGN §8); raises EXIT for incoherence, before any update."""
+        exited = status is ExitStatus.EXITED
+        if self._armed25 and not self._t6_line:
+            if not exited:
+                return Outcome.ENDED_UNKNOWN, True
+            if self._pending is not None or not self._kill_ok or code == 69:
+                return Outcome.T6_FAILED, False
+            return None if clean else (Outcome.ENDED_UNKNOWN, True)
+        if status is ExitStatus.UNKNOWN:
+            return Outcome.ENDED_UNKNOWN, True
+        if status is ExitStatus.NO_EXIT:
+            return Outcome.RETAINED, True
+        retained = self._abort is True
+        if self._terminal == "ABORTED" and code == 68:
+            return Outcome.ABORTED, retained
+        if self._terminal == "T6_UNKILLED" and code == 69:
+            return Outcome.T6_FAILED, retained
+        if self._terminal is not None:
+            raise _Refused(_EXIT)
+        if self._lines == 0:
+            outcome = _SETUP_EXITS.get(code) if type(code) is int else None
+            if outcome is None:
+                raise _Refused(_EXIT)
+            return outcome, False
+        return (Outcome.CONTROL if code == 70 else Outcome.BROKEN), retained

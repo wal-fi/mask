@@ -1,0 +1,26 @@
+[
+  {
+    "command": [
+      "ruff",
+      "check",
+      "--select",
+      "E9,F63,F7,F82",
+      "docs/poc/oracle9_w1_host_reactor.py"
+    ],
+    "exit_code": 0,
+    "seconds": 0.281,
+    "output": "All checks passed!\n"
+  },
+  {
+    "command": [
+      "ruff",
+      "format",
+      "--check",
+      "docs/poc/oracle9_w1_host_reactor.py",
+      "tests/test_oracle9_w1_host_reactor.py"
+    ],
+    "exit_code": 1,
+    "seconds": 0.266,
+    "output": "unformatted: File would be reformatted\n   --> docs\\poc\\oracle9_w1_host_reactor.py:493:19\n    |\n492 |\n    - def _expectations(\n    -     core: types.ModuleType, packet: object\n    - ) -> tuple[tuple[object, ...], ...] | None:\n493 + def _expectations(core: types.ModuleType, packet: object) -> tuple[tuple[object, ...], ...] | None:\n494 |     \"\"\"Bounded packet, ONE core parse; keeps only kind/rows/bytes/reason per job.\"\"\"\n    |\n\n1 file would be reformatted, 1 file already formatted\n"
+  }
+]

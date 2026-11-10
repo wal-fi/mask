@@ -1,0 +1,68 @@
+[
+  {
+    "command": [
+      "ruff",
+      "check",
+      "src",
+      "tests"
+    ],
+    "exit_code": 0,
+    "seconds": 0.265,
+    "output": "All checks passed!\n"
+  },
+  {
+    "command": [
+      "ruff",
+      "check",
+      "--select",
+      "E9,F63,F7,F82",
+      "docs/poc/oracle9_w1_host_reactor.py"
+    ],
+    "exit_code": 0,
+    "seconds": 0.266,
+    "output": "All checks passed!\n"
+  },
+  {
+    "command": [
+      "ruff",
+      "format",
+      "--check",
+      "src",
+      "tests",
+      "deploy/oracle9_w1_controller.py",
+      "deploy/oracle9_w1_driver.py",
+      "deploy/oracle9_w1_main.py",
+      "docs/poc/oracle9_w1_expect.py",
+      "docs/poc/oracle9_w1_host_reactor.py"
+    ],
+    "exit_code": 0,
+    "seconds": 0.297,
+    "output": "370 files already formatted\n"
+  },
+  {
+    "command": [
+      "mypy",
+      "--strict",
+      "--python-version",
+      "3.11",
+      "src",
+      "tests"
+    ],
+    "exit_code": 0,
+    "seconds": 1.156,
+    "output": "Success: no issues found in 365 source files\r\n"
+  },
+  {
+    "command": [
+      "mypy",
+      "--strict",
+      "--python-version",
+      "3.14",
+      "src",
+      "tests"
+    ],
+    "exit_code": 0,
+    "seconds": 1.094,
+    "output": "Success: no issues found in 365 source files\r\n"
+  }
+]

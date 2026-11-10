@@ -1,0 +1,55 @@
+{
+  "protected8": [
+    {
+      "path": "deploy/oracle9_w1_driver.py",
+      "sha256": "b54a8a9457a908e839d1f5870280644839478bc471e5e06cd4268bcdcff8c51f",
+      "bytes": 51913,
+      "lines": 1412
+    },
+    {
+      "path": "deploy/oracle9_w1_main.py",
+      "sha256": "89c99c6587e7c51d86fc0abb460330780357121c28768883ed8ab9dc789ccdea",
+      "bytes": 46787,
+      "lines": 1446
+    },
+    {
+      "path": "tests/test_oracle9_w1_driver.py",
+      "sha256": "37848735f0a8687f227d1ef2c8449b92535a0255a911124ea9dc415d35b05850",
+      "bytes": 81023,
+      "lines": 2136
+    },
+    {
+      "path": "tests/test_oracle9_w1_driver_session.py",
+      "sha256": "e7c2a1c2c2606c59154719cfd1aece2127f443ef0e8a2a03d93f54c344e58b47",
+      "bytes": 45321,
+      "lines": 1279
+    },
+    {
+      "path": "tests/test_oracle9_w1_expect.py",
+      "sha256": "e24f80a58300a7835f5990f842ddb2e13415570a68141e929d2b69ea62844cca",
+      "bytes": 45520,
+      "lines": 1214
+    },
+    {
+      "path": "tests/test_oracle9_w1_main.py",
+      "sha256": "0e6e07f05d4388f52ff7469e9f4bf2713636e274f53d460a3decd65f7256e234",
+      "bytes": 102644,
+      "lines": 2842
+    },
+    {
+      "path": "tests/test_oracle9_w1_driver_t5.py",
+      "sha256": "2b509c870292a30612953257565d8a705d23da11acbf62fad8ba40c7fbfeff0e",
+      "bytes": 50963,
+      "lines": 1292
+    },
+    {
+      "path": "tests/test_oracle9_w1_main_t5.py",
+      "sha256": "ec2df9113c8c3c78eb22512144a6dd41b3e3c6e43b07dcbc3773ee76d2a3dc69",
+      "bytes": 36224,
+      "lines": 895
+    }
+  ],
+  "app124_intact": 124,
+  "new_module_absent": true,
+  "scope": "public source only; no runtime/config/state/binary read"
+}

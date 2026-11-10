@@ -1,0 +1,23 @@
+{
+  "exit_code": 1,
+  "seconds": 11.672,
+  "suites": [
+    {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "30",
+      "skipped": "0",
+      "tests": "366",
+      "time": "10.179",
+      "timestamp": "2026-11-10T16:12:49.109107-03:00",
+      "hostname": "SMTZDIBDN1954"
+    }
+  ],
+  "failure_types": {
+    "OverflowError": 14,
+    "assert 'b\\'MGI1\\\\x0...ersion\"": 1,
+    "AssertionError": 15
+  },
+  "statics_all_passed": true,
+  "frozen335_prefix_preserved": true
+}

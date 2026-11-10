@@ -1,0 +1,43 @@
+{
+  "command": [
+    "pytest",
+    "-q",
+    "tests/test_oracle9_w1_host_reactor.py"
+  ],
+  "exit_code": 1,
+  "seconds": 46.422,
+  "suites": [
+    {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "225",
+      "skipped": "0",
+      "tests": "228",
+      "time": "44.462",
+      "timestamp": "2026-11-10T15:40:41.725608-03:00",
+      "hostname": "SMTZDIBDN1954"
+    }
+  ],
+  "failed_examples": [
+    {
+      "name": "test_h1_pack_control_round_trips_through_the_public_decoder[frame0]",
+      "message": "FileNotFoundError: [Errno 2] No such file or directory: 'C:\\\\Users\\\\w.filho\\\\Desktop\\\\codes\\\\mask\\\\docs\\\\poc\\\\oracle9_w1_host_reactor.py'"
+    },
+    {
+      "name": "test_h1_pack_control_round_trips_through_the_public_decoder[frame1]",
+      "message": "FileNotFoundError: [Errno 2] No such file or directory: 'C:\\\\Users\\\\w.filho\\\\Desktop\\\\codes\\\\mask\\\\docs\\\\poc\\\\oracle9_w1_host_reactor.py'"
+    },
+    {
+      "name": "test_h1_pack_control_round_trips_through_the_public_decoder[frame2]",
+      "message": "FileNotFoundError: [Errno 2] No such file or directory: 'C:\\\\Users\\\\w.filho\\\\Desktop\\\\codes\\\\mask\\\\docs\\\\poc\\\\oracle9_w1_host_reactor.py'"
+    },
+    {
+      "name": "test_h1_pack_control_round_trips_through_the_public_decoder[frame3]",
+      "message": "FileNotFoundError: [Errno 2] No such file or directory: 'C:\\\\Users\\\\w.filho\\\\Desktop\\\\codes\\\\mask\\\\docs\\\\poc\\\\oracle9_w1_host_reactor.py'"
+    }
+  ],
+  "error_examples": [],
+  "missing_module_failures": 225,
+  "source_absent": true,
+  "runtime": "3.11.3 (tags/v3.11.3:f3909b8, Apr  4 2023, 23:49:59) [MSC v.1934 64 bit (AMD64)]"
+}

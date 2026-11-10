@@ -1,0 +1,38 @@
+{
+  "command": [
+    "-q",
+    "--tb=short",
+    "tests/test_oracle9_w1_controller.py",
+    "tests/test_oracle9_w1_driver.py",
+    "tests/test_oracle9_w1_driver_session.py",
+    "tests/test_oracle9_w1_expect.py",
+    "tests/test_oracle9_w1_main.py",
+    "tests/test_oracle9_w1_driver_t5.py",
+    "tests/test_oracle9_w1_main_t5.py",
+    "tests/test_oracle9_w1_host_reactor.py",
+    "--junitxml=docs/poc/evidence/oracle9-w1-host-reactor-review-20261110/final-related1215.xml"
+  ],
+  "exit_code": 0,
+  "seconds": 21.578,
+  "suites": [
+    {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "1215",
+      "time": "19.516",
+      "timestamp": "2026-11-10T16:16:04.332557-03:00",
+      "hostname": "SMTZDIBDN1954"
+    }
+  ],
+  "own": {
+    "tests": 366,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "statics_all_passed": true,
+  "runtime": "3.11.3 (tags/v3.11.3:f3909b8, Apr  4 2023, 23:49:59) [MSC v.1934 64 bit (AMD64)]",
+  "stack_mib": 64
+}
