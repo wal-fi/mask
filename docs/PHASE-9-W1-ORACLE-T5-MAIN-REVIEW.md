@@ -152,3 +152,12 @@ repositório). O commit não ocorreu. Representação dos novos XMLs normalizada
 para LF, árvore parseada idêntica, bytes anteriores comprimidos preservados
 em junit-eol-normalization.json. Snapshots/código/testes intactos; gate
 funcional não repetido por mudança somente de representação da evidência.
+
+## Publicação observada
+
+Push normal5a3dec7..861969d e fetch posterior confirmaram HEAD/origin
+861969df940f7261aed1f60777bc92c34af5cf91,0/0 e rastreados limpos. Autoria/
+trailers conferidos; oito arquivos finais por SHA/tamanho intactos. Sem
+produto/SDK/frontend privado incluído; dados pessoais não rastreados intactos.
+Fsck conectividade retornou0, com objetos dangling históricos sem erro;
+nenhum objeto foi apagado. Publicação não é deploy ou prova nativa.

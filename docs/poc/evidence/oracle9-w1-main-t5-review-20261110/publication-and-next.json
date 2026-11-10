@@ -1,0 +1,27 @@
+{
+  "code_commit": "861969df940f7261aed1f60777bc92c34af5cf91",
+  "code_parent": "5a3dec7d441005b461b98d62977ccc101f9486e7",
+  "push": "normal fast-forward",
+  "fetch_after_push": true,
+  "head_equals_origin": true,
+  "ahead": 0,
+  "behind": 0,
+  "tracked_tree_clean": true,
+  "private_untracked_preserved": [
+    ".claude/",
+    ".codex/",
+    "bash.exe.stackdump",
+    "frontend/bash.exe.stackdump",
+    "systeminfo"
+  ],
+  "authorship": "w.filho <w.filho@live.com>",
+  "coauthors": [
+    "Claude Opus 5.5",
+    "Codex"
+  ],
+  "fsck_connectivity_exit": 0,
+  "fsck_dangling_objects": "Historical dangling objects reported; not errors; no pruning or deletion performed.",
+  "no_new_quota_or_scheduler_job": true,
+  "next_safe_lot": "Read-only reconciliation of public native-readmission plan with driver b54a8a94 and main89c99c65, then scoped design if needed; no effectful command or native execution.",
+  "native_product_gates": "Still OPEN; no production availability."
+}

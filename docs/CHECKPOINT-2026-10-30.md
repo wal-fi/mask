@@ -4,6 +4,25 @@ Criado por solicitação do usuário em2026-10-30. Inclui o trabalho acumulado
 após4a5e556, preservando resultados históricos e tentativas reprovadas. É
 checkpoint de desenvolvimento incompleto da Fase9, não release de produção.
 
+## W1 Oracle: T5 publicado e sincronizado — 2026-11-10
+
+Commit de código861969df940f7261aed1f60777bc92c34af5cf91 publicado por push
+normal5a3dec7..861969d; fetch confirmou HEAD/origin iguais,0/0, rastreados
+limpos. Autor/committer w.filho <w.filho@live.com>, trailers ClaudeOpus5.5
++Codex.849relacionados verdes e statics do bloco abaixo preservados. App124
+e todos os hashes finais conferidos. Arquivos pessoais não rastreados intactos.
+
+Este registro será commit documental posterior: conferir HEAD real na
+retomada, sem usar861969d como guarda de HEAD após docs. Zero próxima chamada
+de programador iniciada; nenhuma quota/reset/job novo. Próximo lote seguro:
+SOMENTE reconciliar, em leitura pública, plano de readmissão nativa com
+pins atuais driverb54a8a94/main89c99c65 e pré-condições de T5. Eventual novo
+desenho deve ser do mesmo Claude2/sessão51ea0d85/claude-opus-5-5/medium,
+após conferir Git/zero escritor; ativo só monitorar/recuperar terminal.
+Nenhum teste/código adicional ou comando/efeito operacional por esta nota.
+T5 físico/B1/B2/D090gate2/C1/ingressos/produção abertos; Gateway indisponível.
+Ler T5-MAIN-REVIEW e publication-and-next.json. Histórico abaixo.
+
 ## W1 Oracle: T5 integrado com fakes,849 verdes — 2026-11-10
 
 Claude2 único programador/sessão51ea0d85/claude-opus-5-5/medium; CLI82502/
