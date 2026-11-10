@@ -1,0 +1,9 @@
+{
+  "status": "DEADLINE_EXCEEDED",
+  "cli_exit_code": 3,
+  "elapsed_seconds": 904.907,
+  "raw_bytes": 889,
+  "raw_sha256": "0464ef3e0849f1588c0992c37ea6f36fcab0237c8da962d37e2636bae90cf7fd",
+  "model": "gemini-4-argon-high",
+  "effort": "high"
+}

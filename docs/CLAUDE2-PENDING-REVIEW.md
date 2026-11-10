@@ -1,3 +1,79 @@
+## Host: desenho final revisto para testes, sem fonte — 2026-11-10
+
+C2 único autor do desenho/sessão51ea0d85/claude-opus-5-5/medium; CLI32936/
+6393/29500 recuperadas0 antes da próxima chamada. Root leu389linhas V1,
+592daV2 e diff completo R6. Finalaed85ad4/30976bytes/655linhas aceito sob
+delegação SOMENTE para preparar testes H1–H17. Namespacecore confiável,
+INIT como fonte única, DTO/tempo/recibo fechados, orphan e T6 sem sucesso
+retroativo. Done é candidato de protocolo, nunca release/limpeza física.
+
+Próximo só tests/test_oracle9_w1_host_reactor.py; módulo docs/poc/
+oracle9_w1_host_reactor.py segue ausente até root ler oráculos e congelar
+RED. Conferir HEAD real após docs e zero escritor; ativo só monitorar,
+recuperar terminal antes de nova chamada. Root revê/valida, não programa.
+Oito fontes/testes eapp124 por SHA intactos; SDK/estado16/attempt intocados.
+849gates são históricos; nenhuma suíte nova por mudança só documental.
+
+Autorização de QUALQUER pacote público necessário ao Gemini é válida para
+próximos lotes, sem pedir aval por pacote. Exclui segredo/config privada/
+ambiente/runtime/binário/histórico. AGY ArgonHigh/high76884 terminou3 por
+DEADLINE_EXCEEDED, sem desenho recuperado; UI app approval expirou, sem
+outra via. Não atribuir autoria do desenho ao Gemini. Atualização da msg
+agendada foi rejeitada por cota do revisor, não executada/contornada; msg
+antiga16h55UTC entregue0, sem próximo disparo observado. C2 retomou normal
+após o horário informado. Sem novo job/reset de quota ou segundo escritor.
+Ler HOST-DESIGN-REVIEW e final-design-integrity.json. Todos gates nativos/
+produto abertos; Gateway indisponível. Sem Docker/PG/SQL/nativo/runtime/
+privado/root/nonce/comando/deploy. Histórico abaixo.
+
+## Host: Gemini timeout; retomada C2 após reset — 2026-11-10
+
+Usuário ampliou expressamente o consentimento de pacotes públicos ao Gemini;
+registro no bloco seguinte. AGY ArgonHigh/high, execução76884/pid23972, foi
+iniciado plan/readonly sobre8cópias verificadas. Terminal recuperado: exit3/
+DEADLINE_EXCEEDED em904,907s, sem desenho disponível. Capturador não reteve
+conversation_id/response; raw889bytes só por SHA, limitação registrada. Não
+tratar essa ausência como prova de inexistência de conversa remota.
+
+CIM confirmou0CLIs escritoras; ComputerUse list_apps mostrou Antigravity
+não executando/0janelas. sky.launch_app teve autorização de app expirada;
+nenhuma janela aprovada e nenhuma outra via usada para esse acesso.
+Atualização da mensagem agendada foi rejeitada ANTES de CreateProcess:
+revisão automática sem cota. Não executada/contornada. Tarefa antiga disparou
+10/11 às13h55SP, result0, NextRun null, mensagem recebida nesta conversa;
+texto4arquivos é histórico, consentimento ampliado posterior se aplica.
+
+Já passou16h50UTC informado para resetC2, sem liberação independentemente
+atestada. Próximo: mesma sessão51ea0d85/claude-opus-5-5/medium somente
+HOST-DESIGN, após guarda fresca Git/0escritores. Root revê tudo antes de
+qualquer teste/source. Autorização anterior não muda: sem Docker/PG/SQL/
+nativo/runtime/config/privado/root/nonce/comando/deploy. Oito fontes/testes/
+app124/estado16/attempt não alterados.849gates históricos; nenhum novo gate.
+Ler gemini-timeout-and-resume-review.json e HOST-DESIGN-REVIEW. Gates abertos.
+
+## Autorização Gemini ampliada — 2026-11-10
+
+Usuário: "autorizo solicitar qualquer pacote ao gemini", respondendo à
+pergunta que nomeou o pacote público8arquivos do host e o contexto público
+necessário deste projeto em futuras retomadas. Substitui o limite anterior
+4arquivos EXPECT para esses envios; não pedir novo consentimento por pacote
+público pertinente. Credenciais/configuração privada/ambiente/runtime/binários/
+histórico da conversa continuam excluídos. Não amplia autoridade de efeitos
+nativos/deploy ou permite contornar rejeição de ferramenta.
+
+Fallback condicionado à quota C2 confirmada. Usar AGY/Gemini ArgonHigh ou
+Flash3.8High conforme tarefa; confirmar zero escritor antes de cada chamada.
+Root revisa/valida, sem programar o produto. Claude2 mantém sessão51ea0d85/
+claude-opus-5-5/medium quando disponível. Nunca dois escritores; não trocar
+conta para contornar quota. Histórico de consentimentos/rejeições preservado.
+
+Atual: CLI26058 encerrou429 antes de HOST-DESIGN, que segue ausente. Catálogo
+AGY confirmou gemini-4-argon-high; zero escritores confirmado. Somente novo
+desenho do host, em resposta readonly sobre scratch8arquivos/204803bytes,
+antes de testes/código. Root lerá tudo antes de qualquer incorporação.
+Job existente13h55SP/16h55UTC mantido; se AGY ativo na retomada, monitorar
+somente. Ler HOST-DESIGN-REVIEW/gemini-broad-approval.json. Gates abertos.
+
 ## W1 Oracle: reconciliação do host revista; quota e retomada — 2026-11-10
 
 CLI16500 recuperada0, só Read; root reviu reconciliação e plano599linhas.

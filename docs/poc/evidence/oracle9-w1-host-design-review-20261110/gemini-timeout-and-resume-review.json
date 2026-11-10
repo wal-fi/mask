@@ -1,0 +1,24 @@
+{
+  "gemini_request": "CLI76884,AGYpid23972,gemini-4-argon-high,effort high,plan/read-only",
+  "cli_exit": 3,
+  "status": "DEADLINE_EXCEEDED",
+  "elapsed_seconds": 904.907,
+  "design_response_available": false,
+  "conversation_id_recovered": false,
+  "capture_limitation": "Only whitelisted parsed result fields retained; raw889byte CLI output SHA recorded but raw bytes not preserved. Missing captured conversation_id is not proof a server conversation never existed.",
+  "no_active_cli_writers_observed": true,
+  "ui_observation": {
+    "app": "electron.app.Antigravity",
+    "isRunning": false,
+    "windows": []
+  },
+  "ui_recovery": "sky.launch_app returned Computer Use app approval timed out; no approved window obtained; no alternate route attempted.",
+  "scheduled_message_update": "Rejected before CreateProcess because automatic approval review usage limit; not executed; not retried through another route.",
+  "scheduled_delivery_observed": {
+    "local": "2026-11-10T13:55:00-03:00",
+    "result": 0,
+    "next_run": null,
+    "old_message_delivered_to_current_conversation": true
+  },
+  "next": "Same authorized Claude2 session after reset time passed and fresh zero-writer guard, only HOST-DESIGN; no source/tests/native effects."
+}

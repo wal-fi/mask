@@ -77,3 +77,102 @@ Consulta à documentação oficial de tarefas locais confirmou a dependência do
 computador ligado e app em execução (https://learn.chatgpt.com/docs/automations).
 O registro efetivo desta retomada é a tarefa Windows relida, não uma automação
 criada pela API ou uma garantia de entrega do app.
+
+## Autorização ampliada e timeout do fallback
+
+Usuário autorizou qualquer pacote público necessário ao Gemini, substituindo
+o limite4EXPECT. Novo envio ArgonHigh/high ocorreu em scratch8cópias, modo
+plan/readonly, sem fonte/teste editado. CLI76884 retornou3/DEADLINE_EXCEEDED,
+904,907s, sem resposta de desenho capturada. Limitações e falhas de acesso/
+revisão automática descritas em gemini-timeout-and-resume-review.json.
+O disparo13h55 foi entregue; após passar16h50UTC e guarda0escritores, a
+continuação segura é a mesma sessãoC2, somente desenho. Não houve reprovação
+técnica de desenho Gemini: nenhum desenho chegou para revisão.
+
+## Revisão da v1 — ainda não liberada para testes
+
+CLI32936 recuperada0, mesma sessão/modelo/esforço. Root leu389linhas da
+v1:54b5ec87/20.241bytes. Só desenho, nenhuma execução de teste/source/nativo.
+Direção de três binds, core público e recibos é adequada, mas há lacunas:
+
+- R1: API e DTOs não fechados (§5): não há métodos/retornos exatos, tipos
+  de token/facts/status/tempos/verdicts/Finish, ou relação inequívoca entre
+  HostRefusal levantada e Finish devolvido. Entrada Line não tem timestamp,
+  ActDone não tem pós-retorno; o reator puro não pode aplicar cercas assim.
+- R2: records EXPECT independente de init_packet opaco permite incoerência
+  de expectativas. Direção mínima: extrair expected do mesmo init_packet
+  por core.decode_init público, sem segundo records, manter apenas expected
+  e bytes privados necessários e sem promessa de zeroização. Nenhuma API nova.
+- R3: orçamento de T6 exige unidade de tempo e política explícita; margem,
+  epsilon e KILL_MIN podem ser parâmetros de testes, ainda NOT_PREPARED para
+  uso nativo, mas seus domínios e fórmula precisam ser fechados. Recibo tardio
+  não passa por comparação só de timestamp declarado sem amarração à ação.
+- R4: 50controles não limitam next_seq do evento a50: após GO50, ARMED25
+  tem next_seq51. A57ªlinha precisa ser recusada (não só ultrapassar57).
+- R5: campos nulos de T1–T4, domínios ABORT, falha durante pendência e T4
+  NOSTOP sem achado normal versus falha de observação precisam ter regra
+  exata. Não permitir facts genérico ou Finish interpretado como cleanup
+  físico. Modelos só produzem candidato a evidência, não aprovação nativa.
+
+V1 preservada como dados; próximo mesmo C2 edita SOMENTE HOST-DESIGN.
+Nenhum teste/source antes de root ler a revisão. Loader público load_pure
+via chamador é aceito prospectivamente, após pin do driver antes de import;
+receber ModuleType não autentica origem por si só. Não criar camada nova.
+
+## Revisão completa da v2 — precisões finais R6
+
+CLI6393 recuperada0. Root leu todas592linhas:62a8b804/27.046bytes. R1–R5
+fecharam a maior parte do contrato. API do encoder ainda não recebe o core
+que deve decodificar o frame; não criar global/cache/loader para resolver.
+Adicionar core explícito a pack_control. DTOs de entrada são carriers frozen
+e suas validações pertencem ao feed, para marcar recusa pegajosa na instância.
+
+Fechar sequência final: status expõe orphan original; recebido em ENDING
+pode ser registrado uma vez sem avançar espelho/reabrir ações. Depois de
+Done, feed não aceita mais recibo (ORDER), e Done conserva a referência
+para o chamador. T6 positivo é exceção ao fim por Exited: só depois de kill
+OK, Exited válido retorna ZERO_BACKENDS25; apenas seu OK encerra candidato.
+Exited antes de kill OK nunca vira sucesso retroativamente. Bridge deve
+serializar confirmação de kill antes de coletar/emitir Exited para esse
+caminho; timestamps são observações seriadas do owner, não pré-timestamps
+de pumps que seriam regressivos ao serem entregues. UNKNOWN retém de modo
+conservador. H13 admite packet/payloadINIT privado redigido; proíbe reter
+LabInit ou credenciais separadas, não o armazenamento necessário do pacote.
+
+Somente precisão documental pequena, nenhuma nova camada, teste ou fonte.
+Demais fontes fixas. Root lerá o diff final antes de aceitar primeiro teste.
+
+## Parecer final do desenho, sob delegação
+
+CLI29500 recuperada0; root leu diff inteiro R6 sobre a V2 toda já lida.
+Documento final (V2+R6):aed85ad4/30.976bytes/655linhas. Aceito como direção
+técnica SOMENTE para os primeiros testes H1–H17. Nenhum teste/código do
+reator existe; root deverá ler todos oráculos e congelar RED antes da fonte.
+pack_control recebe core explícito e compara os campos kind/case/seq do
+Control público retornado por decode_control, não Control==tuple. Modelo
+recebe core confiável já carregado pelo chamador; shape não autentica origem.
+
+DTOs de entrada carriers são validados no feed, recusa pegajosa; expectativa
+vem do mesmo INIT. Timestamps seriados do owner, orphan original preservado,
+e Done não libera recurso físico. T6 só chega a candidato depois do kill
+tempestivo alegado pela porta, Exited próprio e ZERO_BACKENDS positivo;
+Exited precoce não pode ser promovido por recibo posterior. Nada disso
+mede kernel/PG/frescor/identidade. Margens nativas continuam NOT_PREPARED.
+
+Oito fontes/testes correntes e app124 intactos por SHA/tamanho; nenhum
+SDK/estado16/attempt tocado.849verdes são históricos, não suíte repetida.
+Validação desta mudança é documental (diff/JSON/hashes/revisão de API).
+Usuário autorizou os pacotes públicos Gemini, não aprovou individualmente
+este desenho. Autor real do desenho é C2; Gemini expirou sem resposta útil.
+
+A atualização da mensagem agendada foi rejeitada por cota do revisor antes
+de executar e não foi contornada. A mensagem antiga foi entregue16h55UTC
+com result0/sem próximo disparo; o contexto posterior foi aplicado. A
+recuperação UI do AGY teve app approval timed out e foi interrompida.
+Retomada C2 após horário informado e guarda0, mesma sessão/modelo, funcionou.
+
+Próximo incremento sob delegação: somente tests/test_oracle9_w1_host_reactor.py,
+sem módulo antes do RED revisto. Conferir Git atual e zero escritor; ativo
+só monitorar/recuperar terminal antes de nova chamada. Não repetir erro de
+guarda HEAD23d8669 depois de publicar estes documentos. Sem execução nativa
+/Docker/PG/SQL/runtime/config/privado/root/nonce/comando/deploy. Gates abertos.
