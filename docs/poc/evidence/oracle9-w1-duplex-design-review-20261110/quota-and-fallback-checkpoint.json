@@ -1,0 +1,22 @@
+{
+  "claude_design_execution": 65449,
+  "claude_result": "API429 before edits",
+  "duplex_design_exists": false,
+  "reported_reset_local": "2026-11-10T19:30:00-03:00",
+  "inferred_reset_utc": "2026-11-10T22:30:00Z",
+  "reset_independently_observed": false,
+  "gemini_execution": 48746,
+  "gemini_pid": 34228,
+  "gemini_model": "gemini-4-argon-high",
+  "effort": "high",
+  "mode": "plan-readonly",
+  "scope": "proposal on10isolatedpublicfiles233221bytes; no project edits",
+  "normal_catalog_verified": true,
+  "normal_catalog_requires_signin": false,
+  "initial_sandbox_catalog_failed_due_permissions_network": true,
+  "no_private_config_or_credentials_explicitly_read": true,
+  "existing_task_registered_utc": "2026-11-10T22:35:00Z",
+  "native_product_gates": "OPEN",
+  "1215_tests": "historical, not rerun for design-only work",
+  "host_source_test_intact": true
+}

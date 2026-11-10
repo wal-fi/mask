@@ -1,0 +1,22 @@
+{
+  "cli_exit_code": 0,
+  "elapsed_seconds": 206.297,
+  "raw_bytes": 38590,
+  "raw_sha256": "2433708d51abc87cf02b4cac14c6044cb593ed9ceb7a9b922fff556862be5f42",
+  "raw_retained_local": "C:\\Users\\WA2E4~1.FIL\\AppData\\Local\\Temp\\maskgw-agy-duplex-design-0c9elxzw\\terminal-result-v3.raw.json",
+  "top_keys": [
+    "conversation_id",
+    "duration_seconds",
+    "num_turns",
+    "response",
+    "status",
+    "usage"
+  ],
+  "model": "gemini-4-argon-high",
+  "effort": "high",
+  "conversation_id": "85368f37-6b19-40f7-b51c-97e9180f4566",
+  "status": "SUCCESS",
+  "design_recovered": true,
+  "design_bytes": 37208,
+  "public_input_copies_intact": true
+}

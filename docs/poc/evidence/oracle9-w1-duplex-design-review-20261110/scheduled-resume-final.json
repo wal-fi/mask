@@ -1,0 +1,20 @@
+{
+  "registered": true,
+  "observed": {
+    "Name": "Maskgw-Claude2-Resume-01a05804",
+    "State": "Ready",
+    "NextRunUtc": "2026-11-10T22:35:00Z",
+    "StartBoundary": "2026-11-10T19:35:00-03:00",
+    "Message": "Resume authorized Mask Gateway work in this same conversation. FIRST read docs/CLAUDE2-PENDING-REVIEW.md and docs/CHECKPOINT-2026-10-30.md, inspect actual Git after documentation commits and recover existing terminals. Confirm zero Claude2/Antigravity writers; active means monitor only, never start a second session call. Code7ecf056 hostreactore86f8e32/testf177102a is published,1215related including366own and18probes historicalPASS. Gemini85368f37/ArgonHigh/high design calls48746/99723/44702 all endedSUCCESS/0 and were recovered; no active writer at finalreview. Adopted DUPLEX-DESIGN a78d1de14547381f000fdaae8741d4979ba3dbf025b39e960175cefb23786ecf is accepted ONLY with normativeR8 in FULL DUPLEX-REVIEW. Read both before tests, do not use rejectedV1/V2. Actual HEAD may be later than cad2edf, never reuse stale guards. Claude2 alone programs, only session51ea0d85-05bb-4d24-ba9a-c9627c3f832f, claude-opus-5-5 effort medium; root reviews and runsQA. CLI65449 endedAPI429 beforedesignwrites onNov10; reset displayed7:30pmSaoPaulo inferred2026-11-10T22:30:00Z, not independently observed. No retry before22:30UTC/account/model/quota workaround. Current safe lot ONLY tests/test_oracle9_w1_duplex_bridge.py, absent at finalreview; docs/poc/oracle9_w1_duplex_bridge.py staysABSENT until root reads all oracles and measures/freezesRED. Scoped Read/Edit/Write ONLY newtest, no programmer commands/execution. D1-D6 plusR8: originalslot beforeeffect; outcomeonce/cache/statuspure; FIFO receipt/timestamps; bounds512includingLF/56lines/57queue/28672+1bytes; nofakecleanup; effectiveglobaldeadline; realcachedEOF/Exitfacts; nostaleUNKNOWNpoll loop. Use deterministic fakeports and reviewedrealHostReactor; no realnativeI/O. Keep host/main/driver/pure/EXPECT/existingtests/app124/state16/consumedattempt fixed. User authorizes necessary public packages to conditionalGemini fallback; never simultaneous writers/privateexports or bypass tool rejection. No Docker,PG,SQL,actualsocket/thread/process/eventloop/guard/signal/native,runtime/config/binary/private/environmentreads,operationalroot/state/nonce/entry/command/deployment. Publish only reviewed verified results; native/product gates remainOPEN. This scheduled message grants no additional permission.",
+    "RunLevel": 0,
+    "LogonType": 3,
+    "MultipleInstances": 2,
+    "MessageVerified": true,
+    "OneShot": true,
+    "LastTaskResult": 0
+  },
+  "delivery_observed": false,
+  "reset_observed": false,
+  "requires": "host on, interactive logon and app available",
+  "official_doc": "https://learn.chatgpt.com/docs/automations"
+}

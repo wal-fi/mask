@@ -1,0 +1,13 @@
+{
+  "execution": 65449,
+  "exit_code": 1,
+  "session_id": "51ea0d85-05bb-4d24-ba9a-c9627c3f832f",
+  "api_error_status": 429,
+  "terminal_reason": "api_error",
+  "duration_ms": 24855,
+  "permission_denials": [],
+  "result": "You've hit your session limit \u00b7 resets 7:30pm (America/Sao_Paulo)",
+  "reported_reset_local": "2026-11-10T19:30:00-03:00",
+  "inferred_reset_utc": "2026-11-10T22:30:00Z",
+  "reset_independently_observed": false
+}

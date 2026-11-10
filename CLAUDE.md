@@ -1,4 +1,75 @@
 
+## Duplex: desenho revisto para primeiros testes; retomadaC2 confirmada — 2026-11-10
+
+Claude2CLI65449 terminou1/API429 ANTES de editar, resultado recuperado;
+reset informado19h30SP/22h30UTC10/11, não observado. Fallback autorizado:
+AGY/Gemini4ArgonHigh/high mesma conversa85368f37; CLI48746/99723/44702
+recuperadas0/SUCCESS,10/12/14cópias públicas intactas e isoladas. Zero
+escritor após44702. Proposta é do Gemini, não atribuir ao Claude2.
+
+Root leu V1/V2/V3 inteiras. V1/V2 preservadas; direçãoV3 aceita sob delegação
+SOMENTE para primeiros testes, com R8 normativo em DUPLEX-REVIEW. Referência
+exata do documento adotado/proposta em final-design-review.json. Fecha
+slots antes de efeitos, outcome único/cache, FIFO/limites, prazo global,
+EOF/Exited e nenhuma API de cleanup prematuro. Não há prova nativa.
+
+Próximo só tests/test_oracle9_w1_duplex_bridge.py; módulo docs/poc/
+oracle9_w1_duplex_bridge.py AUSENTE até root ler oráculos e congelarRED.
+Primeiro Read de DUPLEX-DESIGN e TODO DUPLEX-REVIEW/R8. C2 único programador
+principal, sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f/claude-opus-5-5/medium,
+somente Read/Edit/Write do novo teste, sem comandos. Conferir Git atual/
+zero escritor e recuperar terminais; ativo só monitorar. Não reutilizar
+HEADcad2edf depois de publicar estes documentos.
+
+Mesma tarefaMaskgw-Claude2-Resume-01a05804 relidaReady para10/11às19h35SP/
+22h35UTC, única/Interactive/Limited/IgnoreNew; mensagem queue nesta conversa
+conferida, sem novo disparo ainda. LastResult0 é histórico. Host/logon/app
+precisam estar disponíveis; agendamento não comprova entrega/reset. Sem
+retryC2 antes22h30UTC nem troca de conta/modelo para contornar quota.
+
+Hoste86/testf177 e upstream/app124/estado16/attempt fixos.1215verdes são
+históricos, não reexecutados por desenho. Sem Docker/PG/SQL/SO/nativo/
+runtime/config/privado/binário/root/nonce/estado/comando/deploy. Gates
+T5físico/B1/B2/D090gate2/C1/TLS/ingressos/produção abertos; Gateway
+indisponível. Fonte/suítes não mudaram. Histórico abaixo.
+
+
+## Duplex: quotaC2 e fallback Gemini readonly em andamento — 2026-11-10
+
+Atualização da revisão: AGY48746 recuperada0/SUCCESS, V1 7cba610d/40485bytes/
+352linhas lida inteira e rejeitada para testes por R1–R6 (posse pré-efeito,
+cleanup prematuro, caps/pump, API, prazo global e recibos). Mesma conversa
+Gemini85368f37 está na execução99723/pid920, PLAN/read-only, pedindo sóV2;
+12cópias públicas isoladas autorizadas. Recuperar99723 antes de nova chamada.
+DUPLEX-DESIGN definitivo continua ausente; não aceitarV1 como contrato.
+
+PartidaHEAD/origincad2edf, rastreados limpos, zero escritor. CLI65449 mesma
+sessão51ea0d85/claude-opus-5-5/medium terminou1/API429 antes de editar;
+terminal recuperado. DUPLEX-DESIGN ausente nesse checkpoint. Reset informado
+19h30SP/22h30UTC10/11, não observado; sem retry antecipado ou outra contaC2.
+
+Sob consentimento posterior de pacotes públicos necessários, AGY/Gemini
+ArgonHigh/high execução48746/pid34228 está em PLAN/read-only sobre10cópias
+públicas isoladas/233221bytes, sem editar repositório. É nova proposta
+duplex, não recuperação da UI antiga; catálogo normal autenticado e modelos
+autorizados conferidos. Nenhuma conversa/config privada/credencial enviada.
+Root não incorpora proposta antes de ler inteira; Gemini é autor real
+se houver entrega, não atribuir ao C2. Nunca iniciar segundo escritor;
+primeiro recuperar esse terminal e conferir metadata fresca.
+
+Tarefa existenteMaskgw-Claude2-Resume-01a05804 reprogramada e relidaReady:
+10/11 às19h35SP/22h35UTC, uma vez, Limited/Interactive/IgnoreNew, mensagem
+queue nesta conversa verificada. LastResult0 é histórico, não novo disparo;
+agendamento não prova quota/entrega e depende de host/logon/app disponíveis.
+Ler scheduled-resume.json/quota-and-fallback-checkpoint.json.
+
+Lote atual só desenho docs/PHASE-9-W1-ORACLE-DUPLEX-DESIGN.md e revisão
+DUPLEX-REVIEW, sem teste/fonte antes de revisão/RED. Fontes/testes/pins/
+app124/estado16/attempt fixos. Hoste86/f177 intacto,1215verdes históricos.
+Sem Docker/PG/SQL/SO/nativo/runtime/config/privado/binário/root/nonce/comando/
+deploy. Gate produto/nativo aberto, Gateway indisponível. Histórico abaixo.
+
+
 ## Reator host publicado; próximo desenho da ponte — 2026-11-10
 
 Checkpoint de CÓDIGO7ecf05623b385cd44f6d49778a275f624f371316 publicado por

@@ -1,0 +1,21 @@
+{
+  "at": "2026-11-10T20:39:24.652848+00:00",
+  "proposal_v3": {
+    "sha256": "18d13c6f5db4f08c39a33190b6ec6ddbc90b67d8df8a62bed7bcef519f0c734a",
+    "bytes": 37208,
+    "lines": 326
+  },
+  "adopted_design": {
+    "sha256": "a78d1de14547381f000fdaae8741d4979ba3dbf025b39e960175cefb23786ecf",
+    "bytes": 37939,
+    "lines": 336
+  },
+  "review": "all V1/V2/V3 read; R8 normative precisions before first tests",
+  "verdict": "PROSPECTIVE_TESTS_ONLY",
+  "author_proposal": "Gemini 4 Argon High effort high",
+  "reviewer": "Codex/root under delegation",
+  "test_absent": true,
+  "module_absent": true,
+  "new_native_or_product_gate_closed": false,
+  "new_test_run": false
+}

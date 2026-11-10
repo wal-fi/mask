@@ -1,0 +1,22 @@
+{
+  "registered": true,
+  "observed": {
+    "Name": "Maskgw-Claude2-Resume-01a05804",
+    "State": "Ready",
+    "NextRunUtc": "2026-11-10T22:35:00Z",
+    "StartBoundary": "2026-11-10T19:35:00-03:00",
+    "Execute": "C:\\Users\\w.filho\\AppData\\Roaming\\npm\\node_modules\\@openai\\codex\\node_modules\\@openai\\codex-win32-x64\\vendor\\x86_64-pc-windows-msvc\\bin\\codex.exe",
+    "WorkingDirectory": "C:\\Users\\w.filho\\Desktop\\codes\\mask",
+    "Message": "Resume authorized Mask Gateway work in this same conversation. Read docs/CLAUDE2-PENDING-REVIEW.md and docs/CHECKPOINT-2026-10-30.md first. Inspect actual current Git after documentation commits; never reuse a stale HEAD guard or redo completed work. Code7ecf056 and docscheckpointcad2edf were published: hostreactore86f8e32/testf177102a,1215related including366own PASS and18probes; all native/product gates remain OPEN. Recover every existing Claude2/Antigravity terminal FIRST and confirm zero active writers; if active monitor only, never start a second session call. Claude2 only session51ea0d85-05bb-4d24-ba9a-c9627c3f832f, claude-opus-5-5 effort medium; root reviews. CLI65449 ended exit1/API429 before duplex-design edits Nov10, reset displayed7:30pm America/Sao_Paulo, inferred2026-11-10T22:30:00Z, not independently observed. No retry before22:30UTC or quota workaround. User authorized necessary public project packages to Gemini; conditional AGY/Gemini ArgonHigh orFlash3.8High is permitted, never simultaneous writers or private exports. At registration, readonlyGemini ArgonHigh/high execution48746/pid34228 is proposing duplexdesign from isolated10publicfiles233221bytes, not editing repo. Recover its result before deciding next action. Current safe lot at registration ONLY docs/PHASE-9-W1-ORACLE-DUPLEX-DESIGN.md and root review, no tests/source before reviewed design and measured frozenRED; consult newest pending notes rather than replacing completed work. Keep host/main/driver/pure/EXPECT/testpins/app124/state16/consumedattempt fixed. No actual socket/thread/process/guard/signal/native/Docker/PG/SQL, runtime/config/binary/private/environment reads, operationalroot/state/nonce/entry/command/deployment. Scoped Read/Edit/Write only current documented safe lot; no programmer commands. Publish only reviewed verified results. This scheduled message grants no additional permission.",
+    "RunLevel": 0,
+    "LogonType": 3,
+    "MultipleInstances": 2,
+    "ActionVerified": true,
+    "OneShot": true,
+    "LastTaskResult": 0
+  },
+  "execution": "one-shot queue into same existing conversation; not proof of future delivery or quota reset",
+  "official_doc": "https://learn.chatgpt.com/docs/automations",
+  "requires": "machine on, user logon and app available",
+  "new_permission_granted": false
+}

@@ -1,0 +1,14 @@
+W1 Oracle: fecha desenho da ponte duplex e retomada conservadora
+
+Adota proposta documental Gemini4ArgonHigh com revisao integral e precisões
+R1-R8 do root. Fecha slots pre-efeito, colheita unica, FIFO, caps, prazos
+e EOF/Exited, sem criar codigo ou testes da ponte nem APIs de cleanup.
+
+Claude2 terminou API429 antes de editar; tarefa existente conferida Ready
+para10/11/2026 19:35 America/Sao_Paulo, apos reset informado nao observado,
+com mensagem somente testes e guarda contra segundo escritor.
+
+Valida13fontes/testes fixos eapp124, JSON/diff;1215verdes sao historicos.
+Gates nativos/produto abertos. Nenhum Docker/PG/SQL/deploy.
+
+Co-Authored-By: Codex <noreply@openai.com>

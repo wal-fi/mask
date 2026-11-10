@@ -1,0 +1,9 @@
+{
+  "sha256": "7cba610d7dd304c5f0ed517c3f1809dfb99abbe1647640036a9d70bd21cb57bc",
+  "bytes": 40485,
+  "lines": 352,
+  "reviewed_all_lines": true,
+  "verdict": "REVISE_DESIGN_BEFORE_TESTS",
+  "author": "Gemini 4 Argon High effort high",
+  "source_test_unchanged": true
+}
