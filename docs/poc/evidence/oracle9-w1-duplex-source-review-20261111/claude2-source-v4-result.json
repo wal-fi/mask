@@ -1,0 +1,13 @@
+{
+  "execution": 71321,
+  "cli_exit_code": 0,
+  "session_id": "51ea0d85-05bb-4d24-ba9a-c9627c3f832f",
+  "subtype": "success",
+  "is_error": false,
+  "api_error_status": null,
+  "terminal_reason": "completed",
+  "duration_ms": 15858,
+  "permission_denials": [],
+  "result": "Fiz a correção em `_drive`, no arquivo `docs/poc/oracle9_w1_duplex_bridge.py`; não rodei pytest, mypy, format nem as sondas, então o resultado ainda precisa ser medido.\n\nLogo antes do primeiro `begin_spawn_into`, a ponte agora faz uma observação nova do relógio e aplica a mesma checagem dos outros `begin_*`:\n- **Prazo global primeiro:** se o instante observado já alcançou o prazo global, recusa OVERALL_DEADLINE sem chamar a porta de spawn. É o caso do relógio inicial 1e308, em que somar o orçamento ao início arredonda para o próprio início.\n- **Depois, o prazo do spawn:** se o instante observado já alcançou o prazo do spawn, recusa SPAWN, também antes de chamar a porta.\n- **Sem rebase:** os prazos continuam calculados a partir do instante inicial `start`, e o domínio de relógio finito aceito não mudou.\n\nNos caminhos normais, a única diferença é essa chamada a mais de `now()` antes do spawn; o resto do comportamento ficou igual. O teste congelado, as seis sondas e as demais fontes não foram alterados.",
+  "uuid": "03dc6116-fcfe-4b22-a6ca-af7a090b06b9"
+}

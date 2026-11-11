@@ -1,0 +1,36 @@
+{
+  "exit_code": 0,
+  "elapsed_s": 1.3279999999999745,
+  "result": {
+    "probes": [
+      {
+        "name": "status_uses_only_cached_state",
+        "pass": false,
+        "observed_reactor_status_calls": 2,
+        "expected": 0
+      },
+      {
+        "name": "original_outcome_error_is_cached",
+        "pass": false,
+        "op_retained": true,
+        "observed_cache_is_none": true
+      },
+      {
+        "name": "constructor_lookup_never_escapes_raw",
+        "pass": false,
+        "accepted_cached_callable": false,
+        "exception_type": "RuntimeError",
+        "lookups": 2
+      },
+      {
+        "name": "drain_anchor_is_first_cached_eof",
+        "pass": false,
+        "expected": 110.046875,
+        "observed": 111.03125,
+        "extension": 0.984375
+      }
+    ],
+    "passed": 0,
+    "failed": 4
+  }
+}

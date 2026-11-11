@@ -1,0 +1,22 @@
+"""Root QA: a late observed spawn still belongs to its original owner."""
+import json
+import pytest
+from tests import test_oracle9_w1_duplex_bridge as t
+
+with pytest.MonkeyPatch.context() as patch:
+    core = t.ht.core.__wrapped__(patch)
+    def late_spawn(world, begin):
+        return begin + 4.0, world.b.SpawnOutcome(ok=True, process=world.process)
+    b = t.bridge_module()
+    budget = b.DuplexBudget(spawn_s=1.0, silence_s=2.0, drain_s=2.0, overall_s=3.0)
+    lab = t.Lab(core, t.Script(spawn=late_spawn), budget)
+    lab.world.clock.overshoot = True
+    state = lab.refuse("OVERALL_DEADLINE")
+    slot = t.view(state, "spawn")
+    print(json.dumps({"name": "late_cached_spawn_is_adopted_before_global_refusal",
+                      "pass": state.process is lab.world.process,
+                      "original_op_retained": slot.op is t.ops_of(lab.world, "spawn")[0],
+                      "original_outcome_retained": slot.outcome.process is lab.world.process,
+                      "observed_process_is_none": state.process is None,
+                      "no_effect_after_spawn": not t.events(lab.world, "read")
+                           and not t.events(lab.world, "wait")}))

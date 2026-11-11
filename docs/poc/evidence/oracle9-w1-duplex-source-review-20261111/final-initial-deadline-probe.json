@@ -1,0 +1,11 @@
+{
+  "exit_code": 0,
+  "result": {
+    "name": "expired_initial_deadline_starts_no_spawn",
+    "pass": true,
+    "spawn_starts": 0,
+    "closed_category": "OVERALL_DEADLINE",
+    "finite_initial_clock": true,
+    "start_plus_overall_equals_start": true
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "path": "docs/poc/oracle9_w1_duplex_bridge.py",
+  "sha256": "41f3de09ca5f3988e510d0ff288882cf610f2bdfd496276ce6f63a866e7f963d",
+  "bytes": 32885,
+  "lines": 931,
+  "test_sha256": "97c26fbfd2823e288a450fdde7ca3d7919ef7a5ec4843021bc3cb98bf585f671",
+  "review_before_execution_pending": true
+}

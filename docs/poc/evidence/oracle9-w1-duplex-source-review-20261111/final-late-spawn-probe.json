@@ -1,0 +1,11 @@
+{
+  "exit_code": 0,
+  "result": {
+    "name": "late_cached_spawn_is_adopted_before_global_refusal",
+    "pass": true,
+    "original_op_retained": true,
+    "original_outcome_retained": true,
+    "observed_process_is_none": false,
+    "no_effect_after_spawn": true
+  }
+}

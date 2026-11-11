@@ -1,0 +1,76 @@
+"""Independent root QA probes over public fake ports; no native/product I/O.
+Frozen as review data before asking the programmer for fixes.
+"""
+import json
+import pytest
+from tests import test_oracle9_w1_duplex_bridge as t
+
+def main():
+    results = []
+    with pytest.MonkeyPatch.context() as patch:
+        core = t.ht.core.__wrapped__(patch)
+        lab = t.Lab(core)
+        original = lab.r.HostReactor.status
+        calls = []
+        def observed(self):
+            calls.append(1)
+            return original(self)
+        patch.setattr(lab.r.HostReactor, "status", observed)
+        lab.bridge.status()
+        lab.bridge.status()
+        results.append({"name": "status_uses_only_cached_state", "pass": not calls,
+                        "observed_reactor_status_calls": len(calls), "expected": 0})
+    with pytest.MonkeyPatch.context() as patch:
+        core = t.ht.core.__wrapped__(patch)
+        error = RuntimeError("synthetic retained error")
+        lab = t.Lab(core, t.Script(faults={"read": ("outcome", error)}))
+        state = lab.refuse("PORT")
+        slot = t.view(state, "read")
+        results.append({"name": "original_outcome_error_is_cached", "pass": slot.outcome is error,
+                        "op_retained": slot.op is t.ops_of(lab.world, "read")[0],
+                        "observed_cache_is_none": slot.outcome is None})
+    with pytest.MonkeyPatch.context() as patch:
+        core = t.ht.core.__wrapped__(patch)
+        b, r = t.bridge_module(), t.reactor_mod()
+        world = t.World(b, r, t.Script())
+        class Clock:
+            def __init__(self): self.lookups = 0
+            @property
+            def now(self):
+                self.lookups += 1
+                if self.lookups == 1:
+                    return lambda: t.T0
+                raise RuntimeError("synthetic second lookup")
+            def poll(self, watched, deadline): return deadline
+        clock = Clock()
+        caught = None
+        try:
+            b.DuplexBridge(r, t.fresh(core, r), clock, world.gateway, world.acts, t.budget_of(b))
+        except Exception as error:
+            caught = error
+        accepted = caught is None
+        closed = (type(caught) is b.BridgeRefusal and caught.category is b.BridgeFault.PORT
+                  and caught.__cause__ is None and caught.__context__ is None)
+        # Caching the first validated callable is also a valid safe solution.
+        results.append({"name": "constructor_lookup_never_escapes_raw",
+                        "pass": accepted or closed, "accepted_cached_callable": accepted,
+                        "exception_type": type(caught).__name__ if caught is not None else None,
+                        "lookups": clock.lookups})
+    with pytest.MonkeyPatch.context() as patch:
+        core = t.ht.core.__wrapped__(patch)
+        def plan(world, payload, begin, deadline):
+            world.eof_at = begin + t.DT
+            return begin + 1.0, world.b.WriteOutcome(delivery=world.r.Delivery.NOT_SENT,
+                                                   bytes_written=0)
+        lab = t.Lab(core, t.Script(writes={0: plan}))
+        result = lab.run()
+        expected = lab.world.eof_at + t.DRAIN
+        observed = result.status.reactor_status.last_at
+        results.append({"name": "drain_anchor_is_first_cached_eof",
+                        "pass": observed == expected, "expected": expected, "observed": observed,
+                        "extension": observed - expected})
+    print(json.dumps({"probes": results, "passed": sum(x["pass"] for x in results),
+                      "failed": sum(not x["pass"] for x in results)}))
+
+if __name__ == "__main__":
+    main()

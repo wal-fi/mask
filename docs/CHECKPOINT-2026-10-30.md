@@ -1,5 +1,39 @@
 # Checkpoint para continuidade em outro local
 
+## Duplex: ponte pura revista; 1410 relacionados verdes — 2026-11-11
+
+Claude2 único programador, sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f,
+claude-opus-5-5/medium. CLI20996/2071/67370/71321 terminaram0/success,
+recuperadas; zero escritores antes de cada chamada/revisão. Sem quota,
+fallback ou novo job. Root leu931linhas V1 e todos os deltas V2/V3/V4.
+
+Fonte final5a09be1c9af3222f918973b426ae349e9f614fb4de191e7807ec8193775a98cd,
+35821bytes/974linhas; teste97c26fbf/1935linhas permanece idêntico ao RED195.
+1410PASS em9arquivos incluindo195próprios,0falhas/erros/skips,37,547s.
+6sondas independentes PASS após REDs medidos antes dos fixes. Ruff
+src/tests/lint restrito PoC limpos; format372; mypy367alvos3.11/3.14 limpos.
+Runtime só Windows3.11.3/pilhaQA64MiB;3.14 é estático.13protegidos/app124
+intactos; estado16/attempt intocados. Ler DUPLEX-SOURCE-REVIEW e
+DUPLEX-VALIDATION/final-validation.json; histórico e falhas preservados.
+
+Status só em cache; erros originais retidos; binding de callable único;
+dreno no primeiro evento; spawn tardio adotado; checagem anterior ao
+primeiro begin. R8/R9 continuam normativos. Done é candidato, não cleanup.
+Integração publicável deve conter fonte E teste congelado, preservando o
+commit RED43f2a48 como histórico; nunca publicar só o RED como suíte verde.
+Inspecionar HEAD real depois dos documentos, sem reutilizar guardas antigas.
+
+Próximo só desenho/reconciliação pública do adaptador concreto das portas
+e do contrato de posse/quiescência antes de ligação nativa. Mesmo C2 e
+guardas Git/zero escritor; ativo só monitorar/recuperar terminal. Reusar
+componentes revistos, sem outro motor ou framework genérico. Testes/RED
+antes de futura fonte; root lê antes de executar. Pins atuais ficam fixos.
+Sem Docker/PG/SQL/nativo/runtime/config/privado/binário/root/nonce/estado/
+deploy. T5físico/B1/B2/D090gate2/C1/TLS/ingressos/produção continuam abertos;
+Gateway indisponível. Destino futuro identificado continua OracleLinux9.8.
+
+Histórico abaixo.
+
 ## Duplex: testes revistos e RED195 congelado — 2026-11-10
 
 Claude2, na mesma sessão 51ea0d85-05bb-4d24-ba9a-c9627c3f832f,

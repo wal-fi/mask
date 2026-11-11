@@ -1,0 +1,30 @@
+{
+  "change": "remove_extra_blank_line_at_EOF_from_review_data_only",
+  "source_and_test_unchanged": true,
+  "items": [
+    {
+      "path": "docs/poc/evidence/oracle9-w1-duplex-source-review-20261111/independent-probes-v1.py.txt",
+      "original_sha256": "71b7731462e93e0787923cdfd5d5c7890b8f15061da25d306c72babd8c7e5c98",
+      "presentation_sha256": "0bad8e9f1c59c9e6d7ef06845dd061e7d45fa53f490ac5c78e3251440eb18ca0",
+      "codec": "zlib+base64",
+      "original_bytes": "eJy9V0uP2zYQvvtXEOpFRlzGe+wWBprmgQZod9PNAjkEAUFJI5tdmhRIam0nyH/vDEnJcjbr7Ck62BRnOJzXNzMqiuKtaaAD/DGBOWsD+/cF65ytwDN7D451faVVzVp5B6yzLvjfmbHMyKDu4TkyNn0d2Nvn13z2xtnPYJj0zMG9gh1rZJCsgtY6wN07ZdYsbICkr53cblE4klir9uD5rCiKmdrSDew/b82w7g4BfJi1zm4ZrTzLBHoR1slaw29idyGavtOwF5VTzZquY2E2a6BlW6lMOb+cMXwc+F6jiBX7+Clu7FTY5Cv4P9bcweGdDPWG19YE2IdyToI62koC6KnJnBULfBM4rbkQOye7Dhohysg7H3m1rCLr37IqifdIsU6tlZEaycjEHf/L+nADsg7WcR9k6P3xRqn1RGl6yDJbeXD30JQedDs/Kjge4aSVacqL+QnNQeidGTVIx0eOaAH3gCoEVz7QbcGKpF2xGBU4sZenCGQbyqfRcmAGhb8URm6huBzuEr0HL6zRB1HLeoOepn1AFYpOeo+MBhM32rw4MXX6FIO6wiVTRBYez6EMDaaM6znKhX0HdYAG95df5z8lWcA5hMOK3fQmqC28ptey8AeDoAkIQYwb5jI0ibF4PMsWuH5fO9WFspXk19WXAm0mW8rC9qG2W/JdFDP/Oj8Kil4dMhJa9HpZvLu+uZ3c5TV6mi4jhJfxAHorSn9COIecE1kLEXUQyue4TiJKF/HMxpRP2p6LbicGB42nOzpI/5g8bczlnXW6GRX+uPz0lHyJupGSxhr4jmpXuP2TcqRaMBd5E5LEFuuvhnJOIR/SGvcm0IoWxyMfaFWShEmCTKJfa/Q8e6ltfXdaTKjYCKGMCqhQKjaM/ri29q7vqDQtTw78gSW+AxcOD8QYu/teuYqZNZX4bMUuHnCo9ptrkemhHHpyidNyWzXyEq29XT7gc1J5eBRsHjBkDUtXFfMHhnRWp8q5YDsKEWBWNZhUGhMQ3ZMVGHYmPkbvor+ilydRqmW/3hCwKJfG3eAOp/ZV/FVsc3/G6JcxkC2ibZNx7zAR4hWLFHe+Rnzu5GF4xQTxdKbq8XggUFSTBIB9DV1gr+OfsrGVR9h921uyrpE2kmRNx4ByLXNkaEyN95FehkMHZeKaE1vFk0U3VHSwKUp0fSLzGi1YW3eYsr2hqsapMn0n+pOzAqGLRUyIQZVviAmUR/LRFb+wlwj6YWJplfOB3UutcKSBJnYaWekIfqm9ZTIRmZctMG91T+7jP66HqIEPro+wTakmDODUJcDXssOe5+SuOFOicq0cXY/9IzkZS9ywObTMQekJ/xnJMCSBoFjhmWnI0HdkATmunQSbmnD0MmhEFq3OXJBBjJJjwg6g/kl1NEJYS1PmhtDJg7YSFxVgg5pC+cSChCKwrZAEgMjMnuGVr04zMcN/oF/w5YDAin9wKsB16h5lAxrnaHdYJarjr/IGv7q+Fe9fX90+7sIzT0WeQ+tVCGBWyyeNCsQNOCosL6NnpnNByt9hMOhNOa0ZaU7KxBMHRcfcvHh7dZx6c0tF7iQzj4L8dCTj2IkCSvgxgBqs4kZIU2/SGBGROmQ8qvEE8Bx1Wo3WnA6Ak92BeXLuLIjQ/R5BNL3m11FezvXOKRNK+ujhTb/tPJqXPsCKy8HwPBal0abflvuPSftP8QtqzzDLMuf8MXWKVio9CiConhFCwZ8p6voZ5+ibQgj6lhKiSJhIH1az2f+IcUrt",
+      "AST_unchanged": true
+    },
+    {
+      "path": "docs/poc/evidence/oracle9-w1-duplex-source-review-20261111/late-spawn-probe.py.txt",
+      "original_sha256": "bec709468b3127e7fc57190eae18ea094cca432ab0d1f79fe5f8b2c6aabb98f3",
+      "presentation_sha256": "3698ad61be9b4a408b7794f8900a27e4b72635bd041269c290e7130d429dfcfb",
+      "codec": "zlib+base64",
+      "original_bytes": "eJydU8Fu1DAQvecrLJ8SEVktcKFSDkXdA9LSQou4VMhyksmuWa/HsiebVoh/x3ayLRWshPAlnvHMm/dmJpzzW0Riny8vmGJGETBsA/gD9Cw4NVkWSBvDWjBoN4ERMk2BodcbbZVhOFnwgnNe6L1DT+x7QHu8u0eCQMXgcc/SLbDlIRkSveoMvJPTuexHZ+BBtl73G2AqlimKSdN2QRAf0e7g8ZOibis6tAQPVFYpziXXRcHi6dADaxiJLYl0F1JOXjkHvZRljqtyXA9D1imzvHJCb/o66ot6qhkpHQ80eju72Sv2VpzVLIeKVtylxJuROtxDibvmix+hZs5jByE0c9RizSXbzGtWJ/fYjwbK5WWMLorPrbjKPXifHWXmJkNznuoGbcB2kXDzOpm9V9oeDTyAV8ZE8404mzGNmuutVVumRtTxftd57RbY5ll9VS8MnjLFTL8z2O1EAg/btB4NSyJzUKC0JE0O9jCMAUp+83V1e7ley6vV5dX6w/WKz3jB5FQSBw1TmRNrxnPlJcJ5balMOyP6ce9C+YNbtQd+wXhm2aluGwc4t0MHqXp0FB0tDFGZ3BhslZGZhjK8fhrfy8OdCiFiZgbH0TAdfhO8OE8iHBdeoovlKE4A+oQYFQp0CSt9g8ShfAJ91np/9u0fkOeN+hN+9v8n7+VnlktgaqJFC3/rxnX0nwSyKGEYoCOpBgI/jySi2DhiEnAAS+GFdA+qX6Z84ijbn06flCZe/ayqovgF7Z94LA==",
+      "AST_unchanged": true
+    },
+    {
+      "path": "docs/poc/evidence/oracle9-w1-duplex-source-review-20261111/initial-deadline-probe.py.txt",
+      "original_sha256": "507a0e9a37aa66865ff3ec43f593bded29c6e6bf3489e2e2e1f01e34d9ee4e83",
+      "presentation_sha256": "a0144dfe68a9e2b0a899d07e724f5c3c8dd0962c9086d7681d9c92003b25f1f3",
+      "codec": "zlib+base64",
+      "original_bytes": "eJx9Uk2PEzEMvc+vsHKaiiXaFReo1MMicStfFeIapRlPJ2yaBMezbUH8d/LRFq3Ebk7Js/3ei20hxCYEhq/3Sxitt4xgXDAPoMnytEe2Boz2PqfomadA9heC9qAdoR5Or/EYLeGQaykx4DiiYSmE6Ow+BmL4kYK/3OOJMXE3UthDuSU4B8pDBdLG4Tt1uFPDHB0e1ZbssMtqCbjrDtnOmUF+DP4BT180m0ma4BmP3C9KXizQsoN8TCCEFbCcWJa7VOpAOkYclOpr3qLmOb2taWu97UveFZWHQG6QnKN3+Ob2bWPV824q0KfgsSJMpyZ4KWuuJc2+b1x4NBi5xeT7Gt3gOCftimUkCvSP4SpQ8Qon1pR7VUziI3pO/dXdDYgU9cGLphTJeu5Ly+Uw72Pqfwuv9yiWIM5zUmXEVjs15Ok561E1duWDakw3VytPj4g6pczk0PetZgGrFdzmZRgurm2CsiilN8/SVJWz6lO6Z0vyQqZs3WjGXaBTrmp68oLI8kuw4398ALqELztqa3/tTF3/rPGN5hd+USyr6OakwiOSdk7hz1m71H6Wy+vOwKs8tM/fP2zu1+vSrQr+WSy67i/v9hGn",
+      "AST_unchanged": true
+    }
+  ]
+}

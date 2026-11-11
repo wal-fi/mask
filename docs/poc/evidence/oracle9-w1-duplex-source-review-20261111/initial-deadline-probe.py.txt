@@ -1,0 +1,21 @@
+"""Root QA: finite clock arithmetic cannot authorize an already-expired first effect."""
+import json
+import pytest
+from tests import test_oracle9_w1_duplex_bridge as t
+
+with pytest.MonkeyPatch.context() as patch:
+    core = t.ht.core.__wrapped__(patch)
+    lab = t.Lab(core)
+    lab.world.t = 1e308
+    caught = None
+    try:
+        lab.bridge.run()
+    except lab.b.BridgeRefusal as error:
+        caught = error
+    starts = t.events(lab.world, "spawn")
+    print(json.dumps({"name": "expired_initial_deadline_starts_no_spawn",
+                      "pass": len(starts) == 0 and caught is not None,
+                      "spawn_starts": len(starts),
+                      "closed_category": caught.category.name if caught is not None else None,
+                      "finite_initial_clock": True,
+                      "start_plus_overall_equals_start": 1e308 + t.OVERALL == 1e308}))

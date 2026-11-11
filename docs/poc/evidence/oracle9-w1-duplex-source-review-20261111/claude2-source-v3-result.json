@@ -1,0 +1,13 @@
+{
+  "execution": 67370,
+  "cli_exit_code": 0,
+  "session_id": "51ea0d85-05bb-4d24-ba9a-c9627c3f832f",
+  "subtype": "success",
+  "is_error": false,
+  "api_error_status": null,
+  "terminal_reason": "completed",
+  "duration_ms": 22736,
+  "permission_denials": [],
+  "result": "Apliquei as três correções em `docs/poc/oracle9_w1_duplex_bridge.py`; não executei mypy, format, pytest nem as sondas, então nada aqui está medido.\n\n1. **Tipagem:** o mapa local `names` em `_bound_reactor_or_none` agora é anotado como `dict[str, Any]`, que é o tipo real do namespace já validado. As validações de classe, de tipo exato e de membros continuam todas no lugar. Isso deve fechar os 15 diagnósticos registrados em `v2-statics.json`.\n2. **Formato:** a condição `zero25` em `_may_start` ficou numa única linha entre parênteses, exatamente como no hunk registrado do Ruff.\n3. **Adoção tardia do spawn:** em `_harvest`, logo depois de guardar o outcome em cache, se o slot é o spawn e o valor é um `SpawnOutcome` exato com `process` não nulo, a ponte adota essa referência. Isso acontece antes da checagem do prazo global em `_poll`, então uma recusa OVERALL_DEADLINE já mostra o processo em `status().process`.\n   - O op e o outcome originais continuam no slot.\n   - Não há chamada nova, efeito, validação ou abertura de read/wait depois do prazo.\n   - `_absorb_spawn` adota a mesma referência como antes, sem mudança no caminho normal.\n\nNenhum outro comportamento mudou. O teste congelado, as cinco sondas e as demais fontes ficaram intactos.",
+  "uuid": "4aba2e68-21af-4e4b-8330-639662f59b32"
+}
