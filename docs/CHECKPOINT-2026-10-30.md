@@ -1,5 +1,35 @@
 # Checkpoint para continuidade em outro local
 
+## Portas nativas: reconciliação revista; desenho é próximo — 2026-11-11
+
+Ponte pura e teste publicados emd9e8293bab4f32295b62ba586d96842f5fb8cb53;
+fetch confirmouHEAD/origin iguais0/0, rastreados limpos. Fonte5a09be1c/
+teste97c26fbf nos blobs iguais aos testados.1410relacionados/195próprios/
+6sondas/estáticos verdes são desse código, não nova prova física.
+
+C2CLI55131 encerrou0/success em43848ms, recuperada; ferramentas só Read.
+Root leu toda a reconciliação e conferiu BudgetLedger/CleanupConfirmation:
+são crédito/fatos lógicos, não atestado nativo por identidade. Parecer
+PORT-OWNERSHIP-REVIEW fecha8precisões. Proposta deste escopo é do Claude2;
+não atribuir ao Gemini. Sem novo escritor, quota/fallback/job.
+
+Próximo único docs/PHASE-9-W1-ORACLE-PORT-OWNERSHIP-DESIGN.md, AUSENTE neste
+checkpoint, pelo mesmo C2/sessão51ea0d85/claude-opus-5-5/medium. Primeiro ler
+toda revisão; só Read/Edit/Write desse desenho, sem comandos. Root lerá
+desenho antes de testes/RED/fonte. Guardas Git atual/zero escritor, ativo
+só monitorar e recuperar terminal antes de nova chamada. Não reutilizar
+d9e8293 como HEAD depois destes documentos. Nenhum código mudou neste lote.
+
+Owner por invocação, fatos físicos tardios separados do cache de protocolo,
+sem segundo outcome/feed/limpar slots. CleanupConfirmation não vira prova
+por bools True; quiescência fica externa à ponte. Reusar componentes,
+sem outro motor/framework de SO. Operacionais continuam NOT_PREPARED.
+13pins/app124/estado16/attempt fixos. Sem Docker/PG/SQL/nativo/runtime/
+config/privado/binário/root/nonce/estado/entry/loader/comando/deploy.
+T5físico/B1/B2/D090gate2/C1/D119/TLS/ingressos/produção abertos; Gateway
+indisponível. Tarefa antiga já entregue, sem próximo disparo conhecido.
+Histórico abaixo.
+
 ## Duplex: ponte pura revista; 1410 relacionados verdes — 2026-11-11
 
 Claude2 único programador, sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f,
