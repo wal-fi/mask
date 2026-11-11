@@ -1,0 +1,472 @@
+# W1 Oracle: portas concretas e posse por invocação — desenho
+
+2026-11-11. Desenho somente, sob delegação; autor Claude2, sessão
+51ea0d85-05bb-4d24-ba9a-c9627c3f832f, claude-opus-5-5/medium. Escrito só com
+leitura pública: PORT-OWNERSHIP-REVIEW (8 precisões normativas), nota
+python311-public-semantics, ponte 5a09be1c, reator e86f8e32, runtime/budget.py
+e planos anteriores. Nada executado, nenhum valor operacional lido. Não é
+aprovação do usuário, prova nativa, runbook nem release. Root lê inteiro
+antes de qualquer teste/RED/fonte.
+
+## 1. Fronteira
+
+- Reusados SEM edição: main 89c99c65, driver b54a8a94, puro 4c155d76,
+  EXPECT ce6ff389, reator e86f8e32, ponte 5a09be1c. O reator é o único motor
+  de protocolo; a ponte é o único laço host. Fio fixo: 56 linhas, 512 bytes
+  incluindo LF, 50 controles, frames de 16 bytes, INIT `>4sI`.
+- Este desenho define SÓ: (a) o adaptador que implementa as portas já
+  publicadas da ponte (`now/poll`, `begin_spawn_into`, `begin_read_into`,
+  `begin_write_into`, `begin_wait_into`, `begin_act_into`) sobre UM processo
+  CLI do gateway e as seis ações; (b) o owner externo por invocação; (c) o
+  contrato de fatos físicos tardios e de quiescência/ausência FORA da ponte.
+- A ponte não ganha close/quiesce/release/ticket/nonce. Done/
+  COMPLETE_CANDIDATE é candidato de protocolo, nunca limpeza física.
+- NOT_PREPARED e não lidos: argv, comandos, nomes/labels/CIDs, rede/IP,
+  credenciais, raiz/task/nonce/estado, pins de CLI/Desktop/stdlib, perfis,
+  janelas de ações, formato textual das saídas de helpers, entry/loader/
+  collector/publisher/deploy. Estado16 e a tentativa consumida não renascem.
+
+## 2. Ligação concreta escolhida
+
+Host Windows, CPython 3.11, `asyncio.ProactorEventLoop` (a documentação
+pública exige Proactor para subprocessos no Windows). APIs públicas usadas,
+e somente estas:
+
+| API pública | Uso |
+|---|---|
+| `asyncio.ProactorEventLoop()` | criado pelo chamador, retido pelo owner; nunca fechado aqui |
+| `loop.time()` | relógio monotônico de `now()` |
+| `loop.create_future()`, `loop.create_task()` | futuros por invocação |
+| `loop.run_until_complete(asyncio.wait(fs, timeout=t))` | `poll`/`settle` síncronos |
+| `loop.subprocess_exec(factory, *argv, stdin=, stdout=, stderr=)` | CLI do gateway e filhos de helper |
+| `asyncio.SubprocessProtocol`: `connection_made`, `pipe_data_received`, `pipe_connection_lost`, `process_exited` | ÚNICA origem de fatos locais |
+| `SubprocessTransport.get_pid/get_returncode/get_pipe_transport` | identidade e código |
+| `WriteTransport.write/is_closing/get_write_buffer_size/set_write_buffer_limits` | handoff de stdin |
+| `ReadTransport.pause_reading/resume_reading` | limite de stdout |
+| `BaseProtocol.pause_writing/resume_writing` | aviso de buffer de escrita |
+
+Proibidos no adaptador: `communicate`, `StreamReader/StreamWriter.drain`
+como prova, `wait_for` (cancela), `asyncio.run` (cancela tudo ao sair),
+`cancel()`, `loop.close()`, `transport.close()`/`kill()`/`terminate()`,
+`shutdown_asyncgens`, threads, sinais, `subprocess.Popen` direto.
+
+Motivo: `BaseSubprocessTransport.close()` mata o processo vivo, e o
+finalizador do transporte chama `close()`. O owner deve, portanto, reter
+referências fortes de todo transporte/protocolo/futuro até uma futura
+operação explícita de limpeza. Perder a referência seria efeito oculto.
+
+A semântica do Proactor (handoff de WriteFile, ordem de callbacks, handle
+do processo) vem só da documentação pública; o comportamento do CPython
+3.11.3 instalado é validação física futura, NÃO medida.
+
+## 3. Módulo e seam de teste
+
+Futuro `docs/poc/oracle9_w1_port_ownership.py`, definições apenas, sem
+efeito no import. Seam único: o objeto `loop`. Construtor público exige
+`type(loop) is asyncio.ProactorEventLoop`; a fábrica privada
+`_bind_for_fakes(loop, plan, limits)` aceita o loop determinístico dos
+testes. Não há outra camada de SO: o adaptador chama os métodos da tabela
+acima diretamente.
+
+## 4. Tipos públicos
+
+Todos `@dataclass(frozen=True, slots=True, repr=False)` com repr constante
+redigido; enums fechados; campos com tipo exato validado.
+
+```text
+class OwnershipFault(Enum): CAPACITY, REENTRY, STATE, PLAN, LOOP, PORT
+class OwnershipRefusal(Exception): category: OwnershipFault   # args == (value,)
+
+class InvocationKind(Enum): SPAWN, WRITE, WAIT, ACT, CHILD, AUDIT
+class Gate(Enum): RESERVED, BOUND, ARMED, NOT_ARMED      # efeito só se ARMED
+class ProtocolState(Enum):                               # congelado 1 vez
+    PENDING, SUCCEEDED, FAILED_KNOWN, NOT_STARTED, UNKNOWN
+class PhysicalState(Enum):                               # só fatos locais
+    NOT_STARTED, OPEN, LOCAL_CLOSED, UNKNOWN
+class LateKind(Enum):
+    PROCESS_EXITED, PIPE_LOST_0, PIPE_LOST_1, PIPE_LOST_2,
+    HANDOFF_ZERO, HANDOFF_ERROR, TASK_DONE, TASK_ERROR, CONTROL
+class AuditKind(Enum): CONTAINER_BY_LABEL, BACKENDS_ZERO
+class AbsenceVerdict(Enum): NOT_RUN, ABSENT_OBSERVED, PRESENT, UNKNOWN
+
+HelperPlan:   argv: tuple[str, ...]             # NOT_PREPARED
+CliPlan:      gateway_argv: tuple[str, ...]     # NOT_PREPARED
+              acts: tuple[tuple[ActKind, tuple[HelperPlan, ...]], ...]
+              audits: tuple[tuple[AuditKind, tuple[HelperPlan, ...]], ...]
+OwnerLimits:  (constantes deste desenho, não operacionais)
+  max_records = 512, max_children_per_invocation = 24,
+  max_writes = 51, max_acts = 7, max_audits = 8,
+  gateway_stdout_cap = 28673  (56*512+1), child_output_cap = 4096 por pipe,
+  max_late_facts = 16 por registro
+
+LateFact:     at: float, kind: LateKind, code: int | None,
+              error_class: str | None        # nome da classe, nunca texto
+RecordView:   record_id: int, kind: InvocationKind, parent: int | None,
+              act_kind: ActKind | None, case: int | None, token: int | None,
+              gate: Gate, reserved_at: float, armed_at: float | None,
+              deadline: float, protocol: ProtocolState,
+              protocol_at: float | None, pid: int | None,
+              returncode: int | None, exited: bool,
+              pipes_lost: tuple[bool | None, bool | None, bool | None],
+              payload_len: int | None, handoff_zero: bool,
+              stdout_bytes: int, overflow: bool,
+              late: tuple[LateFact, ...], late_overflow: bool,
+              physical: PhysicalState
+AuditReport:  records: tuple[RecordView, ...], open_ids: tuple[int, ...],
+              unknown_ids: tuple[int, ...], gateway_cli: PhysicalState,
+              container: AbsenceVerdict, backends: AbsenceVerdict,
+              quiet_candidate: bool
+```
+
+`pipes_lost[i]` é `None` quando o fd i não é pipe (stdin DEVNULL dos
+filhos, stderr DEVNULL do gateway). `payload_len` guarda só o tamanho: os
+bytes do INIT nunca entram em registros, repr ou erro.
+
+```text
+class PortOwnership:
+    def __init__(self, loop: asyncio.ProactorEventLoop, plan: CliPlan,
+                 limits: OwnerLimits) -> None
+    def clock(self) -> ClockAdapter            # now(), poll(watched, target)
+    def gateway(self) -> GatewayAdapter        # begin_spawn_into(slot, deadline)
+    def acts(self) -> ActAdapter               # begin_act_into(slot, act, deadline)
+    def records(self) -> tuple[RecordView, ...]      # leitura pura
+    def first_control(self) -> BaseException | None  # identidade, leitura pura
+    def settle(self, target: float) -> float         # fatos tardios, §8
+    def begin_audit(self, kind: AuditKind, deadline: float) -> int   # §9
+    def audit(self) -> AuditReport                   # derivação pura, §9
+```
+
+`GatewayCliProcess` é o `SpawnOutcome.process` e expõe exatamente
+`begin_read_into(slot, size, deadline)`, `begin_write_into(slot, payload,
+deadline)` e `begin_wait_into(slot, deadline)`. Os ops colocados nos slots
+da ponte são `_Op` com `done() -> bool` e `outcome() -> DTO`. `outcome()`
+calcula o DTO uma vez a partir do resultado do futuro, guarda em cache e
+devolve sempre o mesmo objeto. O DTO é imutável e o `ProtocolState` do
+registro é congelado no mesmo instante.
+
+## 5. Posse por invocação e ordem antes de cada efeito
+
+Toda `begin_*` segue exatamente esta ordem, sem pular passos:
+
+1. **reserve**: recusa `CAPACITY` se algum limite de §4 estouraria. Cria o
+   `InvocationRecord` (gate RESERVED, `reserved_at=loop.time()`) na tabela
+   do owner, retido para sempre. Nenhum efeito ainda.
+2. **inert**: cria o futuro e o `_Op(record, future)`. Ainda nenhum efeito.
+3. **bind**: `slot.bind(op)` da ponte. Se falhar, o gate vira NOT_ARMED,
+   o protocolo NOT_STARTED, e o erro é re-levantado; a ponte faz PORT.
+4. **schedule**: `loop.create_task(coro(record))`. Com o loop parado, isso
+   não executa nada. Falha aqui: gate NOT_ARMED, NOT_STARTED, re-levanta.
+5. **arm** (última instrução de `begin_*`): `record.gate = ARMED`,
+   `armed_at = loop.time()`.
+
+O corotina só toca o SO se o gate for ARMED quando ela roda. Assim, um
+`BaseException` entre os passos 3 e 5 nunca gera efeito tardio escondido
+num `settle` posterior: a tarefa encontra NOT_ARMED, resolve NOT_STARTED e
+termina. Controle depois do passo 5 deixa o registro ARMED, e o resultado
+é decidido pelos fatos.
+
+Cada filho de helper (`CHILD`) e cada auditoria (`AUDIT`) recebe seu
+próprio registro, com reserve antes do `subprocess_exec` e `parent` igual
+ao ACT/AUDIT dono. ZERO24, ZERO25, KILL25, cada TERMINATE/PAUSE/RESTORE/
+OBSERVE, cada uma das ≤51 escritas, o spawn e o wait são registros
+distintos. Nenhum registro é sobrescrito, reutilizado ou apagado.
+
+A ponte esvazia seus slots depois de outcomes conhecidos (SENT/NOT_SENT,
+OK/FAILED, EXITED). Isso não toca o owner: o registro continua. A leitura
+de stdout não é uma invocação nativa. O pipe pertence ao registro SPAWN, e
+cada `begin_read_into` só pega bytes já recebidos (§6.2).
+
+Os callbacks do protocolo só anexam fatos ao registro dono: a fábrica do
+protocolo é fechada sobre esse registro antes do `subprocess_exec`. Eles
+nunca escrevem, matam, fecham, cancelam nem chamam portas, e qualquer
+`Exception` interna vira `LateFact(TASK_ERROR, error_class)`.
+
+## 6. Semântica de cada porta
+
+### 6.1 Spawn (1 registro SPAWN)
+
+O corotina chama `subprocess_exec(factory, *gateway_argv, stdin=PIPE,
+stdout=PIPE, stderr=DEVNULL)`. Depois, de forma síncrona e sem rodar o
+loop: `get_pipe_transport(0).set_write_buffer_limits(high=0)`.
+
+- Sucesso: `SpawnOutcome(ok=True, process=GatewayCliProcess(record))`, com
+  `pid = get_pid()` gravado em `connection_made`.
+- Qualquer exceção: `SpawnOutcome(ok=False, process=None)`, protocolo
+  UNKNOWN e físico UNKNOWN. A API pública não separa "CreateProcess
+  falhou" de "processo criado e depois falhou", então isso nunca vira
+  NOT_STARTED. Se `connection_made` já tiver ocorrido, o transporte fica
+  retido no registro.
+- A ponte recusa SPAWN e retém o slot.
+
+### 6.2 Leitura (sem registro novo)
+
+`pipe_data_received(1, data)` acrescenta ao buffer do owner. Depois de
+`gateway_stdout_cap` bytes recebidos, o owner chama `pause_reading()`,
+marca overflow e só conta os bytes excedentes, sem guardar. A ponte já
+recusa STDOUT_LIMIT com 28673. Isso dá memória limitada a um bloco do SO.
+
+`begin_read_into(slot, size, deadline)` resolve o futuro, dentro do loop,
+no primeiro destes eventos:
+- buffer não vazio: tira `min(size, len)` bytes → `ReadOutcome(True, data)`;
+- `pipe_connection_lost(1, None)` com buffer vazio → `ReadOutcome(True, b"")`;
+- `pipe_connection_lost(1, exc)` com buffer vazio → `ReadOutcome(False, b"")`.
+
+Bytes recebidos antes do erro são entregues primeiro. Nenhum dado é
+inventado nem descartado antes do cap.
+
+### 6.3 Escrita, SENT e NOT_SENT (≤51 registros WRITE)
+
+Seja `t = get_pipe_transport(0)`.
+
+- **NOT_SENT** só quando `t.write` NÃO foi chamado porque a pré-checagem
+  mostrou `t is None`, `t.is_closing()` ou o registro SPAWN já tinha
+  `PIPE_LOST_0`. Daí `WriteOutcome(NOT_SENT, 0)`, protocolo FAILED_KNOWN.
+  Zero é conhecido porque não houve chamada. A checagem fica na mesma
+  etapa síncrona que o `write`: nenhum callback intercala sem rodar o loop.
+- **SENT** quando `t.write(payload)` retornou sem exceção e, depois disso,
+  o owner observou `get_write_buffer_size() == 0` sem `PIPE_LOST_0`. A
+  observação ocorre logo após o write, ou em `resume_writing`, já que
+  high=0. Daí `WriteOutcome(SENT, len(payload))`. Significado proposto:
+  o transporte Proactor não tem mais bytes pendentes, ou seja, as escritas
+  overlapped no pipe local foram concluídas. É handoff LOCAL ao pipe do
+  SO, NUNCA leitura ou ack do peer. Validação nativa NOT_PREPARED.
+- **UNKNOWN** quando `write` levanta exceção; quando há `PIPE_LOST_0` com
+  buffer > 0; ou quando o prazo chega com buffer > 0 (peer que não lê:
+  pipe cheio, futuro pendente, a ponte quarentena e marca UNKNOWN).
+  `bytes_written=0` nesse caso significa só o limite inferior provado; o
+  registro mantém `handoff_zero=False`. Nenhuma contagem parcial é
+  inventada.
+- Bytes ainda no buffer do transporte pertencem ao registro SPAWN e ficam
+  retidos. `drain`, `is_closing` e `wait_closed` nunca são prova de
+  fechamento físico. No Proactor 3.11, write após perda da conexão é
+  descartado em silêncio; por isso a pré-checagem e o PIPE_LOST_0 são
+  obrigatórios.
+
+### 6.4 Wait (1 registro WAIT)
+
+O futuro resolve em `process_exited()` com `get_returncode()` int:
+`WaitOutcome(EXITED, code, reaped=True)`. No Windows, "reaped" significa
+apenas que o transporte obteve o código pelo handle do processo, que fica
+retido. Não há zumbi nem prova de container. Se o código não for int em
+0..255, o resultado é `WaitOutcome(UNKNOWN, None, False)`. O adaptador
+nunca produz NO_EXIT: ausência de fato fica pendente, e a ponte a mapeia
+para UNKNOWN. Pela documentação, `process_exited` pode preceder o
+fechamento dos pipes, então os `PIPE_LOST_*` são fatos separados que o
+wait não afirma.
+
+### 6.5 Ações (≤7 registros ACT; filhos CHILD ≤24 por ação)
+
+`begin_act_into(slot, act, deadline)` valida `type(act)` igual ao `Act`
+do namespace do reator já pinado pelo chamador, além de kind/token/case.
+O corotina executa em sequência os `HelperPlan` do kind, NOT_PREPARED.
+Cada filho tem `stdin=DEVNULL`, stdout/stderr PIPE com 4096 bytes por pipe
+(acima disso: overflow, pause_reading, só contagem).
+
+O op da ação fica `done` apenas quando todo filho iniciado está
+LOCAL_CLOSED, ou quando um filho falhou antes de qualquer efeito.
+`ActOutcome`:
+- **OK**: todos os filhos com exit 0, sem overflow, e o parser fechado do
+  kind produziu o `*Facts` exato do reator.
+- **FAILED**: todos os filhos LOCAL_CLOSED e o parser classificou falha
+  conhecida. `facts` só se completos; senão None.
+- **UNKNOWN** (facts None): spawn de filho incerto, parser incompleto,
+  overflow, ou exceção. Filho vivo no prazo deixa o op pendente; a ponte
+  produz UNKNOWN e retém.
+
+O adaptador não mata o helper no prazo. Os `KillFacts` vêm do relato do
+Docker engine via CLI (`stop_confirmed`, `oom_killed`), não de atestado
+de kernel.
+
+## 7. Relógio, poll e precedência
+
+- `now() = loop.time()`, monotônico e sem rebase. Os prazos vêm da ponte
+  como instantes do mesmo relógio.
+- `poll(watched, target)`: confere que todo op em `watched` é `_Op` deste
+  owner (senão PORT). Depois repete `run_until_complete(asyncio.wait(
+  futures, timeout=max(0, target - loop.time()),
+  return_when=FIRST_COMPLETED))` até um futuro observado terminar ou
+  `loop.time() >= target`. Só então devolve `loop.time()`.
+- A repetição absorve o despertar antecipado de até a resolução do
+  relógio do loop, que a ponte trataria como PORT espúrio. `asyncio.wait`
+  não cancela os futuros observados.
+- Precedência: a ponte já aplica overall antes de todo feed/begin e no
+  retorno do poll. O adaptador não arredonda, não estende prazo e não
+  segura o retorno.
+- Não cooperação: se um passo nativo bloquear a thread dentro do
+  `run_until_complete`, o poll volta tarde e devolve o instante real
+  observado; a ponte recusa pelo prazo e retém. Se nunca voltar, a thread
+  fica presa. Não se promete teto absoluto: cancelar task não preempta o
+  SO. Supervisão externa é NOT_PREPARED.
+- Controle: um `BaseException` que atravessa `run_until_complete` em
+  `poll` ou `settle` é guardado por identidade como `first_control` (só o
+  primeiro) e re-levantado sem tocar nada. Nenhuma task é cancelada. O
+  registro em voo ganha `LateFact(CONTROL)` como fato observado.
+- Não reentrância: `poll`, `settle` e `begin_audit` recusam REENTRY se
+  outro deles estiver rodando o loop.
+
+## 8. Fatos físicos tardios: caminho separado
+
+- O protocolo é congelado na primeira chamada de `outcome()`; o owner
+  nunca chama `done()`/`outcome()` de um op e nunca mexe em slot ou célula
+  da ponte. Um registro cujo op ficou quarentenado pela ponte permanece
+  com protocolo PENDING para sempre. Fatos posteriores vão para
+  `late`/campos físicos, nunca para um segundo outcome, feed ou replay.
+- `settle(target)`: só depois de `run()` da ponte ter retornado ou
+  levantado. Roda o loop até `target` (sem parar antes) e só registra
+  fatos dos callbacks e das tasks. Não arma efeitos novos: tasks já ARMED
+  continuam (por exemplo, a escrita pendente que conclui o handoff tarde
+  vira `LateFact(HANDOFF_ZERO)`), e tasks NOT_ARMED terminam sem efeito.
+- `late` é limitado a 16 por registro; o excesso vira `late_overflow=True`,
+  que conta como UNKNOWN na auditoria.
+- `PhysicalState` derivado apenas de fatos do próprio registro:
+  - NOT_STARTED: gate NOT_ARMED, ou falha conhecida antes de qualquer
+    chamada nativa;
+  - LOCAL_CLOSED: `exited` com returncode int e todo pipe existente
+    perdido sem overflow pendente;
+  - OPEN: processo/transporte conhecido, faltando algum desses fatos;
+  - UNKNOWN: spawn incerto, erro de callback, late_overflow ou controle
+    durante o efeito.
+  - WRITE/ACT/AUDIT só são LOCAL_CLOSED se a task terminou e todos os
+    filhos estão LOCAL_CLOSED. Uma WRITE fecha localmente com
+    HANDOFF_ZERO, ou com PIPE_LOST_0 do registro SPAWN.
+
+Matar ou recolher o CLI do gateway não fecha nenhum registro ACT/CHILD e
+não prova ausência de backends: cada um tem fatos próprios.
+
+## 9. Quiescência, ausência e liberação
+
+- Quem deriva: só `PortOwnership.audit()`, função pura sobre os próprios
+  registros. Não existe API que receba booleanos, `CleanupConfirmation`
+  ou fatos do chamador. Fakes atuam abaixo, no loop/transporte, nunca no
+  owner.
+- `begin_audit(kind, deadline)` só é aceito quando todo registro não-AUDIT
+  está LOCAL_CLOSED ou NOT_STARTED. Antes disso recusa STATE e a ausência
+  fica NOT_RUN. Os filhos executam os `HelperPlan` de auditoria
+  (NOT_PREPARED) com o mesmo contrato de §6.5.
+  - CONTAINER_BY_LABEL: ABSENT_OBSERVED só com exit 0, saída vazia sem
+    overflow e todos os filhos LOCAL_CLOSED. Saída não vazia = PRESENT.
+    Qualquer outra coisa = UNKNOWN.
+  - BACKENDS_ZERO: ABSENT_OBSERVED só com exit 0 e contagem parseada 0
+    para o papel próprio. Os ZERO24/ZERO25 do protocolo são registros
+    distintos e NÃO servem de auditoria, porque precedem a quiescência dos
+    outros registros.
+- `quiet_candidate = True` exige, ao mesmo tempo:
+  - zero registros OPEN/UNKNOWN, incluindo SPAWN e os pipes 0/1;
+  - `container` e `backends` ABSENT_OBSERVED, por auditorias armadas
+    depois do último fechamento local;
+  - nenhum `first_control`.
+- Mesmo `True` é apenas o relato do CLI/engine/PG observado pelo host
+  Windows, não atestado de kernel. Processos `exec` dentro do PG fora de
+  backends, o próprio PG e a rede não são cobertos (ver §12).
+- Logical vs físico: o host NÃO usa `BudgetLedger`. O ledger do
+  controlador, dentro do container, continua inalterado, e seu
+  `CleanupConfirmation` é crédito lógico de modelo (cinco bools sem
+  identidade). Nenhum valor do host é convertido nele. Um futuro passo de
+  limpeza explícita só pode consultar `AuditReport`; erro, UNKNOWN ou
+  falha nunca liberam recurso nem reabrem a tentativa consumida. Sem
+  `quiet_candidate`, todos os owners ficam retidos.
+
+## 10. Retenção pelo chamador
+
+O chamador cria o loop e o `PortOwnership` antes do bridge, passa
+`owner.clock()`, `owner.gateway()` e `owner.acts()` à ponte e retém
+ponte, owner e loop depois de qualquer resultado (Done, HELD, REFUSED ou
+controle). O owner retém para sempre os registros, transportes,
+protocolos, futuros, tasks e o buffer de stdout. Não há `close()`,
+`__del__` nem callback de limpeza. Descartar o owner é proibido pelo
+contrato, porque o finalizador do transporte mataria o processo vivo.
+
+## 11. Matriz de falhas por fronteira
+
+| Fronteira | Registro | Ponte |
+|---|---|---|
+| reserve: limite | nenhum criado | slot vazio → PORT, sem efeito |
+| bind falha | NOT_ARMED/NOT_STARTED | PORT, slot inalterado |
+| create_task falha | NOT_ARMED/NOT_STARTED | PORT, op retido no slot |
+| controle entre bind e arm | NOT_ARMED; tarefa termina sem efeito | CONTROL, HELD |
+| controle após arm | ARMED; fatos decidem | CONTROL, HELD |
+| exceção antes da chamada nativa | FAILED_KNOWN (ex.: NOT_SENT) | outcome conhecido |
+| exceção na chamada nativa | UNKNOWN, retido | UNKNOWN/PORT retido |
+| spawn lança | UNKNOWN; transporte retido se visto | SPAWN, HELD |
+| escrita parcial / peer não lê | PENDING → late HANDOFF_* | UNKNOWN no prazo |
+| stdout > cap | overflow, pause_reading | STDOUT_LIMIT |
+| exit antes de pipes | wait EXITED; pipes OPEN | Exited ok; auditoria OPEN |
+| wait sem fato | PENDING | UNKNOWN_EXIT, retido |
+| helper vivo após kill do gateway | ACT/CHILD OPEN | act UNKNOWN; auditoria recusa |
+| callback lança Exception | late TASK_ERROR, físico UNKNOWN | conforme futuro |
+| poll volta tarde | instante real | OVERALL/SILENCE, retém |
+| outcome lança (não deveria) | — | a ponte guarda o erro original |
+
+## 12. Questões em aberto
+
+1. Prova de que `get_write_buffer_size()==0` no Proactor 3.11.3 implica a
+   conclusão de todas as WriteFile; ordem real dos callbacks; descarte
+   silencioso após perda da conexão. Tudo validação nativa futura.
+2. Supervisão externa para um passo nativo que bloqueie a thread.
+3. Termination/kill explícito de helper ou CLI: será uma invocação
+   própria, com registro, numa operação de limpeza futura; não é definido
+   aqui.
+4. Ausência de processos `exec` no container PG que não sejam backends,
+   remoção do PG/rede e sua auditoria.
+5. Ambiente herdado pelos filhos (env de `subprocess_exec`): o INIT só
+   pelo stdin, mas a política de env é NOT_PREPARED.
+6. Formatos das saídas e parsers fechados de cada helper, e janelas de
+   OBSERVE/RESTORE.
+7. Admissão: pins de CLI/Desktop/stdlib, freshness (300 s ≠ overall 300).
+
+## 13. Próximo lote: testes determinísticos antes da fonte
+
+Arquivo único `tests/test_oracle9_w1_port_ownership.py`; o módulo segue
+AUSENTE até o root ler os oráculos e congelar o RED. Loop de teste:
+subclasse local de `asyncio.BaseEventLoop` com relógio virtual, seletor
+falso e `subprocess_exec` falso que devolve transportes falsos
+implementando o contrato público de §2. Não há socket, processo, thread
+ou sinal reais. O root decide se essa maquinaria asyncio em processo é
+aceitável nos testes. Integração com a ponte publicada e o reator real,
+iguais aos do teste duplex.
+
+Casos positivos obrigatórios (o adaptador funciona, não é sempre UNKNOWN):
+- P1: caminho completo com fakes até Done COMPLETE_CANDIDATE: SPAWN, 51
+  WRITE SENT, ACTs OK com Facts exatos, WAIT EXITED 0. `audit()` com
+  todos LOCAL_CLOSED e duas ausências observadas → `quiet_candidate`.
+  A ponte continua DONE, sem efeito de limpeza.
+- P2: SENT exato com buffer zero imediato e via resume_writing tardio.
+- P3: leitura em blocos fragmentados com EOF depois dos dados; erro
+  depois de dados entrega os dados primeiro.
+- P4: ZERO24 e ZERO25 com registros distintos, ambos retidos depois que a
+  ponte esvaziou o slot.
+
+Casos adversariais obrigatórios:
+- A1: falha em reserve, bind, create_task e na chamada nativa, cada uma
+  com o estado de §11, com assert de ausência de efeito antes do arm.
+- A2: `KeyboardInterrupt` entre bind e arm: o `settle` posterior não
+  inicia nenhum processo nem escrita.
+- A3: controle durante poll: mesma identidade em `first_control`, zero
+  `cancel`/`close`/`kill` registrados no fake.
+- A4: peer que não lê: UNKNOWN no prazo, late HANDOFF_ZERO no settle,
+  protocolo continua PENDING, sem segunda chamada de `outcome()`.
+- A5: write depois de PIPE_LOST_0 dá NOT_SENT sem chamar `write`; perda
+  depois do write com buffer > 0 dá UNKNOWN com 0 bytes.
+- A6: stdout acima de 28673: pause_reading e contagem, sem retenção extra.
+- A7: exit antes dos pipes: wait EXITED, auditoria OPEN, `begin_audit`
+  recusa STATE.
+- A8: helper vivo após KILL25 e saída do gateway: ACT OPEN,
+  `quiet_candidate` False.
+- A9: spawn tardio depois do prazo: o registro retém o transporte, a
+  ponte adota o processo, o físico fica OPEN até os fatos de exit/pipes.
+- A10: spawn levanta exceção depois de `connection_made`: UNKNOWN,
+  transporte retido, nunca NOT_STARTED.
+- A11: wakeup antecipado do loop: poll repete até o target, sem PORT
+  espúrio.
+- A12: limites de registros e de late facts recusados antes do efeito, ou
+  marcados `late_overflow`.
+- A13: AST: nenhum `wait_for`, `asyncio.run`, `cancel`, `close`, `kill`,
+  `terminate`, `communicate`, `drain`, `Popen` ou thread; nenhum
+  `CleanupConfirmation`/`BudgetLedger` usado; nenhuma API do owner aceita
+  booleanos de fato.
+- A14: o repr de registros e erros nunca contém payload ou argv.
+
+Nenhum teste declara gate físico, autoriza liberar recurso real ou
+substitui a validação nativa futura. Pela política Senff, o desenho e
+qualquer código derivado dele exigem revisão humana e de segurança antes
+do merge.

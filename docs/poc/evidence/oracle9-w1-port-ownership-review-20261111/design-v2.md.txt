@@ -1,0 +1,612 @@
+# W1 Oracle: portas concretas e posse por invocação — desenho V2
+
+2026-11-11. Desenho somente, sob delegação. Autor: Claude2, sessão
+51ea0d85-05bb-4d24-ba9a-c9627c3f832f, claude-opus-5-5/medium. Leitura pública
+apenas: PORT-OWNERSHIP-REVIEW inteiro (8 precisões e 7 pontos da V1), nota
+python311-public-semantics, ponte 5a09be1c, reator e86f8e32 (inclusive
+`_facts_ok`) e runtime/budget.py. Nada foi executado e nenhum valor
+operacional foi lido. Não é aprovação do usuário, prova nativa, runbook nem
+release. A V1 (be7e0e4b) foi preservada pelo root como dado. O root lê esta
+V2 inteira antes de qualquer teste, RED ou fonte.
+
+## 0. O que muda da V1
+
+| Ponto da revisão | V2 |
+|---|---|
+| 1 seam/loop | Owner puro sem asyncio, sobre a interface `Pump` estreita. A ligação Proactor fica em outro módulo, com pré-condições próprias (§2). Os fakes passam pelo mesmo construtor e pela mesma autorização. |
+| 2 settle | `seal()` fecha o despacho de trabalho. Autorização é checada imediatamente antes de CADA efeito, filho a filho (§4, §7). |
+| 3 read | Cada leitura é um `ReadTake` com outcome próprio e imutável. Registros transitórios são limitados (§5.2). |
+| 4 assentamento | `SETTLED_RETAINED` explicita os recursos retidos. A disposição é explícita, por invocação e por identidade (§9). |
+| 5 auditorias | A cerca é capturada no `seal`, com escopo `Scope` ligado e controle positivo. Há época de invalidação (§8). |
+| 6 decoders | Esquemas fechados por kind. FAILED e UNKNOWN sempre com `facts=None`. Falhas são enum fechado, nunca nomes de classe (§5.5). |
+| 7 buffers/SENT | SENT é só o handoff do contrato. Corte antes de estender buffers. UNKNOWN com 0 é apenas o limite confirmado (§5.3, §5.2). |
+
+## 1. Fronteira
+
+- Reusados SEM edição: main 89c99c65, driver b54a8a94, puro 4c155d76,
+  EXPECT ce6ff389, reator e86f8e32 e ponte 5a09be1c. O reator é o único
+  motor de protocolo. Fio fixo: 56 linhas, 512 bytes incluindo LF, 50
+  controles, frames de 16 bytes.
+- Escopo: o adaptador das portas publicadas sobre um CLI do gateway e seis
+  ações; o owner por invocação; fatos tardios, cerca/auditoria e disposição
+  explícita, todos FORA da ponte. A ponte não ganha close, quiesce, release,
+  ticket nem nonce.
+- Done ou COMPLETE_CANDIDATE é candidato de protocolo, nunca limpeza física.
+- NOT_PREPARED, não lidos: argv e templates de comando; valores de `Scope`
+  (nomes, labels, papéis); rede/IP; credenciais; raiz/task/nonce/estado;
+  pins de CLI/Desktop/stdlib; perfis; janelas de OBSERVE/RESTORE; entry/
+  loader/collector/publisher/deploy. Estado16 e a tentativa consumida
+  continuam fixos.
+
+## 2. Ligação: owner puro + Pump estreito + Proactor separado
+
+### 2.1 Módulos
+
+- `docs/poc/oracle9_w1_port_ownership.py`: owner, adaptadores das portas,
+  decoders, cerca, auditoria e disposição. Não importa `asyncio`,
+  `subprocess`, `socket`, `threading` nem `signal` (checado por AST).
+  Depende só da interface `Pump` abaixo, recebida no construtor público
+  único `PortOwnership(pump, plan, limits)`, que valida tudo da mesma forma
+  para fake e real. Não existe fábrica de atalho.
+- `docs/poc/oracle9_w1_proactor_pump.py` (lote futuro próprio, gate
+  nativo): implementação real do `Pump` sobre `asyncio.ProactorEventLoop`.
+  Não entra no primeiro lote de testes.
+
+### 2.2 Interface `Pump` (síncrona, completa)
+
+```text
+class Pump(Protocol):
+    def now(self) -> float                       # monotônico
+    def schedule_start(self, request: StartRequest) -> None
+    def run_until(self, target: float, stop: Callable[[], bool]) -> float
+
+StartRequest (frozen): record_id: int, argv: tuple[str, ...],
+    stdin_pipe: bool, not_before: float, authorize: Callable[[], bool],
+    events: ProcessEvents
+
+ProcessEvents (do owner, um por registro de processo):
+    started(handle: ProcessHandle) / start_failed() / not_started()
+    data(fd: int, chunk: bytes) / pipe_lost(fd: int, failed: bool)
+    exited(code: object) / write_resumed() / closed()
+
+ProcessHandle (do pump; 1:1 com APIs públicas de SubprocessTransport e
+WriteTransport/ReadTransport):
+    pid() -> int | None ; returncode() -> int | None
+    write(data: bytes) -> None ; is_closing() -> bool ; buffer_size() -> int
+    pause_reading(fd: int) -> None ; resume_reading(fd: int) -> None
+    close() -> None ; kill() -> None    # só a disposição explícita (§9) chama
+```
+
+Contrato do Pump:
+- `schedule_start` não executa nada. O efeito só ocorre dentro de
+  `run_until`, a partir de `not_before`. Imediatamente antes da chamada
+  nativa, o pump chama `request.authorize()`; se vier False, chama
+  `events.not_started()` e não produz efeito.
+- `run_until` só retorna com `stop()` verdadeiro ou com `now() >= target`.
+  Eventos são entregues apenas dentro dele, na thread chamadora. Um
+  `BaseException` atravessa sem ser capturado. Retorno antecipado viola o
+  contrato, e o owner trata isso como falha `PORT` (§6).
+
+### 2.3 Ligação Proactor futura (não testada no primeiro lote)
+
+- O pump cria o PRÓPRIO `asyncio.ProactorEventLoop()` e, logo em seguida,
+  confere: `not loop.is_running()`, `not loop.is_closed()`,
+  `loop.get_task_factory() is None`. Nunca chama `set_event_loop`, política
+  global, `set_task_factory` nem `asyncio.run`. O loop é exclusivo: não é
+  exposto a ninguém.
+- `schedule_start`: `loop.call_at(not_before, step)`. `step` cria
+  `loop.create_task(start())`. `start()` começa com `if not authorize():
+  not_started(); return` e chama em seguida `await loop.subprocess_exec(
+  factory, *argv, stdin=PIPE|DEVNULL, stdout=PIPE, stderr=PIPE|DEVNULL)`.
+- O protocolo é um `SubprocessProtocol` que só repassa callbacks a
+  `events` (`connection_made` → `started`, `pipe_data_received`,
+  `pipe_connection_lost`, `process_exited`, `resume_writing`,
+  `connection_lost` → `closed`).
+- `run_until`: futuro de espera, `call_at(target)` e reavaliação de `stop`
+  após cada evento, com `run_until_complete` repetido até a condição.
+  Nunca `wait_for` ou `cancel`. O loop nunca é fechado aqui.
+- NOT_PREPARED (validação nativa futura, não medida):
+  - que nenhum outro callback rode entre `authorize()` e o CreateProcess
+    dentro da cadeia síncrona de `subprocess_exec`;
+  - a ordem real dos callbacks no Proactor 3.11.3;
+  - o overhead de alocação de cada bloco entregue por `pipe_data_received`;
+  - o efeito real de `close()`/`kill()` em handles do Windows.
+
+## 3. Tipos públicos do owner
+
+Todos `@dataclass(frozen=True, slots=True, repr=False)` com repr constante
+redigido. Enums fechados. Tipos exatos validados.
+
+```text
+OwnershipFault: CAPACITY, REENTRY, STATE, PLAN, PUMP, PORT, SEALED
+OwnershipRefusal(Exception): category   # args == (value,), sem cadeia
+FaultKind: START, CALLBACK, WRITE, DECODE, OVERFLOW, CONTROL, PUMP
+InvocationKind: SPAWN, WRITE, WAIT, ACT, CHILD, AUDIT, DISPOSE
+Gate: RESERVED, BOUND, ARMED, NOT_ARMED
+ProtocolState: PENDING, SUCCEEDED, FAILED_KNOWN, NOT_STARTED, UNKNOWN
+PhysicalState: NOT_STARTED, OPEN, SETTLED_RETAINED, RELEASED_LOCAL,
+               UNKNOWN
+Retained: TRANSPORT, PROCESS_HANDLE, PIPE_0, PIPE_1, PIPE_2, BUFFER
+AuditKind: GATEWAY_ABSENT, BACKENDS_ZERO
+AbsenceVerdict: NOT_RUN, ABSENT_OBSERVED, PRESENT, STALE, UNKNOWN
+DisposeKind: CLOSE_HANDLE, TERMINATE_PROCESS, REMOVE_GATEWAY_CONTAINER
+DecodeReason: OK, EXIT_NONZERO, SHAPE, SCOPE, TRUNCATED, PREDICATE, MISSING
+
+Scope: scope_id: str, gateway_name: str, scope_label: str,
+       pg_name: str, target_role: str, observer_role: str   # NOT_PREPARED
+HelperPlan: argv: tuple[str, ...]                           # NOT_PREPARED
+CliPlan: scope: Scope, gateway_argv: tuple[str, ...],
+         acts: tuple[tuple[ActKind, tuple[HelperPlan, ...]], ...],
+         audits: tuple[tuple[AuditKind, tuple[HelperPlan, HelperPlan]], ...],
+         remove_gateway: tuple[HelperPlan, ...]
+OwnerLimits (constantes deste desenho, não operacionais):
+  max_records 512 ; max_children 24 por invocação ; max_writes 51 ;
+  max_acts 7 ; max_audits 8 ; max_disposals 64 ;
+  gateway_stdout_cap 28673 (56*512+1) ; child_stdout_cap 4096 ;
+  child_stderr_cap 1024 ; max_late 16 ; max_retained_takes 2
+```
+
+O `CliPlan` é validado no construtor:
+- `scope_id` não vazio, ASCII limitado;
+- todo `HelperPlan.argv` e o `gateway_argv` contêm `scope_id` como
+  argumento ou substring de argumento (ligação estrutural ao MESMO escopo);
+- nenhum argumento casa os padrões de segredo declarados no plano. Os
+  padrões são NOT_PREPARED; segredos nunca entram em argv.
+
+Registros guardam o índice do plano, nunca o argv.
+
+```text
+LateFact: at: float, kind: LateKind, code: int | None, fault: FaultKind | None
+LateKind: STARTED, EXITED, PIPE_LOST, HANDOFF_ZERO, WRITE_FAULT, CHILD_DONE,
+          CLOSED, CONTROL
+RecordView: record_id, kind, parent: int | None, plan_index: int,
+  scope_id: str, act_kind: ActKind | None, case: int | None,
+  token: int | None, gate, reserved_at, armed_at: float | None,
+  deadline: float, epoch: int, protocol: ProtocolState,
+  protocol_at: float | None, pid: int | None, returncode: int | None,
+  exited: bool, pipes_lost: tuple[bool | None, bool | None, bool | None],
+  payload_len: int | None, handoff_zero: bool, out_bytes: int,
+  out_dropped: int, faults: tuple[FaultKind, ...],
+  late: tuple[LateFact, ...], late_overflow: bool,
+  physical: PhysicalState, retained: tuple[Retained, ...],
+  settled_at: float | None
+WorkFence: sealed_at: float, work_ids: tuple[int, ...],
+  open_ids: tuple[int, ...], unknown_ids: tuple[int, ...],
+  work_settled_at: float | None
+AuditResult: record_id, kind, epoch, armed_at, verdict: AbsenceVerdict,
+  reason: DecodeReason
+AuditReport: fence: WorkFence | None, records: tuple[RecordView, ...],
+  gateway: AuditResult | None, backends: AuditResult | None,
+  epoch: int, quiet_candidate: bool
+CustodyView: records: tuple[(record_id, tuple[Retained, ...]), ...]
+
+class PortOwnership:
+    def __init__(self, pump: Pump, plan: CliPlan, limits: OwnerLimits)
+    def clock(self) -> ClockAdapter       # now(), poll(watched, target)
+    def gateway(self) -> GatewayAdapter   # begin_spawn_into(slot, deadline)
+    def acts(self) -> ActAdapter          # begin_act_into(slot, act, deadline)
+    def records(self) -> tuple[RecordView, ...]
+    def first_control(self) -> BaseException | None
+    def seal(self) -> WorkFence
+    def settle(self, target: float) -> float
+    def begin_audit(self, kind: AuditKind, deadline: float) -> int
+    def begin_dispose(self, kind: DisposeKind, target_id: int | None,
+                      deadline: float) -> int
+    def audit(self) -> AuditReport
+    def custody(self) -> CustodyView
+```
+
+`records`, `first_control`, `audit` e `custody` são leituras puras: não
+chamam o pump nem os ops.
+
+## 4. Posse por invocação e autorização antes de cada efeito
+
+Toda invocação nativa (SPAWN, WRITE, CHILD de ACT/AUDIT/DISPOSE e os
+próprios efeitos de DISPOSE) segue esta ordem:
+
+1. **reserve**: checa limites (senão `CAPACITY`, sem registro) e cria o
+   registro (RESERVED). O registro é retido para sempre.
+2. **inert**: cria o op/estado, sem efeito.
+3. **bind**: `slot.bind(op)` da ponte. Só portas da ponte; filhos e
+   dispose não têm slot. Se falhar: NOT_ARMED/NOT_STARTED e re-levanta.
+4. **arm** como última instrução síncrona antes do pedido de efeito.
+5. **request**: `schedule_start` (processos) ou chamada direta (write e
+   dispose sobre handle).
+6. **authorize**, imediatamente antes da chamada nativa. Exige:
+   - gate ARMED;
+   - o despacho certo aberto: trabalho antes do `seal`; auditoria/dispose
+     só depois do `seal` e só para seu próprio registro;
+   - `pump.now() < deadline` da invocação (e do ACT pai);
+   - o pai não concluído;
+   - limite de filhos não atingido;
+   - nenhum `first_control`.
+
+   Se falhar: NOT_STARTED, sem efeito. Isso vale para CADA filho, não só
+   para a entrada.
+
+Um controle entre bind e arm deixa NOT_ARMED, e a autorização posterior
+recusa. Um controle depois do arm e antes do efeito síncrono (write ou
+dispose) deixa UNKNOWN, porque não se distingue "antes" de "dentro" da
+chamada.
+
+O handler de `BaseException` do owner só guarda a identidade (primeira
+apenas) e re-levanta. Não chama pump, evento, close, cancel nem kill.
+
+Cada filho (CHILD) tem registro próprio, com `parent` igual ao ACT, AUDIT
+ou DISPOSE. ZERO24, ZERO25, KILL25, cada escrita, spawn, wait, auditoria e
+disposição são registros distintos, nunca sobrescritos nem apagados. O
+esvaziamento de slots pela ponte não toca o owner.
+
+Callbacks (`ProcessEvents`) só anexam fatos ao registro dono, fechado na
+criação do `StartRequest`. Eles nunca escrevem, matam, fecham ou iniciam
+algo. O único efeito que um evento pode ENFILEIRAR é o próximo filho da
+mesma invocação, como `schedule_start`; esse filho ainda passa pelo
+`authorize` no ponto 6, que o recusa após `seal`, após o prazo ou após a
+conclusão do pai. Uma `Exception` interna de callback vira
+`FaultKind.CALLBACK` no registro, nunca texto ou classe.
+
+## 5. Semântica das portas
+
+### 5.1 Spawn (1 registro SPAWN)
+
+O pump inicia com `stdin_pipe=True` e stderr fora (DEVNULL na ligação
+real). O `started(handle)` grava `pid`.
+
+- `started` antes de qualquer falha: `SpawnOutcome(True, GatewayCliProcess)`.
+- `start_failed` ou fault: `SpawnOutcome(False, None)`, protocolo UNKNOWN.
+  Se `started` já tinha ocorrido, handle e pid ficam retidos e o físico é
+  OPEN; senão é UNKNOWN. Nunca vira NOT_STARTED, salvo por `not_started`
+  vindo do `authorize`.
+
+### 5.2 Leituras: `ReadTake` e buffer de stdout
+
+- Buffer do SPAWN com teto `gateway_stdout_cap`. No `data(1, chunk)`:
+  `room = cap - aceitos`; anexa só `chunk[:room]`, uma cópia de no máximo
+  `room` bytes, ANTES de qualquer extensão; soma `len(chunk) - room` em
+  `out_dropped`; ao atingir o teto, `pause_reading(1)`. Nunca há extensão
+  seguida de truncamento.
+- O bloco do callback já foi alocado pelo pump. Esse custo não é limitado
+  aqui (§2.3, NOT_PREPARED).
+- `begin_read_into(slot, size, deadline)` cria um `ReadTake` (op) com
+  outcome próprio, congelado uma vez:
+  - dados pendentes: retira `min(size, len)` → `ReadOutcome(True, data)`;
+  - `pipe_lost(1, False)` com buffer vazio → `ReadOutcome(True, b"")`;
+  - `pipe_lost(1, True)` com buffer vazio → `ReadOutcome(False, b"")`.
+  Dados recebidos antes do erro são entregues primeiro.
+- Takes não criam registro nativo: o pipe pertence ao SPAWN. O owner retém
+  no máximo `max_retained_takes=2`: o take pendente e o último take não
+  concluído com sucesso (deadline, controle). Um take bem-sucedido é
+  liberado pelo owner quando o próximo take nasce. A ponte decide seu
+  próprio slot; o owner nunca o limpa.
+- Contadores agregados (`out_bytes`, takes concluídos) ficam no SPAWN. O
+  `ProtocolState` do SPAWN só reflete o outcome do spawn.
+
+### 5.3 Escrita: SENT, NOT_SENT e UNKNOWN (≤51 registros WRITE)
+
+Os passos 1 a 5 de §4 acontecem dentro de `begin_write_into`. Seja `h` o
+handle do SPAWN. A pré-checagem é imediata: `h` existe, `not
+h.is_closing()`, sem `pipe_lost(0)` e sem fault de write anterior.
+
+- **NOT_SENT** se a pré-checagem falha: `write` NÃO é chamado.
+  `WriteOutcome(NOT_SENT, 0)`, FAILED_KNOWN. Zero é conhecido porque a
+  chamada não ocorreu.
+- Chama `h.write(payload)`. Em seguida, de forma síncrona: exceção ou
+  `h.is_closing()` → **UNKNOWN**. Isso cobre o erro síncrono e o descarte
+  silencioso antes de `pipe_lost`.
+- **SENT** (handoff local do contrato) quando, sem `pipe_lost(0)`, sem
+  `is_closing()` e sem fault, o owner observa `h.buffer_size() == 0`, logo
+  após o write ou num `write_resumed()`. Exige limites high=0/low=0 na
+  ligação real. Resultado: `WriteOutcome(SENT, len)`.
+- SENT significa só que o transporte declarou não haver bytes pendentes
+  em seu buffer. NÃO é ack do peer, conclusão de WriteFile, entrega ao
+  kernel nem ausência física. Essas inferências são NOT_PREPARED.
+- **UNKNOWN** também com `pipe_lost(0)` ou `is_closing()` antes do buffer
+  zero, ou com o prazo vencido e buffer > 0 (peer que não lê).
+  `bytes_written=0` em UNKNOWN significa "quantidade não estabelecida;
+  limite inferior confirmado 0", nunca zero transmitido.
+- Payload: só `payload_len` é retido. Os bytes ficam com o transporte até
+  o handoff ou a disposição.
+
+### 5.4 Wait (1 registro WAIT)
+
+- `exited(code)` com `type(code) is int` em 0..255 →
+  `WaitOutcome(EXITED, code, reaped=True)`.
+- "reaped" = o pump obteve o returncode do processo. O handle continua
+  retido (`Retained.PROCESS_HANDLE`) até CLOSE_HANDLE. Não há prova de
+  container.
+- Código fora do domínio → `WaitOutcome(UNKNOWN, None, False)`.
+- Nunca NO_EXIT: sem fato, o op fica pendente e a ponte o mapeia para
+  UNKNOWN.
+- `exited` pode chegar antes dos `pipe_lost`. Os pipes são fatos separados.
+
+### 5.5 Ações (≤7 ACT; filhos CHILD em sequência) e decoders fechados
+
+`begin_act_into(slot, act, deadline)` exige `type(act)` igual ao `Act` do
+namespace já pinado e kind/token/case válidos. Cada filho tem
+`stdin_pipe=False`, stdout com teto 4096 e stderr com teto 1024, cortados
+antes de estender (§5.2).
+
+O próximo filho só é enfileirado quando o anterior está SETTLED_RETAINED
+(exit + todos os pipes perdidos) e o decoder parcial pede continuação. Em
+OBSERVE, o espaçamento usa `not_before` (janela NOT_PREPARED, máximo 20).
+
+Entrada dos decoders, por filho:
+`HelperRaw(index: int, code: int, stdout: bytes, stdout_truncated: bool,
+stderr_len: int, stderr_truncated: bool)`. O stderr NUNCA é decodificado
+nem retido, só contado.
+
+Saída: `ActDecode(status: ActStatus, facts: ActFacts | None,
+reason: DecodeReason)`.
+
+```text
+decode_act(kind: ActKind, case: int, scope: Scope,
+           raws: tuple[HelperRaw, ...]) -> ActDecode
+decode_audit(kind: AuditKind, scope: Scope,
+             control: HelperRaw, target: HelperRaw) -> AuditDecode
+```
+
+Esquema fixo de cada linha de saída: um único objeto JSON ASCII canônico
+(chaves ordenadas, sem espaços), terminado em LF, igual à regra do reator.
+Ele sempre contém `"scope": scope_id`. Os templates que o produzem são
+NOT_PREPARED.
+
+| kind | filhos e esquema da linha | facts em OK |
+|---|---|---|
+| TERMINATE_ONE_BACKEND | 1: `{found:int, scope, terminated:bool}` | `TerminateFacts(found, terminated)` |
+| PAUSE_PG | 1: exit 0 sem saída; 2: `{paused:bool, running:bool, scope}` | `PauseFacts(paused)` |
+| RESTORE_PG | 1: exit 0; 2: `{paused, running, scope}`; 3: `{ready:bool, scope}` | `RestoreFacts(running, paused, ready)` |
+| OBSERVE_HEAVY | 1..20: `{active:bool, scope}`; para no primeiro true | `ObserveFacts(found, n)` |
+| ZERO_BACKENDS | 1: `{backends:int, observer_excluded:true, role, scope}` | `ZeroFacts(backends)` |
+| KILL_GATEWAY | 1: exit 0; 2: `{oom:bool, pid:int, running:bool, scope}` | `KillFacts(running is False and pid == 0, oom)` |
+
+Regras, alinhadas a `HostReactor._facts_ok`, que exige `facts=None` para
+todo status diferente de OK:
+- **OK**: todos os filhos assentados, exit 0, sem truncamento, esquema e
+  `scope` exatos (e `role == target_role` em ZERO), e os facts satisfazem
+  o predicado do reator. Exemplos: TERMINATE found==1 e terminated;
+  RESTORE running, não paused e ready; ZERO backends==0; KILL
+  stop_confirmed e não oom; OBSERVE 1..20 observações.
+- **FAILED** (`facts=None`): todos os filhos assentados, esquema e scope
+  exatos, mas predicado falso (`PREDICATE`) ou exit não zero em etapa de
+  comando sem saída (`EXIT_NONZERO`). Só depois do assentamento.
+- **UNKNOWN** (`facts=None`): `SHAPE`, `SCOPE`, `TRUNCATED`, `MISSING`;
+  start incerto; `CALLBACK`/`OVERFLOW`; prazo do pai vencido.
+- UNKNOWN precoce é permitido quando ocorre start incerto, fault de
+  callback ou overflow com filho ainda vivo: o op conclui UNKNOWN, nenhum
+  filho novo é enfileirado e o registro permanece OPEN.
+- OK/FAILED nunca são concluídos com filho vivo.
+
+Um filho vivo no prazo do pai deixa o op pendente; a ponte quarentena e
+fixa UNKNOWN. Assentamento posterior vira `LateFact(CHILD_DONE)` e não
+muda o protocolo. Erros e relatórios nunca contêm argv, saída bruta ou
+credencial.
+
+## 6. Relógio e poll
+
+- `now() = pump.now()`. O owner exige valor finito e não decrescente;
+  violação → `OwnershipRefusal(PUMP)`, que a ponte converte em PORT.
+- `poll(watched, target)`: confere que cada op é deste owner (senão PORT)
+  e chama `pump.run_until(target, stop=lambda: any(op concluído))`. Se
+  retornar com `stop()` falso e `now() < target`, viola o contrato →
+  `PUMP`, sem repetir. O pump real repete internamente (§2.3).
+- A precedência de overall/silence/drain é toda da ponte. O owner não
+  estende, arredonda nem segura o retorno.
+- Não cooperação: se a thread ficar presa dentro do `run_until`, não há
+  teto absoluto prometido (cancelar task não preempta o SO). Um retorno
+  tardio devolve o instante real. Supervisão externa é NOT_PREPARED.
+- `poll`, `settle`, `begin_*` e `seal` recusam `REENTRY` se o pump estiver
+  dentro de `run_until`.
+
+## 7. Seal, settle e fatos tardios
+
+- `seal()`: só fora de `run_until`. O chamador o invoca depois que
+  `bridge.run()` retornar ou levantar. Fecha o despacho de trabalho para
+  sempre: SPAWN, WRITE e filhos de ACT passam a ser recusados no
+  `authorize` (NOT_STARTED), e `begin_*` das portas recusa `SEALED`.
+  Captura e congela `WorkFence` sobre os registros de trabalho existentes.
+  Idempotente: devolve a mesma cerca.
+- O protocolo de cada op congela na primeira observação. O owner nunca
+  chama `done()`/`outcome()` dos ops e nunca mexe em slot ou célula da
+  ponte. Op quarentenado pela ponte mantém `protocol=PENDING`. Fatos
+  posteriores vão SÓ para `late` e para os campos físicos.
+- `settle(target)`: exige `seal`. Chama `pump.run_until(target,
+  stop=todos os registros de trabalho fora de OPEN)`. Efeitos já
+  realizados continuam observados; um pedido de start ainda não autorizado
+  é recusado (NOT_STARTED); filho seguinte de ACT antigo é recusado. Não
+  há efeito novo de trabalho.
+- `late` tem no máximo 16 itens; o excesso vira `late_overflow=True`, que
+  conta como físico UNKNOWN.
+- `PhysicalState` vem só de fatos do próprio registro:
+  - NOT_STARTED: `not_started` ou falha conhecida antes de qualquer
+    chamada nativa;
+  - OPEN: processo ou handle conhecido sem assentamento completo;
+  - SETTLED_RETAINED: returncode int observado, todos os pipes existentes
+    perdidos, sem fault/overflow pendente. `retained` mostra o que continua
+    preso (TRANSPORT, PROCESS_HANDLE, buffers);
+  - RELEASED_LOCAL: CLOSE_HANDLE concluído com `closed()` observado (§9).
+    Não atesta fechamento de handle no SO;
+  - UNKNOWN: start incerto sem handle, fault, controle ou late_overflow.
+- WRITE e ACT/AUDIT/DISPOSE derivam o próprio estado: WRITE assenta com
+  `handoff_zero` ou com `pipe_lost(0)` do SPAWN (este último deixa o
+  handoff indeterminado, mas sem efeito pendente); os demais assentam
+  quando todos os filhos estão assentados.
+- Matar ou recolher o CLI do gateway não assenta nenhum ACT/CHILD.
+
+## 8. Cerca e auditorias
+
+- Cerca: no `seal`, `WorkFence.work_ids` é o conjunto congelado. Depois de
+  todos assentados, `work_settled_at` é o maior `settled_at` desse
+  conjunto, que não muda mais (não há ator de trabalho novo após o seal).
+  Filhos de auditoria NÃO entram na cerca.
+- `begin_audit(kind, deadline)` exige: seal; nenhum registro de trabalho
+  OPEN; `work_settled_at` definido, ou todos os não assentados em UNKNOWN
+  sem handle (veja abaixo); `now() > work_settled_at`; nenhum DISPOSE
+  OPEN. A auditoria cria um registro AUDIT e dois filhos sequenciais:
+  `control` e `target`.
+- **GATEWAY_ABSENT**:
+  - `control` lista, pelo `scope_label`, o container PG do escopo e precisa
+    produzir exatamente `{names:[pg_name], scope}` (controle positivo: o
+    engine responde e o filtro funciona);
+  - `target` lista pelo mesmo filtro o nome do gateway e precisa produzir
+    `{names:[], scope}`;
+  - os dois exit 0, sem truncamento → ABSENT_OBSERVED.
+  `names` com o gateway → PRESENT; controle divergente ou qualquer outra
+  coisa → UNKNOWN. Exit 0 com saída vazia nunca basta.
+- **BACKENDS_ZERO**:
+  - `control` deve mostrar `{observer:true, role:observer_role, scope}`
+    vindo da própria sessão observadora;
+  - `target` deve mostrar `{backends:0, observer_excluded:true,
+    role:target_role, scope}`, contando só o papel-alvo e excluindo o
+    backend do observador.
+  Os ZERO24/ZERO25 do protocolo não substituem esta auditoria.
+- Época: cada DISPOSE com efeito incrementa `epoch`. Toda auditoria grava
+  a época em que foi armada; uma de época anterior vale STALE. Auditoria e
+  dispose não rodam em paralelo.
+- `quiet_candidate = True` exige, ao mesmo tempo:
+  - todos os registros de trabalho SETTLED_RETAINED ou RELEASED_LOCAL;
+  - nenhum UNKNOWN;
+  - GATEWAY_ABSENT e BACKENDS_ZERO ABSENT_OBSERVED na época atual,
+    armadas depois de `work_settled_at`;
+  - seus filhos assentados;
+  - nenhum `first_control`.
+- Mesmo `True` é relato do engine/CLI/PG observado pelo host, não atestado
+  de kernel nem release. Com UNKNOWN sem handle (spawn incerto), a
+  auditoria pode rodar para informar a decisão, mas `quiet_candidate` fica
+  False e o caso exige escalonamento (§12).
+
+## 9. Disposição e passagem de posse (fora da ponte)
+
+O owner é o custodiante único de transportes, handles e buffers. Passar a
+posse é passar o próprio objeto owner: nenhuma API copia ou destaca
+handles. `custody()` mostra o que está retido por registro. A disposição
+é viável e explícita, e cada efeito é uma invocação DISPOSE própria (§4),
+só depois do `seal`:
+
+- **CLOSE_HANDLE**(target): o alvo precisa estar SETTLED_RETAINED.
+  Imediatamente antes: `h.returncode()` é int (senão recusa, sem efeito).
+  Chama `h.close()` (API pública; com o processo já terminado, não deve
+  haver kill). Conclui com `closed()` observado, ou já observado antes →
+  RELEASED_LOCAL. Sem `closed()` no prazo → OPEN.
+- **TERMINATE_PROCESS**(target): o alvo precisa ter handle e
+  `returncode()` None, checado imediatamente antes. Chama `h.kill()`
+  (público; TerminateProcess no Windows). Depois só observa: `exited` no
+  alvo assenta o alvo. Esse registro nunca vira PASS de protocolo.
+- **REMOVE_GATEWAY_CONTAINER**: filhos do `plan.remove_gateway`, ligados
+  ao scope, com decoder `{removed:bool, scope}`. A ausência continua a
+  exigir uma nova GATEWAY_ABSENT na nova época.
+
+Erros, UNKNOWN ou controle nunca liberam: o registro fica retido. Nenhum
+callback, `finally` ou finalizador chama `close`/`kill`. Descartar o owner
+é proibido pelo contrato, porque o finalizador do transporte real pode
+matar o processo.
+
+## 10. Lógico × físico
+
+- O host NÃO usa `BudgetLedger` nem `CleanupConfirmation` (cinco bools de
+  modelo, sem identidade). O ledger do controlador, dentro do container,
+  continua inalterado.
+- Nenhuma API do owner aceita booleanos ou fatos do chamador: os fatos vêm
+  apenas de eventos do pump vinculados a um registro, e os testes injetam
+  fakes ABAIXO do owner.
+- RELEASED_LOCAL e `quiet_candidate` não são release físico. O release
+  físico depende de gate nativo e perfil futuros, ainda abertos. Falha,
+  erro ou UNKNOWN nunca liberam recurso nem reabrem a tentativa consumida.
+
+## 11. Matriz de falhas
+
+| Fronteira | Registro | Ponte / owner |
+|---|---|---|
+| limite em reserve | nenhum | PORT, sem efeito |
+| bind falha | NOT_ARMED/NOT_STARTED | PORT |
+| controle entre bind e arm | NOT_ARMED; authorize recusa depois | CONTROL, HELD |
+| controle após arm, antes de write/dispose síncrono | UNKNOWN | CONTROL, HELD |
+| authorize falso (seal, prazo, pai concluído) | NOT_STARTED, sem efeito | — |
+| `start_failed` antes de `started` | UNKNOWN, sem handle | SPAWN ou act UNKNOWN |
+| `start_failed` depois de `started` | OPEN, handle retido | idem |
+| write: pré-checagem falha | NOT_SENT conhecido | Delivered NOT_SENT |
+| write: exceção/`is_closing` após | UNKNOWN (0 = limite) | retém |
+| peer não lê | PENDING; late HANDOFF_ZERO possível | UNKNOWN no prazo |
+| stdout acima do teto | corte antes de estender, pause_reading | STDOUT_LIMIT |
+| exit antes dos pipes | EXITED; OPEN até os pipes | auditoria recusa |
+| filho vivo no prazo do pai | ACT PENDING/OPEN | UNKNOWN, sem filho novo |
+| settle após filho 1 terminar | filho 2 NOT_STARTED | — |
+| helper vivo após KILL25 | ACT/CHILD OPEN | `quiet_candidate` False |
+| auditoria antes da cerca assentada | recusa STATE | — |
+| dispose após auditoria | época +1, auditoria STALE | nova auditoria |
+| pump retorna cedo | `PUMP` | PORT |
+
+## 12. Em aberto
+
+1. Ordem real dos callbacks, ausência de callback entre `authorize` e
+   CreateProcess, significado nativo de buffer zero, overhead dos blocos e
+   efeito real de `close()`/`kill()` no Proactor 3.11.3. Validação nativa
+   futura, NOT_PREPARED.
+2. Supervisão externa para thread presa em passo nativo.
+3. Escalonamento de spawn UNKNOWN sem handle: o processo docker local não
+   é identificável pela API pública.
+4. Processos `exec` no container PG que não são backends; remoção do PG e
+   da rede e suas auditorias.
+5. Política de ambiente herdado pelos filhos; mecanismo de autenticação
+   dos helpers sem segredo em argv.
+6. Templates de comando que produzem os esquemas fixos de §5.5/§8, e
+   janelas de OBSERVE/RESTORE.
+7. Admissão: pins; freshness de 300 s ≠ prazo overall de 300 s.
+
+## 13. Próximo lote: testes determinísticos antes da fonte
+
+Arquivo único `tests/test_oracle9_w1_port_ownership.py`. O módulo continua
+AUSENTE até o root congelar o RED. Fakes: `FakePump`, `FakeHandle` e um
+roteiro de eventos com relógio lógico diádico, em Python puro. Sem
+asyncio, eventloop, socket, thread, processo ou sinal. Integração com a
+ponte publicada e o reator real, como no teste duplex. Os fakes passam
+pelo MESMO construtor e pela MESMA autorização.
+
+Positivos (o adaptador funciona):
+- P1: caminho completo até Done COMPLETE_CANDIDATE:
+  - SPAWN started; 51 WRITE SENT; ACTs OK com facts válidos para o
+    reator; WAIT EXITED 0;
+  - `seal`, `settle` até todos SETTLED_RETAINED;
+  - GATEWAY_ABSENT e BACKENDS_ZERO ABSENT_OBSERVED → `quiet_candidate`;
+  - CLOSE_HANDLE de cada registro → RELEASED_LOCAL. A ponte continua
+    DONE, sem efeito próprio de limpeza.
+- P2: SENT com buffer zero imediato e com `write_resumed` tardio.
+- P3: takes sucessivos com outcomes próprios e imutáveis; dados antes de
+  EOF e antes de erro.
+- P4: ZERO24 e ZERO25 em registros distintos, retidos depois que a ponte
+  esvaziou o slot.
+- P5: cada kind decodifica OK e FAILED (`facts=None`) com bytes
+  sintéticos, aceitos pelo `_facts_ok` real.
+
+Adversariais:
+- A1: falhas em reserve, bind, arm e authorize, sem efeito no fake.
+- A2: controle entre bind e arm: o settle não inicia processo nem escrita.
+- A3: controle durante `run_until`: mesma identidade em `first_control`;
+  zero close/kill/cancel no fake.
+- A4: settle depois de CHILD1 de um ACT UNKNOWN: CHILD2 NOT_STARTED.
+- A5: peer não lê: UNKNOWN; HANDOFF_ZERO tardio só em `late`; `outcome()`
+  chamado uma vez.
+- A6: write com `is_closing` antes → NOT_SENT sem chamar write; erro
+  síncrono ou `is_closing` depois → UNKNOWN com 0; retorno normal com
+  buffer 0 e `is_closing` não aprova.
+- A7: callback com bloco gigante e no último bloco antes do EOF: corte
+  antes de estender, `out_dropped` exato, `pause_reading`.
+- A8: exit antes dos pipes; auditoria recusa enquanto OPEN.
+- A9: helper vivo após KILL25 e saída do gateway: `quiet_candidate` False.
+- A10: start_failed antes e depois de `started`.
+- A11: cerca não muda com filhos de auditoria (sem circularidade);
+  auditoria antes de `work_settled_at` recusada.
+- A12: escopo errado, saída vazia sem controle, truncamento, chave a mais
+  ou JSON não canônico → UNKNOWN.
+- A13: dispose após auditoria → STALE; TERMINATE só com returncode None
+  checado antes; CLOSE_HANDLE só em SETTLED_RETAINED.
+- A14: pump retorna cedo ou relógio regride → PORT na ponte.
+- A15: limites (registros, filhos, late, takes) recusados antes do efeito
+  ou marcados com overflow.
+- A16: AST: o módulo não importa asyncio/subprocess/socket/threading/
+  signal; não usa BudgetLedger/CleanupConfirmation; nenhuma API recebe
+  fatos booleanos; close/kill só nos caminhos DISPOSE.
+- A17: repr e erros sem payload, argv, saída bruta ou credencial.
+
+Nenhum teste declara gate físico, autoriza liberar recurso real ou
+substitui a validação nativa futura. Pela política Senff, desenho e código
+derivado exigem revisão humana e de segurança antes do merge.

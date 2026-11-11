@@ -1,5 +1,77 @@
 # Checkpoint para continuidade em outro local
 
+## Portas: V4 revista para primeiros testes — 2026-11-11
+
+C2CLI79160 terminou0/success em82774ms, recuperada; zero escritores.
+Root leu todo delta V3→V4, após ler V3 inteira. Final527ab514/37799bytes/
+731linhas preservado com V1–V3. PORT-OWNERSHIP-REVIEW aceita direção V4
+sob delegação SOMENTE para primeiros testes; settle observa UNKNOWN,
+auditorias sobrevivem à disposição local, limites têm alcance explícito.
+Teto137 é conservador, não contagem obrigatória. Sem prova nativa.
+
+Próximo só tests/test_oracle9_w1_port_ownership.py pelo mesmo Claude2,
+sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f/claude-opus-5-5/medium,
+Read/Edit/Write só novo teste, sem comandos. Root lê TODOS os oráculos e
+congela RED antes de fonte; módulos owner/Proactor AUSENTES. Conferir
+Git atual/zero escritor; ativo só monitorar/recuperar terminal. Não usar
+58cd1e0 como guarda depois de novos commits documentais.
+
+13pins/bridge5a/teste97/app124/estado16/attempt intactos.1410verdes são
+históricos, sem suíte nova por docs. Sem quota/fallback/job novo. Nada de
+Docker/PG/SQL/nativo/eventloop/runtime/config/privado/binário/ambiente/
+root/nonce/estado/entry/loader/comando/deploy. T5físico/B1/B2/D090gate2/
+C1/D119/TLS/ingressos/produção abertos; Gateway indisponível. Valores e
+receitas operacionais NOT_PREPARED. Histórico abaixo.
+
+## Portas: V2 relida; precisões finais antes de testes — 2026-11-11
+
+C2CLI42440 encerrou0/success em299684ms, recuperada; zero agentes.
+Root leu TODAS612linhas/32755bytes da V2 abbe742b, preservada como dado.
+Direção de owner puro/Pump específico/fakes sem asyncio/selamento e
+disposição explícita aceita só para revisão final. PORT-OWNERSHIP-REVIEW
+fecha5precisões: namespaces/DTOs, recuperação/época, autorização antes de
+efeito direto, contadores/buffers e decoders. Ainda sem testes/fonte.
+
+Próximo único revisar PORT-OWNERSHIP-DESIGN no mesmo C2/sessão51ea0d85/
+claude-opus-5-5/medium, Read/Edit/Write só esse documento, sem comandos.
+Não reabrir a arquitetura nem substituir destino nativo por fakes como
+entrega final. Root lerá documento e delta antes de oráculos/RED/fonte.
+Conferir Git real/zero escritor; ativo só monitorar/recuperar terminal.
+
+Base publicada58cd1e0, com mudanças documentais locais de revisão.
+Bridge5a09be1c/teste97c26fbf/13pins/app124/estado16/attempt fixos.
+1410verdes históricos, não repetidos por desenho. Sem quota/fallback/job
+novo até este checkpoint. Nada de Docker/PG/SQL/nativo/runtime/config/
+privado/binário/root/nonce/estado/entry/loader/comando/deploy. Gates
+T5físico/B1/B2/D090gate2/C1/D119/TLS/ingressos/produção abertos; Gateway
+indisponível. Operacionais NOT_PREPARED. Histórico abaixo.
+
+## Portas: V1 revista; sete pontos antes de testes — 2026-11-11
+
+C2CLI53445 terminou0/success em401481ms e foi recuperada. Root confirmou
+zero escritores e leu TODAS472linhas/25913bytes do desenho V1 be7e0e4b.
+Snapshot preservado. V1 ainda NÃO aceita para testes: PORT-OWNERSHIP-REVIEW
+fecha7correções de scheduler/fakes, dispatch no settle, cache por read,
+assentamento/disposição, fence/identidade de auditoria, decoders/facts e
+buffers/handoff. Problemas do desenho, não findings de produto medidos.
+
+Próximo somente revisar docs/PHASE-9-W1-ORACLE-PORT-OWNERSHIP-DESIGN.md
+pelo mesmo C2/sessão51ea0d85/claude-opus-5-5/medium, com Read/Edit/Write
+desse documento, sem comandos. Root lerá toda V2 antes de testes/RED/fonte.
+Nada de asyncio/eventloop/OS real nos primeiros testes. Não contornar o
+binding nem substituir caminho funcional por UNKNOWN/retenção eterna.
+Bridge continua sem cleanup; disposição externa futura deve ter contrato
+viável e separado, por identidade/prazo, sem executar nada agora.
+
+Git publicado de partida58cd1e0; conferir HEAD real, não usar guarda após
+novos docs. Bridge5a09be1c/teste97c26fbf/13pins/app124/estado16/attempt fixos.
+1410verdes continuam históricos; nenhuma suíte por desenho. Sem quota,
+fallback ou job novo até este checkpoint. Nenhum código/efeito nativo.
+Sem Docker/PG/SQL/nativo/runtime/config/privado/binário/root/nonce/estado/
+entry/loader/comando/deploy. T5físico/B1/B2/D090gate2/C1/D119/TLS/ingressos/
+produção abertos; Gateway indisponível. Operacionais NOT_PREPARED.
+Histórico abaixo.
+
 ## Portas nativas: reconciliação revista; desenho é próximo — 2026-11-11
 
 Ponte pura e teste publicados emd9e8293bab4f32295b62ba586d96842f5fb8cb53;

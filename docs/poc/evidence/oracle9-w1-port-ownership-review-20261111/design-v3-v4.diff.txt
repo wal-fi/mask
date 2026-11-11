@@ -1,0 +1,193 @@
+--- V3
+
++++ V4
+
+@@ -1,4 +1,12 @@
+
+-# W1 Oracle: portas concretas e posse por invocação — desenho V3
++# W1 Oracle: portas concretas e posse por invocação — desenho V4
++
++V4 (2026-11-11) é um patch estreito sobre a V3 (14410f11, preservada pelo
++root). Fecha as três precisões finais da revisão da V3:
++- `settle` só para cedo com todos os registros assentados;
++- assentamento monotônico dos helpers de auditoria;
++- `OwnerLimits` e escopo dos limites.
++
++Também fixa o acesso aos namespaces via `vars(module)`. Nada mais muda.
+
+ 2026-11-11. Desenho somente, sob delegação. Autor: Claude2, sessão
+ 51ea0d85-05bb-4d24-ba9a-c9627c3f832f, claude-opus-5-5/medium. Fontes, só de
+@@ -28,6 +36,10 @@
+
+ | V2 | 3 ordem direta | Ordem única: reserve, inert, bind, arm, pré-condições, authorize, efeito; limites de escrita antes de expor o handle (§4, §5.1) |
+ | V2 | 4 aritmética | `take=min(len,room)`, contadores não negativos, stderr só contado (§5.2) |
+ | V2 | 5 decoders | `AuditDecode`/`DisposeDecode` definidos; filhos, ordem, chaves, tipos e domínios exatos; OBSERVE found=False é OK (§5.5, §8, §9) |
++| V3 | 1 settle | Para cedo só com todos NOT_STARTED, SETTLED_RETAINED ou RELEASED_LOCAL; UNKNOWN e OPEN continuam observados até o target (§7) |
++| V3 | 2 auditoria | Helper assentado = SETTLED_RETAINED ou RELEASED_LOCAL, monotônico; CLOSE_HANDLE não invalida (§8) |
++| V3 | 3 limites | `OwnerLimits` com int exato, defaults, tetos e domínio; limites por invocação × por vida; coerência do `Scope` (§3) |
++| V3 | nota | Namespaces lidos por `vars(module)`, sem `__getattr__` de módulo (§2.4) |
+
+ ## 1. Fronteira
+
+@@ -140,7 +152,10 @@
+
+ O owner não importa nenhum dos dois. O chamador, que já pinou e carregou
+ os arquivos publicados exatamente como faz para a ponte, passa os dois
+ módulos explicitamente. O construtor exige `type(ns) is types.ModuleType`
+-e confere, sem chamar código do módulo:
++e lê cada nome só por `vars(ns).get(nome)`, a entrada real do dicionário
++do módulo. Nunca usa `getattr(ns, nome)`, que acionaria o `__getattr__` de
++módulo para nomes ausentes. Nome ausente no dicionário = `NAMESPACE`. A
++verificação é feita sem chamar código do módulo e confere:
+
+ - **Ponte:** `SpawnOutcome`, `ReadOutcome`, `WriteOutcome`, `ActOutcome`,
+   `WaitOutcome` e `OperationSlot` são classes (`isinstance(x, type)`).
+@@ -156,7 +171,8 @@
+
+ Os DTOs e facts são construídos só com essas classes recebidas, e o `Act`
+ recebido em `begin_act_into` precisa ter `type(act) is reator.Act`. A
+ forma não prova origem: o pin é responsabilidade do chamador, como na
+-ponte, e não há framework de proveniência. Os testes passam os módulos
++ponte, e não há framework de proveniência. Os módulos são confiáveis e
++pinados; a checagem não é defesa contra classes hostis arbitrárias. Os testes passam os módulos
+ publicados reais, carregados pelo teste.
+
+ ## 3. Tipos públicos
+@@ -189,16 +205,50 @@
+
+          acts: tuple[tuple[ActKind, tuple[HelperPlan, ...]], ...]  # 6 kinds, exatos
+          audits: tuple[tuple[AuditKind, tuple[HelperPlan, HelperPlan]], ...]  # 2
+          remove_gateway: tuple[HelperPlan, HelperPlan]
+-OwnerLimits (constantes do desenho, não operacionais):
+-  max_records 512; max_children 24; max_writes 51; max_acts 7;
+-  max_audits 8; max_disposals 64; gateway_stdout_cap 28673;
+-  child_stdout_cap 4096; max_late 16; max_retained_takes 2
++OwnerLimits (frozen; todos os campos `int` exato, sem bool; constantes
++do modelo, nunca lidas de configuração operacional):
++
++  campo                 default  domínio aceito   escopo
++  max_records           512      1..512           por vida do owner, todos os kinds
++  max_children          24       1..24            por invocação (ACT/AUDIT/DISPOSE)
++  max_writes            51       1..51            por vida (registros WRITE)
++  max_acts              7        1..7             por vida (registros ACT)
++  max_audits            8        1..8             por vida (registros AUDIT)
++  max_disposals         64       1..64            por vida (registros DISPOSE)
++  gateway_stdout_cap    28673    1..28673         por vida (stdout do SPAWN)
++  child_stdout_cap      4096     1..4096          por registro CHILD
++  max_late              16       1..16            por registro
++  max_retained_takes    2        2..2             por vida (fixo)
+ ```
++
++`OwnerLimits()` sem argumentos dá os defaults. Os testes podem passar
++valores MENORES dentro do domínio para exercitar recusas. Valores fora do
++domínio, ou com tipo não exatamente `int`, dão `OwnershipRefusal(PLAN)` no
++construtor. Os tetos são prospectivos do modelo, não medidos.
++
++Contagem dos limites:
++- `max_children` vale por invocação. OBSERVE usa até 20 filhos e os
++  demais kinds de 1 a 3 (§5.5); não é teto global.
++- O teto agregado é `max_records`, contando todos os registros de todos os
++  kinds, filhos incluídos.
++- O pior caso de P1 fica abaixo de 512:
++  - 1 SPAWN + 1 WAIT + 51 WRITE + 7 ACT;
++  - até 20+3+3+1+3+2+1 filhos das ações (TERMINATE 1, PAUSE 2, RESTORE 3,
++    OBSERVE ≤20, ZERO24 1, KILL25 2, ZERO25 1);
++  - 2 AUDIT com 2 filhos cada;
++  - os 38 DISPOSE CLOSE_HANDLE dos processos.
++  - Soma: 60 + 33 + 6 + 38 = 137 registros.
++- Toda recusa de limite acontece no passo 1 (reserve), antes de qualquer
++  bind ou efeito: `CAPACITY`, sem registro novo. Para um filho, isso deixa
++  o pai concluído como UNKNOWN (`MISSING`), sem efeito novo.
+
+ O `CliPlan` é validado só em forma e coerência estrutural:
+ - todo argv contém `scope_id` como argumento ou substring;
+ - cada kind aparece exatamente uma vez;
+-- a contagem de filhos por kind segue a §5.5.
++- a contagem de filhos por kind segue a §5.5 e é ≤ `max_children`;
++- `gateway_name != pg_name`, `observer_role != target_role` e
++  `scope_label` não vazio. Isso é só coerência estrutural; continua sem
++  autenticar receitas.
+
+ A substring não autentica comando nem alvo e não detecta segredo. A
+ admissão confiável futura, NOT_PREPARED, valida receitas, escopo e o canal
+@@ -464,9 +514,18 @@
+
+   `AuditReport.control_history`.
+ - O owner nunca chama `done()`/`outcome()` dos ops nem mexe em slot ou
+   célula da ponte. Op quarentenado continua PENDING.
+-- `settle(target)` exige `seal` e chama `run_until(target, stop=todos os
+-  registros fora de OPEN)`. Pedidos ainda não autorizados de trabalho
+-  viram NOT_STARTED.
++- `settle(target)` exige `seal` e chama `run_until(target, stop)`, com
++  `stop` verdadeiro só quando TODOS os registros estão NOT_STARTED,
++  SETTLED_RETAINED ou RELEASED_LOCAL.
++  - Registros OPEN ou UNKNOWN mantêm o bombeamento até o `target`, para
++    observar fatos tardios como `started`, `exited` e `pipe_lost` de um
++    spawn incerto.
++  - Sem fato novo, `settle` retorna no `target` e o registro continua
++    UNKNOWN/OPEN e retido.
++  - Pedidos de trabalho ainda não autorizados viram NOT_STARTED só pelo
++    `authorize` do pump (`not_started`), nunca por inferência da ausência
++    de evento.
++  - `settle` nunca consulta ops quarentenados.
+ - **Resolução de incerteza.** `faults` é histórico e nunca apagado.
+   `uncertain` é o estado atual e só desliga com fatos físicos posteriores
+   do mesmo registro:
+@@ -509,7 +568,12 @@
+
+ - PRESENT: target com `gateway_name` em `names`, ou `backends > 0`.
+ - UNKNOWN, com o motivo de §5.5: exit ≠ 0, truncamento, esquema, escopo,
+   controle divergente ou filho ausente.
+-- `helpers_settled` exige os dois filhos SETTLED_RETAINED.
++- `helpers_settled` é monotônico: exige que cada um dos dois filhos tenha
++  sido comprovadamente assentado, ou seja, que esteja SETTLED_RETAINED ou
++  RELEASED_LOCAL, com o mesmo `settled_at` registrado. Um CLOSE_HANDLE
++  posterior do filho mantém a mesma invocação, os mesmos bytes decodificados
++  e o mesmo veredito, e não reavalia a auditoria. NOT_STARTED e UNKNOWN
++  nunca contam como observação.
+
+ **Época:** incrementa SOMENTE com efeito que pode mudar o alvo, a saber
+ TERMINATE_PROCESS e REMOVE_GATEWAY_CONTAINER, no momento do authorize ok.
+@@ -522,7 +586,11 @@
+
+   `uncertain` False;
+ - GATEWAY_ABSENT e BACKENDS_ZERO ABSENT_OBSERVED na época atual, armadas
+   depois de `work_settled_at` e com `helpers_settled`;
+-- todos os registros de AUDIT/DISPOSE fora de OPEN/UNKNOWN.
++- todos os registros de AUDIT/DISPOSE fora de OPEN/UNKNOWN. SETTLED_RETAINED
++  e RELEASED_LOCAL contam igualmente como assentados.
++
++Depois de CLOSE_HANDLE de todos os processos, `quiet_scoped` continua True
++e `custody()` só encolhe.
+
+ `control_history` é reportado à parte e não impede `quiet_scoped`.
+ `quiet_scoped` é relato escopado do engine/CLI/PG observado pelo host: não
+@@ -601,6 +669,15 @@
+
+ | filho com exit ≠ 0 em passo json | UNKNOWN `EXIT_NONZERO` |
+ | predicado falso com esquema exato | FAILED `PREDICATE`, facts None |
+ | pump retorna cedo / relógio regride | PUMP → PORT |
++| `start_failed` sem handle, seal, depois `started` + exit + pipes antes do target | `settle` observa e o registro fica SETTLED_RETAINED |
++| o mesmo, sem nenhum evento | `settle` chega ao target; continua UNKNOWN e retido |
++| auditoria antes e depois do CLOSE_HANDLE dos helpers | mesma auditoria válida; `quiet_scoped` True; custódia menor |
++| helper de auditoria NOT_STARTED/UNKNOWN | `helpers_settled` False |
++| `OwnerLimits` com bool, float ou fora do domínio | `PLAN` no construtor |
++| OBSERVE com 20 filhos sob `max_children` 24 | aceito; não esgota limite global |
++| `max_records` menor em teste, atingido | `CAPACITY` antes do efeito; pai UNKNOWN `MISSING` |
++| `gateway_name == pg_name` ou `observer_role == target_role` | `PLAN` |
++| nome ausente em `vars(ns)` (só `__getattr__` de módulo) | `NAMESPACE`, sem chamar `__getattr__` |
+
+ ## 12. Em aberto
+
+@@ -625,7 +702,9 @@
+
+ - **P1**, caminho completo até Done COMPLETE_CANDIDATE: 51 SENT; ACTs OK
+   com facts aceitos pelo `_facts_ok` real; EXITED 0; `seal`; `settle`;
+   duas auditorias ABSENT_OBSERVED; CLOSE_HANDLE de todos → RELEASED_LOCAL;
+-  `quiet_scoped` True, `control_history` False.
++  `quiet_scoped` True antes e depois dos CLOSE_HANDLE, `control_history`
++  False, 137 registros ou menos com `OwnerLimits()` padrão.
++- **P7**: spawn incerto resolvido por `started` tardio dentro do `settle`.
+ - **P2**: SENT imediato e via `write_resumed`.
+ - **P3**: takes sucessivos imutáveis; dados antes do EOF e antes de erro.
+ - **P4**: ZERO24 e ZERO25 em registros distintos.

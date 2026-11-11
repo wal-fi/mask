@@ -1,0 +1,22 @@
+{
+  "execution": 79160,
+  "cli_exit_code": 0,
+  "session_id": "51ea0d85-05bb-4d24-ba9a-c9627c3f832f",
+  "subtype": "success",
+  "is_error": false,
+  "api_error_status": null,
+  "terminal_reason": "completed",
+  "duration_ms": 82774,
+  "permission_denials": [],
+  "uuid": "b97ccc8c-4e12-4844-a299-66c47ddb9001",
+  "capture": "Root transcribed whitelisted metadata from recovered terminal; not raw stdout.",
+  "reported_changes": [
+    "settle observes UNKNOWN until target or later settlement",
+    "audit helper settlement survives RELEASED_LOCAL",
+    "OwnerLimits types/defaults/domains and per-invocation child cap",
+    "Scope structural distinctness",
+    "vars(ns).get lookup",
+    "counterexamples and P7 added"
+  ],
+  "recorded_at_utc": "2026-11-11T13:44:43.216401+00:00"
+}
