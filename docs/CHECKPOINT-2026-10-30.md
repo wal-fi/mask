@@ -1,5 +1,313 @@
 # Checkpoint para continuidade em outro local
 
+## Portas: owner puro revisto;1604relacionados e4sondas verdes ? 2026-11-12
+
+Fonte final a5d233ae/96838bytes/2657linhas, testes171e85/23f86 intactos.
+Gemini ArgonHigh/high foi o programador; root leu toda fonte original e
+TODOS os deltas772+107linhas, aplicados literalmente, s? Ruff com AST igual.
+Terminais46446/35586/45316 recuperados; zero escritor ap?s45316. As chamadas
+com patch retornaram CLI0, mas servi?oERROR/limite de sa?da: n?o chamar
+SUCCESS nem quota. Autoriza??o espec?fica dos4arquivos recebida e usada;
+nenhum novo arquivo privado no retorno t?cnico, hist?rico de rejei??es mantido.
+
+Matriz FINAL1604PASS/30,578s, incluindo194pr?prios,0falhas/erros/skips.
+Quatro sondagens de callbacks de prazo foram medidas divergentes antes do
+suplemento e agora passam: escrita tardia UNKNOWN; leitura vencida falha,
+bytes retidos e outcome anterior imut?vel. RED171/RED23 e medi??es
+intermedi?rias preservados. Ler PORT-OWNERSHIP-VALIDATION/SOURCE-REVIEW e
+final-validation.json. Ruff/format e mypy expl?cito311/314 limpos;368alvos
+src/tests tamb?m limpos. Runtime Windows3.11.3/pilhaQA64MiB;3.14 s? est?tico.
+
+15upstream/ponte + app124 intactos por SHA/tamanho; state16/attempt intocados;
+Proactor AUSENTE. Fonte aceita sob delega??o S? como modelo puro, n?o prova
+nativa ou produto. C?digo+testes congelados devem integrar juntos, com
+somente evid?ncia compacta revisada; nunca publicar s? RED nem propostas
+rejeitadas/logs/pacotes privados. Conferir Git REAL ap?s qualquer commit.
+
+Pr?ximo s? desenho/reconcilia??o do adaptador concreto, antes de testes e
+fonte pr?prios. C2 mesma sess?o51ea0d85/Opus5.5/medium, sem retry antes23hUTC
+informado. Fallback condicionado, nunca escritores simult?neos. N?o h? job
+ou reset confirmado. Sem Docker/PG/SQL/nativo/runtime/config/privado/bin?rio/
+ambiente/root/nonce/estado/entry/loader/collector/publisher/comando/deploy.
+Todos gates nativos/produto abertos; Gateway indispon?vel. Hist?rico abaixo.
+
+## Portas: candidato1604verde com dois findings; Gemini45316 ativo ? 2026-11-12
+
+Autoriza??o expl?cita dos4arquivos recebida e usada; rejei??es hist?ricas
+preservadas. CLI46446 recuperada exit0/servi?oERROR por limite de sa?da,
+n?o quota. Root leu TODAS772linhas do patch fechado, aplicou literalmente
+11hunks; Ruff mec?nico com AST igual. Fonte candidata e0e7297d/95783bytes.
+194pr?prios PASS/2,996s e1604relacionados PASS/30,531s,0falhas/erros/skips.
+Ruff src/tests, lintPoC restrito e format3limpos; mypy expl?cito3 e368alvos
+src/tests limpos em311/314.3.14 somente an?lise est?tica. Testes e85/f86
+continuam congelados/intactos; isso AINDA N?O aprova esta fonte.
+
+Root reproduziu2findings adicionais: READ/WRITE podem concluir sucesso
+com evento ap?s prazo pr?prio se poll avan?a al?m dele sem poll intermedi?rio.
+Evid?ncia owner-authorized-fix-deadline-probes.json. N?o publicar candidato.
+CLI35586 encerrou1 sem patch, mensagem de limite de sa?da anterior;
+zero escritor confirmado depois. Recupera??o normal no mesmo Gemini
+26d0a462/ArgonHigh/high/PLAN/read-only, execu??o45316 ATIVA:
+s? suplemento pequeno da fonte, sem alterar testes/upstream/API ou executar.
+Pacote novo cont?m SOMENTE os mesmos4arquivos autorizados e9blobs p?blicos;
+nenhum novo arquivo privado/export de medi??o. Revis?o normal aprovou.
+Recuperar45316 ANTES de nova chamada; ativo s? monitorar, nunca duplicar.
+
+13pins/app124 e bridge/test preservados; state16/attempt intocados,
+Proactor ausente. C2 sem retry antes23hUTC informado, sem promessa de reset.
+Agendamento n?o comprovado; sem commit/push; nativos/produto abertos,
+Gateway indispon?vel. Root deve ler TODO suplemento, comprovar aplica??o
+literal e repetir sondagens e gates pertinentes antes de aceitar/publicar.
+
+## Portas: pacote autorizado; Gemini ativo46446 ? 2026-11-12
+
+Usu?rio autorizou explicitamente os4arquivos/220935bytes pedidos. Hashes
+conferidos; manifesto pending-four-file-authorization.json registra o
+consentimento. Nove c?pias p?blicas originais tamb?m conferidas:13entradas/
+665555bytes no scratch isolado, nenhum outro arquivo privado exportado.
+
+A revis?o normal aprovou a nova a??o autorizada. Execu??o46446 ATIVA,
+mesma conversa26d0a462/Gemini4ArgonHigh/high/PLAN/read-only, pede s? patch
+da fonte4276 contra194testes congelados. Sem comandos/edi??o pelo agente.
+Recuperar46446 ANTES de nova chamada; ativo s? monitorar, nunca segundo
+escritor. Resultado e leitura dos arquivos ainda n?o confirmados. C2 n?o
+foi retomado; n?o retry antes23hUTC informado. Hist?rico de rejei??es fica.
+
+13pins/app124 intactos; testes e85/f86 e fonte4276 ainda sem mudan?as.
+Proactor ausente; state16/attempt intocados. Root deve ler TODO patch e
+medir194pr?prios antes de aceitar/ampliar QA/publicar. Sem novos commits
+ou push. Nativos/produto continuam abertos; Gateway indispon?vel.
+
+## Portas: autorização específica pendente; zero escritor — 2026-11-12
+
+PRIMEIRO ler SOURCE-REVIEW completo e pending-four-file-authorization.json.
+94202 não existe mais como handle; terminal salvo recuperado: wrapper0,
+serviçoERROR por limite de tokens de SAÍDA (não quota),807,550s. Não chamar
+SUCCESS. Dois blocos preservados SEM juntar: primeiro truncado/inválido;
+segundo a8e65058/134850bytes/3629linhas é sintaticamente completo. Root leu
+TODAS3629linhas e o rejeitou antes de copiar/executar: registry global de
+takes/owners, lookup sys.modules/namespace global, getters mutáveis,
+pipes abertos marcados como perdidos e índiceDISPOSE divergente.
+
+Pedido de patch estrutural também foi REJEITADO pela revisão automática
+ANTES de CreateProcess: detalhes técnicos derivados do candidato/oráculos
+privados não estavam especificamente autorizados. NENHUM agente iniciado,
+sem retry/contorno/outro transporte ou modelo. Reenvio anterior da fonte
+não publicada também NÃO executou. Não publicar para tornar público.
+
+Pacote4arquivos220935bytes PREPARADO/NÃO ENVIADO; pergunta específica
+apresentada ao usuário, resposta PENDENTE. CURRENT-SOURCE.py.txt90393bytes/
+4276d9fc; FROZEN-BASE-TEST.py.txt107260/e85f8b53; FROZEN-REVIEW-TEST.py.txt
+18106/f86f54aa; SOURCE-FIX-REQUEST.md5176/4ed3e32a. Destino mesma conversa
+Gemini26d0a462/ArgonHigh/high. Só fonte pura e194oráculos/parecer; exclui
+credenciais reais/dados/runtime/config/ambiente/binários/histórico. Sem
+aprovação explícita desse pacote, NÃO enviar nem substituir payload/via.
+A autorização genérica anterior não remove esta rejeição.
+
+Source4276 segue candidata PRIVADA REPROVADA. Teste171e85 e RED23f86
+congelados/intactos (1positivoPASS/22FAIL esperadas,0erros/skips).13pins/
+app124 novamente conferidos por SHA/tamanho; state16/attempt intocados;
+Proactor AUSENTE. Nenhum candidato novo executado.1410verdes históricos.
+Zero escritor na recuperação; reconferir metadata antes de nova chamada.
+C2 não retry antes12/11 às23hUTC informado; sessão51ea0d85/Opus5.5/medium.
+Agendamento semanal NÃO confirmado, sem promessa de Ready/entrega/reset.
+GitREALfcb18d2/sem commit ou push. Terceiro turno sem progresso pela
+mesma autorização pendente; limiar para marcar goal blocked satisfeito.
+Consultar estado efetivo no goal; nenhuma conclusão do projeto. Sem Docker/PG/SQL/nativo/
+privado/runtime/config/binário/ambiente/root/nonce/estado/entry/loader/
+collector/publisher/comando/deploy. Todos gates nativos/produto abertos;
+Gateway indisponível. Histórico abaixo.
+
+## Portas: proposta de fonte pura Gemini em andamento — 2026-11-11
+
+RED171/e85f8b53 permanece congelado e local. Root leu integralmente as
+propostas de complemento; V2 8d4ffabe/7069bytes/60linhas aceita sob delegação
+em PORT-OWNERSHIP-CONTRACT, com revisão em PORT-OWNERSHIP-REVIEW. Campos,
+enums e testes não mudaram; não é aprovação individual ou prova nativa.
+
+Gemini ArgonHigh/high, mesma conversa26d0a462, execução6415 ATIVA, PLAN/
+read-only/sandbox: pede SOMENTE fonte pura completa do owner em resposta,
+SEM editar repositório ou executar comandos. Recuperar6415 ANTES de nova
+chamada; ativo implica só monitorar, NUNCA segundo escritor. Pacote novo
+isolado contém SÓ9blobs públicos fcb18d2 já autorizados/444620bytes;
+NENHUM teste local, nota privada, transcript/config/runtime/ambiente/binário
+foi copiado. Manifesto owner-source-public-package.json. Root deve ler
+TODA resposta/fonte antes de gravar módulo e executar QA. Não aceitar
+stubs/universalUNKNOWN nem alterar testes congelados para acomodar fonte.
+
+Owner e Proactor continuam AUSENTES nesta partida. C2 segue em quota
+semanal; não retry antes12/11 às23hUTC informado, mesma sessão/modelo/
+esforço depois.13pins/bridge/test/app124/state16/attempt fixos. GitREAL
+fcb18d2 na partida; só docs/revisão/teste locais, sem commit/push. Tarefa
+semanal não confirmada; não alegar job Ready. Sem efeitos nativos,
+Docker/PG/SQL/runtime/config/privado/binário/ambiente/root/nonce/estado/
+entry/loader/collector/publisher/comando/deploy. Gates abertos e Gateway
+indisponível. Histórico abaixo.
+
+
+## Portas: RED171 revisto e congelado localmente — 2026-11-11
+
+Autorização específica dos2arquivos Gemini recebida e registrada. Mesma
+conversa26d0a462/ArgonHigh/high, PLAN/read-only: CLI61575/29622/18944
+terminaram0/SUCCESS e foram recuperadas. Root leu todoV5 e deltasV6/V7;
+V5 não aplicada por finding de trace. V6/V7 aplicadas literalmente,
+Ruff mecânico com AST igual. Candidata final e85f8b53/107260bytes/2800linhas,
+151funções/51testes nomeados. Ruff/format/mypy strict3.11 e3.14 limpos.
+
+RED171 em Windows3.11.3/pilha64MiB:4sanidades PASS/167FileNotFound FAIL,
+0erros/skips,4,199s. Todas falhas SOMENTE ausência do módulo owner;
+não é comportamento comprovado nem integração verde. Oráculos congelados
+em frozen-red171.json. Sem liberação privada de slots; varredura de estado
+simples falha ao exceder limites; PENDING direto é descrito corretamente;
+startup concluído não limita nova escrita, ACT vencida não inicia helper.
+Ler TODO PORT-OWNERSHIP-TEST-REVIEW antes de futura fonte.
+
+Owner/Proactor continuam AUSENTES; nenhum teste parcial publicado.13pins,
+bridge5a/teste97 eapp124 intactos; state16/attempt intocados.1410verdes
+anteriores históricos. Git publicado de referênciafcb18d2; conferir HEAD
+REAL após qualquer commit, sem guarda antiga. Sem novos commits/push.
+Zero escritores após entregas; antes de nova chamada conferir metadata.
+
+C2 em quota SEMANAL observada; não retry antes12/11 às23hUTC informado.
+Usar só sessão51ea0d85/claude-opus-5-5/medium quando disponível. Fallback
+Gemini condicionado à quota continua autorizado, nunca dois escritores.
+Agendamento semanal NÃO confirmado: criação/consultas sem readback,
+helpers próprios encerrados sem tocar serviços. scheduled-weekly-resume.json
+explicita registration_confirmed=false. Não alegar Ready/entrega/reset.
+Sem efeitos nativos/Docker/PG/SQL/runtime/config/privado/binário/ambiente/
+root/nonce/estado/entry/loader/collector/publisher/comando/deploy. Gates
+nativos/produto abertos; Gateway indisponível. Histórico abaixo.
+
+
+## Portas: autorização específica Gemini recebida — 2026-11-11
+
+Usuário respondeu "autorizo" à pergunta específica de envio ao Gemini de
+SOMENTE CURRENT-TEST.py.txt100803bytes14facd765 e FINAL-TEST-REQUEST.md
+4341bytes007c4b83 para os4ajustes finais. Consentimento/hashes em
+specific-unpublished-consent.json. Substitui a pendência de autorização
+desses2arquivos, não apaga a rejeição histórica nem amplia efeito nativo.
+Antes do envio:0escritores, mesma conversa26d0a462/ArgonHigh/high/PLAN,
+sem comandos/edição pelo agente; root recebe patch e revisa. Sem source
+owner/Proactor até RED revisto; teste continua local e não congelado.
+C2 permanece em quota semanal: não retry antes12/11 às23hUTC informado.
+Terminal7369 do agendamento continua pendente de readback; recuperar antes
+de nova atualização ou afirmar tarefa registrada. Não duplicar tarefa.
+Histórico abaixo.
+
+## Portas: cota semanal C2; envio não publicado aguarda autorização — 2026-11-11
+
+CLI80494 encerrou0/success/832782ms, recuperada;0agentes em17h25UTC.
+Teste14facd765/100803bytes/2648linhas corrigido pelo C2 sobre rascunho
+Gemini. Root reviu TODAS as regiões semânticas alteradas1951linhas e
+comprovou AST igual para os nós inalterados já lidos. Ruff0/mypy3.11 e
+3.14 limpos;4sanidadesPASS/165deselecionados;formatFAIL. Não é RED aceito.
+PORT-OWNERSHIP-TEST-REVIEW fecha4ajustes finais antes de congelar oráculos.
+Owner/Proactor continuam AUSENTES; teste parcial local/não publicado.
+
+Pedido seguinte terminou Prompt is too long ANTES de editar. /compact
+NATIVO na MESMA sessão terminou0/59453ms; texto do resumo não foi exportado.
+Pedido curto seguinte terminou429 SEMANAL ANTES de editar, reset exibido
+Nov12 às20hSP, inferido2026-11-12T23h00UTC, não observado. Não retryC2 antes
+desse horário, nem troca de conta/modelo ou manipulação de histórico/config.
+Não confundir erro de tamanho de contexto com quota ou alegar reset medido.
+
+Fallback Gemini autorizado em geral, mas a revisão automática REJEITOU
+ANTES de executar o envio do teste SINTÉTICO NÃO PUBLICADO100803bytes e
+do trecho técnico FINAL-TEST-REQUEST.md4341bytes. Pacote preparado no
+scratch, NÃO enviado nesta chamada. Autorização ESPECÍFICA para esses2
+arquivos foi pedida ao usuário; resposta ainda pendente neste checkpoint.
+Não reutilizar a autorização genérica para contornar esta rejeição, não
+publicar rascunho para torná-lo público nem trocar transporte/modelo.
+Sem essa resposta, manter envio parado. Trabalho independente registrado.
+
+Atualização da MESMA tarefa Maskgw-Claude2-Resume-01a05804 para
+12/11 às20h05SP/23h05UTC está em andamento no terminal7369, AINDA SEM
+readback/resultado. Não afirmar Ready/agendada/entrega confirmada até
+recuperar7369 e conferir scheduled-weekly-resume.json. Não duplicar a
+atualização nem criar nova tarefa. A intenção é Interactive/Limited/
+IgnoreNew; entrega/reset não garantidos. Primeira ação de retomada:
+ler notas, Git REAL, recuperar terminais/confirmar0escritores; ativo só
+monitorar. Depois do reset cabe tentativa normal SOMENTE mesmaC2/sessão
+51ea0d85-05bb-4d24-ba9a-c9627c3f832f/claude-opus-5-5/medium, só teste
+Read/Edit/Write, sem comandos. Nenhum programador permanece ativo agora.
+
+HEAD publicado de referênciafcb18d2; revisão/checkpoints/rascunho locais,
+sem novos commits/push. Não usar HEAD antigo após futuro commit.13pins/
+bridge5a/teste97/app124/estado16/attempt fixos;1410verdes históricos.
+Sem Docker/PG/SQL/nativo/runtime/config/privado/binário/ambiente/root/
+nonce/estado/entry/loader/collector/publisher/comando/deploy. Gates
+T5físico/B1/B2/D090gate2/C1/D119/TLS/ingressos/produção abertos; Gateway
+indisponível. Histórico abaixo.
+
+## Portas: C2 ativo80494; monitorar a mesma execução — 2026-11-11
+
+Retomada agendada16h55UTC chegou nesta conversa. C2 foi retomado depois
+do horário informado16h50UTC, mesma sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f,
+claude-opus-5-5/medium. Execução80494 está ATIVA; último monitor17h10UTC,
+um escritor/C2 e nenhum Gemini. Não há resultado terminal nem nova quota
+observada. PRIMEIRO recuperar80494; ativo implica SOMENTE monitorar,
+NUNCA iniciar segunda chamada de sessão. Este bloco registra monitoramento,
+não edição adicional do teste ou autorização de fonte.
+
+C2 corrige somente tests/test_oracle9_w1_port_ownership.py, Read/Edit/Write,
+sem comandos. Baseline67ea9838/94287bytes/2584linhas continuava intacta em
+17h08UTC. Root já leu toda candidata e1294linhas do patch Gemini22089ebf,
+que falhou no git apply --check --recount; NENHUM hunk aplicado. Fases
+de leitura/edição atuais do C2 só serão conhecidas no terminal recuperado.
+Após ele encerrar, ler TODOS os deltas, medir gates e só então congelar RED.
+Owner/Proactor AUSENTES. Nenhum teste parcial deve ser publicado como verde.
+
+Mesma tarefa Windows Maskgw-Claude2-Resume-01a05804 atualizada/relida para
+11/11 às14h25SP/17h25UTC, mensagem desta conversa conferida, uma vez,
+Interactive/Limited/IgnoreNew. É acompanhamento de LATÊNCIA, não quota:
+ativo só monitorar80494. Não prova entrega futura nem liberação de cota.
+Não foi criada outra tarefa. Manter host/logon/app disponíveis.
+
+HEAD publicado de referênciafcb18d2; há documentos de revisão e rascunho
+locais. Conferir HEAD real e não reutilizar guarda após commits futuros.
+13pins/bridge5a/teste97/app124/estado16/attempt fixos;1410verdes históricos.
+Baseline local só3sanidadesPASS/137deselecionados,41Ruff/formatfail/5mypy
+em3.11 e3.14; não é RED aceito. Sem Docker/PG/SQL/nativo/runtime/config/
+privado/binário/ambiente/root/nonce/estado/entry/loader/comando/deploy.
+Gates nativos/produto abertos; Gateway indisponível. Histórico abaixo.
+
+## Portas: rascunho Gemini revisto; retomada C2 — 2026-11-11
+
+Desenho V4 publicadofcb18d2/527ab514, aceito só para primeiros testes.
+C2CLI84154 terminou429 ANTES de editar; reset informado13h50SP/16h50UTC,
+não observado. Fallback Gemini ArgonHigh/high expressamente autorizado,
+conversa26d0a462. CLI93789/25209/23618 encerraram0 e foram recuperadas.
+Root leu TODAS2584linhas da candidata e1294do patch. Teste67ea9838 local,
+94287bytes, não aprovado/não congelado/não publicado.3sanidades PASS com
+137deselecionados; Ruff41, format falhou, mypy5 em3.11 e3.14. Nada verde
+sobre features ausentes. PORT-OWNERSHIP-TEST-REVIEW registra6findings.
+
+Patch Gemini22089ebf não aplica na região2182; nenhum hunk aplicado.
+Próximo só mesmoC2/sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f/claude-opus-5-5/
+medium corrigir tests/test_oracle9_w1_port_ownership.py, Read/Edit/Write
+só esse teste, sem comandos. Ler parecer, candidata e proposta; root relê
+TODOS os deltas e congela RED antes da fonte. Owner/Proactor AUSENTES.
+Conferir Git real/zero escritor; ativo só monitorar e recuperar terminal.
+
+Tarefa existente atualizada/relida Ready para11/11 às13h55SP/16h55UTC;
+esta conversa RECEBEU a mensagem16h55UTC. Não é garantia de quota nem novo
+job. Clock16h55:34UTC e CIM16h55:43UTC:zero agentes. Após16h50UTC cabe
+uma tentativa normalC2, nunca antecipação/troca de conta/contorno.
+
+Exportação Gemini inicialmente rejeitada; prova GitHub anônima200/PUBLIC
+com9blobs idênticos permitiu revisão normal da MESMA ação. Sem bypass.
+CLI89969 foi cancelado após falha de cwd curto e aviso de mode;0resposta,
+sem ID, Git intacto; não prova ausência de conversa remota. Chamada
+posterior usou caminho canônico/Stop/PLAN sem flag conflitante. Pacotes
+intactos. Contexto adicional só parecer/QA do próprio código proposto.
+
+13pins/bridge5a/teste97/app124/estado16/attempt fixos;1410verdes históricos.
+Sem Docker/PG/SQL/efeito nativo/eventloop/runtime/config/privado/binário/
+ambiente/root/nonce/estado/entry/loader/collector/publisher/comando/deploy.
+T5físico/B1/B2/D090gate2/C1/D119/TLS/ingressos/produção abertos; Gateway
+indisponível. Preservar rascunho local sem publicar teste parcial.
+Histórico abaixo.
+
 ## Portas: V4 revista para primeiros testes — 2026-11-11
 
 C2CLI79160 terminou0/success em82774ms, recuperada; zero escritores.

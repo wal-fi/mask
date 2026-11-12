@@ -342,3 +342,35 @@ T5físico/B1/B2/D090gate2/C1/D119/TLS/ingressos/produção continuam abertos;
 Gateway indisponível. Proactor, admissão de receitas/segredos/ambiente,
 supervisão externa e prova por identidade continuam NOT_PREPARED, sem
 trocar entrega física por fakes ou quiet_scoped.
+
+## Complemento de representação revisto antes da fonte — 2026-11-11
+
+RED171 foi revisto e congelado localmente em e85f8b53:4sanidades PASS,
+167falhas exclusivamente por ausência do owner,0erros/skips. Nenhuma
+evidência comportamental ou nativa. Ler PORT-OWNERSHIP-TEST-REVIEW completo.
+
+Claude2 permanece em quota semanal observada, sem retry antes12/11 às
+23hUTC informado. Fallback Gemini Argon high/high, mesma conversa26d0a462,
+CLI42016/15302 recuperadas0/SUCCESS (104,146s/40,110s), somente proposta
+read-only sobre os9arquivos públicos já autorizados. Zero escritor após
+as entregas. Root leu as duas propostas inteiras; a primeira foi rejeitada
+por coerção de failed, política nova de callbacks fora de escopo e redação
+que atribuía mutação do protocolo à quarentena da ponte.
+
+Segunda proposta8d4ffabe/7069bytes/60linhas aceita sob delegação SOMENTE
+como precisão do modelo em PHASE-9-W1-ORACLE-PORT-OWNERSHIP-CONTRACT.md:
+tuple de pipes por fd0/1/2; None sem evento, bool exato igual ao failed
+observado; ausência de pipe não vira prova de fechamento. Índices locais
+e da ordem imutável de CliPlan são explícitos por kind. UNKNOWN da ponte
+não escreve o protocolo do owner; ReadTake não ganha campo parent; prazo
+concluído de startup não limita a vida da sessão. Campos/enums/API e
+oráculos congelados permanecem idênticos. Não é aprovação individual
+inventada nem dispensa de prova por teste ou admissão nativa.
+
+Sob a delegação vigente, próximo incremento pode implementar SOMENTE o
+owner puro docs/poc/oracle9_w1_port_ownership.py, pelo programador de
+fallback enquanto a quota C2 observada persistir. O módulo Proactor,
+testes congelados, upstream/protegidos/app124/state16/attempt não mudam.
+Root deve ler TODA fonte antes de executar QA e não publicar parcial
+como verde. Sem efeitos nativos, operacionais, Docker/PG/SQL ou deploy.
+As demais validações de produto e físicas continuam abertas.

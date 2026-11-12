@@ -1,0 +1,37 @@
+{
+  "source_sha256": "a5d233aee8de5c2a53e72e1c8fbc858c07c72bd4947267310fa0cf5598ab2a9d",
+  "probes": [
+    {
+      "case": "late_write_handoff",
+      "deadline": 101.0,
+      "protocol_at": 101.015625,
+      "protocol": "UNKNOWN",
+      "delivery": "UNKNOWN",
+      "matches_contract": true
+    },
+    {
+      "case": "late_read_data",
+      "ok": false,
+      "data_bytes": 0,
+      "late_bytes_retained": true,
+      "old_outcome_identity_preserved": true,
+      "matches_contract": true
+    },
+    {
+      "case": "late_read_eof",
+      "ok": false,
+      "data_bytes": 0,
+      "matches_contract": true
+    },
+    {
+      "case": "synchronous_write_crosses_deadline",
+      "deadline": 101.0,
+      "protocol_at": 101.015625,
+      "protocol": "UNKNOWN",
+      "delivery": "UNKNOWN",
+      "matches_contract": true
+    }
+  ],
+  "passed": 4,
+  "failed": 0
+}

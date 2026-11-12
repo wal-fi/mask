@@ -1,0 +1,138 @@
+{
+  "validated_at_utc": "2026-11-12T12:42:04.068555+00:00",
+  "source_path": "docs/poc/oracle9_w1_port_ownership.py",
+  "source_sha256": "a5d233aee8de5c2a53e72e1c8fbc858c07c72bd4947267310fa0cf5598ab2a9d",
+  "source_bytes": 96838,
+  "source_lines": 2657,
+  "tests_frozen": [
+    {
+      "name": "FROZEN-BASE-TEST.py.txt",
+      "source": "tests/test_oracle9_w1_port_ownership.py",
+      "bytes": 107260,
+      "sha256": "e85f8b53a47ae060874555fcaac0eceaa819c361f9c09189fa863dfd66cc56c7",
+      "published": false
+    },
+    {
+      "name": "FROZEN-REVIEW-TEST.py.txt",
+      "source": "tests/test_oracle9_w1_port_ownership_review.py",
+      "bytes": 18106,
+      "sha256": "f86f54aa1694218e331cd229c9485d8e7707613c29b54a6241089c2d2ffeda6c",
+      "published": false
+    }
+  ],
+  "related_matrix": {
+    "tests": 1604,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "elapsed_s": 30.578
+  },
+  "own_cases_in_final_matrix": 194,
+  "additional_deadline_probes": 4,
+  "probe_red_source": "e0e7297d82e13edc5a6a4c0266a746f4fd586f8ba941cfe27e9388f2126e4a10",
+  "all_failure_texts_read": true,
+  "author": "Gemini Argon high/high; same conversation",
+  "root_role": "Review, literal patch application, mechanical formatting with AST equality, deterministic QA",
+  "runtime": "3.11.3 (tags/v3.11.3:f3909b8, Apr  4 2023, 23:49:59) [MSC v.1934 64 bit (AMD64)]",
+  "qa_thread_stack_bytes": 67108864,
+  "mypy_3_14_static_only": true,
+  "ruff_src_tests": true,
+  "ruff_poc_restricted": true,
+  "format_source_and_two_tests": true,
+  "mypy_explicit_three_files_311": true,
+  "mypy_explicit_three_files_314": true,
+  "mypy_src_tests_368_311": true,
+  "mypy_src_tests_368_314": true,
+  "unchanged_upstream_app_checks": 139,
+  "protected_files": [
+    {
+      "path": "deploy/oracle9_w1_driver.py",
+      "sha256": "b54a8a9457a908e839d1f5870280644839478bc471e5e06cd4268bcdcff8c51f",
+      "bytes": 51913
+    },
+    {
+      "path": "deploy/oracle9_w1_main.py",
+      "sha256": "89c99c6587e7c51d86fc0abb460330780357121c28768883ed8ab9dc789ccdea",
+      "bytes": 46787
+    },
+    {
+      "path": "tests/test_oracle9_w1_driver.py",
+      "sha256": "37848735f0a8687f227d1ef2c8449b92535a0255a911124ea9dc415d35b05850",
+      "bytes": 81023
+    },
+    {
+      "path": "tests/test_oracle9_w1_driver_session.py",
+      "sha256": "e7c2a1c2c2606c59154719cfd1aece2127f443ef0e8a2a03d93f54c344e58b47",
+      "bytes": 45321
+    },
+    {
+      "path": "tests/test_oracle9_w1_expect.py",
+      "sha256": "e24f80a58300a7835f5990f842ddb2e13415570a68141e929d2b69ea62844cca",
+      "bytes": 45520
+    },
+    {
+      "path": "tests/test_oracle9_w1_main.py",
+      "sha256": "0e6e07f05d4388f52ff7469e9f4bf2713636e274f53d460a3decd65f7256e234",
+      "bytes": 102644
+    },
+    {
+      "path": "tests/test_oracle9_w1_driver_t5.py",
+      "sha256": "2b509c870292a30612953257565d8a705d23da11acbf62fad8ba40c7fbfeff0e",
+      "bytes": 50963
+    },
+    {
+      "path": "tests/test_oracle9_w1_main_t5.py",
+      "sha256": "ec2df9113c8c3c78eb22512144a6dd41b3e3c6e43b07dcbc3773ee76d2a3dc69",
+      "bytes": 36224
+    },
+    {
+      "path": "deploy/oracle9_w1_controller.py",
+      "sha256": "4c155d76208f113852f95fec4c57253eef480c610aa390423fa6f82baf1f7bc7",
+      "bytes": 22453
+    },
+    {
+      "path": "tests/test_oracle9_w1_controller.py",
+      "sha256": "084d62cd2a567a0710a7e13b5e9b33896c255ee743fa58e3cc0dab08135b9039",
+      "bytes": 44298
+    },
+    {
+      "path": "docs/poc/oracle9_w1_expect.py",
+      "sha256": "ce6ff3896d44b7e27cbfe76ca4e1c63c5da87c7982ea7e591e8ef71517a06725",
+      "bytes": 22114
+    },
+    {
+      "path": "docs/poc/oracle9_w1_host_reactor.py",
+      "sha256": "e86f8e325410a26efeb47de1c4e349e9099673de612c028eb30e01ceea5d91ae",
+      "bytes": 38610
+    },
+    {
+      "path": "tests/test_oracle9_w1_host_reactor.py",
+      "sha256": "f177102a1ea55e9c6a32d1fcd863f18a2c04800588bddeeab8ee0eb192816613",
+      "bytes": 77736
+    },
+    {
+      "path": "docs/poc/oracle9_w1_duplex_bridge.py",
+      "bytes": 35821,
+      "sha256": "5a09be1c9af3222f918973b426ae349e9f614fb4de191e7807ec8193775a98cd"
+    },
+    {
+      "path": "tests/test_oracle9_w1_duplex_bridge.py",
+      "bytes": 76446,
+      "sha256": "97c26fbfd2823e288a450fdde7ca3d7919ef7a5ec4843021bc3cb98bf585f671"
+    }
+  ],
+  "application_files": 124,
+  "state16_attempt_not_read_or_modified": true,
+  "proactor_absent": true,
+  "native_product_gates_closed": false,
+  "gateway_available": false,
+  "accepted_scope": "Only pure model/source against deterministic fake ports; no native or production acceptance",
+  "agent_terminal_exit_codes": {
+    "46446": 0,
+    "35586": 1,
+    "45316": 0
+  },
+  "agent_service_status": "ERROR output token limit reported; closed patches reviewed separately; not quota",
+  "source_accepted_for_integration": true,
+  "publication_status_at_measurement": "Not yet committed or pushed; inspect actual Git refs for subsequent publication"
+}

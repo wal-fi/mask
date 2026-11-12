@@ -1,0 +1,31 @@
+{
+  "kind": "behavioral_RED",
+  "frozen": true,
+  "frozen_at_utc": "2026-11-11T19:41:36.212059+00:00",
+  "test_path": "tests/test_oracle9_w1_port_ownership_review.py",
+  "test_sha256": "f86f54aa1694218e331cd229c9485d8e7707613c29b54a6241089c2d2ffeda6c",
+  "bytes": 18106,
+  "lines": 479,
+  "source_baseline_sha256": "4276d9fcf8ed47ad9ac829878c3531ac833c3a466757d3c6f676cf00b182c650",
+  "original171_sha256": "e85f8b53a47ae060874555fcaac0eceaa819c361f9c09189fa863dfd66cc56c7",
+  "total": 23,
+  "passed": 1,
+  "failures": 22,
+  "errors": 0,
+  "skips": 0,
+  "elapsed_s": 2.9143096000007063,
+  "all_failure_texts_read": true,
+  "all_failures_expected_review_findings": true,
+  "statics": [
+    "ruff",
+    "format",
+    "mypy_strict311",
+    "mypy_strict314"
+  ],
+  "runtime": "3.11.3 (tags/v3.11.3:f3909b8, Apr  4 2023, 23:49:59) [MSC v.1934 64 bit (AMD64)]",
+  "stack_bytes": 67108864,
+  "protected13_app124_verified": true,
+  "proactor_absent": true,
+  "published": false,
+  "native_product_gates_closed": false
+}
