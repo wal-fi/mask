@@ -62,6 +62,12 @@ DLP/governança/RBAC ou remover bloqueios para parecer pronto.
   prazo. São provas relevantes do controle, sem syscall/loop/subprocesso
   nativo do produto neste lote. Não fecham R05–R08 ou R14.
 
+Revisão dirigida de R13: `ORACLE9-RELEASE-DEPENDENCY-REVIEW-2026-11-12.md`
+confronta as três cópias SSL registradas com avisos oficiais e distingue
+versão upstream, backport e alcance. Não é exploração reproduzida ou troca
+de pins, não invalida automaticamente o uso secretless W1 e não certifica
+as dependências de release por um simples update do RPM do sistema.
+
 ## Sequência que aproxima o resultado solicitado
 
 ```mermaid

@@ -40,8 +40,12 @@ abaixo pertence às consultas antigas, agora substituídas por esse readback.
 15upstream/ponte/app124/state16/attempt fixos. Sem Docker/PG/SQL/nativo/
 loop/socket/thread/processo ou valor operacional de produto. Só a tarefa
 de orquestração autorizada foi atualizada, nenhum serviço alterado.
-Nativos/produto continuam abertos; Gateway indisponível. Goal permanece
-ativo: houve progresso de revisão e agendamento comprovados, não conclusão.
+Nativos/produto continuam abertos; Gateway indisponível. Revisões de SDK,
+entrega e dependências foram adiantadas sem programador. Ver também
+docs/ORACLE9-RELEASE-DEPENDENCY-REVIEW-2026-11-12.md; pins não mudaram.
+Implementação agora depende da quota dos programadores designados. A mesma
+condição ocorreu em3turnos; consultar estado efetivo do goal após auditoria,
+sem alegar conclusão. Tarefa20h05 permanece habilitada para a retomada.
 Histórico abaixo.
 
 
