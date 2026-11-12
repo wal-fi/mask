@@ -1,0 +1,12 @@
+{
+    "task":  "Maskgw-Claude2-Resume-01a05804",
+    "start":  "2026-11-12T21:10:00-03:00",
+    "ignore_new":  "IgnoreNew",
+    "same_conversation":  true,
+    "resume_flag":  true,
+    "test_only":  true,
+    "normative_r8":  true,
+    "target_cli_writers":  0,
+    "future_delivery_confirmed":  false,
+    "verified_at_utc":  "2026-11-12T23:50:36.0220572Z"
+}

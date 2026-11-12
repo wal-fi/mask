@@ -32,7 +32,7 @@ componente não foram usados para provar funcionamento do produto completo.
 | R02 | Vários datasources e políticas pela Admin UX | Etapas1–6 têm implementação e evidência próprias. Porém `bootstrap/main.py` `_build_pgwire_application` recusa Admin/UI junto com PGWire; `_compose` mantém o outro caminho legado. **Ativação integrada incompleta.** | Operador inicia o serviço configurado, administra datasources sem segredo de volta e consulta os aliases pelo PGWire, preservando revisões, concorrência e confirmação de escrita. |
 | R03 | Login PGWire, TLS e identidades separadas | Existem listener, composição, TLS e SCRAM em `src/maskgw/pgwire/`; o bootstrap lê a flag externa e prepara o catálogo existente. **Código presente; certificação final no destino não comprovada.** | Login certo/errado sem enumeração, TLS externo sem downgrade, limites de sessão/idle, parada e pacotes instalados nos perfis reivindicados. |
 | R04 | SELECT simples com masking pela IDE | `pgwire/driver.py` `_after_ready`, linhas263–272, aceita apenas Terminate (`X`). Outro tipo resulta FEATURE_NOT_SUPPORTED sem ler o corpo. **Consultas não entregues.** | Caminho Q até worker/conexão da sessão, resposta mascarada, proveniência, exceções autoritativas, limites e falha fechada. |
-| R05 | Ponte W1 e posse real das portas | Owner puro, host e ponte foram revisados com fakes. Owner `a5d233ae`,194 próprios/1604 relacionados e4 sondagens são evidência do modelo. `oracle9_w1_proactor_pump.py` e seu desenho ainda não existem. **Binding nativo incompleto.** | Desenho/revisão, oráculos/RED, implementação do adaptador e prova nativa de ordem, posse, prazo e recolhimento. Não substituir por mais fakes como entrega final. |
+| R05 | Ponte W1 e posse real das portas | Owner puro, host e ponte foram revisados com fakes. Owner `a5d233ae`,194 próprios/1604 relacionados e4 sondagens são evidência histórica do modelo. Desenho Proactor P3 revisto somente para primeiros oráculos sob R8; `oracle9_w1_proactor_pump.py` continua ausente. **Binding nativo incompleto.** | Oráculos/RED, implementação do adaptador e prova nativa de ordem, posse, prazo e recolhimento. Não substituir por mais fakes como entrega final. |
 | R06 | B-1: equivalência do pipeline no worker da sessão | `PHASE-9-STAGE-8-DESIGN.md` §5 e evidências B-1 distinguem recompilação/snapshot da integração. **Fim a fim não comprovado.** | Worker instalado com o mesmo engine, policy/HMAC/snapshot e conexão da sessão; comparar resultados/tipos/proveniência e provar reload/lease/isolamento entre datasources. |
 | R07 | D-090 gate2: prazo efetivo sem abandonar recurso | O verificador de candidatos e os modelos posteriores não provam contenção de toda validação/masking/consulta. A própria recusa SQL permanece no ingresso. **Gate2 aberto.** | Prazo real imposto pelo dono, falhas/CPU/leitura presa, EOF, término e recolhimento medidos no caminho completo. Retenção incerta não pode ser rotulada cleanup. |
 | R08 | B-2/C1 no perfil Docker aprovado | `PHASE-9-CONTAINER-MEMORY-DECISION.md` aprova prospectivamente a opção A, não seu resultado. `DOMAIN-VALIDATION` é reconciliação pura; guard pré-segredo tem prova nativa limitada, não agregado completo. **Gate aberto.** | Critérios6–7 da D-119: pressão/controles negativos, contabilização do agregado, memória/swap/pids/fds, saída em voo, sigilo e comportamento fechado sob OOM. Não transformar AS em RAM nem o perfil em STRICT_PROVEN. |
@@ -80,9 +80,10 @@ flowchart LR
 ```
 
 Cada seta depende de evidência própria; não é um prazo ou declaração de
-gate fechado. O próximo lote do programador permanece somente o desenho
-Proactor. A revisão prévia está em `PHASE-9-W1-ORACLE-PROACTOR-REVIEW.md`.
-Depois vêm testes revistos/RED, fonte e as provas nativas autorizadas no
+gate fechado. O desenho Proactor P3 foi revisto somente para o primeiro lote
+de oráculos fake, sob TODA `PHASE-9-W1-ORACLE-PROACTOR-REVIEW.md`, incluindo
+R8 normativo. O próximo lote é somente `tests/test_oracle9_w1_proactor_pump.py`,
+ainda ausente. Depois vêm revisão integral/RED, fonte e provas nativas no
 procedimento próprio. Não adicionar outra camada genérica de simulação.
 
 ## Retomada, autoridade e dados externos

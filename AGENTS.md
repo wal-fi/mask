@@ -1,3 +1,34 @@
+## Proactor: P3 revista para primeiros oráculos — 2026-11-12
+
+Claude2, mesma sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f, Opus5.5/medium.
+Execuções81141/3500/17315 terminaram exit0/success, recuperadas, sem denials.
+Root leu integralmente P1/551linhas, P2/630 e P3/773, com snapshots locais.
+P3:91178c1cfa0ac2d6e7545dee9af2bba0cec3e77eb6288ea2350633590b20d330,
+38724bytes. Aceita SOMENTE para primeiros oráculos com SDK falso sob TODO
+PROACTOR-REVIEW, incluindo R8 NORMATIVO. Não é teste verde ou prova nativa.
+
+Próximo único lote: tests/test_oracle9_w1_proactor_pump.py pelo mesmoC2,
+Read/Edit/Write só esse teste, sem comandos. Fonte Proactor AUSENTE até
+root ler TODOS os oráculos e medir/congelar RED. O teste novo também está
+AUSENTE neste checkpoint. SDK público:10textos oficiais, nunca executados.
+R8 fixa relógio inicial, tempo novo após diferidos, fatos com gate SPENT
+e drenagem inicial limitada aos diferidos da entrada. Não enfraquecer testes.
+
+Antes de qualquer chamada: Git REAL/terminais/zero escritor; ativo só
+monitorar. Tarefa EXISTENTE relida Pronta para12/11 às21h10SP(13/11 às00h10UTC),
+mesma conversa/IgnoreNew/--resume, para esse lote. Não é prova de entrega
+futura nem de quota disponível. Não retomar AGY ou duplicar agente/tarefa.
+
+Ownera5d233ae/testese85f8b53/f86f54aa/15upstream/ponte/app124/state16/attempt
+fixos.1604verdes/4sondas continuam históricos. Nenhum teste novo nesta etapa
+documental; todos gates nativos/produto OPEN, Gateway indisponível.
+Sem efeito nativo/Docker/PG/SQL/runtime/config/privado/binário/estado/
+root/nonce/entry/loader/collector/publisher/comando/deploy. Conferir HEAD
+atual após publicação documental, não reutilizar a25b601 como guarda eterna.
+Preservar evidências brutas e arquivos pessoais locais fora dos commits.
+Histórico publicado abaixo.
+
+
 ## Proactor: Flash solicitado pelo mesmo CLI; retorno de quota — 2026-11-12
 
 Usuário autorizou Gemini3.8FlashHigh e o MESMO caminho CLI do Argon.

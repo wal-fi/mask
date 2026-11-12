@@ -1,0 +1,42 @@
+{
+  "design_sha256": "91178c1cfa0ac2d6e7545dee9af2bba0cec3e77eb6288ea2350633590b20d330",
+  "design_bytes": 38724,
+  "design_lines_read": 773,
+  "previous_designs_lines_read": [
+    551,
+    630
+  ],
+  "programmer_session": "51ea0d85-05bb-4d24-ba9a-c9627c3f832f",
+  "model": "claude-opus-5-5",
+  "effort": "medium",
+  "calls": [
+    {
+      "execution": 81141,
+      "terminal": 0,
+      "subtype": "success"
+    },
+    {
+      "execution": 3500,
+      "terminal": 0,
+      "subtype": "success"
+    },
+    {
+      "execution": 17315,
+      "terminal": 0,
+      "subtype": "success"
+    }
+  ],
+  "acceptance": "Only first fake oracles under full PROACTOR-REVIEW including normative R8",
+  "fixed_text_sources_verified": 142,
+  "upstream": 15,
+  "application": 124,
+  "owner_and_frozen_tests": 3,
+  "sdk_texts": 10,
+  "sdk_executed": false,
+  "new_test_absent": true,
+  "proactor_source_absent": true,
+  "tests_run": [],
+  "historic_1604_tests_not_rerun": true,
+  "native_or_product_gate_closed": false,
+  "operational_state_read_or_changed": false
+}
