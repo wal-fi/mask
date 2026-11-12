@@ -1,0 +1,12 @@
+{
+  "classification": "progress: public SDK review, quota recovered, existing task read/updated/verified",
+  "protected_owner_tests_app_checks": 142,
+  "all_intact": true,
+  "no_new_source_tests": true,
+  "proactor_design_absent": true,
+  "proactor_module_absent": true,
+  "native_product_gates_closed": false,
+  "goal_status": "active",
+  "scheduled_task_verified": true,
+  "no_delivery_or_reset_claim": true
+}

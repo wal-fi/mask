@@ -1,3 +1,76 @@
+## Proactor: quota observada; retomada20h05 confirmada — 2026-11-12
+
+Código c3eb2c7 e correção editorial7a9cb08 publicados. Conferir HEAD REAL
+após qualquer commit; não usar hashes antigos como guarda permanente.
+Ownera5d233ae/testes e85/f86 fixos;1604PASS/4sondas são históricos.
+
+Gemini55124 recuperado exit3/RESOURCE_EXHAUSTED429 individual, SEM proposta
+ou edição. Espera informada101h10m16s em12/11 às14h07UTC; não retry antes
+do horário inferido16/11 às19h18UTC, reset NÃO observado. Zero escritores
+conferido após término. C2 primário: mesma sessão51ea0d85/claude-opus-5-5/
+medium, só tentativa normal após12/11 às23hUTC informado. Não trocar conta/
+modelo ou contornar quota. PROACTOR-DESIGN e módulo continuam AUSENTES.
+
+Trabalho independente: root leu definições públicas CPythonv3.11.3 e
+registrou requisitos em PHASE-9-W1-ORACLE-PROACTOR-REVIEW.md, não desenho
+aprovado.14entradas públicas/499232bytes intactas; nenhum novo privado.
+O próximo único lote do programador é esse DESENHO, Read/Edit/Write só
+ele, sem comandos/execução. Root lê proposta inteira antes de aceitar;
+depois oráculos/RED revistos, só então fonte. Owner/API/testes não mudam.
+
+Tarefa EXISTENTE Maskgw-Claude2-Resume-01a05804 localizada por schtasks.
+Atualizada só Exec.Arguments: mensagem atual e --resume; comando, usuário,
+settings, IgnoreNew e horário preservados. Readback XML e consulta nativa
+confirmam Pronto/Habilitado/12/11/2026 às20h05SP(23h05UTC), mesma conversa.
+Prova em evidence/oracle9-w1-proactor-design-review-20261112/
+scheduled-resume-verified.json. Não há nova tarefa nem execução antecipada.
+Host ligado, usuário logado e app/daemon local disponível são necessários;
+--resume pode falhar com warning mesmo com exit0. Entrega futura e reset
+não são garantidos. Primeiro conferir Git/zero escritor/terminais; ativo
+só monitorar, nunca chamada duplicada. Histórico de job não confirmado
+abaixo pertence às consultas antigas, agora substituídas por esse readback.
+
+15upstream/ponte/app124/state16/attempt fixos. Sem Docker/PG/SQL/nativo/
+loop/socket/thread/processo ou valor operacional de produto. Só a tarefa
+de orquestração autorizada foi atualizada, nenhum serviço alterado.
+Nativos/produto continuam abertos; Gateway indisponível. Goal permanece
+ativo: houve progresso de revisão e agendamento comprovados, não conclusão.
+Histórico abaixo.
+
+
+## Proactor: desenho em andamento; Gemini55124 ativo — 2026-11-12
+
+Código c3eb2c7 e correção editorial7a9cb08 publicados e sincronizados.
+Fonte ownera5d233ae/testes e85/f86 fixos;1604PASS e4sondas são a medição
+anterior, sem nova suíte por documentos. Acentos novos corrigidos sem
+mudar código/testes/requisitos; usar UTF-8 também no pipe PowerShell.
+
+Zero escritores conferido antes da chamada. Gemini26d0a462/ArgonHigh/high,
+PLAN/read-only/sandbox, execução55124 ATIVA, devolve SOMENTE proposta de
+docs/PHASE-9-W1-ORACLE-PROACTOR-DESIGN.md. Recuperar55124 ANTES de nova
+chamada; ativo só monitorar, nunca outro escritor. Nenhum teste/fonte
+Proactor antes da revisão integral do desenho e do posterior RED revisto.
+
+Scratch novo contém14textos PÚBLICOS/499232bytes:7blobs do projeto e7
+fontes oficiais CPythonv3.11.3, todos HTTP200 anônimos; projeto idêntico
+aos blobs Git publicados. Prova em evidence/oracle9-w1-proactor-design-
+review-20261112/public-package.json. Nenhum arquivo privado/histórico/
+runtime/config/ambiente/binário ou fonte rejeitada enviado. Permissão
+normal aprovou este pacote público distinto. Não assumir SUCCESS do
+serviço pelo exit0; recuperar resultado real.
+
+Desenho deve reconciliar APIs públicas, posse/tarefas/filas, prazos,
+callbacks, limites e shutdown sem inventar prova física; explicar cleanup
+automático do SDK e eventual conflito com §2.3, sem mudar owner/API.
+Root lerá TODA proposta antes de adotar ou pedir testes. Sem loop/thread/
+processo/socket/Docker/PG/SQL/nativo ou valor operacional executado.
+
+15upstream/ponte/app124/state16/attempt fixos. C2 continua sem retry antes
+23hUTC informado, mesma sessão51ea0d85/Opus5.5/medium depois; reset/job não
+comprovados. Gates nativos/produto abertos; Gateway indisponível.
+Histórico abaixo.
+
+
 ## Portas: owner puro revisto;1604relacionados e4sondas verdes — 2026-11-12
 
 Fonte final a5d233ae/96838bytes/2657linhas, testes171e85/23f86 intactos.

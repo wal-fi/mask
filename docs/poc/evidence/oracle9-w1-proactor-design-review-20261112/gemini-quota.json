@@ -1,0 +1,17 @@
+{
+  "execution_id": 55124,
+  "cli_exit_code": 3,
+  "status": "ERROR",
+  "error_category": "RESOURCE_EXHAUSTED/individual quota",
+  "http_code": 429,
+  "reported_wait": "101h10m16s",
+  "terminal_finished_at_utc": "2026-11-12T14:07:54.0273752Z",
+  "inferred_not_before_utc": "2026-11-16T19:18:10Z",
+  "reset_independently_observed": false,
+  "proposal_returned": false,
+  "edits_observed": false,
+  "writers_after_terminal": 0,
+  "next_programmer": "Claude2 only after2026-11-12T23:00:00Z reported reset, same session/model/medium",
+  "account_or_model_switch": false,
+  "no_retry_before_reported_time": true
+}

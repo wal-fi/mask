@@ -1,0 +1,18 @@
+{
+  "task": "Maskgw-Claude2-Resume-01a05804",
+  "registration_confirmed": true,
+  "next_run_confirmed": true,
+  "next_run_local": "12/11/2026 20:05:00",
+  "timezone": "America/Sao_Paulo",
+  "next_run_utc": "2026-11-12T23:05:00Z",
+  "status": "Pronto",
+  "enabled": "Habilitado",
+  "resume_flag_verified_in_xml": true,
+  "same_conversation": "01a05804-2c07-71f2-bfef-7e3c90c06476",
+  "updated_existing_task_only": true,
+  "multiple_instances": "IgnoreNew",
+  "delivery_observed": false,
+  "quota_reset_observed": false,
+  "requires": "Host awake, user logged in and local Codex app/daemon available; --resume can warn without failing command",
+  "checked_at_utc": "2026-11-12T14:21:13.595340+00:00"
+}
