@@ -1,80 +1,80 @@
-## Portas: owner puro revisto;1604relacionados e4sondas verdes ? 2026-11-12
+## Portas: owner puro revisto;1604relacionados e4sondas verdes — 2026-11-12
 
 Fonte final a5d233ae/96838bytes/2657linhas, testes171e85/23f86 intactos.
 Gemini ArgonHigh/high foi o programador; root leu toda fonte original e
-TODOS os deltas772+107linhas, aplicados literalmente, s? Ruff com AST igual.
-Terminais46446/35586/45316 recuperados; zero escritor ap?s45316. As chamadas
-com patch retornaram CLI0, mas servi?oERROR/limite de sa?da: n?o chamar
-SUCCESS nem quota. Autoriza??o espec?fica dos4arquivos recebida e usada;
-nenhum novo arquivo privado no retorno t?cnico, hist?rico de rejei??es mantido.
+TODOS os deltas772+107linhas, aplicados literalmente, só Ruff com AST igual.
+Terminais46446/35586/45316 recuperados; zero escritor após45316. As chamadas
+com patch retornaram CLI0, mas serviçoERROR/limite de saída: não chamar
+SUCCESS nem quota. Autorização específica dos4arquivos recebida e usada;
+nenhum novo arquivo privado no retorno técnico, histórico de rejeições mantido.
 
-Matriz FINAL1604PASS/30,578s, incluindo194pr?prios,0falhas/erros/skips.
+Matriz FINAL1604PASS/30,578s, incluindo194próprios,0falhas/erros/skips.
 Quatro sondagens de callbacks de prazo foram medidas divergentes antes do
 suplemento e agora passam: escrita tardia UNKNOWN; leitura vencida falha,
-bytes retidos e outcome anterior imut?vel. RED171/RED23 e medi??es
-intermedi?rias preservados. Ler PORT-OWNERSHIP-VALIDATION/SOURCE-REVIEW e
-final-validation.json. Ruff/format e mypy expl?cito311/314 limpos;368alvos
-src/tests tamb?m limpos. Runtime Windows3.11.3/pilhaQA64MiB;3.14 s? est?tico.
+bytes retidos e outcome anterior imutável. RED171/RED23 e medições
+intermediárias preservados. Ler PORT-OWNERSHIP-VALIDATION/SOURCE-REVIEW e
+final-validation.json. Ruff/format e mypy explícito311/314 limpos;368alvos
+src/tests também limpos. Runtime Windows3.11.3/pilhaQA64MiB;3.14 só estático.
 
 15upstream/ponte + app124 intactos por SHA/tamanho; state16/attempt intocados;
-Proactor AUSENTE. Fonte aceita sob delega??o S? como modelo puro, n?o prova
-nativa ou produto. C?digo+testes congelados devem integrar juntos, com
-somente evid?ncia compacta revisada; nunca publicar s? RED nem propostas
-rejeitadas/logs/pacotes privados. Conferir Git REAL ap?s qualquer commit.
+Proactor AUSENTE. Fonte aceita sob delegação SÓ como modelo puro, não prova
+nativa ou produto. Código+testes congelados devem integrar juntos, com
+somente evidência compacta revisada; nunca publicar só RED nem propostas
+rejeitadas/logs/pacotes privados. Conferir Git REAL após qualquer commit.
 
-Pr?ximo s? desenho/reconcilia??o do adaptador concreto, antes de testes e
-fonte pr?prios. C2 mesma sess?o51ea0d85/Opus5.5/medium, sem retry antes23hUTC
-informado. Fallback condicionado, nunca escritores simult?neos. N?o h? job
-ou reset confirmado. Sem Docker/PG/SQL/nativo/runtime/config/privado/bin?rio/
+Próximo só desenho/reconciliação do adaptador concreto, antes de testes e
+fonte próprios. C2 mesma sessão51ea0d85/Opus5.5/medium, sem retry antes23hUTC
+informado. Fallback condicionado, nunca escritores simultâneos. Não há job
+ou reset confirmado. Sem Docker/PG/SQL/nativo/runtime/config/privado/binário/
 ambiente/root/nonce/estado/entry/loader/collector/publisher/comando/deploy.
-Todos gates nativos/produto abertos; Gateway indispon?vel. Hist?rico abaixo.
+Todos gates nativos/produto abertos; Gateway indisponível. Histórico abaixo.
 
-## Portas: candidato1604verde com dois findings; Gemini45316 ativo ? 2026-11-12
+## Portas: candidato1604verde com dois findings; Gemini45316 ativo — 2026-11-12
 
-Autoriza??o expl?cita dos4arquivos recebida e usada; rejei??es hist?ricas
-preservadas. CLI46446 recuperada exit0/servi?oERROR por limite de sa?da,
-n?o quota. Root leu TODAS772linhas do patch fechado, aplicou literalmente
-11hunks; Ruff mec?nico com AST igual. Fonte candidata e0e7297d/95783bytes.
-194pr?prios PASS/2,996s e1604relacionados PASS/30,531s,0falhas/erros/skips.
-Ruff src/tests, lintPoC restrito e format3limpos; mypy expl?cito3 e368alvos
-src/tests limpos em311/314.3.14 somente an?lise est?tica. Testes e85/f86
-continuam congelados/intactos; isso AINDA N?O aprova esta fonte.
+Autorização explícita dos4arquivos recebida e usada; rejeições históricas
+preservadas. CLI46446 recuperada exit0/serviçoERROR por limite de saída,
+não quota. Root leu TODAS772linhas do patch fechado, aplicou literalmente
+11hunks; Ruff mecânico com AST igual. Fonte candidata e0e7297d/95783bytes.
+194próprios PASS/2,996s e1604relacionados PASS/30,531s,0falhas/erros/skips.
+Ruff src/tests, lintPoC restrito e format3limpos; mypy explícito3 e368alvos
+src/tests limpos em311/314.3.14 somente análise estática. Testes e85/f86
+continuam congelados/intactos; isso AINDA NÃO aprova esta fonte.
 
 Root reproduziu2findings adicionais: READ/WRITE podem concluir sucesso
-com evento ap?s prazo pr?prio se poll avan?a al?m dele sem poll intermedi?rio.
-Evid?ncia owner-authorized-fix-deadline-probes.json. N?o publicar candidato.
-CLI35586 encerrou1 sem patch, mensagem de limite de sa?da anterior;
-zero escritor confirmado depois. Recupera??o normal no mesmo Gemini
-26d0a462/ArgonHigh/high/PLAN/read-only, execu??o45316 ATIVA:
-s? suplemento pequeno da fonte, sem alterar testes/upstream/API ou executar.
-Pacote novo cont?m SOMENTE os mesmos4arquivos autorizados e9blobs p?blicos;
-nenhum novo arquivo privado/export de medi??o. Revis?o normal aprovou.
-Recuperar45316 ANTES de nova chamada; ativo s? monitorar, nunca duplicar.
+com evento após prazo próprio se poll avança além dele sem poll intermediário.
+Evidência owner-authorized-fix-deadline-probes.json. Não publicar candidato.
+CLI35586 encerrou1 sem patch, mensagem de limite de saída anterior;
+zero escritor confirmado depois. Recuperação normal no mesmo Gemini
+26d0a462/ArgonHigh/high/PLAN/read-only, execução45316 ATIVA:
+só suplemento pequeno da fonte, sem alterar testes/upstream/API ou executar.
+Pacote novo contém SOMENTE os mesmos4arquivos autorizados e9blobs públicos;
+nenhum novo arquivo privado/export de medição. Revisão normal aprovou.
+Recuperar45316 ANTES de nova chamada; ativo só monitorar, nunca duplicar.
 
 13pins/app124 e bridge/test preservados; state16/attempt intocados,
 Proactor ausente. C2 sem retry antes23hUTC informado, sem promessa de reset.
-Agendamento n?o comprovado; sem commit/push; nativos/produto abertos,
-Gateway indispon?vel. Root deve ler TODO suplemento, comprovar aplica??o
+Agendamento não comprovado; sem commit/push; nativos/produto abertos,
+Gateway indisponível. Root deve ler TODO suplemento, comprovar aplicação
 literal e repetir sondagens e gates pertinentes antes de aceitar/publicar.
 
-## Portas: pacote autorizado; Gemini ativo46446 ? 2026-11-12
+## Portas: pacote autorizado; Gemini ativo46446 — 2026-11-12
 
-Usu?rio autorizou explicitamente os4arquivos/220935bytes pedidos. Hashes
+Usuário autorizou explicitamente os4arquivos/220935bytes pedidos. Hashes
 conferidos; manifesto pending-four-file-authorization.json registra o
-consentimento. Nove c?pias p?blicas originais tamb?m conferidas:13entradas/
+consentimento. Nove cópias públicas originais também conferidas:13entradas/
 665555bytes no scratch isolado, nenhum outro arquivo privado exportado.
 
-A revis?o normal aprovou a nova a??o autorizada. Execu??o46446 ATIVA,
-mesma conversa26d0a462/Gemini4ArgonHigh/high/PLAN/read-only, pede s? patch
-da fonte4276 contra194testes congelados. Sem comandos/edi??o pelo agente.
-Recuperar46446 ANTES de nova chamada; ativo s? monitorar, nunca segundo
-escritor. Resultado e leitura dos arquivos ainda n?o confirmados. C2 n?o
-foi retomado; n?o retry antes23hUTC informado. Hist?rico de rejei??es fica.
+A revisão normal aprovou a nova ação autorizada. Execução46446 ATIVA,
+mesma conversa26d0a462/Gemini4ArgonHigh/high/PLAN/read-only, pede só patch
+da fonte4276 contra194testes congelados. Sem comandos/edição pelo agente.
+Recuperar46446 ANTES de nova chamada; ativo só monitorar, nunca segundo
+escritor. Resultado e leitura dos arquivos ainda não confirmados. C2 não
+foi retomado; não retry antes23hUTC informado. Histórico de rejeições fica.
 
-13pins/app124 intactos; testes e85/f86 e fonte4276 ainda sem mudan?as.
+13pins/app124 intactos; testes e85/f86 e fonte4276 ainda sem mudanças.
 Proactor ausente; state16/attempt intocados. Root deve ler TODO patch e
-medir194pr?prios antes de aceitar/ampliar QA/publicar. Sem novos commits
-ou push. Nativos/produto continuam abertos; Gateway indispon?vel.
+medir194próprios antes de aceitar/ampliar QA/publicar. Sem novos commits
+ou push. Nativos/produto continuam abertos; Gateway indisponível.
 
 ## Portas: autorização específica pendente; zero escritor — 2026-11-12
 

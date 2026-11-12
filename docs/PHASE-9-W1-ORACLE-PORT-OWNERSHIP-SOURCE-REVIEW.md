@@ -287,53 +287,53 @@ essa transição ao serviço de goal e reportar o estado devolvido. Nenhum
 envio, retry ou contorno; fonte/testes não alterados, sem commit/push.
 C2 continua sem retry antes23hUTC informado; agendamento não comprovado.
 
-## Autoriza??o espec?fica recebida ? 2026-11-12
+## Autorização específica recebida — 2026-11-12
 
-O usu?rio respondeu "autorizado" ? pergunta expl?cita dos4arquivos/220935bytes.
+O usuário respondeu "autorizado" à pergunta explícita dos4arquivos/220935bytes.
 Consentimento registrado no manifesto, com hashes intactos. Os9blobs
-p?blicos previamente autorizados foram copiados das c?pias originais
+públicos previamente autorizados foram copiados das cópias originais
 verificadas;13entradas/665555bytes, nenhum outro arquivo privado. Envio
-ainda n?o iniciado neste registro; sujeito ? revis?o normal da ferramenta.
-A rejei??o hist?rica permanece, sem contorno. C2 n?o foi retomado.
+ainda não iniciado neste registro; sujeito à revisão normal da ferramenta.
+A rejeição histórica permanece, sem contorno. C2 não foi retomado.
 
 ## Patch autorizado recebido:194/1604verdes, dois findings adicionais
 
-CLI46446 terminou exit0, mas servi?o ERROR/limite de sa?da, n?o quota.
+CLI46446 terminou exit0, mas serviço ERROR/limite de saída, não quota.
 Resposta8659da6e/31490bytes/772linhas foi lida INTEGRALMENTE. Um diff
 fechado d09f4e30/11hunks aplica com git apply --check --recount. Aplicado
-literalmente; candidato4f1e0aef. Ruff mec?nico com AST id?ntica gerou
-e0e7297d/95783bytes. Nenhum teste foi alterado.194pr?prios PASS em2,996s;
-1604relacionados PASS em30,531s, zero falhas/erros/skips. Mypy expl?cito
+literalmente; candidato4f1e0aef. Ruff mecânico com AST idêntica gerou
+e0e7297d/95783bytes. Nenhum teste foi alterado.194próprios PASS em2,996s;
+1604relacionados PASS em30,531s, zero falhas/erros/skips. Mypy explícito
 3arquivos e src/tests368alvos311/314, Ruff src/tests e PoC restrito limpos;
-format3arquivos limpo.3.14 permanece s? an?lise est?tica.
+format3arquivos limpo.3.14 permanece só análise estática.
 
-Revis?o adicional reproduziu dois defeitos antes de publica??o, sem alterar
-fonte/testes: polling at? prazo+2DT, sem poll anterior no prazo, permite
-write_resumed em101,015625 ap?s deadline101 virar SENT/SUCCEEDED; data
-recebido no mesmo instante conclui ReadTake vencida com ok=True. Expira??o
-s? ao retorno do Pump ? tarde. Evid?ncia em owner-authorized-fix-deadline-
-probes.json. N?o publicar este candidato apesar da matriz verde. Corre??o
+Revisão adicional reproduziu dois defeitos antes de publicação, sem alterar
+fonte/testes: polling até prazo+2DT, sem poll anterior no prazo, permite
+write_resumed em101,015625 após deadline101 virar SENT/SUCCEEDED; data
+recebido no mesmo instante conclui ReadTake vencida com ok=True. Expiração
+só ao retorno do Pump é tarde. Evidência em owner-authorized-fix-deadline-
+probes.json. Não publicar este candidato apesar da matriz verde. Correção
 deve conservar UNKNOWN/resultado de leitura vencida e registrar somente
-fatos f?sicos tardios, com bytes ainda sob posse; nenhum novo motor/API.
+fatos físicos tardios, com bytes ainda sob posse; nenhum novo motor/API.
 
-## Fechamento da revis?o da fonte pura ? 2026-11-12
+## Fechamento da revisão da fonte pura — 2026-11-12
 
-Root leu TODAS107linhas do suplemento45316; CLI0/servi?oERROR por limite
-de sa?da, n?o se inferiu a causa da mensagem nem quota. Diffa295b371
+Root leu TODAS107linhas do suplemento45316; CLI0/serviçoERROR por limite
+de saída, não se inferiu a causa da mensagem nem quota. Diffa295b371
 aplicado literalmente, sem editar hunk ou teste. Fonte finala5d233ae/
 96838bytes/2657linhas. As4sondagens independentes divergem na fontee0
-e passam nesta: handoff tardio, data e EOF tardios, write s?ncrono que
-atravessa o prazo. Bytes retidos e outcome de leitura anterior imut?vel.
+e passam nesta: handoff tardio, data e EOF tardios, write síncrono que
+atravessa o prazo. Bytes retidos e outcome de leitura anterior imutável.
 
-Matriz repetida sobre a fonte FINAL:1604PASS/30,578s, incluindo194pr?prios,
-0falhas/erros/skips. Ruff/format/mypy expl?cito311/314 limpos;368alvos
-src/tests limpos, n?o alterados pelo suplemento.15upstream/ponte+app124
-conferidos por SHA/tamanho. Nenhum teste congelado mudou. Primeira vers?o
+Matriz repetida sobre a fonte FINAL:1604PASS/30,578s, incluindo194próprios,
+0falhas/erros/skips. Ruff/format/mypy explícito311/314 limpos;368alvos
+src/tests limpos, não alterados pelo suplemento.15upstream/ponte+app124
+conferidos por SHA/tamanho. Nenhum teste congelado mudou. Primeira versão
 do roteiro adicional consultou segunda leitura pendente e falhou no harness;
-corre??o done() ocorreu antes do RED4 e est? distinguida da falha da fonte.
+correção done() ocorreu antes do RED4 e está distinguida da falha da fonte.
 
-Aceita somente integra??o do MODELO PURO com seus testes; nenhuma aprova??o
-nativa ou de produ??o. PORT-OWNERSHIP-VALIDATION e final-validation.json
+Aceita somente integração do MODELO PURO com seus testes; nenhuma aprovação
+nativa ou de produção. PORT-OWNERSHIP-VALIDATION e final-validation.json
 registram resultados, autoria e limites. Preservar logs/propostas rejeitadas
-localmente; integrar s? c?digo, testes, documentos e evid?ncia compacta
+localmente; integrar só código, testes, documentos e evidência compacta
 revistos. Nenhum programador ativo; Proactor ausente, demais gates abertos.
