@@ -1,5 +1,21 @@
 # Entrega em produção — execução delegada
 
+## Atualização de estado — 2026-11-12
+
+O objetivo continua ativo e incompleto. Estado do produto, evidências e
+lacunas verificadas no código: `PRODUCTION-READINESS-2026-11-12.md`.
+Os checkpoints e a tarefa desarmada de20/10 descritos abaixo são históricos.
+Em12/11 a mesma tarefa foi localizada, atualizada somente na mensagem e
+`--resume`, e relida como Pronta para20h05SP/23h05UTC. Não foi criada outra
+tarefa; IgnoreNew, usuário, comando e horário foram preservados. A prova
+atual é `poc/evidence/oracle9-w1-proactor-design-review-20261112/scheduled-resume-verified.json`.
+Entrega futura depende do host/logon/app/daemon, e reset não foi observado.
+
+Nenhum novo programa, teste ou efeito nativo foi executado por este mapa.
+O próximo lote do programador é somente o desenho Proactor; ler primeiro
+`CLAUDE2-PENDING-REVIEW.md` e `CHECKPOINT-2026-10-30.md`, Git real e metadados
+de escritores. Autorização delegada não permite duplicar escritor ou burlar quota.
+
 ## 1. Autoridade e checkpoint (2026-10-20)
 
 O usuário autorizou seguir pelo melhor caminho até a entrega em produção,

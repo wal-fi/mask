@@ -1,5 +1,26 @@
 # Fase 9 — PostgreSQL Gateway, múltiplos datasources e Admin UX v2
 
+## Estado vigente — 2026-11-12
+
+Etapas1–6 concluídas/publicadas; há código de startup/TLS/autenticação
+PGWire e ativação local sobre catálogo existente. A Fase9 permanece
+incompleta: o ingresso atual aceita só Terminate após autenticação,
+recusando consultas; o MCP ainda recebe somente SQL para o Gateway legado.
+Admin/UI e PGWire também não estão ativáveis juntos pelo entrypoint atual.
+Owner/ponte/host puros têm validação própria, sem fechar B-1 fim a fim,
+B-2/C1/D-090 gate2 ou produção. Ver `PRODUCTION-READINESS-2026-11-12.md`.
+
+A execução até produção foi delegada pelo usuário em20/10, sem novo aval
+por lote, conforme `PRODUCTION-EXECUTION.md` §1. Isso substitui pedidos de
+autorização por etapa anteriores, sem dispensar gates, revisão ou os limites
+do lote vigente. Os requisitos normativos abaixo não foram alterados.
+
+## Histórico de estado e autorizações
+
+Os registros deste bloco descrevem suas respectivas datas; afirmações de
+ausência de listener, estado local/sem push e pendência de autorização
+anteriores não substituem o estado vigente acima ou o Git atual.
+
 **Estado:** especificação aprovada em 2026-09-22; Etapas 1 e 2 concluídas;
 Etapa 3 (registry multi-datasource e lifecycle) implementada localmente em
 2026-09-23; Etapa 4 (Admin API v2 de datasources) implementada localmente em

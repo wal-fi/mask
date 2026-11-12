@@ -2,6 +2,11 @@
 
 ## Proactor: quota observada; retomada20h05 confirmada — 2026-11-12
 
+Mapa de entrega: docs/PRODUCTION-READINESS-2026-11-12.md confronta14
+requisitos com código/evidência. PGWire ainda recusa consultas, MCP continua
+single-datasource e entrypoint não combina PGWire/Admin. Não tratar owner
+puro verde ou imagem candidata como produto pronto. Próximo lote não muda.
+
 Código c3eb2c7 e correção editorial7a9cb08 publicados. Conferir HEAD REAL
 após qualquer commit; não usar hashes antigos como guarda permanente.
 Ownera5d233ae/testes e85/f86 fixos;1604PASS/4sondas são históricos.

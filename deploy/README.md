@@ -5,10 +5,20 @@ Base oficial9.8 já conferida pelo diagnóstico documentado em
 `docs/PHASE-9-ORACLE9-BASE-VALIDATION.md`; A base pura não contém Python; a imagem derivada já validada contém Python3.11.13.
 A evidência final do runtime está em `docs/PHASE-9-ORACLE9-PYTHON-VALIDATION.md`;
 ID local sha256:1546afefa358aa8c6049350948b1d5d4f272017da8997ae3974c93af7fdc07c4.
-A receita inicial abaixo ainda precisa ser atualizada para partir dessa imagem
-e de um fechamento Linux de dependências; não executá-la como entrega pronta.
-**Ainda não há build da aplicação, instância disponível, SQL liberada ou deploy aprovado
-por estes arquivos.** O produto ainda depende dos gates B-1/B-2/D-090.
+Wheel próprio e candidata instalada offline foram medidos em26/10; ver
+`docs/PHASE-9-ORACLE9-APP-WHEEL-VALIDATION.md` e
+`docs/PHASE-9-ORACLE9-OFFLINE-INSTALL-VALIDATION.md`. São artefatos de
+integração, não uma instância disponível, liberação SQL ou release final.
+Sua retenção atual não foi revalidada no mapa estático de12/11.
+**O produto ainda depende de B-1/B-2/C1/D-090 e dos gates de implantação.**
+Estado e lacunas: `docs/PRODUCTION-READINESS-2026-11-12.md`.
+
+## Receita inicial histórica — não executar como entrega pronta
+
+O texto abaixo registra a preparação original do Containerfile. Etapas
+posteriores produziram os artefatos citados acima; faltas históricas de
+wheel/contexto/instalador não são afirmações de ausência desses trabalhos
+hoje. A receita ainda não é um pipeline de release certificado.
 
 Containerfile.oracle9 é receita inicial para um **contexto gerado separado**,
 somente os nomes de context.allowlist. Não usar a raiz do checkout como
