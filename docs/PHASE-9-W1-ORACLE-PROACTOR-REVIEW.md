@@ -11,6 +11,17 @@ informado, mudar de conta/modelo ou tratar como o erro anterior de saída.
 Claude2 continua com tentativa normal permitida somente depois de
 12/11 às23hUTC informado, mesma sessão/modelo/medium. Reset não foi observado.
 
+Atualização posterior: o usuário autorizou explicitamente Flash High e
+pediu o mesmo CLI do Argon. A chamada61642 solicitou
+`gemini-3.8-flash-high`/high na mesma conversa, PLAN/sandbox, somente com
+os mesmos14textos públicos. Terminou exit0, porém o JSON devolveu
+`status: ERROR`, `finished_reason: error` e quota individual alcançada.
+Não retornou o desenho completo; um link para plano privado não foi lido.
+Não houve retry após a recusa, alteração de código ou aprovação de desenho.
+O serviço não ecoou o modelo efetivo nem comprovou quotas separadas; não
+atribuir os contadores cumulativos da conversa a esta chamada.
+Ver `evidence/oracle9-w1-proactor-design-review-20261112/flash-quota.json`.
+
 ## Fontes examinadas sem executar
 
 Sete arquivos do projeto foram obtidos anonimamente e comparados aos blobs

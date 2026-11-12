@@ -1,5 +1,32 @@
 # Checkpoint para continuidade em outro local
 
+## Proactor: Flash solicitado pelo mesmo CLI; retorno de quota — 2026-11-12
+
+Usuário autorizou Gemini3.8FlashHigh e o MESMO caminho CLI do Argon.
+A inferência pelo título do WindowsTerminal era INVÁLIDA: era o terminal
+desta conversa. Não usar esse título como prova de outro escritor.
+
+Execução61642 recuperada: exit0, mas JSON statusERROR/finished_reasonerror,
+"Individual quota reached", espera informada101h10m16s. Modelo SOLICITADO
+gemini-3.8-flash-high/high, mesma conversa26d0a462, PLAN/sandbox; nenhum
+desenho completo recebido/aprovado. Resposta citava plano privado que NÃO
+foi lido nem exportado. Métricas cumulativas da conversa não são medidas
+desta chamada. Não inferir liberação futura ou quota separada por modelo.
+Sem retry/contorno após essa recusa. Não há execução61642 ativa.
+
+14entradas públicas/499232bytes conferidas antes/depois. Nenhum privado
+enviado; Git de produto intocado. Owner/testes/upstream/app124/state16/
+attempt fixos; design e fonte Proactor AUSENTES. Sem efeito nativo/Docker/
+PG/SQL/deploy. Gateway indisponível e todos gates nativos/produto abertos.
+
+Código/HEAD de partida decf6ad; conferir REAL depois de documentos futuros.
+Tarefa EXISTENTE20h05SP/23h05UTC preservada; C2 só sessão51ea0d85/
+claude-opus-5-5/medium, após horário informado23hUTC, reset não observado.
+Primeiro recuperar terminais e verificar escritor; ativo só monitorar.
+Proposta antes de testes/RED/fonte. Não criar outra tarefa nem trocar conta.
+Evidência compacta: oracle9-w1-proactor-design-review-20261112/flash-quota.json.
+Histórico abaixo.
+
 ## Proactor: quota observada; retomada20h05 confirmada — 2026-11-12
 
 Mapa de entrega: docs/PRODUCTION-READINESS-2026-11-12.md confronta14
