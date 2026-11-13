@@ -1,3 +1,61 @@
+## Chamador host: revisão do desenho ativa81871 — 2026-11-13
+
+Código54c5478 publicado/sincronizado. Fonte3cb74292/testef6724a8f e os
+1784verdes históricos continuam fixos.74461 TERMINAL0/success recuperada;
+root leu TODAS249linhas/12464bytes da H1 d4c58fad. NÃO aceita para testes.
+Ler TODO HOST-RUN-REVIEW HR1 com8precisões: fence após settle,fronteiras
+HostRefusal/PumpFault/close/controle/relato,DTO fechado,custódia one-shot,
+snapshots de namespace,prazos lógicos/capacidade e relógio grosso/oráculos.
+Não são falhas nativas reproduzidas;proposta e snapshot só locais.
+
+81871 ATIVA:mesmoC2/sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f,
+claude-opus-5-5/medium,Read/Edit/Write SOMENTE
+ docs/PHASE-9-W1-ORACLE-HOST-RUN-DESIGN.md. Sem comandos/execução.
+PRIMEIRO recuperar81871;ativo SOMENTE monitorar,NUNCA segunda chamada.
+Root lê TODA proposta/delta antes de admitir testes. Módulo e teste
+host_run continuam AUSENTES até desenho revisto e depois RED congelado.
+
+Mesma tarefa relida às16h46UTC para13/11 às14h16SP/17h16UTC;command,
+principal/settings/IgnoreNew preservados. Monitoramento de LATÊNCIA,
+não reset/quota/garantia futura. Nenhuma tarefa/escritor adicional criado.
+Este registro substitui74461ativo;histórico anterior fica preservado.
+Conferir HEAD REAL após publicação documental,sem guarda54c5478 eterna.
+
+Sem AGY/contorno,efeito nativo/Docker/PG/SQL/runtime/config/ambiente/binário/
+valores de root/nonce/estado/entry/loader/collector/publisher/comando/deploy.
+Pins/app124/state16/attempt/testes/probes intocados. User confirmou CLIs
+legados sem editar mask;conferir identidade/metadados frescos,não chats ou
+configs alheios. Todos gates nativos/produto OPEN;Gateway indisponível.
+Preservar artefatos pessoais,evidências brutas e candidatos não aprovados.
+Histórico abaixo.
+
+## Chamador host: desenho restrito ativo74461 — 2026-11-13
+
+Código do bind54c5478 publicado; HEAD/origin iguais após fetch,0ahead/behind,
+árvore rastreada limpa antes deste checkpoint. Fonte3cb74292/testef6724a8f;
+1784relacionados PASS são prova pura histórica, não gate nativo fechado.
+
+74461 ATIVA, mesmoC2/sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f,
+claude-opus-5-5/medium, Read/Edit/Write SOMENTE
+ docs/PHASE-9-W1-ORACLE-HOST-RUN-DESIGN.md. Sem comandos/execução.
+PRIMEIRO recuperar74461; ativo SÓ monitorar,NUNCA segunda chamada.
+Lote é APENAS desenho mínimo do chamador linear,reusando API existente;
+nenhum teste/fonte antes de root ler TODO desenho e revisar/congelar RED.
+
+Mesma tarefa relida às16h40UTC para13/11 às14h10SP/17h10UTC;command,
+principal/settings/IgnoreNew preservados. Só acompanhamento de LATÊNCIA,
+sem promessa de entrega/reset. Nenhuma tarefa/escritor adicional criado.
+
+BIND-REVIEW B4 normativo: custódia prévia do Throwable exato com traceback;
+retenção não é cleanup. Contratos de owner/pump/ponte/reator/pins/app124/
+state16/attempt fixos. Root lê TODO retorno/delta e verifica antes de
+publicar. User confirmou que CLIs legados não editam mask; conferir
+metadata/identidade atual antes de nova chamada,sem chats/config alheios.
+Sem AGY/contorno,efeito nativo/Docker/PG/SQL/runtime/config/ambiente/binário/
+valores de root/nonce/estado/entry/loader/collector/publisher/comando/deploy.
+Todos gates nativos/produto OPEN;Gateway indisponível. Conferir Git REAL
+após commits documentais futuros,sem guarda antiga. Histórico abaixo.
+
 ## Bind Proactor: integração pura revista e verde — 2026-11-13
 
 56218 TERMINAL exit0/success e recuperada, sem denials. Claude2 foi o único
