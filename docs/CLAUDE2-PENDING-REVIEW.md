@@ -1,4 +1,92 @@
+## Bind Proactor: integração pura revista e verde — 2026-11-13
+
+56218 TERMINAL exit0/success e recuperada, sem denials. Claude2 foi o único
+programador, mesma sessão51ea0d85/claude-opus-5-5/medium. Root leu TODO diff;
+restante do módulo e prefixo do wrapper com AST idêntica. Único helper novo
+_bind_over, wrapper delegando. Ruff mecânico com AST igual, fonte final
+3cb74292/38627bytes/1109linhas. Teste f6724a8f intacto ao RED45 congelado.
+
+1784relacionados PASS/24,102s, incluindo135pump e45bind;0falhas/erros/skips/
+deseleções. Após format,45bind PASS novamente. Probes9+2 PASS e witness
+3sanidades PASS com mutante detectado. Ruff/format e mypy371 alvos311/314
+limpos;3.14 só estático.147textos protegidos intactos. Ler BIND-SOURCE-REVIEW
+e BIND-VALIDATION completos, bind-final-validation.json. Fonte+teste só
+publicar juntos, nunca RED isolado. Nenhum novo finding neste incremento.
+
+Este registro substitui os estados ATIVOS anteriores:56218/11324/8380 já
+terminaram. Zero escritores novos/próprios conferido após a entrega; CLIs
+legados não editam mask segundo o usuário. Conferir Git/metadata reais
+antes de nova chamada; ativo só monitorar. MesmoC2/sessão/modelo/medium,
+sem AGY/contorno. Nunca ler chats/configs alheios ou tocar artefatos pessoais.
+
+Bind real nunca chamado; retenção via Throwable não é cleanup/chamador
+implementado. Todos gates nativos/produto OPEN, Gateway indisponível.
+CliPlan/receitas/readmissão NOT_PREPARED;state16/attempt não lidos/tocados.
+Sem efeito nativo/Docker/PG/SQL/runtime/config/ambiente/binário/valores
+operacionais/root/nonce/estado/entry/loader/collector/publisher/deploy.
+Conferir HEAD atual após publicação documental, sem usar hash antigo.
+Histórico abaixo.
+
+## Bind Proactor: implementa??o restrita ativa56218 ? 2026-11-13
+
+56218 ATIVA, lan?ada ap?s confer?ncia fresca de zero escritores pr?prios/
+novos. Mesma sess?o51ea0d85/claude-opus-5-5/medium, Read/Edit/Write S?
+fonte docs/poc/oracle9_w1_proactor_pump.py: helper _bind_over e delega??o
+m?nima do wrapper. PRIMEIRO recuperar56218; ativo SOMENTE monitorar,
+NUNCA segunda chamada. Sem comandos pelo programador. N?o revisar/publicar
+fonte parcial. Teste f6724a8f RED45 e demais testes/probes/pins FIXOS.
+
+Mesma tarefa relida ?s16h30UTC:Pronta para13/11 ?s14h00SP/17h00UTC,
+command/principal/settings/IgnoreNew preservados. ? monitoramento de
+LAT?NCIA,n?o quota/reset/garantia de entrega. Nenhuma nova tarefa criada.
+Depois do terminal,root l? TODO delta e mede QA antes de aceitar/publicar
+fonte+teste juntos. BIND-DESIGN/BIND-REVIEW B4/BIND-TEST-REVIEW BT5 vigentes.
+Todos gates nativos/produto OPEN;nenhum efeito ou valor operacional.
+Hist?rico abaixo.
+
+## Bind Proactor: RED45 revisto; pr?ximo helper restrito ? 2026-11-13
+
+11324 e8380 TERMINAIS/recuparadas0/success, sem denials. Teste finalf6724a8f
+19488bytes/483linhas; root leu toda V1/todos deltas V2 e ?nico hunk V3.
+Ruff/format/mypy311/314 PASS. MESMA sonda1eefc4af detecta mutante sem filtro.
+RED45 congelado:3sanidadesPASS/42KeyError(_bind_over),0erros/skips,1,540s.
+Todos42textos conferidos;146protegidos intactos. Ler BIND-TEST-REVIEW/BT5.
+
+Pr?ximo SOMENTE docs/poc/oracle9_w1_proactor_pump.py: helper privado e
+wrapper delegando, sem qualquer outro pump/API/teste alterado. MesmoC2,
+sess?o51ea0d85-05bb-4d24-ba9a-c9627c3f832f,claude-opus-5-5/medium,
+Read/Edit/Write s? fonte,sem comandos. Root l? TODO delta antes de QA.
+Ainda N?O lan?ado neste registro; conferir terminal/metadata/Git reais.
+Ativo s? monitorar,nunca segunda chamada. Fonte de partida0a4dcd57;
+testes36b2ba54/f6724a8f e probes0192ef43/aec2781a/1eefc4af FIXOS.
+
+BIND-DESIGN e TODO BIND-REVIEW/B4 normativos. Reten??o pelo frame do helper
+n?o ? cleanup nem chamador implementado. Fonte+teste s? publicar juntos
+ap?s integra??o verde revista.1739verdes s?o hist?ricos. Todos gates
+nativos/produto OPEN. Sem AGY/contorno,efeito nativo/Docker/PG/SQL/runtime/
+config/ambiente/bin?rio/receita/root/nonce/estado/entry/deploy. State16 e
+attempt intocados. Usu?rio esclareceu que CLIs legados n?o editam mask;
+conferir identidades/metadados frescos sem ler outros chats/configs.
+Preservar artefatos pessoais/evid?ncias. Conferir HEAD real ap?s docs.
+Hist?rico abaixo.
+
 ## Bind Proactor: desenho revisto para oráculos — 2026-11-13
+
+39680 recuperada0/success, sem denials. Root leu TODAS412linhas/16207bytes
+V1teste14dbf82c, preservado e NÃO aceito/congelado. RED inicial22casos:
+3sanidadesPASS/19KeyError('_bind_over')/0erros/skips,1,083s; todos19textos
+conferidos, somente ausência do helper. Sonda independente do witness
+1eefc4af:original3PASS E mutante sem filtro de código3PASS, defeito de
+cobertura reproduzido antes do fix. Ruff N818/formatFAIL/mypy2erros None
+em311/314. Ler TODO PROACTOR-BIND-TEST-REVIEW BT1–BT3.
+
+Correção ATIVA11324, observada às16h06UTC, único C2/26424, mesma sessão
+51ea0d85-05bb-4d24-ba9a-c9627c3f832f/claude-opus-5-5/medium, Read/Edit/Write
+SOMENTE tests/test_oracle9_w1_proactor_bind.py, sem comandos/execução.
+PRIMEIRO recuperar11324; ativo só monitorar, NUNCA segunda chamada. Root
+lê TODOS os deltas antes de repetir MESMO probe e gates/RED, sem congelar
+ou publicar teste parcial. _bind_over AUSENTE, fonte0a4dcd57/teste36b2ba54/
+probe0192ef43 FIXOS. Desenho2b8a0f0 publicado; conferir HEAD REAL futuro.
 
 Código52cf350 publicado e sincronizado; ler HEAD REAL após este registro,
 nunca reutilizar esse hash como guarda de commits documentais posteriores.

@@ -1,0 +1,11 @@
+{
+  "root_read_all_diff": true,
+  "source_path": "docs/poc/oracle9_w1_proactor_pump.py",
+  "sha256": "3cb74292da35050088b2d451bdd91007e4b6a962319bc0a900fc8f771a02f244",
+  "all_other_module_nodes_ast_equal": true,
+  "wrapper_imports_preflight_prefix_ast_equal": true,
+  "only_added_private_helper": "_bind_over",
+  "wrapper_only_replaced_tail": "single delegation",
+  "mechanical_format_ast_equal": true,
+  "native_binding_called": false
+}

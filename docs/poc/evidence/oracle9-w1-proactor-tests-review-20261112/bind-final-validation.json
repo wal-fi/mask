@@ -1,0 +1,96 @@
+{
+  "reviewed_utc": "2026-11-13T16:35:07.202137+00:00",
+  "source": {
+    "path": "docs/poc/oracle9_w1_proactor_pump.py",
+    "sha256": "3cb74292da35050088b2d451bdd91007e4b6a962319bc0a900fc8f771a02f244",
+    "bytes": 38627,
+    "lines": 1109
+  },
+  "frozen_test": {
+    "path": "tests/test_oracle9_w1_proactor_bind.py",
+    "sha256": "f6724a8f3614883dbff28634bdfbb13f8bdbb01ec3fe58deefe93ef4b60a4fce",
+    "bytes": 19488,
+    "lines": 483,
+    "frozen_before_source": true
+  },
+  "related": {
+    "total": 1784,
+    "passed": 1784,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 24.102
+  },
+  "related_paths": [
+    "tests/test_oracle9_w1_controller.py",
+    "tests/test_oracle9_w1_driver.py",
+    "tests/test_oracle9_w1_driver_session.py",
+    "tests/test_oracle9_w1_driver_t5.py",
+    "tests/test_oracle9_w1_duplex_bridge.py",
+    "tests/test_oracle9_w1_expect.py",
+    "tests/test_oracle9_w1_host_reactor.py",
+    "tests/test_oracle9_w1_main.py",
+    "tests/test_oracle9_w1_main_t5.py",
+    "tests/test_oracle9_w1_port_ownership.py",
+    "tests/test_oracle9_w1_port_ownership_review.py",
+    "tests/test_oracle9_w1_proactor_pump.py",
+    "tests/test_oracle9_w1_proactor_bind.py"
+  ],
+  "formatted_source_own": {
+    "total": 45,
+    "passed": 45,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 0.382
+  },
+  "related_run_before_only_ast_equal_format": true,
+  "mechanical_format": {
+    "before_sha256": "16030626bdd9be8422446d7fc1baf2ac4ae7574d3bffc88e76e0bf63425ad95f",
+    "after_sha256": "3cb74292da35050088b2d451bdd91007e4b6a962319bc0a900fc8f771a02f244",
+    "ast_equal": true,
+    "bytes": 38627,
+    "lines": 1109,
+    "formatter_stdout": "1 file reformatted\n"
+  },
+  "original_pump_cases_in_related": 135,
+  "bind_cases_in_related": 45,
+  "probes": {
+    "source_boundary_cases": 9,
+    "waiter_controls_cases": 2,
+    "witness_original_sanities": 3,
+    "witness_bad_mutant_detected": true,
+    "all_passed": true,
+    "same_probe_code": true,
+    "run_before_only_ast_equal_format": true
+  },
+  "static": {
+    "product_ruff": "PASS",
+    "poc_contracted_ruff": "PASS E9,F63,F7,F82",
+    "format_final": "PASS 371 files",
+    "mypy_strict_win32": "PASS 371 files",
+    "targets": [
+      "3.11",
+      "3.14"
+    ],
+    "python314_static_only": true,
+    "typecheck_before_only_ast_equal_format": true
+  },
+  "protected": {
+    "checked": 147,
+    "mismatches": [],
+    "frozen_bind_test_fixed": true,
+    "state16_attempt": "not read or touched"
+  },
+  "root_review": {
+    "all_source_delta_read": true,
+    "other_module_nodes_ast_equal": true,
+    "wrapper_imports_preflight_ast_equal": true
+  },
+  "runtime": "Windows Python 3.11.3",
+  "qa_stack_bytes": 67108864,
+  "native_binding_called": false,
+  "new_native_evidence": false,
+  "state16_attempt": "not read or touched",
+  "native_product_gates": "OPEN"
+}

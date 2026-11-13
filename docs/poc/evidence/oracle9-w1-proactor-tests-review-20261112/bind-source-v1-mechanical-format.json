@@ -1,0 +1,8 @@
+{
+  "before_sha256": "16030626bdd9be8422446d7fc1baf2ac4ae7574d3bffc88e76e0bf63425ad95f",
+  "after_sha256": "3cb74292da35050088b2d451bdd91007e4b6a962319bc0a900fc8f771a02f244",
+  "ast_equal": true,
+  "bytes": 38627,
+  "lines": 1109,
+  "formatter_stdout": "1 file reformatted\n"
+}

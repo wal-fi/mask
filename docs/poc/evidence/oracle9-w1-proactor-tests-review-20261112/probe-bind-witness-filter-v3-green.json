@@ -1,0 +1,46 @@
+{
+  "subject": "proposed witness/sanity cases only; no product helper loaded or replaced",
+  "test_sha256": "f6724a8f3614883dbff28634bdfbb13f8bdbb01ec3fe58deefe93ef4b60a4fce",
+  "rows": [
+    {
+      "mode": "original",
+      "case": "test_sanity_retention_witness_accepts_the_helper_frame_reference",
+      "passed": true,
+      "failure_type": null
+    },
+    {
+      "mode": "original",
+      "case": "test_sanity_retention_witness_rejects_deleted_reference_even_if_test_holds_it",
+      "passed": true,
+      "failure_type": null
+    },
+    {
+      "mode": "original",
+      "case": "test_sanity_retention_witness_is_bounded_to_64_traceback_entries",
+      "passed": true,
+      "failure_type": null
+    },
+    {
+      "mode": "code-filter-removed",
+      "case": "test_sanity_retention_witness_accepts_the_helper_frame_reference",
+      "passed": true,
+      "failure_type": null
+    },
+    {
+      "mode": "code-filter-removed",
+      "case": "test_sanity_retention_witness_rejects_deleted_reference_even_if_test_holds_it",
+      "passed": false,
+      "failure_type": "AssertionError"
+    },
+    {
+      "mode": "code-filter-removed",
+      "case": "test_sanity_retention_witness_is_bounded_to_64_traceback_entries",
+      "passed": true,
+      "failure_type": null
+    }
+  ],
+  "original_passed": 3,
+  "mutation_detected": true,
+  "native_effects": false,
+  "product_source_changed": false
+}

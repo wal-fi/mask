@@ -1,0 +1,42 @@
+{
+  "frozen_utc": "2026-11-13T16:24:17.891813+00:00",
+  "path": "tests/test_oracle9_w1_proactor_bind.py",
+  "sha256": "f6724a8f3614883dbff28634bdfbb13f8bdbb01ec3fe58deefe93ef4b60a4fce",
+  "bytes": 19488,
+  "lines": 483,
+  "root_read_all_v1_lines": 412,
+  "root_read_all_v2_deltas": true,
+  "unchanged_v2_function_nodes": 17,
+  "root_reviewed_v3_single_assert_move": true,
+  "mechanical_format_ast_equal": true,
+  "cases": 45,
+  "sanity_passed": 3,
+  "missing_helper_keyerror_failures": 42,
+  "errors": 0,
+  "skipped": 0,
+  "deselected": 0,
+  "seconds": 1.54,
+  "all_failure_texts_inspected": 42,
+  "unexpected_failures": [],
+  "helper_absent_at_freeze": true,
+  "behavioral_or_native_proof": false,
+  "runtime": "Windows Python3.11.3",
+  "qa_stack_bytes": 67108864,
+  "static_targets": [
+    "3.11",
+    "3.14"
+  ],
+  "python314_static_only": true,
+  "ruff_format_mypy_strict_win32": "PASS",
+  "witness_mutation_probe": {
+    "sha256": "1eefc4af8603983db521a51ed019a559f275c653b0b3a69ffe4b0c5c7b9dac4f",
+    "before": "original3PASS/mutant3PASS:missed defect",
+    "after": "original3PASS/mutant2PASS+negativeFAIL:detected"
+  },
+  "protected_texts_checked": 146,
+  "protected_mismatches": [],
+  "state16_attempt": "not read or touched",
+  "frozen": true,
+  "new_test_publication": "hold until reviewed green source integration",
+  "native_product_gates": "OPEN"
+}

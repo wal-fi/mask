@@ -1038,6 +1038,53 @@ def _loop_invariants(loop: LoopSeam, handler: object) -> bool:
     )
 
 
+def _bind_over(loop_class: object, *, pipe: object, devnull: object, ident: object) -> ProactorPump:
+    """Builds the pump over ``loop_class()`` (BIND-DESIGN B2 + BIND-REVIEW B4).
+
+    ``loop_class`` is both the no-argument factory and the exact expected type. A factory
+    that returns nothing leaves no known loop (unobservable partial effects are possible
+    and nothing is claimed). For a returned loop refused by exact type or by the pump
+    constructor, ONE explicit ``close()`` is attempted outside the primary ``except`` in
+    its own guarded ``try``; that is a call attempt, never proof of physical release. The
+    first non-Exception control wins; ordinary failures become a new empty PumpFault. Every
+    raise happens from THIS frame with the known loop kept in the local ``loop``; keeping
+    the raised throwable (a prospective duty of the future caller) keeps that reference.
+    """
+    if not isinstance(loop_class, type):
+        raise PumpFault()  # F0: never called
+    factory_failed = False
+    loop: Any = None
+    try:
+        loop = loop_class()  # a control propagates untouched: no loop is known then
+    except Exception:
+        factory_failed = True
+    if factory_failed:
+        raise PumpFault()  # F1: nothing returned, so no known resource or cleanup claim
+    primary_control: BaseException | None = None
+    pump: ProactorPump | None = None
+    if type(loop) is loop_class:
+        try:
+            pump = ProactorPump(loop=loop, pipe=pipe, devnull=devnull, ident=ident)
+        except Exception:
+            pump = None  # primary fault, reported below as a new PumpFault
+        except BaseException as caught:
+            primary_control = caught
+    if pump is not None:
+        return pump  # success: the pump alone owns the loop
+    close_control: BaseException | None = None
+    try:
+        loop.close()  # the single explicit attempt, outside the primary except
+    except Exception:
+        close_control = None  # an ordinary close failure never replaces the outcome
+    except BaseException as caught:
+        close_control = caught
+    if primary_control is not None:
+        raise primary_control  # the first control wins over any later failure
+    if close_control is not None:
+        raise close_control  # after only a fault, the close control becomes the first
+    raise PumpFault()
+
+
 def bind_proactor_pump() -> ProactorPump:
     """Trusted real binding (design P3 section 2); NOT invoked by the fake-SDK oracles."""
     import asyncio
@@ -1054,24 +1101,9 @@ def bind_proactor_pump() -> ProactorPump:
         running = False
     if running:
         raise PumpFault()
-    loop = asyncio.ProactorEventLoop()
-    if type(loop) is not asyncio.ProactorEventLoop:
-        loop.close()
-        raise PumpFault()
-    failed = False
-    try:
-        pump = ProactorPump(
-            loop=loop,
-            pipe=subprocess.PIPE,
-            devnull=subprocess.DEVNULL,
-            ident=threading.get_ident,
-        )
-    except Exception:
-        failed = True
-    except BaseException:
-        loop.close()
-        raise
-    if failed:
-        loop.close()
-        raise PumpFault()
-    return pump
+    return _bind_over(
+        asyncio.ProactorEventLoop,
+        pipe=subprocess.PIPE,
+        devnull=subprocess.DEVNULL,
+        ident=threading.get_ident,
+    )
