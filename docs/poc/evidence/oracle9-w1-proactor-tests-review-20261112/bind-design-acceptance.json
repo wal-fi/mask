@@ -1,0 +1,23 @@
+{
+  "reviewed_utc": "2026-11-13T15:43:36.089622+00:00",
+  "design_path": "docs/PHASE-9-W1-ORACLE-PROACTOR-BIND-DESIGN.md",
+  "design_sha256": "e48639a574de18fb35a6600f6ae05086bf5ba89f45797dae5c98b9eae168ccba",
+  "bytes": 8521,
+  "lines": 102,
+  "root_read_all_original_b1_lines": 161,
+  "root_read_all_original_b2_lines": 168,
+  "root_read_all_reflowed_lines": 102,
+  "mechanical_soft_wrap_join_only": true,
+  "normalized_words_identical": true,
+  "markdown_ast_claimed": false,
+  "acceptance": "first additive fake bind oracles only under FULL BIND-REVIEW/B4",
+  "new_test_path": "tests/test_oracle9_w1_proactor_bind.py",
+  "new_test_absent_at_acceptance": true,
+  "source_fixed_sha256": "0a4dcd574c9c2d3f2e855d0cd3752a1a86b041966b9a628bc5ed76bcf6a798a8",
+  "old_test_fixed_sha256": "36b2ba548da0966736123f6bfbd05c8c39af3e0d9e33e79e1797d32f07dcf150",
+  "probe_fixed_sha256": "0192ef43a8126b1b09e7ce763357b5244e2b214fafe0bbed6bed1bbdbf8004cc",
+  "helper_present": false,
+  "native_proof": false,
+  "caller_obligation_implemented": false,
+  "native_product_gates": "OPEN"
+}

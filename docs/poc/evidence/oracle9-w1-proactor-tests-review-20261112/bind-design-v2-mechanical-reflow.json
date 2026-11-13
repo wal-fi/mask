@@ -1,0 +1,13 @@
+{
+  "before_sha256": "14bd2a004567974df7c5a296092f2f081c93085c20710a68293e3939a6560722",
+  "after_sha256": "e48639a574de18fb35a6600f6ae05086bf5ba89f45797dae5c98b9eae168ccba",
+  "before_lines": 168,
+  "after_lines": 102,
+  "soft_wraps_joined": 66,
+  "identical_whitespace_normalized_tokens": true,
+  "blank_lines_preserved": true,
+  "headings_tables_new_list_markers_preserved": true,
+  "words_or_contracts_changed": false,
+  "markdown_ast_claimed": false,
+  "source_or_tests_changed": false
+}

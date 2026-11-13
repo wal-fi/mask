@@ -1,3 +1,43 @@
+## Bind Proactor: desenho revisto para oráculos — 2026-11-13
+
+Código52cf350 publicado e sincronizado; ler HEAD REAL após este registro,
+nunca reutilizar esse hash como guarda de commits documentais posteriores.
+68252(Read-only),53670(B1) e14959(B2) recuperadas0/success, mesma sessão
+51ea0d85-05bb-4d24-ba9a-c9627c3f832f/claude-opus-5-5/medium, sem denials.
+Nenhuma chamada própria permanece ativa neste checkpoint.
+
+Root leu TODO relatório/citações,161linhas B1 e168linhas B2. Reflow
+mecânico apenas66soft-wraps, palavras/títulos/tabelas/marcadores e brancos
+idênticos, resultou102linhas e48639a574de18fb35a6600f6ae05086bf5ba89f45797dae5c98b9eae168ccba.
+Sem alegação de AST Markdown. Direção aceita SÓ para primeiros oráculos
+aditivos, sob TODO BIND-REVIEW/B4 NORMATIVO. Não é fonte, prova nativa ou
+aprovação individual do usuário. Reter Throwable/traceback é obrigação
+prospectiva do chamador ausente, não cleanup/garantia física medida.
+
+Próximo SOMENTE tests/test_oracle9_w1_proactor_bind.py, AUSENTE, mesmo C2,
+Read/Edit/Write só novo teste, sem comandos/execução. Reusar FakeLoop e
+contratos congelados. BD-7: caminho forte no FRAME DO HELPER por identidade
+do __code__, não no frame do teste/chamador; máximo64frames, sanidades
+positiva/negativa contra falsoPASS por referências do próprio teste.
+Root lê TODOS os oráculos e mede/congela RED ANTES de fonte. _bind_over
+continua AUSENTE. Nunca chamar bind real/SDK, criar stubs ou afrouxar testes.
+
+Fonte0a4dcd57/teste36b2ba54/probe0192ef43/owner/upstream/app124/state16/
+attempt FIXOS.1739relacionados/135próprios/9probes e estáticos370 são do
+código52cf350, históricos, não repetidos por desenho. Todos gates nativos/
+produto OPEN; Gateway indisponível. Sem efeito nativo/Docker/PG/SQL/runtime/
+config/ambiente/binário ou valor/receita operacional/root/nonce/estado/
+entry/loader/collector/publisher/comando/deploy. Sem AGY/contorno de quota.
+
+O usuário esclareceu que nenhum outro terminal edita mask. Identidades
+legadas e verificação fresca estão em evidência LOCAL de orquestração;
+conferir metadados novos, qualquer chamada própria e criação/flags antes
+de iniciar C2. Ativo só monitorar e recuperar terminal, nunca segundo
+escritor. Não ler chats/config alheios ou encerrar terminais pessoais.
+Mesma tarefa de retomada existe; reler seu estado/horário atual, não assumir
+entrega/reset. Não duplicar tarefa. Preservar todos artefatos locais.
+Histórico de código publicado abaixo.
+
 ## Proactor: modelo integrado e revisão concluída — 2026-11-13
 
 Claude2 foi o único programador, sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f,

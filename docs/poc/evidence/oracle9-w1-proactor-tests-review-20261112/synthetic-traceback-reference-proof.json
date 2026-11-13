@@ -1,0 +1,15 @@
+{
+  "checked_utc": "2026-11-13T15:30:50.864583+00:00",
+  "subject": "generic Python exception object and its own synthetic frame; not the product bind",
+  "empty_args": true,
+  "no_cause": true,
+  "no_context": true,
+  "known_object_alive": true,
+  "exact_known_object_reachable_in_held_traceback": true,
+  "frames_walked": 2,
+  "caller_must_keep_exact_throwable_and_traceback": true,
+  "native_effects": false,
+  "sdk_executed": false,
+  "proves_product_cleanup": false,
+  "proves_existing_bind_ownership_contract": false
+}
