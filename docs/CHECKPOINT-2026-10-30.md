@@ -1,3 +1,53 @@
+## Chamador host: limite observado após edição parcial — 2026-11-13
+
+PRIMEIRO ler HOST-RUN-REVIEW inteiro,HR3/HR2/HR1.30974 TERMINAL exit1,
+service is_error=True/session limit,mesmo se subtype diz success. Limite
+veio DEPOIS de editar: H3parcial46545539/14445bytes/289linhas,root leu TUDO,
+ainda NÃO aceita para testes. Desenho e snapshots só locais. Módulo/teste
+host_run AUSENTES;nenhum RED congelado.74461/81871 também TERMINAIS.
+
+Reset informado4:20pm America/Sao_Paulo,inferido13/11 às19h20UTC,não
+observado. NENHUMA tentativa C2 antes19h20UTC,sem AGY/outra conta/modelo/
+contorno. MesmoC2/sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f,
+claude-opus-5-5/medium,SÓ HOST-RUN-DESIGN Read/Edit/Write,sem comandos.
+Após horário,conferir Git REAL/terminais/zero escritor;ativo só monitorar,
+NUNCA duplicar. User confirmou CLIs legados sem editar mask;conferir suas
+identidades/flags frescas,não chats/config alheios.
+
+Próximo corrigir HR3: T5 futuro não medido;begin_audit é efeito e
+owner.audit é snapshot puro permitido;domínios finais de relatório exatos.
+Sem seal/clock na montagem. Root lê conclusão inteira antes de aceitar
+oráculos;fonte/teste host_run continuam ausentes até revisão e RED.
+
+Mesma tarefa existente relida16h55UTC para13/11 às16h25SP/19h25UTC,
+APÓS horário informado. Command/principal/settings/IgnoreNew preservados,
+zero escritores confirmado. Entrega/reset NÃO garantidos;host/logon/app
+precisam estar disponíveis. Nenhuma tarefa adicional criada.
+
+Código54c5478 e docs64f8d9f publicados;conferir HEAD após documentos futuros,
+sem guarda antiga.1784PASS,45bind e estaticos371 são a medição do código,
+não repetidos por este desenho. Fonte3cb74292/testef6724a8f e demais
+pins/testes/probes/upstream/app124/state16/attempt intocados. Todos gates
+nativos/produto OPEN;Gateway indisponível. Sem efeito nativo/Docker/PG/SQL/
+runtime/config/ambiente/binário/valores de root/nonce/estado/entry/loader/
+collector/publisher/comando/deploy. Preservar artefatos pessoais/evidências.
+Este registro substitui TODOS os estados ativos anteriores. História abaixo.
+
+## Chamador host: ajuste final ativo30974 — 2026-11-13
+
+81871 TERMINAL0/success recuperada;root leu TODAS265linhas H2 9024c3d7,
+não aceita ainda. Ler HOST-RUN-REVIEW HR2 inteiro:sem seal na montagem
+pura pós-controle,admissão/custódia exatas,falha REPORT visível e limitada.
+30974 ATIVA,mesmoC2/sessão51ea0d85/claude-opus-5-5/medium,Read/Edit/Write
+SOMENTE HOST-RUN-DESIGN,sem comandos. PRIMEIRO recuperar30974;ativo só
+monitorar,NUNCA segunda chamada. Root relê TODA revisão antes de testes.
+Módulo/teste host_run AUSENTES;fonte/testes/pins/probes/app124/state16/
+attempt fixos. Nativos/produto OPEN. Código54c5478 e doc64f8d9f publicados;
+conferir HEAD real futuro,não guarda antiga. Mesma tarefa relida16h51UTC
+para13/11 às14h21SP/17h21UTC,IgnoreNew/ação/principal/settings preservados,
+sem promessa de entrega/reset. Sem AGY/contorno/efeito ou valor operacional.
+Registros anteriores de chamadas ativas são históricos. História abaixo.
+
 ## Chamador host: revisão do desenho ativa81871 — 2026-11-13
 
 Código54c5478 publicado/sincronizado. Fonte3cb74292/testef6724a8f e os

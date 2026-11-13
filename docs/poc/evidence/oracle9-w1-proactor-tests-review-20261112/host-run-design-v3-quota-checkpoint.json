@@ -1,0 +1,27 @@
+{
+  "observed_utc": "2026-11-13T16:52:10.3136952Z",
+  "execution": 30974,
+  "cli_exit_code": 1,
+  "service_is_error": true,
+  "service_subtype": "success",
+  "service_message": "You've hit your session limit · resets 4:20pm (America/Sao_Paulo)",
+  "reset_displayed": "4:20pm America/Sao_Paulo",
+  "reset_inferred_utc": "2026-11-13T19:20:00Z",
+  "reset_independently_observed": false,
+  "edits_occurred_before_limit": true,
+  "partial_design_sha256": "465455397ba920acb88f772ed679dc4f20456d6a028b478106dfe20bc81d9261",
+  "partial_design_bytes": 14445,
+  "partial_design_lines": 289,
+  "root_read_entire_partial_design": true,
+  "design_accepted_for_tests": false,
+  "host_run_source_test": "ABSENT",
+  "native_product_gates": "OPEN",
+  "resume_readback": {
+    "start_utc": "2026-11-13T19:25:00Z",
+    "start_sao_paulo": "2026-11-13T16:25:00-03:00",
+    "same_existing_task": true,
+    "same_action_principal_settings": true,
+    "ignore_new": true,
+    "reset_delivery_guaranteed": false
+  }
+}
