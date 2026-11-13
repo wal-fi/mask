@@ -1,3 +1,97 @@
+## Chamador publicado; prova benigna revista só como direção — 2026-11-13
+
+Código793473a/sourcec8d38d21/testee3ef7737 publicado:1.844relacionados/60
+próprios PASS,373estáticos311/314 PASS;nenhum teste repetido por documentos.
+81650/53349/62109/50139 TERMINAIS0/success/is_errorFalse recuperadas,sem
+denials. Zero novos/próprios agentes confirmado21h25UTC;nenhum escritor
+ativo a recuperar. CLIs legados ociosos preservados,sem chats/config lidos.
+
+Root leu AMBOS relatórios de reconciliação,TODO desenhoD1/140linhas e TODO
+deltaD2. Desenho final c4f56ac3/13.926bytes/154linhas;root alterou SÓ título
+NP-D1→NP-D2,corpo igual. Aceite SOMENTE direção prospectiva com TODO
+NATIVE-PROOF-REVIEW NP4:N2authorize→evento não prova CreateProcess;
+N4silêncio não prova EOF;S externo ainda NÃO admitido. NÃO aceita código/
+testes do harness nem execução nativa. Ler desenho e parecer COMPLETOS.
+T5 já tem código;apenas prova física pendente. Nenhum novo launcher/framework.
+
+Próximo único lote seguro:reconciliação SOMENTE LEITURA das fontes/contratos
+PÚBLICOS existentes de pg16_shell_native_control e binding win32 contra
+capacidadeS/B4/K1/N8. Identificar APIs reutilizáveis sem mudanças,premissas e
+provas não medidas;nenhum estado16/tentativa,receita ou valor operacional.
+Se delegado:mesmoC2/sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f/Opus5.5/
+medium,Read restrito,sem comandos/execução. Root lê TODO relatório antes de
+continuar. Primeiro GitREAL/terminais/zeroescritor;ativo SÓ monitorar.
+Não reabrir50139/62109 ou repetir formatação/QA concluídas.
+
+Mesma tarefa relida21h25UTC para13/11 às18h55SP/21h55UTC,IgnoreNew e
+comando/principal/settings preservados. Entrega futura e quota não garantidas.
+Conferir HEAD REAL após este fechamento documental;793473a não é guarda
+eterna.153textos protegidos/fixos conferidos;fonte/testes/probes/owner/app124/
+state16/attempt intactos,não ler estado. Sem AGY/contorno,nativo/loop/socket/
+thread/process/guard/signal/DLL/job/control/Docker/PG/SQL/runtime/config/
+privado/ambiente/binário/operationalroot/nonce/entry/loader/collector/
+publisher/argv/comando/deploy. Nativos/produto OPEN;Gateway indisponível.
+Preservar evidências brutas e arquivos pessoais;ativos abaixo históricos.
+
+## Prova benigna: desenho documental ativo62109 — 2026-11-13
+
+Código793473a publicado e sincronizado:host_run c8d38d21/teste3ef7737,
+1.844relacionados/60próprios/373estáticos medidos;nenhum novo teste por docs.
+81650 e53349 TERMINAIS0/success/is_errorFalse,recuperadas. Root leu AMBOS
+relatórios completos e conferiu os trechos públicos críticos. Primeiro
+relatório repetiu pendência histórica T5 e sugeriu lançador opcional;
+correção confirma T5 JÁ tem código/testes e NÃO falta nova camada pura
+antes da prova benigna pump/bind. Não reabrir os módulos entregues.
+
+Ler TODO PHASE-9-W1-ORACLE-NATIVE-PROOF-REVIEW.md NP1/NP2.62109 ATIVA,
+mesmoC2/sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f/Opus5.5/medium,
+Read/Edit/Write SOMENTE docs/PHASE-9-W1-ORACLE-NATIVE-PROOF-DESIGN.md,
+SEM comandos/execução. PRIMEIRO recuperar62109;ativo SÓ monitorar,NUNCA
+outra chamada. Documento prospectivo de prova benigna/contenção externa,
+N1–N16/B4/K1/N8,evidência por identidade e PASS/FAIL/INCONCLUSIVO. Não é
+admissão nativa;fonte/testes existentes FIXOS. Root ainda NÃO leu/aceitou
+novo desenho;ler TODAS bytes/deltas após terminal antes de aceitar ou
+pedir testes/código. Sem outro framework/lançador ou receita operacional.
+
+Mesma tarefa relida21h19UTC para13/11 às18h49SP/21h49UTC;comando/principal/
+settings/IgnoreNew preservados. LATÊNCIA,não reset/garantia futura. Nenhuma
+nova tarefa/escritor. Conferir GitREAL após docs;793473a não é guarda eterna.
+Fonte/testes/probes/pins/owner/app124/state16/attempt FIXOS. User confirmou
+CLIs legados ociosos;metadata fresca somente,sem chats/config alheios.
+Sem AGY/contorno,efeito nativo/loop/socket/thread/process/guard/signal/DLL/
+job/control/Docker/PG/SQL/runtime/config/privado/ambiente/binário/valores
+operacionais/root/nonce/estado/entry/loader/collector/publisher/argv/comando/
+deploy. Gates nativos/produto OPEN;Gateway indisponível. Preservar artefatos
+pessoais e evidências brutas;registros ativos abaixo são históricos.
+
+## Chamador host publicado; reconciliação de leitura ativa81650 — 2026-11-13
+
+793473acbc2b560c0dd9841ca7f1b5ea26debe12 publicado por fast-forward;fetch
+confirmou HEAD/origin iguais,0/0,rastreados limpos. Fontec8d38d21/teste3ef7737
+conferidos no índice com mesmos bytes testados;11arquivos da whitelist,
+nenhum artefato pessoal/log/candidato bruto.81263/39794/push58959 TERMINAIS
+recuperadas.1.844PASS/60próprios/373estáticos são medição deste fechamento,
+sem repetição por notas posteriores. Gates nativos/produto continuam OPEN.
+
+81650 ATIVA,mesmoC2/sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f,
+claude-opus-5-5/medium,Read SOMENTE textos públicos listados,SEM edição/
+comandos/execução. PRIMEIRO recuperar81650;ativo SÓ monitorar,NUNCA outra
+chamada. Relatório apenas:reconciliar plano nativo/parecer com host_run/
+pump/owner/ponte/reator/driver/main/EXPECT publicados;identificar mínimo
+caller/binding restante,defeito demonstrado versus hipótese física não
+medida,e próximo desenho mínimo SOMENTE se necessário,sem camada genérica.
+Root deve ler TODO relatório antes de definir novo desenho/teste/fonte.
+Nenhuma entrega dessa análise foi recebida/revista neste checkpoint.
+
+Mesma tarefa relida21h12UTC para13/11 às18h42SP/21h42UTC;comando/principal/
+settings/IgnoreNew preservados. LATÊNCIA,não reset/garantia futura. Nenhuma
+nova tarefa/escritor. Conferir HEAD REAL depois de documentos;793473a não
+é guarda eterna. Fontes/testes/probes/pins/owner/app124/state16/attempt
+FIXOS. Sem AGY/contorno,nativo/loop/socket/thread/process/guard/signal/
+Docker/PG/SQL/runtime/config/privado/ambiente/binário/valores operacionais/
+root/nonce/entry/loader/collector/publisher/comando/deploy. Gateway ainda
+indisponível. Preservar evidências e arquivos pessoais;ativos abaixo históricos.
+
 ## Chamador host: 1.844 relacionados verdes; lote puro revisto — 2026-11-13
 
 81263 TERMINAL0/success/is_errorFalse recuperada, sem denials. Zero novos/

@@ -1,0 +1,21 @@
+{
+  "reviewed_utc": "2026-11-13T21:24:19.416929+00:00",
+  "design_sha256": "c4f56ac30eb0dcf0db11307e83ba4e06e4386e195d52d5fe9b7b78d67d3b1bb8",
+  "design_bytes": 13926,
+  "lines": 154,
+  "original_d1_sha256": "e038841a5dbeb1d8535e124fd2d22e4b20ece7a47e30cef93814224f9d059ab7",
+  "original_d1_lines_read": 140,
+  "original_d2_sha256": "55519010c401f4b26ed862b887cd6b5a86f63d33a9c2746d2d193525d9bc928c",
+  "all_d2_delta_read": true,
+  "root_editorial_change": "title NP-D1 -> NP-D2 only; body identical",
+  "acceptance": "prospective direction ONLY with FULL NATIVE-PROOF-REVIEW/NP4; not admitted for native effects or new code/tests",
+  "native_effects": false,
+  "native_product_gates": "OPEN",
+  "programmer_executions": [
+    62109,
+    50139
+  ],
+  "both_service_success": true,
+  "programmer_model": "claude-opus-5-5",
+  "effort": "medium"
+}
