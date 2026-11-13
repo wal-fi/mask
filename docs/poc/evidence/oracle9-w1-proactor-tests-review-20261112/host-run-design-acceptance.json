@@ -1,0 +1,22 @@
+{
+  "accepted_utc": "2026-11-13T19:37:22.368366+00:00",
+  "design": {
+    "path": "docs/PHASE-9-W1-ORACLE-HOST-RUN-DESIGN.md",
+    "sha256": "7e2308833348e5da336901024fa0ad2efac54dc22602615e72ccabdf28393282",
+    "bytes": 19216,
+    "lines": 261
+  },
+  "scope": "first fake oracles only; FULL HOST-RUN-REVIEW HR5 normative",
+  "root_read_entire_v4_lines": 309,
+  "root_read_entire_v5_lines": 378,
+  "root_read_entire_reflowed_lines": 261,
+  "editorial_line_target": 180,
+  "editorial_deviation_accepted_by_root_delegation": true,
+  "semantic_changes_by_root": false,
+  "new_test_at_acceptance": "ABSENT",
+  "new_source": "ABSENT until all oracles reviewed and RED measured/frozen",
+  "code_tests_pins": "fixed",
+  "native_product_gates": "OPEN",
+  "new_native_evidence": false,
+  "state16_attempt": "not read or touched"
+}

@@ -1,3 +1,35 @@
+## Chamador host: desenho revisto para primeiros oráculos — 2026-11-13
+
+21715 e64205 TERMINAIS/recuparadas exit0/success,is_errorFalse,sem denials,
+mesma sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f/claude-opus-5-5/medium.
+Root leu TODAS versões finais309/378linhas e TODOS79/134linhas dos deltas.
+Reflow mecânico117soft-wraps preservou palavras/blocos/títulos/tabelas/
+listas/código;sem AST Markdown. Root releu261linhas finais,design7e230883/
+19216bytes. Desvio editorial180->261 aceito sob delegação,sem cortar contrato.
+
+Aceite SOMENTE para primeiros oráculos com fakes,sob TODO HOST-RUN-REVIEW
+incluindo HR5 NORMATIVO. Próximo tests/test_oracle9_w1_host_run.py,AUSENTE
+neste aceite. docs/poc/oracle9_w1_host_run.py continua AUSENTE até root ler
+TODOS os oráculos e medir/congelar RED. Testes não são prova nativa;jamais
+publicar RED isolado como verde. MesmoC2,Read/Edit/Write só novo teste,sem
+comandos se delegado. Nenhuma nova chamada ativa neste registro;conferir
+metadata/Git reais antes de iniciar. Ativo só monitorar,nunca segundo escritor.
+
+HR5 fixa guard incluindo audit.fence,conjunção de report_complete,domínios
+exatos antes de getters,ausência legítima e H9 admitido sem fabricar
+CompleteCandidate antecipado. Retenção do Throwable/primeiro controle não
+é cleanup. Fonte3cb74292/testes36b2ba54/f6724a8f/probes/owner/upstream/app124/
+state16/attempt FIXOS;148protegidos.1784PASS/estáticos371 são históricos,
+sem repetição por docs. Native/produto OPEN;Gateway indisponível.
+
+Job existente será relido/atualizado para o próximo lote;horário antigo não
+prova entrega/reset. User confirmou CLIs legados sem editar mask;conferir
+identidades/flags frescas,sem chats/configs alheios. Sem AGY/contorno,
+efeito nativo/Docker/PG/SQL/runtime/config/ambiente/binário/valores de root/
+nonce/estado/entry/loader/collector/publisher/comando/deploy. Conferir HEAD
+atual após publicação documental;fd03baa não é guarda eterna. Preservar
+artefatos pessoais/evidências brutas. Registros ativos anteriores históricos.
+
 ## Chamador host: limite observado após edição parcial — 2026-11-13
 
 PRIMEIRO ler HOST-RUN-REVIEW inteiro,HR3/HR2/HR1.30974 TERMINAL exit1,

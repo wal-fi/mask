@@ -1,5 +1,99 @@
 # W1 Oracle: revisão do desenho do chamador linear
 
+## HR5 — direção aceita somente para primeiros oráculos puros
+
+21715 e64205 recuperadas exit0/success,is_error=False,sem denials;mesmo
+C2/sessão51ea0d85/claude-opus-5-5/medium. Uma chamada por vez. Root leu
+TODAS309linhas da conclusão0f98f8bf e79linhas do delta;depois TODAS378linhas
+b6f34c88 e TODOS134linhas do delta. Não se infere reset de cota futuro.
+
+Root juntou apenas117soft-wraps da versão final,sem mudança semântica:
+palavras/blocos normalizados,títulos,tabelas,marcadores/indentação de listas
+e blocos de código idênticos. Releu TODA versão resultante,261linhas/
+19216bytes,7e2308833348e5da336901024fa0ad2efac54dc22602615e72ccabdf28393282.
+Não é comparação de AST Markdown. O teto180 era editorial do pedido do
+root;aceito este desvio sob delegação para preservar o contrato completo,
+sem cortar requisitos ou enfraquecer limites de produto/segurança.
+
+Direção H3 aceita APENAS para criar tests/test_oracle9_w1_host_run.py,
+sob TODO este parecer. Não é aprovação de código,nativo ou produto.
+A fonte docs/poc/oracle9_w1_host_run.py continua AUSENTE até root ler TODOS
+os oráculos e medir/congelar RED. Na sequência correta,o teste surge após
+esta revisão;quem permanece ausente durante RED é a fonte. O teste novo
+ainda está AUSENTE neste aceite. Não publicar testes parciais como verdes.
+
+Precisões NORMATIVAS para os oráculos e a futura fonte:
+
+- A seam privada tem os inputs já admitidos da assinatura:tupla exata de
+  três leitores callable/None,quatro classes de domínio capturadas e
+  first_control BaseException/None. Não é nova fronteira genérica de dados
+  arbitrários;usar leitores e classes sintéticos próprios nos testes H14.
+- A proteção inclui a leitura ÚNICA de audit.fence e suas validações,não
+  apenas a chamada ao leitor. Exception nessa leitura -> fence None,
+  completeFalse/report_faultTrue;controle -> primeira identidade retida,
+  completeFalse,sem bool,sem substituir um controle anterior. Testar os
+  dois casos por domínio sintético próprio,sem mexer no produto/SDK.
+- report_complete é conjunção de TODAS as validações do relatório,com
+  _Snapshots.complete;uma validação de done_outcome/rótulo já reprovada
+  nunca volta a True só porque a coleta passou. Um único REPORT fault
+  basta;é sempre o PRIMEIRO desse passo,sem perder o controle separado.
+- None legítimo em fase não alcançada não é erro. Resultado existente é
+  BridgeRunResult exato,Done exato antes de ler outcome,Outcome exato;
+  snapshots existentes também seguem seus tipos capturados. Não executar
+  getters de DTO de tipo estrangeiro para tentar validar seu conteúdo.
+- H9 deve usar uma sequência admitida pelo reator/ponte reais;Done pode
+  ser um resultado terminal antecipado diferente de COMPLETE_CANDIDATE.
+  Não fabricar CompleteCandidate antes de fatos exigidos de EOF/exit.
+  O que prova é a atualização do fence após settle com fato tardio real
+  do SDK falso,independente da conclusão de protocolo que o precedeu.
+- H14 usa _collect_snapshots REAL do módulo futuro,nunca um guard escrito
+  no teste nem monkeypatch de métodos do produto. Relato pós-controle usa
+  só as três leituras puras;nenhum seal/clock/efeito subsequente.
+
+Próximo único lote:novo TESTE pelo mesmo C2,Read/Edit/Write somente esse
+arquivo,sem comandos. Fonte e TODO código/teste/pin anterior FIXOS. Root
+lê TODOS os oráculos antes de QA/RED;nenhuma fonte ou integração antes de
+revisão e congelamento. Oráculos só de fakes,sem wrapper/binding real.
+
+148protegidos permanecem fixos.1784PASS do bind são históricos,sem nova
+suíte por desenho. N1–N16/T5/B1/B2/D090gate2/C1/D119/TLS/ingressos/produção
+seguem OPEN;Gateway indisponível. Nenhum efeito/valor operacional admitido.
+
+## HR4 — conclusão após o horário; fechar só a seam dos oráculos
+
+21715 recuperada exit0/success,is_error=False,sem denials. Tentativa normal
+após19h20UTC informado,sem contorno de quota. Root leu TODAS309linhas/
+15719bytes da conclusão0f98f8bf e TODOS79linhas do delta. Os148textos
+protegidos continuam intactos. Fonte/teste host_run permanecem AUSENTES.
+
+As três correções de HR3 estão presentes. Antes de aceitar os primeiros
+oráculos,fechar somente estas precisões do mesmo documento:
+
+1. None por AUSÊNCIA legítima do objeto anterior não é retorno inválido:
+   owner ainda não criado -> sem leitura audit/custody;bridge ausente ->
+   sem status;run não retornou -> done_outcome=None;fence não selado ->
+   None permitido. API de objeto EXISTENTE devolvendo tipo errado/None
+   continua REPORT/BOUNDARY e report_complete=False. Não chamar objeto
+   inexistente,não produzir falha artificial extra em recusa de bind/input.
+2. BridgeRunResult.done é anotado object na API publicada. Para fechar o
+   domínio sem getter arbitrário,capturar Done do reator uma vez e exigir
+   type(result.done) is Done ANTES de ler outcome;depois Outcome exato.
+   Usar apenas DTOs existentes,não uma nova API/getter ou inspeção privada.
+3. H14 pede um guard/leitor privado,mas nenhuma assinatura foi fixada.
+   Escolher a MENOR seam privada concreta necessária aos testes:fixar nome,
+   assinatura,entradas,saídas e lógica de precedência em palavras. O oráculo
+   de Exception/controle durante montagem deve chamar essa MESMA seam que
+   o futuro run_host usará,sem implementar o guard no próprio teste,sem
+   monkeypatch do produto ou segunda máquina de relato. Restringir à
+   coleta dos três snapshots e proteção do primeiro controle;sem camada
+   genérica/fábrica/porta nova. Se basta um helper simples,apenas esse.
+   Não escrever o código ainda. Todo caso usa leitores reais ou sintéticos
+   puros próprios,nunca SDK/runtime ou callback de efeito.
+
+A direção linear permanece;sem reabrir o restante já revisto. Root pode
+juntar soft-wraps mecanicamente depois com palavras/estrutura idênticas.
+Nenhum aceite de fonte,nativo ou produção;sem novo teste/RED até a revisão.
+
 ## HR3 — limite após escrita parcial; não retomar antes do horário informado
 
 30974 recuperada:exit1,is_error=True;subtype success NÃO significa entrega

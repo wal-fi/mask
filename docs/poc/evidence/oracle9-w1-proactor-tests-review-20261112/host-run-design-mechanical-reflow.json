@@ -1,0 +1,15 @@
+{
+  "before_sha256": "b6f34c8862ded6fc4ed9ec21aa0e620d36c5b4c5e31fe0d14aa58cbd248dc774",
+  "after_sha256": "7e2308833348e5da336901024fa0ad2efac54dc22602615e72ccabdf28393282",
+  "before_lines": 378,
+  "after_lines": 261,
+  "after_bytes": 19216,
+  "words_equal": true,
+  "normalized_paragraph_blocks_equal": true,
+  "headings_equal": true,
+  "tables_equal": true,
+  "list_marker_order_indent_equal": true,
+  "fenced_blocks_exactly_equal": true,
+  "markdown_ast_claimed": false,
+  "root_semantic_changes": false
+}
