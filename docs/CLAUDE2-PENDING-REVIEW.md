@@ -1,3 +1,34 @@
+## Chamador host: primeiros oráculos ativos29652 — 2026-11-13
+
+Design7e230883/261linhas publicado94d631a,aceito SOMENTE para primeiros
+oráculos com fakes sob TODO HOST-RUN-REVIEW/HR5 NORMATIVO.21715/64205 e
+push56357 TERMINAIS/recuparados;nenhuma chamada anterior permanece ativa.
+
+29652 ATIVA,mesmoC2/sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f,
+claude-opus-5-5/medium,Read/Edit/Write SOMENTE
+ tests/test_oracle9_w1_host_run.py. Sem comandos/execução. PRIMEIRO
+recuperar29652;ativo SÓ monitorar,NUNCA segunda chamada. Root ainda NÃO
+leu nem executou novos oráculos,não há RED congelado. A fonte
+ docs/poc/oracle9_w1_host_run.py DEVE ficar AUSENTE até root ler TODOS os
+casos,medir gates e congelar RED. Não publicar teste parcial como verde.
+
+Mesma tarefa relida19h41UTC para13/11 às17h11SP/20h11UTC,ação/principal/
+settings/IgnoreNew preservados. Monitoramento de LATÊNCIA,não quota/reset/
+garantia futura. Nenhuma tarefa adicional. Conferir Git REAL após docs
+futuros,sem guarda94d631a eterna. User confirmou CLIs legados sem editar
+mask;conferir identidades/flags frescas,sem chats/config alheios.
+
+H1–H16/HR5 com reais owner/ponte/reator/pump e FakeLoop/ProcScript fixos.
+H14 usa a MESMA _collect_snapshots futura,leitores sintéticos próprios,
+guard inclui audit.fence;first_control por identidade,report_complete
+conjuntivo. H9 usa terminal antecipado admitido,sem fabricar CompleteCandidate.
+Fonte3cb74292/testes36b2ba54/f6724a8f/probes/owner/upstream/app124/state16/
+attempt FIXOS.1784PASS/estáticos371 históricos. Nativos/produto OPEN.
+Sem AGY/contorno,efeito nativo/Docker/PG/SQL/runtime/config/ambiente/binário/
+valores de root/nonce/estado/entry/loader/collector/publisher/comando/deploy.
+Preservar artefatos pessoais/evidências brutas. Estados ativos anteriores
+são históricos. Gateway indisponível. Histórico abaixo.
+
 ## Chamador host: desenho revisto para primeiros oráculos — 2026-11-13
 
 21715 e64205 TERMINAIS/recuparadas exit0/success,is_errorFalse,sem denials,
