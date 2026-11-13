@@ -1,0 +1,191 @@
+{
+  "reviewed_utc": "2026-11-13T21:07:42.598109+00:00",
+  "source": {
+    "path": "docs/poc/oracle9_w1_host_run.py",
+    "sha256": "c8d38d21548ad91f735b0389c007d9ec8cfa358c3b3ace63b980d922be851795",
+    "bytes": 29936,
+    "lines": 870
+  },
+  "frozen_test": {
+    "path": "tests/test_oracle9_w1_host_run.py",
+    "sha256": "e3ef77375d03ffc5eddddd0412c726edea1ca8a45dced3c03f80d872882e4c97",
+    "bytes": 49697,
+    "lines": 1173
+  },
+  "design": {
+    "path": "docs/PHASE-9-W1-ORACLE-HOST-RUN-DESIGN.md",
+    "sha256": "7e2308833348e5da336901024fa0ad2efac54dc22602615e72ccabdf28393282",
+    "requires_full_review": "HOST-RUN-REVIEW/HR5"
+  },
+  "sequence": {
+    "original_absence_red56": {
+      "sha256": "695450741ed6d6b908327ee25504a594090d0d3985cbd61b4d69cb14376dae78",
+      "passed": 1,
+      "missing_module_failures": 55,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 6.822,
+      "before_source_v1": true
+    },
+    "source_v1": {
+      "sha256": "5f1e9cbdd3f4f35290b801b6ad844e0517d832f480bee5a0eaa94f21f32bf857",
+      "root_read_all_lines": 842,
+      "passed": 49,
+      "failures": 7,
+      "oracle_failure_attribution": "5 vars(dict);1 arbitrary H11 process minimum;1 invalid global AST line-order expectation",
+      "admission_probe_red": 4
+    },
+    "test_repair": {
+      "root_read_all_delta": true,
+      "unchanged_function_class_nodes": 56,
+      "held_source_v1_byte_identical": true,
+      "new_hash_after_v1_before_v2": true,
+      "original_freeze_preserved": true,
+      "red": {
+        "total": 60,
+        "passed": 56,
+        "failures": 4,
+        "errors": 0,
+        "skipped": 0,
+        "seconds": 2.489,
+        "all_failure_texts_read": true,
+        "expected_failures": [
+          {
+            "name": "test_h6c_incomplete_custody_is_refused_without_any_write[raw-custody-no-fields]",
+            "message": "AttributeError: 'HostCustody' object has no attribute 'claimed'"
+          },
+          {
+            "name": "test_h6c_incomplete_custody_is_refused_without_any_write[custody-missing-report]",
+            "message": "AttributeError: 'HostCustody' object has no attribute 'report'"
+          },
+          {
+            "name": "test_h6c_incomplete_inputs_claim_custody_and_report_refusal_without_bind[raw-inputs-no-fields]",
+            "message": "AttributeError: 'HostRunInputs' object has no attribute 'owner_ns'"
+          },
+          {
+            "name": "test_h6c_incomplete_inputs_claim_custody_and_report_refusal_without_bind[own-windows-missing-audit_s]",
+            "message": "AttributeError: 'HostRunWindows' object has no attribute 'audit_s'"
+          }
+        ]
+      }
+    },
+    "source_v2": {
+      "root_read_all_delta": true,
+      "mechanical_format_ast_equal": true,
+      "unchanged_run_methods": [
+        "__init__",
+        "fault",
+        "take_control",
+        "_labelled",
+        "call",
+        "close_pump",
+        "finish",
+        "_done_outcome",
+        "_confirmed_closes",
+        "_stage"
+      ]
+    }
+  },
+  "own": {
+    "total": 60,
+    "passed": 60,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 1.309
+  },
+  "related": {
+    "total": 1844,
+    "passed": 1844,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 26.462
+  },
+  "related_paths": [
+    "tests/test_oracle9_w1_controller.py",
+    "tests/test_oracle9_w1_driver.py",
+    "tests/test_oracle9_w1_driver_session.py",
+    "tests/test_oracle9_w1_driver_t5.py",
+    "tests/test_oracle9_w1_duplex_bridge.py",
+    "tests/test_oracle9_w1_expect.py",
+    "tests/test_oracle9_w1_host_reactor.py",
+    "tests/test_oracle9_w1_main.py",
+    "tests/test_oracle9_w1_main_t5.py",
+    "tests/test_oracle9_w1_port_ownership.py",
+    "tests/test_oracle9_w1_port_ownership_review.py",
+    "tests/test_oracle9_w1_proactor_pump.py",
+    "tests/test_oracle9_w1_proactor_bind.py",
+    "tests/test_oracle9_w1_host_run.py"
+  ],
+  "probes": {
+    "admission": {
+      "script": {
+        "path": "docs/poc/evidence/oracle9-w1-proactor-tests-review-20261112/probe_host_run_review_findings.py",
+        "sha256": "e087805316bf98822ef6ea3a7a95911dfb8e34459df40a7f3a298969739e279d",
+        "bytes": 4205,
+        "lines": 102
+      },
+      "same_script_red_to_green": true,
+      "passed": 4,
+      "failed": 0,
+      "all_bind_calls": 0
+    },
+    "fixture_assumptions": {
+      "script": {
+        "path": "docs/poc/evidence/oracle9-w1-proactor-tests-review-20261112/probe_host_run_fixture_assumptions.py",
+        "sha256": "fc7a46464a67694ef68ca7f710ecf46df65c1936b2c8df18170ebd9b74171d0e",
+        "bytes": 3952,
+        "lines": 111
+      },
+      "passed": 5,
+      "failed": 0,
+      "host_run_implementation_loaded": false
+    },
+    "old_source_boundaries": {
+      "passed": 9,
+      "unchanged": true
+    },
+    "old_waiter_controls": {
+      "passed": 2,
+      "unchanged": true
+    },
+    "old_retention_witness": {
+      "sanity_passed": 3,
+      "mutant_detected": true,
+      "unchanged": true
+    }
+  },
+  "static": {
+    "product_ruff": "PASS src/tests",
+    "poc_ruff": "PASS E9,F63,F7,F82",
+    "format": "PASS 373 files",
+    "mypy_strict_win32": {
+      "targets": [
+        "3.11",
+        "3.14"
+      ],
+      "files": 373,
+      "both": "PASS"
+    },
+    "python314_static_only": true
+  },
+  "protected": {
+    "existing_texts": 149,
+    "with_test_and_two_probes": 152,
+    "mismatches": [],
+    "source_manifest_reference": "docs/poc/evidence/oracle9-w1-context-manifest-20261027.json",
+    "upstream_reference": "docs/poc/evidence/oracle9-w1-port-tests-review-20261111/final-validation.json"
+  },
+  "runtime": "Windows Python3.11.3",
+  "qa_stack_bytes": 67108864,
+  "coverage_limits": [
+    "H14 does not dynamically cover run_host exactDone/outcome validation or report_complete conjunction; source audited directly",
+    "Admission control branch source-reviewed, not dynamically exercised by ordinary malformed-carrier cases"
+  ],
+  "native_effects": false,
+  "native_binding_called": false,
+  "state16_attempt": "not read or touched",
+  "native_product_gates": "OPEN",
+  "accepted_scope": "pure host caller over faithful frozen fakeSDK only; no readiness or physical-release claim"
+}

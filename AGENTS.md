@@ -1,3 +1,139 @@
+## Chamador host: 1.844 relacionados verdes; lote puro revisto — 2026-11-13
+
+81263 TERMINAL0/success/is_errorFalse recuperada, sem denials. Zero novos/
+próprios escritores confirmado após término; CLIs legados ociosos mantidos.
+Root leu TODO delta V2 e conferiu HR5 diretamente. Fonte c8d38d21/29.936bytes/
+870linhas, teste e3ef7737/49.697bytes/1.173linhas, probes fc7a4646/e0878053.
+Ruff mecânico com AST igual; testes/probes/upstream FIXOS. Nenhum segundo
+escritor ou outra conta/modelo. Fonte+teste integram JUNTOS este fechamento.
+
+60próprios PASS/1,309s;1.844relacionados/14arquivos PASS/26,462s;0falhas/
+erros/skips/deseleções. Sondas independentes:admissão4,fixtures5,fronteiras9,
+waiter2,witness3 com mutante detectado. Ruff src/tests e PoC contratado,
+format373/mypy373 win323.11+3.14 PASS;3.14 só estático.149anteriores mais
+1teste/2probes intactos por SHA. RuntimeWindows3.11.3/pilhaQA64MiB.
+Ler HOST-RUN-VALIDATION, SOURCE-REVIEW HS3 e TEST-REVIEW HT5 completos.
+Chronologia preservada:6954/RED56 antesV1;reparo e3ef/RED4 apósV1 fixa e
+ANTESV2. H14 não prova conjunção/exactDone em run_host; obrigação auditada
+na fonte. Controle durante admissão também só revisto, não medido.
+
+Próximo único lote seguro:reconciliação SOMENTE LEITURA dos textos públicos
+já existentes do plano nativo e componentes publicados, para identificar
+mínimo binding/chamador restante e pré-requisitos de prova física. Reusar
+componentes; separar defeitos demonstrados de hipóteses não medidas. Nenhum
+novo teste/fonte/desenho antes de root ler TODO relatório. Se delegado,
+somente mesmoC2/sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f/Opus5.5/medium,
+Read restrito, sem comandos/execução. Antes:GitREAL/recuperar terminais/
+zeroescritor;ativo SÓ monitorar.81263 e39794 terminadas,não reabrir.
+
+Tarefa existente terá mensagem de retomada atualizada para esse lote; não
+presumir horário antigo, entrega ou quota. Conferir readback mais recente.
+Não reutilizar d37b835 como guarda após commit. Todos os pins/owner/app124/
+state16/attempt FIXOS;nenhum arquivo de estado lido. Sem AGY/contorno,
+nativo/loop/socket/thread/process/guard/signal/Docker/PG/SQL/runtime/config/
+privado/ambiente/binário/valores operacionais/root/nonce/entry/loader/
+collector/publisher/comando/deploy. Gates nativos/produto OPEN; Gateway
+indisponível. Preservar arquivos pessoais e evidências. Ativos abaixo são
+históricos, não escritores atuais.
+
+## Chamador host: RED4 comportamental congelado; fonte V2 ativa81263 — 2026-11-13
+
+39794 TERMINAL0/success/is_errorFalse recuperada, sem denials. Root leu
+TODO delta do teste V3; 56 nós anteriores inalterados. Reparação HT4 revista:
+lookup dict, H11 com enumeração completa e H16 sem falsa ordem por linhas.
+Teste e3ef7737/49.697bytes/1.173linhas; Ruff/format/mypy strict win32311/314
+PASS, 3.14 apenas estático. 60casos:56PASS/4FAIL AttributeError,0erros/skips,
+2,489s. Todos4textos lidos; mesma sonda e0878053 confirma RED4. Fonte V1
+5f1e9c permaneceu intacta;149textos protegidos conferidos. Freeze original
+69545074/RED56 anterior à V1 preservado; novo frozen-host-run-red60.json
+é posterior à V1 e ANTERIOR à correção V2, sem alterar a cronologia.
+
+81263 ATIVA, mesmoC2/sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f,
+claude-opus-5-5/medium, Read/Edit/Write SOMENTE
+ docs/poc/oracle9_w1_host_run.py, sem comandos/execução. PRIMEIRO recuperar
+81263; ativo SÓ monitorar, NUNCA segunda chamada. Corrige admissão HS2
+por invariante e11erros mypy, sem mudar testes/probes/DTOs/upstream.
+Root lê TODO delta antes de QA; conferir HR5/exactDone antes de outcome,
+conjunção report_complete, primeiro controle e interrupção de efeitos.
+Fonte/teste privados até integração verde revista; nada parcial publicado.
+
+Mesma tarefa relida21h02UTC para13/11 às18h32SP/21h32UTC; comando/principal/
+settings/IgnoreNew preservados. LATÊNCIA, não reset ou garantia futura.
+Conferir HEAD REAL após documentos; d37b835 não é guarda eterna.
+Fontes3cb74292/owner/upstream/app124/state16/attempt e probes FIXOS.
+Sem AGY/contorno, efeitos nativos/Docker/PG/SQL/runtime/config/ambiente/
+binários/valores operacionais de root/nonce/estado/entry/loader/collector/
+publisher/comando/deploy. Nativos/produto OPEN; Gateway indisponível.
+Preservar evidências e artefatos pessoais. Ativos anteriores históricos.
+
+## Chamador host: RED56 congelado; fonte ativa78619 — 2026-11-13
+
+70323 TERMINAL0/success/is_errorFalse recuperada. Root leu TODO delta V2
+após1022linhas V1;56nós função/classe inalterados. Ruff mecânico AST igual:
+teste69545074/46254bytes/1099linhas. Ruff/format/mypy strict win32311/314
+PASS;3.14 só estático. RED56 medido ANTES da fonte:1sanidadePASS/
+55FileNotFoundError pelo módulo ausente,0erros/skips/deseleções,6,822s.
+TODOS55textos conferidos. Mesma sondafc7a4646 PASS5/5.149protegidos intactos,
+teste/probe agora congelados. Ler HOST-RUN-TEST-REVIEW HT3 e
+ frozen-host-run-red56.json. Não é comportamento de fonte ou prova nativa.
+
+78619 ATIVA,mesmoC2/sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f,
+claude-opus-5-5/medium,Read/Edit/Write SOMENTE
+ docs/poc/oracle9_w1_host_run.py,sem comandos/execução. PRIMEIRO
+recuperar78619;ativo SÓ monitorar,NUNCA segunda chamada. Fonte AUSENTE
+no congelamento;root ainda NÃO leu/avaliou candidata nova. Depois do
+terminal,ler TODA fonte antes de QA. Teste/probe e todo upstream FIXOS.
+Fonte+teste só publicar JUNTOS após integração verde revista,nunca RED
+isolado como verde. H14 não cobre done_outcome/conjunção dentro de
+run_host;root deve auditar explicitamente essa obrigação HR5 na fonte.
+
+Mesma tarefa relida20h33UTC para13/11 às18h03SP/21h03UTC;ação/principal/
+settings/IgnoreNew preservados. LATÊNCIA,não reset/garantia futura. Nenhuma
+nova tarefa/escritor. Conferir HEAD REAL após publicação documental;d37b835
+não é guarda eterna. Design7e230883/HR5 e fontes3cb74292/owner/upstream/
+app124/state16/attempt FIXOS.1784PASS/estáticos371 são históricos.
+
+Sem AGY/contorno,efeito nativo/Docker/PG/SQL/runtime/config/ambiente/binário/
+valores de root/nonce/estado/entry/loader/collector/publisher/comando/deploy.
+Nativos/produto OPEN;Gateway indisponível. User confirmou CLIs legados sem
+editar mask;conferir identidades/flags frescas sem chats/config alheios.
+Preservar artefatos pessoais/evidências. Estados ativos anteriores históricos.
+
+## Chamador host: V1 lida e correção ativa70323 — 2026-11-13
+
+29652 TERMINAL0/success/is_errorFalse recuperada. Root leu TODAS1022linhas/
+42088bytes do teste1061ef3c ANTES da QA. RED inicial55:1sanidadePASS/
+54FileNotFoundError pelo módulo ausente,0erros/skips,5,496s;todos54textos
+conferidos. Mypy strict311/314 PASS;Ruff1C420/formatFAIL. NÃO congelado.
+Ler TODO HOST-RUN-TEST-REVIEW HT1/HT2. Fonte host_run AUSENTE.
+
+Sonda root só dos fixtures sobre ProHarness CONGELADO passou5/5:tick,
+relógio parado,stdin tardio,spawnfalho e plano inválido. Não carregou/criou
+host_run,sem produto alterado ou efeito nativo. H14 não prova a conjunção
+com done_outcome em run_host;limitação registrada,HR5 continua obrigatório.
+
+70323 ATIVA,mesmoC2/sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f,
+claude-opus-5-5/medium,Read/Edit/Write SOMENTE
+ tests/test_oracle9_w1_host_run.py,sem comandos/execução. PRIMEIRO
+recuperar70323;ativo SÓ monitorar,NUNCA segunda chamada. Corrige C420,
+fortalece ordem WORK<AUDIT<DISPOSE/fechamentos confirmados,snapshots
+pré-bind usando somente cópias de ns e próprio input como dados hostis,
+e reactor_refusal str exata. NÃO altera produto/fixture anterior. Root
+relê TODO delta antes de QA/novoRED;fonte deve ficar AUSENTE até congelar.
+
+Mesma tarefa relida20h23UTC para13/11 às17h53SP/20h53UTC,ação/principal/
+settings/IgnoreNew preservados. LATÊNCIA,não reset/garantia futura. Nenhuma
+nova tarefa/escritor. Design7e230883/HR5 publicado94d631a;código54c5478 e
+checkpointd37b835 publicados. Conferir HEAD REAL após docs futuros,sem
+guarda antiga. Fonte3cb74292/testes36b2ba54/f6724a8f/probes/owner/upstream/
+app124/state16/attempt FIXOS;1784PASS e estáticos371 são históricos.
+
+Sem AGY/contorno,efeito nativo/Docker/PG/SQL/runtime/config/ambiente/binário/
+root/nonce/estado/entry/loader/collector/publisher/comando/deploy. Nativos/
+produto OPEN;Gateway indisponível. Preservar arquivos pessoais/evidências.
+User confirmou CLIs legados sem editar mask;conferir metadata fresca sem
+chats/config alheios. Registros ativos anteriores históricos.
+
 ## Chamador host: primeiros oráculos ativos29652 — 2026-11-13
 
 Design7e230883/261linhas publicado94d631a,aceito SOMENTE para primeiros
