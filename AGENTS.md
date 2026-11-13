@@ -1,3 +1,39 @@
+## Controle existente: reconciliação revista, sem alteração funcional — 2026-11-13
+
+58426 e23493 TERMINAIS0/success/is_errorFalse recuperadas,sem denials;
+mesmoC2/sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f/Opus5.5/medium,
+Read restrito. Root leu AMBOS relatórios completos e conferiu trechos/pins.
+Ler TODO NATIVE-PROOF-REVIEW NP5/NP4:backend10c9058f/adaptadoreaebedd6
+são candidatos de contenção,não S admitido. accounting recusa total>2
+em TODA vida do job;um helper por vez não basta. Contrato Microsoft de
+TotalProcesses confirmado por leitura pública,inclui encerrados e pode
+contar associação recusada por limite;não é medição nativa local.
+
+Espera finita/budget de decisão não é teto de parede. Segundo controle em
+_interrupt pode substituir primeiro;B4 de P não é semântica global de S.
+Verifyb375/lifecycle7bbf/runnerb419/entry356d são específicos do lote antigo;
+não certificam S novo. Blocos de read não substituem framing fechado de linhas.
+153textos protegidos+6fontes de controle conferidos,intactos;nenhuma fonte/
+teste foi alterada ou executada.1.844PASS/60próprios/373estáticos históricos.
+Somente parecer,evidência compacta e estes checkpoints registram a leitura.
+
+Próximo único lote seguro:mesmoC2 SOMENTE Read retornando proposta TEXTUAL
+curta de vínculo para §§2/4/5 do desenho,sob NP5/NP4. SEM editar arquivos,
+comandos/execução,código/testes/receitas/valores operacionais. Root lê TUDO
+antes de definir alteração. Não reabrir58426/23493;nenhuma chamada ativa.
+Primeiro GitREAL/terminais/zeroescritor;ativo SÓ monitorar. Não mudar backend,
+limites,APIs,oráculos ou estado16 para ajustar o caso novo.
+
+Zero agentes confirmado22h05UTC. Mesma tarefa relida22h05UTC para13/11 às
+19h35SP/22h35UTC,IgnoreNew/comando/principal/settings preservados. Não prova
+entrega ou reset futuros. HEAD de partida41185e4;conferir REAL após docs,
+sem guarda antiga. Código793473a/sourcec8d/testee3ef/owner/app124/state16/
+attempt FIXOS,nenhum estado/tentativa lido. Sem AGY/contorno,efeito nativo/
+loop/socket/thread/process/guard/signal/DLL/job/control/Docker/PG/SQL/runtime/
+config/privado/ambiente/binário/operationalroot/nonce/entry/loader/collector/
+publisher/argv/comando/deploy. Nativos/produto OPEN;Gateway indisponível.
+Preservar artefatos pessoais/evidências;estados ativos abaixo históricos.
+
 ## Chamador publicado; prova benigna revista só como direção — 2026-11-13
 
 Código793473a/sourcec8d38d21/testee3ef7737 publicado:1.844relacionados/60

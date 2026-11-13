@@ -1,0 +1,67 @@
+{
+  "reviewed_utc": "2026-11-13T22:04:50.839366+00:00",
+  "public_head_at_review": "41185e48a2a15b66ce06ede24e0c4b7bb5b872cf",
+  "programmer_session": "51ea0d85-05bb-4d24-ba9a-c9627c3f832f",
+  "model": "claude-opus-5-5",
+  "effort": "medium",
+  "executions": [
+    58426,
+    23493
+  ],
+  "scope": "Read only public source/contracts; no agent edits or execution",
+  "both_terminal_exit0_service_success": true,
+  "root_read_both_full_reports": true,
+  "direct_source_checks": [
+    "Request/runtime/_start",
+    "accounting total lifetime guard",
+    "available/read/close",
+    "_guarded/_interrupt",
+    "NestedJobOwner pre-resume and close",
+    "verify fixed schema/scope",
+    "lifecycle captured legacy hooks"
+  ],
+  "sources": [
+    {
+      "path": "docs/poc/pg16_shell_admission_win32.py",
+      "sha256": "10c9058f0d6071e86c7b4c8b2566c1ae4c9f78aeba9d92c50687ae6481f22726",
+      "bytes": 31948
+    },
+    {
+      "path": "docs/poc/pg16_shell_native_control_win32.py",
+      "sha256": "eaebedd6ac36602ba30cb51a4c30a2a93737f1127c23cdc4ebb8ae8cf9246407",
+      "bytes": 15373
+    },
+    {
+      "path": "docs/poc/pg16_shell_native_control.py",
+      "sha256": "b4198fe1606120e1e2df4fe9bff6a52fce4601a67074fdd7e922ef528341a496",
+      "bytes": 30055
+    },
+    {
+      "path": "docs/poc/pg16_shell_native_control_entry.py",
+      "sha256": "356d22914c21c7fefb195b9471b12591cd7120deb152524104ff3b4559fbf0c6",
+      "bytes": 15580
+    },
+    {
+      "path": "docs/poc/pg16_shell_native_control_verify.py",
+      "sha256": "b3755d492ce147596a27dd9a36bc0ecf66686efd65ef60178915ab2d1d1f7a10",
+      "bytes": 24616
+    },
+    {
+      "path": "docs/poc/pg16_shell_native_control_lifecycle_v2.py",
+      "sha256": "7bbf734c8b4a1fefe1617fc8c1cff2a5de0b33f8996eb98b0016233ab0b040cb",
+      "bytes": 14964
+    }
+  ],
+  "protected_texts_checked": 153,
+  "protected_mismatches": [],
+  "findings_scope": "static reuse compatibility, not reproduced native incident",
+  "native_effects": false,
+  "tests_rerun": false,
+  "state16_consumed_attempt": "not read or modified",
+  "native_product_gates": "OPEN",
+  "followup": "Read-only proposed documentary binding under FULL NATIVE-PROOF-REVIEW NP4/NP5; no edits/code/tests or admission",
+  "primary_api_contract_checked": {
+    "url": "https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-jobobject_basic_accounting_information",
+    "scope": "TotalProcesses includes lifetime terminated processes; limit-rejected association may increment; contract only, not host measurement"
+  }
+}

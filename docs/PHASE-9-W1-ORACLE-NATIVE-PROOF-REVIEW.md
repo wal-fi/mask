@@ -1,5 +1,70 @@
 # W1 Oracle: revisão da reconciliação após o chamador host
 
+## NP5 — primitivas existentes reconciliadas; S continua não admitido
+
+2026-11-13. 58426 e23493 TERMINAIS exit0/success/is_errorFalse, sem denials;
+recuperadas. Mesmo Claude2/sessão51ea0d85/Opus5.5/medium, ferramentas Read
+restritas, sem edição ou execução. Root leu AMBOS relatórios completos.
+O primeiro omitiu o desenho e dois contratos; o suplemento os leu e corrigiu
+o alcance de cap2. Nenhuma medição nativa ou teste novo decorre desta leitura.
+
+Root conferiu diretamente os trechos citados e os seis fontes contra os
+blobs publicados, além dos153textos protegidos/fixos. Candidatos existentes:
+backend10c9058f, adaptadoreaebedd6, runnerb4198fe1, entry356d2291,
+verifyb3755d49 e lifecycle7bbf734c. Nenhum foi carregado ou invocado.
+
+| Capacidade | Evidência estática e limite |
+|---|---|
+| Posse antes do código do filho | Backend _start: JOB_LIST na criação suspensa; membership/config/accounting/lista antes de ResumeThread (693–809). Semântica do kernel não medida nesta revisão. |
+| Aninhamento | NestedJobOwner preserva o _start herdado, expande JOB_LIST e verifica INNER antes de delegar resume (adapter273–324). Candidato, não admissão. |
+| Encerramento/observação | Owner.terminate, wait, accounting, members e close já existem (backend812–919). Não são supervisor completo nem prazo absoluto. |
+| Transporte | available/read (866–890) fornecem blocos disponíveis, não linhas já enquadradas; close exige quiescência e EOF. |
+| Limite cumulativo | accounting recusa total>2, além de active>total (831–840). Um P e um helper em TODA a vida do job; outro helper posterior também excede o contrato, mesmo sem simultaneidade. |
+| Orçamento | Argumento finito de wait e budgets verificados entre chamadas não limitam bloqueio dentro de CreateProcess/CloseHandle/outro _call. O admission_host declara isso explicitamente no docstring. |
+| Controles | _guarded chama _interrupt dentro do except primário; _interrupt captura só Exception na contenção (561–589). Um segundo controle pode substituir o primeiro. Não há garantia global B4 pela simples reutilização. |
+
+Qualificações normativas para a continuação documental:
+
+1. A frase universal do desenho §2 sobre inexistência de API não é aceita.
+   Há primitivas candidatas; faltam vínculo, premissas, autoridade, contenção
+   externa efetivamente admitida e evidência real. Não afirmar capacidade S
+   concluída por essa leitura. Kill ou retorno de função não prova liberação.
+2. Cap2 vale no lifetime da contabilidade pública, não só para processos
+   simultâneos. Subcasos independentes previamente declarados, cada qual
+   com owner/job próprios e total<=2, são apenas possibilidade documental;
+   não são retry, autorização ou valores preparados. N7 com efeito de
+   criação incerto requer observação própria; não inferir total pela falha.
+   Root confirmou o contrato público de
+   [TotalProcesses na Microsoft](https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-jobobject_basic_accounting_information):
+   inclui processos encerrados e pode incrementar numa associação recusada
+   por limite. Isso reforça a recusa de inferir contador zero por falha;
+   não mede uma tentativa local nem autoriza consultas ao kernel.
+3. A parada de efeitos após controle no processo P permanece distinta da
+   contenção que S já tenta após seu próprio controle. Não transportar uma
+   garantia de identidade mais forte para S. O limite de segundo controle
+   é compatibilidade estática, não incidente nativo reproduzido nem motivo
+   para modificar o backend congelado neste lote.
+4. Transporte em blocos NÃO substitui o contrato de linhas fechadas da
+   evidência. Um read pode conter linha parcial ou várias linhas; qualquer
+   vínculo futuro deve preservar limites incrementais, ordem e recusa de
+   excesso. Não tratar read de4096bytes como linha válida ou nova API de
+   framing. Não foi criado parser, logger ou framework.
+5. Verify(Expected/verify) é fechado nos pins, três casos e filesets antigos;
+   atesta apenas bytes fornecidos. Lifecycle(context/lifecycle) captura
+   hooks/registro/facts originais dos casos antigos. Runner/entry são seus
+   consumidores específicos. Nenhum certifica S novo ou pode receber novos
+   rótulos/estado16/receitas por analogia. Não ler artefatos de tentativa.
+
+Aceite somente da reconciliação pública sob este parecer. N1–N16/B4/K1/N8,
+T5 físico e todos os gates de produto continuam OPEN; nenhuma autoridade
+operacional foi acrescentada. Nenhum defeito nativo foi reproduzido.
+
+Próximo único lote seguro:mesmoC2 SOMENTE Read das referências públicas,
+retornando em texto uma proposta curta de vínculo documental para §2/§4/§5
+do desenho, sob NP4/NP5. Não editar arquivos, criar fonte/teste ou preparar
+receita/valor operacional. Root lê TODA proposta antes de definir qualquer
+alteração. Reusar primitivas, não criar outro owner/framework/lançador.
+
 ## NP4 — D2 revista; somente direção documental, BLOCK_NATIVE mantido
 
 50139 terminou exit0/success/is_errorFalse, sem denials; recuperada.
