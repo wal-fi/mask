@@ -1,0 +1,63 @@
+{
+  "checked_utc": "2026-11-13T14:23:05.472362+00:00",
+  "path": "tests/test_oracle9_w1_proactor_pump.py",
+  "sha256": "36b2ba548da0966736123f6bfbd05c8c39af3e0d9e33e79e1797d32f07dcf150",
+  "bytes": 113465,
+  "lines": 2973,
+  "test_functions": 67,
+  "root_read_all_v1_lines": [
+    1,
+    2855
+  ],
+  "root_read_all_v2_deltas": true,
+  "unchanged_ast_nodes_verified": 220,
+  "mechanical_format_ast_equal": true,
+  "cases": 135,
+  "sanity_passed": 9,
+  "missing_source_failures": 126,
+  "errors": 0,
+  "skipped": 0,
+  "deselected": 0,
+  "seconds": "29.479",
+  "all_failure_texts_inspected": 126,
+  "unexpected_failures": [],
+  "runtime": "3.11.3",
+  "platform": "win32",
+  "qa_stack_bytes": 67108864,
+  "static_targets": [
+    "3.11",
+    "3.14"
+  ],
+  "static_3_14_is_runtime": false,
+  "ruff": "0.16.5",
+  "mypy": "2.3.1",
+  "static_results": {
+    "ruff": "PASS",
+    "format": "PASS",
+    "mypy311_strict_win32": "PASS",
+    "mypy314_strict_win32": "PASS"
+  },
+  "independent_probe": {
+    "sha256": "aec2781a5122e3aa063eaf499cfff6671e7e349abd5691a03af9b8a699400b1f",
+    "before": {
+      "passed": 0,
+      "failed": 2
+    },
+    "after": {
+      "passed": 2,
+      "failed": 0
+    }
+  },
+  "frozen": true,
+  "source_absent_at_freeze": true,
+  "behavioral_proof": false,
+  "native_proof": false,
+  "product_gates": "OPEN",
+  "test_publication": "held until reviewed green source integration",
+  "protected_files": 142,
+  "state16_attempt": "not read or touched",
+  "session_id": "51ea0d85-05bb-4d24-ba9a-c9627c3f832f",
+  "v1_terminal": "0/success recovered",
+  "v2_terminal": "0/success recovered",
+  "permission_denials": []
+}

@@ -1,0 +1,87 @@
+{
+  "validated_utc": "2026-11-13T14:54:03.970493+00:00",
+  "source_path": "docs/poc/oracle9_w1_proactor_pump.py",
+  "source_sha256": "0a4dcd574c9c2d3f2e855d0cd3752a1a86b041966b9a628bc5ed76bcf6a798a8",
+  "source_bytes": 36637,
+  "source_lines": 1077,
+  "test_path": "tests/test_oracle9_w1_proactor_pump.py",
+  "test_sha256": "36b2ba548da0966736123f6bfbd05c8c39af3e0d9e33e79e1797d32f07dcf150",
+  "test_bytes": 113465,
+  "test_lines": 2973,
+  "frozen_missing_module_red": {
+    "total": 135,
+    "sanity_passed": 9,
+    "expected_missing_source_failures": 126,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 29.479,
+    "behavioral_proof": false
+  },
+  "final_related_matrix": {
+    "total": 1739,
+    "passed": 1739,
+    "own_cases": 135,
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0,
+    "deselected": 0,
+    "seconds": 25.067
+  },
+  "independent_public_api_probe": {
+    "path": "probe_source_boundaries.py",
+    "sha256": "0192ef43a8126b1b09e7ce763357b5244e2b214fafe0bbed6bed1bbdbf8004cc",
+    "red_before_fix": {
+      "passed": 3,
+      "failed": 6
+    },
+    "green_after_fix": {
+      "passed": 9,
+      "failed": 0
+    },
+    "bind_called": false
+  },
+  "source_review": {
+    "v1_all_lines_read": 1007,
+    "v2_all_deltas_read": true,
+    "unchanged_function_nodes": 91,
+    "mechanical_format_ast_equal": true,
+    "findings_fixed": [
+      "S1",
+      "S2"
+    ],
+    "accepted_under_delegation": "fake SDK model integration only"
+  },
+  "static_gates": {
+    "ruff_src_tests": "PASS",
+    "poc_lint_E9_F63_F7_F82": "PASS",
+    "format_370_files": "PASS",
+    "mypy_strict_win32_311_370_files": "PASS",
+    "mypy_strict_win32_314_370_files": "PASS"
+  },
+  "runtime": "Windows Python3.11.3",
+  "qa_stack_bytes": 67108864,
+  "python314_static_only": true,
+  "protected_files_checked": 142,
+  "protected_mismatches": [],
+  "state16_attempt": "not read or touched",
+  "native_bind_executed": false,
+  "native_proof": false,
+  "native_product_gates": "OPEN",
+  "gateway_available": false,
+  "implementation_author": "Claude2, claude-opus-5-5 effort medium",
+  "review_qa": "root",
+  "related_paths": [
+    "tests/test_oracle9_w1_controller.py",
+    "tests/test_oracle9_w1_driver.py",
+    "tests/test_oracle9_w1_driver_session.py",
+    "tests/test_oracle9_w1_driver_t5.py",
+    "tests/test_oracle9_w1_duplex_bridge.py",
+    "tests/test_oracle9_w1_expect.py",
+    "tests/test_oracle9_w1_host_reactor.py",
+    "tests/test_oracle9_w1_main.py",
+    "tests/test_oracle9_w1_main_t5.py",
+    "tests/test_oracle9_w1_port_ownership.py",
+    "tests/test_oracle9_w1_port_ownership_review.py",
+    "tests/test_oracle9_w1_proactor_pump.py"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "source": "CPython v3.11.3 windows_events.py:403-410",
+  "subject": "proposed FakeLoop only; no Proactor implementation loaded",
+  "rows": [
+    {
+      "kind": "KeyboardInterrupt",
+      "same_control_propagated": false,
+      "sdk_close": 1,
+      "sdk_kill": 1,
+      "pass": false
+    },
+    {
+      "kind": "SystemExit",
+      "same_control_propagated": false,
+      "sdk_close": 1,
+      "sdk_kill": 1,
+      "pass": false
+    }
+  ],
+  "passed": 0,
+  "failed": 2,
+  "native_effects": false
+}

@@ -1,0 +1,119 @@
+{
+  "source_sha256": "0a4dcd574c9c2d3f2e855d0cd3752a1a86b041966b9a628bc5ed76bcf6a798a8",
+  "test_sha256": "36b2ba548da0966736123f6bfbd05c8c39af3e0d9e33e79e1797d32f07dcf150",
+  "subject": "public Pump API with frozen fake SDK; binding never called",
+  "rows": [
+    {
+      "case": "request-record_id-read1-exception",
+      "exception_type": "PumpFault",
+      "getter_reads": 1,
+      "single_read_admission": false,
+      "canary_exposed": false,
+      "no_admission_effects": true,
+      "subsequent_valid_request": true,
+      "control_bool_probes": 0,
+      "pass": true
+    },
+    {
+      "case": "events-record_id-read1-exception",
+      "exception_type": "PumpFault",
+      "getter_reads": 1,
+      "single_read_admission": false,
+      "canary_exposed": false,
+      "no_admission_effects": true,
+      "subsequent_valid_request": true,
+      "control_bool_probes": 0,
+      "pass": true
+    },
+    {
+      "case": "request-record_id-read2-exception",
+      "exception_type": "NoneType",
+      "getter_reads": 1,
+      "single_read_admission": true,
+      "canary_exposed": false,
+      "no_admission_effects": true,
+      "subsequent_valid_request": true,
+      "control_bool_probes": 0,
+      "pass": true
+    },
+    {
+      "case": "request-events-read2-exception",
+      "exception_type": "NoneType",
+      "getter_reads": 1,
+      "single_read_admission": true,
+      "canary_exposed": false,
+      "no_admission_effects": true,
+      "subsequent_valid_request": true,
+      "control_bool_probes": 0,
+      "pass": true
+    },
+    {
+      "case": "request-stdin_pipe-read2-exception",
+      "exception_type": "NoneType",
+      "getter_reads": 1,
+      "single_read_admission": true,
+      "canary_exposed": false,
+      "no_admission_effects": true,
+      "subsequent_valid_request": true,
+      "control_bool_probes": 0,
+      "pass": true
+    },
+    {
+      "case": "request-record_id-read1-control",
+      "exception_type": "FalseCtl",
+      "getter_reads": 1,
+      "single_read_admission": false,
+      "canary_exposed": false,
+      "no_admission_effects": true,
+      "subsequent_valid_request": true,
+      "control_bool_probes": 0,
+      "pass": true
+    },
+    {
+      "case": "request-record_id-read2-control",
+      "exception_type": "NoneType",
+      "getter_reads": 1,
+      "single_read_admission": true,
+      "canary_exposed": false,
+      "no_admission_effects": true,
+      "subsequent_valid_request": true,
+      "control_bool_probes": 0,
+      "pass": true
+    },
+    {
+      "case": "prestart-close-after-run",
+      "exception_type": null,
+      "events": [
+        "started",
+        "pipe_lost",
+        "pipe_lost",
+        "exited",
+        "closed"
+      ],
+      "authorizations": 1,
+      "explicit_closes": 1,
+      "sdk_kills": 0,
+      "pump_closed": true,
+      "pass": true
+    },
+    {
+      "case": "prestart-close-in-callback",
+      "exception_type": null,
+      "events": [
+        "started",
+        "pipe_lost",
+        "pipe_lost",
+        "exited",
+        "closed"
+      ],
+      "authorizations": 1,
+      "explicit_closes": 1,
+      "sdk_kills": 0,
+      "pump_closed": true,
+      "pass": true
+    }
+  ],
+  "passed": 9,
+  "failed": 0,
+  "native_effects": false
+}
