@@ -1,0 +1,36 @@
+{
+  "scope": "actual existing test-oracle function against non-executed AST fixtures; no production monkeypatch",
+  "test_sha256": "af80ada35a03580887f319b4010a90e523590f3ef927bc812893c2027011f078",
+  "native_calls": false,
+  "missing_candidate_loaded": false,
+  "rows": [
+    {
+      "case": "definitions_only",
+      "expected_accept": true,
+      "observed_accept": true,
+      "matches": true,
+      "assertion_line": null
+    },
+    {
+      "case": "ordinary_main_guard",
+      "expected_accept": true,
+      "observed_accept": false,
+      "matches": false,
+      "assertion_line": 539
+    },
+    {
+      "case": "specific_retaining_park",
+      "expected_accept": true,
+      "observed_accept": false,
+      "matches": false,
+      "assertion_line": 526
+    },
+    {
+      "case": "top_level_print_assignment",
+      "expected_accept": false,
+      "observed_accept": true,
+      "matches": false,
+      "assertion_line": null
+    }
+  ]
+}

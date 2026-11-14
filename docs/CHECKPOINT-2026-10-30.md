@@ -14,8 +14,11 @@ supervisor-setup-c0-test-review-20261114.md.
 Execução15789 terminou exit1/service is_errorTrue após escrever o teste
 parcial af80ada3, 21.478 bytes/540 linhas. Root leu TODAS as linhas.
 Duas sanidades, Ruff e format PASS; mypy3.11/3.14 com dois erros cada.
-AST contradiz main/estacionamento: corrigir como no parecer. Nenhum RED
-congelado; fonte supervisor_setup_probe.py e host nativo AUSENTES.
+Sondagem independente do próprio oráculo AST confirmou três divergências:
+recusa main protegido e park legítimos, mas aceita print em atribuição
+durante import. Ver recibo supervisor-setup-c0-ast-gate-probe-20261114.json
+e parecer completo antes do fix. Nenhum RED congelado;
+fonte supervisor_setup_probe.py e host nativo AUSENTES.
 Teste parcial permanece LOCAL e NÃO PUBLICADO.
 
 Limite informado: reset às 20h40 de São Paulo, inferido

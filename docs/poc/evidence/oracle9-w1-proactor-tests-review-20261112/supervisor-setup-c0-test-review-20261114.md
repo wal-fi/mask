@@ -4,6 +4,17 @@ Execution15789 ended exit1/service is_errorTrue after writing testaf80ada3. Exac
 
 Root read the COMPLETE written test including its end-of-file AST oracle. Source supervisor_setup_probe.py remains ABSENT. This is an unpublished candidate after an interrupted call, not a completed delivered or frozen suite. Two independent fake/pin sanities PASS; Ruff and format PASS. Mypy targetswin32/3.11 and3.14 each have2 errors at lambda lines404/429. No feature RED frozen or native test executed.
 
+## Independent AST-oracle witness, measured after the interrupted call
+
+Root invoked the ACTUAL existing test-oracle function with isolated source-text fixtures. Only test-fixture globals were substituted; no production function was loaded or monkeypatched. Each fixture was compiled for syntax but NEVER executed. Missing C0 source remained absent and no native call occurred. Receipt: supervisor-setup-c0-ast-gate-probe-20261114.json.
+
+- Definitions-only baseline: accepted as expected.
+- Ordinary guarded main: incorrectly refused at test line539.
+- Specific retaining parking helper: incorrectly refused at line526.
+- A top-level assignment calling print: incorrectly ACCEPTED. It would emit output at import if executed, contrary to the claimed import-defines-only check. This fixture was not executed.
+
+The fix must reconcile BOTH directions: permit the supported guarded entry/retaining park and reject import-time operational calls, including calls hidden in assignments. Exercise the SAME narrow C0 structure check in the real-source oracle and the non-executed positive/negative fixtures. Do not duplicate an imitation predicate just to pass the fixtures, weaken the import-silence obligation, or build a general Python security-analysis framework. Scope the structural claim to the supported C0 entry shape; root still reviews the complete source before accepting it.
+
 ## Required corrections in the SAME test before RED
 
 1. The final AST oracle contradicts the actual entry obligation. It forbids ALL top-level If statements (therefore the normal __name__ main guard), the time module and every literal whileTrue, despite the required UNKNOWN parking with retained resources. Permit ONLY the ordinary main guard and a specific private _park_c0 helper for this entry; normal import must remain effect-free. time.sleep may be used solely for that park. Keep rejection of subprocess/thread/socket/ctypes/asyncio/signal/multiprocessing, top-level operational calls and backend private access. Preserve the zero-start/zero-extra-Owner-method checks. Include small non-executed AST sanity fixtures demonstrating that a guarded entry and specific retaining park are admitted while top-level native activity is refused. Do not turn this into a general AST framework or permit arbitrary loops/effects.
