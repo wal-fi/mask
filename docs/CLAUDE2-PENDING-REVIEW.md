@@ -1,3 +1,43 @@
+## ATUAL — teste C0 parcial; retomada após limite — 2026-11-14
+
+Código d714515 publicado e sincronizado: qualificador999f4a8d,
+testes7905f229/ba61f89a, 1.984 relacionados e 374 estáticos aprovados.
+Essa medição continua histórica; nenhum qualificador nativo foi executado.
+
+C2 74524/73934 terminaram e foram recuperadas. Root leu as duas propostas:
+canários com filho ainda não admitidos. Próximo incremento é C0, somente
+Owner.setup/close, NUNCA start. Contrato exato e revisão do teste em
+poc/evidence/oracle9-w1-proactor-tests-review-20261112/
+supervisor-setup-c0-root-contract-20261114.md e
+supervisor-setup-c0-test-review-20261114.md.
+
+Execução15789 terminou exit1/service is_errorTrue após escrever o teste
+parcial af80ada3, 21.478 bytes/540 linhas. Root leu TODAS as linhas.
+Duas sanidades, Ruff e format PASS; mypy3.11/3.14 com dois erros cada.
+AST contradiz main/estacionamento: corrigir como no parecer. Nenhum RED
+congelado; fonte supervisor_setup_probe.py e host nativo AUSENTES.
+Teste parcial permanece LOCAL e NÃO PUBLICADO.
+
+Limite informado: reset às 20h40 de São Paulo, inferido
+2026-11-14T23:40:00Z, NÃO observado. Não tentar antes nem trocar
+conta/modelo/AGY. Mesmo Claude2, sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f,
+claude-opus-5-5/medium. Zero escritores confirmado após o terminal.
+Depois do reset: Read/Edit/Write SOMENTE o mesmo teste, sem comandos.
+Root revê todos os deltas e mede/congela RED antes de pedir a fonte.
+
+MESMA tarefa Maskgw-Claude2-Resume-01a05804 atualizada e relida: Pronto,
+14/11 às20h45SP/23h45UTC, mesma conversa/--resume/IgnoreNew; comando,
+principal, settings e cwd preservados. Readback compacto:
+supervisor-setup-c0-resume-task-verified-20261114.json. Requer host ligado,
+usuário logado e app/daemon disponível; quota e entrega NÃO garantidas.
+Primeiro recuperar terminais e conferir Git REAL; ativo só monitorar.
+
+Autoridade W1 local e futuros nativos isolados após revisão permanece;
+Docker/PG/SQL/credenciais/rede externa/estado16/tentativa/deploy excluídos.
+Todos os gates nativos/produto abertos; Gateway indisponível. Preservar
+fontes/testes antigos, pins, artefatos pessoais e evidência bruta.
+Blocos abaixo históricos.
+
 ## ATUAL — qualificador do Owner revisto com fakes — 2026-11-14
 
 W1 local autorizado, inclusive futuros testes nativos isolados depois da

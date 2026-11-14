@@ -1,0 +1,22 @@
+{
+    "terminal_execution":  15789,
+    "exit_code":  1,
+    "service_is_error":  true,
+    "reset_reported":  "8:40pm America/Sao_Paulo",
+    "reset_inferred_utc":  "2026-11-14T23:40:00Z",
+    "reset_observed":  false,
+    "retry_before_reset":  false,
+    "test_sha256":  "af80ada35a03580887f319b4010a90e523590f3ef927bc812893c2027011f078",
+    "test_bytes":  21478,
+    "test_lines":  540,
+    "all_test_read":  true,
+    "frozen":  false,
+    "sanities_passed":  2,
+    "ruff":  "PASS",
+    "format":  "PASS",
+    "mypy311_errors":  2,
+    "mypy314_errors":  2,
+    "source_absent":  true,
+    "active_agents_after_terminal":  0,
+    "next":  "Fix same unpublished test only after reset, using complete root review. No source before reviewed RED."
+}

@@ -1,0 +1,20 @@
+{
+    "verified_utc":  "2026-11-14T21:26:45.6472120Z",
+    "task":  "Maskgw-Claude2-Resume-01a05804",
+    "same_task_updated":  true,
+    "scheduled_local":  "2026-11-14T20:45:00-03:00",
+    "scheduled_utc":  "2026-11-14T23:45:00Z",
+    "reported_reset_inferred_utc":  "2026-11-14T23:40:00Z",
+    "reset_observed":  false,
+    "xml_readback_exact":  true,
+    "command_principal_settings_cwd_preserved":  true,
+    "multiple_instances":  "IgnoreNew",
+    "same_root_conversation":  true,
+    "resume_flag":  true,
+    "native_status":  {
+                          "Nome da tarefa":  "\\Maskgw-Claude2-Resume-01a05804",
+                          "Hora da próxima execução":  "14/11/2026 20:45:00",
+                          "Status":  "Pronto"
+                      },
+    "future_delivery_guaranteed":  false
+}
