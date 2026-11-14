@@ -1,0 +1,18 @@
+{
+    "frozen_utc":  "2026-11-14T20:58:03.7173146Z",
+    "head":  "a9c93910cdd907bd34ccbf3f9a67494f797ab2ed",
+    "source_sha256":  "484980a0214fb418dadac596ffdf71b8bd3d99ab7ddd942806dbb3791ea00830",
+    "frozen_test132_sha256":  "7905f2295ff065ab207cd99a09c84214f4b6c637bd730d2d3a968a005b8a7163",
+    "review_test_sha256":  "ba61f89a734f069de76029409a32c46fe980d58a64c9961edf671298fc688633",
+    "read_all_review_oracles":  true,
+    "red_tests":  8,
+    "red_failures":  8,
+    "red_errors":  0,
+    "red_skips":  0,
+    "only_failure":  "stale report.owner_state instead of actual public HELD",
+    "ruff":  "PASS",
+    "format":  "PASS",
+    "mypy311":  "PASS",
+    "mypy314":  "PASS_STATIC_ONLY",
+    "next":  "source-only minimal fix and formatting; no frozen test changes or native runs"
+}

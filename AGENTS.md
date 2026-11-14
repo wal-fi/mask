@@ -1,3 +1,30 @@
+## ATUAL — qualificador do Owner revisto com fakes — 2026-11-14
+
+W1 local autorizado, inclusive futuros testes nativos isolados depois da
+revisão de contrato e contenção. Docker, PG/SQL, credenciais, rede externa,
+estado16, tentativa consumida e deploy continuam excluídos.
+
+Claude2 é o único programador: sessão 51ea0d85-05bb-4d24-ba9a-c9627c3f832f,
+claude-opus-5-5, esforço medium. Execuções 6128, 4942, 16025, 83233 e 27280
+terminaram e foram recuperadas: success/is_errorFalse, sem denials.
+Nenhuma quota observada ou tarefa rearmada neste lote. Antes de nova
+chamada conferir Git REAL e terminais frescos; ativo só monitorar.
+
+Root leu toda a fonte V1 (705 linhas), oráculos e deltas. RED132 precedeu
+a fonte; RED8 SQ3 precedeu a correção do estado público HELD.
+Fonte999f4a8d/teste7905f229/revisaoba61f89a: 1.984 relacionados PASS,
+140 próprios, zero falhas/erros/skips; Ruff/format/mypy em 374 arquivos
+aprovados, 3.14 somente estático. Ver SUPERVISOR-QUALIFICATION-REVIEW e
+VALIDATION. Qualificador nativo ainda não executado. Backend10c, adaptereaeb
+e componentes anteriores fixos; estado16 e tentativa não lidos.
+
+Próximo lote: proposta curta da entrada concreta e custódia externa para
+executar os dois canários com Owner real, usando a primitiva de parada
+medida. Revisar contrato e contenção ANTES de implementar ou rodar a
+entrada. Sem outro framework, AGY ou contorno. N1–N16/S/G/T5 e todos
+os gates de produto abertos; Gateway indisponível. Preservar artefatos
+pessoais e evidência bruta. Blocos abaixo são históricos.
+
 ## D3 aplicada e revista, somente documentação — 2026-11-13
 
 Usuário autorizou aplicação documental.61845/50017 TERMINAIS0/success/
