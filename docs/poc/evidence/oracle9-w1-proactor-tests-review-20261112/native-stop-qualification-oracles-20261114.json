@@ -1,0 +1,15 @@
+{
+    "frozen_utc":  "2026-11-14T19:02:00.1187623Z",
+    "scope":  "One-off qualification of public System.Diagnostics.Process SDK primitives with one benign direct-base-Python child; not new product implementation or S/P proof",
+    "source_target":  "native-stop-qualification-20261114.ps1",
+    "child_profile":  "Direct caller-supplied pinned base interpreter; isolated/no-bytecode/no-site; only stdlib time.sleep for a finite interval; no descendants, output, project import, network, environment queries or files",
+    "q0":  "Preflight path/type/size/digest mismatch refuses before Start; source review must prove no launch before preflight",
+    "q1":  "Allocate Process instance in caller-owned custody before Start; true Start and positive associated identity required before the stop measurement",
+    "q2":  "Finite first WaitForExit must return false for the deliberately stalled child; then exactly one Kill request; positive WaitForExit and HasExited required with exact integer ExitCode",
+    "q3":  "Close/Dispose only after positive child exit; no PID-only kill/reopen, reader threads or redirected-output draining",
+    "q4":  "Start/kill/wait failures remain UNKNOWN or failed qualification; owned instance kept strongly until exit is observed, never claim cleanup from kill return; no automatic new child/retry",
+    "q5":  "One bounded closed output record, no argv, local paths or original exceptions; report runtime host facts only and measured timings without absolute wallclock guarantee",
+    "q6":  "Qualifies this single child and host only; descendant/domain cleanup, S admission, N1-N16 and product gates remain OPEN",
+    "no_product_source_or_tests_changed":  true,
+    "no_red_claim":  "Existing SDK qualification: these are prospective native measurement oracles, not RED for missing product source"
+}

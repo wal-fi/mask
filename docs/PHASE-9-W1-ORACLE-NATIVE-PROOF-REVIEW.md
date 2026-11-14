@@ -1,5 +1,39 @@
 # W1 Oracle: revisão da reconciliação após o chamador host
 
+## NP8 — primitiva pública de parada qualificada; S/P não admitidos
+
+2026-11-14. O usuário autorizou a implementação local do W1 e testes nativos
+isolados no Windows depois de revisão de contrato e contenção. A proibição
+anterior, só documental e de observação, fica histórica para o W1. Continuam
+excluídos Docker, PG/SQL, credenciais, rede externa, estado16, tentativa
+consumida e deploy.
+
+As chamadas 50036, 83285, 57531 e 81185 terminaram e foram recuperadas.
+Root leu os relatórios e o script final (163 linhas, SHA becc5282…, AST sem
+erros) e executou só a qualificação revisada do SDK público. Ela não exercitou
+S, P, o backend, o pump nem os N1–N16.
+
+Resultado de Q0: hash errado deu REFUSED antes de qualquer Start.
+Resultado de Q1: WaitForExit(500) false, um único Kill, depois saída
+observada com código -1 e Dispose só após a saída. Detalhes e limites
+estão em PHASE-9-W1-ORACLE-NATIVE-STOP-QUALIFICATION.md.
+
+Limites que continuam valendo:
+- Kill não prova limpeza de descendentes, e a contagem de descendentes não
+  foi medida.
+- O lançador do venv é distinto do interpretador base; P precisa ser o base
+  direto, pinado pelo chamador.
+- Start incerto é retido só enquanto o host vive, e não há teto absoluto de
+  parede.
+
+Isso NÃO admite G nem S completos e não fecha N1–N16, T5, B1, B2, D-090,
+C1, D119, TLS, ingressos ou produto. O Gateway segue indisponível.
+
+Próximo lote: mesmo Claude2, somente leitura. Contrato concreto do chamador
+de prova S/P sobre a primitiva medida: limites de IO e custódia, perfis e
+alocação fixos, runtime, ABI e hooks, e todos os N obrigatórios. Isso vem
+antes de oráculos, código ou execução nativa de S/P.
+
 ## NP7 — D3 aplicada e revista, exclusivamente documental
 
 61845 e50017 TERMINAIS exit0/success/is_errorFalse, sem denials; recuperadas.

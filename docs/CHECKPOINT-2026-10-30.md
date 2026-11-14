@@ -1,3 +1,28 @@
+## ATUAL — primitiva de parada qualificada; próximo: contrato S/P — 2026-11-14
+
+Usuário autorizou implementação W1 local e testes nativos isolados no
+Windows após revisão de contrato e contenção. Proibição documental anterior
+fica histórica para o W1. Continuam excluídos Docker, PG/SQL, credenciais,
+rede externa, estado16, tentativa consumida e deploy.
+
+50036/83285/57531/81185/94010 terminaram e foram recuperadas. Nenhuma cota
+foi observada e nenhuma tarefa foi rearmada NESTE LOTE; o estado atual da
+tarefa externa não foi relido e não é afirmado. Rechecar metadados antes de
+qualquer próxima chamada; ativo significa só monitorar.
+
+Root executou só a qualificação pública do SDK (script becc5282…, 163
+linhas). Q0: REFUSED antes do Start. Q1: um Kill, saída observada com -1,
+Dispose depois. Detalhes em PHASE-9-W1-ORACLE-NATIVE-STOP-QUALIFICATION.md e
+NATIVE-PROOF-REVIEW NP8. Não admite G nem S, não prova descendentes e não
+fecha N1–N16, T5 ou gates de produto. Gateway indisponível.
+
+Próximo lote: mesmo Claude2, SOMENTE leitura. Contrato concreto do chamador
+de prova S/P ligado à primitiva medida: limites de IO e custódia, perfis e
+alocação fixos, runtime, ABI e hooks, e todos os N obrigatórios. Antes de
+oráculos, código ou S/P nativo. Sem guardião genérico, sem módulo de framing
+puro e sem repetir testes concluídos. Fontes, testes, pins, app124, estado16
+e tentativa continuam fixos. Os blocos abaixo são históricos.
+
 ## D3 aplicada e revista, somente documentação — 2026-11-13
 
 Usuário autorizou aplicação documental.61845/50017 TERMINAIS0/success/
