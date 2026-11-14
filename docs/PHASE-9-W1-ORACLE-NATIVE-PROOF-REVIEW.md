@@ -1,5 +1,94 @@
 # W1 Oracle: revisão da reconciliação após o chamador host
 
+## NP7 — D3 aplicada e revista, exclusivamente documental
+
+61845 e50017 TERMINAIS exit0/success/is_errorFalse, sem denials; recuperadas.
+Claude2 permaneceu na sessão51ea0d85/claude-opus-5-5/medium, escrevendo
+SOMENTE o desenho. Root leu TODAS318linhas da primeira D3c3e3ae8c, o delta
+com as duas correções e TODAS414linhas do diff final D2→D3.
+
+Versão final c18d0f7a14061cc80a588469aa8960b3ecd26912333e66194c2c4c0744135b31,
+24.989bytes/318linhas. Duas frases absolutas foram corrigidas antes deste
+aceite: saída inesperada ou sem relatório fica UNKNOWN/INCONCLUSIVO; fim
+da progressão dos casos não garante término/close/liberação física do job.
+
+Os requisitos NP4/NP5/NP6 foram conferidos na íntegra: identidade e posse
+não se confundem com SHA; referências fortes até fimP; cap cumulativo2;
+helper sem descendentes; casos não alocados BLOQUEADOS; limiteLINECOUNT
+pré-declarado mais512inclLF; recibos por relógioS e framing incremental;
+retenção sem HELD inventado; inventário público antesclose e sem bypass;
+Owner.close None+estadoCLOSED; N8 só subpropriedade local; nenhum prazo
+vira promessa de contenção. Nenhum dos16N obrigatórios foi removido.
+Dez linhas da matriz ficaram byte a byte iguais; N15 explicita o status
+não admitido já exigido, sem nova dispensa. N2/N4/N5/N7/N8 foram corrigidos
+conforme a revisão, e o gate completo continua OPEN.
+
+O programador informou não ter lido o arquivo do pacote, usando a revisão
+e as propostas do mesmo diálogo. Root conferiu o documento/delta completos;
+não se afirma aplicação literal do pacote nem verificação de seu hash
+pelo programador. O pacote e todas as versões brutas ficam preservados.
+
+Checks proporcionais: UTF-8 válido, sem NUL/replacement;16entradas únicas
+na matriz;10linhas não afetadas iguais;153textos protegidos e6fontes de
+controle legados iguais aos blobs/pins publicados;git diff --check limpo.
+Sem mudança funcional: pytest, mypy, Ruff e browsers NÃO repetidos. Os
+1.844PASS/373estáticos continuam medição histórica do código793473a.
+
+Aceite SOMENTE do fechamento documental autorizado pelo usuário. Não é
+admissão de S, execução nativa, aprovação de código/testes novos ou waiver
+de N1–N16/T5/B1/B2/D-090/C1/D119/TLS/ingressos/produção. Nada operacional
+foi preparado, e estado16/tentativa consumida não foram lidos.
+
+Próximo lote seguro possível: leitura pública para propor uma lista mínima
+de inspeções de admissão SOMENTE LEITURA, a serem autorizadas em lote
+próprio. Categorias/limites/evidências esperadas, sem receitas/comandos ou
+valores, sem inspecionar de fato runtime/configuração/binário/Docker/SO.
+Não criar outra camada, fonte, teste, owner ou launcher. Root lê todo
+relatório antes de definir qualquer inspeção. Todas as restrições vigentes
+continuam válidas; este parecer não autoriza execução ou leitura operacional.
+
+## NP6 — propostas lidas; aplicação exclusivamente documental autorizada
+
+O usuário respondeu "sim" à pergunta para aplicar somente a revisão em
+PHASE-9-W1-ORACLE-NATIVE-PROOF-DESIGN.md. A restrição de leitura do lote
+anterior foi esclarecida para ESSE documento; código, testes, capacidades
+externas e toda execução nativa continuam bloqueados. Não é aceite de S.
+
+99308/37651 e73441/51310 terminaram exit0/success/is_errorFalse, sem
+denials; recuperadas. Root leu TODAS94+33+75+34linhas das propostas e
+suplementos. Pacote revisado a9705c5bbc67ffd684fb40733f22ebdd9783ca04643fe59b37a86ad936ad6119
+preserva o material original; suplementos prevalecem nos seus parágrafos.
+Baseline do desenho c4f56ac3 continua fixa ANTES da aplicação D3.
+
+Próximo único lote do programador:mesmo Claude2/sessão51ea0d85/Opus5.5/
+medium, Read/Edit/Write SOMENTE o desenho, sem comandos ou execução.
+Aplicar §2/§4/§5 e o fechamento de consistência §3/§6/§7/§8; preservar
+requisitos corretos anteriores e TODO NP4/NP5. Nenhuma fonte/teste muda.
+
+Condições que não podem sumir na consolidação:
+
+- Máximo de linhas declarado ANTES da tentativa, além de512bytes com LF;
+  timestamps de recebimento pelo relógio de S; blocos não são linhas.
+- Referências locais FORTES até fim de P; primeiro controle sem bool,
+  sem alterar traceback/contexto, sem efeitos depois; S tem semântica
+  própria mais fraca. Autenticidade do fonte não é identidade de runtime.
+- Nenhuma afirmação incondicional prazo->contenção/terminação. Stop/kill
+  é tentativa até observado; externo S continua NÃO ADMITIDO.
+- TotalProcesses<=2 por toda vida do job; helper não cria descendentes;
+  casos sem alocação continuam BLOQUEADOS, sem preparar divisão ou receita.
+- Retenção é decisão, não estado HELD inventado. Inventário público falho
+  impede PASS; não contornar APIs, mudar caps ou consultar objetos CLOSED.
+- Owner.close(): retorno None sem exceção MAIS estado observado CLOSED;
+  não é True genérico. N8 True local só fecha subpropriedade, não N8 inteiro.
+- Nenhum N obrigatório desaparece; N2 parcial/N4 com fatos positivos;
+  N11bloqueado/N14OPEN/N15nãoadmitido/N16contrato próprio preservados.
+- Não proibir todo trabalho futuro de código/teste: este lote é documental;
+  futuros lotes seguem revisão/oráculos/RED e autoridade efetivamente fechada.
+
+Root lerá TODO desenho/delta antes de aceitar/publicar. Todos os gates
+nativos/produto permanecem OPEN. Sem fonte, testes, efeitos, valores ou
+receitas operacionais novos; state16 e tentativa consumida não são lidos.
+
 ## NP5 — primitivas existentes reconciliadas; S continua não admitido
 
 2026-11-13. 58426 e23493 TERMINAIS exit0/success/is_errorFalse, sem denials;

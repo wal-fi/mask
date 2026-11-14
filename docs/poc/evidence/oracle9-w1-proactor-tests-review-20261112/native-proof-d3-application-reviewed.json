@@ -1,0 +1,110 @@
+{
+  "reviewed_utc": "2026-11-14T00:45:16.865268+00:00",
+  "user_authorization": "Explicit sim for documentary application only; no code/tests/native authority added",
+  "head_before_integration": "dbf1b92b2208e3a62bebcfb19429f49564967c15",
+  "path": "docs/PHASE-9-W1-ORACLE-NATIVE-PROOF-DESIGN.md",
+  "baseline": {
+    "sha256": "c4f56ac30eb0dcf0db11307e83ba4e06e4386e195d52d5fe9b7b78d67d3b1bb8",
+    "lines": 154
+  },
+  "first_d3": {
+    "sha256": "c3e3ae8c0a5ed8e25b9f712f5d64e0f1b1dc81932fa95160c83a9e7830d0cdfa",
+    "lines_read": 318
+  },
+  "final": {
+    "sha256": "c18d0f7a14061cc80a588469aa8960b3ecd26912333e66194c2c4c0744135b31",
+    "bytes": 24989,
+    "lines": 318
+  },
+  "root_read_full_d3": true,
+  "root_read_full_baseline_to_final_diff_lines": 414,
+  "root_read_two_clause_delta": true,
+  "two_clause_scope": "Unexpected P exit -> UNKNOWN; end of progression is not physical job termination",
+  "proposal_packet": "a9705c5bbc67ffd684fb40733f22ebdd9783ca04643fe59b37a86ad936ad6119",
+  "packet_read_by_programmer": false,
+  "packet_read_caveat": "Programmer reported not reading packet; used same-session proposals and review; root checked complete document/diff, no literal-patch or programmer packet-verification claim",
+  "matrix_cases": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16
+  ],
+  "unchanged_matrix_rows": [
+    1,
+    3,
+    6,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    16
+  ],
+  "matrix_changed_rows": [
+    2,
+    4,
+    5,
+    7,
+    8,
+    15
+  ],
+  "code_tests_changed": false,
+  "protected_texts": 153,
+  "protected_mismatches": [],
+  "legacy_control_sources": [
+    {
+      "path": "docs/poc/pg16_shell_admission_win32.py",
+      "sha256": "10c9058f0d6071e86c7b4c8b2566c1ae4c9f78aeba9d92c50687ae6481f22726"
+    },
+    {
+      "path": "docs/poc/pg16_shell_native_control_win32.py",
+      "sha256": "eaebedd6ac36602ba30cb51a4c30a2a93737f1127c23cdc4ebb8ae8cf9246407"
+    },
+    {
+      "path": "docs/poc/pg16_shell_native_control.py",
+      "sha256": "b4198fe1606120e1e2df4fe9bff6a52fce4601a67074fdd7e922ef528341a496"
+    },
+    {
+      "path": "docs/poc/pg16_shell_native_control_entry.py",
+      "sha256": "356d22914c21c7fefb195b9471b12591cd7120deb152524104ff3b4559fbf0c6"
+    },
+    {
+      "path": "docs/poc/pg16_shell_native_control_verify.py",
+      "sha256": "b3755d492ce147596a27dd9a36bc0ecf66686efd65ef60178915ab2d1d1f7a10"
+    },
+    {
+      "path": "docs/poc/pg16_shell_native_control_lifecycle_v2.py",
+      "sha256": "7bbf734c8b4a1fefe1617fc8c1cff2a5de0b33f8996eb98b0016233ab0b040cb"
+    }
+  ],
+  "native_effects": false,
+  "tests_rerun": false,
+  "checks": "UTF8 valid/no replacement or NUL; all16matrix entries; ten unchanged rows; protected153+legacy6hashes; Git diff whitespace check recorded separately",
+  "state16_attempt": "not read or touched",
+  "programmer_session": "51ea0d85-05bb-4d24-ba9a-c9627c3f832f",
+  "model": "claude-opus-5-5",
+  "effort": "medium",
+  "executions": [
+    61845,
+    50017
+  ],
+  "both_exit0_service_success": true,
+  "acceptance": "Documentary consolidation only under full NP4/NP5/NP6 review, not native admission or code/test authorization",
+  "native_product_gates": "OPEN",
+  "unchanged_matrix_rows_byte_comparison_including_line_endings": true,
+  "git_diff_check": "PASS",
+  "zero_new_or_owned_agents_after_terminal": true
+}

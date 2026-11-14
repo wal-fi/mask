@@ -1,3 +1,62 @@
+## D3 aplicada e revista, somente documentação — 2026-11-13
+
+Usuário autorizou aplicação documental.61845/50017 TERMINAIS0/success/
+is_errorFalse recuperadas,sem denials;nenhum desses handles permanece ativo.
+Root leu318linhas D3 inicial+delta de2cláusulas+414linhas diff D2→D3 final.
+Desenho c18d0f7a/24.989bytes/318linhas,aceite SOMENTE documental sob
+NATIVE-PROOF-REVIEW NP7/NP6/NP5/NP4. Código/testes/capacidades/nativo NÃO
+foram autorizados.153protegidos+6fontes legadas intactos;16N preservados,
+10linhas da matriz iguais. Sem suítes repetidas por documentos.
+
+Nenhum recurso é dado como livre por kill/prazo/silêncio;fim da progressão
+não é término físico. S candidato não admitido;cap cumulativo2,fortesatéfimP,
+recibos+maxLINECOUNT+512LF,inventárioantesclose/None+CLOSED,N8localparcial,
+retenção semHELDinventado e nenhuma alocação/receita novos. Fontec8d/testee3ef/
+backend10c/adaptereaeb/owner/app124/state16/attempt FIXOS,não ler estado.
+
+Próximo lote seguro SOMENTE Read público:propor lista mínima de categorias
+para futura inspeção de admissão de ambiente APENAS LEITURA,com limites e
+evidências esperadas,SEM comandos/receitas/valores ou inspeção real. Root
+lê TODO relatório antes de definir inspeções. MesmoC2/sessão51ea0d85-05bb-
+4d24-ba9a-c9627c3f832f/Opus5.5/medium;ativo SÓ monitorar,nunca segundo agente.
+Não reabrir61845/50017 ou repetir formatação/testes já encerrados.
+
+Conferir HEAD REAL após este fechamento,não usar dbf1b92 como guarda eterna.
+Tarefa existente terá mensagem/readback atualizados para esse próximo lote;
+não inferir entrega/reset ou horário futuro dos registros antigos. Sem AGY/
+contorno,efeito nativo/loop/socket/thread/process/guard/signal/DLL/job/control/
+Docker/PG/SQL/runtime/config/privado/ambiente/binário/operationalroot/nonce/
+entry/loader/collector/publisher/argv/comando/deploy. Gates nativos/produto
+OPEN;Gateway indisponível. Preservar artefatos pessoais/raw. Ativos abaixo
+são históricos,substituídos por este fechamento.
+
+## Aplicação documental autorizada; somente desenho D3 — 2026-11-13
+
+Usuário respondeu sim à aplicação SOMENTE documental em
+ docs/PHASE-9-W1-ORACLE-NATIVE-PROOF-DESIGN.md. Ler NATIVE-PROOF-REVIEW
+NP6/NP5/NP4. Root leu propostas94+33+75+34linhas; pacotea9705c5b preservado.
+99308/37651/73441/51310 TERMINAIS recuperadas,sem agente ativo antes do lote.
+A limitação Read-only anterior fica histórica para essa aplicação; NÃO há
+permissão para código/testes/nativo ou capacidades externas. S não admitido.
+
+Único alvo de escrita do programador:desenho D3, mesmoC2/sessão51ea0d85-
+05bb-4d24-ba9a-c9627c3f832f/claude-opus-5-5/medium,Read/Edit/Write restritos,
+sem comandos/execução. Root revisa TODO resultado antes de integrar/publicar.
+61845 ATIVA: PRIMEIRO recuperar essa execução;ativo SÓ monitorar,NUNCA
+segunda chamada. Root ainda não leu/reviu D3. Sem resultado terminal novo.
+Conferir metadados frescos antes de qualquer retomada;não reabrir terminadas.
+Baseline c4f56ac3 preservada antes da edição. Backend10c/adaptereaeb/pins/
+153protegidos/app124/state16/attempt FIXOS. Não ler estado/tentativa.
+
+Preservar máximoLINECOUNT+512inclLF,recibos por relógioS,fortes até fimP,
+identidade de runtime separada de SHA,cap cumulativo2/helper sem descendentes,
+retenção sem inventarHELD,inventário antesclose e sem bypassprivado,closeNone
+mais CLOSED,N8local parcial,nenhuma promessa incondicional prazo->contenção.
+Sem alocação/receita/valores,nativo/loop/socket/thread/process/guard/signal/
+DLL/job/control/Docker/PG/SQL/runtime/config/privado/ambiente/binário/root/
+nonce/entry/loader/collector/publisher/comando/deploy. Todos gates OPEN.
+Preservar artefatos pessoais/raw;conferir HEAD REAL após docs,sem guarda antiga.
+
 ## Controle existente: reconciliação revista, sem alteração funcional — 2026-11-13
 
 58426 e23493 TERMINAIS0/success/is_errorFalse recuperadas,sem denials;
