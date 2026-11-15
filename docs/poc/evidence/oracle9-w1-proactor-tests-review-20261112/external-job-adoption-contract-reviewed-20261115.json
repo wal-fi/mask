@@ -1,0 +1,81 @@
+{
+    "kind":  "MASKGW_W1_EXTERNAL_JOB_ADOPTION_CONTRACT_REVIEW_V1",
+    "code_checkpoint":  "eee94147b585aa9c65f3fc55447008b4bb13e3c2",
+    "design_checkpoint":  "8657e21b638a4ead1c00c501e0dfe74534dde39a",
+    "session":  "51ea0d85-05bb-4d24-ba9a-c9627c3f832f",
+    "model":  "claude-opus-5-5",
+    "effort":  "medium",
+    "calls":  [
+                  {
+                      "execution":  "45475",
+                      "terminal_exit":  0,
+                      "service_subtype":  "success",
+                      "service_is_error":  false,
+                      "denials":  0,
+                      "session_id":  "51ea0d85-05bb-4d24-ba9a-c9627c3f832f",
+                      "recovered":  true,
+                      "entire_result_read":  true,
+                      "reported_input_truncated":  false,
+                      "result_utf8_sha256":  "1888761f343309c3b0a6c14ab09acd978bb92d73af43ca06986ed3b567eafb95",
+                      "duration_ms":  71271
+                  },
+                  {
+                      "execution":  "75101",
+                      "terminal_exit":  0,
+                      "service_subtype":  "success",
+                      "service_is_error":  false,
+                      "denials":  0,
+                      "session_id":  "51ea0d85-05bb-4d24-ba9a-c9627c3f832f",
+                      "recovered":  true,
+                      "entire_result_read":  true,
+                      "reported_input_truncated":  true,
+                      "result_utf8_sha256":  "e966b0e8d89e1aced51ef46e7f960cb803fba259df82a4a953e06022b0015e3d",
+                      "duration_ms":  33013
+                  },
+                  {
+                      "execution":  "supplement2",
+                      "terminal_exit":  1,
+                      "service_subtype":  "success",
+                      "service_is_error":  true,
+                      "denials":  0,
+                      "session_id":  "51ea0d85-05bb-4d24-ba9a-c9627c3f832f",
+                      "recovered":  true,
+                      "entire_result_read":  true,
+                      "reported_input_truncated":  false,
+                      "result_utf8_sha256":  "e8d4f75b36edf54bdb9171eb6c4992f536bd122a7757d3d5ea44862583ee10ed",
+                      "duration_ms":  1234
+                  }
+              ],
+    "disposition":  "Incomplete proposal ONLY under full EJ5; no oracle/source/native admission",
+    "received_proposals":  [
+                               "Lazy pinned definitions and four returned keys",
+                               "Read-only public properties with private backing fields",
+                               "Alias refusal before retaining a distinct borrowed candidate"
+                           ],
+    "missing_supplement":  [
+                               "A: first control, REFUSED_CONTROL/HELD, no re-raise or later SDK effect",
+                               "B: exact built-in collision checks, deterministic errors/states and owned-versus-borrowed references",
+                               "C: ordinary loader failures versus controls/cache and private fake seams"
+                           ],
+    "targets_absent":  [
+                           "docs/poc/oracle9_w1_external_job_adoption.py",
+                           "tests/test_oracle9_w1_external_job_adoption.py"
+                       ],
+    "red_frozen":  false,
+    "old_sources_changed":  false,
+    "new_native_effects":  false,
+    "functional_qa_rerun":  false,
+    "quota":  {
+                  "observed":  true,
+                  "observed_utc":  "2026-11-15T02:11:52Z",
+                  "reset_reported":  "1:40am America/Sao_Paulo",
+                  "reset_inferred_utc":  "2026-11-15T04:40:00Z",
+                  "reset_independently_observed":  false,
+                  "no_retry_before_reset":  true,
+                  "workaround":  false
+              },
+    "scheduled_resume_record":  "external-job-adoption-resume-task-verified-20261115.json",
+    "next_scope":  "Read only same-session N-S missing supplement A/B/C, no edits or execution",
+    "native_product_gates":  "OPEN",
+    "gateway_available":  false
+}

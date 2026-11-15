@@ -1,5 +1,25 @@
 # W1: revisão da observação externa do mesmo job
 
+## EJ5 — contrato N-S proposto; suplemento incompleto e limite observado
+
+45475 e75101 terminaram exit0/service success/is_errorFalse, sem denials, recuperadas. Root leu AMBOS os relatórios completos. O segundo informou explicitamente que recebeu a solicitação truncada no item2; portanto seu resultado não demonstra recebimento do restante. Não é finding de código nem prova de causa do truncamento. A proposta continua incompleta e NÃO aceita para oráculos.
+
+A proposta inicial escolhe definitions preguiçosa, cache por namespace e quatro chaves backend/Request/Win32Error/ExternalJobOwner, leitura limitada e bytes pinados antes de executar definições. O suplemento fecha propriedades públicas sem setter/deleter com prefixo privado próprio e resolve o alias antes de reter um candidato externo disjunto. Import deve permanecer sem Path.resolve/lstat/open/compile/exec; a resolução pertence a definitions. São propostas, ainda não código ou API admitida.
+
+Pendentes EXATOS para o mesmo C2, somente Read e resposta curta, antes de qualquer teste:
+
+**A — primeiro controle.** Relançar controle salvo fora do except acrescenta frame por semântica do Python; não prometer traceback imutável por esse mecanismo. Fechar a direção REFUSED_CONTROL com retenção do PRIMEIRO objeto exato, sem bool/str/repr e sem atribuir traceback/contexto, zero chamadas nativas depois da captura, estado do Owner coerente (por exemplo HELD/WIN32_INTERRUPTED) para start/close posteriores não alcançarem o SDK. Prioridade e transições precisam ser exatas.
+
+**B — tipos, aliases e categorias.** Conferir formas reais de _handle/_quarantine: a quarentena do backend é uma lista plana dos valores filtrados por _handle. Checagens de colisão devem operar só sobre contêineres/valores built-in exatos, sem igualdade ou conversão de opacos; forma malformada recusa antes de consultar referência desconhecida. Alias do ledger/quarentena não é empréstimo externo nem deve impedir o fechamento normal de posse genuína pelo Owner. Candidato distinto, retido antes da primeira consulta, nunca é fechado/terminado como C. Fechar consumo da tentativa, prioridades de estado/repetição e INPUT/HANDLE/QUERY/CONFIG/NOT_EMPTY/INTERNAL determinísticos.
+
+**C — loader.** Falha ordinária de fonte vira somente ADOPT_SOURCE, sem diagnóstico/cadeia original. Controles não são engolidos. Fechar falha/cache e os seams de SDK/runtime apenas da cópia privada, no molde do teste público existente. Nunca patch de funções/módulos de produto vivos. Nomes e comportamentos ainda indecididos devem ser explicitados.
+
+A tentativa seguinte (supplement2, texto ASCII curto sem aspas internas) terminou exit1/service is_errorTrue ANTES de editar: limite de sessão, reset exibido1:40am America/Sao_Paulo. Horário inferido2026-11-15T04:40:00Z, NÃO observado independentemente. O subtype success do envelope não é sucesso do serviço. Nenhum retry antes desse horário, AGY, outra conta/modelo ou contorno. Fonte docs/poc/oracle9_w1_external_job_adoption.py e próprio teste continuam AUSENTES; nenhum RED congelado.
+
+MESMA tarefa Maskgw-Claude2-Resume-01a05804 rearmada para15/11 às01h45SP/04h45UTC, mesma conversa/--resume/IgnoreNew. Readbacks nativos XML+CSV e NextRunTime confirmados; principal/settings/comando/cwd iguais aos anteriores. Mudaram só Exec.Arguments e Trigger.StartBoundary. Recibo compacto external-job-adoption-resume-task-verified-20261115.json; XMLs brutos permanecem locais. Host ligado, usuário logado e app/daemon disponível são necessários; entrega e reset NÃO garantidos. Primeiro recuperar terminais/Git REAL e zero escritor; ativo só monitorar, nunca chamada duplicada.
+
+Não fechar o contrato por inferência a partir da resposta parcial. Próximo lote somente o suplemento A/B/C pela mesma sessão51ea0d85/Opus5.5/medium e Read restrito; root lê TODO retorno antes de definir oráculos/RED/fonte. Fontes/testes/pins/C0/app124/state16/tentativa fixos. Nenhum novo efeito nativo ou suíte decorre deste lote. Todos os gates agregados nativos/produto OPEN; Gateway indisponível.
+
 ## EJ4 — XJ3 lida; aceite prospectivo, próximo contrato N-S somente leitura
 
 58258 terminou exit0/service success/is_errorFalse, sem denials, recuperada. Root leu TODAS254linhas finais da XJ3, SHAb202b78ceb78c676911fa144c5bb1bbf4e14e0b97298db65a70240475d8f8755,22.275bytes, e TODO o delta XJ2→XJ3. A chamada bloqueada pela guarda de versão não iniciou agente; o retry usou o hash final cde09059, sem contorno. Fontes/testes anteriores e os quatro pins C0/backend foram reconferidos intactos.

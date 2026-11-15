@@ -1,4 +1,45 @@
-## ATUAL — XJ3 revista prospectivamente; próximo contrato N-S — 2026-11-14
+## ATUAL — N-S ainda proposto; limite C2 e retomada01h45 — 2026-11-14
+
+Códigoeee9414 (C0 nativo setup/close sem Owner.start) e desenho8657e21
+(XJ3b202b78c, prospectivo SOMENTE sob EJ1–EJ5) publicados. Conferir Git
+REAL após futuros commits documentais; nunca reutilizar guarda antiga.
+C0c695/43ff/999f/backend10c/adaptereaeb e fontes/testes antigos fixos.
+
+45475/75101 TERMINAIS0/success/is_errorFalse recuperadas. Root leu AMBOS
+relatórios. Segundo retorno declara solicitação TRUNCADA no item2: só
+propriedades somente leitura/import lazy e parte da correção de aliases
+propostos; resto NÃO recebido/fechado. Não afirmar contrato completo.
+Fonte oracle9_w1_external_job_adoption.py e próprio teste AUSENTES;
+nenhum RED congelado e nenhum código/teste novo admitido.
+
+Supplement2 terminou1/serviceis_errorTrue ANTES de editar às02h11UTC.
+Limite informado1:40am America/Sao_Paulo, inferido15/11 às04h40UTC,
+NÃO observado. Não retry antes04h40UTC, AGY/conta/modelo/contorno.
+MesmoC2/sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f,Opus5.5/medium.
+
+Próximo único lote: SOMENTE Read dos textos públicos, retorno curto dos
+EXATOS pontos A/B/C de EXTERNAL-JOB-OBSERVATION-REVIEW EJ5: controle
+REFUSED_CONTROL/HELD sem re-raise/SDK posterior; tipos built-in exatos e
+aliases/estados/categorias sem sondas opacas; loader ordinário versus
+controle/cache. Root lê TODO retorno antes de registrar contrato e pedir
+oráculos; depois todos os oráculos revistos e RED medido antes de fonte.
+Não inferir resto de mensagem parcial. N-H/N-C/direitos não admitidos.
+
+MESMA tarefa Maskgw-Claude2-Resume-01a05804: Ready/Habilitada,15/11 às
+01h45SP/04h45UTC, mesma conversa/--resume/IgnoreNew. XML+CSV/NextRunTime
+relidos; principal/settings/comando/cwd iguais. Só Args/StartBoundary
+mudaram. Recibo external-job-adoption-resume-task-verified-20261115.json.
+Entrega/reset NÃO garantidos; requer host/logon/app/daemon disponível.
+Primeiro terminais/Git/zero escritor; ativo só monitorar, nunca duplicar.
+
+Python2.083/377estáticos e NQ1/NQ2/NQ3 continuam históricos do código
+publicado, não repetidos por documentos. W1 local após revisão permanece
+autorizado; lote atual é só Read. Sem Docker/PG/SQL/credenciais/rede
+externa/runtime/config/privado/binário/estado16/tentativa/deploy.
+S/G/N1–N16/produto OPEN; Gateway indisponível. Preservar arquivos pessoais,
+respostas/metadata locais e snapshots fora do Git. Histórico abaixo.
+
+## HISTÓRICO — XJ3 revista prospectivamente; próximo contrato N-S — 2026-11-14
 
 Código C0eee9414 publicado, sincronizado e medido: hostc695a68b;
 entrada43ffbf92/qualificador999f4a8d/backend10c9058f/adaptereaebedd6 fixos.

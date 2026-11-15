@@ -1,0 +1,27 @@
+{
+    "task":  "Maskgw-Claude2-Resume-01a05804",
+    "verified_utc":  "2026-11-15T02:14:12.1598417Z",
+    "state":  "Ready",
+    "next_run_local":  "2026-11-15T01:45:00-03:00",
+    "next_run_utc":  "2026-11-15T04:45:00Z",
+    "multiple_instances":  "IgnoreNew",
+    "same_root_conversation":  true,
+    "resume":  true,
+    "message_readback_equal":  true,
+    "changed_only":  [
+                         "Exec.Arguments",
+                         "Trigger.StartBoundary"
+                     ],
+    "native_xml_and_csv_readbacks":  true,
+    "reset_reported":  "1:40am America/Sao_Paulo",
+    "reset_inferred_utc":  "2026-11-15T04:40:00Z",
+    "reset_independently_observed":  false,
+    "future_delivery_guaranteed":  false,
+    "second_writer":  false,
+    "preserved_components_readback_equal":  {
+                                                "principal":  true,
+                                                "settings":  true,
+                                                "command":  true,
+                                                "working_directory":  true
+                                            }
+}
