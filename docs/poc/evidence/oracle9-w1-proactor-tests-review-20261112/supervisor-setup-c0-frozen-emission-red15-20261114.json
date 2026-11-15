@@ -1,0 +1,23 @@
+{
+    "frozen_utc":  "2026-11-15T00:13:20.2978343Z",
+    "head":  "41be68b36dcb12fc523a8648d3f9e08e84ac26a2",
+    "source_sha256":  "264e1133bff514d719a047bb71ab613d2e13fc63f03e2d346b65bbea0d18b0be",
+    "review_test_sha256":  "a9e0430a0265c7d1287611f584adcc7b0948a5eef945c070e259267c4153a9cf",
+    "review_test_lines":  198,
+    "all_review_test_read":  true,
+    "original_frozen84_sha256":  "d21800600d46feefaf4ae866905799e43273a6bccfa665bf275128a8517edb7f",
+    "red_total":  15,
+    "passed":  8,
+    "failed":  7,
+    "errors":  0,
+    "skipped":  0,
+    "only_failure":  "invalid write result acknowledged as exit2 instead of IO exit3",
+    "ruff":  "PASS",
+    "format":  "PASS",
+    "mypy311":  "PASS",
+    "mypy314":  "PASS_STATIC_ONLY",
+    "terminal_execution":  39479,
+    "terminal_recovered":  true,
+    "service_success":  true,
+    "scope":  "Source-only S1 loader registration and S2 exact write acknowledgment fix; no native host/effect"
+}

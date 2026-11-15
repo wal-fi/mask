@@ -22,3 +22,23 @@ The fix must reconcile BOTH directions: permit the supported guarded entry/retai
 3. Close the inert request literal exactly: command_line is double-quoted application plus the fixed suffix -I -B -S -c with the double-quoted pass expression. Assert exact equality rather than token substrings. It is NEVER executed. Inside run_c0, read is forbidden along with all the other Owner methods except setup/close; bounded file read remains legal only in load_qualifier. No change to any frozen helper or public qualifier.
 
 The contract's main/host requirements remain prospective: no real-main invocation, native host or source implementation yet. C0 only, no child profiles. After the test fix root reads all deltas, reruns appropriate statics/sanities and then measures/freezes RED while source is absent. Only then may source be requested. All original oracles and root contract remain in force except the explicit AST reconciliation above. Existing source/tests/pins/app124/state16/attempt remain fixed. All native/product gates OPEN.
+
+## Follow-up after normal post-reset call31781
+
+Call31781 completed exit0/service success/is_errorFalse/no denials and was recovered. Root read ALL264added/22removed delta lines against af80ada3, including every new structure oracle. Candidate2a2fbec3 has782lines/30680bytes; source remains absent. Mypy strict win32 targets3.11 and3.14 now PASS (3.14 static only). No claim of a general quota reset; this particular call succeeded.
+
+Measured remaining fixes, SAME test only:
+
+1. Two negative fixtures (`from-time-import`, `subprocess-import`) prepend their tested import before the existing future import, so compile raises SyntaxError instead of testing the structure checker. Make both fixtures valid Python (for example keep their future import first). Do NOT catch SyntaxError as an accepted negative and do not remove compilation or the rejection assertions. Sanities currently20PASS/2FAIL, no errors/skips.
+2. Ruff PLR0912: check_c0_structure has14branches. Split only the narrow node/module-shape checks as necessary, preserving the SAME checker and every assertion. No configuration change, suppression, weak assertions or general framework.
+3. Format only the quote style of _FIXTURE_PARK/_FIXTURE_MAIN as Ruff requires. No semantic change to fixture strings.
+
+Preserve typed encoding helpers, exact inert command, all original oracles and the expanded positive/negative fixtures. Root reads the full next delta and reruns statics/sanities before measuring/freezing feature RED. No source or native host yet.
+
+## Accepted freeze after call39778
+
+Call39778 completed exit0/service success/is_errorFalse/no denials and was recovered. Root read the full second delta: helper extraction preserves node assertions; two fixtures compile with future imports first; quote-only layout changes preserve values. Final testd2180060 has793lines. Ruff/format/mypy strict win32 targets3.11/3.14 PASS; 3.14 static only.
+
+RED84 measured while source is absent:22sanitiesPASS,62FileNotFoundError failures exclusively missing supervisor_setup_probe.py,0errors/skips. Root inspected ALL62 reasons. The SAME independent original four-fixture AST witness now matches all4 expectations; its earlier3divergences remain historical. Freeze receipt supervisor-setup-c0-frozen-red84-20261114.json. Absence is not behavioral proof.
+
+Accepted ONLY for first implementation of docs/poc/oracle9_w1_supervisor_setup_probe.py, including the actual guarded C0 main/retaining park required by the root contract. Frozen test remains read-only. No host, native execution, child profile, source pin or public qualifier change. Main's dynamic behavior is not established by these frozen feature tests; root must review the complete main and close any further required oracles before native execution. All native/product gates remain OPEN.

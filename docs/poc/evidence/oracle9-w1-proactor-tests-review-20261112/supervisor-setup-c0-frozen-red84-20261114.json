@@ -1,0 +1,31 @@
+{
+    "frozen_utc":  "2026-11-14T23:57:00.7147780Z",
+    "head":  "41be68b36dcb12fc523a8648d3f9e08e84ac26a2",
+    "test":  "tests/test_oracle9_w1_supervisor_setup_probe.py",
+    "sha256":  "d21800600d46feefaf4ae866905799e43273a6bccfa665bf275128a8517edb7f",
+    "lines":  793,
+    "bytes":  30929,
+    "initial_540_lines_read":  true,
+    "all_31781_delta_read":  true,
+    "all_39778_delta_read":  true,
+    "c2_terminal_recovered":  [
+                                  15789,
+                                  31781,
+                                  39778
+                              ],
+    "latest_two_service_success":  true,
+    "red_total":  84,
+    "red_sanities_passed":  22,
+    "red_missing_source_failed":  62,
+    "red_errors":  0,
+    "red_skipped":  0,
+    "all_failure_reasons_checked":  true,
+    "source_absent":  true,
+    "ruff":  "PASS",
+    "format":  "PASS",
+    "mypy_win32_311":  "PASS",
+    "mypy_win32_314":  "PASS_STATIC_ONLY",
+    "same_independent_ast_witness":  "PASS4 after fixes;3divergences before",
+    "scope":  "First concrete C0 setup/close entry implementation only. No native host/effect or child profile",
+    "native_product_gates":  "OPEN"
+}
