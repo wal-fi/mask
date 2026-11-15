@@ -1,0 +1,51 @@
+{
+    "kind":  "MASKGW_W1_EXTERNAL_JOB_ADOPTION_ORACLE_CONTRACT_V1",
+    "base_head":  "e24deac45f90b0b52787adc222807e43e43f7030",
+    "session":  "51ea0d85-05bb-4d24-ba9a-c9627c3f832f",
+    "model":  "claude-opus-5-5",
+    "effort":  "medium",
+    "read_only_reports":  [
+                              {
+                                  "execution":  "33580",
+                                  "terminal_exit":  0,
+                                  "service_is_error":  false,
+                                  "recovered":  true,
+                                  "all_result_read":  true,
+                                  "lines":  88,
+                                  "marker":  "END_ABC_RECEIVED",
+                                  "result_utf8_sha256":  "ef83375dce6064758fa70f1fc001a9dd584b981cc2ce38678b4b5c366b8471a5"
+                              },
+                              {
+                                  "execution":  "67827",
+                                  "terminal_exit":  0,
+                                  "service_is_error":  false,
+                                  "recovered":  true,
+                                  "all_result_read":  true,
+                                  "lines":  62,
+                                  "marker":  "END_D1_D2_RECEIVED",
+                                  "result_utf8_sha256":  "6723a2d7ba28d435232b6cdeaacb92884d5f3257822c177973901ef4a7e721df"
+                              }
+                          ],
+    "contract":  {
+                     "path":  "docs\\poc\\evidence\\oracle9-w1-proactor-tests-review-20261112\\external-job-adoption-root-contract-20261115.md",
+                     "sha256":  "0e26bddc256188d5bce19652ada0c0b0ad455c9f9b0381be89274ad9f19ecc2c",
+                     "scope":  "First fake oracles ONLY; no source/native/product admission"
+                 },
+    "review_decisions":  [
+                             "One complete cache publication boundary",
+                             "Read-only internal pending shape validation and uncertain creation on C output collision",
+                             "Role-aware C assertions: job queries legitimate, process/thread/close/terminate forbidden",
+                             "Corrupted internal containers =\u003e REFUSED_INTERNAL and HELD/WIN32_INTERNAL",
+                             "First control =\u003e REFUSED_CONTROL, exact identity, HELD/WIN32_INTERRUPTED, no later SDK",
+                             "Same frozen backend/adapter and private-copy fake seams only"
+                         ],
+    "source_absent":  true,
+    "test_absent":  true,
+    "red_frozen":  false,
+    "functional_qa_rerun":  false,
+    "old_sources_changed":  false,
+    "new_native_effects":  false,
+    "native_product_gates":  "OPEN",
+    "gateway_available":  false,
+    "next_scope":  "Only first test via same C2, root reviews ALL and freezes measured RED before source"
+}

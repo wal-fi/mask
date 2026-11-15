@@ -1,4 +1,46 @@
-## ATUAL — N-S ainda proposto; limite C2 e retomada01h45 — 2026-11-14
+## ATUAL — contrato N-S fechado para primeiros oráculos falsos — 2026-11-15
+
+Retomada01h45SP chegou nesta conversa.33580/67827 TERMINAIS0/success/
+is_errorFalse sem denials recuperadas. Root leu TODOS os88/62linhas,
+marcadores END_ABC_RECEIVED/END_D1_D2_RECEIVED. A/B/C e D1/D2 recebidos
+integralmente; NÃO repetir o pedido truncado do histórico. Disponibilidade
+provada só nessas chamadas, sem garantia de reset geral. Sem nova tarefa.
+
+Códigoeee9414 e desenho8657e21 permanecem publicados, sem mudanças.
+Na continuação do objetivo ativo, contrato consolidado0e26bddc em
+poc/evidence/oracle9-w1-proactor-tests-review-20261112/
+external-job-adoption-root-contract-20261115.md aceito SOMENTE para
+primeiros oráculos falsos sob TODO EXTERNAL-JOB-OBSERVATION-REVIEW EJ6.
+Não é admissão de N-H/N-C/direitos/kernel nem teste ou fonte aprovado.
+
+Próximo único lote: mesmoC2/sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f,
+claude-opus-5-5/medium, escreve SÓ tests/test_oracle9_w1_external_job_adoption.py.
+Read/Edit/Write restritos, sem comandos/execução. Fonte correspondente
+MUST permanecer AUSENTE até root ler TODOS os oráculos e medir/congelar RED.
+Teste também AUSENTE neste checkpoint. Reusar Kernel falso publicado,
+sem editar referência/backend/adaptador/C0/pins/testes antigos.
+
+Contrato fixa propriedades readonly, tentativa única, controle exato
+REFUSED_CONTROL/HELD sem SDK posterior, formas opacas recusadas/HELD,
+cache completo por uma atribuição e saída C conflitante nunca adotada.
+Asserções POR PAPEL: C é job legítimo em Query e IsProcessInJob(P,C),
+mas nunca processo/thread/close/terminate. Sem skip/xfail/cast/ignore/
+noqa ou assert enfraquecido. Fakes não são prova física nem produto.
+
+Antes da chamada: Git REAL, recuperar terminais e confirmar zero escritor;
+ativo só monitorar, nunca duplicar. Chamadas finais não são reabertas.
+Conferir HEAD após qualquer commit documental, sem guarda antiga eterna.
+Preservar artefatos pessoais/respostas brutas/snapshots fora do Git.
+
+C0c695/43ff/999f/backend10c/adaptereaeb/app124/state16/tentativa fixos;
+2.083/377estáticos e NQ1–NQ3 continuam históricos. Sem Docker/PG/SQL,
+credenciais/rede externa/runtime/config/privado/binário/estado16/tentativa/
+deploy. W1 local futuro após revisão continua autorizado; lote atual só
+oráculos falsos, sem efeitos nativos. S/G/N1–N16/produto OPEN; Gateway
+indisponível. Progresso do lote anterior: evidência completa mudou a
+próxima ação de suplemento Read para primeiros oráculos. Histórico abaixo.
+
+## HISTÓRICO — N-S ainda proposto; limite C2 e retomada01h45 — 2026-11-14
 
 Códigoeee9414 (C0 nativo setup/close sem Owner.start) e desenho8657e21
 (XJ3b202b78c, prospectivo SOMENTE sob EJ1–EJ5) publicados. Conferir Git

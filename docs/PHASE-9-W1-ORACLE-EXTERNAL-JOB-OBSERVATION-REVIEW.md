@@ -1,5 +1,19 @@
 # W1: revisão da observação externa do mesmo job
 
+## EJ6 — suplemento completo e contrato para primeiros oráculos falsos
+
+33580/67827 TERMINAIS0/service success/is_errorFalse, sem denials, recuperadas. Root leu integralmente os dois retornos, de88 e62linhas; marcadores END_ABC_RECEIVED e END_D1_D2_RECEIVED confirmam recebimento integral, substituindo a pendência de entrega do EJ5. Nenhum arquivo foi alterado nessas chamadas Read. A disponibilidade foi medida nessas chamadas, não um reset geral da conta. Nenhuma tarefa foi rearmada por esse sucesso.
+
+Na continuação do objetivo ativo, foi consolidado external-job-adoption-root-contract-20261115.md, SHA0e26bddc256188d5bce19652ada0c0b0ad455c9f9b0381be89274ad9f19ecc2c, para os PRIMEIROS oráculos com SDK falso, antes de fonte. Nomes/retornos/propriedades e domínio1..2^64−2 escolhidos pelo revisor como detalhes de contrato; nenhuma API nativa foi admitida por isso.
+
+Fechamentos revistos: REFUSED_CONTROL com primeiro objeto exato e transição pura HELD/WIN32_INTERRUPTED, zero SDK posterior, sem re-raise/atribuição de traceback/contexto; aliases próprios antes de reter C distinto; loader lazy sobre os mesmos bytes pinados; cache candidato completo publicado por uma atribuição, sem promessa de vazio depois do commit. Acesso readonly interno ao _pending exato da cópia pinada é permitido apenas à subclasse específica, nunca ao chamador. Colisão de saída C sinaliza criação incerta ao caminho herdado de quarentena/contenção OUTER/HELD, sem adotar C como processo ou thread. Sem novo marcador público.
+
+Duas precisões normativas do contrato: formas internas corrompidas recebem REFUSED_INTERNAL mais HELD/WIN32_INTERNAL por atribuições puras, impedindo close posterior sobre dados opacos; testes devem distinguir PAPÉIS, pois QueryInformationJobObject(C) e IsProcessInJob(P,C) são legítimos. Não proibir C em todo touched: proibir C como processo/thread, close e término. Não alterar backend/adapter para facilitar oráculos.
+
+Fonte e teste AUSENTES neste fechamento. Próximo único lote: Claude2 mesma sessão51ea0d85/Opus5.5/medium escreve SOMENTE tests/test_oracle9_w1_external_job_adoption.py, Read/Edit/Write restritos, sem comandos ou execução. Root lê TODOS os oráculos e motivos do RED, mede gates proporcionais e congela teste antes de pedir fonte. Não publicar RED parcial como produto verde. Fakes reusam referência existente sem editá-la; nenhuma chamada real de DLL/job/processo/thread/loop, Docker/PG/SQL, runtime/config/privado/binário/estado16/tentativa/deploy.
+
+As provas C0 e2.083/377estáticos são históricas, não repetidas por documentos. N-H/N-C/direitos/kernel e S/G/N1–N16/produto permanecem OPEN. Contrato e fakes são um pré-requisito da observação externa, não substituto do caminho funcional ou prova de prontidão. Gateway indisponível.
+
 ## EJ5 — contrato N-S proposto; suplemento incompleto e limite observado
 
 45475 e75101 terminaram exit0/service success/is_errorFalse, sem denials, recuperadas. Root leu AMBOS os relatórios completos. O segundo informou explicitamente que recebeu a solicitação truncada no item2; portanto seu resultado não demonstra recebimento do restante. Não é finding de código nem prova de causa do truncamento. A proposta continua incompleta e NÃO aceita para oráculos.
