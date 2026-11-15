@@ -1,0 +1,99 @@
+{
+    "source_sha256":  "e8cdd5be9fe9f4b420f26dc32571c25063739abcac0895469111db9e933432c6",
+    "parse_errors":  0,
+    "all_source_lines_read":  264,
+    "script_body_executed":  false,
+    "native_calls":  false,
+    "record_keys":  [
+                        "kind",
+                        "mode",
+                        "status",
+                        "error",
+                        "instance",
+                        "start_attempted",
+                        "start_true",
+                        "associated",
+                        "exit_observed",
+                        "disposed",
+                        "assets_closed",
+                        "stdout_eof",
+                        "stderr_eof",
+                        "exit_code",
+                        "kill_requests",
+                        "wait_slices",
+                        "stdout_bytes",
+                        "stderr_bytes",
+                        "frame",
+                        "descendants",
+                        "gates"
+                    ],
+    "commands":  [
+                     "Add-Asset",
+                     "ConvertTo-Json",
+                     "ForEach-Object",
+                     "Format-Argument",
+                     "Get-Frame",
+                     "Set-Error",
+                     "Set-StrictMode",
+                     "Start-Sleep",
+                     "Test-LocalPath"
+                 ],
+    "start_calls":  1,
+    "kill_calls":  1,
+    "quote_helper":  [
+                         {
+                             "case":  0,
+                             "matches":  true
+                         },
+                         {
+                             "case":  1,
+                             "matches":  true
+                         },
+                         {
+                             "case":  2,
+                             "matches":  true
+                         },
+                         {
+                             "case":  3,
+                             "matches":  true
+                         }
+                     ],
+    "frame_helper":  [
+                         {
+                             "case":  0,
+                             "expected":  "T127",
+                             "actual":  "T127",
+                             "matches":  true
+                         },
+                         {
+                             "case":  1,
+                             "expected":  "C0_OBSERVED",
+                             "actual":  "C0_OBSERVED",
+                             "matches":  true
+                         },
+                         {
+                             "case":  2,
+                             "expected":  "C0_REFUSED",
+                             "actual":  "C0_REFUSED",
+                             "matches":  true
+                         },
+                         {
+                             "case":  3,
+                             "expected":  "C0_UNKNOWN",
+                             "actual":  "C0_UNKNOWN",
+                             "matches":  true
+                         },
+                         {
+                             "case":  4,
+                             "expected":  "MISMATCH",
+                             "actual":  "C0_REFUSED",
+                             "matches":  false
+                         },
+                         {
+                             "case":  5,
+                             "expected":  "MISMATCH",
+                             "actual":  "C0_UNKNOWN",
+                             "matches":  false
+                         }
+                     ]
+}

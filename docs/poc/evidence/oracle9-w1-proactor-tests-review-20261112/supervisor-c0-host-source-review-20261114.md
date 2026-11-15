@@ -1,0 +1,21 @@
+# Specific C0 host source review and native disposition
+
+Call22741 completed exit0/service success/is_errorFalse/no denials, recovered. Root read ALL264lines of candidatee8cdd5be (12905bytes). No script-body execution or native call. Prospective oracles preceded source.
+
+PowerShell parser0errors. Actual parsed record has21expected keys; command inventory is only Add-Asset, ConvertTo-Json, ForEach-Object, Format-Argument, Get-Frame, Set-Error, Set-StrictMode, Start-Sleep, Test-LocalPath. Parsed invocation count Start1/Kill1. Root read custody, four stream-before-hash holds, bounded post-exit raw reads, no retry/async/PInvoke/reader thread or raw output.
+
+The ACTUAL extracted pure Format-Argument helper passed all4 predefined cases, including spaces, drive root and terminal backslashes. ACTUAL Get-Frame passed four positive/baseline cases but mismatched two negative expectations: `W1C0 REFUSED BOGUS DATA` was classified C0_REFUSED and `W1C0 UNKNOWN DONE CLOSED` classified C0_UNKNOWN. Fixtures were passed to pure helpers only, never to the script body. Receipt supervisor-c0-host-first-static-helpers-20261114.json. This never permitted a PASS (positive frame still exact), but violates the closed classification contract.
+
+Before native qualification, fix ONLY the same PS script:
+1. Record instance=1 IMMEDIATELY after putting the new Process in custody, before setting StartInfo. In finally permit Dispose when exit was observed OR Start was NEVER attempted; no reads on unstarted instance. Permit asset close after successful Dispose in either safe case. Never dispose an attempted/uncertain live Start. This closes the disclosed no-start resource-retention branch using the already qualified pattern, not a new cleanup framework.
+2. Get-Frame must classify only full closed records. REFUSED allows INPUT/CUSTODY/LOAD with EMPTY. UNKNOWN allows any declared step EXCEPT DONE and only the declared state set. Anchor exact ASCII LF termination; reject malformed/extra/CR/nonASCII data as MISMATCH. Keep exact positive T127 and C0_OBSERVED predicates and all bounds.
+
+No changes to fields, pins, budget, assets, captured-byte checks, root schema, modes, existing Python sources/tests or native oracles. Root reads the complete delta, reruns parser/inventory and the SAME helper vectors before admitting only prospective NQ1/NQ2. NQ3 is separate and ONLY after root reviews NQ2 PASS. Existing IO wallclock, parent trust, late-control and S/descendant admission gaps remain explicit. No native effect until root review passes; all native/product gates OPEN.
+
+## Corrected source and exact pre-native acceptance
+
+Call63067 ended0/success/is_errorFalse/no denials, recovered. Root read ALL delta lines: instance observation moved before StartInfo, safe NEVER-attempted-Start disposal added, complete closed frame classification replaces prefixes. Finalc695a68b:283lines/13943bytes. Parser0errors, exact21keys and command inventory, Start1/Kill1; same4quote vectors PASS, all11frame vectors PASS, including original two negative divergences. Script body still had not run at this acceptance. Unstarted disposal never permits disposal of attempted/uncertain live Start.
+
+Root then executed frozen prospective oracles sequentially, no retry. NQ1 gave REFUSED/PREFLIGHT_DIGEST with instance0/start_attempted0; NQ2 gave TRANSPORT PASS with128bytes, positive stdout/stderr EOF, natural exit0/kill0/disposed1/assets_closed1. Root checked the complete NQ2 record before separately executing NQ3. NQ3 gave C0_OBSERVED PASS,26bytes, positive stdout/stderr EOF, natural exit0/kill0/disposed1/assets_closed1. Runtime measurements are in supervisor-c0-host-native-validation-20261114.json; they qualify ONLY these observed local paths.
+
+C0 is the first actual public backend setup/close path for this increment: checked code requires READY and None+CLOSED. It never invokes Owner.start. TRANSPORT measured base-image sharing/IO; only C0 additionally exercised Python reading held project sources. No independent descendant count or complete runtime/DLL provenance was established. Neither external S/G admission, child canaries, N1-N16 nor product readiness follows. Positive SDK returns/state are not a universal physical cleanup or wallclock guarantee. All aggregate native/product gates remain OPEN.

@@ -1,0 +1,115 @@
+{
+    "reviewed_utc":  "2026-11-15T01:14:18.2672194Z",
+    "source_sha256":  "c695a68b6b3ea4b81ff5ab64249039f948ce9080288c81d81706f8c94bde810d",
+    "source_lines":  283,
+    "all_v1_264_lines_and_full_delta_read":  true,
+    "parse_errors":  0,
+    "record_keys":  [
+                        "kind",
+                        "mode",
+                        "status",
+                        "error",
+                        "instance",
+                        "start_attempted",
+                        "start_true",
+                        "associated",
+                        "exit_observed",
+                        "disposed",
+                        "assets_closed",
+                        "stdout_eof",
+                        "stderr_eof",
+                        "exit_code",
+                        "kill_requests",
+                        "wait_slices",
+                        "stdout_bytes",
+                        "stderr_bytes",
+                        "frame",
+                        "descendants",
+                        "gates"
+                    ],
+    "commands":  [
+                     "Add-Asset",
+                     "ConvertTo-Json",
+                     "ForEach-Object",
+                     "Format-Argument",
+                     "Get-Frame",
+                     "Set-Error",
+                     "Set-StrictMode",
+                     "Start-Sleep",
+                     "Test-LocalPath"
+                 ],
+    "start_calls":  1,
+    "kill_calls":  1,
+    "quote_helper_passed":  4,
+    "frame_helper":  [
+                         {
+                             "case":  0,
+                             "expected":  "T127",
+                             "actual":  "T127",
+                             "matches":  true
+                         },
+                         {
+                             "case":  1,
+                             "expected":  "C0_OBSERVED",
+                             "actual":  "C0_OBSERVED",
+                             "matches":  true
+                         },
+                         {
+                             "case":  2,
+                             "expected":  "C0_REFUSED",
+                             "actual":  "C0_REFUSED",
+                             "matches":  true
+                         },
+                         {
+                             "case":  3,
+                             "expected":  "C0_UNKNOWN",
+                             "actual":  "C0_UNKNOWN",
+                             "matches":  true
+                         },
+                         {
+                             "case":  4,
+                             "expected":  "MISMATCH",
+                             "actual":  "MISMATCH",
+                             "matches":  true
+                         },
+                         {
+                             "case":  5,
+                             "expected":  "MISMATCH",
+                             "actual":  "MISMATCH",
+                             "matches":  true
+                         },
+                         {
+                             "case":  6,
+                             "expected":  "MISMATCH",
+                             "actual":  "MISMATCH",
+                             "matches":  true
+                         },
+                         {
+                             "case":  7,
+                             "expected":  "MISMATCH",
+                             "actual":  "MISMATCH",
+                             "matches":  true
+                         },
+                         {
+                             "case":  8,
+                             "expected":  "MISMATCH",
+                             "actual":  "MISMATCH",
+                             "matches":  true
+                         },
+                         {
+                             "case":  9,
+                             "expected":  "OVERFLOW",
+                             "actual":  "OVERFLOW",
+                             "matches":  true
+                         },
+                         {
+                             "case":  10,
+                             "expected":  "ABSENT",
+                             "actual":  "ABSENT",
+                             "matches":  true
+                         }
+                     ],
+    "script_body_executed":  false,
+    "native_calls":  false,
+    "accepted_scope":  "Prospective NQ1 and NQ2 only; NQ3 separate after root reviews NQ2 PASS"
+}

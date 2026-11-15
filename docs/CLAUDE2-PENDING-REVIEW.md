@@ -1,4 +1,41 @@
-## ATUAL — entrada C0 revista; host nativo pendente — 2026-11-14
+## ATUAL — C0 nativo local qualificado; próximo observador externo — 2026-11-14
+
+Host específico c695a68b, 283linhas/13.943bytes, escrito pelo mesmo Claude2
+sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f/claude-opus-5-5/medium.
+25643/22741/63067 TERMINAIS success/is_errorFalse, sem denials, recuperadas.
+Zero escritores confirmado depois e antes de cada medição; nunca duplicar.
+Root leu V1 inteira e TODOS os deltas; parser0, quatro casos de aspas e
+11frames aprovados antes de executar o corpo. Duas contraprovas de frame
+foram reproduzidas e corrigidas; custódia de Start não tentado corrigida.
+
+Oráculos prospectivos declarados antes da fonte, sem RED artificial:
+NQ1 REFUSED/PREFLIGHT_DIGEST antes de alocar Process,138ms;
+NQ2 TRANSPORT PASS/T127,128bytes+EOF,314ms;
+NQ3 C0 PASS/C0_OBSERVED,26bytes+EOF,432ms, SOMENTE após root revisar NQ2.
+Uma invocação por caso, sem retry; positivos com saída natural0,kill0,
+EOFstdout/stderr,Dispose e fechamento dos quatro streams observados.
+C0 executou backend público real setup/close,READY→CLOSED; NUNCA Owner.start.
+Ver SUPERVISOR-C0-HOST-VALIDATION e recibo compacto native-validation.
+Fonte43ff/qualificador999f/backend10c e todos os fontes/testes antigos fixos.
+QA Python2.083/estáticos377 permanece histórico do5cf0035; não repetido
+para o script PowerShell isolado. Nenhum novo agendamento ou quota neste lote.
+
+Próximo único lote: reconciliação PÚBLICA somente leitura das APIs existentes
+para observador/custódia fora de S morto, sob NATIVE-PROOF-DESIGN/REVIEW.
+Mesmo Claude2, Read apenas, sem comandos/edições; root lê TODO parecer
+antes de definir contrato/oráculos/código ou execução com filho. Considerar
+TotalProcesses2 CUMULATIVO de toda a vida do job; não inventar framework,
+Owner ou lançador, nem pressupor ausência de APIs em todo o repositório.
+Conferir Git REAL/metadados; ativo só monitorar, sem reabrir terminais finais.
+
+C0 qualifica somente setup/close local e transporte observado, não S/G,
+canários com filho, N1–N16 agregados ou prontidão do produto. Descendentes
+UNKNOWN; todos os gates de produto abertos; Gateway indisponível. W1 local
+nativo isolado autorizado após revisão; Docker/PG/SQL/credenciais/rede
+externa/estado16/tentativa/deploy excluídos. Preservar artefatos pessoais,
+logs, snapshots e metadados locais fora dos commits. Histórico abaixo.
+
+## HISTÓRICO — entrada C0 revista; host nativo pendente — 2026-11-14
 
 Retomada agendada recebida às23h45UTC. Metadados normais confirmaram zero
 escritores; revisão automática que falhou por quota antes disso não havia
