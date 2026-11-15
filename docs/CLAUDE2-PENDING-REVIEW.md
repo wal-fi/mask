@@ -1,4 +1,41 @@
-## ATUAL — C0 nativo local qualificado; próximo observador externo — 2026-11-14
+## ATUAL — XJ3 revista prospectivamente; próximo contrato N-S — 2026-11-14
+
+Código C0eee9414 publicado, sincronizado e medido: hostc695a68b;
+entrada43ffbf92/qualificador999f4a8d/backend10c9058f/adaptereaebedd6 fixos.
+NQ1 negativo semProcess; NQ2 transporte e NQ3 setup/close real passaram,
+sem Owner.start. Python2.083/estáticos377 continuam históricos do5cf0035.
+
+19110/26015/37893/38691/58258 TERMINAIS success/is_errorFalse, sem denials,
+recuperadas. Mesmo Claude2/sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f,
+claude-opus-5-5/medium. Root leu os dois relatórios completos,209linhasV1,
+263V2,254V3 e TODO deltaV2→V3. Sem outro escritor/modelo/contorno.
+Guarda rejeitou hash intermediário antes de iniciar agente; corrigido
+para finalcde09059 já lido. Não confundir monitoramento com bytes finais.
+
+XJ3b202b78c,22.275bytes/254linhas, aceita SOMENTE como desenho prospectivo
+sob TODO EXTERNAL-JOB-OBSERVATION-REVIEW EJ1–EJ4. H cria mesmo job e
+transfere cópia a S; H fica fora dele, preservando cap2 cumulativo.
+Nenhuma API, teste, fonte, perfil com filho ou nativo novo está admitido.
+Schema21chaves: limite real independente395inclLF, conservador397<=512;
+entrada23/ack24 são limites de texto, não prova de transporte ou prazo.
+Resíduos de criação/cópia incertas e ausência de snapshot atômico explícitos.
+
+Próximo único lote: mesmoC2 SOMENTE Read, proposta curta do contrato exato
+N-S: API/tipos/transições/erros/controle/retenção e SDK falso/oráculos.
+Ler TODO REVIEW EJ4 e desenho XJ3, fontes públicos e teste de referência.
+Sem edição/comandos/testes/fonte antes de root ler TODO retorno, fechar
+contrato e depois revisar todos os oráculos e medir/congelar RED.
+Não editar backend/adaptador/C0, não extrair ledger privado pelo chamador,
+não criar framework ou guardião. N-H/N-C ainda não admitidos.
+
+Antes de qualquer chamada: Git REAL/terminais/zero escritor; ativo só
+monitorar. Chamadas finais não devem ser reabertas. Nenhuma quota ou novo
+agendamento neste lote. W1 local isolado autorizado após revisão concreta;
+Docker/PG/SQL/credenciais/rede externa/estado16/tentativa/deploy excluídos.
+S/G/N1–N16 e produto OPEN; Gateway indisponível. Preservar logs/snapshots,
+metadados locais e artefatos pessoais fora do Git. Histórico abaixo.
+
+## HISTÓRICO — C0 nativo local qualificado; próximo observador externo — 2026-11-14
 
 Host específico c695a68b, 283linhas/13.943bytes, escrito pelo mesmo Claude2
 sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f/claude-opus-5-5/medium.

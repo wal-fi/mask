@@ -1,0 +1,94 @@
+{
+    "kind":  "MASKGW_W1_EXTERNAL_JOB_DESIGN_REVIEW_V1",
+    "code_checkpoint":  "eee94147b585aa9c65f3fc55447008b4bb13e3c2",
+    "session":  "51ea0d85-05bb-4d24-ba9a-c9627c3f832f",
+    "model":  "claude-opus-5-5",
+    "effort":  "medium",
+    "calls":  [
+                  {
+                      "execution":  "19110",
+                      "terminal_exit":  0,
+                      "service_subtype":  "success",
+                      "is_error":  false,
+                      "denials":  0,
+                      "recovered":  true,
+                      "complete_result_read":  true,
+                      "result_utf8_sha256":  "de97cfed81af5846399891dfbe08bc806b167533584ab5e16b7e54054077d188",
+                      "duration_ms":  59075
+                  },
+                  {
+                      "execution":  "26015",
+                      "terminal_exit":  0,
+                      "service_subtype":  "success",
+                      "is_error":  false,
+                      "denials":  0,
+                      "recovered":  true,
+                      "complete_result_read":  true,
+                      "result_utf8_sha256":  "922f6191a378d742f65ddad6e18a636ca4248a47a5c4e7537417b7cd135c68dd",
+                      "duration_ms":  35764
+                  },
+                  {
+                      "execution":  "37893",
+                      "terminal_exit":  0,
+                      "service_subtype":  "success",
+                      "is_error":  false,
+                      "denials":  0,
+                      "recovered":  true,
+                      "complete_result_read":  true,
+                      "result_utf8_sha256":  "8aef6ad08067852654830b5fd34322504fd83335f4e19f7898c253ac513fcbc7",
+                      "duration_ms":  134816
+                  },
+                  {
+                      "execution":  "38691",
+                      "terminal_exit":  0,
+                      "service_subtype":  "success",
+                      "is_error":  false,
+                      "denials":  0,
+                      "recovered":  true,
+                      "complete_result_read":  true,
+                      "result_utf8_sha256":  "6b5519ffd719e472f193fc00d827e10441ca0d3f4f1313b281852b7fd1e2de42",
+                      "duration_ms":  156432
+                  },
+                  {
+                      "execution":  "58258",
+                      "terminal_exit":  0,
+                      "service_subtype":  "success",
+                      "is_error":  false,
+                      "denials":  0,
+                      "recovered":  true,
+                      "complete_result_read":  true,
+                      "result_utf8_sha256":  "8a9fba31705f4ca1a2af53f7507f2213ccb30c671fac3782d80244c30ef26968",
+                      "duration_ms":  251491
+                  }
+              ],
+    "design":  {
+                   "path":  "docs/PHASE-9-W1-ORACLE-EXTERNAL-JOB-OBSERVATION-DESIGN.md",
+                   "sha256":  "b202b78ceb78c676911fa144c5bb1bbf4e14e0b97298db65a70240475d8f8755",
+                   "bytes":  22275,
+                   "lines":  254,
+                   "all_v1_v2_v3_and_final_delta_read":  true,
+                   "disposition":  "Prospective direction ONLY under FULL EJ1-EJ4; no executable API/oracles/native admission"
+               },
+    "text_bounds":  {
+                        "record_keys":  21,
+                        "independent_domain_upper_ascii_bytes_including_lf":  395,
+                        "conservative_declared_bound":  397,
+                        "cap":  512,
+                        "input_max":  23,
+                        "ack_max":  24,
+                        "native_transport_proved":  false
+                    },
+    "intermediate_hash_guard":  {
+                                    "programmer_started":  false,
+                                    "wrong_hash_from_active_monitor":  "2672b44202f9626093b0ab5c052c56756ba8f832b39b54e6f8e3000c7fa0e8ad",
+                                    "correct_final_xj2":  "cde09059ff71fa009041543b260a66fe3a1a2ba8bb876a3c5d736b38d771ee6a",
+                                    "corrected_before_real_call":  true
+                                },
+    "old_sources_changed":  false,
+    "new_tests_or_sources":  false,
+    "new_native_effects":  false,
+    "functional_qa_rerun":  false,
+    "next_scope":  "Read-only public N-S exact API and fake-SDK contract proposal before oracles/RED/source",
+    "native_product_gates":  "OPEN",
+    "gateway_available":  false
+}
