@@ -1,0 +1,22 @@
+{
+  "kind": "MASKGW_W1_EXTERNAL_JOB_ENTRY_INITIAL_GATE_RESULTS_V1",
+  "test_sha256": "25bf694e898b85c27f3199ed7a6bc501e28ac889c4ef9dc21ef035a29f625edc",
+  "all_test_lines_read": 1457,
+  "collected": 179,
+  "collection_exit": 0,
+  "fake_sanity": {
+    "tests": "5",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.816"
+  },
+  "ruff": "FAIL PLR0912 _arm 13 branches",
+  "format": "FAIL budget test signature must be one line",
+  "mypy_win32_311": "FAIL4diagnostics at382/763/826",
+  "mypy_win32_314": "FAIL4diagnostics at382/763/826 STATIC ONLY",
+  "red_measured": false,
+  "frozen": false,
+  "source_absent": true,
+  "native_effects": false
+}

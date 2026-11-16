@@ -1,0 +1,26 @@
+{
+  "kind": "MASKGW_W1_EXTERNAL_JOB_ENTRY_V2_ORACLE_PROBES_V1",
+  "test_sha256": "1835ba817343cea1076fa95ec3add21d0828a074bfb8ac968f1e2dd8d0ef3fad",
+  "actual_classifier_same_family_retest": [
+    {
+      "fixture": "benign",
+      "static_accepted": true,
+      "dynamic_accepted": true,
+      "effects": [],
+      "marker_created": false
+    },
+    {
+      "fixture": "impure",
+      "static_accepted": false,
+      "dynamic_accepted": false,
+      "effects": [
+        "builtins.open"
+      ],
+      "marker_created": false
+    }
+  ],
+  "inert_dataclass_enum_accepted": true,
+  "source_remained_absent": true,
+  "native_effects": false,
+  "red_frozen": false
+}

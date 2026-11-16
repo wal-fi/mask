@@ -1,4 +1,218 @@
-## ATUAL — N-S28677e2 publicado; XE2 aceita só para primeiros fakes sob ER3 — 2026-11-16
+## ATUAL — entrada S revista com fakes; limite C2 e retomada16h05 — 2026-11-16
+
+3267 TERMINAL1/serviceis_errorTrue/API429 após gravar fonteb4826e0b,
+16.809bytes/433linhas. Root recuperou retorno e leu TODAS433linhas.
+Teste1835/76.003bytes/1.878linhas congelado e intacto, RED193 precedeu fonte.
+Root mediu193próprios e2.514relacionados em22arquivos PASS,0falhas/erros/
+skips/deseleções. Ruff produto/PoC contratado,format379/mypy379win32
+311/314 PASS,314 só estático.16probes de guards puros PASS. Sem finding
+bloqueante novo; aceite somente do componente sob SDK falso.
+
+Ler ENTRY-VALIDATION, external-job-entry-source-review e recibo final de16/11.
+Root inspecionou fresh available APÓS inventário/última leitura, EOFcacheado,
+tipos públicos/adopt inválido, total1OU2/active0 e ack/primeiro controle.
+Não refazer fonte/testes/gates concluídos nem reabrir3267/3963/90134 finais.
+
+Limite relatado16hSP/19UTC de16/11, NÃO observado. Não retry antes19UTC,
+AGY/conta/modelo/contorno. MESMA tarefa Maskgw-Claude2-Resume-01a05804
+relida Ready/Habilitada para16/11 às16h05SP/19h05UTC, mesma conversa/
+--resume/IgnoreNew. Só Args e StartBoundary alterados; TODO resto doXML
+idêntico. XML+CSV+NextRunTime conferidos. Tentativa inicial de cmdlet Xml
+falhou ANTES de alterar tarefa; registro correto aplicado e relido.
+Recibo resume-task-verified. Requer host/logon/app/daemon; entrega/reset
+não garantidos. Nenhuma nova tarefa/ação ou escritor criado por isso.
+
+Próximo único lote APÓS janela: mesma sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f,
+claude-opus-5-5/medium, SOMENTE Read público sob TODO MAIN-BINDING-REVIEW
+MB1. Retorno curto da ligação main/park/Request/portas de S e N-C/N-H,
+distinguindo main Linux W1 já existente. Sem editar arquivo, testes,
+fonte, comandos/execução, perfil/argv/valores ou outro Owner/framework/
+guardião. Root lê TODO retorno antes de próxima ação; nada nativo admitido.
+
+Base pública dd68b80; fonte+teste+evidências integram este lote após QA.
+Conferir HEAD REAL após commits, sem guarda antiga.3checkpoints Root
+locais esperados. Zero chamadas C2 confirmado após terminal; interativos
+são do usuário, validar Claude2 autorizado. Todos antigos/N-S465/teste37a/
+backend10c/adaptereaeb/C0/qualificador/pins/app124/state16/tentativa fixos.
+Preservar pessoais/raw/snapshots locais. Sem Docker/PG/SQL/rede externa/
+efeito nativo DLL/job/processo/thread/loop ou runtime/config/ambiente/
+privado/binário/estado16/tentativa/deploy do produto. Metadados próprios
+da tarefa autorizada foram relidos. Main/park/N-H/N-C/direitos/kernel/S/G/
+N1–N16/produto OPEN; Gateway indisponível. Histórico abaixo.
+
+## HISTÓRICO — fonte S ativa3267 naquela observação — 2026-11-16
+
+Execução3267 ATIVA na observação17:20UTC; PID30624/criação1794849528603,
+mesma sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f,claude-opus-5-5/medium.
+Metadados frescos confirmaram UMA chamada. PRIMEIRO recuperar3267; ativa
+só MONITORAR, nunca segunda chamada ou outro escritor. Sem retorno terminal
+ou quota/reset observados. Ausência de arquivo não prova término.
+Fonte AUSENTE na última checagem, mas pode receber edições parciais.
+Recibo local external-job-entry-source-active-20261116.json.
+
+Único alvo C2: docs/poc/oracle9_w1_external_job_entry.py, Read/Edit/Write
+restritos, SEM comandos/execução. Teste1835ba817343cea1076fa95ec3add21d0828a074bfb8ac968f1e2dd8d0ef3fad
+CONGELADO/READONLY,76.003bytes/1.878linhas. Root mediu RED193:17sanidades
+PASS,176FAIL SÓ por fonte ausente,0erros/skips/deseleções,1,609s. CADA motivo
+conferido. Ruff/format/mypy311/314 PASS1arquivo,314 só estático. Root leu
+1457linhasV1 e TODO delta686;66definições alheias iguais emAST. Probes novos
+recusam import impuro sem marker e aceitam dataclass/Enum. Não refazer oráculos.
+
+Após terminal, Root lê TODA implementação e verifica frozen/pins antes de
+QA. Fonte+teste só integrados JUNTOS após gates; não publicar RED sozinho.
+Ler XE2+TODO ENTRY-REVIEW ER1–ER3 e external-job-entry-test-review V2/R1–R3.
+Inspecionar fonte: fresh available APÓS inventário/última leitura mesmocom
+EOF cacheado; tipos públicos/adopt impossível sem fakeOwner/patch. Um
+budget compartilhado; total1OU2/active0 pós-saída, membros/EOF positivos;
+N-S pré-resume continua1/1. Ack único, primeiro controle, RETAIN/custódia.
+Não criar main/park/perfil/argv/Owner/framework/guardião neste lote.
+
+HEAD público dd68b802d0b8bfba45fe7f0ce9d7459dfe99164a;3checkpoints Root
+locais esperados. Conferir Git REAL. Não reabrir3963/90134 ou outras finais.
+Interativos são do usuário; validar sessão Claude2, não ler chats/configs
+deles nem bloquear por seus interativos. N-S465/teste37a/código28677e2 e
+todos os antigos/pins/app124/state16/tentativa fixos. Preservar pessoais/
+raw/snapshots locais. Sem quota/tarefa/reset novos nem promessa de entrega.
+Sem efeito real DLL/job/processo/thread/loop, Docker/PG/SQL/rede externa/
+runtime/config/ambiente/privado/binário/estado16/tentativa/deploy.
+Main/park/N-H/N-C/direitos/kernel/S/G/N1–N16/produto OPEN; Gateway
+indisponível. Histórico abaixo.
+
+## HISTÓRICO — RED193 congelado, antes de pedir fonte — 2026-11-16
+
+3963/90134 TERMINAIS0/success/is_errorFalse sem denials, recuperadas.
+Root leu1457linhas iniciais e TODO delta686linhas.66definições alheias
+idênticas em AST. Teste LOCAL1835ba817343cea1076fa95ec3add21d0828a074bfb8ac968f1e2dd8d0ef3fad,
+76.003bytes/1.878linhas CONGELADO. V125bf e provas anteriores preservadas.
+
+Root mediu193casos:17sanidadesPASS,176FAIL SÓ por fonte ausente,
+0erros/skips/deseleções,1,609s. CADA motivo conferido. Ruff/format/mypy
+win32311/314 PASS1arquivo;314 só estático. Classificadores reais aceitam
+benigno/dataclass/Enum e recusam import impuro sem marker. Ver TODO
+external-job-entry-test-review-20261116.md V2/R1/R2/R3 e frozen-red JSON.
+
+Próximo único lote C2: SOMENTE docs/poc/oracle9_w1_external_job_entry.py,
+AUSENTE neste checkpoint. MesmoC2/sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f,
+claude-opus-5-5/medium,Read/Edit/Write só fonte,SEM comandos/execução.
+Teste1835/XE2+ER1–ER3/N-S/backend/adapter/C0/qualificador/pins/antigos
+READONLY. Root lê TODA fonte antes da QA; integrar fonte+teste juntos
+só se gates passarem. Não publicar RED sozinho nem ajustar oráculos.
+
+Na revisão de fonte conferir explicitamente fresh available depois do
+inventário/última leitura, mesmo quando SDK cacheia EOF. Guardar tipos
+públicos/adopt inválido sem patch de produto/fake Owner. RETAIN/custódia
+não admitem main/park/recurso físico. Sem novo framework/Owner/guardião.
+
+HEAD público dd68b802d0b8bfba45fe7f0ce9d7459dfe99164a;3checkpoints Root
+locais. Git REAL/sessão C2 antes de agir; ativa só monitorar, nunca duplicar.
+Interativos são do usuário. Não reabrir chamadas finais. N-S465/teste37a/
+código28677e2 e todos os anteriores/app124/state16/tentativa fixos.
+Sem quota/tarefa/reset novos. Preservar pessoais/raw/snapshots locais.
+Sem efeito nativo DLL/job/processo/thread/loop, Docker/PG/SQL/rede externa/
+runtime/config/ambiente/privado/binário/estado16/tentativa/deploy.
+Main/park/N-H/N-C/direitos/kernel/S/G/N1–N16/produto OPEN; Gateway
+indisponível. Histórico abaixo.
+
+## HISTÓRICO — oráculos precisavam R1/R2/R3 antes do freeze — 2026-11-16
+
+3963 TERMINAL0/success/is_errorFalse recuperada. Root leu TODAS1457linhas
+25bf694e/60.079bytes;179casos coletados,5sanidadesPASS/0,816s. Ruff1falha,
+format1assinatura,mypy311/314 quatro diagnósticos cada. Sem RED/freeze.
+Fonte docs/poc/oracle9_w1_external_job_entry.py AUSENTE e assim deve ficar.
+
+Root reproduziu dois defeitos do TESTE, não do produto. R1: traço público
+Owner/N-S com SDK falso fecha None+CLOSED em4turnos/4reads após3*MAX_READ+5
+bytes e EOF novo pós-inventário; oráculo exige5. Também read vazio seguido
+por available None fresco permite close com1turno, que o teste recusa.
+R2: checker AST e dinâmico aceitam import com escrita via builtins importado.
+Benigno passa; impuro também e cria marker. Fixtures/probes locais, nenhum
+fonte real novo. Ler TODO external-job-entry-test-review-20261116.md e
+recibos initial-gates/initial-oracle-probes no diretório de evidência.
+
+Próximo único lote C2: corrigir SOMENTE tests/test_oracle9_w1_external_job_entry.py
+conforme R1/R2/R3, preservando os demais asserts e antigo snapshot25bf.
+MesmoC2/sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f,Opus5.5/medium,
+Read/Edit/Write só teste, SEM comandos/execução. Root lê TODO delta e
+repete contraprovas/sanidades/gates antes de medir/congelar RED. Nada de
+fonte antes do RED, patch de produto vivo, supressão/skip/xfail/cast/ignore/
+noqa ou assert enfraquecido. Dataclass/Enum legítimos devem passar import.
+
+HEAD público dd68b802d0b8bfba45fe7f0ce9d7459dfe99164a;3checkpoints Root
+locais. Conferir Git REAL e sessão Claude2 antes de chamar; ativa apenas
+monitorar. Interativos são do usuário. Não reabrir3963 ou outras finais.
+N-S465/teste37a/código28677e2 e todos os antigos/pins/app124/state16/
+tentativa fixos. Fonte/teste candidatos e raw/snapshots pessoais locais.
+Sem quota/agendamento novos. Sem efeito real DLL/job/processo/thread/loop,
+Docker/PG/SQL/rede externa/runtime/config/ambiente/privado/binário/estado/
+tentativa/deploy. Main/park/N-H/N-C/direitos/kernel/S/G/N1–N16/produto
+OPEN; Gateway indisponível. Histórico abaixo.
+
+## HISTÓRICO — primeiro teste entregue, revisão integral ainda pendente — 2026-11-16
+
+3963 TERMINAL0/success/is_errorFalse, sem denials, recuperada. Root leu
+TODO retorno do serviço; NÃO leu ainda todos os oráculos do teste novo.
+Metadados frescos16:42UTC confirmaram zero chamadas Claude2 da sessão.
+Não reabrir3963 nem inferir que segue ativa por notas históricas abaixo.
+Os interativos são do usuário; validar só Claude2 autorizado.
+
+Teste LOCAL25bf694e898b85c27f3199ed7a6bc501e28ac889c4ef9dc21ef035a29f625edc,
+60079bytes/1457linhas. A contagem de casos informada pelo programador
+NÃO foi medida pelo Root; nenhum gate/RED/freeze foi executado neste teste.
+Fonte docs/poc/oracle9_w1_external_job_entry.py AUSENTE e MUST permanecer
+assim até Root ler TODOS oráculos, revisar fakes e medir/congelar RED.
+Teste parcial/candidato não publicado. Recibo local first-test-terminal.
+
+Próximo único lote ROOT: ler TODO teste/deltas e conferir contrato XE2 +
+TODO ENTRY-REVIEW ER1–ER3 antes de QA. ER3 total1OU2/active0 pós-saída;
+membros vazios/EOF fresco/budget único, controle/ack único/custódia.
+Programador relatou lacunas de domínios públicos/adopt inválido; revisar
+sem exigir patch de produto vivo ou substituir Owner real por fake.
+Nenhuma nova chamada C2 antes dessa revisão. Se finding reproduzido,
+mesma sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f,Opus5.5/medium, só teste,
+Read/Edit/Write restritos, sem comandos/execução. Sem fonte antes do RED.
+
+HEAD público dd68b802d0b8bfba45fe7f0ce9d7459dfe99164a.3checkpoints Root
+podem ter mudanças locais; conferir Git REAL/zero chamadas C2 antes de
+agir. Código28677e2/fonte465/teste37a e antigos fixos,100/2.321/377PASS
+históricos. Sem quota/tarefa/reset novos. Preservar pessoais/raw/snapshots.
+Sem DLL/job/processo/thread/loop de produto, Docker/PG/SQL/rede externa/
+runtime/config/ambiente/privado/binário/estado16/tentativa/deploy.
+Main/park/N-H/N-C/direitos/kernel/S/G/N1–N16/produto OPEN; Gateway
+indisponível. Histórico abaixo.
+
+## HISTÓRICO — primeiro teste ATIVO3963 naquela observação — 2026-11-16
+
+Execução3963 ATIVA na última observação; PID27764/criação1794839033838,
+mesma sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f,claude-opus-5-5/medium.
+Metadados frescos confirmaram UMA chamada da sessão. Interativos são do
+usuário; validar Claude2 autorizado, não bloquear por seus interativos.
+PRIMEIRO recuperar3963. Ativo só MONITORAR, nunca segunda chamada.
+Não há retorno terminal, quota ou reset observado; NÃO inferir término
+por ausência de arquivo/resposta. Recibo local first-test-active de16/11.
+
+Escopo do programador SOMENTE tests/test_oracle9_w1_external_job_entry.py,
+Read/Edit/Write restritos; sem comandos/execução. Teste ainda AUSENTE na
+última observação; fonte docs/poc/oracle9_w1_external_job_entry.py AUSENTE.
+Após terminal, root lê TODOS os oráculos/deltas antes de QA/freezeRED.
+Fonte MUST ficar AUSENTE antes de revisão e RED medido/congelado.
+
+HEAD público dd68b802d0b8bfba45fe7f0ce9d7459dfe99164a (desenho/revisão),
+origin0/0/rastreados limpos após push. Estes3checkpoints Root podem ficar
+locais durante o acompanhamento; conferir Git REAL, sem guarda antiga.
+XE2 6ba824f6 sob TODO ER1–ER3. ER3 exige total1OU2/active0 depois de saída,
+membros vazios e EOF fresco; não congelar a antiga restrição(1,0).
+Código28677e2/fonte465/teste37a já publicado e medido100/2.321/377PASS.
+Não refazer N-S nem reabrir chamadas27437/88510/49622, todas finais.
+
+Nenhuma nova tarefa/quota/reset ou entrega futura garantida. C2 único
+programador; root revisa/QA. Preservar antigos/fontes/testes/pins/app124/
+state16/tentativa e pessoais/raw/snapshots. Sem novo efeito nativo, DLL,
+job/processo/thread/loop, Docker/PG/SQL/rede externa/runtime/config/
+ambiente/privado/binário/estado16/tentativa/deploy. Main/park/N-H/N-C/
+direitos/kernel/S/G/N1–N16/produto OPEN; Gateway indisponível.
+Histórico abaixo.
+
+## HISTÓRICO — XE2 aceita só para primeiros fakes sob ER3 — 2026-11-16
 
 27437/88510/49622 TERMINAIS0/success/is_errorFalse, sem denials, recuperadas.
 Root leu TODO relatório,127linhasXE1,139linhasXE2 e TODO delta227linhas.

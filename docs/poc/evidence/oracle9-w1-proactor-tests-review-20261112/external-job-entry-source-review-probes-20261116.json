@@ -1,0 +1,104 @@
+{
+  "kind": "MASKGW_W1_EXTERNAL_JOB_ENTRY_SOURCE_REVIEW_PROBES_V1",
+  "source_sha256": "b4826e0b649e37b485b4ca065e225e1103cbd41e19836c2ac95ca78172a62e18",
+  "all_source_lines_read": 433,
+  "guard_truth_table": [
+    {
+      "guard": "available",
+      "case": "none",
+      "accepted": true
+    },
+    {
+      "guard": "available",
+      "case": "zero",
+      "accepted": true
+    },
+    {
+      "guard": "available",
+      "case": "max",
+      "accepted": true
+    },
+    {
+      "guard": "available",
+      "case": "negative",
+      "accepted": false
+    },
+    {
+      "guard": "available",
+      "case": "large",
+      "accepted": false
+    },
+    {
+      "guard": "available",
+      "case": "bool",
+      "accepted": false
+    },
+    {
+      "guard": "available",
+      "case": "text",
+      "accepted": false
+    },
+    {
+      "guard": "counts",
+      "case": "one_done",
+      "accepted": true
+    },
+    {
+      "guard": "counts",
+      "case": "two_done",
+      "accepted": true
+    },
+    {
+      "guard": "counts",
+      "case": "empty",
+      "accepted": false
+    },
+    {
+      "guard": "counts",
+      "case": "list",
+      "accepted": false
+    },
+    {
+      "guard": "counts",
+      "case": "zero_total",
+      "accepted": false
+    },
+    {
+      "guard": "counts",
+      "case": "active",
+      "accepted": false
+    },
+    {
+      "guard": "counts",
+      "case": "three",
+      "accepted": false
+    },
+    {
+      "guard": "counts",
+      "case": "bool_total",
+      "accepted": false
+    },
+    {
+      "guard": "counts",
+      "case": "bool_active",
+      "accepted": false
+    }
+  ],
+  "control_flow_read": {
+    "fresh_available_after_inventory_and_last_read": "source lines340-349 after _drain_once and _inventory",
+    "invalid_public_return_guards": "wait335-339, read297-299, available286-287, inventory318-325, adopt378-380",
+    "post_exit_total1or2_active0": true,
+    "no_unbounded_payload_retention": true,
+    "no_private_owner_access": true,
+    "sole_control_ack_exception": "adopt382-386, no SDK afterward"
+  },
+  "own": {
+    "tests": "193",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "10.590"
+  },
+  "native_effects": false,
+  "product_ready_claimed": false
+}

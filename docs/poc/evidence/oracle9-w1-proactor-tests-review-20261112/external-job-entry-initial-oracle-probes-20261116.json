@@ -1,0 +1,100 @@
+{
+  "kind": "MASKGW_W1_EXTERNAL_JOB_ENTRY_INITIAL_ORACLE_PROBES_V1",
+  "test_sha256": "25bf694e898b85c27f3199ed7a6bc501e28ac889c4ef9dc21ef035a29f625edc",
+  "source_remained_absent": true,
+  "product_source_imported_or_patched": false,
+  "native_effects": false,
+  "public_owner_fake_trace_budget4": {
+    "description": "Public Owner API trace only, not an entry implementation",
+    "turns": [
+      {
+        "turn": 1,
+        "wait": true,
+        "available_before_read": 12293,
+        "read_bytes": 4096,
+        "exit_code": 0,
+        "counts": [
+          1,
+          0
+        ],
+        "members": [],
+        "fresh_after_inventory": 8197
+      },
+      {
+        "turn": 2,
+        "wait": true,
+        "available_before_read": 8197,
+        "read_bytes": 4096,
+        "exit_code": 0,
+        "counts": [
+          1,
+          0
+        ],
+        "members": [],
+        "fresh_after_inventory": 4101
+      },
+      {
+        "turn": 3,
+        "wait": true,
+        "available_before_read": 4101,
+        "read_bytes": 4096,
+        "exit_code": 0,
+        "counts": [
+          1,
+          0
+        ],
+        "members": [],
+        "fresh_after_inventory": 5
+      },
+      {
+        "turn": 4,
+        "wait": true,
+        "available_before_read": 5,
+        "read_bytes": 5,
+        "exit_code": 0,
+        "counts": [
+          1,
+          0
+        ],
+        "members": [],
+        "fresh_after_inventory": null
+      }
+    ],
+    "budget_waits": 4,
+    "reads": 4,
+    "close_returned_none": true,
+    "state": "CLOSED",
+    "current_test_requires_extra_turn": true
+  },
+  "public_owner_fake_trace_empty_read_budget1": {
+    "description": "Fresh available None after inventory is positive even when a previous read was empty",
+    "budget_waits": 1,
+    "reads": 1,
+    "initial_available": 10,
+    "read_bytes": 0,
+    "counts": [
+      1,
+      0
+    ],
+    "members": [],
+    "fresh_available_after_inventory": null,
+    "state": "CLOSED",
+    "current_budget1_test_requires_retain": true
+  },
+  "actual_import_classifier_probes": [
+    {
+      "fixture": "benign",
+      "actual_static_oracle_accepted": true,
+      "actual_dynamic_import_oracle_accepted": true,
+      "marker_exists_after": false
+    },
+    {
+      "fixture": "impure",
+      "actual_static_oracle_accepted": true,
+      "actual_dynamic_import_oracle_accepted": true,
+      "marker_exists_after": true
+    }
+  ],
+  "probe_scope": "Specific public Owner API traces and actual test classifier functions only; synthetic API names are inert import fixtures, never a stand-in entry behavior",
+  "red_frozen": false
+}
