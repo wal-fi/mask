@@ -1,0 +1,54 @@
+{
+  "kind": "MASKGW_W1_EXTERNAL_JOB_ENTRY_DESIGN_REVIEW_V1",
+  "reviewed_utc": "2026-11-16T14:18:58.176357+00:00",
+  "base_head": "28677e22a4f6cf1b29aafa8459b14129eb4ca53e",
+  "session": "51ea0d85-05bb-4d24-ba9a-c9627c3f832f",
+  "model": "claude-opus-5-5",
+  "effort": "medium",
+  "calls": [
+    {
+      "execution": 88510,
+      "exit": 0,
+      "service_is_error": false,
+      "denials": [],
+      "recovered": true
+    },
+    {
+      "execution": 49622,
+      "exit": 0,
+      "service_is_error": false,
+      "denials": [],
+      "recovered": true
+    }
+  ],
+  "xe1": {
+    "sha256": "ec2eff7118b8d72dbe56b4afb410a5acd25e2a8f8e0b4d2cff09b4e2375799c5",
+    "all_lines_read": 127,
+    "accepted": false,
+    "raw_snapshot_local_only": true
+  },
+  "xe2": {
+    "path": "docs/PHASE-9-W1-ORACLE-EXTERNAL-JOB-ENTRY-DESIGN.md",
+    "sha256": "6ba824f6b7e03aff3182aef4c01386e4ed7f29e49a574710212daf46ad894293",
+    "bytes": 13751,
+    "all_lines_read": 139,
+    "accepted_only_under_full_review": "ER1-ER3 for first fake oracles only"
+  },
+  "full_delta_read": true,
+  "normative_closure": [
+    "Accept leading zero hex per original XJ3",
+    "No final stdout frame after ack",
+    "Trusted exact carrier rather than unforgeability claim",
+    "One shared finite budget with multichunk drain and fresh EOF",
+    "Post-exit accounting total1or2/active0 per lifetime cap; no physical helper allocation",
+    "RETAIN deterministic return preserves caller custody; real main and retaining park still pending"
+  ],
+  "new_source_absent": true,
+  "new_test_absent": true,
+  "old_source_tests_pins_changed": false,
+  "functional_suites_rerun_for_docs": false,
+  "native_effects": false,
+  "native_product_gates": "OPEN",
+  "gateway_available": false,
+  "next_scope": "Same C2 writes first test only, root reads all and freezes measured RED before source"
+}

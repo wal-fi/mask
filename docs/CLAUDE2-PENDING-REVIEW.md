@@ -1,4 +1,73 @@
-## ATUAL — N-S revisto com SDK falso; gates finais medidos — 2026-11-16
+## ATUAL — N-S28677e2 publicado; XE2 aceita só para primeiros fakes sob ER3 — 2026-11-16
+
+27437/88510/49622 TERMINAIS0/success/is_errorFalse, sem denials, recuperadas.
+Root leu TODO relatório,127linhasXE1,139linhasXE2 e TODO delta227linhas.
+XE2 6ba824f6b7e03aff3182aef4c01386e4ed7f29e49a574710212daf46ad894293,
+13.751bytes, aceita SOMENTE para primeiros oráculos sob TODO ENTRY-REVIEW
+ER1–ER3. Precisão ER3 prevalece: após saída accounting total1 OU2/active0,
+mais membros vazios; antes do resume N-S continua(1,1). Nenhum helper real
+alocado. Não usar cláusula estreita(1,0) de XE2/ER2 como oráculo final.
+
+Código28677e22a4f6cf1b29aafa8459b14129eb4ca53e publicado e reconferido:
+fonte465/teste37a,100próprios/2.321relacionados/377estáticos PASS com
+SDK falso. Medição histórica, não repetida por estes documentos.
+Backend10c/adaptereaeb/C0/qualificador e todos os anteriores fixos.
+
+Próximo único lote C2: SOMENTE tests/test_oracle9_w1_external_job_entry.py,
+AUSENTE neste checkpoint. Fonte docs/poc/oracle9_w1_external_job_entry.py
+MUST ficar AUSENTE até Root ler TODOS os oráculos e medir/congelar RED.
+MesmoC2/sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f,claude-opus-5-5/medium,
+Read/Edit/Write só teste novo; programador SEM comandos/execução. Reusar
+SDKs falsos publicados, sem alterar pins/testes antigos ou patch de produto
+vivo. Sem supressão/skip/xfail/cast/ignore/noqa ou assert enfraquecido.
+Ler XE2 e REVIEW INTEIROS; RETAIN/custódia não provam main/park reais.
+
+Antes de chamar: Git REAL e metadados da sessão Claude2; ativa só monitorar,
+nunca duplicar ou reabrir terminais finais. Os Claudes interativos são do
+usuário, validar Claude2; não ler seus chats/configs nem bloquear por eles.
+Nenhuma quota ou agendamento novo por chamadas de sucesso neste lote.
+
+Preservar pessoais/raw/snapshots locais; publicar só revistos. Nenhum
+runtime/config/ambiente/privado/binário/estado16/tentativa lido, nem efeito
+real DLL/job/processo/thread/loop, Docker/PG/SQL/rede externa/deploy.
+N-H/N-C/main/park/direitos/kernel/S/G/N1–N16/produto OPEN; Gateway
+indisponível. HEAD pode ser mais recente após docs, nunca guarda antiga.
+Histórico abaixo.
+
+## HISTÓRICO — reconciliação lida; desenho da entrada S ainda pendente — 2026-11-16
+
+28677e22a4f6cf1b29aafa8459b14129eb4ca53e publicado e conferido após fetch,
+HEAD/origin0/0, rastreados limpos naquele fechamento. Fonte465/teste37a
+exatos publicados:100próprios/2.321relacionados e377estáticos PASS.
+Medição com SDK falso; sem native/produto admitidos. Não refazer N-S.
+
+27437 TERMINAL0/success/is_errorFalse sem denials, recuperada. Root leu
+TODO relatório END_NH_NC_RECONCILIATION e conferiu citações públicas.
+Somente Read, nenhum rastreado mudou. Próximo desenho só sob TODO
+EXTERNAL-JOB-ENTRY-REVIEW ER1: NÃO frame final depois de ack, NÃO herdar
+argv/perfil C0 ou zeroSDK global; N-H pode ter fakes antes de direitos reais.
+Root não aceitou tais extrapolações do relatório como contrato.
+
+Próximo único lote C2: docs/PHASE-9-W1-ORACLE-EXTERNAL-JOB-ENTRY-DESIGN.md,
+AUSENTE neste checkpoint. MesmoC2/sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f,
+claude-opus-5-5/medium, Read/Edit/Write só desenho, sem comandos/execução.
+Root lê TODAS linhas antes de testes/fonte. Fechar entrada S/N-C, custódia,
+protocolo único, entrega e controles, ciclo público de P/oráculos falsos;
+sem outro Owner/framework/guardião. Nenhum main ou perfil nativo admitido.
+
+Git REAL/terminais Claude2 antes de agir; ativo só monitorar, nunca duplicar.
+Os interativos são do usuário: validar sessão Claude2 autorizada, não ler
+chats/configs alheios nem bloquear por seus interativos. Não reabrir27437
+ou outros terminais finais. Nenhuma quota/tarefa nova neste lote.
+
+Todos os antigos fontes/testes/pins/app124/state16/tentativa fixos; manter
+pessoais/raw/snapshots locais. Sem efeito real DLL/job/processo/thread/loop,
+Docker/PG/SQL/rede externa/runtime/config/ambiente/privado/binário/estado/
+tentativa/deploy. N-H/N-C/direitos/kernel/S/G/N1–N16 e produto OPEN;
+Gateway indisponível. Conferir HEAD atual após docs, sem guarda antiga eterna.
+Histórico abaixo.
+
+## HISTÓRICO — N-S revisto com SDK falso e publicado28677e2 — 2026-11-16
 
 89656 TERMINAL0/success/is_errorFalse, sem denials, recuperada. Root leu
 TODO delta final: só mínimo e predicado de query_members. AST dos demais

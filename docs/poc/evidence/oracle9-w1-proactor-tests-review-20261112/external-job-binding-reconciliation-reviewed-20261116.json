@@ -1,0 +1,28 @@
+{
+  "kind": "MASKGW_W1_EXTERNAL_JOB_BINDING_RECONCILIATION_REVIEW_V1",
+  "reviewed_utc": "2026-11-16T14:04:47.521051+00:00",
+  "base_head": "28677e22a4f6cf1b29aafa8459b14129eb4ca53e",
+  "execution": 27437,
+  "terminal_exit": 0,
+  "service_subtype": "success",
+  "service_is_error": false,
+  "session": "51ea0d85-05bb-4d24-ba9a-c9627c3f832f",
+  "requested_model": "claude-opus-5-5",
+  "effort": "medium",
+  "denials": [],
+  "entire_result_read": true,
+  "result_lines": 78,
+  "result_utf8_sha256": "e8b69e79979c4dadfd05e3872c888af34e27cd4bab7ca8ce4b16842f3970890e",
+  "marker": "END_NH_NC_RECONCILIATION",
+  "tracked_changes_during_call": false,
+  "accepted_only_with": "PHASE-9-W1-ORACLE-EXTERNAL-JOB-ENTRY-REVIEW ER1",
+  "rejected_or_limited": [
+    "No final stdout frame after ack",
+    "No inherited C0 argv/profile or global zero-SDK control promise",
+    "N-H fake testing remains separate from physical-rights measurements",
+    "Absence claims limited to cited public surfaces"
+  ],
+  "source_or_tests_authorized": false,
+  "native_effects_authorized": false,
+  "native_product_gates": "OPEN"
+}
