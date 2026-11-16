@@ -1,0 +1,46 @@
+{
+  "kind": "MASKGW_W1_S_MAIN_ORACLE_REGRESSION_RED6_V1",
+  "test_sha256": "97d8c411d65462a46c6e0d12fe40d08e0d08f520f4ec3c3b5f1a56301284dfca",
+  "test_lines": 1362,
+  "test_bytes": 55122,
+  "old_138_top_level_ast_nodes_unchanged": true,
+  "root_read_all_added_66_lines": true,
+  "selected_sanity_counts": {
+    "tests": 38,
+    "failures": 6,
+    "errors": 0,
+    "skipped": 0
+  },
+  "passed": 32,
+  "elapsed_seconds": 1.976,
+  "failures": [
+    {
+      "name": "test_sanity_root_regression_enter_rejects_reversed_owner_guard",
+      "assertion_rejected_empty_findings": true
+    },
+    {
+      "name": "test_sanity_root_regression_enter_rejects_reversed_first_control_retention",
+      "assertion_rejected_empty_findings": true
+    },
+    {
+      "name": "test_sanity_root_regression_main_rejects_release_after_entered",
+      "assertion_rejected_empty_findings": true
+    },
+    {
+      "name": "test_sanity_root_regression_park_rejects_forgotten_references",
+      "assertion_rejected_empty_findings": true
+    },
+    {
+      "name": "test_sanity_root_regression_park_rejects_unreachable_sleep",
+      "assertion_rejected_empty_findings": true
+    },
+    {
+      "name": "test_sanity_root_regression_main_rejects_lost_first_error_and_control",
+      "assertion_rejected_empty_findings": true
+    }
+  ],
+  "source_absent": true,
+  "oracles_frozen": false,
+  "full_source_absence_red_not_yet_measured": true,
+  "all_native_product_gates": "OPEN"
+}

@@ -1,0 +1,116 @@
+{
+  "kind": "MASKGW_W1_S_MAIN_REPAIR_ORACLE_PROBES_V1",
+  "test_sha256": "b48954e64ec325b04c260e2ffa7be9bfbf4b79c3b5b5abe5e45943c2d624bae3",
+  "root_read_entire_delta_lines": 942,
+  "sanity_counts": {
+    "tests": 41,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "old_six_root_regressions_ast_unchanged": true,
+  "probes": [
+    {
+      "name": "enter-valid",
+      "expected_accept": true,
+      "actual_accept": true,
+      "matches": true,
+      "findings": []
+    },
+    {
+      "name": "owner-reversed",
+      "expected_accept": false,
+      "actual_accept": false,
+      "matches": true,
+      "findings": [
+        "guard-incomplete"
+      ]
+    },
+    {
+      "name": "control-reversed",
+      "expected_accept": false,
+      "actual_accept": false,
+      "matches": true,
+      "findings": [
+        "control-rule"
+      ]
+    },
+    {
+      "name": "main-valid",
+      "expected_accept": true,
+      "actual_accept": true,
+      "matches": true,
+      "findings": []
+    },
+    {
+      "name": "main-release-reversed",
+      "expected_accept": false,
+      "actual_accept": false,
+      "matches": true,
+      "findings": [
+        "main-entered"
+      ]
+    },
+    {
+      "name": "main-missing-slots",
+      "expected_accept": false,
+      "actual_accept": false,
+      "matches": true,
+      "findings": [
+        "main-first-error",
+        "main-first-control"
+      ]
+    },
+    {
+      "name": "park-valid",
+      "expected_accept": true,
+      "actual_accept": true,
+      "matches": true,
+      "findings": []
+    },
+    {
+      "name": "park-forgets",
+      "expected_accept": false,
+      "actual_accept": false,
+      "matches": true,
+      "findings": [
+        "park-holder-dropped",
+        "park-loop"
+      ]
+    },
+    {
+      "name": "park-unreachable",
+      "expected_accept": false,
+      "actual_accept": false,
+      "matches": true,
+      "findings": [
+        "park-loop"
+      ]
+    },
+    {
+      "name": "enter-extra-unconditional-control-overwrite",
+      "expected_accept": false,
+      "actual_accept": true,
+      "matches": false,
+      "findings": []
+    },
+    {
+      "name": "main-extra-unconditional-control-overwrite",
+      "expected_accept": false,
+      "actual_accept": true,
+      "matches": false,
+      "findings": []
+    }
+  ],
+  "new_false_accepts": [
+    "enter-extra-unconditional-control-overwrite",
+    "main-extra-unconditional-control-overwrite"
+  ],
+  "lint_findings": 1,
+  "format_pass": false,
+  "mypy_errors_each_311_314": 1,
+  "source_absent": true,
+  "oracles_frozen": false,
+  "probe_text_only_never_executed_as_main": true,
+  "all_native_product_gates": "OPEN"
+}

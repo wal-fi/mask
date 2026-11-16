@@ -1,0 +1,85 @@
+{
+  "kind": "MASKGW_W1_S_MAIN_TEST_INITIAL_ORACLE_REVIEW_V1",
+  "test_sha256": "7fe8f5cdfd747704ac4f3a2377f8118306140599000e6f87ea2267273e72054b",
+  "source_absent": true,
+  "test_frozen": false,
+  "root_read_all_lines": 1296,
+  "sanity_junit": {
+    "tests": 32,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "initial_lint_findings": 5,
+  "initial_format_pass": false,
+  "initial_mypy_errors_each_311_314": 1,
+  "probes": [
+    {
+      "name": "enter-valid-shape",
+      "checker": "_enter_violations",
+      "expected_accept": true,
+      "actual_accept": true,
+      "findings": [],
+      "matches_expectation": true
+    },
+    {
+      "name": "enter-reversed-owner-condition",
+      "checker": "_enter_violations",
+      "expected_accept": false,
+      "actual_accept": true,
+      "findings": [],
+      "matches_expectation": false
+    },
+    {
+      "name": "enter-reversed-first-control-retention",
+      "checker": "_enter_violations",
+      "expected_accept": false,
+      "actual_accept": true,
+      "findings": [],
+      "matches_expectation": false
+    },
+    {
+      "name": "main-pinned-fixture",
+      "checker": "_main_region_violations",
+      "expected_accept": true,
+      "actual_accept": true,
+      "findings": [],
+      "matches_expectation": true
+    },
+    {
+      "name": "main-reversed-post-entered-release",
+      "checker": "_main_region_violations",
+      "expected_accept": false,
+      "actual_accept": true,
+      "findings": [],
+      "matches_expectation": false
+    },
+    {
+      "name": "park-valid-shape",
+      "checker": "_park_violations",
+      "expected_accept": true,
+      "actual_accept": true,
+      "findings": [],
+      "matches_expectation": true
+    },
+    {
+      "name": "park-forgets-both-references",
+      "checker": "_park_violations",
+      "expected_accept": false,
+      "actual_accept": true,
+      "findings": [],
+      "matches_expectation": false
+    },
+    {
+      "name": "park-unreachable-sleep",
+      "checker": "_park_violations",
+      "expected_accept": false,
+      "actual_accept": true,
+      "findings": [],
+      "matches_expectation": false
+    }
+  ],
+  "probes_only_ast_text_not_executed_as_main": true,
+  "no_native_effect": true,
+  "all_gates": "OPEN"
+}

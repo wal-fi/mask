@@ -1,0 +1,236 @@
+{
+  "kind": "MASKGW_W1_S_MAIN_FINAL_FAKE_VALIDATION_V1",
+  "reviewed_utc": "2026-11-16T20:35:56.223205+00:00",
+  "base_head": "b3cfcf60dda1390eaaf5a091126bb2da05435f0a",
+  "artifacts": [
+    {
+      "path": "docs/poc/oracle9_w1_external_job_s_main.py",
+      "sha256": "9ef5a21eec69e4f1ccbccd94569e624a00cf9d2bfe36139e8bd687ea9c45496e",
+      "bytes": 10029,
+      "lines": 290
+    },
+    {
+      "path": "tests/test_oracle9_w1_external_job_s_main.py",
+      "sha256": "f8d519e5cc839b10b713b1eceafbc1f37c5bf01cbdb07da69e5be9d2e5a416c3",
+      "bytes": 75589,
+      "lines": 1836
+    },
+    {
+      "path": "tests/test_oracle9_w1_external_job_s_main_review.py",
+      "sha256": "9e1142cf7e0dee900bc276d2facaecf0157be614bdcde06ff88596e488903bf8",
+      "bytes": 3279,
+      "lines": 83
+    }
+  ],
+  "programmer": {
+    "session": "51ea0d85-05bb-4d24-ba9a-c9627c3f832f",
+    "model": "claude-opus-5-5",
+    "effort": "medium",
+    "calls": [
+      {
+        "execution": 80442,
+        "terminal_exit": 0,
+        "subtype": "success",
+        "is_error": false,
+        "permission_denials": [],
+        "session_match": true,
+        "terminal_recovered": true
+      },
+      {
+        "execution": 29677,
+        "terminal_exit": 0,
+        "subtype": "success",
+        "is_error": false,
+        "permission_denials": [],
+        "session_match": true,
+        "terminal_recovered": true
+      },
+      {
+        "execution": 79390,
+        "terminal_exit": 0,
+        "subtype": "success",
+        "is_error": false,
+        "permission_denials": [],
+        "session_match": true,
+        "terminal_recovered": true
+      },
+      {
+        "execution": 72666,
+        "terminal_exit": 0,
+        "subtype": "success",
+        "is_error": false,
+        "permission_denials": [],
+        "session_match": true,
+        "terminal_recovered": true
+      },
+      {
+        "execution": 47382,
+        "terminal_exit": 0,
+        "subtype": "success",
+        "is_error": false,
+        "permission_denials": [],
+        "session_match": true,
+        "terminal_recovered": true
+      },
+      {
+        "execution": 33597,
+        "terminal_exit": 0,
+        "subtype": "success",
+        "is_error": false,
+        "permission_denials": [],
+        "session_match": true,
+        "terminal_recovered": true
+      },
+      {
+        "execution": 20306,
+        "terminal_exit": 0,
+        "subtype": "success",
+        "is_error": false,
+        "permission_denials": [],
+        "session_match": true,
+        "terminal_recovered": true
+      },
+      {
+        "execution": 82651,
+        "terminal_exit": 0,
+        "subtype": "success",
+        "is_error": false,
+        "permission_denials": [],
+        "session_match": true,
+        "terminal_recovered": true
+      }
+    ]
+  },
+  "sequence": {
+    "root_read_initial_test_lines": 1296,
+    "root_read_all_test_deltas": [
+      66,
+      942,
+      33,
+      115
+    ],
+    "source_absence_RED102": {
+      "tests": 102,
+      "sanities_passed": 47,
+      "source_absence_failures": 55,
+      "errors": 0,
+      "skipped": 0,
+      "deselected": 0,
+      "all55_messages_exactly_checked": true
+    },
+    "RED6_and_RED_W6_before_classifier_fixes_preserved": true,
+    "root_read_all_initial_source_lines": 284,
+    "source_review_finding_R1": "Ordinary Path.resolve OSError escaped SMainLoadError",
+    "review_test_all83_lines_read": true,
+    "source_present_review_RED": {
+      "tests": 4,
+      "failure_wrong_raw_OSError": 1,
+      "control_identity_passes": 3,
+      "errors": 0,
+      "skipped": 0
+    },
+    "root_read_full_source_fix_delta": true,
+    "other_source_AST_nodes_unchanged": true,
+    "both_frozen_tests_unchanged": true
+  },
+  "own": {
+    "tests": 106,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 4.024,
+    "deselected": 0
+  },
+  "related": {
+    "tests": 2620,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 56.718,
+    "deselected": 0,
+    "paths": [
+      "tests/test_oracle9_w1_controller.py",
+      "tests/test_oracle9_w1_driver.py",
+      "tests/test_oracle9_w1_driver_session.py",
+      "tests/test_oracle9_w1_driver_t5.py",
+      "tests/test_oracle9_w1_duplex_bridge.py",
+      "tests/test_oracle9_w1_expect.py",
+      "tests/test_oracle9_w1_external_job_adoption.py",
+      "tests/test_oracle9_w1_external_job_entry.py",
+      "tests/test_oracle9_w1_host_reactor.py",
+      "tests/test_oracle9_w1_host_run.py",
+      "tests/test_oracle9_w1_main.py",
+      "tests/test_oracle9_w1_main_t5.py",
+      "tests/test_oracle9_w1_port_ownership.py",
+      "tests/test_oracle9_w1_port_ownership_review.py",
+      "tests/test_oracle9_w1_proactor_bind.py",
+      "tests/test_oracle9_w1_proactor_pump.py",
+      "tests/test_oracle9_w1_supervisor_qualification.py",
+      "tests/test_oracle9_w1_supervisor_qualification_review.py",
+      "tests/test_oracle9_w1_supervisor_setup_probe.py",
+      "tests/test_oracle9_w1_supervisor_setup_probe_review.py",
+      "tests/test_pg16_shell_admission_win32.py",
+      "tests/test_pg16_shell_native_control_win32.py",
+      "tests/test_oracle9_w1_external_job_s_main.py",
+      "tests/test_oracle9_w1_external_job_s_main_review.py"
+    ]
+  },
+  "static": {
+    "ruff_src_tests": "PASS",
+    "ruff_poc_contract": "PASS E9,F63,F7,F82 over101 explicit public PoC paths: tracked top-level .py plus the new main; excludes evidence snapshots",
+    "format": "PASS380 src/tests/new main",
+    "mypy_win32_311": "PASS380 src/tests/new main",
+    "mypy_win32_314": "PASS380 STATIC ONLY",
+    "gate_config_changed": false
+  },
+  "preserved_pins": [
+    {
+      "path": "docs/poc/oracle9_w1_supervisor_qualification.py",
+      "sha256": "999f4a8d627e1550e8c95c6c6fa42aaa7a5edfb7045acbb33ccf51561d5fe015"
+    },
+    {
+      "path": "docs/poc/oracle9_w1_supervisor_setup_probe.py",
+      "sha256": "43ffbf92c1fb747f61cc764f6db95fdfed800976cfe17cc2bd4e5c8f5657d511"
+    },
+    {
+      "path": "docs/poc/oracle9_w1_external_job_entry.py",
+      "sha256": "b4826e0b649e37b485b4ca065e225e1103cbd41e19836c2ac95ca78172a62e18"
+    },
+    {
+      "path": "deploy/oracle9_w1_main.py",
+      "sha256": "89c99c6587e7c51d86fc0abb460330780357121c28768883ed8ab9dc789ccdea"
+    },
+    {
+      "path": "tests/test_oracle9_w1_external_job_entry.py",
+      "sha256": "1835ba817343cea1076fa95ec3add21d0828a074bfb8ac968f1e2dd8d0ef3fad"
+    },
+    {
+      "path": "docs/poc/oracle9_w1_external_job_adoption.py",
+      "sha256": "465ae9067e0f24fe656259e3757f45e8a5788f55ed177db2ab82160d5b6ba5ae"
+    },
+    {
+      "path": "tests/test_oracle9_w1_external_job_adoption.py",
+      "sha256": "37a757ad69b8d032e44e59d008a183149f9bb1f6fd0f46901553e0b00fbc9224"
+    },
+    {
+      "path": "docs/poc/pg16_shell_admission_win32.py",
+      "sha256": "10c9058f0d6071e86c7b4c8b2566c1ae4c9f78aeba9d92c50687ae6481f22726"
+    },
+    {
+      "path": "docs/poc/pg16_shell_native_control_win32.py",
+      "sha256": "eaebedd6ac36602ba30cb51a4c30a2a93737f1127c23cdc4ebb8ae8cf9246407"
+    }
+  ],
+  "qa": {
+    "scope": "Fake SDK only; direct development Python pytest process without64MiB wrapper",
+    "whole_product_PG_suite": false,
+    "frontend_packages_rerun": false,
+    "valid_main_or_park_executed": false,
+    "product_native_effects": false,
+    "runtime_config_environment_private_state16_attempt_read": false
+  },
+  "raw_CLI_XML_snapshots_published": false,
+  "all_native_product_gates": "OPEN",
+  "gateway_available": false,
+  "next_scope": "Read-only public proposal for the minimum N-H host v2/native binding and live N-C prerequisites under XJ3/EJ; no file edits or native execution"
+}

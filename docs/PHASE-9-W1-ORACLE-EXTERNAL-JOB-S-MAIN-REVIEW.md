@@ -1,5 +1,13 @@
 # W1: revisão do main específico de S
 
+## SM-R4 — precisão do loader para oráculos sem `_run_s` válido
+
+Depois de ler todos os primeiros oráculos, Root fecha sob delegação uma precisão do helper privado ainda não implementado: `_load_entry(holder)` preenche entry/adoption como descrito em SM3 e, em falha ordinária, levanta o erro fechado específico `SMainLoadError`, texto fixo `S_MAIN_LOAD`, sem causa/contexto original (levantar fora do except ordinário). Não cria Owner ou outro recurso nativo. Controles continuam propagando o MESMO objeto, sem wrapper nem registro/park nesse helper; a região A do chamador é quem retém e decide park. Não editar a entrada b482 ou o SM3 pinado para criar outro loader/framework.
+
+Os testes de falhas do loader devem chamá-lo DIRETAMENTE em árvore temporária e observar esse erro específico, sem usar uma AssertionError de trap como a recusa correta. Os controles são observados como propagação por identidade no helper; registro/decisão do chamador ficam como obrigação estrutural, sem cobertura dinâmica inventada. O mapeamento fase A→3 deve ser conferido em AST, não por executar `_run_s` com argv válido. Somente `_run_s` com inputs inválidos e sem arquivo acessado permanece dinamicamente permitido, além da costura `_prepare`/SDK falso/`_enter` já fechada.
+
+Precisão compatível com as recusas/carga de SM3: define o erro privado que ainda não tinha forma exata, sem introduzir superfície de operador, perfil, comando ou efeito. Nenhum fonte/teste do main aprovado por isso. Ler também TODO `external-job-s-main-test-review-20261116.md`, incluindo RED6 das regressões dos classificadores, antes de corrigir o teste. Os limites e gates OPEN de SM-R3 permanecem.
+
 ## SM-R3 — SM3 aceito somente para primeiros oráculos falsos
 
 77201 TERMINAL exit0/success/is_errorFalse, sem denials, stderr vazio, recuperada. Root leu TODO delta86linhas SM2→SM3; anteriormente leu287linhas SM1 e TODO delta522 SM1→SM2. SM3 final1ac1c1d72ba412b87302093b15fde2c26dd96388564d1eedc38a28442c1c143f,18.025bytes/309linhas. A mudança ficou limitada à revisão/citações, guard público de custódia, qualificação de REJECTED e oráculos hostis. Os demais trechos permaneceram iguais. As quatro condições do guard precedem entered e a chamada, na mesma região protegida; used custody retém o Owner anterior sem novo efeito.

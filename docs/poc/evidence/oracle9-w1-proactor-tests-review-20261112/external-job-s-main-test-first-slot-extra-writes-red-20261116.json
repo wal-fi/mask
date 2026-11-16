@@ -1,0 +1,53 @@
+{
+  "kind": "MASKGW_W1_S_MAIN_EXTRA_FIRST_WRITES_RED_W6_V1",
+  "test_sha256": "b48954e64ec325b04c260e2ffa7be9bfbf4b79c3b5b5abe5e45943c2d624bae3",
+  "cases": [
+    {
+      "site": "enter",
+      "slot": "first_error",
+      "expected_rejected": true,
+      "actual_rejected": false,
+      "findings": []
+    },
+    {
+      "site": "enter",
+      "slot": "first_control",
+      "expected_rejected": true,
+      "actual_rejected": false,
+      "findings": []
+    },
+    {
+      "site": "main",
+      "slot": "first_error",
+      "expected_rejected": true,
+      "actual_rejected": false,
+      "findings": []
+    },
+    {
+      "site": "main",
+      "slot": "first_control",
+      "expected_rejected": true,
+      "actual_rejected": false,
+      "findings": []
+    },
+    {
+      "site": "region-a",
+      "slot": "first_error",
+      "expected_rejected": true,
+      "actual_rejected": false,
+      "findings": []
+    },
+    {
+      "site": "region-a",
+      "slot": "first_control",
+      "expected_rejected": true,
+      "actual_rejected": false,
+      "findings": []
+    }
+  ],
+  "all_six_fail_expected_rejection": true,
+  "source_absent": true,
+  "only_inert_AST_text_never_main_execution": true,
+  "oracles_frozen": false,
+  "all_native_product_gates": "OPEN"
+}

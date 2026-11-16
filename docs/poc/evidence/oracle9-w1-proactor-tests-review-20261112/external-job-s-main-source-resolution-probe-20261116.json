@@ -1,0 +1,27 @@
+{
+  "kind": "MASKGW_W1_S_MAIN_SOURCE_LOAD_RESOLUTION_REVIEW_V1",
+  "source_sha256": "6ec04338001fad25a0787bd5966ea2865141078049dcb4c6fe95aa6d18775bab",
+  "frozen_test_intact": true,
+  "ordinary_resolution_failure_escapes_closed_loader_contract": true,
+  "rows": [
+    {
+      "case": "ordinary",
+      "actual_type": "OSError",
+      "expected_closed_ordinary": false,
+      "control_identity_preserved": true,
+      "entry_adoption_owner_not_created": true,
+      "no_native_effect": true
+    },
+    {
+      "case": "control",
+      "actual_type": "KernelCtl",
+      "expected_closed_ordinary": true,
+      "control_identity_preserved": true,
+      "entry_adoption_owner_not_created": true,
+      "no_native_effect": true
+    }
+  ],
+  "only_stdlib_file_port_failure_injected": true,
+  "no_valid_main_or_park_execution": true,
+  "all_native_product_gates": "OPEN"
+}

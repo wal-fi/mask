@@ -1,0 +1,158 @@
+{
+  "kind": "MASKGW_W1_S_MAIN_FINAL_ORACLES_PRE_RED_V1",
+  "test_sha256": "f8d519e5cc839b10b713b1eceafbc1f37c5bf01cbdb07da69e5be9d2e5a416c3",
+  "root_read_initial_lines": 1296,
+  "root_read_all_deltas": [
+    66,
+    942,
+    33,
+    115
+  ],
+  "sanity_counts": {
+    "tests": 47,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "independent_AST_probes": [
+    {
+      "name": "enter-valid",
+      "expected_accept": true,
+      "actual_accept": true,
+      "passed": true,
+      "findings": []
+    },
+    {
+      "name": "owner-reversed",
+      "expected_accept": false,
+      "actual_accept": false,
+      "passed": true,
+      "findings": [
+        "guard-incomplete"
+      ]
+    },
+    {
+      "name": "control-reversed",
+      "expected_accept": false,
+      "actual_accept": false,
+      "passed": true,
+      "findings": [
+        "control-rule"
+      ]
+    },
+    {
+      "name": "main-valid",
+      "expected_accept": true,
+      "actual_accept": true,
+      "passed": true,
+      "findings": []
+    },
+    {
+      "name": "main-release-reversed",
+      "expected_accept": false,
+      "actual_accept": false,
+      "passed": true,
+      "findings": [
+        "main-entered"
+      ]
+    },
+    {
+      "name": "main-missing-slots",
+      "expected_accept": false,
+      "actual_accept": false,
+      "passed": true,
+      "findings": [
+        "main-first-error",
+        "main-first-control"
+      ]
+    },
+    {
+      "name": "park-valid",
+      "expected_accept": true,
+      "actual_accept": true,
+      "passed": true,
+      "findings": []
+    },
+    {
+      "name": "park-forgets",
+      "expected_accept": false,
+      "actual_accept": false,
+      "passed": true,
+      "findings": [
+        "park-holder-dropped",
+        "park-loop"
+      ]
+    },
+    {
+      "name": "park-unreachable",
+      "expected_accept": false,
+      "actual_accept": false,
+      "passed": true,
+      "findings": [
+        "park-loop"
+      ]
+    },
+    {
+      "name": "enter-extra-first_error",
+      "expected_accept": false,
+      "actual_accept": false,
+      "passed": true,
+      "findings": [
+        "error-rule"
+      ]
+    },
+    {
+      "name": "enter-extra-first_control",
+      "expected_accept": false,
+      "actual_accept": false,
+      "passed": true,
+      "findings": [
+        "control-rule"
+      ]
+    },
+    {
+      "name": "main-extra-first_error",
+      "expected_accept": false,
+      "actual_accept": false,
+      "passed": true,
+      "findings": [
+        "main-first-error"
+      ]
+    },
+    {
+      "name": "main-extra-first_control",
+      "expected_accept": false,
+      "actual_accept": false,
+      "passed": true,
+      "findings": [
+        "main-first-control"
+      ]
+    },
+    {
+      "name": "region-a-extra-first_error",
+      "expected_accept": false,
+      "actual_accept": false,
+      "passed": true,
+      "findings": [
+        "region-a-error"
+      ]
+    },
+    {
+      "name": "region-a-extra-first_control",
+      "expected_accept": false,
+      "actual_accept": false,
+      "passed": true,
+      "findings": [
+        "region-a-control"
+      ]
+    }
+  ],
+  "ruff_pass": true,
+  "format_pass": true,
+  "mypy_win32_311_pass": true,
+  "mypy_win32_314_static_only_pass": true,
+  "source_absent": true,
+  "oracles_frozen": false,
+  "full_source_absence_RED_next": true,
+  "all_native_product_gates": "OPEN"
+}

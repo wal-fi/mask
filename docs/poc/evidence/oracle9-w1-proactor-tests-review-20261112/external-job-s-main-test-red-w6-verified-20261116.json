@@ -1,0 +1,45 @@
+{
+  "kind": "MASKGW_W1_S_MAIN_EXTRA_WRITE_PYTEST_RED_W6_V1",
+  "test_sha256": "de7905ce94678e1436ea7bdeffcc256640a9b37becdf202fb35e93fbad46113a",
+  "bytes": 74192,
+  "lines": 1810,
+  "old_182_AST_nodes_unchanged": true,
+  "root_read_complete_added_33_lines": true,
+  "sanity_counts": {
+    "tests": 47,
+    "failures": 6,
+    "errors": 0,
+    "skipped": 0
+  },
+  "passed": 41,
+  "failures": [
+    {
+      "name": "test_sanity_root_extra_write_rejects_unconditional_second_write[enter-first_control]",
+      "false_accept_reproduced": true
+    },
+    {
+      "name": "test_sanity_root_extra_write_rejects_unconditional_second_write[enter-first_error]",
+      "false_accept_reproduced": true
+    },
+    {
+      "name": "test_sanity_root_extra_write_rejects_unconditional_second_write[main-first_control]",
+      "false_accept_reproduced": true
+    },
+    {
+      "name": "test_sanity_root_extra_write_rejects_unconditional_second_write[main-first_error]",
+      "false_accept_reproduced": true
+    },
+    {
+      "name": "test_sanity_root_extra_write_rejects_unconditional_second_write[region-a-first_control]",
+      "false_accept_reproduced": true
+    },
+    {
+      "name": "test_sanity_root_extra_write_rejects_unconditional_second_write[region-a-first_error]",
+      "false_accept_reproduced": true
+    }
+  ],
+  "elapsed_seconds": 1.949,
+  "source_absent": true,
+  "oracles_frozen": false,
+  "all_native_product_gates": "OPEN"
+}

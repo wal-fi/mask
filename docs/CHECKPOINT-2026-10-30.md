@@ -1,46 +1,47 @@
-## ATUAL — desenho SM3 revisto; próximos oráculos do main S — 2026-11-16
+## ATUAL — main Windows S validado só com fakes; próximo N-H Read — 2026-11-16
 
-25399/42481/31834/67723/77201 TERMINAIS0/success/is_errorFalse, sem
-denials, recuperadas; mesma sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f,
-claude-opus-5-5/medium. Root leu TODOS121/61linhas dos dois relatórios,
-287linhasSM1 e TODOS522/86linhas dos deltasSM1→SM2→SM3. Não reabrir
-chamadas finais ou repetir reconciliação/suplemento. Disponibilidade
-observada nessas chamadas após19UTC, sem alegar reset geral de quota.
+33597/20306/82651 TERMINAIS0/success/is_errorFalse sem denials, recuperadas.
+Root leu TODAS284linhas da fonteV1 e TODO delta do fix; demais nós AST
+iguais, testes congelados intactos. FonteFINAL9ef5a21eec69e4f1ccbccd94569e624a00cf9d2bfe36139e8bd687ea9c45496e,
+10.029bytes/290linhas. Testef8d519e5cc839b10b713b1eceafbc1f37c5bf01cbdb07da69e5be9d2e5a416c3
+75.589bytes/1836linhas, review9e1142cf7e0dee900bc276d2facaecf0157be614bdcde06ff88596e488903bf8
+3.279bytes/83linhas. Integração fonte+DOIStestes+evidências JUNTOS neste
+fechamento, sem RED isolado, sem raw/snapshots/pessoais no commit.
 
-SM3 final1ac1c1d72ba412b87302093b15fde2c26dd96388564d1eedc38a28442c1c143f,
-18.025bytes/309linhas, aceito SOMENTE para primeiros oráculos falsos sob
-TODO EXTERNAL-JOB-S-MAIN-REVIEW SM-R3/SM-R2/SM-R1 e MB4. Root corrigiu
-comparação impossível de re.compile, contagem de jobs como prova de
-invocações e a saída insegura para custódia usada. Guard público retém
-Owner anterior sem novo efeito; REJECTED14 só com custódia própria sem
-Owner/claim/controle. Não é código, RED congelado ou admissão nativa.
+Root mediu106próprios/4,024s e2.620relacionados em24arquivos/56,718s PASS,
+0falhas/erros/skips/deseleções. Ruff src/tests ePoC contratado101caminhos
+PASS; format380/mypy380 win32311/314 PASS,314 só estático.9pins públicos
+conferidos. Nada de produto/DB/frontend/empacotamento executado ou alterado.
+Ler TODA S-MAIN-VALIDATION, source-review R3/R2/R1 e final-validation.
 
-Próximo único lote: mesmo Claude2 escreve SÓ
-tests/test_oracle9_w1_external_job_s_main.py, AUSENTE neste checkpoint.
-Read/Edit/Write restritos ao teste, sem comandos/execução. Reusar
-EntryKernel/Reader/Writer/classificadores congelados; sem fake Owner/
-fake entrada/patch de produto, skip/xfail/ignore/cast/noqa/assert fraco.
-Fonte docs/poc/oracle9_w1_external_job_s_main.py MUST ficar AUSENTE até
-Root ler TODOS os oráculos/deltas, conferir contraprovas e medir/congelar
-RED honesto. Não executar main válido, park real ou novo nativo.
+Histórico preservado: root leu1296linhasV1teste eTODOSdeltas66/942/33/115;
+RED6/RED-W6 precederam reparos dos classificadores.15contraprovasAST PASS.
+RED102 ANTESfonte:47sanidadesPASS+55FAILsóausência/0erros-skips-deseleções,
+1,494s. R1 extra comfontepresente:1FAIL OSError cru+3PASScontroles antesfix.
+Fix só_load_entry fecha erro ordinário dePath.resolve foraexcept, mantém
+controles por identidade. Não reabrir chamadas finais/reescrever fonte/
+refazer formatação/gates concluídos sem nova causa.
 
-Entrada S b4826e0b/teste1835 PUBLICADOS5fc896f e preservados. Resultados
-193próprios/2.514relacionados/379estáticos continuam HISTÓRICOS, sem
-repetição por documentos. Recibos s-main-design-reviewed e sm1-static-
-review registram serviços, limites e9pins conferidos. Base documental
-7a255d7; conferir HEAD REAL após publicação, sem guarda antiga eterna.
-Nenhuma quota nova ou tarefa futura foi prometida/rearmada após sucesso;
-a tarefa entregue não prova novo horário, reset ou disponibilidade.
+Próximo ÚNICO lote: mesmaC2/sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f,
+claude-opus-5-5/medium SOMENTE Read público, retorno curto do vínculo
+mínimo N-H/hostv2 F/Q/C e pré-requisitos deN-C emvidaS sob XJ3/EJ.
+Identificar APIs existentes reutilizáveis e lacunas exatas de contrato/
+código/prova; não presumir ausência global nem criar framework/Owner/
+launcher/guardião. Sem editar arquivo, testes/fonte/comandos/execução,
+perfil/argv/valores ou efeito nativo. Root lê TODO relatório antes de
+próxima mudança. Não refazer main Linux ou componentes anteriores.
 
-Primeiro Git REAL/terminais/zero escritor; ativo só monitorar, nunca
-segunda chamada. Interativos são do usuário: validar só Claude2
-autorizado. Preservar pessoais/raw/snapshots fora do commit. N-S465/
-37a/backend10c/adaptereaeb/C0/qualificador e todos os antigos/app124/
-state16/tentativa fixos; estado/tentativa não lidos. Sem DLL/job/processo/
-thread/loop/guard/sinal reais, Docker/PG/SQL/credencial/rede externa/
-runtime/config/ambiente/privado/binário/estado/tentativa/deploy. Ferramentas
-QA falsas permitidas ao Root. N-H/N-C/direitos/kernel/S/G/N1–N16/B1/B2/
-D-090/produto OPEN; Gateway indisponível. Histórico abaixo.
+Conferir GitREAL após integração/docs (baseb3cfcf6 não é guarda eterna).
+Recuperar terminais; ativo só MONITORAR, nunca segundo escritor. Interativos
+são do usuário; validar SÓClaude2 autorizado. Não houve nova quota/tarefa
+rearmada após sucesso nem garantia de reset/entrega. Preservar pessoais/
+raw/snapshots locais. Entrada b482/teste1835/N-S465/37a/backend10c/adaptereaeb/
+C0/qualificador/antigos/app124/state16/tentativa FIXOS; não ler estado/
+tentativa. Sem main válido/park real/nativo DLL/job/processo/thread/loop/
+guard/sinal/Docker/PG/SQL/credencial/rede externa/runtime/config/ambiente/
+privado/binário/estado/tentativa/deploy. Root QA só SDK falso. N-H/N-C/
+direitos/ambiente/kernel/S/G/N1–N16/B1/B2/D-090/TLS/ingressos/produto OPEN;
+Gateway indisponível. Histórico abaixo.
 
 ## HISTÓRICO — fonte S ativa3267 naquela observação — 2026-11-16
 

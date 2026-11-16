@@ -1,0 +1,24 @@
+{
+  "kind": "MASKGW_W1_S_MAIN_LOADER_REVIEW_RED1_V1",
+  "source_sha256": "6ec04338001fad25a0787bd5966ea2865141078049dcb4c6fe95aa6d18775bab",
+  "review_test_sha256": "9e1142cf7e0dee900bc276d2facaecf0157be614bdcde06ff88596e488903bf8",
+  "review_test_bytes": 3279,
+  "review_test_lines": 83,
+  "counts": {
+    "tests": 4,
+    "failures": 1,
+    "errors": 0,
+    "skipped": 0
+  },
+  "control_passes": 3,
+  "failed_case": "test_review_resolve_os_error_is_the_closed_load_error",
+  "expected_wrong_raw_OSError_type_confirmed": true,
+  "elapsed_seconds": 2.074,
+  "review_test_frozen": true,
+  "original_f8d_frozen_unchanged": true,
+  "ruff_format_mypy311_314_one_review_file_pass": true,
+  "mypy314_static_only": true,
+  "root_read_all_review_test_lines": 83,
+  "no_main_park_native_effect": true,
+  "all_native_product_gates": "OPEN"
+}
