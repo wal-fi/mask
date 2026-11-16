@@ -1,0 +1,139 @@
+{
+  "kind": "MASKGW_W1_EXTERNAL_JOB_ADOPTION_FINAL_FAKE_VALIDATION_V1",
+  "reviewed_utc": "2026-11-16T13:54:46.916115+00:00",
+  "base_head": "6c342b903ee7d524a1008ae8d2e624d8095972ee",
+  "source": {
+    "path": "docs/poc/oracle9_w1_external_job_adoption.py",
+    "sha256": "465ae9067e0f24fe656259e3757f45e8a5788f55ed177db2ab82160d5b6ba5ae",
+    "bytes": 15836,
+    "lines": 394
+  },
+  "test": {
+    "path": "tests/test_oracle9_w1_external_job_adoption.py",
+    "sha256": "37a757ad69b8d032e44e59d008a183149f9bb1f6fd0f46901553e0b00fbc9224",
+    "bytes": 42063,
+    "lines": 994
+  },
+  "review": {
+    "all_initial_source_lines_read": 394,
+    "all_test_oracles_and_deltas_read": true,
+    "all_final_source_delta_read": true,
+    "all_ast_outside_query_members_unchanged": true,
+    "old_assertions_weakened": false
+  },
+  "sequence": {
+    "red98": {
+      "passed": 4,
+      "failed_missing_source": 94,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 6.871,
+      "test_sha256": "7601d8a8637e5899a3107fa1975ed13a189c2d53cbd3fa013d559df447b8e4b8",
+      "preserved": true
+    },
+    "first_source_own": {
+      "passed": 98,
+      "seconds": 2.69,
+      "source_sha256": "86d2049eef7203ea4c9b99d4e2eb772ee1b7493d870f668089e4b84a5ca0ec43"
+    },
+    "independent_R1": "Pinned public reader accepts bounded member padding; old short fake misclassified sizeof-1. Not a physical-kernel observation.",
+    "red100_before_source_fix": {
+      "passed": 98,
+      "failed_positive_padding": 2,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 3.423,
+      "receipt": "external-job-adoption-padding-frozen-red-20261115.json"
+    }
+  },
+  "own": {
+    "tests": 100,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 100,
+    "seconds": 3.81,
+    "deselected": 0,
+    "selection": "explicit paths, no deselection expression",
+    "paths": [
+      "tests/test_oracle9_w1_external_job_adoption.py"
+    ]
+  },
+  "related": {
+    "tests": 2321,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 2321,
+    "seconds": 47.771,
+    "deselected": 0,
+    "selection": "explicit paths, no deselection expression",
+    "paths": [
+      "tests/test_oracle9_w1_controller.py",
+      "tests/test_oracle9_w1_driver.py",
+      "tests/test_oracle9_w1_driver_session.py",
+      "tests/test_oracle9_w1_driver_t5.py",
+      "tests/test_oracle9_w1_duplex_bridge.py",
+      "tests/test_oracle9_w1_expect.py",
+      "tests/test_oracle9_w1_external_job_adoption.py",
+      "tests/test_oracle9_w1_host_reactor.py",
+      "tests/test_oracle9_w1_host_run.py",
+      "tests/test_oracle9_w1_main.py",
+      "tests/test_oracle9_w1_main_t5.py",
+      "tests/test_oracle9_w1_port_ownership.py",
+      "tests/test_oracle9_w1_port_ownership_review.py",
+      "tests/test_oracle9_w1_proactor_bind.py",
+      "tests/test_oracle9_w1_proactor_pump.py",
+      "tests/test_oracle9_w1_supervisor_qualification.py",
+      "tests/test_oracle9_w1_supervisor_qualification_review.py",
+      "tests/test_oracle9_w1_supervisor_setup_probe.py",
+      "tests/test_oracle9_w1_supervisor_setup_probe_review.py",
+      "tests/test_pg16_shell_admission_win32.py",
+      "tests/test_pg16_shell_native_control_win32.py"
+    ]
+  },
+  "static": {
+    "ruff_src_tests": "PASS",
+    "ruff_poc_select": "E9,F63,F7,F82 PASS",
+    "format": "377 files PASS",
+    "mypy_strict_win32_311": "377 files PASS",
+    "mypy_strict_win32_314": "377 files PASS STATIC ONLY",
+    "config_changed": false
+  },
+  "qa": {
+    "scope": "Fake SDK only; direct pytest process without 64MiB stack wrapper",
+    "python314_static_only": true,
+    "database_suite_run": false,
+    "frontend_or_packages_rerun": false,
+    "native_tests_run": false
+  },
+  "programmer": {
+    "session": "51ea0d85-05bb-4d24-ba9a-c9627c3f832f",
+    "model": "claude-opus-5-5",
+    "effort": "medium",
+    "recovered_success_calls": [
+      53214,
+      66781,
+      40367,
+      77890,
+      36387,
+      89656
+    ],
+    "final_service_is_error": false,
+    "denials": [],
+    "no_active_target_session_before_qa": true,
+    "interactive_user_clis_excluded_per_user_instruction": true
+  },
+  "preserved_pins": {
+    "docs/poc/pg16_shell_admission_win32.py": "10c9058f0d6071e86c7b4c8b2566c1ae4c9f78aeba9d92c50687ae6481f22726",
+    "docs/poc/pg16_shell_native_control_win32.py": "eaebedd6ac36602ba30cb51a4c30a2a93737f1127c23cdc4ebb8ae8cf9246407",
+    "docs/poc/oracle9_w1_supervisor_setup_probe.py": "43ffbf92c1fb747f61cc764f6db95fdfed800976cfe17cc2bd4e5c8f5657d511",
+    "docs/poc/oracle9_w1_supervisor_qualification.py": "999f4a8d627e1550e8c95c6c6fa42aaa7a5edfb7045acbb33ccf51561d5fe015"
+  },
+  "runtime_config_private_state16_consumed_attempt_read": false,
+  "raw_cli_xml_snapshots_published": false,
+  "native_product_gates": "OPEN",
+  "gateway_available": false,
+  "accepted_scope": "Specific N-S adapter reviewed with fake SDK; N-H/N-C rights, real transfer and physical kernel remain unadmitted",
+  "next_scope": "Read-only public reconciliation for minimum N-H/N-C binding contract before any new test/source/native lot"
+}

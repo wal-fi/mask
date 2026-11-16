@@ -1,0 +1,31 @@
+{
+  "kind": "MASKGW_W1_ADOPTION_MEMBERS_CONTRACT_PROBE_V1",
+  "source_sha256": "86d2049eef7203ea4c9b99d4e2eb772ee1b7493d870f668089e4b84a5ca0ec43",
+  "test_sha256": "7601d8a8637e5899a3107fa1975ed13a189c2d53cbd3fa013d559df447b8e4b8",
+  "source_v1_own_junit": {
+    "tests": "98",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "2.690"
+  },
+  "schema": {
+    "header_bytes": 8,
+    "entry_bytes": 8,
+    "allocated_bytes": 24,
+    "reported_bytes": 23,
+    "members": 1,
+    "minimum_bytes": 16
+  },
+  "pinned_parent_public_members_accepts_reported_length": true,
+  "new_c_reader_refuses_same_bounded_length": true,
+  "new_start_error": [
+    "WIN32_RESUME"
+  ],
+  "new_owner_state": "LAUNCH_FAILED",
+  "physical_kernel_semantics_measured": false,
+  "native_effects": false,
+  "finding": "Static compatibility mismatch: new reader narrowed the pinned parent interval; V2 oracle mislabeled allocation-size-minus-one as truncated variable-length member data",
+  "required_sequence": "Narrowly reopen fake short-member input, add positive padded-length regressions, measure source-present RED before source change; preserve original RED98",
+  "native_product_gates": "OPEN"
+}

@@ -1,4 +1,154 @@
-## ATUAL — contrato N-S fechado para primeiros oráculos falsos — 2026-11-15
+## ATUAL — N-S revisto com SDK falso; gates finais medidos — 2026-11-16
+
+89656 TERMINAL0/success/is_errorFalse, sem denials, recuperada. Root leu
+TODO delta final: só mínimo e predicado de query_members. AST dos demais
+nós idêntica à fonte86d. Fonte465ae9067e0f24fe656259e3757f45e8a5788f55ed177db2ab82160d5b6ba5ae,
+394linhas/15.836bytes; teste37a757ad69b8d032e44e59d008a183149f9bb1f6fd0f46901553e0b00fbc9224,
+994linhas/42.063bytes, intacto. RED98 e RED100 históricos preservados.
+
+Root mediu100/100próprios e2.321/2.321relacionados em21arquivos,
+0falhas/erros/skips/deseleções. Ruff src/tests e PoC contratado PASS;
+format377/mypy377 win32 alvos311 e314 PASS,314 só estático. QA direta,
+sem wrapper64MiB. Ver EXTERNAL-JOB-ADOPTION-VALIDATION e recibo final de16/11.
+Fonte e teste entram juntos; isso NÃO admite kernel, N-H/N-C ou produto.
+Backend10c/adaptereaeb/qualificador999f/C043ff e anteriores intactos.
+
+Usuário esclareceu que os Claudes interativos abertos são seus. Validar
+as chamadas Claude2 da sessão autorizada; NÃO bloquear por um interativo
+alheio nem ler chats/configs dele. Zero chamadas Claude2 da sessão foi
+confirmado antes da QA. Não reabrir89656 ou terminais já recuperados.
+Nenhuma nova quota, tarefa ou garantia de reset/entrega neste lote.
+
+Próximo único lote: reconciliação PÚBLICA somente Read do vínculo mínimo
+N-H/N-C ainda necessário contra XJ3/EJ1–EJ6 e APIs existentes. Se delegado,
+mesmoC2/sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f,claude-opus-5-5/medium,
+Read restrito, sem comandos/execução. Root lê TODO relatório antes de
+fechar novo contrato/oráculos/fonte/efeito nativo. Não criar outro Owner,
+framework ou guardião, nem refazer N-S já revisto. Git REAL antes de agir;
+ativo da sessão significa só monitorar, nunca duplicar escritor.
+
+Base pública6c342b9; fonte+teste+revisão integram este lote. Conferir HEAD
+REAL após publicação, sem guarda antiga eterna. Preservar pessoais/raw/
+snapshots locais; publicação só de artefatos revistos, sem saídas CLI/XML.
+Sem DLL/job/processo/thread/loop reais de produto, Docker/PG/SQL/rede
+externa/runtime/config/privado/binário/estado16/tentativa/deploy.
+N-H/N-C/direitos/kernel/S/G/N1–N16/produto OPEN; Gateway indisponível.
+Histórico abaixo.
+
+## HISTÓRICO — RED100 medido; fonte N-S ainda pendente naquele checkpoint — 2026-11-15
+
+36387 TERMINAL0/success/is_errorFalse sem denials recuperada. Root leu
+TODO delta da reabertura motivada R1: dado short de MEMBERS (mínimo−1),
+fault padded e2positivos; todos os outros nós AST iguais ao7601 anterior.
+Teste37a757ad69b8d032e44e59d008a183149f9bb1f6fd0f46901553e0b00fbc9224,
+42.063bytes/994linhas CONGELADO. RED98/7601 original preservado.
+
+Fonte86d INALTERADA mediu100casos:98PASS,2FAIL só nas novas regressões
+positivas de padding,0erros/skips/deseleções,3.423s. Ruff/format/mypy311/
+314 em2arquivos PASS. Recibo external-job-adoption-padding-frozen-red-
+20261115.json em poc/evidence/oracle9-w1-proactor-tests-review-20261112/.
+Não é Kernel físico: Root provou divergência com leitor pinado público,
+que aceita mínimo<=length<=sizeof; fonte novo só exato/full rejeita.
+
+Próximo único lote: C2 mesma sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f,
+claude-opus-5-5/medium edita SÓ docs/poc/oracle9_w1_external_job_adoption.py.
+Corrigir intervalo de members conforme TODO external-job-adoption-source-
+review-20261115.md R1. Teste37a/contrato/backend/adapter/C0/pins READONLY;
+sem comandos/execução. Root lê TODO delta, verifica AST dos outros nós,
+repete gates próprios/relacionados antes de integrar fonte+teste juntos.
+Não mudar testes para obter verde. Fonte candidato atual86d tem394linhas;
+root já leu todas. Sem outro Owner/framework/guardião.
+
+Git público6c342b9;3checkpoints podem ter alterações Root locais. Antes
+de chamar: Git REAL/terminais/zero escritor; ativo só monitorar e nunca
+duplicar/reabrir handle terminal. Preservar pessoais/raw/snapshots locais.
+
+Nenhuma chamada real de DLL/job/processo/thread/loop, Docker/PG/SQL/rede
+externa/runtime/config/privado/binário/estado16/tentativa/deploy no lote.
+Fakes não substituem Gateway funcional. N-H/N-C/direitos/kernel/S/G/
+N1–N16/produto OPEN; Gateway indisponível. Histórico abaixo.
+
+## HISTÓRICO — fonte candidata; reabertura estreita de MEMBERS — 2026-11-15
+
+77890 TERMINAL0/success/is_errorFalse, sem denials, recuperada. Root leu
+TODAS394linhas da fonte86d2049eef7203ea4c9b99d4e2eb772ee1b7493d870f668089e4b84a5ca0ec43,
+15.832bytes. Teste7601/RED98 preservados. Fonte+teste ainda LOCAIS.
+98/98PASS em2.690s; lintPoC/format e mypy311/314 em2arquivos PASS.
+Isso NÃO encerrou revisão nem admitiu nativos/produto.
+
+Root mediu divergência R1 de compatibilidade: backend/adapter aceitam
+header+count*entry <= length <= sizeof; novo fonte só mínimoEXATO ou
+buffercheio. O fake short usou sizeof−1, que em MEMBERS ainda pode ser
+válido. Caso medido FALSO:8+1*8=16<=23<=24; members público herdado aceita,
+novo leitor de C recusa. Não é medição do kernel real.
+
+Ler TODO external-job-adoption-source-review-20261115.md R1 e revisão
+do teste, em poc/evidence/oracle9-w1-proactor-tests-review-20261112/.
+Próximo único lote: C2 mesma sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f,
+claude-opus-5-5/medium edita SÓ tests/test_oracle9_w1_external_job_adoption.py.
+Reabrir SOMENTE dado short de MEMBERS (mínimo−1) e acrescentar2regressões
+POSITIVAS de padding, adopt/count0 e created/count1. Asserções antigas
+não relaxadas, outros nós AST iguais. Fonte86d READONLY e intacto.
+Sem comandos/execução do programador, sem fonte ou contrato novo.
+
+Root lê TODO delta e mede novo RED com fontePRESENTE antes de congelar
+nova revisão; preservar RED98 e7601 anteriores. Depois C2 fonteONLY
+corrige intervalo herdado, e root revisa/QA antes de integrar os dois.
+Não aceitar verdes que preservem diferença para satisfazer oráculo errado.
+
+Código público6c342b9;3documentos de checkpoint Root podem ter mudanças
+locais, além das evidências/teste/fonte próprios. Conferir Git REAL e
+zero escritor antes de chamar; ativo só monitorar, nunca duplicar ou
+reabrir handles finais. Preservar pessoais/raw/snapshots fora do commit.
+
+C0/backend10c/adaptereaeb e todos os anteriores/app124/state16/tentativa
+fixos. Sem DLL/job/processo/thread/loop reais, Docker/PG/SQL/rede externa/
+runtime/config/privado/binário/estado16/tentativa/deploy. Ferramentas de
+QA só com SDK falso. N-H/N-C/direitos/kernel/S/G/N1–N16/produto OPEN;
+Gateway indisponível. Histórico abaixo.
+
+## HISTÓRICO — RED98 congelado; próximo fonte N-S — 2026-11-15
+
+Código publicado6c342b9, contrato0e26bddc.53214/66781/40367 TERMINAIS0/
+success/is_errorFalse, sem denials, recuperadas. Root leu815linhasV1,
+952V2 e TODO deltaV3, comprovou AST dos demais nós igual e confirmou
+primeiro snapshot imutável diante de novo controle. Zero escritor antes
+de pedir fonte. Não reabrir chamadas finais nem repetir o suplemento A/B/C.
+
+Teste LOCAL congelado7601d8a8637e5899a3107fa1975ed13a189c2d53cbd3fa013d559df447b8e4b8,
+40.677bytes/966linhas. ROOT mediu98casos:4sanidades só do fake PASS,
+94FAIL por AUSÊNCIA do fonte,0erros/skips/deseleções,6.871s. Cada motivo
+conferido. Ruff/format e mypy strict win32 alvo311/314 PASS em1arquivo;
+314 só estático. Recibo external-job-adoption-frozen-red-20261115.json
+em poc/evidence/oracle9-w1-proactor-tests-review-20261112/. Não declarar
+produto verde nem publicar teste RED sem fonte junto.
+
+Próximo único lote: Claude2 mesma sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f,
+claude-opus-5-5/medium escreve SÓ docs/poc/oracle9_w1_external_job_adoption.py.
+Read/Edit/Write só esse fonte, sem comandos/execução. Fonte AUSENTE neste
+checkpoint. Teste congelado/contrato/referência/backend/adapter/C0/pins
+não mudam. Root lê TODA implementação antes de QA; fakes não são admissão
+nativa nem prontidão do produto. Não criar outro Owner/framework/guardião.
+
+Ler contrato consolidado0e26bddc e TODO external-job-adoption-test-review
+V3. Regras incluem controle retido/HELD sem SDK posterior, aliases por
+papel e guarda de saída C, cache completo e carregamento dos MESMOS bytes.
+Não herdar flags future que alterem backend dataclass em namespace privado.
+
+Antes de qualquer chamada: Git REAL, recuperar terminais e confirmar zero
+escritor; ativo só monitorar. HEAD pode receber documentos futuros, sem
+guarda antiga eterna. Preservar notas/evidências/arquivos pessoais locais.
+Sem quota nova observada ou reagendamento após sucesso; tarefa antiga
+entregou a retomada, não prova horário futuro ou reset garantido.
+
+C0c695/43ff/999f/backend10c/adaptereaeb/app124/state16/tentativa fixos;
+2.083/377estáticos e NQ1–NQ3 continuam históricos. Não executar Docker,
+PG/SQL/rede externa/DLL/job/processo/thread/loop de produto; não ler
+runtime/config/privado/binário/estado16/tentativa nem deploy. Ferramentas
+de desenvolvimento/QA falsas autorizadas. N-H/N-C/direitos/S/G/N1–N16/
+produto OPEN; Gateway indisponível. Histórico abaixo.
+
+## HISTÓRICO — contrato N-S fechado para primeiros oráculos falsos — 2026-11-15
 
 Retomada01h45SP chegou nesta conversa.33580/67827 TERMINAIS0/success/
 is_errorFalse sem denials recuperadas. Root leu TODOS os88/62linhas,

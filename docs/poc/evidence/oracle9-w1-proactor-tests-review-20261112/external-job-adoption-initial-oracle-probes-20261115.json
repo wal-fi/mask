@@ -1,0 +1,23 @@
+{
+  "kind": "MASKGW_W1_ADOPTION_ORACLE_INITIAL_REVIEW_V1",
+  "test_sha256": "bef17b03b430fe8fb04f9f27d91e7ada86fefd94df99254329b2c03ce06a521a",
+  "all_815_lines_read": true,
+  "source_absent": true,
+  "production_finding_claimed": false,
+  "actual_assertion_witnesses": {
+    "empty_termination_list_accepted": true,
+    "extra_query_after_control_accepted_by_last_name_predicate": true
+  },
+  "import_oracle_benign_probe": {
+    "accepted": true,
+    "error_type": null
+  },
+  "fake_only_sanities": {
+    "tests": "3",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  "native_effects": false,
+  "red_frozen": false
+}

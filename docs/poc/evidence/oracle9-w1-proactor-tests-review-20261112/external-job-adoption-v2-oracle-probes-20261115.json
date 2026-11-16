@@ -1,0 +1,14 @@
+{
+  "kind": "MASKGW_W1_ADOPTION_ORACLE_V2_REVIEW_V1",
+  "test_sha256": "d05d87122d2dbaee92e81a73b237312f393468161f11ec235dd98a9cf5152d05",
+  "all_952_lines_read": true,
+  "source_absent": true,
+  "extra_post_control_query_still_accepted": true,
+  "first_snapshot_replaced": true,
+  "calls_at_first_control": 1,
+  "calls_after_second_control": 2,
+  "fixed_containment_rejects_empty": true,
+  "production_finding_claimed": false,
+  "native_effects": false,
+  "red_frozen": false
+}

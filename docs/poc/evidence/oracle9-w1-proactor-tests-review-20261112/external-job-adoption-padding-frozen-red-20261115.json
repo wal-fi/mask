@@ -1,0 +1,30 @@
+{
+  "kind": "MASKGW_W1_ADOPTION_PADDING_FROZEN_RED_V1",
+  "base_head": "6c342b903ee7d524a1008ae8d2e624d8095972ee",
+  "source_sha256_before_fix": "86d2049eef7203ea4c9b99d4e2eb772ee1b7493d870f668089e4b84a5ca0ec43",
+  "test_sha256": "37a757ad69b8d032e44e59d008a183149f9bb1f6fd0f46901553e0b00fbc9224",
+  "test_bytes": 42063,
+  "test_lines": 994,
+  "all_delta_read": true,
+  "all_other_ast_identical_to_original_red98": true,
+  "tests": 100,
+  "passed": 98,
+  "failures": 2,
+  "errors": 0,
+  "skips": 0,
+  "deselected": 0,
+  "failed_cases": {
+    "test_members_length_within_parent_interval_is_accepted_at_adoption": "AssertionError: assert 'REFUSED_QUERY' == 'ADOPTED'\n  \n  - ADOPTED\n  + REFUSED_QUERY",
+    "test_members_length_within_parent_interval_is_accepted_before_resume": "_xj_backend.Win32Error: WIN32_RESUME"
+  },
+  "junit_time_seconds": "3.423",
+  "old_assertions_weakened": false,
+  "oracle_data_correction": "MEMBERS short is below header+count*entry; added valid bounded padding positive cases",
+  "independent_contract_proof": "external-job-adoption-members-contract-probe-20261115.json",
+  "original_red98_preserved": "external-job-adoption-frozen-red-20261115.json",
+  "frozen": true,
+  "native_effects": false,
+  "physical_kernel_measured": false,
+  "next_scope": "C2 source ONLY fixes member interval; test stays frozen",
+  "native_product_gates": "OPEN"
+}
