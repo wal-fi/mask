@@ -1,0 +1,17 @@
+{
+  "kind": "MASKGW_W1_S_MAIN_SM1_ROOT_STATIC_REVIEW_V1",
+  "qualifier_sha256": "999f4a8d627e1550e8c95c6c6fa42aaa7a5edfb7045acbb33ccf51561d5fe015",
+  "design_sha256": "700f42ed27865cf1f21d2ed424f8495e4cd1002e2a6f3cbd2c67094d98f1f86e",
+  "local_path_ast_kind": "Call",
+  "literal_eval_whole_local_path_error": "ValueError",
+  "pattern_arg_is_literal_string": true,
+  "entry_second_call_obligation": "The same claimed custody fails _empty before Owner; job count alone does not distinguish a second rejected call. This conclusion is source inspection, not an executed kernel probe.",
+  "review_choices": {
+    "budget": "same pinned entry.MAX_TURNS; decision count only",
+    "exit_codes": "SM1 table accepted as closed int32 domain, DONE only zero",
+    "park_slice": "same fixed C0 constant by static compatibility, no C0 runtime import"
+  },
+  "no_project_import_execution_or_native_effect": true,
+  "own_test_and_source_still_absent": true,
+  "gates": "OPEN"
+}

@@ -1,52 +1,46 @@
-## ATUAL — entrada S publicada; vínculo main pendente — 2026-11-16
+## ATUAL — desenho SM3 revisto; próximos oráculos do main S — 2026-11-16
 
-3267 TERMINAL1/serviceis_errorTrue/API429 após gravar fonteb4826e0b,
-16.809bytes/433linhas. Root recuperou retorno e leu TODAS433linhas.
-Teste1835/76.003bytes/1.878linhas congelado e intacto, RED193 precedeu fonte.
-Root mediu193próprios e2.514relacionados em22arquivos PASS,0falhas/erros/
-skips/deseleções. Ruff produto/PoC contratado,format379/mypy379win32
-311/314 PASS,314 só estático.16probes de guards puros PASS. Sem finding
-bloqueante novo; aceite somente do componente sob SDK falso.
+25399/42481/31834/67723/77201 TERMINAIS0/success/is_errorFalse, sem
+denials, recuperadas; mesma sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f,
+claude-opus-5-5/medium. Root leu TODOS121/61linhas dos dois relatórios,
+287linhasSM1 e TODOS522/86linhas dos deltasSM1→SM2→SM3. Não reabrir
+chamadas finais ou repetir reconciliação/suplemento. Disponibilidade
+observada nessas chamadas após19UTC, sem alegar reset geral de quota.
 
-Ler ENTRY-VALIDATION, external-job-entry-source-review e recibo final de16/11.
-Root inspecionou fresh available APÓS inventário/última leitura, EOFcacheado,
-tipos públicos/adopt inválido, total1OU2/active0 e ack/primeiro controle.
-Não refazer fonte/testes/gates concluídos nem reabrir3267/3963/90134 finais.
+SM3 final1ac1c1d72ba412b87302093b15fde2c26dd96388564d1eedc38a28442c1c143f,
+18.025bytes/309linhas, aceito SOMENTE para primeiros oráculos falsos sob
+TODO EXTERNAL-JOB-S-MAIN-REVIEW SM-R3/SM-R2/SM-R1 e MB4. Root corrigiu
+comparação impossível de re.compile, contagem de jobs como prova de
+invocações e a saída insegura para custódia usada. Guard público retém
+Owner anterior sem novo efeito; REJECTED14 só com custódia própria sem
+Owner/claim/controle. Não é código, RED congelado ou admissão nativa.
 
-Limite relatado16hSP/19UTC de16/11, NÃO observado. Não retry antes19UTC,
-AGY/conta/modelo/contorno. MESMA tarefa Maskgw-Claude2-Resume-01a05804
-relida Ready/Habilitada para16/11 às16h05SP/19h05UTC, mesma conversa/
---resume/IgnoreNew. Só Args e StartBoundary alterados; TODO resto doXML
-idêntico. XML+CSV+NextRunTime conferidos. Tentativa inicial de cmdlet Xml
-falhou ANTES de alterar tarefa; registro correto aplicado e relido.
-Recibo resume-task-verified. Requer host/logon/app/daemon; entrega/reset
-não garantidos. Nenhuma nova tarefa/ação ou escritor criado por isso.
+Próximo único lote: mesmo Claude2 escreve SÓ
+tests/test_oracle9_w1_external_job_s_main.py, AUSENTE neste checkpoint.
+Read/Edit/Write restritos ao teste, sem comandos/execução. Reusar
+EntryKernel/Reader/Writer/classificadores congelados; sem fake Owner/
+fake entrada/patch de produto, skip/xfail/ignore/cast/noqa/assert fraco.
+Fonte docs/poc/oracle9_w1_external_job_s_main.py MUST ficar AUSENTE até
+Root ler TODOS os oráculos/deltas, conferir contraprovas e medir/congelar
+RED honesto. Não executar main válido, park real ou novo nativo.
 
-Próximo único lote APÓS janela: mesma sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f,
-claude-opus-5-5/medium, SOMENTE Read público sob TODO MAIN-BINDING-REVIEW
-MB1/MB2. Retorno curto da ligação main/park/Request/portas de S e N-C/N-H,
-distinguindo main Linux W1 já existente. Sem editar arquivo, testes,
-fonte, comandos/execução, perfil/argv/valores ou outro Owner/framework/
-guardião. Root lê TODO retorno antes de próxima ação; nada nativo admitido.
+Entrada S b4826e0b/teste1835 PUBLICADOS5fc896f e preservados. Resultados
+193próprios/2.514relacionados/379estáticos continuam HISTÓRICOS, sem
+repetição por documentos. Recibos s-main-design-reviewed e sm1-static-
+review registram serviços, limites e9pins conferidos. Base documental
+7a255d7; conferir HEAD REAL após publicação, sem guarda antiga eterna.
+Nenhuma quota nova ou tarefa futura foi prometida/rearmada após sucesso;
+a tarefa entregue não prova novo horário, reset ou disponibilidade.
 
-Entrada S+teste+evidências PUBLICADOS em5fc896f, HEAD/origin0/0 na
-conferência17h59UTC; código/teste não alterados por este fechamento.
-Root conferiu MB2 por texto/AST: qualify monta Request internamente e
-executa setup→start sem slot de adopt; C0 emite W1C0, não o ack W1XA1.
-O main Linux W1 existente não é S Windows. Recibo compacto main-binding-
-root-reconciliation registra referências e limites; não é prova nativa.
-Próximo Read MB1+MB2 deve fechar mínimo vínculo Request/portas/park,
-sem repetir inventário, editar código ou criar outro framework.
-Conferir HEAD REAL após commits, sem guarda antiga. Zero chamadas C2
-confirmado17h59UTC; nenhuma tentativa antes19UTC. Tarefa16h05 preservada,
-sem mudança ou nova promessa de entrega/reset neste fechamento.
-Interativos são do usuário, validar Claude2 autorizado. Antigos/N-S465/teste37a/
-backend10c/adaptereaeb/C0/qualificador/pins/app124/state16/tentativa fixos.
-Preservar pessoais/raw/snapshots locais. Sem Docker/PG/SQL/rede externa/
-efeito nativo DLL/job/processo/thread/loop ou runtime/config/ambiente/
-privado/binário/estado16/tentativa/deploy do produto. Metadados próprios
-da tarefa autorizada foram relidos. Main/park/N-H/N-C/direitos/kernel/S/G/
-N1–N16/produto OPEN; Gateway indisponível. Histórico abaixo.
+Primeiro Git REAL/terminais/zero escritor; ativo só monitorar, nunca
+segunda chamada. Interativos são do usuário: validar só Claude2
+autorizado. Preservar pessoais/raw/snapshots fora do commit. N-S465/
+37a/backend10c/adaptereaeb/C0/qualificador e todos os antigos/app124/
+state16/tentativa fixos; estado/tentativa não lidos. Sem DLL/job/processo/
+thread/loop/guard/sinal reais, Docker/PG/SQL/credencial/rede externa/
+runtime/config/ambiente/privado/binário/estado/tentativa/deploy. Ferramentas
+QA falsas permitidas ao Root. N-H/N-C/direitos/kernel/S/G/N1–N16/B1/B2/
+D-090/produto OPEN; Gateway indisponível. Histórico abaixo.
 
 ## HISTÓRICO — fonte S ativa3267 naquela observação — 2026-11-16
 

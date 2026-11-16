@@ -1,0 +1,118 @@
+{
+  "kind": "MASKGW_W1_S_MAIN_SM3_DOCUMENTARY_REVIEW_V1",
+  "reviewed_utc": "2026-11-16T19:29:31.396334+00:00",
+  "base_head": "7a255d7526ed510034c5fdc762be83e53ac5fc3a",
+  "calls": [
+    {
+      "handle": 25399,
+      "terminal_exit": 0,
+      "subtype": "success",
+      "is_error": false,
+      "permission_denials": [],
+      "session_match": true,
+      "result_lines": 121,
+      "result_sha256": "13683acf67a459626ac77c0f54457968d29fd90deb82d73e793e6ed4d9285d3f",
+      "root_read_complete": true
+    },
+    {
+      "handle": 42481,
+      "terminal_exit": 0,
+      "subtype": "success",
+      "is_error": false,
+      "permission_denials": [],
+      "session_match": true,
+      "result_lines": 61,
+      "result_sha256": "0b72f5c0e10f3046f74693cce01ca83d6a33595aa4584ae942ebdbbbdb08b0ce",
+      "root_read_complete": true
+    },
+    {
+      "handle": 31834,
+      "terminal_exit": 0,
+      "subtype": "success",
+      "is_error": false,
+      "permission_denials": [],
+      "session_match": true,
+      "result_lines": 34,
+      "result_sha256": "74d77054fa13b6a34b42fb20932fe84115f90117bd6ea5fc23b4968ee651065e",
+      "root_read_complete": true
+    },
+    {
+      "handle": 67723,
+      "terminal_exit": 0,
+      "subtype": "success",
+      "is_error": false,
+      "permission_denials": [],
+      "session_match": true,
+      "result_lines": 27,
+      "result_sha256": "e3f2079a25c0126a286c02ea230c4ebaa83199e2b7dce4c9d4cb0eb8304147c1",
+      "root_read_complete": true
+    },
+    {
+      "handle": 77201,
+      "terminal_exit": 0,
+      "subtype": "success",
+      "is_error": false,
+      "permission_denials": [],
+      "session_match": true,
+      "result_lines": 15,
+      "result_sha256": "7072174a9191d5ecce3eaa308ddbe1523b9f0f20ed1adf048c484febdc8ec4f4",
+      "root_read_complete": true
+    }
+  ],
+  "model": "claude-opus-5-5",
+  "effort": "medium",
+  "design": {
+    "path": "docs\\PHASE-9-W1-ORACLE-EXTERNAL-JOB-S-MAIN-DESIGN.md",
+    "sha256": "1ac1c1d72ba412b87302093b15fde2c26dd96388564d1eedc38a28442c1c143f",
+    "bytes": 18025,
+    "lines": 309,
+    "prior_sm1_lines_read": 287,
+    "sm1_sm2_full_diff_lines_read": 522,
+    "sm2_sm3_full_diff_lines_read": 86
+  },
+  "accepted_only_for_first_fake_oracles_under_full_review": true,
+  "pin_checks": [
+    {
+      "path": "docs/poc/oracle9_w1_supervisor_qualification.py",
+      "sha256": "999f4a8d627e1550e8c95c6c6fa42aaa7a5edfb7045acbb33ccf51561d5fe015"
+    },
+    {
+      "path": "docs/poc/oracle9_w1_supervisor_setup_probe.py",
+      "sha256": "43ffbf92c1fb747f61cc764f6db95fdfed800976cfe17cc2bd4e5c8f5657d511"
+    },
+    {
+      "path": "docs/poc/oracle9_w1_external_job_entry.py",
+      "sha256": "b4826e0b649e37b485b4ca065e225e1103cbd41e19836c2ac95ca78172a62e18"
+    },
+    {
+      "path": "deploy/oracle9_w1_main.py",
+      "sha256": "89c99c6587e7c51d86fc0abb460330780357121c28768883ed8ab9dc789ccdea"
+    },
+    {
+      "path": "tests/test_oracle9_w1_external_job_entry.py",
+      "sha256": "1835ba817343cea1076fa95ec3add21d0828a074bfb8ac968f1e2dd8d0ef3fad"
+    },
+    {
+      "path": "docs/poc/oracle9_w1_external_job_adoption.py",
+      "sha256": "465ae9067e0f24fe656259e3757f45e8a5788f55ed177db2ab82160d5b6ba5ae"
+    },
+    {
+      "path": "tests/test_oracle9_w1_external_job_adoption.py",
+      "sha256": "37a757ad69b8d032e44e59d008a183149f9bb1f6fd0f46901553e0b00fbc9224"
+    },
+    {
+      "path": "docs/poc/pg16_shell_admission_win32.py",
+      "sha256": "10c9058f0d6071e86c7b4c8b2566c1ae4c9f78aeba9d92c50687ae6481f22726"
+    },
+    {
+      "path": "docs/poc/pg16_shell_native_control_win32.py",
+      "sha256": "eaebedd6ac36602ba30cb51a4c30a2a93737f1127c23cdc4ebb8ae8cf9246407"
+    }
+  ],
+  "own_source_absent": true,
+  "own_test_absent": true,
+  "no_functional_suite_rerun_for_documents": true,
+  "no_native_or_product_effect": true,
+  "all_native_product_gates": "OPEN",
+  "gateway_available": false
+}
