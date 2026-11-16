@@ -1,4 +1,4 @@
-## ATUAL — entrada S revista com fakes; limite C2 e retomada16h05 — 2026-11-16
+## ATUAL — entrada S publicada; vínculo main pendente — 2026-11-16
 
 3267 TERMINAL1/serviceis_errorTrue/API429 após gravar fonteb4826e0b,
 16.809bytes/433linhas. Root recuperou retorno e leu TODAS433linhas.
@@ -24,15 +24,23 @@ não garantidos. Nenhuma nova tarefa/ação ou escritor criado por isso.
 
 Próximo único lote APÓS janela: mesma sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f,
 claude-opus-5-5/medium, SOMENTE Read público sob TODO MAIN-BINDING-REVIEW
-MB1. Retorno curto da ligação main/park/Request/portas de S e N-C/N-H,
+MB1/MB2. Retorno curto da ligação main/park/Request/portas de S e N-C/N-H,
 distinguindo main Linux W1 já existente. Sem editar arquivo, testes,
 fonte, comandos/execução, perfil/argv/valores ou outro Owner/framework/
 guardião. Root lê TODO retorno antes de próxima ação; nada nativo admitido.
 
-Base pública dd68b80; fonte+teste+evidências integram este lote após QA.
-Conferir HEAD REAL após commits, sem guarda antiga.3checkpoints Root
-locais esperados. Zero chamadas C2 confirmado após terminal; interativos
-são do usuário, validar Claude2 autorizado. Todos antigos/N-S465/teste37a/
+Entrada S+teste+evidências PUBLICADOS em5fc896f, HEAD/origin0/0 na
+conferência17h59UTC; código/teste não alterados por este fechamento.
+Root conferiu MB2 por texto/AST: qualify monta Request internamente e
+executa setup→start sem slot de adopt; C0 emite W1C0, não o ack W1XA1.
+O main Linux W1 existente não é S Windows. Recibo compacto main-binding-
+root-reconciliation registra referências e limites; não é prova nativa.
+Próximo Read MB1+MB2 deve fechar mínimo vínculo Request/portas/park,
+sem repetir inventário, editar código ou criar outro framework.
+Conferir HEAD REAL após commits, sem guarda antiga. Zero chamadas C2
+confirmado17h59UTC; nenhuma tentativa antes19UTC. Tarefa16h05 preservada,
+sem mudança ou nova promessa de entrega/reset neste fechamento.
+Interativos são do usuário, validar Claude2 autorizado. Antigos/N-S465/teste37a/
 backend10c/adaptereaeb/C0/qualificador/pins/app124/state16/tentativa fixos.
 Preservar pessoais/raw/snapshots locais. Sem Docker/PG/SQL/rede externa/
 efeito nativo DLL/job/processo/thread/loop ou runtime/config/ambiente/

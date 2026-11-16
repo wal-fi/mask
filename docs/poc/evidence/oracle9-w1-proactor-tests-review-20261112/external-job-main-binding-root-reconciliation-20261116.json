@@ -1,0 +1,62 @@
+{
+  "kind": "MASKGW_W1_MAIN_BINDING_ROOT_PUBLIC_RECONCILIATION_V1",
+  "reviewed_utc": "2026-11-16T17:56:40.651074+00:00",
+  "base_head": "5fc896fbaa014cc6c973b1846344cee99e34ef2f",
+  "source_text_only_not_imported_or_executed": true,
+  "qualifier_public_module_functions": [
+    {
+      "name": "load_backend",
+      "line": 255
+    },
+    {
+      "name": "qualify",
+      "line": 661
+    }
+  ],
+  "qual_spec_fields": [
+    "case",
+    "application",
+    "directory",
+    "max_turns"
+  ],
+  "qualifier_execute_public_owner_calls": [
+    "setup",
+    "start",
+    "check_config"
+  ],
+  "no_adopt_slot_between_setup_and_start_in_that_method": true,
+  "request_construction_is_inside_private_Run_acquire": {
+    "line": 450,
+    "command_factory_private_line": 289
+  },
+  "c0_public_main_role": "Setup and close only; emits W1C0, not W1XA1; incompatible unchanged with XJ3 ack-only stdout",
+  "existing_linux_main_role": "Linux System/WorkerSession, not Windows borrowed-job S",
+  "minimum_missing_contract": [
+    "Controlled Request/profile provenance and construction from the same AdoptionLoad",
+    "Actual S main retains EntryCustody plus IO ports through process lifetime and maps RETAIN to specific park",
+    "N-H rights/duplication/identity and live N-C physical proofs remain separate"
+  ],
+  "absence_claim_scope": "Only the cited public source surfaces",
+  "old_sources_tests_pins_changed": false,
+  "new_C2_call_before_reset": false,
+  "native_product_effects": false,
+  "gates": "OPEN",
+  "source_refs": [
+    {
+      "path": "docs/poc/oracle9_w1_supervisor_qualification.py",
+      "sha256": "999f4a8d627e1550e8c95c6c6fa42aaa7a5edfb7045acbb33ccf51561d5fe015"
+    },
+    {
+      "path": "docs/poc/oracle9_w1_supervisor_setup_probe.py",
+      "sha256": "43ffbf92c1fb747f61cc764f6db95fdfed800976cfe17cc2bd4e5c8f5657d511"
+    },
+    {
+      "path": "docs/poc/oracle9_w1_external_job_entry.py",
+      "sha256": "b4826e0b649e37b485b4ca065e225e1103cbd41e19836c2ac95ca78172a62e18"
+    },
+    {
+      "path": "deploy/oracle9_w1_main.py",
+      "sha256": "89c99c6587e7c51d86fc0abb460330780357121c28768883ed8ab9dc789ccdea"
+    }
+  ]
+}
