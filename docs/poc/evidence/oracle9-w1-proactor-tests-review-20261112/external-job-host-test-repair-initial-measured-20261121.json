@@ -1,0 +1,16 @@
+{
+  "kind": "MASKGW_W1_H_REPAIRED_HARNESS_INITIAL_MEASURED_V1",
+  "test_sha256": "8a778b5c072b4a7549a1c33a5f88f9cb3d205ea4f019af9b4048d2166843d186",
+  "root_read_all_repair_delta_entries": 675,
+  "tests": 197,
+  "sanities_passed": 82,
+  "source_failures": 115,
+  "all_source_failures_exact_SOURCE_ABSENT": true,
+  "frozen_regression_block_preserved_bytes": 5512,
+  "elapsed_ms": 14799,
+  "terminal_exit": 1,
+  "stderr_bytes": 0,
+  "whole_suite_frozen": false,
+  "independent_review_probes_pending": true,
+  "native_or_product_calls": false
+}

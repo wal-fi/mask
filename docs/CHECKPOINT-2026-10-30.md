@@ -1,4 +1,58 @@
-## ATUAL — contrato H D4 revisto; primeiros oráculos pendentes — 2026-11-21
+## ATUAL — oráculos H parcialmente reparados; A2 aguarda limite C2 — 2026-11-21
+
+34913/41555/53439 TERMINAIS0/success/is_errorFalse, sem denials,
+recuperadas. Root leu TODAS1.897linhasV1 e TODOSdeltas119/675entradas;
+675 compõem695linhasdiff do reparo. Teste LOCAL8a778b5c072b4a7549a1c33a5f88f9cb3d205ea4f019af9b4048d2166843d186,
+116.553bytes/2.477linhas. Bloco5.512bytes das5regressões preservado
+EXATAMENTE. Root mediu197casos:82sanidadesPASS/115FAIL TODOS e EXATAMENTE
+SOURCE_ABSENT,14.799ms,stderr0. NÃO há freeze integral nem fonte admitido.
+Histórico165/49/116 e170/50/120 preservado;4regressões RED antes do reparo.
+
+Root fez contraprovas independentes: barreira/fixture bom/aliases/entrada
+canônica e refs fechadas/desconhecidas corrigidos. Restam2defeitos REAIS
+DO FAKE: aquisição malformada por chave extra ainda entra Known; aquisição
+válida roteirizada entra Known mas não sincroniza Refs/Assets e a consulta
+falha QUERY_UNKNOWN_REF. Ler TODO external-job-host-test-review-20261121.md
+HT-R4/HT-R3/HT-R2/HT-R1 e recibos compactos neste diretório de evidência:
+docs/poc/evidence/oracle9-w1-proactor-tests-review-20261112/.
+
+Pedido A2 terminou exit1/serviceis_errorTrue/api_error por limite de sessão
+ANTES de editar,2026-11-21T22:45:48Z; sem denials. Reset INFORMADO23hSP,
+inferido2026-11-22T02:00:00Z,NÃO observado. NÃO retry antes02UTC, nem AGY/
+conta/modelo/contorno. Teste8a intacto; zero chamada da sessão confirmado.
+MESMA tarefa Maskgw-Claude2-Resume-01a05804 rearmada21/11 às23h05SP/22/11
+02h05UTC,Ready/Habilitada/IgnoreNew. XML e CSV relidos; SOMENTE Arguments
+e StartBoundary mudaram,demais XML idêntico. Recibo resume-task-verified.
+Entrega/reset NÃO garantidos; dependem de host/logon/app/daemon disponíveis.
+
+Próximo ÚNICO lote: mesmaC2/sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f,
+claude-opus-5-5/medium SOMENTE tests/test_oracle9_w1_external_job_host_fake.ps1,
+Read/Edit/Write restritos,SEM comandos/execução. A2 acrescenta APENAS2
+regressões antes do resumo: rawOK malformado é devolvido MESMO objeto mas
+Known0; rawOK válido preserva Ref/papel e sincroniza Refs/Assets,queryOK0/0
+sem violações. NÃO mudar helpers/fixtures/asserts antigos. Root lê TODO
+delta,confere bytes/bloco congelado e mede RED ANTES de B2. Só depois
+reparo do registrador e cobertura dos domínios pós-saída/DeriveC/ExitCode.
+
+D4e4f039b3 permanece aceito só para fakes sob TODO HD-R4/NH3/XJ3/EJ.
+Fonte docs/poc/oracle9_w1_external_job_host.ps1 MUST ficar AUSENTE; revisão
+própria de assinatura/direitos/identidade ainda exigida antes do binding.
+NÃO publicar teste parcial/RED isolado,raw,snapshots ou artefatos pessoais.
+Este checkpoint integra SÓ documentos/recibos revistos.14pins públicos
+reconferidos; nenhum teste antigo/produto/DB/frontend/pacote rodado ou
+alterado.106/2.620/380PASS main S continuam HISTÓRICOS com SDK falso.
+
+Conferir Git REAL e recuperar terminais antes de chamar; validar SÓClaude2
+autorizado. Ativa só MONITORAR,nunca segunda chamada. Interativos são do
+usuário. NÃO reabrir chamadas terminais nem refazer trabalho concluído.
+Preservar antigos/pins/app124/state16/tentativa e pessoais/raw/snapshots;
+não ler estado/tentativa/runtime/config/ambiente/privado/binário/chat alheio.
+Sem main válido/park real/efeito DLL/job/processo/thread/loop/guard/sinal,
+Docker/PG/SQL/credencial/rede externa operacional/deploy. Root QA só falso.
+N-H/N-C/direitos/ambiente/kernel/S/G/N1–N16/B1/B2/D-090/TLS/ingressos/
+produto OPEN; Gateway indisponível. Histórico abaixo.
+
+## HISTÓRICO — contrato H D4 revisto; primeiros oráculos pendentes — 2026-11-21
 
 79890/28918/72004/36092 TERMINAIS0/success/is_errorFalse, sem denials,
 recuperadas. Root leu TODOS retornos,252linhasD1/328D2/437D3 e TODO

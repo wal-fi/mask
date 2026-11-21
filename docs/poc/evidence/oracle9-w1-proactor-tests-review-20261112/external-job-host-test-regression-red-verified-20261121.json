@@ -1,0 +1,49 @@
+{
+  "kind": "MASKGW_W1_H_HARNESS_REGRESSIONS_RED_VERIFIED_V1",
+  "test_sha256": "47f3b8aae0d4ed4767ec3cdcbc8d55e8d476757660a0d295bec233c9e72b3647",
+  "previous_e75_bytes_preserved": true,
+  "root_read_all_delta_lines": 119,
+  "added_lines": 110,
+  "tests": 170,
+  "passed": 50,
+  "failed": 120,
+  "new_regressions": [
+    {
+      "name": "sanity_gate_source_function_refuses_rejected_text",
+      "status": "FAIL",
+      "reason": "ASSERT GATE_EXPECTED_SOURCE_REJECTED_GOT "
+    },
+    {
+      "name": "sanity_gate_host_flow_refuses_rejected_text",
+      "status": "FAIL",
+      "reason": "ASSERT GATE_EXPECTED_SOURCE_REJECTED_GOT A propriedade 'CValue' não foi encontrada neste objeto. Verifique se a propriedade existe."
+    },
+    {
+      "name": "sanity_gate_benign_runs_only_requested_function",
+      "status": "PASS",
+      "reason": ""
+    },
+    {
+      "name": "sanity_fake_query_after_closeref_is_unknown",
+      "status": "FAIL",
+      "reason": "ASSERT QUERY_AFTER_CLOSE_UNKNOWN"
+    },
+    {
+      "name": "sanity_fake_configure_unknown_ref_is_unknown",
+      "status": "FAIL",
+      "reason": "ASSERT NEVER_ACQUIRED_UNKNOWN"
+    }
+  ],
+  "new_regression_failures": 4,
+  "old_benign_failures": 2,
+  "source_cases": 114,
+  "all_source_failures_exact_SOURCE_ABSENT": true,
+  "terminal_exit": 1,
+  "elapsed_ms": 7876,
+  "stderr_bytes": 0,
+  "new_five_case_nodes_frozen_for_repair": true,
+  "whole_suite_frozen": false,
+  "source_authorized": false,
+  "host_source_absent": true,
+  "native_or_product_calls": false
+}

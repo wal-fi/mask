@@ -1,0 +1,43 @@
+{
+  "kind": "MASKGW_W1_H_TEST_HELPER_REVIEW_PROBES_V1",
+  "source_test_sha256": "8a778b5c072b4a7549a1c33a5f88f9cb3d205ea4f019af9b4048d2166843d186",
+  "good_fixture_violations": [],
+  "assignment_rhs_ast_type": "System.Management.Automation.Language.CommandExpressionAst",
+  "rejected_fixture_violations": [
+    "UNASSIGNED",
+    "COMMAND"
+  ],
+  "rejected_body_executed": false,
+  "rejected_body_probe_error": true,
+  "rejection_reason": "SOURCE_REJECTED",
+  "alias_two_hop_reflection_violations": [
+    "METHOD",
+    "REF_USE"
+  ],
+  "canonical_entry_violations": [],
+  "wrong_entry_exit_violations": [
+    "EXIT_EMITTED"
+  ],
+  "selected_function_ast_type": "System.Management.Automation.Language.FunctionDefinitionAst",
+  "benign_private_function_result": [
+    true
+  ],
+  "malformed_acquisition_registered_known_refs": 1,
+  "malformed_acquisition_raw_status": "OK",
+  "scripted_valid_acquisition_known_count": 1,
+  "scripted_valid_acquisition_query_status": "FAILED",
+  "scripted_valid_acquisition_violations": [
+    "QUERY_UNKNOWN_REF"
+  ],
+  "fake_close_status": "CLOSED",
+  "fake_query_after_close_status": "UNKNOWN",
+  "fake_query_after_close_violations": [
+    "QUERY_CLOSED_REF"
+  ],
+  "fake_configure_unknown_status": "UNKNOWN",
+  "fake_configure_unknown_violations": [
+    "REF_UNKNOWN"
+  ],
+  "host_source_created": false,
+  "native_or_product_calls": false
+}

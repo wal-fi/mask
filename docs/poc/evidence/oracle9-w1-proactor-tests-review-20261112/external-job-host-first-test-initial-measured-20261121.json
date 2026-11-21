@@ -1,0 +1,31 @@
+{
+  "kind": "MASKGW_W1_H_FIRST_TEST_INITIAL_MEASUREMENT_V1",
+  "test_sha256": "e75d3589bf5a1a39c9b193463ac3fd75360aa1cbefaa57565576d4adc6a12e5a",
+  "root_read_all_lines": 1897,
+  "tests": 165,
+  "passed": 49,
+  "failed": 116,
+  "sanities": 51,
+  "sanities_passed": 49,
+  "sanities_failed": 2,
+  "source_cases": 114,
+  "source_failures_all_exact_SOURCE_ABSENT": true,
+  "sanity_failures": [
+    {
+      "name": "sanity_checker_accepts_good_fixture",
+      "status": "FAIL",
+      "reason": "ASSERT GOOD_REJECTED PIPELINE,PIPELINE,PIPELINE,PIPELINE,REF_USE,PIPELINE,PIPELINE,PIPELINE,PIPELINE,PIPELINE,PIPELINE,PIPELINE,PIPELINE,PIPELINE,PIPELINE,PIPELINE,REF_USE,REF_USE,PIPELINE,PIPELINE,PIPELINE,PIPELINE,PIPELINE,PIPELINE,PIPELINE,PIPELINE,PIPELINE"
+    },
+    {
+      "name": "sanity_checker_accepts_permitted_variants",
+      "status": "FAIL",
+      "reason": "ASSERT VARIANT_REJECTED PIPELINE,PIPELINE,PIPELINE,PIPELINE,REF_USE,PIPELINE,PIPELINE,PIPELINE,PIPELINE,PIPELINE,PIPELINE,PIPELINE,PIPELINE,PIPELINE,PIPELINE,PIPELINE,PIPELINE,PIPELINE,PIPELINE,PIPELINE,PIPELINE,PIPELINE,REF_USE,REF_USE,PIPELINE,PIPELINE,PIPELINE,PIPELINE,PIPELINE,PIPELINE,PIPELINE,PIPELINE,PIPELINE"
+    }
+  ],
+  "stderr_bytes": 0,
+  "terminal_exit": 1,
+  "elapsed_ms": 7122,
+  "RED_frozen": false,
+  "host_source_absent": true,
+  "native_or_product_calls": false
+}

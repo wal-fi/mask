@@ -1,0 +1,25 @@
+{
+  "measured_at_utc": "2026-11-21T22:50:56.7239665Z",
+  "task_name": "Maskgw-Claude2-Resume-01a05804",
+  "task_path": "\\",
+  "thread": "01a05804-2c07-71f2-bfef-7e3c90c06476",
+  "state": "Ready",
+  "enabled": true,
+  "start_boundary": "2026-11-21T23:05:00-03:00",
+  "start_utc": "2026-11-22T02:05:00Z",
+  "next_run_time": "11/21/2026 23:05:00",
+  "last_task_result": 0,
+  "changed_fields": [
+    "Exec.Arguments",
+    "Trigger.StartBoundary"
+  ],
+  "all_other_xml_identical": true,
+  "registration_matches_request": true,
+  "multiple_instances": "IgnoreNew",
+  "reset_reported": "11pm America/Sao_Paulo",
+  "reset_inferred_utc": "2026-11-22T02:00:00Z",
+  "reset_independently_observed": false,
+  "execution_or_delivery_guaranteed": false,
+  "prerequisite": "Host, user logon, Codex app and queue daemon must be available.",
+  "raw_xml_local_only": true
+}
