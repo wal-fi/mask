@@ -1,4 +1,42 @@
-## ATUAL — main Windows S validado só com fakes; próximo N-H Read — 2026-11-16
+## ATUAL — reconciliação N-H revista; desenho específico ainda não iniciado — 2026-11-21
+
+52885fd main Windows S permanece publicado e intacto;106próprios/2.620
+relacionados/380estáticos são medições HISTÓRICAS com SDK falso, não
+repetidas neste lote documental. Fontes/testes/pins públicos reconferidos.
+Nenhum main válido, park real ou efeito nativo executado.
+
+30182 e47872 TERMINAIS0/success/is_errorFalse, sem denials, recuperadas.
+Root leu TODAS101+77linhas dos dois relatórios Read, mais TODO XJ3/EJ.
+Suplemento c1a57ce9/6.573bytes encerrou com END_NH2_SUPPLEMENT. Zero
+chamadas da sessão autorizada confirmado após término; interativos do
+usuário ignorados. Nenhuma quota nova ou tarefa rearmada por sucesso.
+
+Ler TODA EXTERNAL-JOB-HOST-BINDING-REVIEW NH3/NH2/NH1. Inventário aceito
+só nas superfícies públicas citadas. F/Q/C e N-C vivo ainda exigem contrato:
+F_CLOSE_RAISED não autoriza registro com custódia incompleta; Q positivo
+antes de Start precisa de descarte explícito. Start falso/levantado após
+attempt não prova ausência de S. Funções PowerShell com portas falsas e
+captura AST privada são apenas costura prospectiva, não prova de ABI/
+direitos/identidade/EOF físico. Sem Pester presumido ou novo framework.
+
+Próximo documento proposto: somente EXTERNAL-JOB-HOST-DESIGN, ainda
+AUSENTE. Root leu TODO suplemento antes de definir esse escopo futuro;
+NÃO foi iniciada escrita do desenho, teste ou fonte do host. Fechar no
+desenho os domínios dos portos, falhas/primeiros objetos, gramática de QA,
+framing e custódia sob TODO XJ3/EJ/NH3 antes de primeiros oráculos/RED.
+MesmoC2/sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f,Opus5.5/medium;
+Root revisa/QA. Git REAL/terminais antes de chamar; ativa só monitorar.
+
+Preservar antigos fontes/testes/pins/app124/state16/tentativa e pessoais/
+raw/snapshots; não ler estado/tentativa. Nenhum runtime/config/ambiente/
+privado/binário/chat alheio, DLL/job/processo/thread/loop de produto,
+Docker/PG/SQL/credencial/rede externa operacional/deploy. Git/CLI e QA
+falsa são ferramentas de desenvolvimento, não efeito do experimento.
+N-H/N-C/direitos/ambiente/kernel/S/G/N1–N16/B1/B2/D-090/TLS/ingressos/
+produto OPEN; Gateway indisponível. Sem promessa de reset/entrega.
+Histórico abaixo.
+
+## HISTÓRICO — main Windows S validado só com fakes; próximo N-H Read — 2026-11-16
 
 33597/20306/82651 TERMINAIS0/success/is_errorFalse sem denials, recuperadas.
 Root leu TODAS284linhas da fonteV1 e TODO delta do fix; demais nós AST

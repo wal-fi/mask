@@ -1,0 +1,119 @@
+{
+  "kind": "MASKGW_W1_HOST_BINDING_PUBLIC_READ_REVIEW_V1",
+  "reviewed_utc": "2026-11-21T21:07:10.530390+00:00",
+  "base_head": "52885fd455a15d30772602e721afdbdb041fd6bb",
+  "session": "51ea0d85-05bb-4d24-ba9a-c9627c3f832f",
+  "model": "claude-opus-5-5",
+  "effort": "medium",
+  "programmer_tools": "Scoped Read only; no edits or commands",
+  "calls": [
+    {
+      "execution": 30182,
+      "terminal_exit": 0,
+      "subtype": "success",
+      "is_error": false,
+      "permission_denials": [],
+      "terminal_recovered": true,
+      "root_read_all_result_lines": 101,
+      "result_utf8_bytes": 8010,
+      "result_sha256": "59376a31dc3109326df8ecae4cb9445aa0138ad6ad4535ea8a71e6550ec3b3ae",
+      "end_marker": "END_NH1_RECONCILIATION",
+      "stderr_bytes": 0
+    },
+    {
+      "execution": 47872,
+      "terminal_exit": 0,
+      "subtype": "success",
+      "is_error": false,
+      "permission_denials": [],
+      "terminal_recovered": true,
+      "root_read_all_result_lines": 77,
+      "result_utf8_bytes": 6573,
+      "result_sha256": "c1a57ce907d4b1f1ef75d023062f7df47c349ce2d64bc5b262f4ac20ec5d5019",
+      "end_marker": "END_NH2_SUPPLEMENT",
+      "stderr_bytes": 0
+    }
+  ],
+  "authorized_session_metadata": {
+    "checked_utc": "2026-11-21T21:03:54.9827101Z",
+    "matching_calls": 0,
+    "unrelated_interactive_sessions_inspected": false
+  },
+  "root_read_full_public_XJ3_and_EJ1_to_EJ6": true,
+  "review": "docs/PHASE-9-W1-ORACLE-EXTERNAL-JOB-HOST-BINDING-REVIEW.md NH3/NH2/NH1",
+  "result_scope": "Prospective public reconciliation only; no API/test/native admission",
+  "open_contract_points": [
+    "F_CLOSE_RAISED leaves incomplete custody; no POST_S/PASS while uncertain",
+    "Known Q before any Start attempt needs explicit cleanup; attempted false/raised Start is not proof of absent S",
+    "Exact fake port domains, first error/control, PowerShell AST grammar/capture and silent pipeline remain to be contracted",
+    "Incremental live ack read/write domain and post-exit residue need a reviewed specific host contract"
+  ],
+  "protected_public_artifacts_verified": [
+    {
+      "path": "docs/poc/oracle9_w1_external_job_s_main.py",
+      "sha256": "9ef5a21eec69e4f1ccbccd94569e624a00cf9d2bfe36139e8bd687ea9c45496e"
+    },
+    {
+      "path": "tests/test_oracle9_w1_external_job_s_main.py",
+      "sha256": "f8d519e5cc839b10b713b1eceafbc1f37c5bf01cbdb07da69e5be9d2e5a416c3"
+    },
+    {
+      "path": "tests/test_oracle9_w1_external_job_s_main_review.py",
+      "sha256": "9e1142cf7e0dee900bc276d2facaecf0157be614bdcde06ff88596e488903bf8"
+    },
+    {
+      "path": "docs/poc/oracle9_w1_supervisor_qualification.py",
+      "sha256": "999f4a8d627e1550e8c95c6c6fa42aaa7a5edfb7045acbb33ccf51561d5fe015"
+    },
+    {
+      "path": "docs/poc/oracle9_w1_supervisor_setup_probe.py",
+      "sha256": "43ffbf92c1fb747f61cc764f6db95fdfed800976cfe17cc2bd4e5c8f5657d511"
+    },
+    {
+      "path": "docs/poc/oracle9_w1_external_job_entry.py",
+      "sha256": "b4826e0b649e37b485b4ca065e225e1103cbd41e19836c2ac95ca78172a62e18"
+    },
+    {
+      "path": "deploy/oracle9_w1_main.py",
+      "sha256": "89c99c6587e7c51d86fc0abb460330780357121c28768883ed8ab9dc789ccdea"
+    },
+    {
+      "path": "tests/test_oracle9_w1_external_job_entry.py",
+      "sha256": "1835ba817343cea1076fa95ec3add21d0828a074bfb8ac968f1e2dd8d0ef3fad"
+    },
+    {
+      "path": "docs/poc/oracle9_w1_external_job_adoption.py",
+      "sha256": "465ae9067e0f24fe656259e3757f45e8a5788f55ed177db2ab82160d5b6ba5ae"
+    },
+    {
+      "path": "tests/test_oracle9_w1_external_job_adoption.py",
+      "sha256": "37a757ad69b8d032e44e59d008a183149f9bb1f6fd0f46901553e0b00fbc9224"
+    },
+    {
+      "path": "docs/poc/pg16_shell_admission_win32.py",
+      "sha256": "10c9058f0d6071e86c7b4c8b2566c1ae4c9f78aeba9d92c50687ae6481f22726"
+    },
+    {
+      "path": "docs/poc/pg16_shell_native_control_win32.py",
+      "sha256": "eaebedd6ac36602ba30cb51a4c30a2a93737f1127c23cdc4ebb8ae8cf9246407"
+    }
+  ],
+  "future_design_source_test_absent": [
+    "docs/PHASE-9-W1-ORACLE-EXTERNAL-JOB-HOST-DESIGN.md",
+    "docs/poc/oracle9_w1_external_job_host.ps1",
+    "tests/test_oracle9_w1_external_job_host.py"
+  ],
+  "functional_gates_rerun": false,
+  "historical_main_S_only": {
+    "own": 106,
+    "related": 2620,
+    "static_paths": 380,
+    "fake_SDK_only": true
+  },
+  "native_or_valid_main_or_park_executed": false,
+  "runtime_config_environment_private_binary_state_attempt_foreign_chat_read": false,
+  "quota_observed_or_task_rearmed": false,
+  "raw_CLI_or_snapshots_published": false,
+  "native_product_gates": "OPEN",
+  "gateway_available": false
+}
