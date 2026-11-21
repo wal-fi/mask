@@ -1,0 +1,31 @@
+{
+    "kind":  "MASKGW_H_DESIGN_PURE_UINT64_FORMAT_PROBE_V1",
+    "checked_at_utc":  "2026-11-21T21:35:08.8201834Z",
+    "scope":  "Pure synthetic UInt64 formatting only; no handle, SDK, native, child or product invocation",
+    "cases":  [
+                  {
+                      "synthetic_number":  "9223372036854775807",
+                      "expected":  "7fffffffffffffff",
+                      "design_Convert_failed":  false,
+                      "design_Convert_result":  "7fffffffffffffff",
+                      "UInt64_x_result":  "7fffffffffffffff",
+                      "UInt64_x_matches":  true
+                  },
+                  {
+                      "synthetic_number":  "9223372036854775808",
+                      "expected":  "8000000000000000",
+                      "design_Convert_failed":  true,
+                      "design_Convert_result":  null,
+                      "UInt64_x_result":  "8000000000000000",
+                      "UInt64_x_matches":  true
+                  },
+                  {
+                      "synthetic_number":  "18446744073709551614",
+                      "expected":  "fffffffffffffffe",
+                      "design_Convert_failed":  true,
+                      "design_Convert_result":  null,
+                      "UInt64_x_result":  "fffffffffffffffe",
+                      "UInt64_x_matches":  true
+                  }
+              ]
+}

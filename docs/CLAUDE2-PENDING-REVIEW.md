@@ -1,4 +1,45 @@
-## ATUAL — reconciliação N-H revista; desenho específico ainda não iniciado — 2026-11-21
+## ATUAL — contrato H D4 revisto; primeiros oráculos pendentes — 2026-11-21
+
+79890/28918/72004/36092 TERMINAIS0/success/is_errorFalse, sem denials,
+recuperadas. Root leu TODOS retornos,252linhasD1/328D2/437D3 e TODO
+106linhasdeltaD3→D4. D4 e4f039b3df2eec655cc1ffaed073bc6f40dfc6b0e599e4a8554042a8e3117e04,
+34.797bytes/450linhas, aceita SOMENTE primeiros fakes sob TODA
+HOST-DESIGN-REVIEW HD-R4/R3/R2/R1 e HOST-BINDING NH3/NH2/NH1/XJ3/EJ.
+D1/D2/D3 e raw preservados locais; nenhum fonte/teste antigo mudou.
+
+Root reproduziu defeito de Convert com UInt64 sintético alto; ToString x
+acertou3limites antes de pedir fix. D4 corrige representação, custódia,
+portas/resultados, primeiros slots, framing e descarte. O probe NÃO
+usou handle/SDK/filho. Nenhum parser/Stop real ou suíte funcional rodada.
+106/2.620/380PASS do main S continuam HISTÓRICOS. Pins públicos fixos.
+
+Próximo ÚNICO lote: mesmaC2/sessão51ea0d85-05bb-4d24-ba9a-c9627c3f832f,
+claude-opus-5-5/medium escreve SOMENTE
+tests/test_oracle9_w1_external_job_host_fake.ps1, ainda AUSENTE.
+Read/Edit/Write só teste; SEM comandos/execução. Oráculos D4§10 + TODO
+HD-R4; positivos/negativos reais do checker, captura única do futuro
+fonte sem SHA esperado impossível, controles como resultados explícitos
+falsos, nunca parada real do engine. Não avaliar entrada/C0/Add-Type/
+PInvoke/Process nem presumir Pester. Root lê TODOS oráculos antes de QA,
+contraprovas e RED medido/congelado. Não publicar RED isolado.
+
+Fonte docs/poc/oracle9_w1_external_job_host.ps1 MUST ficar AUSENTE.
+RED não autoriza corpo nativo sem revisão própria de assinatura/direito/
+identidade. Não aceitar stub de binding como host completo só por fakes
+verdes, nem criar outro Owner/framework/launcher. Nenhuma admissão nativa.
+
+Conferir Git REAL após integração/docs, recuperar terminais e validar SÓ
+Claude2 autorizado. Ativa só MONITORAR, nunca segundo escritor. Interativos
+são do usuário. Zero sessão confirmado depois36092. Nenhuma quota/tarefa
+nova por sucesso, sem garantia de reset/entrega. Preservar pessoais/raw/
+snapshots, antigos fontes/testes/pins/app124/state16/tentativa; não ler
+estado/tentativa/runtime/config/ambiente/privado/binário/chat alheio.
+Sem main válido/park real/DLL/job/processo/thread/loop de produto, Docker/
+PG/SQL/credencial/rede externa operacional/deploy. Root QA só falso.
+N-H/N-C/direitos/ambiente/kernel/S/G/N1–N16/B1/B2/D-090/TLS/ingressos/
+produto OPEN; Gateway indisponível. Histórico abaixo.
+
+## HISTÓRICO — reconciliação N-H revista; desenho específico ainda não iniciado — 2026-11-21
 
 52885fd main Windows S permanece publicado e intacto;106próprios/2.620
 relacionados/380estáticos são medições HISTÓRICAS com SDK falso, não
