@@ -1,5 +1,36 @@
 # W1: próximo vínculo do host H — somente reconciliação pública
 
+## NH4 — RED241 revisto; vínculo nativo ainda não autorizado
+
+2026-11-22.75286/8574/12276/82966/21158 TERMINAIS0/success/is_errorFalse,sem denials/stderr,recuperadas. Root leu TODOS os deltas A2/B2/B3 (42/117/127linhas),TODO relatório Read139linhas e TODO suplemento83linhas,com END_H_BINDING_RO/END_H_BINDING_SUPPLEMENT. Excesso de tamanho não suprimiu conteúdo; não é permissão adicional. As duas chamadas finais foram SOMENTE Read. A primeira declarou que não releu XJ3/parte da EJ; o suplemento depois confirmou leitura integral de XJ3/EJ/adaptador e substitui essa lacuna,sem declarar efeito nativo.
+
+Ler TODO external-job-host-test-review-20261121.md HT-R7–HT-R1 e external-job-host-frozen-red241-20261122.json no diretório público de evidência. Teste LOCALb4dd88c8586efab3d6e1101b1c6fefda02e8b97ecf5d2bff686fdf582a1b06f7,129.783bytes/2.720linhas,CONGELADO: Root mediu241casos,102sanidadesPASS/139FAIL TODOS EXATAMENTE SOURCE_ABSENT,13.840ms,stderr0. Os REDs de4e2defeitos do harness precederam seus reparos e foram preservados. Fonte host.ps1 permanece AUSENTE. Não publicar RED isolado.
+
+### Citações conferidas e limites do relatório
+
+- Root conferiu o C0 integral e os trechos de assinatura/layout/consultas do backend,papéis do adaptador,XJ3§2–8/§12–14 e EJ citados. C0 reutiliza um padrão de custódia de Process/streams; NÃO é API importável sem efeito. O C0 não tem binding C# de job.
+- **Correção factual obrigatória:** C0:211 é um COMENTÁRIO de retenção, não uso de Process.Handle. C0 usa Id,WaitForExit,HasExited,ExitCode,Kill,Dispose e BaseStream. A identidade da instância é precedente; acesso/direitos do Handle de S ainda são NOVOS e R1 continua não medido. O suplemento reconheceu a correção.
+- Backend10c9058f: SIGNATURES229–272,layouts141–227 e consultas429–486 são referência pública para o vínculo novo. O adaptadoreaebedd6:172–219 consulta referência explícita;223–254 CRIA INNER,273–324 preserva JOB_LIST/verificação antes do resume. Não é adoção externa nem prova de direitos/aninhamento. N-S465 já implementa adoção com fakes; não refazer seu código ou presumir admissão física.
+- As afirmações de API ausente valem SOMENTE nas superfícies lidas. Não se infere ausência global nem se lê arquivo/estado/tentativa legado. DuplicateHandle/GetCurrentProcess,as máscaras de acesso a job e Process.Handle não são especificados por essas definições pinadas.
+- Toda uma configuração ou contagem compatível não prova identidade de J; a proveniência de Q/C parte da derivação de F e ainda exige revisão do vínculo e provas R1–R3. P+helper continua limite2cumulativo por TODA vida; H/S fora de J.
+
+### Trabalho mínimo antes de autorizar fonte
+
+1. **Contrato de interop verificável:** fechar assinaturas,larguras,BOOL/out handle,marshalling e último erro para duplicação/processo atual e comparar as APIs de job com os layouts x64 pinados. Não preencher ausências pela memória do SDK. Fatos de documentação primária e prova física são categorias distintas.
+2. **Direitos/posse:** Q somente QUERY+TERMINATE,C somente ASSIGN+QUERY; ambos derivados de F,não herdáveis,sem ampliar acesso/fechar origem. Falha só é REFUSED_NO_EFFECT quando o contrato da API sustentar; outra incerteza continua UNKNOWN e sem retry. R1–R3 físicos permanecem OPEN.
+3. **Ref opaca:** candidato mínimo é referência sem finalizador que feche job,retida por identidade e fechada só por CloseRef. Sua representação e registro imediato precisam de revisão concreta; nenhum Owner/ledger paralelo ou camada nova está admitido.
+4. **Não herança:** a ausência de uma porta extra de GetHandleInformation NÃO implica a escolha forçada entre criar porta ou aceitar lacuna. A revisão pode fechar a pós-condição dentro dos corpos existentes,com custódia imediata e resultado incerto fiel. Não alterar automaticamente31portas ou o RED241 para satisfazer uma extrapolação do relatório. Nenhum corpo ainda autorizado.
+5. **Streams:** CaptureIn/WriteIn/FlushIn/CloseIn e o ack em vida de S são novos. Fechar forma de fechamento sem preâmbulo/bytes extras e associação à MESMA instância. A leitura síncrona sem teto já é limitação explícita de XJ3§5/NH2/D4,não uma proteção nova. Não substituir por async/guardião sem novo desenho.
+6. **Bitness/ABI:** recusa fechada antes de binding incompatível e checagem dos mesmos layouts/offsets x64. A qualificação histórica do Python/C0 não prova o processo futuro de H; nenhuma inspeção de ambiente agora.
+7. **Controle/silêncio:** classificar falhas reais/primeiro controle sem promessa de que catch/park sobreviva à parada do engine. Revisar TODAS31portas nativas,retorno único e todos os fluxos de saída,Add-Type e exceções. Os fakes CONTROL não certificam essa propriedade física.
+8. **Cobertura:** RED241 prova os oráculos de lógica/forma da entrada, não a ABI nem os corpos nativos ainda ausentes. Igualdade de constantes/limites deve ser conferida contra o backend pinado na revisão do corpo; nenhum stub é host completo. Reabrir oráculo congelado só por finding concreto,com novo RED e histórico preservado; não enfraquecer testes para obter verde.
+
+### Consulta primária pendente, sem efeito operacional
+
+A lista concreta a verificar é a documentação oficial pública da Microsoft sobre DuplicateHandle,GetCurrentProcess,Job Object Security and Access Rights,GetHandleInformation,Create/Set/Query/Terminate/Close e .NET Process.Handle/StandardInput/BaseStream/StreamWriter.Close. É necessária para resolver os itens1/2/5/6/7 sem adivinhar assinaturas/direitos ou afirmar ausência de efeito. A autorização atual deste lote proíbe rede; esta lista NÃO autoriza consultas agora,baixar/executar binários,inspecionar ambiente ou abrir processo/serviço/banco. Só depois de autorização específica dessa leitura pública e revisão dos resultados poderá ser definido o próximo contrato/corpo. Não há comando,perfil,argv,nonce,raiz ou valores operacionais preparados.
+
+Nenhuma nova tarefa por sucesso. Zero sessão autorizada após terminais será conferido antes de qualquer continuação; interativos do usuário não são escritores deste trabalho. Main S106/2.620/380PASS continuam HISTÓRICOS; não foram repetidos. Todos os gates N-H/N-C/direitos/ambiente/kernel/S/G/N1–N16/B1/B2/D-090/TLS/ingressos/produto OPEN; Gateway indisponível.
+
 ## NH3 — suplemento integral revisto; limites para o desenho específico
 
 2026-11-21. A execução47872 terminou exit0/service success/is_errorFalse, sem denials e com stderr vazio; terminal recuperado. Mesma sessão51ea0d85/claude-opus-5-5/medium, somente Read. Root leu TODAS77linhas/6.573bytes do resultado c1a57ce907d4b1f1ef75d023062f7df47c349ce2d64bc5b262f4ac20ec5d5019, incluindo END_NH2_SUPPLEMENT; o excesso de7linhas não alterou o escopo. Zero chamadas da sessão confirmado depois do término. Nenhum arquivo rastreado mudou. HEAD/origin52885fd,0/0, fontes e testes pinados reconferidos; os2.620/380 verdes continuam HISTÓRICOS, sem repetição por este Read.

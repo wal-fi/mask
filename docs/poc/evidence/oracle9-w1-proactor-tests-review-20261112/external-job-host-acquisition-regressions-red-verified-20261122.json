@@ -1,0 +1,33 @@
+{
+  "kind": "MASKGW_W1_H_ACQUISITION_A2_RED_VERIFIED_V1",
+  "recorded_at_utc": "2026-11-22T02:09:22.234252+00:00",
+  "execution": 75286,
+  "programmer_terminal_exit": 0,
+  "service_is_error": false,
+  "permission_denials": [],
+  "root_read_all_delta_lines": 42,
+  "inserted_lines": 33,
+  "all_old_bytes_preserved": true,
+  "prior_frozen_block_preserved_bytes": 5512,
+  "test_sha256": "822f8fc0325b42707e50d288e8a6c7463e8da90338061193f59291deb299e733",
+  "test_bytes": 118549,
+  "test_lines": 2510,
+  "tests": 199,
+  "passed": 82,
+  "failed": 117,
+  "new_regression_failures": {
+    "sanity_fake_malformed_acquisition_not_known": "ASSERT MALFORMED_NOT_KNOWN",
+    "sanity_fake_scripted_acquisition_is_consultable": "ASSERT QUERY_SAME_REF_OK_0_0"
+  },
+  "old_source_failures": 115,
+  "all_old_failures_exact_SOURCE_ABSENT": true,
+  "terminal_exit": 1,
+  "elapsed_ms": 13306,
+  "stderr_bytes": 0,
+  "two_new_cases_frozen_against_B2": true,
+  "whole_suite_frozen": false,
+  "host_source_absent": true,
+  "native_or_product_calls": false,
+  "provider_available_for_this_call_only": true,
+  "global_quota_reset_proven": false
+}

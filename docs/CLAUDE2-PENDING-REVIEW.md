@@ -1,4 +1,50 @@
-## ATUAL — oráculos H parcialmente reparados; A2 aguarda limite C2 — 2026-11-21
+## ATUAL — RED241 H congelado; revisão do binding e consulta primária pendentes — 2026-11-22
+
+75286/8574/12276/82966/21158 TERMINAIS0/success/is_errorFalse,sem denials/
+stderr,recuperadas. Root leu TODOSdeltas42/117/127linhas dos lotesA2/B2/B3,
+TODO relatório Read139linhas e TODO suplemento83linhas. Não reabrir chamadas
+finais. C0:211 NÃO usa Process.Handle; citação corrigida e XJ3/EJ/adaptador
+relidos no suplemento. Ler TODA HOST-BINDING-REVIEW NH4/NH3/NH2/NH1 e
+external-job-host-test-review-20261121.md HT-R7–HT-R1 no diretório de evidência.
+
+Teste LOCALb4dd88c8586efab3d6e1101b1c6fefda02e8b97ecf5d2bff686fdf582a1b06f7,
+129.783bytes/2.720linhas,CONGELADO. Root mediu241casos:102sanidadesPASS/
+139FAIL TODOS EXATAMENTE SOURCE_ABSENT,13.840ms,stderr0. CADA motivo
+conferido. A2primeiroRED2 falhas,antesB2; B2 passou102sanidades. B3só24
+casos/preparo inseridos; TODO conteúdo anterior intacto. Snapshots/REDs de
+4e2defeitos do harness preservados. Nenhum teste RED isolado publicado.
+
+Fonte docs/poc/oracle9_w1_external_job_host.ps1 MUST ficar AUSENTE até
+revisão própria do vínculo. RED não certifica as31portas/ABI/SDK físico.
+Reusar somente os componentes revisados,sem novo Owner/framework/launcher.
+Process.Handle/direitos e DuplicateHandle/GetCurrentProcess ainda exigem
+contrato primário; NÃO inferir do padrão ProcessC0 ou da memória do SDK.
+Não herança pode ser fechada nos corpos existentes,não criar porta extra
+por inferência. Identidade,controle,stream/fechamento e silêncio seguem NH4.
+
+Próxima autoridade realmente faltante: leitura pública SOMENTE das páginas
+oficiais Microsoft enumeradas em NH4,para assinaturas/direitos/streams.
+O lote atual proíbe rede; nenhuma consulta foi realizada/autorizada por
+este checkpoint. Sem fonte/teste adicional/comandos do programador antes
+da revisão correspondente. Usuário pode autorizar essa consulta sem
+admitir qualquer efeito nativo/ambiente/produto. Root lê TODO resultado.
+
+A retomada23h05SP foi entregue; C2 disponível nas chamadas concluídas,
+NÃO prova de reset geral. Nenhuma tarefa nova por sucesso. Mesma sessão
+51ea0d85-05bb-4d24-ba9a-c9627c3f832f,claude-opus-5-5/medium,programa sóC2;
+Root revisa/QA. Conferir GitREAL após docs/integração e validar SÓC2.
+Ativa só MONITORAR,nunca duplicar; interativos são do usuário.
+
+14pins públicos reconferidos; antigos/mainS/app124/state16/tentativa e
+pessoais/raw/snapshots FIXOS;não ler estado/tentativa/runtime/config/
+ambiente/privado/binário/chat alheio. Sem main válido/park real/efeito DLL/
+job/processo/thread/loop/guard/sinal,Docker/PG/SQL/credencial/rede externa
+operacional/deploy. RootQA só falso.106/2.620/380PASS continuam HISTÓRICOS,
+nenhum produto/DB/frontend/pacote rodado ou alterado.
+N-H/N-C/direitos/ambiente/kernel/S/G/N1–N16/B1/B2/D-090/TLS/ingressos/
+produto OPEN; Gateway indisponível. Histórico abaixo.
+
+## HISTÓRICO — oráculos H parcialmente reparados; A2 aguarda limite C2 — 2026-11-21
 
 34913/41555/53439 TERMINAIS0/success/is_errorFalse, sem denials,
 recuperadas. Root leu TODAS1.897linhasV1 e TODOSdeltas119/675entradas;

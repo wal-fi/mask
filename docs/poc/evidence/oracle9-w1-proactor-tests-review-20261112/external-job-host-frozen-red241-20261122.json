@@ -1,0 +1,38 @@
+{
+  "kind": "MASKGW_W1_H_FAKE_ORACLES_FROZEN_RED241_V1",
+  "recorded_at_utc": "2026-11-22T02:19:57.513032+00:00",
+  "programmer_executions_recovered_terminal": [
+    75286,
+    8574,
+    12276
+  ],
+  "latest_service_is_error": false,
+  "permission_denials": [],
+  "root_read_all_B3_delta_lines": 127,
+  "B3_inserted_lines": 118,
+  "all_B2_bytes_preserved": true,
+  "test_sha256": "b4dd88c8586efab3d6e1101b1c6fefda02e8b97ecf5d2bff686fdf582a1b06f7",
+  "test_bytes": 129783,
+  "test_lines": 2720,
+  "tests": 241,
+  "sanities_passed": 102,
+  "source_failures": 139,
+  "all_failures_exact_SOURCE_ABSENT": true,
+  "terminal_exit": 1,
+  "elapsed_ms": 13840,
+  "stderr_bytes": 0,
+  "RED_frozen": true,
+  "host_source_absent": true,
+  "native_binding_source_authorized_before_separate_review": false,
+  "protected_public_pins_verified": 14,
+  "native_or_product_calls": false,
+  "publish_partial_RED_test": false,
+  "historical_harness_bug_RED_preserved": true,
+  "prospective_assumptions_accepted": [
+    "two valid pre/run tuple reads for each QueryCounts/QueryMembers",
+    "invalid Read-W1XTuple has null fields",
+    "invalid DeriveC type/range first category INTERNAL",
+    "200 bad observations exceed fixed decision slices, not wallclock bound"
+  ],
+  "remaining_prerequisite": "read-only minimum native binding reconciliation and root signature/rights/identity review; no runtime admission"
+}

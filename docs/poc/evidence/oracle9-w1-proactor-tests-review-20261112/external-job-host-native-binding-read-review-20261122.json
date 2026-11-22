@@ -1,0 +1,32 @@
+{
+  "kind": "MASKGW_W1_H_NATIVE_BINDING_PUBLIC_READ_REVIEW_V1",
+  "recorded_at_utc": "2026-11-22T02:30:52.576482+00:00",
+  "read_calls_terminal_recovered": [
+    82966,
+    21158
+  ],
+  "service_is_error": false,
+  "permission_denials": [],
+  "reports_root_read_in_full": {
+    "initial": {
+      "sha256": "68b8f97f4dfab9fbe3f5018737cc27557b3e4d1a91584747827d6278b7599721",
+      "lines": 139,
+      "raw_report_local_only": true
+    },
+    "supplement": {
+      "sha256": "c5a700b79d4756d8a3cb309e2e6f75a9c3103d0dc9209d020cbb09e2cb4e012f",
+      "lines": 83,
+      "raw_report_local_only": true
+    }
+  },
+  "C0_Process_Handle_precedent_claim_rejected_and_corrected": true,
+  "XJ3_EJ_adapter_read_completed_by_supplement": true,
+  "all_31_ports_mapped_as_prospective_only": true,
+  "official_public_documentation_permission_pending": true,
+  "official_documentation_consulted": false,
+  "host_source_authorized": false,
+  "host_source_absent": true,
+  "frozen_test_sha256": "b4dd88c8586efab3d6e1101b1c6fefda02e8b97ecf5d2bff686fdf582a1b06f7",
+  "native_or_product_calls": false,
+  "next_requirement": "Read public Microsoft documentation only after scope authorization; root reviews before body."
+}

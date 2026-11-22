@@ -1,0 +1,29 @@
+{
+  "kind": "MASKGW_W1_H_ACQUISITION_B2_REPAIR_VERIFIED_V1",
+  "recorded_at_utc": "2026-11-22T02:14:27.436807+00:00",
+  "execution": 8574,
+  "programmer_terminal_exit": 0,
+  "service_is_error": false,
+  "permission_denials": [],
+  "root_read_all_delta_lines": 117,
+  "test_sha256": "c493be90263482af426f76ddc92896764ce90bc8b539936dd5b26eb952f208db",
+  "test_bytes": 123799,
+  "test_lines": 2602,
+  "existing_functions_other_than_Invoke_FakePort_exactly_unchanged": 68,
+  "prior_seven_regressions_and_prep_exact_bytes_preserved": true,
+  "tests": 217,
+  "passed": 102,
+  "failed": 115,
+  "all_failures_exact_SOURCE_ABSENT": true,
+  "elapsed_ms": 13336,
+  "stderr_bytes": 0,
+  "whole_suite_frozen": false,
+  "remaining_before_freeze": [
+    "post-exit typed tuple domains",
+    "DeriveC unsigned and type domains",
+    "ExitCode exact type domain"
+  ],
+  "protected_public_pins_verified": 14,
+  "host_source_absent": true,
+  "native_or_product_calls": false
+}

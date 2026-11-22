@@ -1,5 +1,39 @@
 # H: revisão dos primeiros oráculos PowerShell
 
+## HT-R7 — B3 lido integralmente; RED241 congelado, binding ainda pendente
+
+12276 TERMINAL0/success/is_errorFalse,sem denials/stderr,recuperada. Root leu TODO retorno e TODAS127linhasdelta (118inseridas). Testeb4dd88c8586efab3d6e1101b1c6fefda02e8b97ecf5d2bff686fdf582a1b06f7,129.783bytes/2.720linhas,snapshot local preservado. Por prefixo/sufixo de bytes TODO conteúdo B2 anterior permanece EXATO: funções,fixtures,preparo,asserções,blocos congelados e resumo. Só24casos/preparo local foram inseridos antes do resumo.
+
+Root conferiu as suposições contra D4: pre e run chamam a leitura completa por F/Q; Read-W1XTuple inválido devolve campos nulos; Number DeriveC de tipo/faixa inválidos fixa INTERNAL antes de UNKNOWN da etapa;200resultados ruins ultrapassam as fatias de decisão existentes,sem prometer prazo de parede. Os14casos de tupla só aceitam o resultado ruim DEPOIS de WaitExit EXITED e por Q,após duas leituras positivas.6casosDeriveC bloqueiam envio/coerção;4ExitCode inválido retêm sem inventar0/descarte. Nenhum novo helper ou lógica H imitada.
+
+Root mediu241casos,102sanidades PASS/139FAIL TODOS EXATAMENTE SOURCE_ABSENT,13.840ms,stderr0. CADA falha conferida;14pins públicos intactos. O RED241 deste teste está CONGELADO. Preservar o hash e todos os oráculos contra implementação futura; não publicar teste RED isolado. Os REDs anteriores de4e2defeitos do harness e seus snapshots não foram apagados. O host fonte permanece AUSENTE.
+
+Próximo ÚNICO lote,antes de fonte: mesmaC2/sessão/modelo/medium,SOMENTE Read público,retorno curto do vínculo mínimo das31portas de D4 com C0/backend/adaptador/N-S/entrada/main S e as lacunas EXATAS de assinatura,direitos,identidade/custódia,framing e silêncio. Reusar contratos/código existentes,sem novo Owner/framework/launcher. Distinguir método público reutilizável de efeito físico NÃO medido. Sem editar documentos,testes ou fonte,SEM comandos/execução,perfil/argv/valores operacionais. Root lê TODO relatório e confere citações antes de autorizar corpo nativo; RED sozinho NÃO o admite. Não refazer main S/antigos nem reabrir chamadas finais. Nenhuma tarefa nova por sucesso; todos os gates nativos/produto OPEN; Gateway indisponível.
+
+## HT-R6 — B2 medido; B3 cobre domínios antes do freeze
+
+8574 TERMINAL0/success/is_errorFalse,sem denials/stderr,recuperada. Root leu TODO retorno e TODAS117linhasdelta. Testec493be90263482af426f76ddc92896764ce90bc8b539936dd5b26eb952f208db,123.799bytes/2.602linhas,snapshot local. Por AST,68funções anteriores fora Invoke-FakePort têm texto EXATO; bloco antigo+preparo e dois casosA2 EXATOS em bytes. Mudanças foram registro em Invoke-FakePort, novo colaborador mínimo/tabela de slots e18sanidades de aquisição. Raw continua retornado intacto; formas inválidas/CONTROL não registram; sucesso positivo sincroniza por papel.
+
+Root mediu217casos:102sanidades PASS/115FAIL TODOS EXATAMENTE SOURCE_ABSENT,13.336ms,stderr0. Os doisA2 passaram depois do RED anterior. CADA falha conferida,14pins públicos intactos. Isto verifica só o reparo dos fakes, não um host inexistente. Não há freeze integral nem autorização de binding nativo.
+
+Próximo B3 SOMENTE acrescentar casos/preparo local antes do resumo no MESMO teste, sem alterar QUALQUER helper/fixture/assert/caso atual ou blocos congelados. Read/Edit/Write restritos,SEM comandos/execução; host continua AUSENTE. Completar:
+
+- Tuplas PÓS-saída: tipos bool/long/negativo/>2 em total e active,active>total; members bool/long/negativo/>2/diferente de active. Roteirizar raw New-FakeResult depois de DUAS leituras DEFAULT pré+run em QueryCounts/QueryMembers,como o caso flow_post_invalid_tuple_retains. Confirmar no Check que o alvo foi realmente observado APÓS Exited/WaitExit por Q,sem confundir com preflight. Recusa precisa RETAIN,sem Qclose/DisposeS/CloseAsset/EmitRecord,nunca coerção para0. Para membro!=active usar total1/active0/members1. Nenhum novo SO ou helper genérico.
+- DeriveC: UInt640,UInt64max (2^64−1),tipo errado (int/long/bool/string) como raw OK. Nenhuma escrita/flush de C inválido,nenhum valor fora do domínio vira UInt64/serialização válida. Seguir recuperação UNKNOWN de D4 para falha de forma: CloseIn uma vez após streams positivos e descarte só pelos fatos posteriores; não inventar proibição de toda limpeza quando o contrato admite. Os valores positivos altos existentes permanecem intactos.
+- ExitCode raw OK com Number bool/long/string/null (e portadores indevidos se necessário): RETAIN após saída positiva,sem descarte Q/DisposeS/assets/registro e sem inventar ExitCode0. Número int não zero continua o caso positivo de FAIL com descarte já existente.
+
+Usar os portos/scriptqueues/reais helpers de teste existentes,sem emular lógica H. Se helper for insuficiente, relatar antes de editar; não enfraquecer teste nem fazer patch no produto. Root lê TODO delta,confere todos os antigos em bytes/AST e a fase real de injeção antes de medir/congelar RED. Ainda existe revisão própria de assinaturas/direitos para o futuro binding. Nenhuma nova tarefa por sucesso; todos os gates nativos/produto OPEN; Gateway indisponível.
+
+## HT-R5 — A2 completo, duas regressões RED; B2 estreito liberado
+
+A tarefa entregou a retomada às23h05SP. Root confirmou zero chamada autorizada antes de iniciar75286 na MESMA sessão/modelo/medium.75286 TERMINAL0/success/is_errorFalse,sem denials/stderr,recuperada. O serviço esteve disponível NESSA chamada; não é prova de reset geral. Root leu TODO retorno e TODO delta42linhas (33adicionadas); por prefixo/sufixo de bytes provou TODO8a anterior intacto e bloco5.512bytes idêntico. Novo teste822f8fc0325b42707e50d288e8a6c7463e8da90338061193f59291deb299e733,118.549bytes/2.510linhas,snapshot local preservado.
+
+Root mediu199casos,82PASS/117FAIL,13.306ms,stderr0. CADA falha conferida:115anteriores EXATAMENTE SOURCE_ABSENT;2novas EXATAMENTE ASSERT MALFORMED_NOT_KNOWN e ASSERT QUERY_SAME_REF_OK_0_0. Assim os dois defeitos do fake foram comprovados por regressões antes do reparo. Os dois novos casos e o preparo/bloco antigo ficam congelados contra B2. Não há freeze integral nem fonte admitido; o host permanece AUSENTE.
+
+Próximo B2: MESMO teste, Read/Edit/Write restritos,SEM comandos/execução. Reparar só o registro de aquisição em Invoke-FakePort (e mínimo colaborador de teste se indispensável): apenas hashtable exato com quatro chaves, Status string exata OK, Ref não nula, Number/Number2 nulos pode entrar Known. Devolver SEMPRE o raw original intacto ao chamador; inválido/CONTROL não promove referência. Sincronizar Refs/Assets para TODO sucesso positivo, default OU roteirizado, por papel/identidade. Sem outro Owner/modelo de SO ou mudança no algoritmo H. Reusar Test-ExactCarrier/Test-ExactType existentes e não sondar/converter Ref opaca. Acrescentar sanidades mínimas dos carriers inválidos e positivos por papel, sem mudar nenhum assert/fixture/caso congelado; demais helpers inalterados salvo mínimo justificado. Root lê TODO delta, confere frozen e mede novamente, antes de tratar cobertura restante da D4 como concluída.
+
+Depois B2, ainda completar os domínios pós-saída/DeriveC/ExitCode de HT-R3 e revisar todos os oráculos antes do freeze. Nenhum corpo nativo/autorização de assinatura-direito é antecipado. Sem nova tarefa por sucesso, sem reabrir75286 ou chamadas finais. Todos os gates nativos/produto OPEN; Gateway indisponível.
+
 ## HT-R4 — limite antes de A2; revisão permanece aberta
 
 O pedido de regressões A2 terminou por limite de sessão em2026-11-21T22:45:48Z,exit1/serviceis_errorTrue/terminal_reason api_error,sem denials,ANTES de editar. Root leu o retorno completo. Teste8a778b5c permanece116.553bytes/2.477linhas; host.ps1 continua AUSENTE. Não reabrir34913/41555/53439: são terminais recuperadas. A execução de197casos em HT-R3 e as contraprovas são medições históricas já concluídas, não foram repetidas por este fechamento documental.
